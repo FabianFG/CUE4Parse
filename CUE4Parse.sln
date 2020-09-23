@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUE4Parse", "CUE4Parse\CUE4Parse.csproj", "{AA16738F-6082-4410-868B-FC59A0363E8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUE4Parse-UnitTests", "CUE4Parse-UnitTests\CUE4Parse-UnitTests.csproj", "{D94CBF8D-00B0-4FE2-847D-C6F9930A6334}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA16738F-6082-4410-868B-FC59A0363E8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA16738F-6082-4410-868B-FC59A0363E8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA16738F-6082-4410-868B-FC59A0363E8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA16738F-6082-4410-868B-FC59A0363E8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D94CBF8D-00B0-4FE2-847D-C6F9930A6334}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D94CBF8D-00B0-4FE2-847D-C6F9930A6334}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D94CBF8D-00B0-4FE2-847D-C6F9930A6334}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D94CBF8D-00B0-4FE2-847D-C6F9930A6334}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
