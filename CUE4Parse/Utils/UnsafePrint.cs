@@ -4,7 +4,6 @@ namespace CUE4Parse.Utils
 {
     public static class UnsafePrint
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe string BytesToHex(byte* bytes, uint length)
         {
             char[] c = new char[length * 2];
