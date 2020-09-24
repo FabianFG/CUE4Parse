@@ -10,8 +10,8 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public List<FPropertyTag> Properties { get; }
         public bool ReadGuid { get; }
-        public FGuid? ObjectGuid { get; }
-        
+        public FGuid? ObjectGuid { get; private set; }
+
         public UObject(FObjectExport exportObject, bool readGuid = true) : base(exportObject)
         {
             Properties = new List<FPropertyTag>();
@@ -38,6 +38,11 @@ namespace CUE4Parse.UE4.Assets.Exports
                 if (tag.Name.IsNone)
                     break;
                 Properties.Add(tag);
+            }
+
+            if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 16 <= Ar.Length)
+            {
+                ObjectGuid = Ar.Read<FGuid>();
             }
         }
     }

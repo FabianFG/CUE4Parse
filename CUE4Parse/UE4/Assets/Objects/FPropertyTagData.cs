@@ -1,10 +1,11 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
-    public class FPropertyTagData
+    public abstract class FPropertyTagData
     {
         public override string ToString() => GetType().Name;
 
@@ -20,21 +21,41 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        public class EnumOrByteProperty : FPropertyTagData
+        public class ByteProperty : FPropertyTagData
+        {
+            public FName ByteName;
+
+            public ByteProperty(FAssetArchive Ar)
+            {
+                ByteName = Ar.ReadFName();
+            }
+        }
+        
+        public class EnumProperty : FPropertyTagData
         {
             public FName EnumName;
 
-            public EnumOrByteProperty(FAssetArchive Ar)
+            public EnumProperty(FAssetArchive Ar)
             {
                 EnumName = Ar.ReadFName();
             }
         }
 
-        public class ArrayOrSetProperty : FPropertyTagData
+        public class ArrayProperty : FPropertyTagData
         {
             public FName InnerType;
 
-            public ArrayOrSetProperty(FAssetArchive Ar)
+            public ArrayProperty(FAssetArchive Ar)
+            {
+                InnerType = Ar.ReadFName();
+            }
+        }
+        
+        public class SetProperty : FPropertyTagData
+        {
+            public FName InnerType;
+
+            public SetProperty(FAssetArchive Ar)
             {
                 InnerType = Ar.ReadFName();
             }
@@ -54,11 +75,11 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public class BoolProperty : FPropertyTagData
         {
-            public byte BoolVal;
+            public bool BoolVal;
 
-            public BoolProperty(FAssetArchive Ar)
+            public BoolProperty(FArchive Ar)
             {
-                BoolVal = Ar.Read<byte>();
+                BoolVal = Ar.ReadFlag();
             }
         }
     }

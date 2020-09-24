@@ -18,6 +18,10 @@
             Number = number;
         }
 
+        public FName(FNameEntry[] nameMap, int index, int number) : this(nameMap[index], index, number)
+        {
+        }
+
         public override string ToString()
         {
             return Text;

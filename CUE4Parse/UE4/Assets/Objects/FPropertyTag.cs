@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using System;
 using System.IO;
+using CUE4Parse.UE4.Exceptions;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -13,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         public int Size;
         public int ArrayIndex;
         public FPropertyTagData? TagData;
-        public byte HasPropertyGuid;
+        public bool HasPropertyGuid;
         public FGuid? PropertyGuid;
         public FPropertyTagType? Tag;
 
@@ -29,16 +30,16 @@ namespace CUE4Parse.UE4.Assets.Objects
             TagData = PropertyType.Text switch
             {
                 "StructProperty" => new FPropertyTagData.StructProperty(Ar),
-                "EnumProperty" => new FPropertyTagData.EnumOrByteProperty(Ar),
-                "ByteProperty" => new FPropertyTagData.EnumOrByteProperty(Ar),
-                "ArrayProperty" => new FPropertyTagData.ArrayOrSetProperty(Ar),
-                "SetProperty" => new FPropertyTagData.ArrayOrSetProperty(Ar),
-                "MapProperty" => new FPropertyTagData.MapProperty(Ar),
                 "BoolProperty" => new FPropertyTagData.BoolProperty(Ar),
+                "EnumProperty" => new FPropertyTagData.EnumProperty(Ar),
+                "ByteProperty" => new FPropertyTagData.ByteProperty(Ar),
+                "ArrayProperty" => new FPropertyTagData.ArrayProperty(Ar),
+                "SetProperty" => new FPropertyTagData.SetProperty(Ar),
+                "MapProperty" => new FPropertyTagData.MapProperty(Ar),
                 _ => null
             };
-            HasPropertyGuid = Ar.Read<byte>();
-            if (HasPropertyGuid != 0)
+            HasPropertyGuid = Ar.ReadFlag();
+            if (HasPropertyGuid)
             {
                 PropertyGuid = Ar.Read<FGuid>();
             }
@@ -47,14 +48,33 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 var pos = Ar.Position;
                 var finalPos = pos + Size;
-                Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
-#if DEBUG
-                if (finalPos != Ar.Position)
+                try
                 {
-                    Console.WriteLine($"FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}) was not read properly, pos {Ar.Position}, calculated pos {finalPos}");
-                }
+                    Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
+#if DEBUG
+                    if (finalPos != Ar.Position)
+                    {
+                        Console.WriteLine(
+                            $"FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}) was not read properly, pos {Ar.Position}, calculated pos {finalPos}");
+                    }
 #endif
-                Ar.Seek(finalPos, SeekOrigin.Begin);
+                }
+                catch (ParserException e)
+                {
+#if DEBUG
+                    if (finalPos != Ar.Position)
+                    {
+                        Console.WriteLine(
+                            $"Failed to read FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}), skipping it");
+                        Console.WriteLine(e.ToString());
+                    }
+#endif
+                }
+                finally
+                {
+                    // Always seek to calculated position, no need to crash
+                    Ar.Position = finalPos;    
+                }
             }
         }
     }

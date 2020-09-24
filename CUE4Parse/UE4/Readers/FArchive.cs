@@ -71,6 +71,12 @@ namespace CUE4Parse.UE4.Readers
         {
             return Read<int>() != 0;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ReadFlag()
+        {
+            return Read<byte>() != 0;
+        }
 
         public string ReadFString()
         {
