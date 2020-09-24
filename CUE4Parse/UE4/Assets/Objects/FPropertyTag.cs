@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using System;
+using System.IO;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -53,6 +54,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     Console.WriteLine($"FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}) was not read properly, pos {Ar.Position}, calculated pos {finalPos}");
                 }
 #endif
+                Ar.Seek(finalPos, SeekOrigin.Begin);
             }
         }
     }

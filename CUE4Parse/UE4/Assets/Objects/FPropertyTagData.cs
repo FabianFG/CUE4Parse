@@ -6,6 +6,8 @@ namespace CUE4Parse.UE4.Assets.Objects
 {
     public class FPropertyTagData
     {
+        public override string ToString() => GetType().Name;
+
         public class StructProperty : FPropertyTagData
         {
             public FName StructName;
