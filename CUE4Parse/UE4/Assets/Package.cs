@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -49,7 +50,9 @@ namespace CUE4Parse.UE4.Assets
                 var validPos = uexpAr.Position + it.SerialSize;
 #endif
                 var exportType = it.ClassIndex.IsNull ? uexpAr.ReadFName().Text : it.ClassIndex.Name;
-                /*var export = */ReadExport(uexpAr, exportType, it);
+                var export = ReadExport(exportType, it);
+                export.Owner = this;
+                export.Deserialize(uexpAr);
 #if DEBUG
                 Console.WriteLine(validPos != uexpAr.Position
                     ? $"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining"
@@ -63,9 +66,12 @@ namespace CUE4Parse.UE4.Assets
                 ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null)
         { }
 
-        private void ReadExport(FAssetArchive uexpAr, string exportType, FObjectExport export)
+        private UExport ReadExport(string exportType, FObjectExport export)
         {
-            
+            return exportType switch
+            {
+                _ => new UObject(export, false)
+            };
         }
     }
 }

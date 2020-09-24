@@ -1,5 +1,7 @@
 bin/
 obj/
+.vs/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+/CUE4Parse-UnitTests/

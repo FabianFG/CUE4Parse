@@ -14,6 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         
         public UObject(FObjectExport exportObject, bool readGuid = true) : base(exportObject)
         {
+            Properties = new List<FPropertyTag>();
             ReadGuid = readGuid;
         }
 
@@ -31,7 +32,13 @@ namespace CUE4Parse.UE4.Assets.Exports
 
         public override void Deserialize(FAssetArchive Ar)
         {
-            throw new System.NotImplementedException();
+            while (true)
+            {
+                var tag = new FPropertyTag(Ar, true);
+                if (tag.Name.IsNone)
+                    break;
+                Properties.Add(tag);
+            }
         }
     }
 }
