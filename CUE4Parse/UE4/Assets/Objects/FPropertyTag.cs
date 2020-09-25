@@ -1,9 +1,8 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
-using System;
-using System.IO;
 using CUE4Parse.UE4.Exceptions;
+using System;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {

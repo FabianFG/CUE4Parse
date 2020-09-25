@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Dynamic;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -46,10 +46,15 @@ namespace CUE4Parse.UE4.Assets.Objects
                 case "NameProperty": return new NameProperty(Ar.ReadFName());
                 case "DelegateProperty": return new DelegateProperty(Ar.Read<int>(), Ar.ReadFName());
                 case "DoubleProperty": return new DoubleProperty(Ar.Read<double>());
-                case "ArrayProperty": return null;
-                case "StructProperty": return null;
+                case "ArrayProperty":
+                    return tagData switch
+                    {
+                        FPropertyTagData.ArrayProperty arrayProperty => new ArrayProperty(new UScriptArray(Ar, arrayProperty.InnerType.Text)),
+                        _ => null,
+                    };
+                case "StructProperty": return new StructProperty(new UScriptStruct(Ar, (tagData as FPropertyTagData.StructProperty)?.StructName.Text));
                 case "StrProperty": return new StrProperty(Ar.ReadFString());
-                case "TextProperty": return null;
+                case "TextProperty": return new TextProperty(new FText(Ar));
                 case "InterfaceProperty": return new InterfaceProperty(Ar.Read<UInterfaceProperty>());
                 case "SoftObjectProperty": return null;
                 case "AssetObjectProperty": return null;
@@ -244,6 +249,36 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 Value = value;
                 Name = name;
+            }
+        }
+
+        public class ArrayProperty : FPropertyTagType
+        {
+            public readonly UScriptArray Value;
+
+            public ArrayProperty(UScriptArray value)
+            {
+                Value = value;
+            }
+        }
+
+        public class StructProperty : FPropertyTagType
+        {
+            public readonly UScriptStruct Value;
+
+            public StructProperty(UScriptStruct value)
+            {
+                Value = value;
+            }
+        }
+
+        public class TextProperty : FPropertyTagType
+        {
+            public readonly FText Value;
+
+            public TextProperty(FText value)
+            {
+                Value = value;
             }
         }
     }
