@@ -174,7 +174,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 Arguments = new Dictionary<string, FFormatArgumentValue>(Ar.Read<int>());
                 for (int i = 0; i < Arguments.Count; i++)
                 {
-                    Arguments.Add(Ar.ReadFString(), new FFormatArgumentValue(Ar));
+                    Arguments[Ar.ReadFString()] = new FFormatArgumentValue(Ar);
                 }
             }
         }
@@ -188,11 +188,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public OrderedFormat(FAssetArchive Ar)
             {
                 SourceFmt = new FText(Ar);
-                Arguments = new FFormatArgumentValue[Ar.Read<int>()];
-                for (int i = 0; i < Arguments.Length; i++)
-                {
-                    Arguments[i] = new FFormatArgumentValue(Ar);
-                }
+                Arguments = Ar.ReadArray<FFormatArgumentValue>();
             }
         }
 
@@ -205,11 +201,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public ArgumentFormat(FAssetArchive Ar)
             {
                 SourceFmt = new FText(Ar);
-                Arguments = new FFormatArgumentData[Ar.Read<int>()];
-                for (int i = 0; i < Arguments.Length; i++)
-                {
-                    Arguments[i] = new FFormatArgumentData(Ar);
-                }
+                Arguments = Ar.ReadArray<FFormatArgumentData>();
             }
         }
 

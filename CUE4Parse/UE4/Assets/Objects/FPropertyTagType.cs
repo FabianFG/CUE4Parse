@@ -56,16 +56,30 @@ namespace CUE4Parse.UE4.Assets.Objects
                 case "StrProperty": return new StrProperty(Ar.ReadFString());
                 case "TextProperty": return new TextProperty(new FText(Ar));
                 case "InterfaceProperty": return new InterfaceProperty(Ar.Read<UInterfaceProperty>());
-                case "SoftObjectProperty": return null;
-                case "AssetObjectProperty": return null;
+                case "AssetObjectProperty":
+                case "SoftObjectProperty":
+                    var property = new SoftObjectProperty(new FSoftObjectPath(Ar));
+                    if (type == ReadType.MAP)
+                        Ar.Position += 4;
+                    return property;
                 case "UInt64Property": return new UInt64Property(Ar.Read<ulong>());
                 case "UInt32Property": return new UInt32Property(Ar.Read<uint>());
                 case "UInt16Property": return new UInt16Property(Ar.Read<ushort>());
                 case "Int64Property": return new Int64Property(Ar.Read<long>());
                 case "Int16Property": return new Int16Property(Ar.Read<short>());
                 case "Int8Property": return new Int8Property(Ar.Read<byte>());
-                case "MapProperty": return null;
-                case "SetProperty": return null;
+                case "MapProperty":
+                    return tagData switch
+                    {
+                        FPropertyTagData.MapProperty mapProperty => new MapProperty(new UScriptMap(Ar, mapProperty)),
+                        _ => null,
+                    };
+                case "SetProperty":
+                    return tagData switch
+                    {
+                        FPropertyTagData.SetProperty setProperty => new SetProperty(new UScriptArray(Ar, setProperty.InnerType.Text)),
+                        _ => null,
+                    };
                 case "EnumProperty":
                     if (type == ReadType.NORMAL && (tagData as FPropertyTagData.EnumProperty)?.EnumName.IsNone == true)
                         return new EnumProperty(new FName());
@@ -277,6 +291,36 @@ namespace CUE4Parse.UE4.Assets.Objects
             public readonly FText Value;
 
             public TextProperty(FText value)
+            {
+                Value = value;
+            }
+        }
+
+        public class SoftObjectProperty : FPropertyTagType
+        {
+            public readonly FSoftObjectPath Value;
+
+            public SoftObjectProperty(FSoftObjectPath value)
+            {
+                Value = value;
+            }
+        }
+
+        public class MapProperty : FPropertyTagType
+        {
+            public readonly UScriptMap Value;
+
+            public MapProperty(UScriptMap value)
+            {
+                Value = value;
+            }
+        }
+
+        public class SetProperty : FPropertyTagType
+        {
+            public readonly UScriptArray Value;
+
+            public SetProperty(UScriptArray value)
             {
                 Value = value;
             }
