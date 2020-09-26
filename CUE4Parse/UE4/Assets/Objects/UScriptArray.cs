@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     throw new ParserException($"Couldn't read ArrayProperty with inner type {innerType}");
             }
 
-            Properties = new List<FPropertyTagType>();
+            Properties = new List<FPropertyTagType>(elementCount);
             var innerTagData = InnerTag?.TagData;
             for (int i = 0; i < elementCount; i++)
             {
