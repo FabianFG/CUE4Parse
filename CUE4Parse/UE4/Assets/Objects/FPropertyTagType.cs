@@ -24,42 +24,42 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public object? GetValue(Type type)
         {
-            if (this is FPropertyTagType<object> prop && type == prop.Value.GetType())
-                return prop.Value;
-            else if (this is FPropertyTagType<UScriptStruct> structProp && structProp.Value.StructType.GetType() == type)
-                return structProp.Value.StructType;
-            else if (this is FPropertyTagType<UScriptArray> arrayProp && type.IsArray)
+            switch (this)
             {
-                var array = arrayProp.Value.Properties;
-                var contentType = type.GetElementType()!;
-                var result = Array.CreateInstance(contentType, array.Count);
-                for (var i = 0; i < array.Count; i++)
+                case FPropertyTagType<object> prop when type == prop.Value.GetType():
+                    return prop.Value;
+                case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType.GetType() == type:
+                    return structProp.Value.StructType;
+                case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
                 {
-                    result.SetValue(array[i].GetValue(contentType), i);
+                    var array = arrayProp.Value.Properties;
+                    var contentType = type.GetElementType()!;
+                    var result = Array.CreateInstance(contentType, array.Count);
+                    for (var i = 0; i < array.Count; i++)
+                    {
+                        result.SetValue(array[i].GetValue(contentType), i);
+                    }
+                    return result;
                 }
-                return result;
-            }
-            else if (this is FPropertyTagType<FPackageIndex> objProp && typeof(UExport).IsAssignableFrom(type))
-            {
-                throw new NotImplementedException("Need to implement FileProvider first");
-            }
-            else if (this is FPropertyTagType<FSoftObjectPath> softObjProp && typeof(UExport).IsAssignableFrom(type))
-            {
-                throw new NotImplementedException("Need to implement FileProvider first");
-            }
-            else if (this is EnumProperty enumProp && type.IsEnum)
-            {
-                var storedEnum = enumProp.Value.Text;
-                if (type.Name != storedEnum.SubstringBefore("::"))
-                    return null;
+                case FPropertyTagType<FPackageIndex> objProp when typeof(UExport).IsAssignableFrom(type):
+                    throw new NotImplementedException("Need to implement FileProvider first");
+                case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UExport).IsAssignableFrom(type):
+                    throw new NotImplementedException("Need to implement FileProvider first");
+                case EnumProperty enumProp when type.IsEnum:
+                {
+                    var storedEnum = enumProp.Value.Text;
+                    if (type.Name != storedEnum.SubstringBefore("::"))
+                        return null;
                 
-                var search = storedEnum.SubstringAfter("::");
-                var values = type.GetEnumNames()!;
-                var idx = Array.FindIndex(values, it => it == search);
-                return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
+                    var search = storedEnum.SubstringAfter("::");
+                    var values = type.GetEnumNames()!;
+                    var idx = Array.FindIndex(values, it => it == search);
+                    return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
+                }
+                default:
+                    //TODO Maybe Maps?
+                    return null;
             }
-            //TODO Maybe Maps?
-            return null;
         }
         
         internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type)
