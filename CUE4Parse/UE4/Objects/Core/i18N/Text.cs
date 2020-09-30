@@ -301,7 +301,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         {
             public readonly FName TableId;
             public readonly string Key;
-            public override string Text => string.Empty; /* load table from files and get value by key */
+            public override string Text => string.Empty; /* TODO load table from files and get value by key */
 
             public StringTableEntry(FAssetArchive Ar)
             {

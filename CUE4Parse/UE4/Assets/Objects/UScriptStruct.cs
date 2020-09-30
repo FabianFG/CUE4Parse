@@ -24,6 +24,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector" => Ar.Read<FVector>(),
                 "Vector2D" => Ar.Read<FVector2D>(),
                 "Vector4" => Ar.Read<FVector4>(),
+                
                 "IntVector" => Ar.Read<FIntVector>(),
                 _  => throw new System.NotImplementedException()
             };
