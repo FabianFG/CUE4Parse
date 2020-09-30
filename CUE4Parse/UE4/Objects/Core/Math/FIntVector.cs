@@ -1,0 +1,19 @@
+﻿using System.Runtime.InteropServices;
+
+namespace CUE4Parse.UE4.Objects.Core.Math
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct FIntVector : IUStruct
+    {
+        public readonly int X;
+        public readonly int Y;
+        public readonly int Z;
+
+        public FIntVector(int x, int y, int z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+    }
+}

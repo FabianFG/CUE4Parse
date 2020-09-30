@@ -5,7 +5,7 @@ using CUE4Parse.Utils;
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct FGuid
+    public struct FGuid : IUStruct
     {
         public readonly uint A;
         public readonly uint B;

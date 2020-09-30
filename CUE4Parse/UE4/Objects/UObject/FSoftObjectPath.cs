@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    public readonly struct FSoftObjectPath : IUClass
+    public readonly struct FSoftObjectPath : IUStruct
     {
         /** Asset path, patch to a top level object in a package. This is /package/path.assetname */
         public readonly FName AssetPathName;

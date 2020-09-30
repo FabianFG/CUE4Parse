@@ -85,7 +85,7 @@ namespace CUE4Parse.UE4.Readers
 
             if (length == 0)
             {
-                return null;
+                return string.Empty;
             }
 
             // 1 byte/char is removed because of null terminator ('\0')
