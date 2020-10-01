@@ -153,7 +153,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public bool Equals(FVector other)
+        public readonly bool Equals(FVector other)
         {
             return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
         }
