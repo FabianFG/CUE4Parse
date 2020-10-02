@@ -1,8 +1,8 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using System;
 using System.Collections.Generic;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
@@ -234,11 +234,11 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly EDateTimeStyle DateStyle;
             public readonly string? TimeZone;
             public readonly string TargetCulture;
-            public override string Text => SourceDateTime.Date;
+            public override string Text => SourceDateTime.ToString();
 
             public AsDate(FAssetArchive Ar)
             {
-                SourceDateTime = new FDateTime(Ar);
+                SourceDateTime = Ar.Read<FDateTime>();
                 DateStyle = Ar.Read<EDateTimeStyle>();
                 if (Ar.Ver >= UE4Version.VER_UE4_FTEXT_HISTORY_DATE_TIMEZONE)
                 {
@@ -254,11 +254,11 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly EDateTimeStyle TimeStyle;
             public readonly string TimeZone;
             public readonly string TargetCulture;
-            public override string Text => SourceDateTime.Date;
+            public override string Text => SourceDateTime.ToString();
 
             public AsTime(FAssetArchive Ar)
             {
-                SourceDateTime = new FDateTime(Ar);
+                SourceDateTime = Ar.Read<FDateTime>();
                 TimeStyle = Ar.Read<EDateTimeStyle>();
                 TimeZone = Ar.ReadFString();
                 TargetCulture = Ar.ReadFString();
@@ -272,11 +272,11 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly EDateTimeStyle TimeStyle;
             public readonly string TimeZone;
             public readonly string TargetCulture;
-            public override string Text => SourceDateTime.Date;
+            public override string Text => SourceDateTime.ToString();
 
             public AsDateTime(FAssetArchive Ar)
             {
-                SourceDateTime = new FDateTime(Ar);
+                SourceDateTime = Ar.Read<FDateTime>();
                 DateStyle = Ar.Read<EDateTimeStyle>();
                 TimeStyle = Ar.Read<EDateTimeStyle>();
                 TimeZone = Ar.ReadFString();
@@ -393,18 +393,6 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             MaximumIntegralDigits = Ar.Read<int>();
             MinimumFractionalDigits = Ar.Read<int>();
             MaximumFractionalDigits = Ar.Read<int>();
-        }
-    }
-
-    public class FDateTime : IUClass
-    {
-        public long Ticks;
-        public string Date;
-
-        public FDateTime(FAssetArchive Ar)
-        {
-            Ticks = Ar.Read<long>();
-            Date = new DateTime(Ticks).ToString("F");
         }
     }
 }
