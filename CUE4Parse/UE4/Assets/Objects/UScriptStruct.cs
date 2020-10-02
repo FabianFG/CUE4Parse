@@ -1,7 +1,11 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.GameplayTags;
+using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.Engine.Ai;
+using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Objects.Engine.Curves;
+using CUE4Parse.UE4.Objects.GameplayTag;
 using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -31,19 +35,19 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "FrameNumber" => Ar.Read<FFrameNumber>(),
                 "FrameRate" => Ar.Read<FFrameRate>(),
                 "Guid" => Ar.Read<FGuid>(),
+                "NavAgentSelector" => Ar.Read<FNavAgentSelector>(),
+                "SmartName" => new FSmartName(Ar),
+                "RichCurveKey" => Ar.Read<FRichCurveKey>(),
+                "SimpleCurveKey" => Ar.Read<FSimpleCurveKey>(),
+                "SkeletalMeshSamplingLODBuiltData" => new FSkeletalMeshSamplingLODBuiltData(Ar),
+                "PerPlatformBool" => new TPerPlatformProperty.FPerPlatformBool(Ar),
+                "PerPlatformFloat" => new TPerPlatformProperty.FPerPlatformFloat(Ar),
+                "PerPlatformInt" => new TPerPlatformProperty.FPerPlatformInt(Ar),
                 "GameplayTagContainer" => new FGameplayTagContainer(Ar),
                 "LevelSequenceObjectReferenceMap" => new FLevelSequenceObjectReferenceMap(Ar),
                 "SoftObjectPath" => new FSoftObjectPath(Ar),
                 "SoftClassPath" => new FSoftObjectPath(Ar),
 
-                "SimpleCurveKey" => throw new System.NotImplementedException(),
-                "RichCurveKey" => throw new System.NotImplementedException(),
-                "SmartName" => throw new System.NotImplementedException(),
-                "PerPlatformFloat" => throw new System.NotImplementedException(),
-                "PerPlatformInt" => throw new System.NotImplementedException(),
-                "PerPlatformBool" => throw new System.NotImplementedException(),
-                "SkeletalMeshSamplingLODBuiltData" => throw new System.NotImplementedException(),
-                "NavAgentSelector" => throw new System.NotImplementedException(),
                 "MovieSceneTrackIdentifier" => throw new System.NotImplementedException(),
                 "MovieSceneSegmentIdentifier" => throw new System.NotImplementedException(),
                 "MovieSceneSequenceID" => throw new System.NotImplementedException(),

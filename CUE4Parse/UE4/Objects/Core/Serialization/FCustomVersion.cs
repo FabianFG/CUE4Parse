@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Objects.Core.Serialization
     {
         /** Unique custom key. */
         public readonly FGuid Key;
-
         /** Custom version */
         public readonly int Version;
     }
