@@ -14,6 +14,22 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 		RCIM_None
 	};
 
+	public enum ERichCurveExtrapolation : byte
+    {
+		/** Repeat the curve without an offset. */
+		RCCE_Cycle,
+		/** Repeat the curve with an offset relative to the first or last key's value. */
+		RCCE_CycleWithOffset,
+		/** Sinusoidally extrapolate. */
+		RCCE_Oscillate,
+		/** Use a linearly increasing value for extrapolation.*/
+		RCCE_Linear,
+		/** Use a constant value for extrapolation */
+		RCCE_Constant,
+		/** No Extrapolation */
+		RCCE_None
+    };
+
 	public enum ERichCurveTangentMode : byte
 	{
 		/** Automatically calculates tangents to create smooth curves between values. */

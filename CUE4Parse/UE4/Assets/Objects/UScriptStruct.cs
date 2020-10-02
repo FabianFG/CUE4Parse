@@ -5,8 +5,9 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Ai;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
-using CUE4Parse.UE4.Objects.GameplayTag;
+using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.LevelSequence;
+using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -38,31 +39,30 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "SmartName" => new FSmartName(Ar),
                 "RichCurveKey" => Ar.Read<FRichCurveKey>(),
                 "SimpleCurveKey" => Ar.Read<FSimpleCurveKey>(),
+                "ColorMaterialInput" => new FMaterialInput<FColor>(Ar),
+                "ScalarMaterialInput" => new FMaterialInput<float>(Ar),
+                "ShadingModelMaterialInput" => new FMaterialInput<uint>(Ar),
+                "VectorMaterialInput" => new FMaterialInput<FVector>(Ar),
+                "Vector2MaterialInput" => new FMaterialInput<FVector2D>(Ar),
+                "ExpressionInput" => new FExpressionInput(Ar),
+                "MaterialAttributesInput" => new FExpressionInput(Ar),
                 "SkeletalMeshSamplingLODBuiltData" => new FSkeletalMeshSamplingLODBuiltData(Ar),
                 "PerPlatformBool" => new TPerPlatformProperty.FPerPlatformBool(Ar),
                 "PerPlatformFloat" => new TPerPlatformProperty.FPerPlatformFloat(Ar),
                 "PerPlatformInt" => new TPerPlatformProperty.FPerPlatformInt(Ar),
                 "GameplayTagContainer" => new FGameplayTagContainer(Ar),
                 "LevelSequenceObjectReferenceMap" => new FLevelSequenceObjectReferenceMap(Ar),
+                "MovieSceneEvaluationKey" => Ar.Read<FMovieSceneEvaluationKey>(),
+                "MovieSceneFloatValue" => Ar.Read<FMovieSceneFloatValue>(),
+                "MovieSceneFrameRange" => Ar.Read<FMovieSceneFrameRange>(),
+                "MovieSceneSegment" => new FMovieSceneSegment(Ar),
+                "MovieSceneSegmentIdentifier" => Ar.Read<FMovieSceneSegmentIdentifier>(),
+                "MovieSceneSequenceID" => Ar.Read<FMovieSceneSequenceID>(),
+                "MovieSceneTrackIdentifier" => Ar.Read<FMovieSceneTrackIdentifier>(),
+                "SectionEvaluationDataTree" => new FSectionEvaluationDataTree(Ar), // Deprecated in UE4.26? can't find it anymore. Replaced by FMovieSceneEvaluationTrack
+                "MovieSceneFloatChannel" => new MovieSceneFloatChannel(Ar),
                 "SoftObjectPath" => new FSoftObjectPath(Ar),
                 "SoftClassPath" => new FSoftObjectPath(Ar),
-
-                "MovieSceneTrackIdentifier" => throw new System.NotImplementedException(),
-                "MovieSceneSegmentIdentifier" => throw new System.NotImplementedException(),
-                "MovieSceneSequenceID" => throw new System.NotImplementedException(),
-                "MovieSceneSegment" => throw new System.NotImplementedException(),
-                "SectionEvaluationDataTree" => throw new System.NotImplementedException(),
-                "MovieSceneFrameRange" => throw new System.NotImplementedException(),
-                "MovieSceneFloatValue" => throw new System.NotImplementedException(),
-                "MovieSceneFloatChannel" => throw new System.NotImplementedException(),
-                "MovieSceneEvaluationTemplate" => throw new System.NotImplementedException(),
-                "MovieSceneEvaluationKey" => throw new System.NotImplementedException(),
-                "VectorMaterialInput" => throw new System.NotImplementedException(),
-                "ColorMaterialInput" => throw new System.NotImplementedException(),
-                "ExpressionInput" => throw new System.NotImplementedException(),
-                "ScalarMaterialInput" => throw new System.NotImplementedException(),
-                "MaterialAttributesInput" => throw new System.NotImplementedException(),
-                "Vector2MaterialInput" => throw new System.NotImplementedException(),
                 _  => throw new System.NotImplementedException()
             };
         }
