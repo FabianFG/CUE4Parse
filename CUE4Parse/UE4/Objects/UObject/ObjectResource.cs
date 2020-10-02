@@ -71,7 +71,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     public abstract class FObjectResource
     {
         public FName ObjectName;
-        public FPackageIndex OuterIndex;
+        public FPackageIndex? OuterIndex;
 
         public override string ToString()
         {
@@ -126,8 +126,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             NotForServer = Ar.ReadBoolean();
             PackageGuid = Ar.Read<FGuid>();
             PackageFlags = Ar.Read<uint>();
-            NotAlwaysLoadedForEditorGame = Ar.Ver >= UE4Version.VER_UE4_LOAD_FOR_EDITOR_GAME ? Ar.ReadBoolean() : true;
-            IsAsset = Ar.Ver >= UE4Version.VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT ? Ar.ReadBoolean() : false;
+            NotAlwaysLoadedForEditorGame = Ar.Ver < UE4Version.VER_UE4_LOAD_FOR_EDITOR_GAME || Ar.ReadBoolean();
+            IsAsset = Ar.Ver >= UE4Version.VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT && Ar.ReadBoolean();
 
             if (Ar.Ver >= UE4Version.VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
             {

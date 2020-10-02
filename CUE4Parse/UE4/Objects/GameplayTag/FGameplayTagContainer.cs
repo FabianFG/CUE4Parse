@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Objects.GameplayTags
+namespace CUE4Parse.UE4.Objects.GameplayTag
 {
     public struct FGameplayTagContainer : IUStruct, IEnumerable<FName>
     {
