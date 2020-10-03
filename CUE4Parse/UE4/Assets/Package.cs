@@ -70,7 +70,7 @@ namespace CUE4Parse.UE4.Assets
         {
             return exportType switch
             {
-                _ => new UObject(export, false)
+                _ => new UObject(export, true)
             };
         }
     }

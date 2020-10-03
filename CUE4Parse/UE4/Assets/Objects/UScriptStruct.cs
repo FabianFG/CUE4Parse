@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -35,6 +36,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Timespan" => Ar.Read<FDateTime>(),
                 "FrameNumber" => Ar.Read<FFrameNumber>(),
                 "FrameRate" => Ar.Read<FFrameRate>(),
+                "Guid" => Ar.Read<FGuid>(),
                 "NavAgentSelector" => Ar.Read<FNavAgentSelector>(),
                 "SmartName" => new FSmartName(Ar),
                 "RichCurveKey" => Ar.Read<FRichCurveKey>(),
@@ -63,7 +65,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MovieSceneFloatChannel" => new MovieSceneFloatChannel(Ar),
                 "SoftObjectPath" => new FSoftObjectPath(Ar),
                 "SoftClassPath" => new FSoftObjectPath(Ar),
-                _  => throw new System.NotImplementedException()
+                _  => new FStructFallback(Ar)
             };
         }
     }
