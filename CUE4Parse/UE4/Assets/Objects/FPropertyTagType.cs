@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Reflection;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -17,18 +19,28 @@ namespace CUE4Parse.UE4.Assets.Objects
     public abstract class FPropertyTagType<T> : FPropertyTagType
     {
         public T Value { get; protected set; }
+
+        public override object? GenericValue => Value;
+
+        public override string ToString() => Value != null ? $"{Value.ToString()} ({GetType().Name})" : string.Empty;
     }
 
     public abstract class FPropertyTagType
     {
+        public abstract object? GenericValue { get; }
         public object? GetValue(Type type)
         {
+            var generic = GenericValue;
+            if (type.IsInstanceOfType(generic))
+            {
+                return generic;
+            }
             switch (this)
             {
-                case FPropertyTagType<object> prop when type == prop.Value.GetType():
-                    return prop.Value;
-                case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType.GetType() == type:
+                case FPropertyTagType<UScriptStruct> structProp when type.IsInstanceOfType(structProp.Value.StructType):
                     return structProp.Value.StructType;
+                case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType is FStructFallback fallback && type.GetCustomAttribute<StructFallback>() != null:
+                    return fallback.MapToClass(type);
                 case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
                 {
                     var array = arrayProp.Value.Properties;
@@ -55,12 +67,14 @@ namespace CUE4Parse.UE4.Assets.Objects
                     var idx = Array.FindIndex(values, it => it == search);
                     return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
                 }
+                //TODO Maybe Maps?
                 default:
-                    //TODO Maybe Maps?
                     return null;
             }
         }
-        
+
+        public abstract override string ToString();
+
         internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type)
         {
             switch(propertyType)
@@ -294,6 +308,8 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 Value = value;
             }
+
+            public override string ToString() => Value.ToString().SubstringBeforeLast(')') + ", StructProperty)";
         }
 
         public class TextProperty : FPropertyTagType<FText>

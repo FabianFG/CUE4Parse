@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
@@ -99,7 +101,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int CreateBeforeSerializationDependencies;
         public readonly int SerializationBeforeCreateDependencies;
         public readonly int CreateBeforeCreateDependencies;
-        //TODO var exportObject: Lazy<UExport>
+        public Type ExportType;
+        public Lazy<UExport> ExportObject;
 
         public FObjectExport(FAssetArchive Ar)
         {

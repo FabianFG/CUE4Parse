@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -6,7 +8,11 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports
 {
-    public class UObject : UExport
+    public interface IPropertyHolder
+    {
+        public List<FPropertyTag> Properties { get; }
+    }
+    public class UObject : UExport, IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; }
         public bool ReadGuid { get; }
@@ -44,6 +50,36 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
+        }
+    }
+
+    public static class PropertyUtil
+    {
+        // TODO Little Problem here: Can't use T? since this would need a constraint to struct or class, which again wouldn't work fine with primitives
+        public static T GetOrDefault<T>(this IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            var value = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag?.GetValue(typeof(T));
+            if (value is T cast)
+            {
+                return cast;
+            }
+            return default;
+        }
+
+        // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
+        public static T Get<T>(this IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            var tag = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag;
+            if (tag == null)
+            {
+                throw new NullReferenceException($"{holder.GetType().Name} does not have a property '{name}'");
+            }
+            var value = tag.GetValue(typeof(T));
+            if (value is T cast)
+            {
+                return cast;
+            }
+            throw new NullReferenceException($"Couldn't get property '{name}' of type {typeof(T).Name} in {holder.GetType().Name}");
         }
     }
 }

@@ -7,5 +7,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     {
         public readonly uint X;
         public readonly uint Y;
+
+        public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";
     }
 }

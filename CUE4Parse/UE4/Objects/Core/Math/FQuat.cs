@@ -9,5 +9,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly float Y;
         public readonly float Z;
         public readonly float W;
+
+        public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}, {nameof(W)}: {W}";
     }
 }

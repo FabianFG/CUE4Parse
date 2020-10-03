@@ -7,25 +7,25 @@ using System.Collections.Generic;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
 {
-	public enum ETextHistoryType : sbyte
-	{
-		None = -1,
-		Base = 0,
-		NamedFormat,
-		OrderedFormat,
-		ArgumentFormat,
-		AsNumber,
-		AsPercent,
-		AsCurrency,
-		AsDate,
-		AsTime,
-		AsDateTime,
-		Transform,
-		StringTableEntry,
-		TextGenerator,
+    public enum ETextHistoryType : sbyte
+    {
+        None = -1,
+        Base = 0,
+        NamedFormat,
+        OrderedFormat,
+        ArgumentFormat,
+        AsNumber,
+        AsPercent,
+        AsCurrency,
+        AsDate,
+        AsTime,
+        AsDateTime,
+        Transform,
+        StringTableEntry,
+        TextGenerator,
 
-		// Add new enum types at the end only! They are serialized by index.
-	}
+        // Add new enum types at the end only! They are serialized by index.
+    }
 
     public enum EFormatArgumentType : sbyte
     {
@@ -43,16 +43,22 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
     {
         /** Rounds to the nearest place, equidistant ties go to the value which is closest to an even value: 1.5 becomes 2, 0.5 becomes 0 */
         HalfToEven,
+
         /** Rounds to nearest place, equidistant ties go to the value which is further from zero: -0.5 becomes -1.0, 0.5 becomes 1.0 */
         HalfFromZero,
+
         /** Rounds to nearest place, equidistant ties go to the value which is closer to zero: -0.5 becomes 0, 0.5 becomes 0. */
         HalfToZero,
+
         /** Rounds to the value which is further from zero, "larger" in absolute value: 0.1 becomes 1, -0.1 becomes -1 */
         FromZero,
+
         /** Rounds to the value which is closer to zero, "smaller" in absolute value: 0.1 becomes 0, -0.1 becomes 0 */
         ToZero,
+
         /** Rounds to the value which is more negative: 0.1 becomes 0, -0.1 becomes -1 */
         ToNegativeInfinity,
+
         /** Rounds to the value which is more positive: 0.1 becomes 1, -0.1 becomes 0 */
         ToPositiveInfinity,
 
@@ -66,6 +72,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         Short,
         Medium,
         Long,
+
         Full
         // Add new enum types at the end only! They are serialized by index.
     }
@@ -82,32 +89,35 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
     {
         /** This string table is pending load, and load should be attempted when possible */
         PendingLoad,
-		/** This string table is currently being loaded, potentially asynchronously */
-		Loading,
-		/** This string was loaded, though that load may have failed */
-		Loaded,
-	}
+
+        /** This string table is currently being loaded, potentially asynchronously */
+        Loading,
+
+        /** This string was loaded, though that load may have failed */
+        Loaded,
+    }
 
     public class FText : IUClass
     {
-		public uint Flags;
-		public FTextHistory TextHistory;
-        public string Text;
+        public readonly uint Flags;
+        public readonly ETextHistoryType HistoryType;
+        public readonly FTextHistory TextHistory;
+        public string Text => TextHistory.Text;
 
-		public FText(FAssetArchive Ar)
+        public FText(FAssetArchive Ar)
         {
-			Flags = Ar.Read<uint>();
+            Flags = Ar.Read<uint>();
 
-			var historyType = Ar.Read<ETextHistoryType>();
-            TextHistory = historyType switch
+            HistoryType = Ar.Read<ETextHistoryType>();
+            TextHistory = HistoryType switch
             {
                 ETextHistoryType.Base => new FTextHistory.Base(Ar),
                 ETextHistoryType.NamedFormat => new FTextHistory.NamedFormat(Ar),
                 ETextHistoryType.OrderedFormat => new FTextHistory.OrderedFormat(Ar),
                 ETextHistoryType.ArgumentFormat => new FTextHistory.ArgumentFormat(Ar),
-                ETextHistoryType.AsNumber => new FTextHistory.FormatNumber(Ar, historyType),
-                ETextHistoryType.AsPercent => new FTextHistory.FormatNumber(Ar, historyType),
-                ETextHistoryType.AsCurrency => new FTextHistory.FormatNumber(Ar, historyType),
+                ETextHistoryType.AsNumber => new FTextHistory.FormatNumber(Ar, HistoryType),
+                ETextHistoryType.AsPercent => new FTextHistory.FormatNumber(Ar, HistoryType),
+                ETextHistoryType.AsCurrency => new FTextHistory.FormatNumber(Ar, HistoryType),
                 ETextHistoryType.AsDate => new FTextHistory.AsDate(Ar),
                 ETextHistoryType.AsTime => new FTextHistory.AsTime(Ar),
                 ETextHistoryType.AsDateTime => new FTextHistory.AsDateTime(Ar),
@@ -116,7 +126,18 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
                 _ => new FTextHistory.None(Ar)
             };
-            Text = TextHistory.Text;
+        }
+        
+        public FText(string sourceString) : this("", "", sourceString) { }
+
+        public FText(string @namespace, string key, string sourceString) : this(0, ETextHistoryType.Base,
+            new FTextHistory.Base(@namespace, key, sourceString)) { }
+
+        public FText(uint flags, ETextHistoryType historyType, FTextHistory textHistory)
+        {
+            Flags = flags;
+            HistoryType = historyType;
+            TextHistory = textHistory;
         }
 
         public override string ToString() => Text;
@@ -165,7 +186,10 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         public class NamedFormat : FTextHistory
         {
             public readonly FText SourceFmt;
-            public readonly Dictionary<string, FFormatArgumentValue> Arguments; /* called FFormatNamedArguments in UE4 */
+
+            public readonly Dictionary<string, FFormatArgumentValue>
+                Arguments; /* called FFormatNamedArguments in UE4 */
+
             public override string Text => SourceFmt.Text;
 
             public NamedFormat(FAssetArchive Ar)
@@ -215,15 +239,18 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
 
             public FormatNumber(FAssetArchive Ar, ETextHistoryType historyType)
             {
-                if (historyType == ETextHistoryType.AsCurrency && Ar.Ver >= UE4Version.VER_UE4_ADDED_CURRENCY_CODE_TO_FTEXT)
+                if (historyType == ETextHistoryType.AsCurrency &&
+                    Ar.Ver >= UE4Version.VER_UE4_ADDED_CURRENCY_CODE_TO_FTEXT)
                 {
                     CurrencyCode = Ar.ReadFString();
                 }
+
                 SourceValue = new FFormatArgumentValue(Ar);
                 if (Ar.ReadBoolean()) // bHasFormatOptions
                 {
                     FormatOptions = new FNumberFormattingOptions(Ar);
                 }
+
                 TargetCulture = Ar.ReadFString();
             }
         }
@@ -244,6 +271,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 {
                     TimeZone = Ar.ReadFString();
                 }
+
                 TargetCulture = Ar.ReadFString();
             }
         }

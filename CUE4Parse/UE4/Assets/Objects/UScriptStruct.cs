@@ -68,5 +68,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 _  => new FStructFallback(Ar)
             };
         }
+
+        public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
     }
 }

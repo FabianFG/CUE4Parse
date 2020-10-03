@@ -15,5 +15,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Y = y;
             Z = z;
         }
+
+        public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";
     }
 }

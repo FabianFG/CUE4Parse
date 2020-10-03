@@ -9,5 +9,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly TRangeBound<T> LowerBound;
         /** Holds the range's upper bound. */
         public readonly TRangeBound<T> UpperBound;
+
+        public override string ToString()
+        {
+            return $"{nameof(LowerBound)}: {LowerBound}, {nameof(UpperBound)}: {UpperBound}";
+        }
     }
 }

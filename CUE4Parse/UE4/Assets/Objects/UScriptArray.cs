@@ -7,11 +7,13 @@ namespace CUE4Parse.UE4.Assets.Objects
 {
     public class UScriptArray
     {
-        public FPropertyTag? InnerTag;
-        public List<FPropertyTagType> Properties;
+        public readonly string InnerType; 
+        public readonly FPropertyTag? InnerTag;
+        public readonly List<FPropertyTagType> Properties;
 
         public UScriptArray(FAssetArchive Ar, string innerType)
         {
+            InnerType = innerType;
             var elementCount = Ar.Read<int>();
             if (innerType == "StructProperty" || innerType == "ArrayProperty")
             {
@@ -32,5 +34,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                         $"Failed to read array property of type {innerType} at ${Ar.Position}, index {i}");
             }
         }
+
+        public override string ToString() => $"{InnerType}[{Properties.Count}]";
     }
 }

@@ -13,5 +13,7 @@ namespace CUE4Parse.UE4.Objects.Core.Serialization
         public readonly FGuid Key;
         /** Custom version */
         public readonly int Version;
+
+        public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
     }
 }

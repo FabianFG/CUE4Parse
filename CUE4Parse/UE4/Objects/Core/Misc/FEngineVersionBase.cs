@@ -17,6 +17,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         /** Changelist number. This is used to arbitrate when Major/Minor/Patch version numbers match. */
         private readonly uint _changeList;
+
         public uint ChangeList => _changeList & 0x7fffffffu; // Mask to ignore licensee bit
 
         public FEngineVersionBase(FArchive Ar)
@@ -30,7 +31,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         /** Checks if the changelist number represents licensee changelist number. */
         public bool IsLicenseeVersion()
         {
-            return (ChangeList & 0x80000000u) != 0u; 
+            return (ChangeList & 0x80000000u) != 0u;
         }
 
         /** Returns whether the current version is empty. */
@@ -50,5 +51,8 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         {
             return changeList | 0x80000000u;
         }
+
+        public override string ToString() =>
+            $"{nameof(Major)}: {Major}, {nameof(Minor)}: {Minor}, {nameof(Patch)}: {Patch}, {nameof(ChangeList)}: {ChangeList}";
     }
 }

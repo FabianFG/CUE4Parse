@@ -24,5 +24,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SubPathString = Ar.ReadFString();
             }
         }
+
+        public override string ToString() => string.IsNullOrEmpty(SubPathString)
+            ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
+            : $"{AssetPathName.Text}:{SubPathString}";
     }
 }

@@ -76,5 +76,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 }
             }
         }
+
+        public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";
     }
 }

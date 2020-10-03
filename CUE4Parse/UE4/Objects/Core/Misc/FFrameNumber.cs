@@ -6,5 +6,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     public readonly struct FFrameNumber : IUStruct
     {
         public readonly int FrameNumberValue;
+
+        public override string ToString() => FrameNumberValue.ToString();
     }
 }

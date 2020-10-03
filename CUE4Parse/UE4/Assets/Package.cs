@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -14,11 +16,14 @@ namespace CUE4Parse.UE4.Assets
     {
         public static readonly uint PackageMagic = 0x9E2A83C1u;
 
+        public readonly string Name;
         public readonly FNameEntry[] NameMap;
         public readonly FObjectImport[] ImportMap;
         public readonly FObjectExport[] ExportMap;
+
         public Package(FArchive uasset, FArchive uexp, FArchive? ubulk)
         {
+            Name = uasset.Name.SubstringBeforeLast(".uasset");
             var uassetAr = new FAssetArchive(uasset, this);
             var info = new FPackageFileSummary(uassetAr);
             if (info.Tag != PackageMagic)
@@ -31,10 +36,10 @@ namespace CUE4Parse.UE4.Assets
 
             uassetAr.Seek(info.ImportOffset, SeekOrigin.Begin);
             ImportMap = uassetAr.ReadArray(info.ImportCount, () => new FObjectImport(uassetAr));
-            
+
             uassetAr.Seek(info.ExportOffset, SeekOrigin.Begin);
             ExportMap = uassetAr.ReadArray(info.ExportCount, () => new FObjectExport(uassetAr));
-            
+
             var uexpAr = new FAssetArchive(uexp, this, info.TotalHeaderSize);
             if (ubulk != null)
             {
@@ -42,36 +47,78 @@ namespace CUE4Parse.UE4.Assets
                 var ubulkAr = new FAssetArchive(ubulk, this, offset);
                 uexpAr.AddPayload(PayloadType.UBULK, ubulkAr);
             }
-            
+
             foreach (var it in ExportMap)
             {
-                uexpAr.SeekAbsolute(it.SerialOffset, SeekOrigin.Begin);
-#if DEBUG
-                var validPos = uexpAr.Position + it.SerialSize;
-#endif
                 var exportType = it.ClassIndex.IsNull ? uexpAr.ReadFName().Text : it.ClassIndex.Name;
-                var export = ReadExport(exportType, it);
-                export.Owner = this;
-                export.Deserialize(uexpAr);
+                var export = ConstructExport(exportType, it);
+                it.ExportType = export.GetType();
+                it.ExportObject = new Lazy<UExport>(() =>
+                {
+                    uexpAr.SeekAbsolute(it.SerialOffset, SeekOrigin.Begin);
 #if DEBUG
-                Console.WriteLine(validPos != uexpAr.Position
-                    ? $"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining"
-                    : $"Successfully read {exportType} at {it.SerialOffset - info.TotalHeaderSize} with size {it.SerialSize}");
+                    var validPos = uexpAr.Position + it.SerialSize;
 #endif
+                    export.Owner = this;
+                    export.Deserialize(uexpAr);
+
+#if DEBUG
+                    Console.WriteLine(validPos != uexpAr.Position
+                        ? $"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining"
+                        : $"Successfully read {exportType} at {it.SerialOffset - info.TotalHeaderSize} with size {it.SerialSize}");
+#endif
+
+                    return export;
+                });
             }
         }
 
         public Package(string name, byte[] uasset, byte[] uexp, byte[]? ubulk)
             : this(new FByteArchive($"{name}.uasset", uasset), new FByteArchive($"{name}.uexp", uexp),
                 ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null)
-        { }
+        {
+        }
 
-        private UExport ReadExport(string exportType, FObjectExport export)
+        private UExport ConstructExport(string exportType, FObjectExport export)
         {
             return exportType switch
             {
                 _ => new UObject(export, true)
             };
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T? GetExportOfTypeOrNull<T>() where T : UExport
+        {
+            var export = ExportMap.FirstOrDefault(it => typeof(T).IsAssignableFrom(it.ExportType));
+            return export?.ExportObject.Value as T;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetExportOfType<T>() where T : UExport =>
+            GetExportOfTypeOrNull<T>() ??
+            throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            ExportMap
+                .FirstOrDefault(it => it.ObjectName.Text.Equals(name, comparisonType))?.ExportObject
+                .Value;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
+            where T : UExport => GetExportOrNull(name, comparisonType) as T;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            GetExportOrNull(name, comparisonType) ??
+            throw new NullReferenceException(
+                $"Package '{Name}' does not have an export with the name '{name}'");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
+            where T : UExport => GetExportOrNull<T>(name, comparisonType) ??
+                                 throw new NullReferenceException(
+                                     $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
     }
 }

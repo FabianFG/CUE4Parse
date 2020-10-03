@@ -23,14 +23,14 @@ namespace CUE4Parse.Utils
         public static string SubstringAfter(this string s, char delimiter)
         {
             var index = s.IndexOf(delimiter);
-            return index == -1 ? s : s.Substring(index + 1, s.Length);
+            return index == -1 ? s : s.Substring(index + 1, s.Length - index - 1);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringAfter(this string s, string delimiter)
         {
             var index = s.IndexOf(delimiter, StringComparison.Ordinal);
-            return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length);
+            return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length - index - delimiter.Length);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
