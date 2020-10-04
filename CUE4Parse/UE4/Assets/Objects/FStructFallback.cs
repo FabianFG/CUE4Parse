@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
@@ -21,5 +22,10 @@ namespace CUE4Parse.UE4.Assets.Objects
                 Properties.Add(tag);
             }
         }
+        
+        public T GetOrDefault<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetOrDefault<T>(this, name, comparisonType);
+        public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.Get<T>(this, name, comparisonType);
     }
 }

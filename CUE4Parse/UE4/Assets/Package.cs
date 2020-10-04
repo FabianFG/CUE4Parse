@@ -5,10 +5,12 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -17,6 +19,7 @@ namespace CUE4Parse.UE4.Assets
         public static readonly uint PackageMagic = 0x9E2A83C1u;
 
         public readonly string Name;
+        public readonly FPackageFileSummary Summary;
         public readonly FNameEntry[] NameMap;
         public readonly FObjectImport[] ImportMap;
         public readonly FObjectExport[] ExportMap;
@@ -25,25 +28,25 @@ namespace CUE4Parse.UE4.Assets
         {
             Name = uasset.Name.SubstringBeforeLast(".uasset");
             var uassetAr = new FAssetArchive(uasset, this);
-            var info = new FPackageFileSummary(uassetAr);
-            if (info.Tag != PackageMagic)
+            Summary = new FPackageFileSummary(uassetAr);
+            if (Summary.Tag != PackageMagic)
             {
-                throw new ParserException(uassetAr, $"Invalid uasset magic: {info.Tag} != {PackageMagic}");
+                throw new ParserException(uassetAr, $"Invalid uasset magic: {Summary.Tag} != {PackageMagic}");
             }
 
-            uassetAr.Seek(info.NameOffset, SeekOrigin.Begin);
-            NameMap = uassetAr.ReadArray(info.NameCount, () => new FNameEntry(uassetAr));
+            uassetAr.Seek(Summary.NameOffset, SeekOrigin.Begin);
+            NameMap = uassetAr.ReadArray(Summary.NameCount, () => new FNameEntry(uassetAr));
 
-            uassetAr.Seek(info.ImportOffset, SeekOrigin.Begin);
-            ImportMap = uassetAr.ReadArray(info.ImportCount, () => new FObjectImport(uassetAr));
+            uassetAr.Seek(Summary.ImportOffset, SeekOrigin.Begin);
+            ImportMap = uassetAr.ReadArray(Summary.ImportCount, () => new FObjectImport(uassetAr));
 
-            uassetAr.Seek(info.ExportOffset, SeekOrigin.Begin);
-            ExportMap = uassetAr.ReadArray(info.ExportCount, () => new FObjectExport(uassetAr));
+            uassetAr.Seek(Summary.ExportOffset, SeekOrigin.Begin);
+            ExportMap = uassetAr.ReadArray(Summary.ExportCount, () => new FObjectExport(uassetAr));
 
-            var uexpAr = new FAssetArchive(uexp, this, info.TotalHeaderSize);
+            var uexpAr = new FAssetArchive(uexp, this, Summary.TotalHeaderSize);
             if (ubulk != null)
             {
-                var offset = (int) (info.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
+                var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
                 var ubulkAr = new FAssetArchive(ubulk, this, offset);
                 uexpAr.AddPayload(PayloadType.UBULK, ubulkAr);
             }
@@ -63,9 +66,11 @@ namespace CUE4Parse.UE4.Assets
                     export.Deserialize(uexpAr);
 
 #if DEBUG
-                    Console.WriteLine(validPos != uexpAr.Position
-                        ? $"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining"
-                        : $"Successfully read {exportType} at {it.SerialOffset - info.TotalHeaderSize} with size {it.SerialSize}");
+                    if (validPos != uexpAr.Position)
+                        Log.Warning($"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining");
+                    else
+                        Log.Debug($"Successfully read {exportType} at {it.SerialOffset - Summary.TotalHeaderSize} with size {it.SerialSize}");
+                        
 #endif
 
                     return export;
@@ -83,6 +88,7 @@ namespace CUE4Parse.UE4.Assets
         {
             return exportType switch
             {
+                "Texture2D" => new UTexture2D(export),
                 _ => new UObject(export, true)
             };
         }

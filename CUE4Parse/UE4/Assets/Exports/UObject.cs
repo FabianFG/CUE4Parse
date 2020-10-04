@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -51,12 +52,19 @@ namespace CUE4Parse.UE4.Assets.Exports
                 ObjectGuid = Ar.Read<FGuid>();
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetOrDefault<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetOrDefault<T>(this, name, comparisonType);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.Get<T>(this, name, comparisonType);
     }
 
     public static class PropertyUtil
     {
         // TODO Little Problem here: Can't use T? since this would need a constraint to struct or class, which again wouldn't work fine with primitives
-        public static T GetOrDefault<T>(this IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public static T GetOrDefault<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             var value = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag?.GetValue(typeof(T));
             if (value is T cast)
@@ -67,7 +75,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
-        public static T Get<T>(this IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public static T Get<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             var tag = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag;
             if (tag == null)

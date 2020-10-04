@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Exceptions;
 using System;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -53,7 +54,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                     if (finalPos != Ar.Position)
                     {
-                        Console.WriteLine(
+                        Log.Debug(
                             $"FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}) was not read properly, pos {Ar.Position}, calculated pos {finalPos}");
                     }
 #endif
@@ -63,9 +64,9 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                     if (finalPos != Ar.Position)
                     {
-                        Console.WriteLine(
+                        Log.Debug(
                             $"Failed to read FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}), skipping it");
-                        Console.WriteLine(e.ToString());
+                        Log.Debug(e.ToString());
                     }
 #endif
                 }

@@ -39,13 +39,14 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public FAssetArchive GetPayload(PayloadType type)
         {
-            return _payloads[type] ?? throw new ParserException(this, $"{type} is needed to parse the current package");
+            _payloads.TryGetValue(type, out var ret);
+            return ret ?? throw new ParserException(this, $"{type} is needed to parse the current package");
         }
         public void AddPayload(PayloadType type, FAssetArchive payload)
         {
             if (_payloads.ContainsKey(type))
             {
-                throw new ParserException($"Can't add a payload that is already attached of type {type}");
+                throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
             _payloads[type] = payload;
         }
@@ -63,6 +64,7 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override bool CanSeek => _baseArchive.CanSeek;
         public override long Length => _baseArchive.Length;
+        public long AbsolutePosition => AbsoluteOffset + Position;
         public override long Position
         {
             get => _baseArchive.Position;

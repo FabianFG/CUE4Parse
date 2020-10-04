@@ -102,7 +102,7 @@ namespace CUE4Parse.UE4.Objects.PakFile
 				bool bIndexIsFrozen = Ar.ReadBoolean();
 				if (bIndexIsFrozen)
 				{
-					throw new ParserException("PakFile was frozen with version PakFile_Version_FrozenIndex, which is no longer supported by Unreal Engine.");
+					throw new ParserException(Ar, "PakFile was frozen with version PakFile_Version_FrozenIndex, which is no longer supported by Unreal Engine.");
 				}
 			}
 

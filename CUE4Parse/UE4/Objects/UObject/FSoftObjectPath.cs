@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (Ar.Ver < UE4Version.VER_UE4_ADDED_SOFT_OBJECT_PATH)
             {
                 var path = Ar.ReadFString();
-                throw new ParserException($"Asset path \"{path}\" is in short form and is not supported, nor recommended");
+                throw new ParserException(Ar, $"Asset path \"{path}\" is in short form and is not supported, nor recommended");
             }
             else
             {

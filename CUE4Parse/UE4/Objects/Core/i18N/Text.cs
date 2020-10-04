@@ -371,7 +371,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 EFormatArgumentType.UInt => Ar.Read<ulong>(),
                 EFormatArgumentType.Double => Ar.Read<double>(),
                 EFormatArgumentType.Float => Ar.Read<float>(),
-                _ => throw new ParserException($"{Type} argument not supported yet"),
+                _ => throw new ParserException(Ar, $"{Type} argument not supported yet"),
             };
         }
     }

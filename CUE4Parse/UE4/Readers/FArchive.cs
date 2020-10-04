@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.Readers
                 var ucs2Bytes = ReadBytes(-length * sizeof(ushort));
                 if (ucs2Bytes[ucs2Bytes.Length - 1] != 0 || ucs2Bytes[ucs2Bytes.Length - 2] != 0)
                 {
-                    throw new ParserException(this,"Serialized FString is not null terminated");
+                    throw new ParserException(this, "Serialized FString is not null terminated");
                 }
                 return Encoding.Unicode.GetString(ucs2Bytes, 0, ucs2Bytes.Length - sizeof(ushort));
             }
@@ -108,7 +108,7 @@ namespace CUE4Parse.UE4.Readers
             var ansiBytes = ReadBytes(length);
             if (ansiBytes[ansiBytes.Length - 1] != 0)
             {
-                throw new ParserException(this,"Serialized FString is not null terminated");
+                throw new ParserException(this, "Serialized FString is not null terminated");
             }
 
             return Encoding.UTF8.GetString(ansiBytes, 0, ansiBytes.Length - sizeof(byte));

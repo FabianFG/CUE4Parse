@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Exceptions;
 using System;
 using System.Collections.Generic;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -19,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 InnerTag = new FPropertyTag(Ar, false);
                 if (InnerTag == null)
-                    throw new ParserException($"Couldn't read ArrayProperty with inner type {innerType}");
+                    throw new ParserException(Ar, $"Couldn't read ArrayProperty with inner type {innerType}");
             }
 
             Properties = new List<FPropertyTagType>(elementCount);
@@ -30,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 if (property != null)
                     Properties.Add(property);
                 else
-                    Console.WriteLine(
+                    Log.Debug(
                         $"Failed to read array property of type {innerType} at ${Ar.Position}, index {i}");
             }
         }

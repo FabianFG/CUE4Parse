@@ -12,6 +12,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
       <PackageReference Include="System.Memory" Version="4.5.4" />
       <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     </ItemGroup>
