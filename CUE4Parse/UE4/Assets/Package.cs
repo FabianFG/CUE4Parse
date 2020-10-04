@@ -53,7 +53,11 @@ namespace CUE4Parse.UE4.Assets
 
             foreach (var it in ExportMap)
             {
-                var exportType = it.ClassIndex.IsNull ? uexpAr.ReadFName().Text : it.ClassIndex.Name;
+                var exportType = 
+                    it.ClassIndex.IsNull ? uexpAr.ReadFName().Text :
+                    //it.ClassIndex.IsExport ? ExportMap[it.ClassIndex.Index - 1].SuperIndex.Name :
+                    //it.ClassIndex.IsImport ? ImportMap[-it.ClassIndex.Index - 1].ObjectName.Text :
+                    it.ClassIndex.Name;
                 var export = ConstructExport(exportType, it);
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UExport>(() =>
@@ -89,6 +93,7 @@ namespace CUE4Parse.UE4.Assets
             return exportType switch
             {
                 "Texture2D" => new UTexture2D(export),
+                "VirtualTexture2D" => new UTexture2D(export),
                 _ => new UObject(export, true)
             };
         }

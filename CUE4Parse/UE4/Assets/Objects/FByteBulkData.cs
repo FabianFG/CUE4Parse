@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (Header.ElementCount == 0)
             {
                 // Nothing to do here
-            } 
+            }
             else if (EBulkData.BULKDATA_Unused.Check(bulkDataFlags))
             {
                 Log.Warning("Bulk with no data");
@@ -30,7 +30,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 Log.Debug($"bulk data in .uexp file (Force Inline Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
                 Ar.Read(Data, 0, Header.ElementCount);
-            } else if (EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags))
+            }
+            else if (EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags))
             {
 #if DEBUG
                 Log.Debug($"bulk data in .ubulk file (Payload In Separate File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
@@ -38,13 +39,15 @@ namespace CUE4Parse.UE4.Assets.Objects
                 var ubulkAr = Ar.GetPayload(PayloadType.UBULK);
                 ubulkAr.Position = Header.OffsetInFile;
                 ubulkAr.Read(Data, 0, Header.ElementCount);
-            } else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
+            }
+            else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
             {
 #if DEBUG
                 Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
                 throw new ParserException(Ar, "TODO: Uptnl");
-            } else if (EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
+            }
+            else if (EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
             {
 #if DEBUG
                 Log.Debug($"bulk data in .uexp file (Payload At End Of File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
@@ -59,7 +62,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 } else throw new ParserException(Ar, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
 
                 Ar.Position = savePos;
-            } else if (EBulkData.BULKDATA_CompressedZlib.Check(bulkDataFlags))
+            }
+            else if (EBulkData.BULKDATA_CompressedZlib.Check(bulkDataFlags))
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }

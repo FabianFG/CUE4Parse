@@ -11,7 +11,8 @@ namespace CUE4Parse.UE4.Assets.Objects
         BULKDATA_PayloadInSeperateFile = 0x0100,            // data stored in .ubulk file near the asset (UE4.12+)
         BULKDATA_SerializeCompressedBitWindow = 0x0200,     // use platform-specific compression
         BULKDATA_OptionalPayload = 0x0800,                  // same as BULKDATA_PayloadInSeperateFile, but stored with .uptnl extension (UE4.20+)
-        BULKDATA_Size64Bit = 0x2000                         // 64-bit size fields, UE4.22+
+        BULKDATA_Size64Bit = 0x2000,                        // 64-bit size fields, UE4.22+
+        BULKDATA_NoOffsetFixUp = 0x10000                    // do not add Summary.BulkDataStartOffset to bulk location, UE4.26
     }
 
     public static class BulkDataFlagUtil

@@ -36,7 +36,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
             
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
-            var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D ? Ar.ReadBoolean() : false;
+            var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
 
             if (Ar.Ver < UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR)
             {
@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                         if (Ar.AbsolutePosition != skipOffset)
                         {
                             Log.Warning(
-                                $"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining ${skipOffset - Ar.AbsolutePosition}");
+                                $"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                             Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                         }
                         

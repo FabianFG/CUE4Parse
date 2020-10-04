@@ -13,6 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public List<FPropertyTag> Properties { get; }
     }
+
     public class UObject : UExport, IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; }

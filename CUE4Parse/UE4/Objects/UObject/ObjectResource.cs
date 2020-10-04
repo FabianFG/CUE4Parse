@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
