@@ -19,7 +19,10 @@ namespace CUE4Parse.UE4.Assets.Objects
             ElementCount = Ar.Read<int>();
             SizeOnDisk = Ar.Read<int>();
             OffsetInFile = Ar.Ver >= UE4Version.VER_UE4_BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
-            OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
+            if (!EBulkData.BULKDATA_NoOffsetFixUp.Check(BulkDataFlags)) // UE4.26 flag
+            {
+                OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
+            }
         }
     }
 }

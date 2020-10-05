@@ -19,13 +19,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         public FIntPoint ImportedSize { get; private set; }
         public int NumSlices { get; private set; }    // important only while UTextureCube4 is derived from UTexture2D in out implementation
 
-        public UTexture2D()
-        {
-        }
-
-        public UTexture2D(FObjectExport exportObject) : base(exportObject)
-        {
-        }
+        public UTexture2D() { }
+        public UTexture2D(FObjectExport exportObject) : base(exportObject) { }
 
         public override void Deserialize(FAssetArchive Ar)
         {

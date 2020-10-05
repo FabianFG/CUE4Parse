@@ -11,6 +11,9 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Serilog;
+using CUE4Parse.UE4.Assets.Exports.Sound;
+using CUE4Parse.UE4.Assets.Exports.Engine;
+using CUE4Parse.UE4.Assets.Exports.Internationalization;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -94,6 +97,10 @@ namespace CUE4Parse.UE4.Assets
             {
                 "Texture2D" => new UTexture2D(export),
                 "VirtualTexture2D" => new UTexture2D(export),
+                "CurveTable" => new UCurveTable(export),
+                "DataTable" => new UDataTable(export),
+                "SoundWave" => new USoundWave(export),
+                "StringTable" => new UStringTable(export),
                 _ => new UObject(export, true)
             };
         }
