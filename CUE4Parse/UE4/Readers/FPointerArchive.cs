@@ -5,24 +5,27 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
 {
-    public class FByteArchive : FArchive
+    public class FPointerArchive : FArchive
     {
-        private readonly byte[] _data;
+        private readonly unsafe byte* _ptr;
 
-        public FByteArchive(string name, byte[] data, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
+        public unsafe FPointerArchive(string name, byte* ptr, long length, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
             : base(ver, game)
         {
-            this._data = data;
-            this.Name = name;
-            Length = _data.Length;
+            _ptr = ptr;
+            Name = name;
+            Length = length;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            Buffer.BlockCopy(_data, (int) Position, buffer, offset, count);
-            Position += count;
-            return count;
+            unsafe
+            {
+                Unsafe.CopyBlockUnaligned(ref buffer[offset], ref _ptr[Position], (uint) count);
+                Position += count;
+                return count;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,10 +48,13 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
         {
-            var size = Unsafe.SizeOf<T>();
-            var result = Unsafe.ReadUnaligned<T>(ref _data[Position]);
-            Position += size;
-            return result;
+            unsafe
+            {
+                var size = Unsafe.SizeOf<T>();
+                var result = Unsafe.ReadUnaligned<T>(ref _ptr[Position]);
+                Position += size;
+                return result;
+            }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,18 +68,21 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override unsafe void Read(byte* ptr, int length)
         {
-            Unsafe.CopyBlockUnaligned(ref ptr[0], ref _data[Position], (uint) length);
+            Unsafe.CopyBlockUnaligned(ref ptr[0], ref _ptr[Position], (uint) length);
             Position += length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)
         {
-            var size = length * Unsafe.SizeOf<T>();
-            var result = new T[length];
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref _data[Position], (uint) size);
-            Position += size;
-            return result;
+            unsafe
+            {
+                var size = length * Unsafe.SizeOf<T>();
+                var result = new T[length];
+                Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref _ptr[Position], (uint) size);
+                Position += size;
+                return result;
+            }
         }
     }
 }

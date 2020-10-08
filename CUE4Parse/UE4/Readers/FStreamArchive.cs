@@ -43,6 +43,14 @@ namespace CUE4Parse.UE4.Readers
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override unsafe void Read(byte* ptr, int length)
+        {
+            var bytes = ReadBytes(length);
+            Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
+            Position += length;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
         {
             var size = Unsafe.SizeOf<T>();

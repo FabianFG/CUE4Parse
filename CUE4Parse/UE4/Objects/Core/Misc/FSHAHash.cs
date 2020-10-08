@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Pak.Reader;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     {
         public readonly byte[] Hash;
 
-        public FSHAHash(FPakArchive Ar)
+        public FSHAHash(FArchive Ar)
         {
             Hash = Ar.ReadBytes(20);
         }
