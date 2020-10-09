@@ -98,21 +98,33 @@ namespace CUE4Parse.UE4.Readers
                     throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
                 }
 
-                var ucs2Bytes = ReadBytes(-length * sizeof(ushort));
-                if (ucs2Bytes[ucs2Bytes.Length - 1] != 0 || ucs2Bytes[ucs2Bytes.Length - 2] != 0)
+                unsafe
+                {
+                    var ucs2Length = -length * sizeof(ushort);
+                    var ucs2Bytes = stackalloc byte[ucs2Length];
+                    Read(ucs2Bytes, ucs2Length);
+#if !NO_STRING_NULL_TERMINATION_VALIDATION
+                    if (ucs2Bytes[ucs2Length - 1] != 0 || ucs2Bytes[ucs2Length - 2] != 0)
+                    {
+                        throw new ParserException(this, "Serialized FString is not null terminated");
+                    }
+#endif
+                    return new string((char*) ucs2Bytes);
+                }
+            }
+
+            unsafe
+            {
+                var ansiBytes = stackalloc byte[length];
+                Read(ansiBytes, length);
+#if !NO_STRING_NULL_TERMINATION_VALIDATION
+                if (ansiBytes[length - 1] != 0)
                 {
                     throw new ParserException(this, "Serialized FString is not null terminated");
                 }
-                return Encoding.Unicode.GetString(ucs2Bytes, 0, ucs2Bytes.Length - sizeof(ushort));
+#endif
+                return new string((sbyte*) ansiBytes);
             }
-            
-            var ansiBytes = ReadBytes(length);
-            if (ansiBytes[ansiBytes.Length - 1] != 0)
-            {
-                throw new ParserException(this, "Serialized FString is not null terminated");
-            }
-
-            return Encoding.UTF8.GetString(ansiBytes, 0, ansiBytes.Length - sizeof(byte));
         }
     }
 }

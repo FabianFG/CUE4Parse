@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         {
             var nameIndex = Read<int>();
             var extraIndex = Read<int>();
-#if FNAME_VALIDATION
+#if !NO_FNAME_VALIDATION
             if (nameIndex < 0 || nameIndex >= Owner.NameMap.Length)
             {
                 throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner.NameMap.Length}");
