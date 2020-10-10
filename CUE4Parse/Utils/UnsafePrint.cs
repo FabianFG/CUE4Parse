@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace CUE4Parse.Utils
+﻿namespace CUE4Parse.Utils
 {
     public static class UnsafePrint
     {

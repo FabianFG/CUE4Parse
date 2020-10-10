@@ -98,8 +98,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     };
                     for (var i = 0; i < maxNumCompressionMethods; i++)
                     {
-                        var name = Encoding.ASCII.GetString(buffer + i * COMPRESSION_METHOD_NAME_LEN,
-                            COMPRESSION_METHOD_NAME_LEN).TrimEnd('\0');
+                        var name = new string((sbyte*) buffer + i * COMPRESSION_METHOD_NAME_LEN, 0, COMPRESSION_METHOD_NAME_LEN).TrimEnd('\0');
                         if (string.IsNullOrEmpty(name))
                             continue;
                         if (!Enum.TryParse(name, out CompressionMethod method))

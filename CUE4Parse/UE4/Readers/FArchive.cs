@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -60,9 +61,7 @@ namespace CUE4Parse.UE4.Readers
             var length = Read<int>();
 
             if (length == 0)
-            {
                 return new T[0];
-            }
 
             return ReadArray<T>(length);
         }
@@ -84,6 +83,10 @@ namespace CUE4Parse.UE4.Readers
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
             var length = Read<int>();
 
+            if (length > 512 || length < -512)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
+            }
             if (length == 0)
             {
                 return string.Empty;
@@ -92,12 +95,6 @@ namespace CUE4Parse.UE4.Readers
             // 1 byte/char is removed because of null terminator ('\0')
             if (length < 0) // LoadUCS2Char, Unicode, 16-bit, fixed-width
             {
-                // If SaveNum cannot be negated due to integer overflow, Ar is corrupted.
-                if (length == int.MinValue)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
-                }
-
                 unsafe
                 {
                     var ucs2Length = -length * sizeof(ushort);
@@ -109,7 +106,7 @@ namespace CUE4Parse.UE4.Readers
                         throw new ParserException(this, "Serialized FString is not null terminated");
                     }
 #endif
-                    return new string((char*) ucs2Bytes);
+                    return new string((char*) ucs2Bytes, 0 , -length - 1);
                 }
             }
 
@@ -123,7 +120,7 @@ namespace CUE4Parse.UE4.Readers
                     throw new ParserException(this, "Serialized FString is not null terminated");
                 }
 #endif
-                return new string((sbyte*) ansiBytes);
+                return new string((sbyte*) ansiBytes, 0, length - 1);
             }
         }
     }
