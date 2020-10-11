@@ -1,39 +1,44 @@
 ﻿using System;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
-    public class FPakEntry
+    public class FPakEntry : GameFile
     {
+        public readonly PakFileReader Pak;
         public readonly long Pos;
-        public readonly long Size;
+        public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public readonly CompressionMethod CompressionMethod;
-        public readonly FPakCompressedBlock[] CompressionBlocks;
+        public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
         public readonly bool IsEncrypted;
         public readonly int CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
 
-        public FPakEntry(FArchive Ar, FPakInfo info)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info)
         {
+            Pak = reader;
+            Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
             Pos = Ar.Read<long>();
-            Size = Ar.Read<long>();
+            CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
-            
+            Size = UncompressedSize;
+
             if (info.Version >= EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
                 try
                 {
                     CompressionMethod = info.CompressionMethods[Ar.Read<int>()];
                 }
-                catch (Exception e)
+                catch
                 {
                     CompressionMethod = CompressionMethod.Unknown;
                 }
@@ -67,8 +72,10 @@ namespace CUE4Parse.UE4.Pak.Objects
             StructSize = (ushort) (Ar.Position - startOffset);
         }
 
-        public unsafe FPakEntry(byte* data)
+        public unsafe FPakEntry(PakFileReader reader, string path, byte* data)
         {
+            Pak = reader;
+            Path = path;
             // UE4 reference: FPakFile::DecodePakEntry()
             uint bitfield = *(uint*) data;
             data += sizeof(uint);
@@ -98,24 +105,26 @@ namespace CUE4Parse.UE4.Pak.Objects
                 UncompressedSize = *(long*) data; // Should be ulong
                 data += sizeof(long);
             }
+
+            Size = UncompressedSize;
             
             // Size field
             if (CompressionMethod != CompressionMethod.None)
             {
                 if ((bitfield & 0x20000000) != 0)
                 {
-                    Size = *(uint*) data;
+                    CompressedSize = *(uint*) data;
                     data += sizeof(uint);
                 }
                 else
                 {
-                    Size = *(long*) data;
+                    CompressedSize = *(long*) data;
                     data += sizeof(long);
                 }
             }
             else
             {
-                Size = UncompressedSize;
+                CompressedSize = UncompressedSize;
             }
 
             // bEncrypted
@@ -146,7 +155,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     ref var b = ref CompressionBlocks[0];
                     b.CompressedStart = Pos + StructSize;
-                    b.CompressedEnd = b.CompressedStart + Size;
+                    b.CompressedEnd = b.CompressedStart + CompressedSize;
                 }
                 else
                 {
@@ -164,6 +173,16 @@ namespace CUE4Parse.UE4.Pak.Objects
                     }
                 }
             }
+        }
+
+        public override byte[] Read()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override FArchive CreateReader()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -100,5 +100,8 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         {
             return ToString(EGuidFormats.Digits);
         }
+
+        public static bool operator ==(FGuid one, FGuid two) => one.A == two.A && one.B == two.B && one.C == two.C && one.D == two.D;
+        public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
     }
 }

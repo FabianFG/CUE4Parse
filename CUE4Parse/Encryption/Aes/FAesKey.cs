@@ -25,5 +25,7 @@ namespace CUE4Parse.Encryption.Aes
             KeyString = keyString;
             Key = keyString.Substring(2).ParseHexBinary();
         }
+
+        public override string ToString() => KeyString;
     }
 }

@@ -41,6 +41,13 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string SubstringBeforeWithLast(this string s, char delimiter)
+        {
+            var index = s.LastIndexOf(delimiter);
+            return index == -1 ? s : s.Substring(0, index + 1);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringBeforeLast(this string s, string delimiter)
         {
             var index = s.LastIndexOf(delimiter, StringComparison.Ordinal);
@@ -51,14 +58,14 @@ namespace CUE4Parse.Utils
         public static string SubstringAfterLast(this string s, char delimiter)
         {
             var index = s.LastIndexOf(delimiter);
-            return index == -1 ? s : s.Substring(index + 1, s.Length);
+            return index == -1 ? s : s.Substring(index + 1, s.Length - index - 1);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringAfterLast(this string s, string delimiter)
         {
             var index = s.LastIndexOf(delimiter, StringComparison.Ordinal);
-            return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length);
+            return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length - index - delimiter.Length);
         }
     }
 }

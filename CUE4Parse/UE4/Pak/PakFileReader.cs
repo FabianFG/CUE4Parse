@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -13,7 +17,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Pak
 {
-    public class PakFileReader
+    public partial class PakFileReader
     {
 
         private static readonly ILogger log = Log.ForContext<PakFileReader>();
@@ -22,6 +26,10 @@ namespace CUE4Parse.UE4.Pak
         public bool IsConcurrent { get; set; } = false;
         public readonly string FileName; 
         public readonly FPakInfo Info;
+
+        public string MountPoint { get; private set; }
+        public int FileCount { get; private set; } = 0;
+        public int EncryptedFileCount { get; private set; } = 0;
         
         public FAesKey? AesKey { get; set; }
 
@@ -41,11 +49,26 @@ namespace CUE4Parse.UE4.Pak
         public PakFileReader(string filePath, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
             : this(new FileInfo(filePath), ver, game) {}
         public PakFileReader(FileInfo file, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : this(new FStreamArchive(file.Name, file.Open(FileMode.Open), ver, game)) {}
+            : this(new FStreamArchive(file.Name, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), ver, game)) {}
 
-        public Dictionary<string, FPakEntry> ReadIndex() => ReadIndexUpdated();
+        public Dictionary<string, FPakEntry> ReadIndex(
+            ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>>? outFiles = null)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            var result = ReadIndexUpdated(outFiles);
+            var elapsed = watch.Elapsed;
+            var sb = new StringBuilder($"Pak {FileName}: {FileCount} files");
+            if (EncryptedFileCount != 0)
+                sb.Append($" ({EncryptedFileCount} encrypted)");
+            if (MountPoint.Contains("/"))
+                sb.Append($", mount point: \"{MountPoint}\"");
+            sb.Append($", version {(int) Info.Version} in {elapsed}");
+            log.Information(sb.ToString());
+            return result;
+        }
 
-        private Dictionary<string, FPakEntry> ReadIndexUpdated()
+        private Dictionary<string, FPakEntry> ReadIndexUpdated(ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>>? outFiles = null)
         {
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
@@ -62,9 +85,10 @@ namespace CUE4Parse.UE4.Pak
             }
             
             ValidateMountPoint(ref mountPoint);
+            MountPoint = mountPoint;
 
-            var fileCount = primaryIndex.Read<int>();
-            var encryptedFileCount = 0;
+            FileCount = primaryIndex.Read<int>();
+            EncryptedFileCount = 0;
 
             primaryIndex.Position += 8; // PathHashSeed
 
@@ -89,6 +113,18 @@ namespace CUE4Parse.UE4.Pak
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
             var directoryIndex = new FByteArchive($"{FileName} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
+            if (outFiles != null)
+            {
+                ReadDirectoryIndexInto(directoryIndex, encodedPakEntries, outFiles);
+                return new Dictionary<string, FPakEntry>(); // TODO not sure whether that's good
+            }
+            return ReadDirectoryIndexToDict(directoryIndex, encodedPakEntries, FileCount);
+        }
+
+        private Dictionary<string, FPakEntry> ReadDirectoryIndexToDict(FArchive directoryIndex, byte[] encodedPakEntries, int fileCount)
+        {
+            var mountPoint = MountPoint;
+            // Read FDirectoryIndex
             var directoryIndexLength = directoryIndex.Read<int>();
             var directoryIndexDict = new Dictionary<string, Dictionary<string, int>>(directoryIndexLength);
             for (int i = 0; i < directoryIndexLength; i++)
@@ -119,26 +155,38 @@ namespace CUE4Parse.UE4.Pak
                         var fileName = innerEntry.Key!;
                         var offset = innerEntry.Value!;
 
-                        string path = dirName + fileName;
-                        files[path] = new FPakEntry(ptr + offset);
+                        string path = mountPoint + dirName + fileName;
+                        files[path] = new FPakEntry(this, path, ptr + offset);
                     }
                 }
             }
 
             return files;
         }
-        
-        private static void Benchmark(Action act, int iterations)
+
+        private void ReadDirectoryIndexInto(FArchive directoryIndex, byte[] encodedPakEntries, ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>> outFiles)
         {
-            GC.Collect();
-            act.Invoke(); // run once outside of loop to avoid initialization costs
-            Stopwatch sw = Stopwatch.StartNew();
-            for (int i = 0; i < iterations; i++)
+            // Read FDirectoryIndex
+            var mountPoint = MountPoint;
+            unsafe
             {
-                act.Invoke();
+                var directoryIndexLength = directoryIndex.Read<int>();
+                var ptr = (byte*) Unsafe.AsPointer(ref encodedPakEntries[0]);
+                for (int i = 0; i < directoryIndexLength; i++)
+                {
+                    var dir = mountPoint + directoryIndex.ReadFString();
+                    var dirDictLength = directoryIndex.Read<int>();
+                    var dirDict = outFiles.GetOrAdd(dir.ToLower(), () => new ConcurrentDictionary<string, GameFile>(Environment.ProcessorCount, dirDictLength));
+                    for (int j = 0; j < dirDictLength; j++)
+                    {
+                        var name = directoryIndex.ReadFString();
+                        var entry = new FPakEntry(this, dir + name, ptr + directoryIndex.Read<int>());
+                        if (entry.IsEncrypted)
+                            EncryptedFileCount++;
+                        dirDict[name.ToLower()] = entry;
+                    }
+                }
             }
-            sw.Stop();
-            Console.WriteLine((sw.ElapsedTicks / iterations).ToString() + " ticks");
         }
 
         private byte[] ReadAndDecrypt(int length)
@@ -167,6 +215,10 @@ namespace CUE4Parse.UE4.Pak
                 log.Warning($"Pak \"{FileName}\" has strange mount point \"{mountPoint}\", mounting to root");
                 mountPoint = "/";
             }
+
+            mountPoint = mountPoint.Substring(1);
         }
+
+        public override string ToString() => FileName;
     }
 }
