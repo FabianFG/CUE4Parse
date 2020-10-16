@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
 {
-    public abstract class FArchive : Stream
+    public abstract class FArchive : Stream, ICloneable
     {
         public UE4Version Ver;
         public EGame Game;
@@ -123,5 +123,7 @@ namespace CUE4Parse.UE4.Readers
                 return new string((sbyte*) ansiBytes, 0, length - 1);
             }
         }
+
+        public abstract object Clone();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -6,7 +7,7 @@ using CUE4Parse.UE4.Pak;
 
 namespace CUE4Parse.FileProvider.Pak
 {
-    public interface IPakFileProvider : IFileProvider
+    public interface IPakFileProvider : IFileProvider, IDisposable
     {
         public IReadOnlyCollection<PakFileReader> UnloadedPaks { get; }
         public IReadOnlyCollection<PakFileReader> MountedPaks { get; }

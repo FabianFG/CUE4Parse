@@ -1,16 +1,14 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using CUE4Parse.Encryption.Aes;
-using CUE4Parse.FileProvider;
+﻿using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider.Pak;
 
 namespace CUE4Parse.UE4.Pak
 {
     public partial class PakFileReader
     {
-        public void MountTo(FAesKey key, ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>> outFiles)
+        public void MountTo(FAesKey key, FileProviderDictionary files, bool caseInsensitive)
         {
             AesKey = key;
-            ReadIndex(outFiles);
+            files.AddFiles(ReadIndex(caseInsensitive));
         }
     }
 }

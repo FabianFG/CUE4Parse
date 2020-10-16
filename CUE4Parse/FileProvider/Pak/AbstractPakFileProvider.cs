@@ -15,7 +15,9 @@ namespace CUE4Parse.FileProvider.Pak
 {
     public abstract class AbstractPakFileProvider : AbstractFileProvider, IPakFileProvider
     {
-        protected ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>> _files = new ConcurrentDictionary<string, ConcurrentDictionary<string, GameFile>>();
+        public readonly bool IsCaseInsensitive;
+        protected FileProviderDictionary _files;
+        public override IReadOnlyDictionary<string, GameFile> Files => _files;
         
         protected ConcurrentDictionary<PakFileReader, object?> _unloadedPaks = new ConcurrentDictionary<PakFileReader, object?>();
         public IReadOnlyCollection<PakFileReader> UnloadedPaks => (IReadOnlyCollection<PakFileReader>) _unloadedPaks.Keys;
@@ -27,11 +29,17 @@ namespace CUE4Parse.FileProvider.Pak
         protected ConcurrentDictionary<FGuid, object?> _requiredKeys = new ConcurrentDictionary<FGuid, object?>();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
+        protected AbstractPakFileProvider(bool isCaseInsensitive)
+        {
+            IsCaseInsensitive = isCaseInsensitive;
+            _files = new FileProviderDictionary(IsCaseInsensitive);
+        }
+
         public IEnumerable<PakFileReader> UnloadedPaksByGuid(FGuid guid) =>
             _unloadedPaks.Keys.Where(it => it.Info.EncryptionKeyGuid == guid);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeyAsync(guid, key).Result;
+        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {[guid] = key});
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<int> SubmitKeyAsync(FGuid guid, FAesKey key) =>
@@ -55,7 +63,7 @@ namespace CUE4Parse.FileProvider.Pak
                     {
                         try
                         {
-                            reader.MountTo(key, _files);
+                            reader.MountTo(key, _files, IsCaseInsensitive);
                             _unloadedPaks.TryRemove(reader, out _);
                             _mountedPaks[reader] = null;
                             Interlocked.Increment(ref countNewMounts);
@@ -86,6 +94,14 @@ namespace CUE4Parse.FileProvider.Pak
                 }
             }
             return countNewMounts;
+        }
+        
+        public void Dispose()
+        {
+            foreach (var pak in _mountedPaks)
+            {
+                pak.Key.Ar.Dispose();
+            }
         }
     }
 }

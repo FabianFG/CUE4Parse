@@ -84,5 +84,13 @@ namespace CUE4Parse.UE4.Readers
                 return result;
             }
         }
+
+        public override object Clone()
+        {
+            unsafe
+            {
+                return new FPointerArchive(Name, _ptr, Length, Ver, Game) {Position = Position};
+            }
+        }
     }
 }

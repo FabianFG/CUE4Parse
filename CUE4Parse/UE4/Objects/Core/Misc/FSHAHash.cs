@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public override string ToString()
         {
-            unsafe { return UnsafePrint.BytesToHex((byte*) Unsafe.AsPointer(ref Hash[0]), 20); }
+            unsafe { fixed (byte* ptr = Hash) { return UnsafePrint.BytesToHex(ptr, 20); } } 
         }
     }
 }

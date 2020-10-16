@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Versions;
 
@@ -15,7 +16,9 @@ namespace CUE4Parse.UE4.Readers
             _baseStream = baseStream;
             Name = name;
         }
-        
+
+        public override void Close() => _baseStream.Close();
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
             => _baseStream.Read(buffer, offset, count);
@@ -66,6 +69,19 @@ namespace CUE4Parse.UE4.Readers
             var result = new T[length];
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
             return result;
+        }
+
+        public override object Clone()
+        {
+            return _baseStream switch
+            {
+                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Ver, Game),
+                FileStream fileStream => new FStreamArchive(Name,
+                        File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Ver, Game)
+                    {Position = Position},
+                _ => throw new InvalidOperationException(
+                    $"Stream of type {_baseStream.GetType().Name} doesn't support cloning")
+            };
         }
     }
 }

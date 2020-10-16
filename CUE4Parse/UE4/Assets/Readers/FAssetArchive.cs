@@ -59,15 +59,18 @@ namespace CUE4Parse.UE4.Assets.Readers
         public override long Seek(long offset, SeekOrigin origin)
             => _baseArchive.Seek(offset, origin);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long SeekAbsolute(long offset, SeekOrigin origin)
             => _baseArchive.Seek(offset - AbsoluteOffset, origin);
-
+        
         public override bool CanSeek => _baseArchive.CanSeek;
         public override long Length => _baseArchive.Length;
         public long AbsolutePosition => AbsoluteOffset + Position;
         public override long Position
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _baseArchive.Position;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _baseArchive.Position = value;
         }
 
@@ -88,5 +91,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)
             => _baseArchive.ReadArray<T>(length);
+
+        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset);
     }
 }

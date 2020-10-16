@@ -75,5 +75,7 @@ namespace CUE4Parse.UE4.Readers
             Position += size;
             return result;
         }
+
+        public override object Clone() => new FByteArchive(Name, _data, Ver, Game) {Position = Position};
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
@@ -19,7 +20,9 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly int CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
+        public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info)
         {
             Pak = reader;
@@ -72,6 +75,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             StructSize = (ushort) (Ar.Position - startOffset);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe FPakEntry(PakFileReader reader, string path, byte* data)
         {
             Pak = reader;
@@ -175,14 +179,10 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
         }
 
-        public override byte[] Read()
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override byte[] Read() => Pak.Extract(this);
 
-        public override FArchive CreateReader()
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Pak.Ar.Ver, Pak.Ar.Game);
     }
 }
