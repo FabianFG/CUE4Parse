@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Assets.Exports;
@@ -26,10 +27,12 @@ namespace CUE4Parse.UE4.Assets
         public readonly FNameEntry[] NameMap;
         public readonly FObjectImport[] ImportMap;
         public readonly FObjectExport[] ExportMap;
+        public readonly IFileProvider? Provider;
 
-        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk)
+        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null)
         {
             Name = uasset.Name.SubstringBeforeLast(".uasset");
+            Provider = provider;
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
             if (Summary.Tag != PackageMagic)
@@ -52,6 +55,13 @@ namespace CUE4Parse.UE4.Assets
                 var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
                 var ubulkAr = new FAssetArchive(ubulk, this, offset);
                 uexpAr.AddPayload(PayloadType.UBULK, ubulkAr);
+            }
+            if (uptnl != null)
+            {
+                // TODO Not sure whether that's even needed
+                var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
+                var uptnlAr = new FAssetArchive(uptnl, this, offset);
+                uexpAr.AddPayload(PayloadType.UPTNL, uptnlAr);
             }
 
             foreach (var it in ExportMap)
@@ -85,9 +95,10 @@ namespace CUE4Parse.UE4.Assets
             }
         }
 
-        public Package(string name, byte[] uasset, byte[] uexp, byte[]? ubulk)
+        public Package(string name, byte[] uasset, byte[] uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null)
             : this(new FByteArchive($"{name}.uasset", uasset), new FByteArchive($"{name}.uexp", uexp),
-                ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null)
+                ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
+                uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider)
         {
         }
 

@@ -16,6 +16,8 @@ namespace CUE4Parse.FileProvider.Pak
         public FileProviderDictionary(bool isCaseInsensitive)
         {
             IsCaseInsensitive = isCaseInsensitive;
+            _keys = new KeyEnumerable(this);
+            _values = new ValueEnumerable(this);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,10 +67,7 @@ namespace CUE4Parse.FileProvider.Pak
             }
         }
 
-        public IEnumerable<string> Keys => throw new InvalidOperationException();
-        public IEnumerable<GameFile> Values => throw new InvalidOperationException();
 
-        
         public int Count => _indicesBag.Sum(it => it.Count);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<KeyValuePair<string, GameFile>> GetEnumerator()
@@ -86,6 +85,63 @@ namespace CUE4Parse.FileProvider.Pak
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private KeyEnumerable _keys;
+        private ValueEnumerable _values;
+        public IEnumerable<string> Keys => _keys;
+        public IEnumerable<GameFile> Values => _values;
+
+        private class KeyEnumerable : IEnumerable<string>
+        {
+            private FileProviderDictionary _orig;
+
+            internal KeyEnumerable(FileProviderDictionary orig)
+            {
+                _orig = orig;
+            }
+            
+            public IEnumerator<string> GetEnumerator()
+            {
+                foreach (var index in _orig._indicesBag)
+                {
+                    foreach (var key in index.Keys)
+                    {
+                        yield return key;
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+        
+        private class ValueEnumerable : IEnumerable<GameFile>
+        {
+            private FileProviderDictionary _orig;
+
+            internal ValueEnumerable(FileProviderDictionary orig)
+            {
+                _orig = orig;
+            }
+            
+            public IEnumerator<GameFile> GetEnumerator()
+            {
+                foreach (var index in _orig._indicesBag)
+                {
+                    foreach (var key in index.Values)
+                    {
+                        yield return key;
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 }

@@ -9,18 +9,14 @@ using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider
 {
-    public class FileProvider : AbstractPakFileProvider
+    public class DefaultFileProvider : AbstractPakFileProvider
     {
-
-        public UE4Version Ver { get; set; } = UE4Version.VER_UE4_LATEST;
-        public EGame Game { get; set; } = EGame.GAME_UE4_LATEST;
-
-        public FileProvider(DirectoryInfo dir, bool isCaseInsensitive = false) : base(isCaseInsensitive)
+        public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive, ver, game)
         {
+            
             if (!dir.Exists)
                 throw new ArgumentException("Given Directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
-            
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)
@@ -46,7 +42,7 @@ namespace CUE4Parse.FileProvider
                     }
                     catch (Exception e)
                     {
-                        log.Warning(e.ToString());
+                        Log.Warning(e.ToString());
                     }
                 }
                 else
@@ -54,7 +50,7 @@ namespace CUE4Parse.FileProvider
                     // Register local file only if it has a known extension, we don't need every file
                     if (GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
                     {
-                        var osFile = new OsGameFile(dir, file);
+                        var osFile = new OsGameFile(dir, file, Ver, Game);
                         var path = osFile.Path;
                         if (IsCaseInsensitive)
                             osFiles[path.ToLowerInvariant()] = osFile;

@@ -9,19 +9,25 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Pak
 {
     public abstract class AbstractPakFileProvider : AbstractFileProvider, IPakFileProvider
     {
-        public readonly bool IsCaseInsensitive;
         protected FileProviderDictionary _files;
         public override IReadOnlyDictionary<string, GameFile> Files => _files;
-        
-        protected ConcurrentDictionary<PakFileReader, object?> _unloadedPaks = new ConcurrentDictionary<PakFileReader, object?>();
-        public IReadOnlyCollection<PakFileReader> UnloadedPaks => (IReadOnlyCollection<PakFileReader>) _unloadedPaks.Keys;
-        protected ConcurrentDictionary<PakFileReader, object?> _mountedPaks = new ConcurrentDictionary<PakFileReader, object?>();
+
+        protected ConcurrentDictionary<PakFileReader, object?> _unloadedPaks =
+            new ConcurrentDictionary<PakFileReader, object?>();
+
+        public IReadOnlyCollection<PakFileReader> UnloadedPaks =>
+            (IReadOnlyCollection<PakFileReader>) _unloadedPaks.Keys;
+
+        protected ConcurrentDictionary<PakFileReader, object?> _mountedPaks =
+            new ConcurrentDictionary<PakFileReader, object?>();
+
         public IReadOnlyCollection<PakFileReader> MountedPaks => (IReadOnlyCollection<PakFileReader>) _mountedPaks.Keys;
 
         protected ConcurrentDictionary<FGuid, FAesKey> _keys = new ConcurrentDictionary<FGuid, FAesKey>();
@@ -29,9 +35,10 @@ namespace CUE4Parse.FileProvider.Pak
         protected ConcurrentDictionary<FGuid, object?> _requiredKeys = new ConcurrentDictionary<FGuid, object?>();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
-        protected AbstractPakFileProvider(bool isCaseInsensitive)
+        protected AbstractPakFileProvider(bool isCaseInsensitive = false,
+            UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive,
+            ver, game)
         {
-            IsCaseInsensitive = isCaseInsensitive;
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }
 
@@ -75,7 +82,8 @@ namespace CUE4Parse.FileProvider.Pak
                         }
                         catch (Exception e)
                         {
-                            log.Warning(e, $"Uncaught exception while loading pak file {reader.FileName.SubstringAfterLast('/')}");
+                            Log.Warning(e,
+                                $"Uncaught exception while loading pak file {reader.FileName.SubstringAfterLast('/')}");
                         }
 
                         return null;
@@ -93,9 +101,10 @@ namespace CUE4Parse.FileProvider.Pak
                     _keys.TryAdd(it.Info.EncryptionKeyGuid, key);
                 }
             }
+
             return countNewMounts;
         }
-        
+
         public void Dispose()
         {
             foreach (var pak in _mountedPaks)

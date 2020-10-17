@@ -80,6 +80,9 @@ namespace CUE4Parse.UE4.Pak.Objects
         {
             Pak = reader;
             Path = path;
+            Ver = reader.Ar.Ver;
+            Game = reader.Ar.Game;
+            
             // UE4 reference: FPakFile::DecodePakEntry()
             uint bitfield = *(uint*) data;
             data += sizeof(uint);

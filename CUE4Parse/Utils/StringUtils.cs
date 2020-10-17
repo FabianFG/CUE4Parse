@@ -13,9 +13,9 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string SubstringBefore(this string s, string delimiter)
+        public static string SubstringBefore(this string s, string delimiter, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            var index = s.IndexOf(delimiter, StringComparison.Ordinal);
+            var index = s.IndexOf(delimiter, comparisonType);
             return index == -1 ? s : s.Substring(0, index);
         }
         
@@ -27,9 +27,9 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string SubstringAfter(this string s, string delimiter)
+        public static string SubstringAfter(this string s, string delimiter, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            var index = s.IndexOf(delimiter, StringComparison.Ordinal);
+            var index = s.IndexOf(delimiter, comparisonType);
             return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length - index - delimiter.Length);
         }
         
@@ -48,9 +48,9 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string SubstringBeforeLast(this string s, string delimiter)
+        public static string SubstringBeforeLast(this string s, string delimiter, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            var index = s.LastIndexOf(delimiter, StringComparison.Ordinal);
+            var index = s.LastIndexOf(delimiter, comparisonType);
             return index == -1 ? s : s.Substring(0, index);
         }
         
@@ -62,9 +62,9 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string SubstringAfterLast(this string s, string delimiter)
+        public static string SubstringAfterLast(this string s, string delimiter, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            var index = s.LastIndexOf(delimiter, StringComparison.Ordinal);
+            var index = s.LastIndexOf(delimiter, comparisonType);
             return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length - index - delimiter.Length);
         }
     }
