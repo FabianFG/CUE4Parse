@@ -15,6 +15,7 @@ using Serilog;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -112,6 +113,7 @@ namespace CUE4Parse.UE4.Assets
                 "DataTable" => new UDataTable(export),
                 "SoundWave" => new USoundWave(export),
                 "StringTable" => new UStringTable(export),
+                "Skeleton" => new USkeleton(export),
                 _ => new UObject(export, true)
             };
         }
