@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -222,5 +224,56 @@ namespace CUE4Parse.FileProvider
         /// <param name="file">The package file</param>
         /// <returns>The package parts in a Dictionary with their name as keys if successfully loaded; null otherwise</returns>
         public Task<IReadOnlyDictionary<string, byte[]>?> TrySavePackageAsync(GameFile file);
+
+        /// <summary>
+        /// Loads an object from the Package at the passed path
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object</returns>
+        public UExport LoadObject(string? objectPath);
+        /// <summary>
+        /// Attempts to load an object from the Package at the passed path
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <param name="export">The loaded object if loaded successfully; default otherwise</param>
+        /// <returns>true if object was loaded; false otherwise</returns>
+        public bool TryLoadObject(string? objectPath, out UExport export);
+        /// <summary>
+        /// Loads an object from the Package at the passed path with type T
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object of type T</returns>
+        public T LoadObject<T>(string? objectPath) where T : UExport;
+        /// <summary>
+        /// Attempts to load an object from the Package at the passed path with type T
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <param name="export">The loaded object if loaded successfully and of correct type; default otherwise</param>
+        /// <returns>true if object was loaded and of correct type; false otherwise</returns>
+        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UExport;
+        /// <summary>
+        /// Asynchronously loads an object from the Package at the passed path
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object</returns>
+        public Task<UExport> LoadObjectAsync(string? objectPath);
+        /// <summary>
+        /// Asynchronously attempts to load an object from the Package at the passed path
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object if loaded successfully; null otherwise</returns>
+        public Task<UExport?> TryLoadObjectAsync(string? objectPath);
+        /// <summary>
+        /// Asynchronously loads an object from the Package at the passed path with type T
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object of type T</returns>
+        public Task<T> LoadObjectAsync<T>(string? objectPath) where T : UExport;
+        /// <summary>
+        /// Asynchronously attempts to load an object from the Package at the passed path with type T
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>The loaded object if loaded successfully and of correct type; null otherwise</returns>
+        public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport;
     }
 }

@@ -42,7 +42,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                 case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType is FStructFallback fallback && type.GetCustomAttribute<StructFallback>() != null:
                     return fallback.MapToClass(type);
                 case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
-                {
                     var array = arrayProp.Value.Properties;
                     var contentType = type.GetElementType()!;
                     var result = Array.CreateInstance(contentType, array.Count);
@@ -51,13 +50,15 @@ namespace CUE4Parse.UE4.Assets.Objects
                         result.SetValue(array[i].GetValue(contentType), i);
                     }
                     return result;
-                }
                 case FPropertyTagType<FPackageIndex> objProp when typeof(UExport).IsAssignableFrom(type):
-                    throw new NotImplementedException("Need to implement FileProvider first");
+                    if (objProp.Value.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
+                        return objExport;
+                    return null;
                 case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UExport).IsAssignableFrom(type):
-                    throw new NotImplementedException("Need to implement FileProvider first");
+                    if (softObjProp.Value.TryLoad(out var softExport) && type.IsInstanceOfType(softExport))
+                        return softExport;
+                    return null;
                 case EnumProperty enumProp when type.IsEnum:
-                {
                     var storedEnum = enumProp.Value.Text;
                     if (type.Name != storedEnum.SubstringBefore("::"))
                         return null;
@@ -66,7 +67,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                     var values = type.GetEnumNames()!;
                     var idx = Array.FindIndex(values, it => it == search);
                     return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
-                }
                 //TODO Maybe Maps?
                 default:
                     return null;

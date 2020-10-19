@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -77,6 +79,8 @@ namespace CUE4Parse.FileProvider
             return IsCaseInsensitive ? path.ToLowerInvariant() : path;
         }
 
+        #region SaveAsset Methods
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] SaveAsset(string path) => this[path].Read();
 
@@ -98,6 +102,10 @@ namespace CUE4Parse.FileProvider
             TrySaveAsset(path, out var data);
             return data;
         });
+        
+        #endregion
+
+        #region CreateReader Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FArchive CreateReader(string path) => this[path].CreateReader();
@@ -121,6 +129,10 @@ namespace CUE4Parse.FileProvider
             return reader;
         });
         
+        #endregion
+
+        #region LoadPackage Methods
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Package LoadPackage(string path) => LoadPackage(this[path]);
 
@@ -159,7 +171,7 @@ namespace CUE4Parse.FileProvider
             var ubulkTask = ubulkFile?.CreateReaderAsync();
             var uptnlTask = uptnlFile?.CreateReaderAsync();
             return new Package(await uassetTask, await uexpTask, 
-                ubulkTask != null ? await ubulkTask : null, uptnlTask != null ? await uptnlTask : null);
+                ubulkTask != null ? await ubulkTask : null, uptnlTask != null ? await uptnlTask : null, this);
         }
 
         public async Task<Package?> TryLoadPackageAsync(string path)
@@ -192,13 +204,17 @@ namespace CUE4Parse.FileProvider
 
             try
             {
-                return new Package(uasset, uexp, ubulk, uptnl);
+                return new Package(uasset, uexp, ubulk, uptnl, this);
             }
             catch
             {
                 return null;
             }
         }
+        
+        #endregion
+
+        #region SavePackageMethods
 
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path) => SavePackage(this[path]);
 
@@ -287,5 +303,80 @@ namespace CUE4Parse.FileProvider
                 dict[uptnlFile.Path] = uptnl;
             return dict;
         }
+
+        #endregion
+
+        #region LoadObject Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport LoadObject(string? objectPath) => LoadObjectAsync(objectPath).Result;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoadObject(string? objectPath, out UExport export)
+        {
+            export = TryLoadObjectAsync(objectPath).Result;
+            return export != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T LoadObject<T>(string? objectPath) where T : UExport => LoadObjectAsync<T>(objectPath).Result;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UExport
+        {
+            export = TryLoadObjectAsync<T>(objectPath).Result;
+            return export != null;
+        }
+
+        public async Task<UExport> LoadObjectAsync(string? objectPath)
+        {
+            if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
+            var packagePath = objectPath;
+            string objectName;
+            var dotIndex = packagePath.IndexOf('.');
+            if (dotIndex == -1) // use the package name as object name
+            {
+                objectName = packagePath.SubstringAfterLast('/');
+            }
+            else // packagePath.objectName
+            {
+                objectName = packagePath.Substring(dotIndex + 1);
+                packagePath = packagePath.Substring(0, dotIndex);
+            }
+
+            var pkg = await LoadPackageAsync(packagePath);
+            return pkg.GetExport(objectName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+
+        public async Task<UExport?> TryLoadObjectAsync(string? objectPath)
+        {
+            if (objectPath == null) return null;
+            var packagePath = objectPath;
+            string objectName;
+            var dotIndex = packagePath.IndexOf('.');
+            if (dotIndex == -1) // use the package name as object name
+            {
+                objectName = packagePath.SubstringAfterLast('/');
+            }
+            else // packagePath.objectName
+            {
+                objectName = packagePath.Substring(dotIndex + 1);
+                packagePath = packagePath.Substring(0, dotIndex);
+            }
+
+            var pkg = await TryLoadPackageAsync(packagePath);
+            return pkg?.GetExportOrNull(objectName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> LoadObjectAsync<T>(string? objectPath) where T : UExport =>
+            await LoadObjectAsync(objectPath) as T ??
+            throw new ParserException("Loaded object but it was of wrong type");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport =>
+            await TryLoadObjectAsync(objectPath) as T;
+
+        #endregion
     }
 }

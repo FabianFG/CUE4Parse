@@ -149,5 +149,7 @@ namespace CUE4Parse.UE4.Assets
             where T : UExport => GetExportOrNull<T>(name, comparisonType) ??
                                  throw new NullReferenceException(
                                      $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
+
+        public override string ToString() => Name;
     }
 }

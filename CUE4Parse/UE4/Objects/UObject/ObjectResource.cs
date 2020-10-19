@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 
@@ -60,6 +64,133 @@ namespace CUE4Parse.UE4.Objects.UObject
                    ?? ExportObject?.ObjectName.Text.Insert(0, "Export: ")
                    ?? Index.ToString();
         }
+        
+        #region Loading Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport Load() =>
+            Load(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad(out UExport export)
+        {
+            var provider = Owner?.Provider;
+            if (provider == null)
+            {
+                export = default;
+                return false;
+            }
+            return TryLoad(provider, out export);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Load<T>() where T : UExport =>
+            Load<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad<T>(out T export) where T : UExport
+        {
+            var provider = Owner?.Provider;
+            if (provider == null)
+            {
+                export = default;
+                return false;
+            }
+            return TryLoad(provider, out export);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport> LoadAsync() => await LoadAsync(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport?> TryLoadAsync()
+        {
+            var provider = Owner?.Provider;
+            if (provider == null) return null;
+            return await TryLoadAsync(provider).ConfigureAwait(false);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> LoadAsync<T>() where T : UExport => await LoadAsync<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> TryLoadAsync<T>() where T : UExport
+        {
+            var provider = Owner?.Provider;
+            if (provider == null) return null;
+            return await TryLoadAsync<T>(provider).ConfigureAwait(false);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Load<T>(IFileProvider provider) where T : UExport =>
+            Load(provider) as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad<T>(IFileProvider provider, out T export) where T : UExport
+        {
+            if (!TryLoad(provider, out var genericExport) || !(genericExport is T cast))
+            {
+                export = default;
+                return false;
+            }
+
+            export = cast;
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> LoadAsync<T>(IFileProvider provider) where T : UExport => await LoadAsync(provider) as T ??
+            throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport Load(IFileProvider provider) => ImportObject?.Load(provider) ?? ExportObject?.Load(provider) ??
+            throw new ParserException("Package was loaded without a IFileProvider");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad(IFileProvider provider, out UExport export)
+        {
+            var import = ImportObject;
+            if (import != null && import.TryLoad(provider, out export))
+                return true;
+            var exportObj = ExportObject;
+            if (exportObj != null && exportObj.TryLoad(provider, out export))
+                return true;
+
+            export = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport> LoadAsync(IFileProvider provider)
+        {
+            var import = ImportObject;
+            if (import != null)
+                return await import.LoadAsync(provider);
+            var exportObj = ExportObject;
+            if (exportObj != null)
+                return await exportObj.LoadAsync(provider);
+            throw new ParserException($"{ToString()} could not be loaded");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            var import = ImportObject;
+            if (import != null)
+            {
+                var loadedImport = await import.TryLoadAsync(provider);
+                if (loadedImport != null)
+                    return loadedImport;
+            }
+            var exportObj = ExportObject;
+            if (exportObj != null)
+            {
+                var loadedExport = await exportObj.TryLoadAsync(provider);
+                if (loadedExport != null)
+                    return loadedExport;
+            }
+
+            return null;
+        }
+        
+        #endregion
     }
     
     
@@ -72,6 +203,91 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public FName ObjectName;
         public FPackageIndex? OuterIndex;
+        
+        #region Loading Methods
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport Load() =>
+            Load(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad(out UExport export)
+        {
+            var provider = OuterIndex?.Owner?.Provider;
+            if (provider == null)
+            {
+                export = default;
+                return false;
+            }
+            return TryLoad(provider, out export);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Load<T>() where T : UExport =>
+            Load<T>(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad<T>(out T export) where T : UExport
+        {
+            var provider = OuterIndex?.Owner?.Provider;
+            if (provider == null)
+            {
+                export = default;
+                return false;
+            }
+            return TryLoad(provider, out export);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport> LoadAsync() => await LoadAsync(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport?> TryLoadAsync()
+        {
+            var provider = OuterIndex?.Owner?.Provider;
+            if (provider == null) return null;
+            return await TryLoadAsync(provider).ConfigureAwait(false);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> LoadAsync<T>() where T : UExport => await LoadAsync<T>(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> TryLoadAsync<T>() where T : UExport
+        {
+            var provider = OuterIndex?.Owner?.Provider;
+            if (provider == null) return null;
+            return await TryLoadAsync<T>(provider).ConfigureAwait(false);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Load<T>(IFileProvider provider) where T : UExport =>
+            Load(provider) as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad<T>(IFileProvider provider, out T export) where T : UExport
+        {
+            if (!TryLoad(provider, out var genericExport) || !(genericExport is T cast))
+            {
+                export = default;
+                return false;
+            }
+
+            export = cast;
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> LoadAsync<T>(IFileProvider provider) where T : UExport => await LoadAsync(provider) as T ??
+            throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
+
+        public abstract UExport Load(IFileProvider provider);
+
+        public abstract bool TryLoad(IFileProvider provider, out UExport export);
+
+        public abstract Task<UExport> LoadAsync(IFileProvider provider);
+
+        public abstract Task<UExport?> TryLoadAsync(IFileProvider provider);
+        
+        #endregion
 
         public override string ToString()
         {
@@ -148,6 +364,40 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override UExport Load(IFileProvider provider) => ExportObject.Value;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool TryLoad(IFileProvider provider, out UExport export)
+        {
+            try
+            {
+                export = ExportObject.Value;
+                return true;
+            }
+            catch
+            {
+                export = default;
+                return false;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override async Task<UExport> LoadAsync(IFileProvider provider) => await Task.FromResult(ExportObject.Value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            try
+            {
+                return await Task.FromResult(ExportObject.Value);
+            }
+            catch
+            {
+                return await Task.FromResult<UExport?>(null);
+            }
+        }
+
         public override string ToString()
         {
             return $"{ObjectName.Text} ({ClassIndex.Name})";
@@ -169,6 +419,37 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassName = Ar.ReadFName();
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override UExport Load(IFileProvider provider) => LoadAsync(provider).Result;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool TryLoad(IFileProvider provider, out UExport export)
+        {
+            export = TryLoadAsync(provider).Result;
+            return export != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override async Task<UExport> LoadAsync(IFileProvider provider)
+        {
+            // The needed export is located in another asset
+            var outerImport = OuterIndex?.ImportObject ?? throw new ParserException("Outer ImportObject must be not null");
+            var pkg = await provider.LoadPackageAsync(outerImport.ObjectName.Text);
+            return pkg.GetExport(ObjectName.Text);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            // The needed export is located in another asset
+            var outerImport = OuterIndex?.ImportObject;
+            if (outerImport == null)
+                return null;
+
+            var pkg = await provider.TryLoadPackageAsync(outerImport.ObjectName.Text);
+            return pkg?.GetExportOrNull(ObjectName.Text);
         }
     }
 }

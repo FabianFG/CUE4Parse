@@ -58,8 +58,14 @@ namespace CUE4Parse.UE4.Assets.Exports
         public T GetOrDefault<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault<T>(this, name, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Lazy<T> GetOrDefaultLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetOrDefaultLazy<T>(this, name, comparisonType);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetLazy<T>(this, name, comparisonType);
     }
 
     public static class PropertyUtil
@@ -74,6 +80,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             return default;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name,
+            StringComparison comparisonType = StringComparison.Ordinal) =>
+            new Lazy<T>(() => GetOrDefault<T>(holder, name, comparisonType));
 
         // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
         public static T Get<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -90,5 +101,10 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             throw new NullReferenceException($"Couldn't get property '{name}' of type {typeof(T).Name} in {holder.GetType().Name}");
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
+            StringComparison comparisonType = StringComparison.Ordinal) =>
+            new Lazy<T>(() => Get<T>(holder, name, comparisonType));
     }
 }

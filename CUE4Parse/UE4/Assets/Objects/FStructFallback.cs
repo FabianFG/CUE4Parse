@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.Assets.Objects
     public class FStructFallback : IUStruct, IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; }
-        public FGuid? ObjectGuid { get; }
 
         public FStructFallback(FAssetArchive Ar)
         {
