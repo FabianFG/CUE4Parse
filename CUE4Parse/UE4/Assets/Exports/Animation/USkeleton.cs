@@ -35,9 +35,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Ver >= UE4Version.VER_UE4_FIX_ANIMATIONBASEPOSE_SERIALIZATION)
             {
-                int NumOfRetargetSources = Ar.Read<int>();
-                AnimRetargetSources = new Dictionary<FName, FReferencePose>(NumOfRetargetSources);
-                for (int i = 0; i < NumOfRetargetSources; i++)
+                var numOfRetargetSources = Ar.Read<int>();
+                AnimRetargetSources = new Dictionary<FName, FReferencePose>(numOfRetargetSources);
+                for (var i = 0; i < numOfRetargetSources; i++)
                 {
                     AnimRetargetSources[Ar.ReadFName()] = new FReferencePose(Ar);
                 }
@@ -54,9 +54,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_ADD_SMARTNAMES)
             {
-                int mapLength = Ar.Read<int>();
+                var mapLength = Ar.Read<int>();
                 NameMappings = new Dictionary<FName, FSmartNameMapping>(mapLength);
-                for (int i = 0; i < mapLength; i++)
+                for (var i = 0; i < mapLength; i++)
                 {
                     NameMappings[Ar.ReadFName()] = new FSmartNameMapping(Ar);
                 }
@@ -67,7 +67,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 var stripDataFlags = Ar.Read<FStripDataFlags>();
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
-                    ExistingMarkerNames = Ar.ReadArray(Ar.Read<int>(), () => Ar.ReadFName());
+                    ExistingMarkerNames = Ar.ReadArray(Ar.Read<int>(), Ar.ReadFName);
                 }
             }
         }

@@ -18,9 +18,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Ver >= UE4Version.VER_UE4_REFERENCE_SKELETON_REFACTOR)
             {
-                int num = Ar.Read<int>();
+                var num = Ar.Read<int>();
                 FinalNameToIndexMap = new Dictionary<FName, int>(num);
-                for (int i = 0; i < num; ++i)
+                for (var i = 0; i < num; ++i)
                 {
                     FinalNameToIndexMap[Ar.ReadFName()] = Ar.Read<int>();
                 }

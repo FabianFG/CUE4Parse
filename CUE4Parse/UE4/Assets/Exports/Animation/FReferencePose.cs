@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    public class FReferencePose
+    public struct FReferencePose
     {
         public readonly FName PoseName;
         public readonly FTransform[] ReferencePose;

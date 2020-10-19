@@ -15,15 +15,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
 		public FSmartNameMapping(FAssetArchive Ar)
         {
-            var FrwObjVer = FFrameworkObjectVersion.Get(Ar);
-            var FrwAniVer = FAnimPhysObjectVersion.Get(Ar);
-			if (FrwObjVer >= FFrameworkObjectVersion.Type.SmartNameRefactor)
+            var frwObjVer = FFrameworkObjectVersion.Get(Ar);
+            var frwAniVer = FAnimPhysObjectVersion.Get(Ar);
+			if (frwObjVer >= FFrameworkObjectVersion.Type.SmartNameRefactor)
 			{
-				if (FrwAniVer < FAnimPhysObjectVersion.Type.SmartNameRefactorForDeterministicCooking)
+				if (frwAniVer < FAnimPhysObjectVersion.Type.SmartNameRefactorForDeterministicCooking)
 				{
-					int mapLength = Ar.Read<int>();
+					var mapLength = Ar.Read<int>();
 					GuidMap = new Dictionary<FName, FGuid>(mapLength);
-					for (int i = 0; i < mapLength; i++)
+					for (var i = 0; i < mapLength; i++)
                     {
 						GuidMap[Ar.ReadFName()] = Ar.Read<FGuid>();
                     }
@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 			else if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_ADD_SMARTNAMES)
 			{
 				Ar.Read<ushort>();
-				int mapLength = Ar.Read<int>();
+				var mapLength = Ar.Read<int>();
 				UidMap = new Dictionary<ushort, FName>(mapLength);
 				for (int i = 0; i < mapLength; i++)
 				{
@@ -40,13 +40,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 				}
 			}
 
-			if (FrwObjVer >= FFrameworkObjectVersion.Type.MoveCurveTypesToSkeleton)
+			if (frwObjVer >= FFrameworkObjectVersion.Type.MoveCurveTypesToSkeleton)
 			{
-				int mapLength = Ar.Read<int>();
+				var mapLength = Ar.Read<int>();
 				CurveMetaDataMap = new Dictionary<FName, FCurveMetaData>(mapLength);
-				for (int i = 0; i < mapLength; i++)
+				for (var i = 0; i < mapLength; i++)
 				{
-					CurveMetaDataMap[Ar.ReadFName()] = new FCurveMetaData(Ar, FrwAniVer);
+					CurveMetaDataMap[Ar.ReadFName()] = new FCurveMetaData(Ar, frwAniVer);
 				}
 			}
 		}

@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    public class FMeshBoneInfo
+    public struct FMeshBoneInfo
     {
         public readonly FName Name;
         public readonly int ParentIndex;

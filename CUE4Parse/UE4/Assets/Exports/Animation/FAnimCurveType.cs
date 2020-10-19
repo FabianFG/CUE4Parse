@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    public class FAnimCurveType
+    public struct FAnimCurveType
     {
         public readonly bool bMaterial;
         public readonly bool bMorphtarget;
