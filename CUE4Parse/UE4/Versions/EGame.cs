@@ -1,9 +1,12 @@
-﻿namespace CUE4Parse.UE4.Versions
+﻿using System.Runtime.CompilerServices;
+
+namespace CUE4Parse.UE4.Versions
 {
     public static class GameUtils
     {
         public static readonly int GameUe4Base = 0x1000000;
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GAME_UE4(int x)
         {
             return GameUe4Base + x << 4;
