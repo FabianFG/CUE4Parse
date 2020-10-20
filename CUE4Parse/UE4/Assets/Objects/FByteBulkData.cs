@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     public class FByteBulkData
     {
         public readonly FByteBulkDataHeader Header;
-        private readonly byte[] Data;
+        public readonly byte[] Data;
 
         public FByteBulkData(FAssetArchive Ar)
         {

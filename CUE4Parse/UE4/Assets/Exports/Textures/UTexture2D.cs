@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using CUE4Parse.UE4.Assets.Exports.Materials;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -14,11 +15,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
     public class UTexture2D : UTexture
     {
         public FTexture2DMipMap[] Mips { get; private set; }
+        public int FirstMip { get; private set; }
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
+        public int NumSlices { get; private set; }    // important only while UTextureCube4 is derived from UTexture2D in out implementation
+        public bool IsVirtual { get; private set; }
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
-        public int NumSlices { get; private set; }    // important only while UTextureCube4 is derived from UTexture2D in out implementation
 
         public UTexture2D() { }
         public UTexture2D(FObjectExport exportObject) : base(exportObject) { }
@@ -78,10 +81,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                         
                         // copy data to UTexture2D
                         Mips = data.Mips;
+                        FirstMip = data.FirstMip;
                         SizeX = data.SizeX;
                         SizeY = data.SizeY;
-                        Format = pixelFormat;
                         NumSlices = data.NumSlices;
+                        IsVirtual = data.bIsVirtual;
+                        Format = pixelFormat;
                     }
                     else
                     {
@@ -95,6 +100,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                 }
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FTexture2DMipMap? GetFirstMip() => Mips[FirstMip];
 
         public override void GetParams(CMaterialParams parameters)
         {

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 

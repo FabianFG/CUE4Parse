@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
