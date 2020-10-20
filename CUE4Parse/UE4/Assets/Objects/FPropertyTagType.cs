@@ -67,6 +67,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     var values = type.GetEnumNames()!;
                     var idx = Array.FindIndex(values, it => it == search);
                     return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
+                //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
                 //TODO Maybe Maps?
                 default:
                     return null;

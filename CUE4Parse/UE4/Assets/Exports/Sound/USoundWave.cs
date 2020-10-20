@@ -17,9 +17,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         public USoundWave() { }
         public USoundWave(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
             // UObject Properties
             if (GetOrDefault<bool>(nameof(bStreaming))) // will return false if not found
                 bStreaming = true;

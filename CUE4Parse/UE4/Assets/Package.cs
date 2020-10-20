@@ -16,6 +16,7 @@ using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Materials;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -77,12 +78,9 @@ namespace CUE4Parse.UE4.Assets
                 it.ExportObject = new Lazy<UExport>(() =>
                 {
                     uexpAr.SeekAbsolute(it.SerialOffset, SeekOrigin.Begin);
-#if DEBUG
                     var validPos = uexpAr.Position + it.SerialSize;
-#endif
                     export.Owner = this;
-                    export.Deserialize(uexpAr);
-
+                    export.Deserialize(uexpAr, validPos);
 #if DEBUG
                     if (validPos != uexpAr.Position)
                         Log.Warning($"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining");
@@ -114,6 +112,7 @@ namespace CUE4Parse.UE4.Assets
                 "SoundWave" => new USoundWave(export),
                 "StringTable" => new UStringTable(export),
                 "Skeleton" => new USkeleton(export),
+                "Material" => new UMaterial(export),
                 _ => new UObject(export, true)
             };
         }

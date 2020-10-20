@@ -21,9 +21,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public USkeleton() { }
         public USkeleton(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
             // UObject Properties
             BoneTree = GetOrDefault<FBoneNode[]>(nameof(BoneTree));
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));

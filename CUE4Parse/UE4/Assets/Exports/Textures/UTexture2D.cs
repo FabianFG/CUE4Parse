@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using CUE4Parse.UE4.Assets.Exports.Materials;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -22,9 +23,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         public UTexture2D() { }
         public UTexture2D(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
             // UObject Properties
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
             
@@ -93,6 +94,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                     pixelFormatEnum = Ar.ReadFName();
                 }
             }
+        }
+
+        public override void GetParams(CMaterialParams parameters)
+        {
+            // ???
         }
     }
 }

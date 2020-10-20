@@ -13,9 +13,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         public UCurveTable() { }
         public UCurveTable(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
 
             int numRows = Ar.Read<int>();
             CurveTableMode = Ar.Read<ECurveTableMode>();
@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                     _ => ""
                 };
                 UObject rowValue = new UObject(new List<FPropertyTag>(), null, exportType);
-                rowValue.Deserialize(Ar);
+                rowValue.Deserialize(Ar, -1);
                 RowMap[rowName] = rowValue;
             }
         }

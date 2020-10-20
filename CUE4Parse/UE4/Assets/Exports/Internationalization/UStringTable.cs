@@ -11,9 +11,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization
         public UStringTable() { }
         public UStringTable(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
 
             StringTable = new FStringTable(Ar);
             StringTableId = Ar.Read<int>();

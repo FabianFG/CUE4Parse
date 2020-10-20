@@ -67,5 +67,9 @@ namespace CUE4Parse.Utils
             var index = s.LastIndexOf(delimiter, comparisonType);
             return index == -1 ? s : s.Substring(index + delimiter.Length, s.Length - index - delimiter.Length);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Contains(this string orig, string value, StringComparison comparisonType) =>
+            orig.IndexOf(value, comparisonType) >= 0;
     }
 }

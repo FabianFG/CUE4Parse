@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports
 {
@@ -38,7 +39,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             ObjectGuid = objectGuid;
         }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             while (true)
             {
@@ -55,11 +56,11 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetOrDefault<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefault<T>(this, name, comparisonType);
+        public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetOrDefault<T>(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Lazy<T> GetOrDefaultLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefaultLazy<T>(this, name, comparisonType);
+        public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
+            PropertyUtil.GetOrDefaultLazy<T>(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
@@ -71,20 +72,24 @@ namespace CUE4Parse.UE4.Assets.Exports
     public static class PropertyUtil
     {
         // TODO Little Problem here: Can't use T? since this would need a constraint to struct or class, which again wouldn't work fine with primitives
-        public static T GetOrDefault<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public static T GetOrDefault<T>(IPropertyHolder holder, string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            var value = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag?.GetValue(typeof(T));
-            if (value is T cast)
+            foreach (var value in from it 
+                in holder.Properties 
+                where it.Name.Text.Equals(name, comparisonType) 
+                select it.Tag?.GetValue(typeof(T)))
             {
-                return cast;
+                if (value is T cast)
+                    return cast;
             }
-            return default;
+
+            return defaultValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name,
+        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default, 
             StringComparison comparisonType = StringComparison.Ordinal) =>
-            new Lazy<T>(() => GetOrDefault<T>(holder, name, comparisonType));
+            new Lazy<T>(() => GetOrDefault<T>(holder, name, defaultValue, comparisonType));
 
         // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
         public static T Get<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)

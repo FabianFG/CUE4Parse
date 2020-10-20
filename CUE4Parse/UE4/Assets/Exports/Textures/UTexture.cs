@@ -10,9 +10,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         protected UTexture() { }
         protected UTexture(FObjectExport exportObject) : base(exportObject) { }
 
-        public override void Deserialize(FAssetArchive Ar)
+        public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            base.Deserialize(Ar);
+            base.Deserialize(Ar, validPos);
             var stripFlags = Ar.Read<FStripDataFlags>();
             
             // Legacy serialization.
