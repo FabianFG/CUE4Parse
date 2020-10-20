@@ -10,7 +10,8 @@ namespace CUE4Parse.UE4.Assets.Utils
     {
         public static object? MapToClass(this FStructFallback fallback, Type type)
         {
-            var value = type.GetConstructor(new[] { typeof(FStructFallback) })?.Invoke(new object[] { fallback });
+            var value = Activator.CreateInstance(type, fallback);
+            //var value = type.GetConstructor(new[] { typeof(FStructFallback) })?.Invoke(new object[] { fallback });
             return value;
         }
     }

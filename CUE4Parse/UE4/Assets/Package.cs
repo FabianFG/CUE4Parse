@@ -113,6 +113,7 @@ namespace CUE4Parse.UE4.Assets
                 "StringTable" => new UStringTable(export),
                 "Skeleton" => new USkeleton(export),
                 "Material" => new UMaterial(export),
+                "MaterialInstanceConstant" => new UMaterialInstanceConstant(export),
                 _ => new UObject(export, true)
             };
         }
