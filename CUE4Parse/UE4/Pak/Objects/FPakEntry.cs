@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly long UncompressedSize;
         public readonly CompressionMethod CompressionMethod;
         public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
-        public readonly bool IsEncrypted;
+        public override bool IsEncrypted { get; }
         public readonly int CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file

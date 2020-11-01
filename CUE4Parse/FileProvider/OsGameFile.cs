@@ -16,6 +16,8 @@ namespace CUE4Parse.FileProvider
         }
 
 
+        public override bool IsEncrypted => false;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] Read() => File.ReadAllBytes(ActualFile.FullName);
 

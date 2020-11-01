@@ -6,16 +6,18 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 {
     public readonly struct FSHAHash : IUStruct
     {
+        public const int SIZE = 20;
+        
         public readonly byte[] Hash;
 
         public FSHAHash(FArchive Ar)
         {
-            Hash = Ar.ReadBytes(20);
+            Hash = Ar.ReadBytes(SIZE);
         }
 
         public override string ToString()
         {
-            unsafe { fixed (byte* ptr = Hash) { return UnsafePrint.BytesToHex(ptr, 20); } } 
+            unsafe { fixed (byte* ptr = Hash) { return UnsafePrint.BytesToHex(ptr, SIZE); } } 
         }
     }
 }
