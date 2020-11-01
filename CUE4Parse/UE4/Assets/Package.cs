@@ -17,6 +17,7 @@ using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Materials;
+using CUE4Parse.UE4.Assets.Exports.Wwise;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -86,7 +87,6 @@ namespace CUE4Parse.UE4.Assets
                         Log.Warning($"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining");
                     else
                         Log.Debug($"Successfully read {exportType} at {it.SerialOffset - Summary.TotalHeaderSize} with size {it.SerialSize}");
-                        
 #endif
 
                     return export;
@@ -112,6 +112,7 @@ namespace CUE4Parse.UE4.Assets
                 "SoundWave" => new USoundWave(export),
                 "StringTable" => new UStringTable(export),
                 "Skeleton" => new USkeleton(export),
+                "AkMediaAssetData" => new UAkMediaAssetData(export),
                 "Material" => new UMaterial(export),
                 "MaterialInstanceConstant" => new UMaterialInstanceConstant(export),
                 _ => new UObject(export, true)
