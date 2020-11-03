@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CUE4Parse.FileProvider.Pak;
+using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.IO;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider
 {
-    public class DefaultFileProvider : AbstractPakFileProvider
+    public class DefaultFileProvider : AbstractVfsFileProvider
     {
         public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive, ver, game)
         {
@@ -36,7 +38,28 @@ namespace CUE4Parse.FileProvider
                     try
                     {
                         var reader = new PakFileReader(file, Ver, Game) {IsConcurrent = true};
-                        _unloadedPaks[reader] = null; 
+                        _unloadedVfs[reader] = null; 
+                        if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
+                            _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warning(e.ToString());
+                    }
+                }
+                else if (ext.Equals("ucas", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var utoc = new FileInfo(file.FullName.SubstringBeforeLast('.') + ".utoc");
+                        if (!utoc.Exists)
+                        {
+                            Log.Warning("Couldn't locate .utoc for {0}", file.Name);
+                            continue;
+                        }
+                        var reader = new IoStoreReader(file, utoc, EIoStoreTocReadOptions.ReadDirectoryIndex, Ver, Game)
+                            {IsConcurrent = true};
+                        _unloadedVfs[reader] = null; 
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
                     }

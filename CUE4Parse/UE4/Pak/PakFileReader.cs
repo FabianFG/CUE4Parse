@@ -7,41 +7,37 @@ using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.Pak
 {
-    public partial class PakFileReader
+    public partial class PakFileReader : AbstractAesVfsReader
     {
 
         private static readonly ILogger log = Log.ForContext<PakFileReader>();
 
         public readonly FArchive Ar;
-        public bool IsConcurrent { get; set; } = false;
-        public readonly string FileName; 
-        public readonly FPakInfo Info;
-
-        public string MountPoint { get; private set; }
-        public IReadOnlyDictionary<string, GameFile> Files { get; private set; }
-        public int FileCount { get; private set; } = 0;
-        public int EncryptedFileCount { get; private set; } = 0;
         
-        public FAesKey? AesKey { get; set; }
+        public readonly FPakInfo Info;
+        
+        public string MountPoint { get; private set; }
 
-        public bool IsEncrypted => Info.EncryptedIndex;
+        public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
+        public override bool IsEncrypted => Info.EncryptedIndex;
 
-        public PakFileReader(FArchive Ar)
+        public PakFileReader(FArchive Ar) : base(Ar.Name, Ar.Ver, Ar.Game)
         {
             this.Ar = Ar;
-            FileName = Ar.Name;
             Info = FPakInfo.ReadFPakInfo(Ar);
             if (Info.Version > EPakFileVersion.PakFile_Version_Latest)
             {
-                log.Warning($"Pak file \"{FileName}\" has unsupported version {(int) Info.Version}");
+                log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
         }
 
@@ -51,49 +47,49 @@ namespace CUE4Parse.UE4.Pak
             : this(new FStreamArchive(file.Name, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), ver, game)) {}
 
 
-        public byte[] Extract(FPakEntry file)
+        public override byte[] Extract(VfsEntry entry)
         {
-            if (file.Pak != this) throw new ArgumentException($"Wrong pak file reader, required {file.Pak.FileName}, this is {FileName}");
+            if (!(entry is FPakEntry pakEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
             // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             // Pak Entry is written before the file data,
             // but its the same as the one from the index, just without a name
             // We don't need to serialize that again so + file.StructSize
-            reader.Position = file.Pos + file.StructSize;
+            reader.Position = pakEntry.Offset + pakEntry.StructSize;
 
-            if (file.IsCompressed)
+            if (pakEntry.IsCompressed)
             {
 #if DEBUG
-                Log.Debug($"{file.Name} is compressed with {file.CompressionMethod}");
+                Log.Debug($"{pakEntry.Name} is compressed with {pakEntry.CompressionMethod}");
 #endif
-                var data = new MemoryStream((int) file.UncompressedSize);
-                foreach (var block in file.CompressionBlocks)
+                var data = new MemoryStream((int) pakEntry.UncompressedSize);
+                foreach (var block in pakEntry.CompressionBlocks)
                 {
                     reader.Position = block.CompressedStart;
-                    var srcSize = (int) (block.CompressedEnd - block.CompressedStart).Align(file.IsEncrypted ? Aes.ALIGN : 1);
+                    var srcSize = (int) (block.CompressedEnd - block.CompressedStart).Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
                     // Read the compressed block
-                    byte[] src = ReadAndDecrypt(srcSize, reader, file.IsEncrypted);
+                    byte[] src = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,
                     // its either just the compression block size
                     // or if its the last block its the remaining data size
-                    var uncompressedSize = (int) Math.Min(file.CompressionBlockSize, (file.UncompressedSize - data.Length));
-                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, file.CompressionMethod, reader), 0, uncompressedSize);
+                    var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, (pakEntry.UncompressedSize - data.Length));
+                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, pakEntry.CompressionMethod, reader), 0, uncompressedSize);
                 }
 
-                if (data.Length == file.UncompressedSize) return data.GetBuffer();
-                else if (data.Length > file.UncompressedSize) return data.GetBuffer().SubByteArray((int) file.UncompressedSize);
-                else throw new ParserException(reader, $"Decompression of {file.Name} failed, {data.Length} < {file.UncompressedSize}");
+                if (data.Length == pakEntry.UncompressedSize) return data.GetBuffer();
+                else if (data.Length > pakEntry.UncompressedSize) return data.GetBuffer().SubByteArray((int) pakEntry.UncompressedSize);
+                else throw new ParserException(reader, $"Decompression of {pakEntry.Name} failed, {data.Length} < {pakEntry.UncompressedSize}");
             }
             else
             {
                 // File might be encrypted or just stored normally
-                var size = (int) file.UncompressedSize.Align(file.IsEncrypted ? Aes.ALIGN : 1);
-                var data = ReadAndDecrypt(size, reader, file.IsEncrypted);
-                return size != file.UncompressedSize ? data.SubByteArray((int) file.UncompressedSize) : data;
+                var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
+                var data = ReadAndDecrypt(size, reader, pakEntry.IsEncrypted);
+                return size != pakEntry.UncompressedSize ? data.SubByteArray((int) pakEntry.UncompressedSize) : data;
             }
         }
 
-        public IReadOnlyDictionary<string, GameFile> ReadIndex(bool caseInsensitive = false)
+        public override IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false)
         {
             var watch = new Stopwatch();
             watch.Start();
@@ -102,7 +98,7 @@ namespace CUE4Parse.UE4.Pak
             else
                 ReadIndexLegacy(caseInsensitive);
             var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"Pak {FileName}: {FileCount} files");
+            var sb = new StringBuilder($"Pak {Name}: {FileCount} files");
             if (EncryptedFileCount != 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
             if (MountPoint.Contains("/"))
@@ -115,7 +111,7 @@ namespace CUE4Parse.UE4.Pak
         private IReadOnlyDictionary<string, GameFile> ReadIndexLegacy(bool caseInsensitive)
         {
             Ar.Position = Info.IndexOffset;
-            var index = new FByteArchive($"{FileName} - Index", ReadAndDecrypt((int) Info.IndexSize));
+            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize));
             
             string mountPoint;
             try
@@ -124,33 +120,34 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{FileName}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
             
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
-            FileCount = index.Read<int>();
-            var files = new Dictionary<string, GameFile>(FileCount);
+            var fileCount = index.Read<int>();
+            var files = new Dictionary<string, GameFile>(fileCount);
 
-            for (int i = 0; i < FileCount; i++)
+            for (int i = 0; i < fileCount; i++)
             {
                 var path = index.ReadFString();
                 var entry = new FPakEntry(this, path, index, Info);
+                if (entry.IsEncrypted)
+                    EncryptedFileCount++;
                 if (caseInsensitive)
                     files[path.ToLowerInvariant()] = entry;
                 else
                     files[path] = entry;
             }
-
-            Files = files;
-            return files;
+            
+            return Files = files;
         }
 
         private IReadOnlyDictionary<string, GameFile> ReadIndexUpdated(bool caseInsensitive)
         {
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
-            FArchive primaryIndex = new FByteArchive($"{FileName} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+            FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
 
             string mountPoint;
             try
@@ -159,13 +156,13 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{FileName}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
             
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
-            FileCount = primaryIndex.Read<int>();
+            var fileCount = primaryIndex.Read<int>();
             EncryptedFileCount = 0;
 
             primaryIndex.Position += 8; // PathHashSeed
@@ -189,12 +186,12 @@ namespace CUE4Parse.UE4.Pak
 
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
-            var directoryIndex = new FByteArchive($"{FileName} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
+            var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
 
             unsafe { fixed(byte* ptr = encodedPakEntries) {
                 var directoryIndexLength = directoryIndex.Read<int>();
 
-                var files = new Dictionary<string, GameFile>(FileCount);
+                var files = new Dictionary<string, GameFile>(fileCount);
                 
                 for (int i = 0; i < directoryIndexLength; i++)
                 {
@@ -222,75 +219,17 @@ namespace CUE4Parse.UE4.Pak
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
-        private byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted)
-        {
-            if (isEncrypted)
-            {
-                if (AesKey != null)
-                {
-                    return reader.ReadBytes(length).Decrypt(AesKey);
-                }
-                throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
-            }
+        protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
 
-            return reader.ReadBytes(length);
-        }
-
-        private void ValidateMountPoint(ref string mountPoint)
-        {
-            var badMountPoint = !mountPoint.StartsWith("../../..");
-            mountPoint = mountPoint.SubstringAfter("../../..");
-            if (mountPoint[0] != '/' || ( (mountPoint.Length > 1) && (mountPoint[1] == '.') ))
-                badMountPoint = true;
-
-            if (badMountPoint)
-            {
-                log.Warning($"Pak \"{FileName}\" has strange mount point \"{mountPoint}\", mounting to root");
-                mountPoint = "/";
-            }
-
-            mountPoint = mountPoint.Substring(1);
-        }
-
-        public override string ToString() => FileName;
-        
-        private const int MAX_MOUNTPOINT_TEST_LENGTH = 128;
-
-        public byte[] IndexCheckBytes()
+        public override byte[] MountPointCheckBytes()
         {
             Ar.Position = Info.IndexOffset;
             return Ar.ReadBytes((int) (4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
         }
         
-        
-        public bool TestAesKey(FAesKey key) => !IsEncrypted ? true : TestAesKey(IndexCheckBytes(), key);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsValidIndex(byte[] testBytes) => IsValidIndex(new FByteArchive(string.Empty, testBytes));
-        public static bool IsValidIndex(FArchive reader)
+        public override void Dispose()
         {
-            var mountPointLength = reader.Read<int>();
-            if (mountPointLength > MAX_MOUNTPOINT_TEST_LENGTH || mountPointLength < -MAX_MOUNTPOINT_TEST_LENGTH)
-                return false;
-            // Calculate the pos of the null terminator for this string
-            // Then read the null terminator byte and check whether it is actually 0
-            if (mountPointLength == 0) return reader.Read<byte>() == 0;
-            else if (mountPointLength < 0)
-            {
-                // UTF16
-                reader.Seek(-(mountPointLength - 1) * 2, SeekOrigin.Current);
-                return reader.Read<short>() == 0;
-            }
-            else
-            {
-                // UTF8
-                reader.Seek(mountPointLength - 1, SeekOrigin.Current);
-                return reader.Read<byte>() == 0;
-            }
+            Ar.Dispose();
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TestAesKey(byte[] bytes, FAesKey key) => IsValidIndex(bytes.Decrypt(key));
     }
 }

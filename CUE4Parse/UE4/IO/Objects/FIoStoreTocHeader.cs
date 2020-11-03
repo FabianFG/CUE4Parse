@@ -30,19 +30,19 @@ namespace CUE4Parse.UE4.IO.Objects
         public static byte[] TOC_MAGIC = new byte[]
             {0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D};
         
-        public byte[] TocMagic;
-        public EIoStoreTocVersion Version;
-        public uint TocHeaderSize;
-        public uint TocEntryCount;
-        public uint TocCompressedBlockEntryCount;
-        public uint TocCompressedBlockEntrySize;	// For sanity checking
-        public uint CompressionMethodNameCount;
-        public uint CompressionMethodNameLength;
-        public uint CompressionBlockSize;
-        public long DirectoryIndexSize;
-        public FIoContainerId ContainerId;
-        public FGuid EncryptionKeyGuid;
-        public EIoContainerFlags ContainerFlags;
+        public readonly byte[] TocMagic;
+        public readonly EIoStoreTocVersion Version;
+        public readonly uint TocHeaderSize;
+        public readonly uint TocEntryCount;
+        public readonly uint TocCompressedBlockEntryCount;
+        public readonly uint TocCompressedBlockEntrySize;	// For sanity checking
+        public readonly uint CompressionMethodNameCount;
+        public readonly uint CompressionMethodNameLength;
+        public readonly uint CompressionBlockSize;
+        public readonly long DirectoryIndexSize;
+        public readonly FIoContainerId ContainerId;
+        public readonly FGuid EncryptionKeyGuid;
+        public readonly EIoContainerFlags ContainerFlags;
 
         public FIoStoreTocHeader(FArchive Ar)
         {

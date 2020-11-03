@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
@@ -9,19 +10,20 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Vfs
 {
-    public abstract class VirtualFileSystemReader
+    public abstract partial class AbstractVfsReader : IVfsReader
     {
-        protected static readonly ILogger log = Log.ForContext<VirtualFileSystemReader>();
+        protected static readonly ILogger log = Log.ForContext<AbstractVfsReader>();
+        public string Name { get; }
+        public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
+        public virtual int FileCount => Files.Count;
         
         public bool IsConcurrent { get; set; } = false;
-        public readonly string Name;
-        public IReadOnlyDictionary<string, GameFile> Files { get; private set; }
-        public virtual int FileCount => Files?.Count ?? 0;
+        public bool IsMounted { get; } = false;
 
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
 
-        protected VirtualFileSystemReader(string name, UE4Version ver, EGame game)
+        protected AbstractVfsReader(string name, UE4Version ver, EGame game)
         {
             Name = name;
             Ver = ver;
@@ -33,8 +35,7 @@ namespace CUE4Parse.UE4.Vfs
 
         public abstract byte[] Extract(VfsEntry entry);
         
-        
-        private void ValidateMountPoint(ref string mountPoint)
+        protected void ValidateMountPoint(ref string mountPoint)
         {
             var badMountPoint = !mountPoint.StartsWith("../../..");
             mountPoint = mountPoint.SubstringAfter("../../..");
@@ -50,7 +51,7 @@ namespace CUE4Parse.UE4.Vfs
             mountPoint = mountPoint.Substring(1);
         }
         
-        private const int MAX_MOUNTPOINT_TEST_LENGTH = 128;
+        protected const int MAX_MOUNTPOINT_TEST_LENGTH = 128;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsValidIndex(byte[] testBytes) => IsValidIndex(new FByteArchive(string.Empty, testBytes));
@@ -75,5 +76,9 @@ namespace CUE4Parse.UE4.Vfs
                 return reader.Read<byte>() == 0;
             }
         }
+
+        public abstract void Dispose();
+
+        public override string ToString() => Name;
     }
 }

@@ -4,14 +4,14 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
-    public class FPakEntry : GameFile
+    public class FPakEntry : VfsEntry
     {
         public readonly PakFileReader Pak;
-        public readonly long Pos;
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public readonly CompressionMethod CompressionMethod;
@@ -23,14 +23,14 @@ namespace CUE4Parse.UE4.Pak.Objects
         public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info) : base(reader)
         {
             Pak = reader;
             Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
-            Pos = Ar.Read<long>();
+            Offset = Ar.Read<long>();
             CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
             Size = UncompressedSize;
@@ -67,8 +67,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                 // Convert relative compressed offsets to absolute
                 for (int i = 0; i < CompressionBlocks.Length; i++)
                 {
-                    CompressionBlocks[i].CompressedStart += Pos;
-                    CompressionBlocks[i].CompressedEnd += Pos;
+                    CompressionBlocks[i].CompressedStart += Offset;
+                    CompressionBlocks[i].CompressedEnd += Offset;
                 }
             }
 
@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe FPakEntry(PakFileReader reader, string path, byte* data)
+        public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader)
         {
             Pak = reader;
             Path = path;
@@ -92,12 +92,12 @@ namespace CUE4Parse.UE4.Pak.Objects
             // Offset follows - either 32 or 64 bit value
             if ((bitfield & 0x80000000) != 0)
             {
-                Pos = *(uint*) data;
+                Offset = *(uint*) data;
                 data += sizeof(uint);
             }
             else
             {
-                Pos = *(long*) data; // Should be ulong
+                Offset = *(long*) data; // Should be ulong
                 data += sizeof(long);
             }
             
@@ -161,12 +161,12 @@ namespace CUE4Parse.UE4.Pak.Objects
                 if (blockCount == 1)
                 {
                     ref var b = ref CompressionBlocks[0];
-                    b.CompressedStart = Pos + StructSize;
+                    b.CompressedStart = Offset + StructSize;
                     b.CompressedEnd = b.CompressedStart + CompressedSize;
                 }
                 else
                 {
-                    var currentOffset = Pos + StructSize;
+                    var currentOffset = Offset + StructSize;
                     var alignment = IsEncrypted ? Aes.ALIGN : 1;
                     for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
                     {

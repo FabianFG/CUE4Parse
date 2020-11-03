@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider;
+using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.Versions;
+
+namespace CUE4Parse.UE4.Vfs
+{
+    public interface IVfsReader : IDisposable
+    {
+        public string Name { get; }
+        
+        public IReadOnlyDictionary<string, GameFile> Files { get; }
+        public int FileCount { get; }
+        
+        public bool IsConcurrent { get; set; }
+        public bool IsMounted { get; }
+        
+        public UE4Version Ver { get; set; }
+        public EGame Game { get; set; }
+        
+        public IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
+        public void MountTo(FileProviderDictionary files, bool caseInsensitive);
+        
+        public abstract byte[] Extract(VfsEntry entry);
+    }
+}

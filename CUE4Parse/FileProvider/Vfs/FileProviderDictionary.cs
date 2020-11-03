@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace CUE4Parse.FileProvider.Pak
+namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {

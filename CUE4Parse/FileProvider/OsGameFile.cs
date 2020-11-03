@@ -14,8 +14,7 @@ namespace CUE4Parse.FileProvider
         {
             ActualFile = info;
         }
-
-
+        
         public override bool IsEncrypted => false;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
