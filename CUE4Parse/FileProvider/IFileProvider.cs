@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -18,6 +19,17 @@ namespace CUE4Parse.FileProvider
         /// The Game that should be used during parsing operations
         /// </summary>
         public EGame Game { get; set; }
+        
+        /// <summary>
+        /// Type Mappings that should be used for unversioned property serialization
+        /// Can be null if there is no need for loading such packages
+        /// </summary>
+        public ITypeMappingsContainer? MappingsContainer { get; set; }
+        
+        /// <summary>
+        /// Type Mappings for this specific game (determined by game name)
+        /// </summary>
+        public TypeMappings? MappingsForThisGame { get; }
         
         /// <summary>
         /// The files available in this provider in dictionary with their full path as key.

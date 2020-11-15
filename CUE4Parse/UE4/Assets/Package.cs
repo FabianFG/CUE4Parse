@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
@@ -19,8 +20,8 @@ namespace CUE4Parse.UE4.Assets
         public override FObjectImport[] ImportMap { get; }
         public override FObjectExport[] ExportMap { get; }
 
-        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null)
-            : base(uasset.Name.SubstringBeforeLast(".uasset"), provider)
+        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+            : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -20,6 +21,9 @@ namespace CUE4Parse.FileProvider
 
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
+        public ITypeMappingsContainer? MappingsContainer { get; set; }
+
+        public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public bool IsCaseInsensitive { get; }
 
@@ -179,7 +183,7 @@ namespace CUE4Parse.FileProvider
             if (uexp != null)
             {
                 return new Package(uasset, uexp, 
-                    ubulk, uptnl, this);
+                    ubulk, uptnl, this, MappingsForThisGame);
             }
             else
             {
@@ -188,7 +192,7 @@ namespace CUE4Parse.FileProvider
                     throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
                 }
                 return new IoPackage(uasset, vfsFileProvider.GlobalData,
-                    ubulk, uptnl, this);
+                    ubulk, uptnl, this, MappingsForThisGame);
             }
         }
 
@@ -226,7 +230,7 @@ namespace CUE4Parse.FileProvider
             {
                 if (uexp != null)
                 {
-                    return new Package(uasset, uexp, ubulk, uptnl, this);
+                    return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
                 }
                 else
                 {
@@ -234,7 +238,7 @@ namespace CUE4Parse.FileProvider
                     {
                         return null;
                     }
-                    return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this);
+                    return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this, MappingsForThisGame);
                 }
             }
             catch

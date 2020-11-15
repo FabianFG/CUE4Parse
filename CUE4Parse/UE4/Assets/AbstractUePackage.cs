@@ -11,6 +11,7 @@ using CUE4Parse.UE4.Assets.Exports.Materials;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
@@ -21,15 +22,17 @@ namespace CUE4Parse.UE4.Assets
     {
         public string Name { get; }
         public IFileProvider? Provider { get; }
+        public TypeMappings? Mappings { get; }
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
         public abstract FObjectImport[] ImportMap { get; }
         public abstract FObjectExport[] ExportMap { get; }
 
-        public AbstractUePackage(string name, IFileProvider? provider)
+        public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
             Name = name;
             Provider = provider;
+            Mappings = mappings;
         }
 
         protected void ProcessExportMap(FAssetArchive exportAr)

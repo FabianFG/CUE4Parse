@@ -5,8 +5,10 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports
 {
@@ -43,7 +45,10 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             if (Ar.HasUnversionedProperties)
             {
-                DeserializePropertiesUnversioned(Ar, ExportType);
+                var mappings = Ar.Owner.Mappings;
+                if (mappings == null)
+                    throw new ParserException("Found unversioned properties but package doesn't have any type mappings");
+                Properties = DeserializePropertiesUnversioned(Ar, ExportType);
             }
             else
             {
@@ -60,11 +65,47 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             var properties = new List<FPropertyTag>();
             var header = new FUnversionedHeader(Ar);
+            if (!header.HasValues)
+                return properties;
+            if (Ar.Owner.Mappings == null || !Ar.Owner.Mappings.Types.TryGetValue(type, out var propMappings))
+            {
+                Log.Warning("Missing prop mappings for type {0} in package {1}", type, Ar.Owner.Name);
+                return properties;
+            }
+            
             using var it = new FIterator(header);
             do
             {
                 var (val, isNonZero) = it.Current;
-                
+                // The value has content and needs to be serialized normally
+                if (isNonZero)
+                {
+                    if (propMappings.TryGetValue(val, out var propertyInfo))
+                    {
+                        // TODO Read Value
+                    }
+                    else
+                    {
+                        Log.Warning(
+                            "{0}: Unknown property with value {1}. Can't proceed with serialization (Serialized {2} properties until now)",
+                            type, val, properties.Count);
+                        return properties;
+                    }  
+                }
+                // The value is serialized as zero meaning we don't have to read any bytes here
+                else
+                {
+                    if (propMappings.TryGetValue(val, out var propertyInfo))
+                    {
+                        // TODO Read as Zero
+                    }
+                    else
+                    {
+                        Log.Warning(
+                            "{0}: Unknown property with value {1} but it's zero so we are good",
+                            type, val);
+                    }
+                }
             } while (it.MoveNext());
             return properties;
         }

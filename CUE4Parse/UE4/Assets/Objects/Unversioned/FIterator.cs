@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Objects.Unversioned
 {
@@ -60,7 +62,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
             Skip();
         }
 
-        public bool IsNonZero => !_fragmentIt.Current.HasAnyZeroes || !_zeroMask[_zeroMaskIndex];
+        public bool IsNonZero => !_fragmentIt.Current.HasAnyZeroes || !_zeroMask.GetOrFalse(_zeroMaskIndex);
 
         public (int Val, bool IsNonZero) Current => (_schemaIt, IsNonZero);
 

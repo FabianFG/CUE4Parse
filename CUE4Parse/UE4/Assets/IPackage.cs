@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
@@ -14,6 +15,7 @@ namespace CUE4Parse.UE4.Assets
     {
         public string Name { get; }
         public IFileProvider? Provider { get; }
+        public TypeMappings? Mappings { get; }
         
         public FPackageFileSummary Summary { get; }
         public FNameEntrySerialized[] NameMap { get; }

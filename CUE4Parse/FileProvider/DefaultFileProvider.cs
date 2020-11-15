@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
@@ -19,6 +20,9 @@ namespace CUE4Parse.FileProvider
             if (!dir.Exists)
                 throw new ArgumentException("Given Directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
+            
+            // TODO should this stay like that?
+            MappingsContainer = new RepoTypeMappingsContainer();
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)

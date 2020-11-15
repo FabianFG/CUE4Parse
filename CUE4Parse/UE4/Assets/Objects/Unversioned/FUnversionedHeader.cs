@@ -10,6 +10,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
         public IReadOnlyList<FFragment> Fragments;
         public BitArray ZeroMask;
         public readonly bool HasNonZeroValues;
+        public bool HasValues => HasNonZeroValues | ZeroMask.Length > 0;
         
         public FUnversionedHeader(FArchive Ar)
         {
@@ -37,7 +38,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
             }
             else
             {
-                ZeroMask = new BitArray(new int[8]);
+                ZeroMask = new BitArray(0);
                 HasNonZeroValues = unmaskedNum > 0;
             }
             Fragments = fragments;
@@ -63,6 +64,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
                 }
                 data = new BitArray(intData);
             }
+
+            data.Length = numBits;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.Utils
 {
@@ -23,5 +24,9 @@ namespace CUE4Parse.Utils
 
             return false;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool GetOrFalse(this BitArray array, int index) =>
+            index >= 0 && index < array.Length && array[index];
     }
 }
