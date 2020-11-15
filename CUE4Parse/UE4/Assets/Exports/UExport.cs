@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public string ExportType { get; protected set; }
         public FObjectExport? Export { get; }
         public string Name { get; protected set; }
-        public Package? Owner { get; set; }
+        public IPackage? Owner { get; set; }
         
         public abstract void Deserialize(FAssetArchive Ar, long validPos);
 
@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             Name = exportType;
         }
 
-        protected UExport(FObjectExport exportObject) : this(exportObject.ClassIndex.Name)
+        protected UExport(FObjectExport exportObject) : this(exportObject.ClassName)
         {
             Export = exportObject;
             Name = exportObject.ObjectName.Text;

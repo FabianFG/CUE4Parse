@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         /** Optional FString for subobject within an asset. This is the sub path after the : */
         public readonly string SubPathString;
 
-        public readonly Package? Owner;
+        public readonly IPackage? Owner;
 
         public FSoftObjectPath(FAssetArchive Ar)
         {

@@ -1,4 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -7,15 +9,17 @@ namespace CUE4Parse.UE4.Versions
     public static class VersionUtils
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetUE4CustomVersion(FPackageFileSummary summary, FGuid guid)
+        public static int GetUE4CustomVersion(FAssetArchive Ar, FGuid guid)
         {
+            var summary = Ar.Owner.Summary;
             for (int i = 0; i < summary.CustomContainerVersion.Length; i++)
             {
                 if (summary.CustomContainerVersion[i].Key == guid)
                 {
                     return summary.CustomContainerVersion[i].Version;
                 }
-            }
+            }    
+            
             return -1;
         }
     }

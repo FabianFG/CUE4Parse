@@ -30,12 +30,24 @@ namespace CUE4Parse.UE4.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected byte[] DecryptIfEncrypted(byte[] bytes) =>
             DecryptIfEncrypted(bytes, IsEncrypted);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count) =>
+            DecryptIfEncrypted(bytes, beginOffset, count, IsEncrypted);
         protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted)
         {
             if (!IsEncrypted) return bytes;
             if (AesKey != null)
             {
                 return bytes.Decrypt(AesKey);
+            }
+            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+        }
+        protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted)
+        {
+            if (!IsEncrypted) return bytes;
+            if (AesKey != null)
+            {
+                return bytes.Decrypt(beginOffset, count, AesKey);
             }
             throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
         }

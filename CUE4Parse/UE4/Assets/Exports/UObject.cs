@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports
 {
@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports
 
     public class UObject : UExport, IPropertyHolder
     {
-        public List<FPropertyTag> Properties { get; }
+        public List<FPropertyTag> Properties { get; private set; }
         public bool ReadGuid { get; }
         public FGuid? ObjectGuid { get; private set; }
 
@@ -41,18 +41,46 @@ namespace CUE4Parse.UE4.Assets.Exports
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            while (true)
+            if (Ar.HasUnversionedProperties)
             {
-                var tag = new FPropertyTag(Ar, true);
-                if (tag.Name.IsNone)
-                    break;
-                Properties.Add(tag);
+                DeserializePropertiesUnversioned(Ar, ExportType);
+            }
+            else
+            {
+                Properties = DeserializePropertiesTagged(Ar);
             }
 
             if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 16 <= Ar.Length)
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
+        }
+        
+        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, string type)
+        {
+            var properties = new List<FPropertyTag>();
+            var header = new FUnversionedHeader(Ar);
+            using var it = new FIterator(header);
+            do
+            {
+                var (val, isNonZero) = it.Current;
+                
+            } while (it.MoveNext());
+            return properties;
+        }
+        
+        internal static List<FPropertyTag> DeserializePropertiesTagged(FAssetArchive Ar)
+        {
+            var properties = new List<FPropertyTag>();
+            while (true)
+            {
+                var tag = new FPropertyTag(Ar, true);
+                if (tag.Name.IsNone)
+                    break;
+                properties.Add(tag);
+            }
+
+            return properties;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

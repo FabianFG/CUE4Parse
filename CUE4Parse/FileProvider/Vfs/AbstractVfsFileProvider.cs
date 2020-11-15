@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
@@ -30,6 +31,8 @@ namespace CUE4Parse.FileProvider.Vfs
             new ConcurrentDictionary<IAesVfsReader, object?>();
 
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
+
+        public IoGlobalData? GlobalData { get; private set; }
 
         protected ConcurrentDictionary<FGuid, FAesKey> _keys = new ConcurrentDictionary<FGuid, FAesKey>();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
@@ -55,6 +58,10 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var it in _unloadedVfs)
             {
                 var reader = it.Key;
+                if (GlobalData == null && reader is IoStoreReader ioReader && reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
+                {
+                    GlobalData = new IoGlobalData(ioReader);
+                }
                 if (reader.IsEncrypted)
                     continue;
                 tasks.AddLast(Task.Run(() =>
@@ -74,7 +81,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     catch (Exception e)
                     {
                         Log.Warning(e,
-                            $"Uncaught exception while loading pak file {reader.Name.SubstringAfterLast('/')}");
+                            $"Uncaught exception while loading file {reader.Name.SubstringAfterLast('/')}");
                     }
 
                     return null;

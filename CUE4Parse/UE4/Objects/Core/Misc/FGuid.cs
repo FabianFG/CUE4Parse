@@ -22,7 +22,9 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     };
 
     [StructLayout(LayoutKind.Sequential)]
+#pragma warning disable 660,661
     public struct FGuid : IUStruct
+#pragma warning restore 660,661
     {
         public readonly uint A;
         public readonly uint B;
@@ -40,6 +42,15 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             B = b;
             C = c;
             D = d;
+        }
+
+        public FGuid(string hexString)
+        {
+            var bytes = hexString.ParseHexBinary(); 
+            A = BitConverter.ToUInt32(bytes, 0);
+            B = BitConverter.ToUInt32(bytes, 4);
+            C = BitConverter.ToUInt32(bytes, 8);
+            D = BitConverter.ToUInt32(bytes, 12);
         }
 
         public unsafe string HexString => UnsafePrint.BytesToHex(

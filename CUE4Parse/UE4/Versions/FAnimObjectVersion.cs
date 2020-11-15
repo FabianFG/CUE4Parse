@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Versions
         public static Type Get(FAssetArchive Ar)
         {
 
-            int ver = VersionUtils.GetUE4CustomVersion(Ar.Owner.Summary, GUID);
+            int ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
             if (ver >= 0)
                 return (Type)ver;
 
@@ -35,6 +35,8 @@ namespace CUE4Parse.UE4.Versions
                 return Type.StoreMarkerNamesOnSkeleton;
             if (Ar.Game < EGame.GAME_UE4_26)
                 return (Type)7;
+            if (Ar.Game < EGame.GAME_UE4_27)
+                return (Type) 15;
 
             return Type.LatestVersion;
         }

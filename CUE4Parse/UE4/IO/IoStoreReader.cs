@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
@@ -11,17 +12,18 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Vfs;
-using Serilog;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO
 {
     public class IoStoreReader : AbstractAesVfsReader
     {
-        private static readonly ILogger log = Log.ForContext<IoStoreReader>();
-
         public readonly FArchive Ar;
         
         public readonly FIoStoreTocResource TocResource;
+#if GENERATE_CHUNK_ID_DICT
+        public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
+#endif
         public readonly FIoStoreTocHeader Info;
         public string MountPoint { get; private set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
@@ -33,6 +35,14 @@ namespace CUE4Parse.UE4.IO
         {
             Ar = containerStream;
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
+#if GENERATE_CHUNK_ID_DICT
+            Toc = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
+            for (var i = 0; i < TocResource.ChunkIds.Length; i++)
+            {
+                Toc[TocResource.ChunkIds[i]] = TocResource.ChunkOffsetLengths[i];
+            }
+#endif
+            
             Info = TocResource.Header;
             if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
             {
@@ -47,7 +57,97 @@ namespace CUE4Parse.UE4.IO
 
         public override byte[] Extract(VfsEntry entry)
         {
-            throw new System.NotImplementedException();
+            if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Name}, this is {Name}");
+            return Read(ioEntry.ChunkId, ioEntry.Offset, ioEntry.Size);
+        }
+        
+        // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
+        // UE Code builds a Map<FIoChunkId, FIoOffsetAndLength> to optimize loading of chunks just by their id
+        // After some testing this appeared to take ~30mb of memory
+        // We can save that memory since we rarely use loading by FIoChunkId directly (I'm pretty sure we just do for the global reader)
+        // If anyone want to use the map anyway the define GENERATE_CHUNK_ID_DICT exists
+        
+
+        public bool DoesChunkExist(FIoChunkId chunkId)
+        {
+#if GENERATE_CHUNK_ID_DICT
+            return Toc.ContainsKey(chunkId);      
+#else
+            return Array.IndexOf(TocResource.ChunkIds, chunkId) >= 0;          
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int ChunkIndex(FIoChunkId chunkId) => Array.IndexOf(TocResource.ChunkIds, chunkId);
+
+        public byte[] Read(FIoChunkId chunkId)
+        {
+#if GENERATE_CHUNK_ID_DICT
+            var offsetLength = Toc[chunkId];
+#else
+            var offsetLength = TocResource.ChunkOffsetLengths[Array.IndexOf(TocResource.ChunkIds, chunkId)];
+#endif
+            return Read(chunkId, (long) offsetLength.Offset, (long) offsetLength.Length);
+        }
+        
+        private byte[] Read(FIoChunkId chunkId, long offset, long length)
+        {
+            var compressionBlockSize = TocResource.Header.CompressionBlockSize;
+            var dst = new byte[length];
+            var firstBlockIndex = (int) (offset / compressionBlockSize);
+            var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
+            var offsetInBlock = offset % compressionBlockSize;
+            var remainingSize = length;
+            var dstOffset = 0;
+
+            var compressedBuffer = Array.Empty<byte>();
+            var uncompressedBuffer = Array.Empty<byte>();
+
+            var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
+
+            for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
+            {
+                ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
+
+                var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
+                if (compressedBuffer.Length < rawSize)
+                {
+                    //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");
+                    compressedBuffer = new byte[rawSize];
+                }
+
+                var uncompressedSize = compressionBlock.UncompressedSize;
+                if (uncompressedBuffer.Length < uncompressedSize)
+                {
+                    //Console.WriteLine($"{chunkId}: block {blockIndex} UncompressedBuffer size: {uncompressedSize} - Had to create copy");
+                    uncompressedBuffer = new byte[uncompressedSize];
+                }
+
+                reader.Position = compressionBlock.Offset;
+                reader.Read(compressedBuffer, 0, (int) rawSize);
+                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
+
+                byte[] src;
+                if (compressionBlock.CompressionMethodIndex == 0)
+                {
+                    src = compressedBuffer;
+                }
+                else
+                {
+                    var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
+                    Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0,
+                        (int) uncompressedSize, compressionMethod, reader);
+                    src = uncompressedBuffer;
+                }
+
+                var sizeInBlock = (int) Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
+                Buffer.BlockCopy(src, (int) offsetInBlock, dst, dstOffset, sizeInBlock);
+                offsetInBlock = 0;
+                remainingSize -= sizeInBlock;
+                dstOffset += sizeInBlock;
+            }
+
+            return dst;
         }
 
         public override IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false)
@@ -93,7 +193,7 @@ namespace CUE4Parse.UE4.IO
 
             var files = new Dictionary<string, GameFile>(fileEntries.Length);
             
-            ReadIndex(string.Empty, root.FirstChildEntry);
+            ReadIndex(MountPoint, root.FirstChildEntry);
             
             void ReadIndex(string directoryName, uint dir)
             {

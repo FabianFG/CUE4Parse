@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         /// </summary>
         public readonly int Index;
 
-        public readonly Package? Owner;
+        public readonly IPackage? Owner;
 
         public FObjectImport? ImportObject => Index < 0 ? Owner?.ImportMap[-Index - 1] : null;
         public FObjectImport? OuterImportObject => ImportObject?.OuterIndex?.ImportObject ?? ImportObject;
@@ -44,7 +44,8 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public string Name => ImportObject?.ObjectName.Text
                               ?? ExportObject?.ObjectName.Text
-                              ?? Index.ToString();
+                              //?? Index.ToString();
+                              ?? string.Empty;
 
         public FPackageIndex(FAssetArchive Ar)
         {
@@ -297,26 +298,35 @@ namespace CUE4Parse.UE4.Objects.UObject
 
     public class FObjectExport : FObjectResource
     {
-        public readonly FPackageIndex ClassIndex;
-        public readonly FPackageIndex SuperIndex;
-        public readonly FPackageIndex TemplateIndex;
-        public readonly uint ObjectFlags;
-        public readonly long SerialSize;
-        public readonly long SerialOffset;
-        public readonly bool ForcedExport;
-        public readonly bool NotForClient;
-        public readonly bool NotForServer;
-        public readonly FGuid PackageGuid;
-        public readonly uint PackageFlags;
-        public readonly bool NotAlwaysLoadedForEditorGame;
-        public readonly bool IsAsset;
-        public readonly int FirstExportDependency;
-        public readonly int SerializationBeforeSerializationDependencies;
-        public readonly int CreateBeforeSerializationDependencies;
-        public readonly int SerializationBeforeCreateDependencies;
-        public readonly int CreateBeforeCreateDependencies;
+        public FPackageIndex ClassIndex;
+        public FPackageIndex SuperIndex;
+        public FPackageIndex TemplateIndex;
+        public uint ObjectFlags;
+        public long SerialSize;
+        public long SerialOffset;
+        public bool ForcedExport;
+        public bool NotForClient;
+        public bool NotForServer;
+        public FGuid PackageGuid;
+        public uint PackageFlags;
+        public bool NotAlwaysLoadedForEditorGame;
+        public bool IsAsset;
+        public int FirstExportDependency;
+        public int SerializationBeforeSerializationDependencies;
+        public int CreateBeforeSerializationDependencies;
+        public int SerializationBeforeCreateDependencies;
+        public int CreateBeforeCreateDependencies;
         public Type ExportType;
         public Lazy<UExport> ExportObject;
+
+        public string ClassName;
+
+#pragma warning disable 8618
+        public FObjectExport()
+#pragma warning restore 8618
+        {
+            
+        }
 
         public FObjectExport(FAssetArchive Ar)
         {
@@ -362,6 +372,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerializationBeforeCreateDependencies = 0;
                 CreateBeforeCreateDependencies = 0;
             }
+
+            ClassName = ClassIndex.Name;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,35 +1,53 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
+using Ionic.Zlib;
+using Serilog;
 
 namespace CUE4Parse.Compression
 {
     public static class Compression
     {
+        public static byte[] Decompress(byte[] compressed, int uncompressedSize, CompressionMethod method, FArchive? reader = null) =>
+            Decompress(compressed, 0, compressed.Length, uncompressedSize, method, reader);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] Decompress(byte[] src, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
+        public static byte[] Decompress(byte[] compressed, int compressedOffset, int compressedCount, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         {
-            var dst = new byte[uncompressedSize];
-            Decompress(src, dst, method);
-            return dst;
+            var uncompressed = new byte[uncompressedSize];
+            Decompress(compressed, compressedOffset, compressedCount, uncompressed, 0, uncompressedSize, method);
+            return uncompressed;
         }
-        public static void Decompress(byte[] src, byte[] dst, CompressionMethod method, FArchive? reader = null)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Decompress(byte[] compressed, byte[] dst, CompressionMethod method, FArchive? reader = null) =>
+            Decompress(compressed, 0, compressed.Length, dst, 0, dst.Length, method, reader);
+        public static void Decompress(byte[] compressed, int compressedOffset, int compressedSize, byte[] uncompressed, int uncompressedOffset, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         {
+            using var srcStream = new MemoryStream(compressed, compressedOffset, compressedSize, false);
             switch (method)
             {
                 case CompressionMethod.None:
-                    break;
+                    Buffer.BlockCopy(compressed, compressedOffset, uncompressed, uncompressedOffset, compressedSize);
+                    return;
                 case CompressionMethod.Zlib:
-                    break;
+                    var zlib = new ZlibStream(srcStream, CompressionMode.Decompress);
+                    zlib.Read(uncompressed, uncompressedOffset, uncompressedSize);
+                    zlib.Dispose();
+                    return;
                 case CompressionMethod.Gzip:
-                    break;
+                    var gzip = new GZipStream(srcStream, CompressionMode.Decompress);
+                    gzip.Read(uncompressed, uncompressedOffset, uncompressedSize);
+                    gzip.Dispose();
+                    return;
                 case CompressionMethod.Oodle:
-                    break;
+                    Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
+                    return;
                 case CompressionMethod.Unknown:
-                    break;
                 default:
-                    if (reader != null) throw new UnknownCompressionMethodException(reader, $"Compression method \"{method}\" is unknown");
-                    else throw new UnknownCompressionMethodException($"Compression method \"{method}\" is unknown");
+                    if (reader != null) throw new OodleException(reader, $"Compression method \"{method}\" is unknown");
+                    else throw new OodleException($"Compression method \"{method}\" is unknown");
             }
         }
     }

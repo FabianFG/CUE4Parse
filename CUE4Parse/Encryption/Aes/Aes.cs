@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 namespace CUE4Parse.Encryption.Aes
 {
@@ -8,9 +9,17 @@ namespace CUE4Parse.Encryption.Aes
         public const int BLOCK_SIZE = 16 * 8;
 
         private static readonly AesCryptoServiceProvider Provider;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Decrypt(this byte[] encrypted, FAesKey key)
         {
             return Provider.CreateDecryptor(key.Key, null).TransformFinalBlock(encrypted, 0, encrypted.Length);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] Decrypt(this byte[] encrypted, int beginOffset, int count, FAesKey key)
+        {
+            return Provider.CreateDecryptor(key.Key, null).TransformFinalBlock(encrypted, beginOffset, count);
         }
 
         static Aes()

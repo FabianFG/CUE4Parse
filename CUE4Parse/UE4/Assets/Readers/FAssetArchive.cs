@@ -11,12 +11,14 @@ namespace CUE4Parse.UE4.Assets.Readers
     public class FAssetArchive : FArchive
     {
         private readonly FArchive _baseArchive;
-        public readonly Package Owner;
+        public readonly IPackage Owner;
         public readonly int AbsoluteOffset;
-        
+
+        public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
+
         private readonly Dictionary<PayloadType, FAssetArchive> _payloads = new Dictionary<PayloadType, FAssetArchive>();
 
-        public FAssetArchive(FArchive baseArchive, Package owner, int absoluteOffset = 0)
+        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0)
         {
             _baseArchive = baseArchive;
             Owner = owner;

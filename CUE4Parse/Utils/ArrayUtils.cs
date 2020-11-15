@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 namespace CUE4Parse.Utils
 {
@@ -10,6 +11,17 @@ namespace CUE4Parse.Utils
             Array.Copy(byteArray, tmp, len);
 
             return tmp;
+        }
+        
+        public static bool Contains(this BitArray array, bool search)
+        {
+            for (var i = 0; i < array.Count; i++)
+            {
+                if (array[i])
+                    return true;
+            }
+
+            return false;
         }
     }
 }

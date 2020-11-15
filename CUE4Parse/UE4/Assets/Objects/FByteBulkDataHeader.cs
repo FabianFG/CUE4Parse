@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
-    public struct FByteBulkDataHeader
+    public readonly struct FByteBulkDataHeader
     {
         public readonly int BulkDataFlags;
         public readonly int ElementCount;

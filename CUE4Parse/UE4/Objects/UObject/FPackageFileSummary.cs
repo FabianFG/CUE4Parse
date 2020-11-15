@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
@@ -31,14 +33,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int FileVersionUE4;
         public readonly int FileVersionLicenseUE4;
         public readonly FCustomVersion[] CustomContainerVersion;
-        public readonly int TotalHeaderSize;
+        public int TotalHeaderSize;
         public readonly string FolderName;
-        public readonly uint PackageFlags;
-        public readonly int NameCount;
+        public PackageFlags PackageFlags;
+        public int NameCount;
         public readonly int NameOffset;
         public readonly int GatherableTextDataCount;
         public readonly int GatherableTextDataOffset;
-        public readonly int ExportCount;
+        public int ExportCount;
         public readonly int ExportOffset;
         public readonly int ImportCount;
         public readonly int ImportOffset;
@@ -49,18 +51,28 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int ThumbnailTableOffset;
         public readonly FGuid Guid;
         public readonly FGenerationInfo[] Generations;
-        public readonly FEngineVersion SavedByEngineVersion;
-        public readonly FEngineVersion CompatibleWithEngineVersion;
+        public readonly FEngineVersion? SavedByEngineVersion;
+        public readonly FEngineVersion? CompatibleWithEngineVersion;
         public readonly uint CompressionFlags;
         public readonly FCompressedChunk[] CompressedChunks;
         public readonly uint PackageSource;
         public readonly string[] AdditionalPackagesToCook;
         public readonly int AssetRegistryDataOffset;
-        public readonly int BulkDataStartOffset;
+        public int BulkDataStartOffset;
         public readonly int WorldTileInfoDataOffset;
         public readonly int[] ChunkIds;
         public readonly int PreloadDependencyCount;
         public readonly int PreloadDependencyOffset;
+
+        public FPackageFileSummary()
+        {
+            CustomContainerVersion = Array.Empty<FCustomVersion>();
+            FolderName = string.Empty;
+            Generations = Array.Empty<FGenerationInfo>();
+            CompressedChunks = Array.Empty<FCompressedChunk>();
+            AdditionalPackagesToCook = Array.Empty<string>();
+            ChunkIds = Array.Empty<int>();
+        }
 
         public FPackageFileSummary(FArchive Ar)
         {
@@ -72,7 +84,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             CustomContainerVersion = Ar.ReadArray<FCustomVersion>();
             TotalHeaderSize = Ar.Read<int>();
             FolderName = Ar.ReadFString();
-            PackageFlags = Ar.Read<uint>();
+            PackageFlags = Ar.Read<PackageFlags>();
             NameCount = Ar.Read<int>();
             NameOffset = Ar.Read<int>();
             GatherableTextDataCount = Ar.Read<int>();

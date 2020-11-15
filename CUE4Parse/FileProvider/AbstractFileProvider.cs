@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
@@ -134,13 +135,13 @@ namespace CUE4Parse.FileProvider
         #region LoadPackage Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Package LoadPackage(string path) => LoadPackage(this[path]);
+        public IPackage LoadPackage(string path) => LoadPackage(this[path]);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Package LoadPackage(GameFile file) => LoadPackageAsync(file).Result;
+        public IPackage LoadPackage(GameFile file) => LoadPackageAsync(file).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadPackage(string path, out Package package)
+        public bool TryLoadPackage(string path, out IPackage package)
         {
             if (!TryFindGameFile(path, out var file))
             {
@@ -152,29 +153,46 @@ namespace CUE4Parse.FileProvider
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadPackage(GameFile file, out Package package)
+        public bool TryLoadPackage(GameFile file, out IPackage package)
         {
             package = TryLoadPackageAsync(file).Result;
             return package != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<Package> LoadPackageAsync(string path) => await LoadPackageAsync(this[path]);
-        public async Task<Package> LoadPackageAsync(GameFile file)
+        public async Task<IPackage> LoadPackageAsync(string path) => await LoadPackageAsync(this[path]);
+        public async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUE4Package) throw new ArgumentException("File must be a package to be a loaded as one", nameof(file));
-            var uexpFile = Files[file.PathWithoutExtension + ".uexp"];
+            Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.CreateReaderAsync();
-            var uexpTask = uexpFile.CreateReaderAsync();
+            var uexpTask = uexpFile?.CreateReaderAsync();
             var ubulkTask = ubulkFile?.CreateReaderAsync();
             var uptnlTask = uptnlFile?.CreateReaderAsync();
-            return new Package(await uassetTask, await uexpTask, 
-                ubulkTask != null ? await ubulkTask : null, uptnlTask != null ? await uptnlTask : null, this);
+            var uasset = await uassetTask;
+            var uexp = uexpTask != null ? await uexpTask : null;
+            var ubulk = ubulkTask != null ? await ubulkTask : null;
+            var uptnl = uptnlTask != null ? await uptnlTask : null;
+            // TODO Decide which package parser to use
+            if (uexp != null)
+            {
+                return new Package(uasset, uexp, 
+                    ubulk, uptnl, this);
+            }
+            else
+            {
+                if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+                {
+                    throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
+                }
+                return new IoPackage(uasset, vfsFileProvider.GlobalData,
+                    ubulk, uptnl, this);
+            }
         }
 
-        public async Task<Package?> TryLoadPackageAsync(string path)
+        public async Task<IPackage?> TryLoadPackageAsync(string path)
         {
             if (!TryFindGameFile(path, out var file))
             {
@@ -184,27 +202,40 @@ namespace CUE4Parse.FileProvider
             return await TryLoadPackageAsync(file).ConfigureAwait(false);
         }
 
-        public async Task<Package?> TryLoadPackageAsync(GameFile file)
+        public async Task<IPackage?> TryLoadPackageAsync(GameFile file)
         {
-            if (!file.IsUE4Package || !TryFindGameFile(file.PathWithoutExtension + ".uexp", out var uexpFile))
+            if (!file.IsUE4Package)
                 return null;
+            Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.TryCreateReaderAsync().ConfigureAwait(false);
-            var uexpTask = uexpFile.TryCreateReaderAsync().ConfigureAwait(false);
+            var uexpTask = uexpFile?.TryCreateReaderAsync().ConfigureAwait(false);
             var ubulkTask = ubulkFile?.TryCreateReaderAsync().ConfigureAwait(false);
             var uptnlTask = uptnlFile?.TryCreateReaderAsync().ConfigureAwait(false);
 
             var uasset = await uassetTask;
-            var uexp = await uexpTask;
-            if (uasset == null || uexp == null)
+            if (uasset == null)
                 return null;
+            var uexp = uexpTask != null ? await uexpTask.Value : null;
             var ubulk = ubulkTask != null ? await ubulkTask.Value : null;
             var uptnl = uptnlTask != null ? await uptnlTask.Value : null;
 
+            // TODO Decide which package parser to use
             try
             {
-                return new Package(uasset, uexp, ubulk, uptnl, this);
+                if (uexp != null)
+                {
+                    return new Package(uasset, uexp, ubulk, uptnl, this);
+                }
+                else
+                {
+                    if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+                    {
+                        return null;
+                    }
+                    return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this);
+                }
             }
             catch
             {

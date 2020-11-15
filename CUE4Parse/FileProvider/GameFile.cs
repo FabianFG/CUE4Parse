@@ -48,7 +48,9 @@ namespace CUE4Parse.FileProvider
             }
             catch
             {
+#pragma warning disable 8625
                 data = default;
+#pragma warning restore 8625
                 return false;
             }
         }

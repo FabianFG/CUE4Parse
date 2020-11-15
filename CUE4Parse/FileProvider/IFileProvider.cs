@@ -122,54 +122,54 @@ namespace CUE4Parse.FileProvider
         /// </summary>
         /// <param name="path">The package file path</param>
         /// <returns>The parsed package content</returns>
-        public Package LoadPackage(string path);
+        public IPackage LoadPackage(string path);
         /// <summary>
         /// Loads and parses a Package from the passed file. 
         /// Can throw various exceptions
         /// </summary>
         /// <param name="file">The package file</param>
         /// <returns>The parsed package content</returns>
-        public Package LoadPackage(GameFile file);
+        public IPackage LoadPackage(GameFile file);
         /// <summary>
         /// Attempts to loads and parse a Package at the passed path. 
         /// </summary>
         /// <param name="path">The package file path</param>
         /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
         /// <returns>true if the package could be parsed; false otherwise</returns>
-        public bool TryLoadPackage(string path, out Package package);
+        public bool TryLoadPackage(string path, out IPackage package);
         /// <summary>
         /// Attempts to loads and parse a Package from the passed file. 
         /// </summary>
         /// <param name="file">The package file</param>
         /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
         /// <returns>true if the package could be parsed; false otherwise</returns>
-        public bool TryLoadPackage(GameFile file, out Package package);
+        public bool TryLoadPackage(GameFile file, out IPackage package);
         /// <summary>
         /// Asynchronously loads and parses a Package at the passed path. 
         /// Can throw various exceptions
         /// </summary>
         /// <param name="path">The package file path</param>
         /// <returns>The parsed package content</returns>
-        public Task<Package> LoadPackageAsync(string path);
+        public Task<IPackage> LoadPackageAsync(string path);
         /// <summary>
         /// Asynchronously loads and parses a Package from the passed file. 
         /// Can throw various exceptions
         /// </summary>
         /// <param name="file">The package file</param>
         /// <returns>The parsed package content</returns>
-        public Task<Package> LoadPackageAsync(GameFile file);
+        public Task<IPackage> LoadPackageAsync(GameFile file);
         /// <summary>
         /// Asynchronously attempts to loads and parse a Package at the passed path. 
         /// </summary>
         /// <param name="path">The package file path</param>
         /// <returns>The parsed package content if it could be parsed; default otherwise</returns>
-        public Task<Package?> TryLoadPackageAsync(string path);
+        public Task<IPackage?> TryLoadPackageAsync(string path);
         /// <summary>
         /// Asynchronously attempts to loads and parse a Package for the passed file. 
         /// </summary>
         /// <param name="file">The package file</param>
         /// <returns>The parsed package content if it could be parsed; default otherwise</returns>
-        public Task<Package?> TryLoadPackageAsync(GameFile file);
+        public Task<IPackage?> TryLoadPackageAsync(GameFile file);
         /// <summary>
         /// Loads all parts of the Package at the passed path. 
         /// Can throw various exceptions

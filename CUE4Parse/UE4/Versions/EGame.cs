@@ -42,6 +42,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_24 = 0x1000000 + 24 << 4,
         GAME_UE4_25 = 0x1000000 + 25 << 4,
         GAME_UE4_26 = 0x1000000 + 26 << 4,
+        GAME_UE4_27 = 0x1000000 + 27 << 4,
         GAME_UE4_LAST,
         GAME_UE4_LATEST = GAME_UE4_LAST - 1
     }

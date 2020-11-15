@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Vfs;
 
 namespace CUE4Parse.UE4.IO.Objects
@@ -20,15 +21,10 @@ namespace CUE4Parse.UE4.IO.Objects
             Size = (long) offsetLength.Length;
             IsEncrypted = reader.IsEncrypted;
         }
-        
-        public override byte[] Read()
-        {
-            throw new System.NotImplementedException();
-        }
 
-        public override FArchive CreateReader()
-        {
-            throw new System.NotImplementedException();
-        }
+        public override byte[] Read() => Vfs.Extract(this);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Ver, Game);
     }
 }

@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Exports;
+﻿using System;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -65,7 +66,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MovieSceneFloatChannel" => new MovieSceneFloatChannel(Ar),
                 "SoftObjectPath" => new FSoftObjectPath(Ar),
                 "SoftClassPath" => new FSoftObjectPath(Ar),
-                _  => new FStructFallback(Ar)
+                _ => new FStructFallback(Ar, structName),
             };
         }
 

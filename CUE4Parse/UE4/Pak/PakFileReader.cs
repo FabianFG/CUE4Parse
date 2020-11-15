@@ -17,11 +17,8 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Pak
 {
-    public partial class PakFileReader : AbstractAesVfsReader
+    public class PakFileReader : AbstractAesVfsReader
     {
-
-        private static readonly ILogger log = Log.ForContext<PakFileReader>();
-
         public readonly FArchive Ar;
         
         public readonly FPakInfo Info;

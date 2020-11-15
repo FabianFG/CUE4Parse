@@ -1,8 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
-using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
@@ -11,7 +9,6 @@ namespace CUE4Parse.UE4.Pak.Objects
 {
     public class FPakEntry : VfsEntry
     {
-        public readonly PakFileReader Pak;
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public readonly CompressionMethod CompressionMethod;
@@ -25,7 +22,6 @@ namespace CUE4Parse.UE4.Pak.Objects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info) : base(reader)
         {
-            Pak = reader;
             Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
@@ -78,7 +74,6 @@ namespace CUE4Parse.UE4.Pak.Objects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader)
         {
-            Pak = reader;
             Path = path;
             Ver = reader.Ar.Ver;
             Game = reader.Ar.Game;
@@ -183,9 +178,9 @@ namespace CUE4Parse.UE4.Pak.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] Read() => Pak.Extract(this);
+        public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Pak.Ar.Ver, Pak.Ar.Game);
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Ver, Game);
     }
 }

@@ -23,7 +23,9 @@ namespace CUE4Parse.UE4.IO.Objects
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+#pragma warning disable 660,661
     public readonly struct FIoChunkId
+#pragma warning restore 660,661
     {
         public readonly ulong ChunkId;
         public readonly ushort ChunkIndex;
