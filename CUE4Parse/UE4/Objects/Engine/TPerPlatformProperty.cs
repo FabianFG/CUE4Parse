@@ -11,6 +11,11 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly bool bCooked;
             public readonly bool Default;
             public override object Value => Default;
+
+            public FPerPlatformBool()
+            {
+                
+            }
             
             public FPerPlatformBool(FAssetArchive Ar)
             {
@@ -25,6 +30,11 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly float Default;
             public override object Value => Default;
 
+            public FPerPlatformFloat()
+            {
+                
+            }
+
             public FPerPlatformFloat(FAssetArchive Ar)
             {
                 bCooked = Ar.ReadBoolean();
@@ -37,6 +47,11 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly bool bCooked;
             public readonly int Default;
             public override object Value => Default;
+
+            public FPerPlatformInt()
+            {
+                
+            }
 
             public FPerPlatformInt(FAssetArchive Ar)
             {

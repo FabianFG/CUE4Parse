@@ -179,7 +179,7 @@ namespace CUE4Parse.FileProvider
             var uexp = uexpTask != null ? await uexpTask : null;
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
-            // TODO Decide which package parser to use
+            
             if (uexp != null)
             {
                 return new Package(uasset, uexp, 
@@ -224,8 +224,7 @@ namespace CUE4Parse.FileProvider
             var uexp = uexpTask != null ? await uexpTask.Value : null;
             var ubulk = ubulkTask != null ? await ubulkTask.Value : null;
             var uptnl = uptnlTask != null ? await uptnlTask.Value : null;
-
-            // TODO Decide which package parser to use
+            
             try
             {
                 if (uexp != null)

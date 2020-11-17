@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.IO
         public string MountPoint { get; private set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
-        public bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
+        public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
         public IoStoreReader(FArchive containerStream, FArchive tocStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
             base(containerStream.Name, containerStream.Ver, containerStream.Game)

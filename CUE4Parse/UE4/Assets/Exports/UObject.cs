@@ -82,7 +82,16 @@ namespace CUE4Parse.UE4.Assets.Exports
                 {
                     if (propMappings.TryGetValue(val, out var propertyInfo))
                     {
-                        // TODO Read Value
+                        var tag = new FPropertyTag(Ar, propertyInfo, ReadType.NORMAL);
+                        if (tag.Tag != null)
+                            properties.Add(tag);
+                        else
+                        {
+                            Log.Warning(
+                                "{0}: Failed to serialize property {1} of type. Can't proceed with serialization (Serialized {2} properties until now)",
+                                type, propertyInfo.Name, propertyInfo.Type, properties.Count);
+                            return properties;
+                        }
                     }
                     else
                     {
@@ -97,7 +106,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 {
                     if (propMappings.TryGetValue(val, out var propertyInfo))
                     {
-                        // TODO Read as Zero
+                        properties.Add(new FPropertyTag(Ar, propertyInfo, ReadType.ZERO));
                     }
                     else
                     {

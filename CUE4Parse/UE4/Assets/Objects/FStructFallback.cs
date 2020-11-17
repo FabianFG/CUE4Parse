@@ -9,6 +9,11 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public List<FPropertyTag> Properties { get; }
 
+        public FStructFallback()
+        {
+            Properties = new List<FPropertyTag>();
+        }
+
         public FStructFallback(FAssetArchive Ar, string? structType)
         {
             if (Ar.HasUnversionedProperties)

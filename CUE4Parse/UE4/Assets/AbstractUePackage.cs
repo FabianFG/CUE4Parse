@@ -48,14 +48,14 @@ namespace CUE4Parse.UE4.Assets
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UExport>(() =>
                 {
-                    exportAr.SeekAbsolute(it.SerialOffset, SeekOrigin.Begin);
+                    exportAr.SeekAbsolute(it.RealSerialOffset, SeekOrigin.Begin);
                     var validPos = exportAr.Position + it.SerialSize;
                     export.Deserialize(exportAr, validPos);
 #if DEBUG
                     if (validPos != exportAr.Position)
                         Log.Warning($"Did not read {exportType} correctly, {validPos - exportAr.Position} bytes remaining");
                     else
-                        Log.Debug($"Successfully read {exportType} at {it.SerialOffset - Summary.TotalHeaderSize} with size {it.SerialSize}");
+                        Log.Debug($"Successfully read {exportType} at {it.RealSerialOffset} with size {it.SerialSize}");
 #endif
 
                     return export;

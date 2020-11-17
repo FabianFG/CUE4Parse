@@ -93,8 +93,8 @@ namespace CUE4Parse.UE4.Assets
                             throw new ParserException("TODO: FExportMapEntry has FilterFlags");
 
                         //This export offset is not the "real" offset
-                        //exp.SerialOffset = (long) e.CookedSerialOffset;
-                        exp.SerialOffset = currentExportOffset;
+                        exp.SerialOffset = (long) e.CookedSerialOffset;
+                        exp.RealSerialOffset = currentExportOffset;
                         exp.SerialSize = (long) e.CookedSerialSize;
                         exp.ObjectName = CreateFNameFromMappedName(e.ObjectName);
                         exp.ClassName = GlobalData.FindScriptEntryName(e.ClassIndex);

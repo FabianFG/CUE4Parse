@@ -47,6 +47,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                               //?? Index.ToString();
                               ?? string.Empty;
 
+        
+        public FPackageIndex(FAssetArchive Ar, int index)
+        {
+            Index = index;
+            Owner = Ar.Owner;
+        }
+        
         public FPackageIndex(FAssetArchive Ar)
         {
             Index = Ar.Read<int>();
@@ -303,6 +310,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageIndex TemplateIndex;
         public uint ObjectFlags;
         public long SerialSize;
+        public long RealSerialOffset;
         public long SerialOffset;
         public bool ForcedExport;
         public bool NotForClient;
@@ -347,6 +355,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerialSize = Ar.Read<long>();
                 SerialOffset = Ar.Read<long>();
             }
+            RealSerialOffset = SerialOffset;
 
             ForcedExport = Ar.ReadBoolean();
             NotForClient = Ar.ReadBoolean();

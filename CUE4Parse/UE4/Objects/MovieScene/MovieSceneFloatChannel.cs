@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-    public class MovieSceneFloatChannel : IUStruct
+    public readonly struct MovieSceneFloatChannel : IUStruct
     {
         public readonly ERichCurveExtrapolation PreInfinityExtrap;
         public readonly ERichCurveExtrapolation PostInfinityExtrap;
@@ -36,6 +36,8 @@ namespace CUE4Parse.UE4.Objects.MovieScene
             DefaultValue = Ar.Read<float>();
             bHasDefaultValue = Ar.ReadBoolean();
             TickResolution = Ar.Read<FFrameRate>();
+            Times = null;
+            Values = null;
         }
     }
 }

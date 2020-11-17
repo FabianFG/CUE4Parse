@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Exceptions;
 using System;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -18,6 +19,31 @@ namespace CUE4Parse.UE4.Assets.Objects
         public FGuid? PropertyGuid;
         public FPropertyTagType? Tag;
 
+        public FPropertyTag(FAssetArchive Ar, PropertyInfo info, ReadType type)
+        {
+            Name = new FName(info.Name);
+            PropertyType = new FName(info.Type);
+            ArrayIndex = 0;
+            TagData = new FPropertyTagData(info);
+            HasPropertyGuid = false;
+            PropertyGuid = null;
+
+            var pos = Ar.Position;
+            try
+            {
+                Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData,
+                    type);
+            }
+            catch (ParserException e)
+            {
+                Log.Debug(
+                    $"Failed to read FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}), skipping it");
+                Log.Debug(e.ToString());
+            }
+
+            Size = (int) (Ar.Position - pos);
+        }
+        
         public FPropertyTag(FAssetArchive Ar, bool readData)
         {
             Name = Ar.ReadFName();
@@ -27,17 +53,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             PropertyType = Ar.ReadFName();
             Size = Ar.Read<int>();
             ArrayIndex = Ar.Read<int>();
-            TagData = PropertyType.Text switch
-            {
-                "StructProperty" => new FPropertyTagData.StructProperty(Ar),
-                "BoolProperty" => new FPropertyTagData.BoolProperty(Ar),
-                "EnumProperty" => new FPropertyTagData.EnumProperty(Ar),
-                "ByteProperty" => new FPropertyTagData.ByteProperty(Ar),
-                "ArrayProperty" => new FPropertyTagData.ArrayProperty(Ar),
-                "SetProperty" => new FPropertyTagData.SetProperty(Ar),
-                "MapProperty" => new FPropertyTagData.MapProperty(Ar),
-                _ => null
-            };
+            TagData = new FPropertyTagData(Ar, PropertyType.Text);
             HasPropertyGuid = Ar.ReadFlag();
             if (HasPropertyGuid)
             {

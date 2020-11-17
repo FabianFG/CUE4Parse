@@ -58,11 +58,13 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var it in _unloadedVfs)
             {
                 var reader = it.Key;
-                if (GlobalData == null && reader is IoStoreReader ioReader && reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
+                if (GlobalData == null && reader is IoStoreReader ioReader &&
+                    reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
                 {
                     GlobalData = new IoGlobalData(ioReader);
                 }
-                if (reader.IsEncrypted)
+
+                if (reader.IsEncrypted || !reader.HasDirectoryIndex)
                     continue;
                 tasks.AddLast(Task.Run(() =>
                 {
@@ -114,6 +116,15 @@ namespace CUE4Parse.FileProvider.Vfs
                 var key = it.Value;
                 foreach (var reader in UnloadedVfsByGuid(guid))
                 {
+                    if (GlobalData == null && reader is IoStoreReader ioReader &&
+                        reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
+                    {
+                        GlobalData = new IoGlobalData(ioReader);
+                    }
+                    
+                    if (!reader.HasDirectoryIndex)
+                        continue;
+                    
                     tasks.AddLast(Task.Run(() =>
                     {
                         try

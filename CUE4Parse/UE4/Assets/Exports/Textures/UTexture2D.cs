@@ -72,7 +72,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                         Log.Debug($"Loading data for format {pixelFormatEnum}");
 #endif
                         var data = new FTexturePlatformData(Ar);
-                        if (Ar.AbsolutePosition != skipOffset)
+                        if (Ar.AbsolutePosition + Export!.SerialOffset - Export!.RealSerialOffset != skipOffset)
                         {
                             Log.Warning(
                                 $"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");

@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.Pak
         
         public string MountPoint { get; private set; }
 
+        public override bool HasDirectoryIndex => true;
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public override bool IsEncrypted => Info.EncryptedIndex;
 

@@ -9,30 +9,42 @@ namespace CUE4Parse.UE4.Assets.Objects
     public class UScriptArray
     {
         public readonly string InnerType; 
-        public readonly FPropertyTag? InnerTag;
+        public readonly FPropertyTagData? InnerTagData;
         public readonly List<FPropertyTagType> Properties;
 
-        public UScriptArray(FAssetArchive Ar, string innerType)
+        public UScriptArray(string innerType)
         {
             InnerType = innerType;
+            InnerTagData = null;
+            Properties = new List<FPropertyTagType>();
+        }
+
+        public UScriptArray(FAssetArchive Ar, FPropertyTagData? tagData)
+        {
+            InnerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptArray needs inner type");
             var elementCount = Ar.Read<int>();
-            if (innerType == "StructProperty" || innerType == "ArrayProperty")
+            if (Ar.HasUnversionedProperties)
             {
-                InnerTag = new FPropertyTag(Ar, false);
-                if (InnerTag == null)
-                    throw new ParserException(Ar, $"Couldn't read ArrayProperty with inner type {innerType}");
+                // TODO Won't work if the array contains more arrays,
+                // it's just a hack to make it work with our property mappings
+                InnerTagData = tagData;
+            }
+            else if (InnerType == "StructProperty" || InnerType == "ArrayProperty")
+            {
+                InnerTagData = new FPropertyTag(Ar, false).TagData;
+                if (InnerTagData == null)
+                    throw new ParserException(Ar, $"Couldn't read ArrayProperty with inner type {InnerType}");
             }
 
             Properties = new List<FPropertyTagType>(elementCount);
-            var innerTagData = InnerTag?.TagData;
             for (int i = 0; i < elementCount; i++)
             {
-                var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, innerTagData, ReadType.ARRAY);
+                var property = FPropertyTagType.ReadPropertyTagType(Ar, InnerType, InnerTagData, ReadType.ARRAY);
                 if (property != null)
                     Properties.Add(property);
                 else
                     Log.Debug(
-                        $"Failed to read array property of type {innerType} at ${Ar.Position}, index {i}");
+                        $"Failed to read array property of type {InnerType} at ${Ar.Position}, index {i}");
             }
         }
 

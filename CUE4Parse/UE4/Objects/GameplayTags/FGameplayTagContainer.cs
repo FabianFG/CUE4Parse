@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags
 {
-    public struct FGameplayTagContainer : IUStruct, IEnumerable<FName>
+    public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FName>
     {
         public readonly FName[] GameplayTags;
 

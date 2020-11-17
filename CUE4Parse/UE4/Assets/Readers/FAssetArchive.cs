@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Assets.Readers
     {
         private readonly FArchive _baseArchive;
         public readonly IPackage Owner;
-        public readonly int AbsoluteOffset;
+        public int AbsoluteOffset;
 
         public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
 

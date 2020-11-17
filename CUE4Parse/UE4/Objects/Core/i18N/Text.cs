@@ -152,6 +152,10 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly string? CultureInvariantString;
             public override string Text => CultureInvariantString ?? string.Empty;
 
+            public None()
+            {
+                
+            }
             public None(FAssetArchive Ar)
             {
                 if (Ar.ReadBoolean()) // bHasCultureInvariantString

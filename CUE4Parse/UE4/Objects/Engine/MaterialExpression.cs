@@ -3,14 +3,20 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
-    public class FMaterialInput<T> : FExpressionInput
+    public class FMaterialInput<T> : FExpressionInput where T : struct
     {
         public bool UseConstant { get; protected set; }
         public T Constant { get; protected set; }
 
+        public FMaterialInput()
+        {
+            UseConstant = false;
+            Constant = new T();
+        }
+
         public FMaterialInput(FAssetArchive Ar) : base(Ar)
         {
-            UseConstant = Ar.Read<uint>() != 0u;
+            UseConstant = Ar.ReadBoolean();
             Constant = Ar.Read<T>();
         }
     }
@@ -25,6 +31,11 @@ namespace CUE4Parse.UE4.Objects.Engine
         public readonly int MaskB;
         public readonly int MaskA;
         public readonly FName ExpressionName;
+
+        public FExpressionInput()
+        {
+            
+        }
 
         public FExpressionInput(FAssetArchive Ar)
         {

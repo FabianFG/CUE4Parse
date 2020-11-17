@@ -9,12 +9,20 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public Dictionary<FPropertyTagType?, FPropertyTagType?> Properties;
 
-        public UScriptMap(FAssetArchive Ar, FPropertyTagData.MapProperty tagData)
+        public UScriptMap()
         {
+            Properties = new Dictionary<FPropertyTagType?, FPropertyTagType?>();
+        }
+
+        public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData)
+        {
+            if (tagData.InnerType == null || tagData.ValueType == null)
+                throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
+            
             int numKeyToRemove = Ar.Read<int>();
             for (int i = 0; i < numKeyToRemove; i++)
             {
-                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType.Text, tagData, ReadType.MAP);
+                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData, ReadType.MAP);
             }
 
             int numEntries = Ar.Read<int>();
@@ -23,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 try
                 {
-                    Properties[FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType.Text, tagData, ReadType.MAP)] = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType.Text, tagData, ReadType.MAP);
+                    Properties[FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData, ReadType.MAP)] = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData, ReadType.MAP);
                 }
                 catch (ParserException e)
                 {
