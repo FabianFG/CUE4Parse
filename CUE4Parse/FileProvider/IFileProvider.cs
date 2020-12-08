@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -24,7 +25,7 @@ namespace CUE4Parse.FileProvider
         /// Type Mappings that should be used for unversioned property serialization
         /// Can be null if there is no need for loading such packages
         /// </summary>
-        public ITypeMappingsContainer? MappingsContainer { get; set; }
+        public ITypeMappingsProvider? MappingsContainer { get; set; }
         
         /// <summary>
         /// Type Mappings for this specific game (determined by game name)
@@ -36,6 +37,13 @@ namespace CUE4Parse.FileProvider
         /// If <see cref="IsCaseInsensitive"/> is set those keys are in lower case while the Path property of a <see cref="GameFile"/> remains in proper case
         /// </summary>
         public IReadOnlyDictionary<string, GameFile> Files { get; }
+        
+        /// <summary>
+        /// The files available in this provider by the FPackageId from an io store reader
+        /// It only contains the id's for files from io store readers
+        /// </summary>
+        public IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
+        
         /// <summary>
         /// Whether this file provider supports case-insensitive file lookups. 
         /// Has influence to the behaviour of <see cref="Files"/> and <see cref="FixPath"/>

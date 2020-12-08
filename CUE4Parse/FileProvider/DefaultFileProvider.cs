@@ -22,7 +22,7 @@ namespace CUE4Parse.FileProvider
             ScanGameDirectory(dir, true);
             
             // TODO should this stay like that?
-            MappingsContainer = new RepoTypeMappingsContainer();
+            MappingsContainer = new RepoTypeMappingsProvider();
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)

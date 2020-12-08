@@ -19,7 +19,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
         {
             _zeroMask = header.ZeroMask;
             _fragmentIt = header.Fragments.GetEnumerator();
-            Skip();
+            if (header.HasValues)
+                Skip();
         }
         
         public bool MoveNext()

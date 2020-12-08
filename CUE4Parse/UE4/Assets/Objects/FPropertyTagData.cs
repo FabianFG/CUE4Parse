@@ -8,16 +8,20 @@ namespace CUE4Parse.UE4.Assets.Objects
 {
     public class FPropertyTagData
     {
+        public string Type;
         public string? StructType;
         public FGuid? StructGuid;
         public bool? Bool;
         public string? EnumName;
-        public string? EnumType;
+        public bool IsEnumAsByte;
         public string? InnerType;
         public string? ValueType;
+        public FPropertyTagData? InnerTypeData;
+        public FPropertyTagData? ValueTypeData;
 
         internal FPropertyTagData(FAssetArchive Ar, string type)
         {
+            Type = type;
             switch (type)
             {
                 case "StructProperty":
@@ -51,15 +55,18 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        internal FPropertyTagData(PropertyInfo info)
+        internal FPropertyTagData(PropertyType info)
         {
+            Type = info.Type;
             StructType = info.StructType;
             StructGuid = null;
             Bool = info.Bool;
             EnumName = info.EnumName;
-            EnumType = info.EnumType;
-            InnerType = info.InnerType;
-            ValueType = info.ValueType;
+            IsEnumAsByte = info.IsEnumAsByte == true;
+            InnerTypeData = info.InnerType != null ? new FPropertyTagData(info.InnerType) : null;
+            InnerType = InnerTypeData?.Type;
+            ValueTypeData = info.ValueType != null ? new FPropertyTagData(info.ValueType) : null;
+            ValueType = ValueTypeData?.Type;
         }
     }
 }

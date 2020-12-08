@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int GatherableTextDataOffset;
         public int ExportCount;
         public readonly int ExportOffset;
-        public readonly int ImportCount;
+        public int ImportCount;
         public readonly int ImportOffset;
         public readonly int DependsOffset;
         public readonly int SoftPackageReferencesCount;

@@ -22,9 +22,9 @@ namespace CUE4Parse.UE4.Assets.Objects
         public FPropertyTag(FAssetArchive Ar, PropertyInfo info, ReadType type)
         {
             Name = new FName(info.Name);
-            PropertyType = new FName(info.Type);
+            PropertyType = new FName(info.MappingType.Type);
             ArrayIndex = 0;
-            TagData = new FPropertyTagData(info);
+            TagData = new FPropertyTagData(info.MappingType);
             HasPropertyGuid = false;
             PropertyGuid = null;
 

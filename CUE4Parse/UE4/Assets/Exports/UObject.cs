@@ -89,7 +89,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                         {
                             Log.Warning(
                                 "{0}: Failed to serialize property {1} of type. Can't proceed with serialization (Serialized {2} properties until now)",
-                                type, propertyInfo.Name, propertyInfo.Type, properties.Count);
+                                type, propertyInfo.Name, propertyInfo.MappingType.Type, properties.Count);
                             return properties;
                         }
                     }

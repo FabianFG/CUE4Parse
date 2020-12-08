@@ -2,13 +2,18 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.IO.Objects;
+using Serilog;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {
+        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ConcurrentDictionary<FPackageId, GameFile>();
+        public IReadOnlyDictionary<FPackageId, GameFile> byId => _byId;
         private ConcurrentBag<IReadOnlyDictionary<string, GameFile>> _indicesBag = new ConcurrentBag<IReadOnlyDictionary<string, GameFile>>();
 
         public bool IsCaseInsensitive;
@@ -23,6 +28,17 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            foreach (var file in newFiles.Values)
+            {
+                if (file is FIoStoreEntry ioEntry)
+                {
+                    _byId[ioEntry.ChunkId.AsPackageId()] = file;
+                }
+            }
+            stopWatch.Stop();
+            Log.Information("Generating by id took {0}ms", stopWatch.ElapsedMilliseconds);
             _indicesBag.Add(newFiles);
         }
         

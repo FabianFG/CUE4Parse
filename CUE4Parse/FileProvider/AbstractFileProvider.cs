@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -21,10 +22,11 @@ namespace CUE4Parse.FileProvider
 
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
-        public ITypeMappingsContainer? MappingsContainer { get; set; }
+        public ITypeMappingsProvider? MappingsContainer { get; set; }
 
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
+        public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; }
 
         protected AbstractFileProvider(bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)

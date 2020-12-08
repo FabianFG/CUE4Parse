@@ -4,13 +4,19 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
 {
     public class TypeMappings
     {
-        public readonly IReadOnlyDictionary<string, IReadOnlyDictionary<int, PropertyInfo>> Types;
-        public readonly IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> Enums;
+        public readonly Dictionary<string, Struct> Types;
+        public readonly Dictionary<string, Dictionary<int, string>> Enums;
 
-        public TypeMappings(IReadOnlyDictionary<string, IReadOnlyDictionary<int, PropertyInfo>> types, IReadOnlyDictionary<string, IReadOnlyDictionary<int, string>> enums)
+        public TypeMappings(Dictionary<string, Struct> types, Dictionary<string, Dictionary<int, string>> enums)
         {
             Types = types;
             Enums = enums;
+        }
+
+        public TypeMappings()
+        {
+            Types = new Dictionary<string, Struct>();
+            Enums = new Dictionary<string, Dictionary<int, string>>();
         }
     }
 }

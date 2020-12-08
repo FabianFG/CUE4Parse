@@ -1,5 +1,7 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -11,10 +13,20 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 Value = new FName(IndexToEnum(Ar, tagData?.EnumName, 0));
             }
-            else if (Ar.HasUnversionedProperties)
+            else if (Ar.HasUnversionedProperties && type == ReadType.NORMAL)
             {
-                Value = new FName(IndexToEnum(Ar, tagData?.EnumName,
-                        tagData?.EnumType == "IntProperty" ? Ar.Read<int>() : Ar.Read<byte>()));
+                var index = 0;
+                if (tagData?.InnerType != null)
+                {
+                    var underlyingProp = ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.NORMAL)?.GenericValue;
+                    if (underlyingProp != null && underlyingProp.IsNumericType())
+                        index = Convert.ToInt32(underlyingProp);
+                }
+                else
+                {
+                    index = Ar.Read<byte>();
+                }
+                Value = new FName(IndexToEnum(Ar, tagData?.EnumName, index));
             }
             else
             {

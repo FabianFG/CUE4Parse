@@ -21,7 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Resources" />
     <Folder Include="Sounds\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Detex.dll" />
+    <EmbeddedResource Include="Resources\Detex.dll" />
   </ItemGroup>
 
 </Project>

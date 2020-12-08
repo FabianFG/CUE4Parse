@@ -41,27 +41,19 @@ namespace CUE4Parse_Conversion.Textures.BC
         {
             unsafe
             {
-                detexTexture tex;
-                tex.format = (uint)inputFormat;
-                tex.data = (byte*)Unsafe.AsPointer(ref inp[0]);
-                tex.width = width;
-                tex.height = height;
-                tex.width_in_blocks = width / 4;
-                tex.height_in_blocks = height / 4;
-                return detexDecompressTextureLinear(&tex, (byte*)Unsafe.AsPointer(ref dst[0]),
-                    (uint)outputPixelFormat);
+                fixed (byte* inpPtr = inp, dstPtr = dst)
+                {
+                    detexTexture tex;
+                    tex.format = (uint)inputFormat;
+                    tex.data = inpPtr;
+                    tex.width = width;
+                    tex.height = height;
+                    tex.width_in_blocks = width / 4;
+                    tex.height_in_blocks = height / 4;
+                    return detexDecompressTextureLinear(&tex, dstPtr,
+                        (uint)outputPixelFormat);   
+                }
             }
-        }
-
-        public static byte[] DecodeBC6H(byte[] inp, int width, int height)
-        {
-            const int PIXEL_SIZE = 16;
-            var dst = new byte[width * height * PIXEL_SIZE];
-
-            DecodeDetexLinear(inp, dst, width, height, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
-                DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBX8);
-
-            return dst;
         }
 
         [DllImport(DETEX_DLL_NAME)]
@@ -70,7 +62,7 @@ namespace CUE4Parse_Conversion.Textures.BC
 
         private static void PrepareDllFile()
         {
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FModel.Resources.Detex.dll");
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse_Conversion.Resources.Detex.dll");
             if (stream == null)
                 throw new MissingManifestResourceException("Couldn't find Detex.dll in Embedded Resources");
             var ba = new byte[(int)stream.Length];

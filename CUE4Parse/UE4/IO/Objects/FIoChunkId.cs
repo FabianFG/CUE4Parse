@@ -41,6 +41,12 @@ namespace CUE4Parse.UE4.IO.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FPackageId AsPackageId()
+        {
+            return new FPackageId(ChunkId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FIoChunkId a, FIoChunkId b) => a.Equals(b);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -25,9 +25,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             var elementCount = Ar.Read<int>();
             if (Ar.HasUnversionedProperties)
             {
-                // TODO Won't work if the array contains more arrays,
-                // it's just a hack to make it work with our property mappings
-                InnerTagData = tagData;
+                InnerTagData = tagData.InnerTypeData;
             }
             else if (InnerType == "StructProperty" || InnerType == "ArrayProperty")
             {

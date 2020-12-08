@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
@@ -20,6 +21,7 @@ namespace CUE4Parse.FileProvider.Vfs
     {
         protected FileProviderDictionary _files;
         public override IReadOnlyDictionary<string, GameFile> Files => _files;
+        public override IReadOnlyDictionary<FPackageId, GameFile> FilesById => _files.byId;
 
         protected ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs =
             new ConcurrentDictionary<IAesVfsReader, object?>();

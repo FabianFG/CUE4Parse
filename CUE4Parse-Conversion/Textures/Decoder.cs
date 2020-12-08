@@ -60,7 +60,6 @@ namespace CUE4Parse_Conversion.Textures
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, isFloat: true,
                         inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
                         outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBX8); // Not sure whether that works, would actually be DETEX_PIXEL_FORMAT_FLOAT_RGBX32
-                    data = Detex.DecodeBC6H(data, mip.SizeX, mip.SizeY);
                     colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_BC7:

@@ -27,11 +27,11 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             int numEntries = Ar.Read<int>();
             Properties = new Dictionary<FPropertyTagType?, FPropertyTagType?>(numEntries);
-            for (int i = 0; i < Properties.Count; i++)
+            for (int i = 0; i < numEntries; i++)
             {
                 try
                 {
-                    Properties[FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData, ReadType.MAP)] = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData, ReadType.MAP);
+                    Properties[FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP)] = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
                 }
                 catch (ParserException e)
                 {

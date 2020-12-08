@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets
             foreach (var it in ExportMap)
             {
                 var exportType = 
-                    it.ClassName == string.Empty || it.ClassName == "None" ? exportAr.ReadFName().Text :
+                    (it.ClassName == string.Empty || it.ClassName == "None") && !(this is IoPackage) ? exportAr.ReadFName().Text :
                         //it.ClassIndex.IsExport ? ExportMap[it.ClassIndex.Index - 1].SuperIndex.Name :
                         //it.ClassIndex.IsImport ? ImportMap[-it.ClassIndex.Index - 1].ObjectName.Text :
                         it.ClassName;
@@ -90,7 +90,15 @@ namespace CUE4Parse.UE4.Assets
         public T? GetExportOfTypeOrNull<T>() where T : UExport
         {
             var export = ExportMap.FirstOrDefault(it => typeof(T).IsAssignableFrom(it.ExportType));
-            return export?.ExportObject.Value as T;
+            try
+            {
+                return export?.ExportObject.Value as T;
+            }
+            catch(Exception e)
+            {
+                Log.Debug(e, "Failed to get export object");
+                return null;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,10 +107,20 @@ namespace CUE4Parse.UE4.Assets
             throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-            ExportMap
-                .FirstOrDefault(it => it.ObjectName.Text.Equals(name, comparisonType))?.ExportObject
-                .Value;
+        public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            try
+            {
+                return ExportMap
+                    .FirstOrDefault(it => it.ObjectName.Text.Equals(name, comparisonType))?.ExportObject
+                    .Value;
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e, "Failed to get export object");
+                return null;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)

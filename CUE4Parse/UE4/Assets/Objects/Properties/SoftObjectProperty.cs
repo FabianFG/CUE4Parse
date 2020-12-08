@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 var pos = Ar.Position;
                 Value = new FSoftObjectPath(Ar);
-                if (type == ReadType.MAP)
+                if (!Ar.HasUnversionedProperties && type == ReadType.MAP)
                 {
                     // skip ahead, putting the total bytes read to 16
                     Ar.Position += 16 - (Ar.Position - pos);

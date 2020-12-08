@@ -77,11 +77,11 @@ namespace CUE4Parse.UE4.Assets.Objects
         public abstract override string ToString();
 
         internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type)
-        { 
+        {
             var tagType = propertyType switch
             {
                 "ByteProperty" => tagData?.EnumName != null
-                    ? (FPropertyTagType?) new NameProperty(Ar, type)
+                    ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)
                     : new ByteProperty(Ar, type),
                 "BoolProperty" => new BoolProperty(Ar, tagData, type),
                 "IntProperty" => new IntProperty(Ar, type),

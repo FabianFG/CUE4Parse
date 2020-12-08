@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
@@ -432,7 +432,14 @@ namespace CUE4Parse.UE4.Objects.UObject
     public class FObjectImport : FObjectResource
     {
         public readonly FName ClassPackage;
-        public readonly FName ClassName;
+        public FName ClassName;
+        
+#pragma warning disable 8618
+        public FObjectImport()
+#pragma warning restore 8618
+        {
+            
+        }
 
         public FObjectImport(FAssetArchive Ar)
         {
