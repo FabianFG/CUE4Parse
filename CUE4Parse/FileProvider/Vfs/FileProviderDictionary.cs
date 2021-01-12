@@ -28,8 +28,6 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles)
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
             foreach (var file in newFiles.Values)
             {
                 if (file is FIoStoreEntry ioEntry)
@@ -37,8 +35,6 @@ namespace CUE4Parse.FileProvider.Vfs
                     _byId[ioEntry.ChunkId.AsPackageId()] = file;
                 }
             }
-            stopWatch.Stop();
-            Log.Information("Generating by id took {0}ms", stopWatch.ElapsedMilliseconds);
             _indicesBag.Add(newFiles);
         }
         

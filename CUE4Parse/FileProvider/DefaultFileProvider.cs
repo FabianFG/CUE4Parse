@@ -22,11 +22,7 @@ namespace CUE4Parse.FileProvider
                 throw new ArgumentException("Given Directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
             
-            // TODO should this stay like that?
-            MappingsContainer = new RepoTypeMappingsProvider();
-            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[0] = new PropertyInfo(0, "FloorTrap", new PropertyType("ObjectProperty"));
-            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[1] = new PropertyInfo(0, "CeilingTrap", new PropertyType("ObjectProperty"));
-            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[2] = new PropertyInfo(0, "WallTrap", new PropertyType("ObjectProperty"));
+            MappingsContainer = new BenBotMappingsProvider();
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)
