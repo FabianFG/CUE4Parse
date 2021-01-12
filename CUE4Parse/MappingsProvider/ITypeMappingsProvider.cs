@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CUE4Parse.UE4.Assets.Objects.Unversioned
+namespace CUE4Parse.MappingsProvider
 {
     public interface ITypeMappingsProvider
     {

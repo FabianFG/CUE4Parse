@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
@@ -217,21 +219,24 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.TryCreateReaderAsync().ConfigureAwait(false);
             var uexpTask = uexpFile?.TryCreateReaderAsync().ConfigureAwait(false);
-            var ubulkTask = ubulkFile?.TryCreateReaderAsync().ConfigureAwait(false);
-            var uptnlTask = uptnlFile?.TryCreateReaderAsync().ConfigureAwait(false);
+            var lazyUbulk = ubulkFile != null
+                ? new Lazy<FArchive?>(() => ubulkFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
+                : null;
+            
+            var lazyUptnl = uptnlFile != null
+                ? new Lazy<FArchive?>(() => uptnlFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
+                : null;
 
             var uasset = await uassetTask;
             if (uasset == null)
                 return null;
             var uexp = uexpTask != null ? await uexpTask.Value : null;
-            var ubulk = ubulkTask != null ? await ubulkTask.Value : null;
-            var uptnl = uptnlTask != null ? await uptnlTask.Value : null;
-            
+
             try
             {
                 if (uexp != null)
                 {
-                    return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
+                    return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
                 }
                 else
                 {
@@ -239,7 +244,7 @@ namespace CUE4Parse.FileProvider
                     {
                         return null;
                     }
-                    return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this, MappingsForThisGame);
+                    return new IoPackage(uasset, vfsFileProvider.GlobalData, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
                 }
             }
             catch

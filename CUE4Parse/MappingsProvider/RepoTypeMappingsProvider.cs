@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -9,7 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 
-namespace CUE4Parse.UE4.Assets.Objects.Unversioned
+namespace CUE4Parse.MappingsProvider
 {
     public sealed class RepoTypeMappingsProvider : JsonTypeMappingsProvider
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CUE4Parse.UE4.Assets.Objects.Unversioned
+namespace CUE4Parse.MappingsProvider
 {
     public class TypeMappings
     {

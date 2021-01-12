@@ -31,6 +31,15 @@ namespace CUE4Parse.UE4.Assets.Objects
 #endif
                 Ar.Read(Data, 0, Header.ElementCount);
             }
+            else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
+            {
+#if DEBUG
+                Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
+#endif
+                var uptnlAr = Ar.GetPayload(PayloadType.UPTNL);
+                uptnlAr.Position = Header.OffsetInFile;
+                uptnlAr.Read(Data, 0, Header.ElementCount);
+            }
             else if (EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags))
             {
 #if DEBUG
@@ -39,13 +48,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                 var ubulkAr = Ar.GetPayload(PayloadType.UBULK);
                 ubulkAr.Position = Header.OffsetInFile;
                 ubulkAr.Read(Data, 0, Header.ElementCount);
-            }
-            else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
-            {
-#if DEBUG
-                Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
-#endif
-                throw new ParserException(Ar, "TODO: Uptnl");
             }
             else if (EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
             {

@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -20,7 +22,7 @@ namespace CUE4Parse.UE4.Assets
         public override FObjectImport[] ImportMap { get; }
         public override FObjectExport[] ExportMap { get; }
 
-        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+        public Package(FArchive uasset, FArchive uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             var uassetAr = new FAssetArchive(uasset, this);
@@ -44,18 +46,22 @@ namespace CUE4Parse.UE4.Assets
             {
                 //var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
                 var offset = Summary.BulkDataStartOffset;
-                var ubulkAr = new FAssetArchive(ubulk, this, offset);
-                uexpAr.AddPayload(PayloadType.UBULK, ubulkAr);
+                uexpAr.AddPayload(PayloadType.UBULK, offset, ubulk);
             }
             if (uptnl != null)
             {
-                // TODO Not sure whether that's even needed
-                var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
-                var uptnlAr = new FAssetArchive(uptnl, this, offset);
-                uexpAr.AddPayload(PayloadType.UPTNL, uptnlAr);
+                var offset = Summary.BulkDataStartOffset;
+                uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
 
             ProcessExportMap(uexpAr);
+        }
+
+        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null,
+            IFileProvider? provider = null, TypeMappings? mappings = null)
+            : this(uasset, uexp, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
+                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
+        {
         }
 
         public Package(string name, byte[] uasset, byte[] uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null)

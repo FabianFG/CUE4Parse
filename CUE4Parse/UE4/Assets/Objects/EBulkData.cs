@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [Flags]
     public enum EBulkData
     {
         BULKDATA_PayloadAtEndOfFile = 0x0001,               // bulk data stored at the end of this file, data offset added to global data offset in package
@@ -12,6 +14,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         BULKDATA_SerializeCompressedBitWindow = 0x0200,     // use platform-specific compression
         BULKDATA_OptionalPayload = 0x0800,                  // same as BULKDATA_PayloadInSeperateFile, but stored with .uptnl extension (UE4.20+)
         BULKDATA_Size64Bit = 0x2000,                        // 64-bit size fields, UE4.22+
+        BULKDATA_BadDataVersion = 0x8000,                   // I really don't know one ushort before the data
         BULKDATA_NoOffsetFixUp = 0x10000                    // do not add Summary.BulkDataStartOffset to bulk location, UE4.26
     }
 

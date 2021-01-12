@@ -23,6 +23,12 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
             }
+
+            if (EBulkData.BULKDATA_BadDataVersion.Check(BulkDataFlags))
+            {
+                Ar.Position += sizeof(ushort);
+                BulkDataFlags &= ~(int)EBulkData.BULKDATA_BadDataVersion;
+            }
         }
     }
 }

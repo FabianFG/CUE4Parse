@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Utils;
@@ -16,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
 
-        private readonly Dictionary<PayloadType, FAssetArchive> _payloads = new Dictionary<PayloadType, FAssetArchive>();
+        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new Dictionary<PayloadType, Lazy<FAssetArchive?>>();
 
         public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0)
         {
@@ -42,15 +43,31 @@ namespace CUE4Parse.UE4.Assets.Readers
         public FAssetArchive GetPayload(PayloadType type)
         {
             _payloads.TryGetValue(type, out var ret);
-            return ret ?? throw new ParserException(this, $"{type} is needed to parse the current package");
+            var reader = ret?.Value;
+            return reader ?? throw new ParserException(this, $"{type} is needed to parse the current package");
         }
+
         public void AddPayload(PayloadType type, FAssetArchive payload)
         {
             if (_payloads.ContainsKey(type))
             {
                 throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
-            _payloads[type] = payload;
+
+            _payloads[type] = new Lazy<FAssetArchive?>(() => payload);
+        }
+        
+        public void AddPayload(PayloadType type, int absoluteOffset, Lazy<FArchive?> payload)
+        {
+            if (_payloads.ContainsKey(type))
+            {
+                throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
+            }
+            _payloads[type] = new Lazy<FAssetArchive?>(() =>
+            {
+                var rawAr = payload.Value;
+                return rawAr == null ? null : new FAssetArchive(rawAr, Owner, absoluteOffset);
+            });
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

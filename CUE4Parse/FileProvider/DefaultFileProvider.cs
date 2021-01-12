@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
@@ -23,6 +24,9 @@ namespace CUE4Parse.FileProvider
             
             // TODO should this stay like that?
             MappingsContainer = new RepoTypeMappingsProvider();
+            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[0] = new PropertyInfo(0, "FloorTrap", new PropertyType("ObjectProperty"));
+            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[1] = new PropertyInfo(0, "CeilingTrap", new PropertyType("ObjectProperty"));
+            MappingsContainer.ForGame("fortnite").Types["FortContextTrapItemDefinition"].Properties[2] = new PropertyInfo(0, "WallTrap", new PropertyType("ObjectProperty"));
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)

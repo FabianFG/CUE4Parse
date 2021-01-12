@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -32,7 +33,7 @@ namespace CUE4Parse.UE4.Assets
 
         public FPackageObjectIndex[] ExportIndices { get; private set; }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+        public IoPackage(FArchive uasset, IoGlobalData globalData, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             GlobalData = globalData;
@@ -68,17 +69,23 @@ namespace CUE4Parse.UE4.Assets
             if (ubulk != null)
             {
                 var offset = Summary.BulkDataStartOffset;
-                var ubulkAr = new FAssetArchive(ubulk, this, offset);
-                uassetAr.AddPayload(PayloadType.UBULK, ubulkAr);
+                uassetAr.AddPayload(PayloadType.UBULK, offset, ubulk);
             }
             if (uptnl != null)
             {
                 var offset = Summary.BulkDataStartOffset;
-                var uptnlAr = new FAssetArchive(uptnl, this, offset);
-                uassetAr.AddPayload(PayloadType.UPTNL, uptnlAr);
+                uassetAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
             
             ProcessExportMap(uassetAr);
+        }
+        
+        
+        public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null,
+            IFileProvider? provider = null, TypeMappings? mappings = null)
+            : this(uasset, globalData, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
+                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
+        {
         }
 
         private FObjectExport[] LoadExportTable(FAssetArchive reader, int exportCount, int exportTableSize,
