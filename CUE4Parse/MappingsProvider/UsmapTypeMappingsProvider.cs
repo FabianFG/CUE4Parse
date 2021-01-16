@@ -16,7 +16,7 @@ namespace CUE4Parse.MappingsProvider
 
         protected void AddUsmap(byte[] usmap, string game, string name = "An unnamed usmap")
         {
-            MappingsByGame[game] = UsmapParser.Parse(usmap);
+            MappingsByGame[game] = UsmapParser.Parse(usmap, name);
         }
         
     }

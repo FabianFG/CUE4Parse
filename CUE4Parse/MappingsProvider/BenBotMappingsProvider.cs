@@ -23,7 +23,7 @@ namespace CUE4Parse.MappingsProvider
         
         public const string BenMappingsEndpoint = "https://benbotfn.tk/api/v1/mappings";
         
-        private HttpClient _client = new HttpClient { Timeout = TimeSpan.FromSeconds(2), DefaultRequestHeaders = { { "User-Agent", "CUE4Parse" } }};
+        private readonly HttpClient _client = new HttpClient { Timeout = TimeSpan.FromSeconds(2), DefaultRequestHeaders = { { "User-Agent", "CUE4Parse" } }};
         
         public sealed override bool Reload()
         {
