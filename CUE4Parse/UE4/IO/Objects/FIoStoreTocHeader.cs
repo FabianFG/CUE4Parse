@@ -5,12 +5,12 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    
     public enum EIoStoreTocVersion
     {
         Invalid = 0,
         Initial,
         DirectoryIndex,
+        PartitionSize,
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     }
@@ -39,7 +39,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint CompressionMethodNameCount;
         public readonly uint CompressionMethodNameLength;
         public readonly uint CompressionBlockSize;
-        public readonly long DirectoryIndexSize;
+        public readonly uint DirectoryIndexSize;
+        public readonly uint PartitionCount;
         public readonly FIoContainerId ContainerId;
         public readonly FGuid EncryptionKeyGuid;
         public readonly EIoContainerFlags ContainerFlags;
@@ -57,7 +58,8 @@ namespace CUE4Parse.UE4.IO.Objects
             CompressionMethodNameCount = Ar.Read<uint>();
             CompressionMethodNameLength = Ar.Read<uint>();
             CompressionBlockSize = Ar.Read<uint>();
-            DirectoryIndexSize = Ar.Read<long>();
+            DirectoryIndexSize = Ar.Read<uint>();
+            PartitionCount = Ar.Read<uint>();
             ContainerId = Ar.Read<FIoContainerId>();
             EncryptionKeyGuid = Ar.Read<FGuid>();
             ContainerFlags = Ar.Read<EIoContainerFlags>();

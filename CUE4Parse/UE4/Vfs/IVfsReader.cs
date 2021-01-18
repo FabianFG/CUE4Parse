@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Versions;

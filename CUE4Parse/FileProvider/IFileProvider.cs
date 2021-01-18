@@ -52,7 +52,7 @@ namespace CUE4Parse.FileProvider
         /// <summary>
         /// The name of the game represented by this provider. 
         /// This is fetched from the prefix before "Game/". 
-        /// If there was no file with "Game/" an empty string is returned
+        /// If there was no file with "Game/" the root folder name is returned
         /// </summary>
         public string GameName { get; }
 

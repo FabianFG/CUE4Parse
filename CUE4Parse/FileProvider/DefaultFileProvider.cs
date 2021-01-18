@@ -21,7 +21,8 @@ namespace CUE4Parse.FileProvider
                 throw new ArgumentException("Given Directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
             
-            MappingsContainer = new BenBotMappingsProvider();
+            // TODO no useless requests
+            MappingsContainer = new BenBotMappingsProvider("fortnite");
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)

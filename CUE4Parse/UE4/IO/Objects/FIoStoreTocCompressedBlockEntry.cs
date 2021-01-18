@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -28,6 +26,11 @@ namespace CUE4Parse.UE4.IO.Objects
                 UncompressedSize = *((uint*) data + 2) & SizeMask;
                 CompressionMethodIndex = (byte) (*((uint*) data + 2) >> SizeBits);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Offset)} {Offset}: From {CompressedSize} To {UncompressedSize}";
         }
     }
 }

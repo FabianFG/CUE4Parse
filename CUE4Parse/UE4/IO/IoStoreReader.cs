@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.IO
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
 #endif
         public readonly FIoStoreTocHeader Info;
-        public string MountPoint { get; private set; }
+        public string? MountPoint { get; private set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;

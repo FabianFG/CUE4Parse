@@ -1,8 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Versions
 {

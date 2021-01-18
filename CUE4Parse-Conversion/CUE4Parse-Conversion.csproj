@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="Resources" />
-    <Folder Include="Sounds\" />
   </ItemGroup>
 
   <ItemGroup>
