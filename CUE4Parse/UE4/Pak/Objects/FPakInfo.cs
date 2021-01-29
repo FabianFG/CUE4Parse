@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -10,7 +9,6 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
-    
     public enum EPakFileVersion : int
     {
         PakFile_Version_Initial = 1,
@@ -35,7 +33,6 @@ namespace CUE4Parse.UE4.Pak.Objects
     {
         public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
-        
         
         public readonly uint Magic;
         public readonly EPakFileVersion Version;
@@ -77,7 +74,14 @@ namespace CUE4Parse.UE4.Pak.Objects
                     throw new ParserException(Ar, "Pak index is frozen");
             }
 
-            if (Version >= EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
+            if (Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
+            {
+                CompressionMethods = new List<CompressionMethod>
+                {
+                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle
+                };
+            }
+            else
             {
                 var maxNumCompressionMethods = offsetToTry switch
                 {
@@ -172,7 +176,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 foreach (var offset in _offsetsToTry)
                 {
-                    reader.Seek(-((long) offset), SeekOrigin.End);
+                    reader.Seek(-(long)offset, SeekOrigin.End);
                     var info = new FPakInfo(reader, offset);
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
