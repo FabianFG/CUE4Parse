@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
         <RootNamespace>CUE4Parse_Fortnite</RootNamespace>
         <LangVersion>default</LangVersion>
         <Nullable>enable</Nullable>
+        <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

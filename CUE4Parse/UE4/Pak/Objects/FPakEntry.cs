@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (info.Version >= EPakFileVersion.PakFile_Version_RelativeChunkOffsets)
             {
                 // Convert relative compressed offsets to absolute
-                for (int i = 0; i < CompressionBlocks.Length; i++)
+                for (var i = 0; i < CompressionBlocks.Length; i++)
                 {
                     CompressionBlocks[i].CompressedStart += Offset;
                     CompressionBlocks[i].CompressedEnd += Offset;

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Vfs;
 
 namespace CUE4Parse.FileProvider.Vfs
