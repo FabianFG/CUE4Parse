@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
@@ -18,7 +20,7 @@ namespace CUE4Parse.UE4.IO
 {
     public class IoStoreReader : AbstractAesVfsReader
     {
-        public readonly FArchive Ar;
+        public readonly IReadOnlyList<FArchive> ContainerStreams;
         
         public readonly FIoStoreTocResource TocResource;
 #if GENERATE_CHUNK_ID_DICT
@@ -30,11 +32,48 @@ namespace CUE4Parse.UE4.IO
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
-        public IoStoreReader(FArchive containerStream, FArchive tocStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
-            base(containerStream.Name, containerStream.Ver, containerStream.Game)
+        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) :
+            this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), ver, game), 
+                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), 
+                    ver, game), readOptions) { }
+
+        public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
+            base(tocStream.Name, tocStream.Ver, tocStream.Game)
         {
-            Ar = containerStream;
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
+
+            List<FArchive> containerStreams;
+            if (TocResource.Header.PartitionCount <= 0)
+            {
+                containerStreams = new List<FArchive>(1);
+                try
+                {
+                    containerStreams.Add(openContainerStreamFunc(tocStream.Name.SubstringBeforeLast('.') + ".ucas"));
+                }
+                catch (Exception e)
+                {
+                    throw new FIoStatusException(EIoErrorCode.FileOpenFailed, $"Failed to open container partition 0 for {tocStream.Name}", e);
+                }
+            }
+            else
+            {
+                containerStreams = new List<FArchive>((int) TocResource.Header.PartitionCount);
+                var environmentPath = tocStream.Name.SubstringBeforeLast('.');
+                for (int i = 0; i < TocResource.Header.PartitionCount; i++)
+                {
+                    try
+                    {
+                        var path = i > 0 ? string.Concat(environmentPath, "_s", i, ".ucas") : string.Concat(environmentPath, ".ucas");
+                        containerStreams.Add(openContainerStreamFunc(path));
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FIoStatusException(EIoErrorCode.FileOpenFailed, $"Failed to open container partition {i} for {tocStream.Name}", e);
+                    }
+                }
+            }
+
+            ContainerStreams = containerStreams;
 #if GENERATE_CHUNK_ID_DICT
             Toc = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
             for (var i = 0; i < TocResource.ChunkIds.Length; i++)
@@ -46,18 +85,16 @@ namespace CUE4Parse.UE4.IO
             Info = TocResource.Header;
             if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
             {
-                log.Warning($"Io Store \"{Name}\" has unsupported version {(int) Info.Version}");
+                log.Warning("Io Store \"{Name}\" has unsupported version {Version}", Path, (int) Info.Version);
             }
         }
-        
-        public IoStoreReader(string containerPath, string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : this(new FileInfo(containerPath), new FileInfo(tocPath), readOptions, ver, game) {}
-        public IoStoreReader(FileInfo containerFile, FileInfo tocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : this(new FStreamArchive(containerFile.Name, containerFile.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), ver, game), new FByteArchive(tocFile.Name, File.ReadAllBytes(tocFile.FullName), ver, game), readOptions) {}
+
+        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
+            : this(new FileInfo(tocPath), readOptions, ver, game) {}
 
         public override byte[] Extract(VfsEntry entry)
         {
-            if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Name}, this is {Name}");
+            if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
             return Read(ioEntry.ChunkId, ioEntry.Offset, ioEntry.Size);
         }
         
@@ -102,8 +139,8 @@ namespace CUE4Parse.UE4.IO
 
             var compressedBuffer = Array.Empty<byte>();
             var uncompressedBuffer = Array.Empty<byte>();
-
-            var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
+            
+            var clonedReaders = new FArchive[ContainerStreams.Count];
 
             for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
             {
@@ -123,7 +160,18 @@ namespace CUE4Parse.UE4.IO
                     uncompressedBuffer = new byte[uncompressedSize];
                 }
 
-                reader.Position = compressionBlock.Offset;
+                var partitionIndex = (int) ((ulong) compressionBlock.Offset / TocResource.Header.PartitionSize);
+                var partitionOffset = (long) ((ulong) compressionBlock.Offset % TocResource.Header.PartitionSize);
+                FArchive reader;
+                if (IsConcurrent)
+                {
+                    ref var clone = ref clonedReaders[partitionIndex];
+                    clone ??= (FArchive) ContainerStreams[partitionIndex].Clone();
+                    reader = clone;
+                }
+                else reader = ContainerStreams[partitionIndex];
+                
+                reader.Position = partitionOffset;
                 reader.Read(compressedBuffer, 0, (int) rawSize);
                 compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
 
@@ -169,8 +217,8 @@ namespace CUE4Parse.UE4.IO
         }
         public IReadOnlyDictionary<string, GameFile> ProcessIndex(bool caseInsensitive)
         {
-            if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException(Ar, "No directory index");
-            var directoryIndex = new FByteArchive(Name, DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
+            if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
+            var directoryIndex = new FByteArchive(Path, DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
             
             string mountPoint;
             try
@@ -179,7 +227,7 @@ namespace CUE4Parse.UE4.IO
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Path}'", e);
             }
             
             ValidateMountPoint(ref mountPoint);
@@ -230,11 +278,15 @@ namespace CUE4Parse.UE4.IO
         }
 
         public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
-        protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
+        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("Io Store can't read bytes without context");//ReadAndDecrypt(length, Ar, IsEncrypted);
 
         public override void Dispose()
         {
-            Ar.Dispose();
+            foreach (var stream in ContainerStreams)
+            {
+                stream.Dispose();
+            }
+
         }
     }
 }

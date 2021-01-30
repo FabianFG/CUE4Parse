@@ -9,6 +9,7 @@ namespace CUE4Parse.UE4.Vfs
 {
     public interface IVfsReader : IDisposable
     {
+        public string Path { get; }
         public string Name { get; }
         
         public IReadOnlyDictionary<string, GameFile> Files { get; }

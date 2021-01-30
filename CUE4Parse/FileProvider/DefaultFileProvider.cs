@@ -51,17 +51,11 @@ namespace CUE4Parse.FileProvider
                         Log.Warning(e.ToString());
                     }
                 }
-                else if (ext.Equals("ucas", StringComparison.OrdinalIgnoreCase))
+                else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        var utoc = new FileInfo(file.FullName.SubstringBeforeLast('.') + ".utoc");
-                        if (!utoc.Exists)
-                        {
-                            Log.Warning("Couldn't locate .utoc for {0}", file.Name);
-                            continue;
-                        }
-                        var reader = new IoStoreReader(file, utoc, EIoStoreTocReadOptions.ReadDirectoryIndex, Ver, Game)
+                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Ver, Game)
                             {IsConcurrent = true};
                         _unloadedVfs[reader] = null; 
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))

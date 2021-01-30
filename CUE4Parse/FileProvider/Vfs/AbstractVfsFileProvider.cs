@@ -61,7 +61,7 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 var reader = it.Key;
                 if (GlobalData == null && reader is IoStoreReader ioReader &&
-                    reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
+                    reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
                 {
                     GlobalData = new IoGlobalData(ioReader);
                 }
@@ -85,7 +85,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     catch (Exception e)
                     {
                         Log.Warning(e,
-                            $"Uncaught exception while loading file {reader.Name.SubstringAfterLast('/')}");
+                            $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
                     }
 
                     return null;
@@ -119,7 +119,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 foreach (var reader in UnloadedVfsByGuid(guid))
                 {
                     if (GlobalData == null && reader is IoStoreReader ioReader &&
-                        reader.Name.Equals("global.ucas", StringComparison.OrdinalIgnoreCase))
+                        reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
                     {
                         GlobalData = new IoGlobalData(ioReader);
                     }
@@ -144,7 +144,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         catch (Exception e)
                         {
                             Log.Warning(e,
-                                $"Uncaught exception while loading pak file {reader.Name.SubstringAfterLast('/')}");
+                                $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
                         }
 
                         return null;

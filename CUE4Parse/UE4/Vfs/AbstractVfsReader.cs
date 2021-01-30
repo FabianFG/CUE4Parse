@@ -13,6 +13,7 @@ namespace CUE4Parse.UE4.Vfs
     public abstract partial class AbstractVfsReader : IVfsReader
     {
         protected static readonly ILogger log = Log.ForContext<AbstractVfsReader>();
+        public string Path { get; }
         public string Name { get; }
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
         public virtual int FileCount => Files.Count;
@@ -25,9 +26,10 @@ namespace CUE4Parse.UE4.Vfs
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
 
-        protected AbstractVfsReader(string name, UE4Version ver, EGame game)
+        protected AbstractVfsReader(string path, UE4Version ver, EGame game)
         {
-            Name = name;
+            Path = path;
+            Name = path.Replace('\\', '/').SubstringAfterLast('/');
             Ver = ver;
             Game = game;
             Files = new Dictionary<string, GameFile>();
@@ -46,7 +48,7 @@ namespace CUE4Parse.UE4.Vfs
 
             if (badMountPoint)
             {
-                log.Warning($"\"{Name}\" has strange mount point \"{mountPoint}\", mounting to root");
+                log.Warning($"\"{Path}\" has strange mount point \"{mountPoint}\", mounting to root");
                 mountPoint = "/";
             }
 
@@ -81,6 +83,6 @@ namespace CUE4Parse.UE4.Vfs
 
         public abstract void Dispose();
 
-        public override string ToString() => Name;
+        public override string ToString() => Path;
     }
 }
