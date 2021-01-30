@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.MappingsProvider;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
@@ -17,12 +16,12 @@ namespace CUE4Parse.FileProvider
     {
         public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive, ver, game)
         {
-            
             if (!dir.Exists)
-                throw new ArgumentException("Given Directory must exist", nameof(dir));
+                throw new ArgumentException("Given directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
             
-            MappingsContainer = new BenBotMappingsProvider();
+            // TODO no useless requests
+            MappingsContainer = new BenBotMappingsProvider("fortnite");
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)
@@ -42,7 +41,7 @@ namespace CUE4Parse.FileProvider
                     try
                     {
                         var reader = new PakFileReader(file, Ver, Game) {IsConcurrent = true};
-                        _unloadedVfs[reader] = null; 
+                        _unloadedVfs[reader] = null;
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
                     }

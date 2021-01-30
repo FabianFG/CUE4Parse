@@ -25,5 +25,10 @@ namespace CUE4Parse.UE4.IO.Objects
                          | ((ulong) offsetAndLength[5] << 32);
             }
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(Offset)} {Offset} | {nameof(Length)} {Length}";
+        }
     }
 }

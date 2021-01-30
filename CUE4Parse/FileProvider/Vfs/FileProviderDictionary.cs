@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.IO.Objects;
-using Serilog;
 
 namespace CUE4Parse.FileProvider.Vfs
 {

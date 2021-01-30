@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.IO.Objects;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -54,7 +52,7 @@ namespace CUE4Parse.FileProvider
         /// <summary>
         /// The name of the game represented by this provider. 
         /// This is fetched from the prefix before "Game/". 
-        /// If there was no file with "Game/" an empty string is returned
+        /// If there was no file with "Game/" the root folder name is returned
         /// </summary>
         public string GameName { get; }
 

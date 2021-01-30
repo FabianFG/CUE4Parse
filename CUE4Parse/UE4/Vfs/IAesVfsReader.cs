@@ -1,8 +1,6 @@
 ﻿using CUE4Parse.Encryption.Aes;
-using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Vfs
 {

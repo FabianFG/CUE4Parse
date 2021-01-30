@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             UncompressedSize = Ar.Read<long>();
             Size = UncompressedSize;
 
-            if (info.Version >= EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
+            if (info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
                 try
                 {
@@ -41,6 +41,10 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     CompressionMethod = CompressionMethod.Unknown;
                 }
+            }
+            else if (info.Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && !info.IsSubVersion)
+            {
+                CompressionMethod = (CompressionMethod)Ar.Read<byte>();
             }
             else
             {
@@ -61,7 +65,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (info.Version >= EPakFileVersion.PakFile_Version_RelativeChunkOffsets)
             {
                 // Convert relative compressed offsets to absolute
-                for (int i = 0; i < CompressionBlocks.Length; i++)
+                for (var i = 0; i < CompressionBlocks.Length; i++)
                 {
                     CompressionBlocks[i].CompressedStart += Offset;
                     CompressionBlocks[i].CompressedEnd += Offset;

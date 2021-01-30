@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Versions;
@@ -18,6 +17,7 @@ namespace CUE4Parse.UE4.Vfs
         public bool HasDirectoryIndex { get; }
         public bool IsConcurrent { get; set; }
         public bool IsMounted { get; }
+        public string MountPoint { get; }
         
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }

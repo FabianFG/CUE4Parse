@@ -22,6 +22,7 @@ namespace CUE4Parse.UE4.Vfs
         public abstract bool HasDirectoryIndex { get; }
         public bool IsConcurrent { get; set; } = false;
         public bool IsMounted { get; } = false;
+        public string MountPoint { get; private set; }
 
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
@@ -53,6 +54,7 @@ namespace CUE4Parse.UE4.Vfs
             }
 
             mountPoint = mountPoint.Substring(1);
+            MountPoint = mountPoint;
         }
         
         protected const int MAX_MOUNTPOINT_TEST_LENGTH = 128;

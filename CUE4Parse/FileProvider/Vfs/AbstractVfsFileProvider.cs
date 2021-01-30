@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
@@ -114,7 +113,7 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var it in keys)
             {
                 var guid = it.Key;
-                if (!_requiredKeys.ContainsKey(guid)) continue;
+                // if (!_requiredKeys.ContainsKey(guid)) continue;
                 var key = it.Value;
                 foreach (var reader in UnloadedVfsByGuid(guid))
                 {
@@ -156,11 +155,9 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var it in completed)
             {
                 var key = it?.AesKey;
-                if (it != null && key != null)
-                {
-                    _requiredKeys.TryRemove(it.EncryptionKeyGuid, out _);
-                    _keys.TryAdd(it.EncryptionKeyGuid, key);
-                }
+                if (it == null || key == null) continue;
+                _requiredKeys.TryRemove(it.EncryptionKeyGuid, out _);
+                _keys.TryAdd(it.EncryptionKeyGuid, key);
             }
 
             return countNewMounts;

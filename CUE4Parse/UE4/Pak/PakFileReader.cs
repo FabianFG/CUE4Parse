@@ -126,7 +126,7 @@ namespace CUE4Parse.UE4.Pak
             var fileCount = index.Read<int>();
             var files = new Dictionary<string, GameFile>(fileCount);
 
-            for (int i = 0; i < fileCount; i++)
+            for (var i = 0; i < fileCount; i++)
             {
                 var path = index.ReadFString();
                 var entry = new FPakEntry(this, path, index, Info);
@@ -191,12 +191,12 @@ namespace CUE4Parse.UE4.Pak
 
                 var files = new Dictionary<string, GameFile>(fileCount);
                 
-                for (int i = 0; i < directoryIndexLength; i++)
+                for (var i = 0; i < directoryIndexLength; i++)
                 {
                     var dir = directoryIndex.ReadFString();
                     var dirDictLength = directoryIndex.Read<int>();
                     
-                    for (int j = 0; j < dirDictLength; j++)
+                    for (var j = 0; j < dirDictLength; j++)
                     {
                         var name = directoryIndex.ReadFString();
                         var path = string.Concat(mountPoint, dir, name);

@@ -9,21 +9,21 @@ namespace CUE4Parse.MappingsProvider
 {
     public class BenBotMappingsProvider : UsmapTypeMappingsProvider
     {
-
         public string? SpecificVersion = null;
-
+        private readonly string _gameName;
         private readonly bool _isWindows64Bit;
 
-        public BenBotMappingsProvider(string? specificVersion = null)
+        public BenBotMappingsProvider(string gameName, string? specificVersion = null)
         {
             SpecificVersion = specificVersion;
+            _gameName = gameName;
             _isWindows64Bit = Environment.Is64BitOperatingSystem && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             Reload();
         }
         
         public const string BenMappingsEndpoint = "https://benbotfn.tk/api/v1/mappings";
         
-        private HttpClient _client = new HttpClient { Timeout = TimeSpan.FromSeconds(2), DefaultRequestHeaders = { { "User-Agent", "CUE4Parse" } }};
+        private readonly HttpClient _client = new HttpClient { Timeout = TimeSpan.FromSeconds(2), DefaultRequestHeaders = { { "User-Agent", "CUE4Parse" } }};
         
         public sealed override bool Reload()
         {
@@ -77,7 +77,7 @@ namespace CUE4Parse.MappingsProvider
                     return false;
                 }
 
-                AddUsmap(usmapBytes, "fortnite", usmapName!);
+                AddUsmap(usmapBytes, _gameName, usmapName!);
                 return true;
             }
             catch (Exception e)

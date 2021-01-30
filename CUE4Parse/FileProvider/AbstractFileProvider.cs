@@ -8,7 +8,6 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Readers;
@@ -38,10 +37,20 @@ namespace CUE4Parse.FileProvider
             Game = game;
         }
 
-        public string GameName =>
-            Files.Keys
-                .FirstOrDefault(it => it.SubstringBefore('/').EndsWith("game", StringComparison.OrdinalIgnoreCase))
-                ?.SubstringBefore("game", StringComparison.OrdinalIgnoreCase) ?? string.Empty;
+        public string GameName
+        {
+            get
+            {
+                string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase));
+
+                if (t == null)
+                    return string.Empty;
+                else if (t.Contains("game", StringComparison.OrdinalIgnoreCase))
+                    return t.SubstringBefore("game", StringComparison.OrdinalIgnoreCase);
+                else
+                    return t.SubstringBefore('/');
+            }
+        }
 
         public GameFile this[string path] => Files[FixPath(path)];
 
