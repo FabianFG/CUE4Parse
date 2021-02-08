@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -6,9 +7,11 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    [JsonConverter(typeof(FSoftObjectPathConverter))]
     public readonly struct FSoftObjectPath : IUStruct
     {
         /** Asset path, patch to a top level object in a package. This is /package/path.assetname */
@@ -133,5 +136,27 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override string ToString() => string.IsNullOrEmpty(SubPathString)
             ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
             : $"{AssetPathName.Text}:{SubPathString}";
+    }
+    
+    public class FSoftObjectPathConverter : JsonConverter<FSoftObjectPath>
+    {
+        public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("AssetPathName");
+            writer.WriteValue(value.AssetPathName.Text);
+            
+            writer.WritePropertyName("SubPathString");
+            writer.WriteValue(value.SubPathString);
+            
+            writer.WriteEndObject();
+        }
+
+        public override FSoftObjectPath ReadJson(JsonReader reader, Type objectType, FSoftObjectPath existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

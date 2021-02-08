@@ -1,9 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
 {
@@ -97,6 +99,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         Loaded,
     }
 
+    [JsonConverter(typeof(FTextConverter))]
     public class FText : IUClass
     {
         public readonly uint Flags;
@@ -142,10 +145,24 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
 
         public override string ToString() => Text;
     }
+    
+    public class FTextConverter : JsonConverter<FText>
+    {
+        public override void WriteJson(JsonWriter writer, FText value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value.TextHistory);
+        }
+
+        public override FText ReadJson(JsonReader reader, Type objectType, FText existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public abstract class FTextHistory : IUClass
     {
-        public abstract string Text { get; }
+        [JsonIgnore] public abstract string Text { get; }
 
         public class None : FTextHistory
         {

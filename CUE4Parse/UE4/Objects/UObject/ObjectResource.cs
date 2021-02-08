@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -20,6 +21,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// Values less than zero indicate that this is an index into the ImportMap. The actual
     /// array index will be (-FPackageIndex - 1)
     /// </summary>
+    [JsonConverter(typeof(FPackageIndexConverter))]
     public class FPackageIndex
     {
         /// <summary>
@@ -42,11 +44,9 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
 
-        public string Name => ImportObject?.ObjectName.Text
-                              ?? ExportObject?.ObjectName.Text
-                              //?? Index.ToString();
-                              ?? string.Empty;
-
+        public string Name => ImportObject?.ObjectName.Text ??
+                              ExportObject?.ObjectName.Text ??
+                              string.Empty;
         
         public FPackageIndex(FAssetArchive Ar, int index)
         {
@@ -68,9 +68,9 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public override string ToString()
         {
-            return ImportObject?.ObjectName.Text.Insert(0, "Import: ")
-                   ?? ExportObject?.ObjectName.Text.Insert(0, "Export: ")
-                   ?? Index.ToString();
+            return ImportObject?.ObjectName.Text.Insert(0, "Import: ") ??
+                   ExportObject?.ObjectName.Text.Insert(0, "Export: ") ??
+                   Index.ToString();
         }
         
         #region Loading Methods
@@ -201,12 +201,39 @@ namespace CUE4Parse.UE4.Objects.UObject
         #endregion
     }
     
+    public class FPackageIndexConverter : JsonConverter<FPackageIndex>
+    {
+        public override void WriteJson(JsonWriter writer, FPackageIndex value, JsonSerializer serializer)
+        {
+            if (value.ImportObject != null)
+            {
+                serializer.Serialize(writer, value.ImportObject);
+            }
+            else if (value.ExportObject != null)
+            {
+                serializer.Serialize(writer, value.ExportObject);
+            }
+            else
+            {
+                writer.WriteNull();
+            }
+            
+        }
+
+        public override FPackageIndex ReadJson(JsonReader reader, Type objectType, FPackageIndex existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    
     
     /// <summary>
     /// Base class for UObject resource types.  FObjectResources are used to store UObjects on disk
     /// via FLinker's ImportMap (for resources contained in other packages) and ExportMap (for resources
     /// contained within the same package)
     /// </summary>
+    [JsonConverter(typeof(FObjectResourceConverter))]
     public abstract class FObjectResource
     {
         public FName ObjectName;
@@ -300,6 +327,37 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override string ToString()
         {
             return ObjectName.Text;
+        }
+    }
+    
+    public class FObjectResourceConverter : JsonConverter<FObjectResource>
+    {
+        public override void WriteJson(JsonWriter writer, FObjectResource value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            switch (value)
+            {
+                case FObjectImport i:
+                    writer.WritePropertyName("ObjectName");
+                    writer.WriteValue($"{i.ObjectName.Text}:{i.ClassName.Text}");
+                    break;
+                case FObjectExport e:
+                    writer.WritePropertyName("ObjectName");
+                    writer.WriteValue($"{e.ObjectName.Text}:{e.ClassName}");
+                    break;
+            }
+
+            writer.WritePropertyName("OuterIndex");
+            serializer.Serialize(writer, value.OuterIndex);
+            
+            writer.WriteEndObject();
+        }
+
+        public override FObjectResource ReadJson(JsonReader reader, Type objectType, FObjectResource existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 

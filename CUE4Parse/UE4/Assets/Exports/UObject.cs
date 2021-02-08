@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports
@@ -17,6 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public List<FPropertyTag> Properties { get; }
     }
 
+    [JsonConverter(typeof(UObjectConverter))]
     public class UObject : UExport, IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; private set; }
@@ -189,5 +191,37 @@ namespace CUE4Parse.UE4.Assets.Exports
         public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
             StringComparison comparisonType = StringComparison.Ordinal) =>
             new Lazy<T>(() => Get<T>(holder, name, comparisonType));
+    }
+    
+    public class UObjectConverter : JsonConverter<UObject>
+    {
+        public override void WriteJson(JsonWriter writer, UObject value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            // export type
+            writer.WritePropertyName("Type");
+            writer.WriteValue(value.ExportType);
+            
+            // export properties
+            writer.WritePropertyName("Export");
+            writer.WriteStartObject();
+            {
+                foreach (var property in value.Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+            }
+            writer.WriteEndObject();
+            
+            writer.WriteEndObject();
+        }
+
+        public override UObject ReadJson(JsonReader reader, Type objectType, UObject existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

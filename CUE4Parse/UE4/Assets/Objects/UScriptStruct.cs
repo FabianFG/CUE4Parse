@@ -11,9 +11,11 @@ using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.UObject;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(UScriptStructConverter))]
     public class UScriptStruct
     {
         public readonly IUStruct StructType;
@@ -71,5 +73,19 @@ namespace CUE4Parse.UE4.Assets.Objects
         }
 
         public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
+    }
+    
+    public class UScriptStructConverter : JsonConverter<UScriptStruct>
+    {
+        public override void WriteJson(JsonWriter writer, UScriptStruct value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value.StructType);
+        }
+
+        public override UScriptStruct ReadJson(JsonReader reader, Type objectType, UScriptStruct existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

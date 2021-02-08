@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -25,6 +26,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         public override string ToString() => Value != null ? $"{Value.ToString()} ({GetType().Name})" : string.Empty;
     }
 
+    [JsonConverter(typeof(FPropertyTagTypeConverter))]
     public abstract class FPropertyTagType
     {
         public abstract object? GenericValue { get; }
@@ -115,6 +117,38 @@ namespace CUE4Parse.UE4.Assets.Objects
             }      
 #endif
             return tagType;
+        }
+    }
+    
+    public class FPropertyTagTypeConverter : JsonConverter<FPropertyTagType>
+    {
+        public override void WriteJson(JsonWriter writer, FPropertyTagType value, JsonSerializer serializer)
+        {
+            // serializer.Serialize(writer, value);
+            switch (value) // remove switch once all types are added
+            {
+                case ObjectProperty o:
+                    serializer.Serialize(writer, o);
+                    break;
+                case TextProperty t:
+                    serializer.Serialize(writer, t);
+                    break;
+                case StructProperty s:
+                    serializer.Serialize(writer, s);
+                    break;
+                case SoftObjectProperty so:
+                    serializer.Serialize(writer, so);
+                    break;
+                default:
+                    writer.WriteNull();
+                    break;
+            }
+        }
+
+        public override FPropertyTagType ReadJson(JsonReader reader, Type objectType, FPropertyTagType existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
