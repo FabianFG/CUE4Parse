@@ -427,6 +427,21 @@ namespace CUE4Parse.FileProvider
         public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport =>
             await TryLoadObjectAsync(objectPath) as T;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<UExport> LoadObjectExports(string? objectPath)
+        {
+            if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
+            var packagePath = objectPath;
+            var dotIndex = packagePath.IndexOf('.');
+            if (dotIndex > -1)
+            {
+                packagePath = packagePath.Substring(0, dotIndex);
+            }
+
+            var pkg = LoadPackage(packagePath);
+            return pkg.GetExports();
+        }
+
         #endregion
     }
 }

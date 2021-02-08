@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
@@ -29,6 +29,7 @@ namespace CUE4Parse.UE4.Assets
         public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
         public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public IEnumerable<UExport> GetExports();
         
         public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
             where T : UExport;

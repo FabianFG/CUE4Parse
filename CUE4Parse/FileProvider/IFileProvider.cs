@@ -294,5 +294,12 @@ namespace CUE4Parse.FileProvider
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object if loaded successfully and of correct type; null otherwise</returns>
         public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport;
+        
+        /// <summary>
+        /// Loads an object from the Package at the passed path
+        /// </summary>
+        /// <param name="objectPath">The object path</param>
+        /// <returns>All exports of the object</returns>
+        public IEnumerable<UExport> LoadObjectExports(string? objectPath);
     }
 }

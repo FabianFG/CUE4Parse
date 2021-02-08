@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -132,6 +133,12 @@ namespace CUE4Parse.UE4.Assets
             GetExportOrNull(name, comparisonType) ??
             throw new NullReferenceException(
                 $"Package '{Name}' does not have an export with the name '{name}'");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<UExport> GetExports()
+        {
+            return ExportMap.Select(x => x.ExportObject.Value);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
