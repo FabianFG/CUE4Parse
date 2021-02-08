@@ -20,7 +20,20 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, StructProperty value, JsonSerializer serializer)
         {
-            serializer.Serialize(writer, value.Value);
+            if (value.Value.StructType is FStructFallback sf)
+            {
+                writer.WriteStartObject();
+                foreach (var property in sf.Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+                writer.WriteEndObject();
+            }
+            else
+            {
+                serializer.Serialize(writer, value.Value.StructType);
+            }
         }
 
         public override StructProperty ReadJson(JsonReader reader, Type objectType, StructProperty existingValue, bool hasExistingValue,

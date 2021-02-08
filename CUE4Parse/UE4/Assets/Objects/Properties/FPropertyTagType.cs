@@ -163,6 +163,9 @@ namespace CUE4Parse.UE4.Assets.Objects
                 case ByteProperty by:
                     serializer.Serialize(writer, by);
                     break;
+                case MapProperty m:
+                    serializer.Serialize(writer, m);
+                    break;
                 default:
                     writer.WriteNull();
                     break;
