@@ -2,9 +2,11 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(EnumPropertyConverter))]
     public class EnumProperty : FPropertyTagType<FName>
     {
         public EnumProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
@@ -49,6 +51,20 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 return string.Concat(enumName, "::", index);
             }
+        }
+    }
+
+    public class EnumPropertyConverter : JsonConverter<EnumProperty>
+    {
+        public override void WriteJson(JsonWriter writer, EnumProperty value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value.Value.Text);
+        }
+
+        public override EnumProperty ReadJson(JsonReader reader, Type objectType, EnumProperty existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
