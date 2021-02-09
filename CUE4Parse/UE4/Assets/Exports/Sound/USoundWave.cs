@@ -1,11 +1,14 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound
 {
+    [JsonConverter(typeof(USoundWaveConverter))]
     public class USoundWave : USoundBase
     {
         public bool bStreaming { get; private set; } = true;
@@ -44,6 +47,50 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 CompressedDataGuid = Ar.Read<FGuid>();
                 RunningPlatformData = new FStreamedAudioPlatformData(Ar);
             }
+        }
+    }
+    
+    public class USoundWaveConverter : JsonConverter<USoundWave>
+    {
+        public override void WriteJson(JsonWriter writer, USoundWave value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            // export type
+            writer.WritePropertyName("Type");
+            writer.WriteValue(value.ExportType);
+            
+            // export properties
+            writer.WritePropertyName("Export");
+            writer.WriteStartObject();
+            {
+                writer.WritePropertyName("CompressedFormatData");
+                serializer.Serialize(writer, value.CompressedFormatData);
+                
+                writer.WritePropertyName("RawData");
+                serializer.Serialize(writer, value.RawData);
+                
+                writer.WritePropertyName("CompressedDataGuid");
+                serializer.Serialize(writer, value.CompressedDataGuid);
+                
+                writer.WritePropertyName("RunningPlatformData");
+                serializer.Serialize(writer, value.RunningPlatformData);
+                
+                foreach (var property in value.Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+            }
+            writer.WriteEndObject();
+            
+            writer.WriteEndObject();
+        }
+
+        public override USoundWave ReadJson(JsonReader reader, Type objectType, USoundWave existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

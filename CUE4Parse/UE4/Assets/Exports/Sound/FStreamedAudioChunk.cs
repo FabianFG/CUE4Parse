@@ -1,9 +1,12 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound
 {
+    [JsonConverter(typeof(FStreamedAudioChunkConverter))]
     public class FStreamedAudioChunk
     {
         public int DataSize;
@@ -23,6 +26,30 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 Ar.Position -= sizeof(int);
                 throw new ParserException(Ar, "StreamedAudioChunks must be cooked");
             }
+        }
+    }
+    
+    public class FStreamedAudioChunkConverter : JsonConverter<FStreamedAudioChunk>
+    {
+        public override void WriteJson(JsonWriter writer, FStreamedAudioChunk value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("DataSize");
+            writer.WriteValue(value.DataSize);
+            
+            writer.WritePropertyName("AudioDataSize");
+            writer.WriteValue(value.AudioDataSize);
+            
+            serializer.Serialize(writer, value.BulkData);
+            
+            writer.WriteEndObject();
+        }
+
+        public override FStreamedAudioChunk ReadJson(JsonReader reader, Type objectType, FStreamedAudioChunk existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -124,52 +124,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, FPropertyTagType value, JsonSerializer serializer)
         {
-            // serializer.Serialize(writer, value);
-            switch (value) // remove switch once all types are added
-            {
-                case ObjectProperty o:
-                    serializer.Serialize(writer, o);
-                    break;
-                case TextProperty t:
-                    serializer.Serialize(writer, t);
-                    break;
-                case StructProperty s:
-                    serializer.Serialize(writer, s);
-                    break;
-                case SoftObjectProperty so:
-                    serializer.Serialize(writer, so);
-                    break;
-                case EnumProperty e:
-                    serializer.Serialize(writer, e);
-                    break;
-                case ArrayProperty a:
-                    serializer.Serialize(writer, a);
-                    break;
-                case BoolProperty b:
-                    serializer.Serialize(writer, b);
-                    break;
-                case FloatProperty f:
-                    serializer.Serialize(writer, f);
-                    break;
-                case IntProperty i:
-                    serializer.Serialize(writer, i);
-                    break;
-                case StrProperty st:
-                    serializer.Serialize(writer, st);
-                    break;
-                case NameProperty n:
-                    serializer.Serialize(writer, n);
-                    break;
-                case ByteProperty by:
-                    serializer.Serialize(writer, by);
-                    break;
-                case MapProperty m:
-                    serializer.Serialize(writer, m);
-                    break;
-                default:
-                    writer.WriteNull();
-                    break;
-            }
+            serializer.Serialize(writer, value);
         }
 
         public override FPropertyTagType ReadJson(JsonReader reader, Type objectType, FPropertyTagType existingValue, bool hasExistingValue,

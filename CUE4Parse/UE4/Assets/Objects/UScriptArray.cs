@@ -2,10 +2,12 @@
 using CUE4Parse.UE4.Exceptions;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(UScriptArrayConverter))]
     public class UScriptArray
     {
         public readonly string InnerType; 
@@ -47,5 +49,26 @@ namespace CUE4Parse.UE4.Assets.Objects
         }
 
         public override string ToString() => $"{InnerType}[{Properties.Count}]";
+    }
+    
+    public class UScriptArrayConverter : JsonConverter<UScriptArray>
+    {
+        public override void WriteJson(JsonWriter writer, UScriptArray value, JsonSerializer serializer)
+        {
+            writer.WriteStartArray();
+            
+            foreach (var property in value.Properties)
+            {
+                serializer.Serialize(writer, property);
+            }
+            
+            writer.WriteEndArray();
+        }
+
+        public override UScriptArray ReadJson(JsonReader reader, Type objectType, UScriptArray existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

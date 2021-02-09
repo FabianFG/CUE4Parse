@@ -8,10 +8,12 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Textures
 {
+    [JsonConverter(typeof(UTexture2DConverter))]
     public class UTexture2D : UTexture
     {
         public FTexture2DMipMap[] Mips { get; private set; }
@@ -107,6 +109,66 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         public override void GetParams(CMaterialParams parameters)
         {
             // ???
+        }
+    }
+    
+    public class UTexture2DConverter : JsonConverter<UTexture2D>
+    {
+        public override void WriteJson(JsonWriter writer, UTexture2D value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            // export type
+            writer.WritePropertyName("Type");
+            writer.WriteValue(value.ExportType);
+            
+            // export properties
+            writer.WritePropertyName("Export");
+            writer.WriteStartObject();
+            {
+                writer.WritePropertyName("Mips");
+                writer.WriteStartArray();
+                {
+                    foreach (var mip in value.Mips)
+                    {
+                        serializer.Serialize(writer, mip);
+                    }
+                }
+                writer.WriteEndArray();
+                
+                writer.WritePropertyName("FirstMip");
+                writer.WriteValue(value.FirstMip);
+                
+                writer.WritePropertyName("SizeX");
+                writer.WriteValue(value.SizeX);
+                
+                writer.WritePropertyName("SizeY");
+                writer.WriteValue(value.SizeY);
+                
+                writer.WritePropertyName("NumSlices");
+                writer.WriteValue(value.NumSlices);
+                
+                writer.WritePropertyName("IsVirtual");
+                writer.WriteValue(value.IsVirtual);
+                
+                writer.WritePropertyName("Format");
+                writer.WriteValue(value.Format.ToString());
+                
+                foreach (var property in value.Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+            }
+            writer.WriteEndObject();
+            
+            writer.WriteEndObject();
+        }
+
+        public override UTexture2D ReadJson(JsonReader reader, Type objectType, UTexture2D existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

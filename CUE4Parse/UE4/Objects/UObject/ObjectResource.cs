@@ -215,7 +215,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
             else
             {
-                writer.WriteNull();
+                writer.WriteValue(value.Index);
             }
             
         }

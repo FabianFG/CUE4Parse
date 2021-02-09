@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.Utils;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
@@ -21,6 +22,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         Base36Encoded, // 1DPF6ARFCM4XH5RMWPU8TGR0J
     };
 
+    [JsonConverter(typeof(FGuidConverter))]
     [StructLayout(LayoutKind.Sequential)]
 #pragma warning disable 660,661
     public struct FGuid : IUStruct
@@ -114,5 +116,19 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public static bool operator ==(FGuid one, FGuid two) => one.A == two.A && one.B == two.B && one.C == two.C && one.D == two.D;
         public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
+    }
+    
+    public class FGuidConverter : JsonConverter<FGuid>
+    {
+        public override void WriteJson(JsonWriter writer, FGuid value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value.ToString(EGuidFormats.UniqueObjectGuid));
+        }
+
+        public override FGuid ReadJson(JsonReader reader, Type objectType, FGuid existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

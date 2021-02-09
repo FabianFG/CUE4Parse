@@ -2,9 +2,12 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
+using CUE4Parse.Utils;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(UScriptMapConverter))]
     public class UScriptMap
     {
         public Dictionary<FPropertyTagType?, FPropertyTagType?> Properties;
@@ -38,6 +41,28 @@ namespace CUE4Parse.UE4.Assets.Objects
                     throw new ParserException(Ar, $"Failed to read key/value pair for index {i} in map", e);
                 }
             }
+        }
+    }
+    
+    public class UScriptMapConverter : JsonConverter<UScriptMap>
+    {
+        public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            foreach (var kvp in value.Properties)
+            {
+                writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+                serializer.Serialize(writer, kvp.Value);
+            }
+            
+            writer.WriteEndObject();
+        }
+
+        public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

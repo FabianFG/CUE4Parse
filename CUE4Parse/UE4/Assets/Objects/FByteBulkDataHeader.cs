@@ -1,9 +1,12 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
     public readonly struct FByteBulkDataHeader
     {
         public readonly int BulkDataFlags;
@@ -29,6 +32,34 @@ namespace CUE4Parse.UE4.Assets.Objects
                 Ar.Position += sizeof(ushort);
                 BulkDataFlags &= ~(int)EBulkData.BULKDATA_BadDataVersion;
             }
+        }
+    }
+    
+    public class FByteBulkDataHeaderConverter : JsonConverter<FByteBulkDataHeader>
+    {
+        public override void WriteJson(JsonWriter writer, FByteBulkDataHeader value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("BulkDataFlags");
+            writer.WriteValue(value.BulkDataFlags);
+            
+            writer.WritePropertyName("ElementCount");
+            writer.WriteValue(value.ElementCount);
+            
+            writer.WritePropertyName("SizeOnDisk");
+            writer.WriteValue(value.SizeOnDisk);
+            
+            writer.WritePropertyName("OffsetInFile");
+            writer.WriteValue($"0x{value.OffsetInFile:X}");
+            
+            writer.WriteEndObject();
+        }
+
+        public override FByteBulkDataHeader ReadJson(JsonReader reader, Type objectType, FByteBulkDataHeader existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

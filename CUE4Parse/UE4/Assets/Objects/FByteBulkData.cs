@@ -1,10 +1,13 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [JsonConverter(typeof(FByteBulkDataConverter))]
     public class FByteBulkData
     {
         public readonly FByteBulkDataHeader Header;
@@ -69,6 +72,21 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
+        }
+    }
+    
+    public class FByteBulkDataConverter : JsonConverter<FByteBulkData>
+    {
+        public override void WriteJson(JsonWriter writer, FByteBulkData value, JsonSerializer serializer)
+        {
+            writer.WritePropertyName("Header");
+            serializer.Serialize(writer, value.Header);
+        }
+
+        public override FByteBulkData ReadJson(JsonReader reader, Type objectType, FByteBulkData existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

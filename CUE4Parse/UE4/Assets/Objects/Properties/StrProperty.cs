@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, StrProperty value, JsonSerializer serializer)
         {
-            serializer.Serialize(writer, value.Value);
+            writer.WriteValue(value.Value);
         }
 
         public override StrProperty ReadJson(JsonReader reader, Type objectType, StrProperty existingValue, bool hasExistingValue,
