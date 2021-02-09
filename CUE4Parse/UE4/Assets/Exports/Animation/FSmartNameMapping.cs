@@ -1,12 +1,15 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
+	[JsonConverter(typeof(FSmartNameMappingConverter))]
     public class FSmartNameMapping
     {
 		public readonly Dictionary<FName, FGuid> GuidMap;
@@ -50,5 +53,69 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 				}
 			}
 		}
+    }
+    
+    public class FSmartNameMappingConverter : JsonConverter<FSmartNameMapping>
+    {
+        public override void WriteJson(JsonWriter writer, FSmartNameMapping value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("GuidMap");
+            if (value.GuidMap != null)
+            {
+	            writer.WriteStartObject();
+	            foreach (var kvp in value.GuidMap)
+	            {
+		            writer.WritePropertyName(kvp.Key.Text);
+		            serializer.Serialize(writer, kvp.Value);
+	            }
+	            writer.WriteEndObject();
+            }
+            else
+            {
+	            writer.WriteNull();
+            }
+                
+            writer.WritePropertyName("UidMap");
+            if (value.UidMap != null)
+            {
+	            writer.WriteStartObject();
+	            foreach (var kvp in value.UidMap)
+	            {
+		            writer.WritePropertyName(kvp.Key.ToString());
+		            writer.WriteValue(kvp.Value.Text);
+	            }
+	            writer.WriteEndObject();
+            }
+            else
+            {
+	            writer.WriteNull();
+            }
+                
+            writer.WritePropertyName("CurveMetaDataMap");
+            if (value.CurveMetaDataMap != null)
+            {
+	            writer.WriteStartObject();
+	            foreach (var kvp in value.CurveMetaDataMap)
+	            {
+		            writer.WritePropertyName(kvp.Key.Text);
+		            serializer.Serialize(writer, kvp.Value);
+	            }
+	            writer.WriteEndObject();
+            }
+            else
+            {
+	            writer.WriteNull();
+            }
+            
+            writer.WriteEndObject();
+        }
+
+        public override FSmartNameMapping ReadJson(JsonReader reader, Type objectType, FSmartNameMapping existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

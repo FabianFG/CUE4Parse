@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     public class FByteBulkData
     {
         public readonly FByteBulkDataHeader Header;
+        public readonly EBulkData BulkDataFlag;
         public readonly byte[] Data;
 
         public FByteBulkData(FAssetArchive Ar)
@@ -25,10 +26,12 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else if (EBulkData.BULKDATA_Unused.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_Unused;
                 Log.Warning("Bulk with no data");
             }
             else if (EBulkData.BULKDATA_ForceInlinePayload.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_ForceInlinePayload;
 #if DEBUG
                 Log.Debug($"bulk data in .uexp file (Force Inline Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
@@ -36,6 +39,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_OptionalPayload;
 #if DEBUG
                 Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
@@ -45,6 +49,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else if (EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_PayloadInSeperateFile;
 #if DEBUG
                 Log.Debug($"bulk data in .ubulk file (Payload In Separate File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
@@ -54,6 +59,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else if (EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_PayloadAtEndOfFile;
 #if DEBUG
                 Log.Debug($"bulk data in .uexp file (Payload At End Of File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif          
@@ -70,6 +76,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else if (EBulkData.BULKDATA_CompressedZlib.Check(bulkDataFlags))
             {
+                BulkDataFlag = EBulkData.BULKDATA_CompressedZlib;
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
         }
@@ -80,7 +87,15 @@ namespace CUE4Parse.UE4.Assets.Objects
         public override void WriteJson(JsonWriter writer, FByteBulkData value, JsonSerializer serializer)
         {
             writer.WritePropertyName("Header");
+            
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("BulkDataFlag");
+            writer.WriteValue(value.BulkDataFlag.ToString());
+            
             serializer.Serialize(writer, value.Header);
+            
+            writer.WriteEndObject();
         }
 
         public override FByteBulkData ReadJson(JsonReader reader, Type objectType, FByteBulkData existingValue, bool hasExistingValue,

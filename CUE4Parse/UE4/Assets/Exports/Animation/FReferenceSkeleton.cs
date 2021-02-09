@@ -1,10 +1,13 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
+    [JsonConverter(typeof(FReferenceSkeletonConverter))]
     public class FReferenceSkeleton
     {
         public readonly FMeshBoneInfo[] FinalRefBoneInfo;
@@ -33,6 +36,60 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     FinalRefBoneInfo[0] = new FMeshBoneInfo(FinalRefBoneInfo[0].Name, - 1);
                 }
             }
+        }
+    }
+    
+    public class FReferenceSkeletonConverter : JsonConverter<FReferenceSkeleton>
+    {
+        public override void WriteJson(JsonWriter writer, FReferenceSkeleton value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("FinalRefBoneInfo");
+            writer.WriteStartArray();
+            {
+                foreach (var boneInfo in value.FinalRefBoneInfo)
+                {
+                    serializer.Serialize(writer, boneInfo);
+                }
+            }
+            writer.WriteEndArray();
+
+            writer.WritePropertyName("FinalRefBonePose");
+            writer.WriteStartArray();
+            {
+                foreach (var bonePose in value.FinalRefBonePose)
+                {
+                    serializer.Serialize(writer, bonePose);
+                }
+            }
+            writer.WriteEndArray();
+            
+            writer.WritePropertyName("FinalNameToIndexMap");
+            {
+                if (value.FinalNameToIndexMap != null)
+                {
+                    writer.WriteStartObject();
+                    foreach (var kvp in value.FinalNameToIndexMap)
+                    {
+                        writer.WritePropertyName(kvp.Key.Text);
+                        writer.WriteValue(kvp.Value);
+                    }
+                    writer.WriteEndObject();
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+            }
+            
+            writer.WriteEndObject();
+        }
+
+        public override FReferenceSkeleton ReadJson(JsonReader reader, Type objectType, FReferenceSkeleton existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
