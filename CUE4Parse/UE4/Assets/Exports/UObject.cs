@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 Properties = DeserializePropertiesTagged(Ar);
             }
 
-            if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 16 <= Ar.Length)
+            if (Ar.Position + 20 <= Ar.Length && ReadGuid && Ar.ReadBoolean())
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }

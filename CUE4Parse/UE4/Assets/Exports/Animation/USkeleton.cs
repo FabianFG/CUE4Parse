@@ -99,51 +99,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 serializer.Serialize(writer, value.Guid);
                 
                 writer.WritePropertyName("AnimRetargetSources");
-                if (value.AnimRetargetSources != null)
-                {
-                    writer.WriteStartObject();
-                    foreach (var kvp in value.AnimRetargetSources)
-                    {
-                        writer.WritePropertyName(kvp.Key.Text);
-                        serializer.Serialize(writer, kvp.Value);
-                    }
-                    writer.WriteEndObject();
-                }
-                else
-                {
-                    writer.WriteNull();
-                }
+                serializer.Serialize(writer, value.AnimRetargetSources);
 
                 writer.WritePropertyName("NameMappings");
-                if (value.NameMappings != null)
-                {
-                    writer.WriteStartObject();
-                    foreach (var kvp in value.NameMappings)
-                    {
-                        writer.WritePropertyName(kvp.Key.Text);
-                        serializer.Serialize(writer, kvp.Value);
-                    }
-                    writer.WriteEndObject();
-                }
-                else
-                {
-                    writer.WriteNull();
-                }
+                serializer.Serialize(writer, value.NameMappings);
 
                 writer.WritePropertyName("ExistingMarkerNames");
-                if (value.ExistingMarkerNames != null)
-                {
-                    writer.WriteStartArray();
-                    foreach (var name in value.ExistingMarkerNames)
-                    {
-                        writer.WriteValue(name.Text);
-                    }
-                    writer.WriteEndArray();
-                }
-                else
-                {
-                    writer.WriteNull();
-                }
+                serializer.Serialize(writer, value.ExistingMarkerNames);
 
                 foreach (var property in value.Properties)
                 {

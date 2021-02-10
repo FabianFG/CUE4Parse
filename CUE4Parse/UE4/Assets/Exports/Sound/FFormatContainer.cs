@@ -29,12 +29,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         {
             writer.WriteStartObject();
             
-            foreach (var kvp in value.Formats)
-            {
-                writer.WritePropertyName(kvp.Key.Text);
-                serializer.Serialize(writer, kvp.Value);
-            }
-            
+            serializer.Serialize(writer, value.Formats);
+
             writer.WriteEndObject();
         }
 

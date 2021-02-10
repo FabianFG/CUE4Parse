@@ -35,10 +35,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
-        public FObjectImport? ImportObject => Index < 0 ? Owner?.ImportMap[-Index - 1] : null;
+        public FObjectImport? ImportObject => IsImport && -Index <= Owner?.ImportMap.Length ? Owner?.ImportMap[-Index - 1] : null;
         public FObjectImport? OuterImportObject => ImportObject?.OuterIndex?.ImportObject ?? ImportObject;
         
-        public FObjectExport? ExportObject => Index > 0 ? Owner?.ExportMap[Index - 1] : null;
+        public FObjectExport? ExportObject => IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
         
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
@@ -340,11 +340,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 case FObjectImport i:
                     writer.WritePropertyName("ObjectName");
-                    writer.WriteValue($"{i.ObjectName.Text}:{i.ClassName.Text}");
+                    writer.WriteValue($"{i.ObjectName.Name.Name}:{i.ClassName.Text}");
                     break;
                 case FObjectExport e:
                     writer.WritePropertyName("ObjectName");
-                    writer.WriteValue($"{e.ObjectName.Text}:{e.ClassName}");
+                    writer.WriteValue($"{e.ObjectName.Name.Name}:{e.ClassName}");
                     break;
             }
 

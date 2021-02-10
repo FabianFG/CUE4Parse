@@ -27,6 +27,16 @@ namespace CUE4Parse.UE4.Readers
         public override bool CanWrite { get; } = false;
         public override void SetLength(long value) { throw new InvalidOperationException(); }
         public override void Write(byte[] buffer, int offset, int count) { throw new InvalidOperationException(); }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ReadArray<T>(T[] array, Func<T> getter)
+        {
+            // array is a reference type
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = getter();
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadArray<T>(int length, Func<T> getter)
@@ -38,10 +48,7 @@ namespace CUE4Parse.UE4.Readers
                 return result;
             }
 
-            for (int i = 0; i < length; i++)
-            {
-                result[i] = getter();
-            }
+            ReadArray(result, getter);
             
             return result;
         }
@@ -50,7 +57,7 @@ namespace CUE4Parse.UE4.Readers
         public T[] ReadArray<T>(Func<T> getter)
         {
             var length = Read<int>();
-            return ReadArray<T>(length, getter);
+            return ReadArray(length, getter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

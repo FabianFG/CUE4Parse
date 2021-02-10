@@ -96,7 +96,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "TextProperty" => new TextProperty(Ar, type),
                 "InterfaceProperty" => new InterfaceProperty(Ar, type),
                 "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
-                "AssetObjectProperty" => new SoftObjectProperty(Ar, type),
+                "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
                 "UInt64Property" => new UInt64Property(Ar, type),
                 "UInt32Property" => new UInt32Property(Ar, type),
                 "UInt16Property" => new UInt16Property(Ar, type),

@@ -28,12 +28,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 var path = Ar.ReadFString();
                 throw new ParserException(Ar, $"Asset path \"{path}\" is in short form and is not supported, nor recommended");
             }
-            else
-            {
-                AssetPathName = Ar.ReadFName();
-                SubPathString = Ar.ReadFString();
-            }
-
+            
+            AssetPathName = Ar.ReadFName();
+            SubPathString = Ar.ReadFString();
             Owner = Ar.Owner;
         }
         
@@ -145,7 +142,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WriteStartObject();
             
             writer.WritePropertyName("AssetPathName");
-            writer.WriteValue(value.AssetPathName.Text);
+            serializer.Serialize(writer, value.AssetPathName);
             
             writer.WritePropertyName("SubPathString");
             writer.WriteValue(value.SubPathString);

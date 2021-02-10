@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WriteStartObject();
             
             writer.WritePropertyName("Name");
-            writer.WriteValue(value.Name.Text);
+            serializer.Serialize(writer, value.Name);
                 
             writer.WritePropertyName("ParentIndex");
             writer.WriteValue(value.ParentIndex);

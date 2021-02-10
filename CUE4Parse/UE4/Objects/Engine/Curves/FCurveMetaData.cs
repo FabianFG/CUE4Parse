@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             writer.WriteStartArray();
             foreach (var bone in value.LinkedBones)
             {
-                writer.WriteValue(bone.Text);
+                serializer.Serialize(writer, bone);
             }
             writer.WriteEndArray();
                 

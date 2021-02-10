@@ -33,13 +33,16 @@ namespace CUE4Parse.UE4.Assets
             }
 
             uassetAr.Seek(Summary.NameOffset, SeekOrigin.Begin);
-            NameMap = uassetAr.ReadArray(Summary.NameCount, () => new FNameEntrySerialized(uassetAr));
+            NameMap = new FNameEntrySerialized[Summary.NameCount];
+            uassetAr.ReadArray(NameMap, () => new FNameEntrySerialized(uassetAr));
 
             uassetAr.Seek(Summary.ImportOffset, SeekOrigin.Begin);
-            ImportMap = uassetAr.ReadArray(Summary.ImportCount, () => new FObjectImport(uassetAr));
+            ImportMap = new FObjectImport[Summary.ImportCount];
+            uassetAr.ReadArray(ImportMap, () => new FObjectImport(uassetAr));
 
             uassetAr.Seek(Summary.ExportOffset, SeekOrigin.Begin);
-            ExportMap = uassetAr.ReadArray(Summary.ExportCount, () => new FObjectExport(uassetAr));
+            ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
+            uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
             var uexpAr = new FAssetArchive(uexp, this, Summary.TotalHeaderSize);
             if (ubulk != null)

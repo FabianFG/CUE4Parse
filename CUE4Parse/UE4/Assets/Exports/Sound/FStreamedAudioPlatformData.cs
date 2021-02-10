@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             writer.WriteValue(value.NumChunks);
             
             writer.WritePropertyName("AudioFormat");
-            writer.WriteValue(value.AudioFormat.Text);
+            serializer.Serialize(writer, value.AudioFormat);
             
             writer.WritePropertyName("Chunks");
             writer.WriteStartArray();

@@ -66,23 +66,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WriteEndArray();
             
             writer.WritePropertyName("FinalNameToIndexMap");
-            {
-                if (value.FinalNameToIndexMap != null)
-                {
-                    writer.WriteStartObject();
-                    foreach (var kvp in value.FinalNameToIndexMap)
-                    {
-                        writer.WritePropertyName(kvp.Key.Text);
-                        writer.WriteValue(kvp.Value);
-                    }
-                    writer.WriteEndObject();
-                }
-                else
-                {
-                    writer.WriteNull();
-                }
-            }
-            
+            serializer.Serialize(writer, value.FinalNameToIndexMap);
+
             writer.WriteEndObject();
         }
 

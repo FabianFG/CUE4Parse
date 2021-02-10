@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WriteStartObject();
             
             writer.WritePropertyName("PoseName");
-            writer.WriteValue(value.PoseName.Text);
+            serializer.Serialize(writer, value.PoseName);
 
             writer.WritePropertyName("ReferencePose");
             writer.WriteStartArray();

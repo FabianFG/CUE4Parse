@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             writer.WriteValue(value.Num);
             
             writer.WritePropertyName("Name");
-            writer.WriteValue(value.Value.Text);
+            serializer.Serialize(writer, value.Value);
             
             writer.WriteEndObject();
         }

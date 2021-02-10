@@ -58,7 +58,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, EnumProperty value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.Value.Text);
+            serializer.Serialize(writer, value.Value);
         }
 
         public override EnumProperty ReadJson(JsonReader reader, Type objectType, EnumProperty existingValue, bool hasExistingValue,

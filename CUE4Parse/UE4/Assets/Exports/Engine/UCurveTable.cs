@@ -51,15 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             
             // export properties
             writer.WritePropertyName("Export");
-            writer.WriteStartObject();
-            {
-                foreach (var kvp in value.RowMap)
-                {
-                    writer.WritePropertyName(kvp.Key.Text);
-                    serializer.Serialize(writer, kvp.Value); // will write CurveTableMode
-                }
-            }
-            writer.WriteEndObject();
+            serializer.Serialize(writer, value.RowMap); // will write CurveTableMode
             
             writer.WriteEndObject();
         }

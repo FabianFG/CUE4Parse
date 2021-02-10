@@ -135,7 +135,10 @@ namespace CUE4Parse.MappingsProvider
             for (int i = 0; i < serializablePropertyCount; i++)
             {
                 var propInfo = ParsePropertyInfo(Ar, nameLut);
-                properties[propInfo.Index] = propInfo;
+                for (int j = 0; j < propInfo.ArraySize; j++)
+                {
+                    properties[propInfo.Index + j] = propInfo;
+                }
             }
             return new Struct(context, name, superType, properties, propertyCount);
         }

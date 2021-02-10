@@ -62,52 +62,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WriteStartObject();
 
             writer.WritePropertyName("GuidMap");
-            if (value.GuidMap != null)
-            {
-	            writer.WriteStartObject();
-	            foreach (var kvp in value.GuidMap)
-	            {
-		            writer.WritePropertyName(kvp.Key.Text);
-		            serializer.Serialize(writer, kvp.Value);
-	            }
-	            writer.WriteEndObject();
-            }
-            else
-            {
-	            writer.WriteNull();
-            }
+            serializer.Serialize(writer, value.GuidMap);
                 
             writer.WritePropertyName("UidMap");
-            if (value.UidMap != null)
-            {
-	            writer.WriteStartObject();
-	            foreach (var kvp in value.UidMap)
-	            {
-		            writer.WritePropertyName(kvp.Key.ToString());
-		            writer.WriteValue(kvp.Value.Text);
-	            }
-	            writer.WriteEndObject();
-            }
-            else
-            {
-	            writer.WriteNull();
-            }
+            serializer.Serialize(writer, value.UidMap);
                 
             writer.WritePropertyName("CurveMetaDataMap");
-            if (value.CurveMetaDataMap != null)
-            {
-	            writer.WriteStartObject();
-	            foreach (var kvp in value.CurveMetaDataMap)
-	            {
-		            writer.WritePropertyName(kvp.Key.Text);
-		            serializer.Serialize(writer, kvp.Value);
-	            }
-	            writer.WriteEndObject();
-            }
-            else
-            {
-	            writer.WriteNull();
-            }
+            serializer.Serialize(writer, value.CurveMetaDataMap);
             
             writer.WriteEndObject();
         }

@@ -46,7 +46,10 @@ namespace CUE4Parse.MappingsProvider
             {
                 if (propToken == null) continue;
                 var prop = ParsePropertyInfo(propToken);
-                properties[prop.Index] = prop;
+                for (int i = 0; i < prop.ArraySize; i++)
+                {
+                    properties[prop.Index + i] = prop;
+                }
             }
             var propertyCount = structToken["propertyCount"]!.ToObject<int>()!;
             
