@@ -98,6 +98,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             SoftPackageReferencesOffset = Ar.Read<int>();
             SearchableNamesOffset = Ar.Read<int>();
             ThumbnailTableOffset = Ar.Read<int>();
+            if (Ar.Name.StartsWith("ShooterGame")) Ar.Read<long>();
             Guid = Ar.Read<FGuid>();
             Generations = Ar.ReadArray<FGenerationInfo>();
             SavedByEngineVersion = new FEngineVersion(Ar);

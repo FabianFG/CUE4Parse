@@ -75,8 +75,8 @@ namespace CUE4Parse.UE4.Pak
                 }
 
                 if (data.Length == pakEntry.UncompressedSize) return data.GetBuffer();
-                else if (data.Length > pakEntry.UncompressedSize) return data.GetBuffer().SubByteArray((int) pakEntry.UncompressedSize);
-                else throw new ParserException(reader, $"Decompression of {pakEntry.Name} failed, {data.Length} < {pakEntry.UncompressedSize}");
+                if (data.Length > pakEntry.UncompressedSize) return data.GetBuffer().SubByteArray((int) pakEntry.UncompressedSize);
+                throw new ParserException(reader, $"Decompression of {pakEntry.Name} failed, {data.Length} < {pakEntry.UncompressedSize}");
             }
             else
             {

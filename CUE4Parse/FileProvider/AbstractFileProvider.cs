@@ -198,15 +198,14 @@ namespace CUE4Parse.FileProvider
                 return new Package(uasset, uexp, 
                     ubulk, uptnl, this, MappingsForThisGame);
             }
-            else
+            
+            if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
             {
-                if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
-                {
-                    throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
-                }
-                return new IoPackage(uasset, vfsFileProvider.GlobalData,
-                    ubulk, uptnl, this, MappingsForThisGame);
+                throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
+            
+            return new IoPackage(uasset, vfsFileProvider.GlobalData,
+                ubulk, uptnl, this, MappingsForThisGame);
         }
 
         public async Task<IPackage?> TryLoadPackageAsync(string path)

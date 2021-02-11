@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Vfs
             DecryptIfEncrypted(bytes, beginOffset, count, IsEncrypted);
         protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted)
         {
-            if (!IsEncrypted) return bytes;
+            if (!isEncrypted) return bytes;
             if (AesKey != null)
             {
                 return bytes.Decrypt(AesKey);
@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Vfs
         }
         protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted)
         {
-            if (!IsEncrypted) return bytes;
+            if (!isEncrypted) return bytes;
             if (AesKey != null)
             {
                 return bytes.Decrypt(beginOffset, count, AesKey);

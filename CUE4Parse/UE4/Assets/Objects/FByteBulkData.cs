@@ -43,7 +43,8 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                 Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
-                var uptnlAr = Ar.GetPayload(PayloadType.UPTNL);
+                if (!Ar.TryGetPayload(PayloadType.UPTNL, out var uptnlAr) || uptnlAr == null) return;
+                
                 uptnlAr.Position = Header.OffsetInFile;
                 uptnlAr.Read(Data, 0, Header.ElementCount);
             }
@@ -53,7 +54,8 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                 Log.Debug($"bulk data in .ubulk file (Payload In Separate File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
 #endif
-                var ubulkAr = Ar.GetPayload(PayloadType.UBULK);
+                if (!Ar.TryGetPayload(PayloadType.UBULK, out var ubulkAr) || ubulkAr == null) return;
+                
                 ubulkAr.Position = Header.OffsetInFile;
                 ubulkAr.Read(Data, 0, Header.ElementCount);
             }

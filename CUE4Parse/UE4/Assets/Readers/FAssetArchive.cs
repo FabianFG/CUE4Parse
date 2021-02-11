@@ -40,6 +40,15 @@ namespace CUE4Parse.UE4.Assets.Readers
             return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
         }
 
+        public bool TryGetPayload(PayloadType type, out FAssetArchive? ar)
+        {
+            ar = null;
+            if (!_payloads.TryGetValue(type, out var ret)) return false;
+            
+            ar = ret.Value;
+            return true;
+        }
+
         public FAssetArchive GetPayload(PayloadType type)
         {
             _payloads.TryGetValue(type, out var ret);
