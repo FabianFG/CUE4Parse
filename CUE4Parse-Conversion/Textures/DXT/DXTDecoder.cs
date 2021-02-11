@@ -11,7 +11,7 @@
         {
             int bitsPerSecond = sizeX * _BITS_PER_PIXEL;
             int sizeOfPlane = bitsPerSecond * sizeY;
-            byte[] rawData = new byte[sizeY * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
+            byte[] rawData = new byte[sizeZ * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
             Colour8888[] colours = new Colour8888[4];
             colours[0].Alpha = 0xFF;
             colours[1].Alpha = 0xFF;
