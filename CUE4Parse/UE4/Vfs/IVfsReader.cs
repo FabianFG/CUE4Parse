@@ -15,9 +15,10 @@ namespace CUE4Parse.UE4.Vfs
         public int FileCount { get; }
         
         public bool HasDirectoryIndex { get; }
+        public string MountPoint { get; }
         public bool IsConcurrent { get; set; }
         public bool IsMounted { get; }
-        
+
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
         

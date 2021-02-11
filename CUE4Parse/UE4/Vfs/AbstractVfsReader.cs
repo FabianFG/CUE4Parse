@@ -19,6 +19,7 @@ namespace CUE4Parse.UE4.Vfs
 
 
         public abstract bool HasDirectoryIndex { get; }
+        public abstract string MountPoint { get; protected set; }
         public bool IsConcurrent { get; set; } = false;
         public bool IsMounted { get; } = false;
 
@@ -66,18 +67,16 @@ namespace CUE4Parse.UE4.Vfs
             // Calculate the pos of the null terminator for this string
             // Then read the null terminator byte and check whether it is actually 0
             if (mountPointLength == 0) return reader.Read<byte>() == 0;
-            else if (mountPointLength < 0)
+            if (mountPointLength < 0)
             {
                 // UTF16
                 reader.Seek(-(mountPointLength - 1) * 2, SeekOrigin.Current);
                 return reader.Read<short>() == 0;
             }
-            else
-            {
-                // UTF8
-                reader.Seek(mountPointLength - 1, SeekOrigin.Current);
-                return reader.Read<byte>() == 0;
-            }
+            
+            // UTF8
+            reader.Seek(mountPointLength - 1, SeekOrigin.Current);
+            return reader.Read<byte>() == 0;
         }
 
         public abstract void Dispose();

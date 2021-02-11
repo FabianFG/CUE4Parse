@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -7,7 +6,6 @@ using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    
     public enum EIoStoreTocReadOptions
     {
         Default,

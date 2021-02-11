@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Pak.Objects
     {
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
-        public readonly CompressionMethod CompressionMethod;
+        public override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
         public override bool IsEncrypted { get; }
         public readonly int CompressionBlockSize;

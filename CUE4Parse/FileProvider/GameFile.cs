@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -23,6 +24,7 @@ namespace CUE4Parse.FileProvider
         }
 
         public abstract bool IsEncrypted { get; }
+        public abstract CompressionMethod CompressionMethod { get; }
         public virtual UE4Version Ver { get; protected set; }
         public virtual EGame Game { get; protected set; }
         public string Path { get; protected set; }

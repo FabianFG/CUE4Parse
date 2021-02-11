@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Pak
         
         public readonly FPakInfo Info;
         
-        public string MountPoint { get; private set; }
+        public override string MountPoint { get; protected set; }
 
         public override bool HasDirectoryIndex => true;
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;

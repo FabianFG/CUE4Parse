@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
@@ -27,7 +25,7 @@ namespace CUE4Parse.UE4.IO
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
 #endif
         public readonly FIoStoreTocHeader Info;
-        public string? MountPoint { get; private set; }
+        public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
@@ -85,7 +83,7 @@ namespace CUE4Parse.UE4.IO
             Info = TocResource.Header;
             if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
             {
-                log.Warning("Io Store \"{Name}\" has unsupported version {Version}", Path, (int) Info.Version);
+                log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) Info.Version);
             }
         }
 
