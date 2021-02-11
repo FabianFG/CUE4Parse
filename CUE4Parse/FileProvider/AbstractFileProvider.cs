@@ -430,14 +430,8 @@ namespace CUE4Parse.FileProvider
         public IEnumerable<UExport> LoadObjectExports(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
-            var packagePath = objectPath;
-            var dotIndex = packagePath.IndexOf('.');
-            if (dotIndex > -1)
-            {
-                packagePath = packagePath.Substring(0, dotIndex);
-            }
 
-            var pkg = LoadPackage(packagePath);
+            var pkg = LoadPackage(objectPath);
             return pkg.GetExports();
         }
 

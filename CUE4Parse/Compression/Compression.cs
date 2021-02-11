@@ -44,7 +44,6 @@ namespace CUE4Parse.Compression
                 case CompressionMethod.Oodle:
                     Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
-                case CompressionMethod.Unknown:
                 default:
                     if (reader != null) throw new OodleException(reader, $"Compression method \"{method}\" is unknown");
                     else throw new OodleException($"Compression method \"{method}\" is unknown");
