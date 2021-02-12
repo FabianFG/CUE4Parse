@@ -15,11 +15,11 @@ namespace CUE4Parse.FileProvider
         public static readonly string[] Ue4KnownExtensions = { "uasset", "umap", "uexp", "ubulk", "uptnl" };
 
         protected GameFile() { }
-        protected GameFile(string path, long size, UE4Version ver, EGame game)
+        protected GameFile(string path, long size, EGame game, UE4Version ver)
         {
             Path = path;
             Size = size;
-            Ver = ver;
+            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
             Game = game;
         }
 

@@ -30,13 +30,13 @@ namespace CUE4Parse.UE4.IO
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
-        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) :
-            this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), ver, game), 
+        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) :
+            this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), 
                 it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), 
-                    ver, game), readOptions) { }
+                    game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), readOptions) { }
 
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
-            base(tocStream.Name, tocStream.Ver, tocStream.Game)
+            base(tocStream.Name, tocStream.Game, tocStream.Ver)
         {
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
 
@@ -87,8 +87,8 @@ namespace CUE4Parse.UE4.IO
             }
         }
 
-        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : this(new FileInfo(tocPath), readOptions, ver, game) {}
+        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new FileInfo(tocPath), readOptions, game, ver) {}
 
         public override byte[] Extract(VfsEntry entry)
         {

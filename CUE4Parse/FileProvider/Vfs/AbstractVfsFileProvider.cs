@@ -41,8 +41,8 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false,
-            UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive,
-            ver, game)
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive,
+            game, ver)
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }

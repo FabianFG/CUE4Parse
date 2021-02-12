@@ -9,8 +9,8 @@ namespace CUE4Parse.FileProvider
     public class OsGameFile : GameFile
     {
         public readonly FileInfo ActualFile;
-        public OsGameFile(DirectoryInfo baseDir, FileInfo info, UE4Version ver, EGame game)
-            : base(info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length, ver, game)
+        public OsGameFile(DirectoryInfo baseDir, FileInfo info, EGame game, UE4Version ver)
+            : base(info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length, game, ver)
         {
             ActualFile = info;
         }

@@ -185,6 +185,6 @@ namespace CUE4Parse.UE4.Pak.Objects
         public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Ver, Game);
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Game, Ver);
     }
 }

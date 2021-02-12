@@ -16,10 +16,10 @@ namespace CUE4Parse.UE4.Readers
         public abstract byte[] ReadBytes(int length);
         public abstract T[] ReadArray<T>(int length);
 
-        protected FArchive(UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
+        protected FArchive(EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
-            Ver = ver;
             Game = game;
+            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
         }
 
         public override void Flush() { }

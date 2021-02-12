@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Vfs
 
         public long Offset { get; protected set; }
         
-        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size, vfs.Ver, vfs.Game)
+        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size, vfs.Game, vfs.Ver)
         {
             Vfs = vfs;
         }

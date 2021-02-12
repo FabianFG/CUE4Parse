@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -98,7 +99,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             SoftPackageReferencesOffset = Ar.Read<int>();
             SearchableNamesOffset = Ar.Read<int>();
             ThumbnailTableOffset = Ar.Read<int>();
-            if (Ar.Name.StartsWith("ShooterGame")) Ar.Read<long>();
+            if (Ar.Game == EGame.GAME_VALORANT) Ar.Position += 8;
             Guid = Ar.Read<FGuid>();
             Generations = Ar.ReadArray<FGenerationInfo>();
             SavedByEngineVersion = new FEngineVersion(Ar);

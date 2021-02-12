@@ -26,11 +26,11 @@ namespace CUE4Parse.UE4.Vfs
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
 
-        protected AbstractVfsReader(string path, UE4Version ver, EGame game)
+        protected AbstractVfsReader(string path, EGame game, UE4Version ver)
         {
             Path = path;
             Name = path.Replace('\\', '/').SubstringAfterLast('/');
-            Ver = ver;
+            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
             Game = game;
             Files = new Dictionary<string, GameFile>();
         }

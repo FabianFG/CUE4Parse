@@ -10,8 +10,8 @@ namespace CUE4Parse.UE4.Readers
 
         private readonly Stream _baseStream;
 
-        public FStreamArchive(string name, Stream baseStream, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : base(ver, game)
+        public FStreamArchive(string name, Stream baseStream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : base(game, ver)
         {
             _baseStream = baseStream;
             Name = name;
@@ -75,9 +75,9 @@ namespace CUE4Parse.UE4.Readers
         {
             return _baseStream switch
             {
-                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Ver, Game),
+                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Game, Ver),
                 FileStream fileStream => new FStreamArchive(Name,
-                        File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Ver, Game)
+                        File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Game, Ver)
                     {Position = Position},
                 _ => throw new InvalidOperationException(
                     $"Stream of type {_baseStream.GetType().Name} doesn't support cloning")

@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new Dictionary<PayloadType, Lazy<FAssetArchive?>>();
 
         public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0)
-            : base(baseArchive.Ver, baseArchive.Game)
+            : base(baseArchive.Game, baseArchive.Ver)
         {
             _baseArchive = baseArchive;
             Owner = owner;

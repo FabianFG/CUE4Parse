@@ -30,11 +30,11 @@ namespace CUE4Parse.FileProvider
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; }
 
-        protected AbstractFileProvider(bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
+        protected AbstractFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
             IsCaseInsensitive = isCaseInsensitive;
-            Ver = ver;
             Game = game;
+            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
         }
 
         public string GameName

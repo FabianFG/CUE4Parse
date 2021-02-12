@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using CUE4Parse.Encryption.Aes;
 
 namespace CUE4Parse.Utils
 {
     public static class StringUtils
     {
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FAesKey ParseAesKey(this string s)
+        {
+            return new FAesKey(s);
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringBefore(this string s, char delimiter)
         {

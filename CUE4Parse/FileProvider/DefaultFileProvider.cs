@@ -14,7 +14,7 @@ namespace CUE4Parse.FileProvider
 {
     public class DefaultFileProvider : AbstractVfsFileProvider
     {
-        public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST) : base(isCaseInsensitive, ver, game)
+        public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
         {
             if (!dir.Exists)
                 throw new ArgumentException("Given directory must exist", nameof(dir));
@@ -40,7 +40,7 @@ namespace CUE4Parse.FileProvider
                 {
                     try
                     {
-                        var reader = new PakFileReader(file, Ver, Game) {IsConcurrent = true};
+                        var reader = new PakFileReader(file, Game, Ver) {IsConcurrent = true};
                         _unloadedVfs[reader] = null;
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -54,7 +54,7 @@ namespace CUE4Parse.FileProvider
                 {
                     try
                     {
-                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Ver, Game)
+                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Game, Ver)
                             {IsConcurrent = true};
                         _unloadedVfs[reader] = null; 
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
@@ -70,7 +70,7 @@ namespace CUE4Parse.FileProvider
                     // Register local file only if it has a known extension, we don't need every file
                     if (GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
                     {
-                        var osFile = new OsGameFile(dir, file, Ver, Game);
+                        var osFile = new OsGameFile(dir, file, Game, Ver);
                         var path = osFile.Path;
                         if (IsCaseInsensitive)
                             osFiles[path.ToLowerInvariant()] = osFile;

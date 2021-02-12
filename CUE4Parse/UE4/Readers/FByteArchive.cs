@@ -9,8 +9,8 @@ namespace CUE4Parse.UE4.Readers
     {
         private readonly byte[] _data;
 
-        public FByteArchive(string name, byte[] data, UE4Version ver = UE4Version.VER_UE4_LATEST, EGame game = EGame.GAME_UE4_LATEST)
-            : base(ver, game)
+        public FByteArchive(string name, byte[] data, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : base(game, ver)
         {
             this._data = data;
             this.Name = name;
@@ -76,6 +76,6 @@ namespace CUE4Parse.UE4.Readers
             return result;
         }
 
-        public override object Clone() => new FByteArchive(Name, _data, Ver, Game) {Position = Position};
+        public override object Clone() => new FByteArchive(Name, _data, Game, Ver) {Position = Position};
     }
 }

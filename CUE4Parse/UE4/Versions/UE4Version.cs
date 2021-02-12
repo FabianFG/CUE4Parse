@@ -25,6 +25,8 @@ namespace CUE4Parse.UE4.Versions
     // Unreal engine 4 versions, declared as enum to be able to see all revisions in a single place
     public enum UE4Version
     {
+        VER_UE4_DETERMINE_BY_GAME = -1,
+        
         // Pre-release UE4 file versions
         VER_UE4_ASSET_REGISTRY_TAGS = 112,
         VER_UE4_TEXTURE_DERIVED_DATA2 = 124,
