@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.UE4.Versions
 {
@@ -27,6 +26,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_18 = GameUtils.GameUe4Base + 18 << 4,
         GAME_UE4_19 = GameUtils.GameUe4Base + 19 << 4,
         GAME_UE4_20 = GameUtils.GameUe4Base + 20 << 4,
+            GAME_BORDERLANDS3 = GAME_UE4_20 + 1,
         GAME_UE4_21 = GameUtils.GameUe4Base + 21 << 4,
         GAME_UE4_22 = GameUtils.GameUe4Base + 22 << 4,
         GAME_UE4_23 = GameUtils.GameUe4Base + 23 << 4,
@@ -55,64 +55,39 @@ namespace CUE4Parse.UE4.Versions
             // If a game needs a even more specific custom version than the major release version you can add it below
             // if (game == EGame.GAME_VALORANT)
             //     return UE4Version.VER_UE4_24;
-            
-            // General UE4 Versions
-            if (game < EGame.GAME_UE4_1)
-                return UE4Version.VER_UE4_0;
-            else if (game < EGame.GAME_UE4_2)
-                return UE4Version.VER_UE4_1;
-            else if (game < EGame.GAME_UE4_3)
-                return UE4Version.VER_UE4_2;
-            else if (game < EGame.GAME_UE4_4)
-                return UE4Version.VER_UE4_3;
-            else if (game < EGame.GAME_UE4_5)
-                return UE4Version.VER_UE4_4;
-            else if (game < EGame.GAME_UE4_6)
-                return UE4Version.VER_UE4_5;
-            else if (game < EGame.GAME_UE4_7)
-                return UE4Version.VER_UE4_6;
-            else if (game < EGame.GAME_UE4_8)
-                return UE4Version.VER_UE4_7;
-            else if (game < EGame.GAME_UE4_9)
-                return UE4Version.VER_UE4_8;
-            else if (game < EGame.GAME_UE4_10)
-                return UE4Version.VER_UE4_9;
-            else if (game < EGame.GAME_UE4_11)
-                return UE4Version.VER_UE4_10;
-            else if (game < EGame.GAME_UE4_12)
-                return UE4Version.VER_UE4_11;
-            else if (game < EGame.GAME_UE4_13)
-                return UE4Version.VER_UE4_12;
-            else if (game < EGame.GAME_UE4_14)
-                return UE4Version.VER_UE4_13;
-            else if (game < EGame.GAME_UE4_15)
-                return UE4Version.VER_UE4_14;
-            else if (game < EGame.GAME_UE4_16)
-                return UE4Version.VER_UE4_15;
-            else if (game < EGame.GAME_UE4_17)
-                return UE4Version.VER_UE4_16;
-            else if (game < EGame.GAME_UE4_18)
-                return UE4Version.VER_UE4_17;
-            else if (game < EGame.GAME_UE4_19)
-                return UE4Version.VER_UE4_18;
-            else if (game < EGame.GAME_UE4_20)
-                return UE4Version.VER_UE4_19;
-            else if (game < EGame.GAME_UE4_21)
-                return UE4Version.VER_UE4_20;
-            else if (game < EGame.GAME_UE4_22)
-                return UE4Version.VER_UE4_21;
-            else if (game < EGame.GAME_UE4_23)
-                return UE4Version.VER_UE4_22;
-            else if (game < EGame.GAME_UE4_24)
-                return UE4Version.VER_UE4_23;
-            else if (game < EGame.GAME_UE4_25)
-                return UE4Version.VER_UE4_24;
-            else if (game < EGame.GAME_UE4_26)
-                return UE4Version.VER_UE4_25;
-            else if (game < EGame.GAME_UE4_27)
-                return UE4Version.VER_UE4_26;
-            else
-                return UE4Version.VER_UE4_LATEST;
+
+            return game switch
+            {
+                // General UE4 Versions
+                < EGame.GAME_UE4_1 => UE4Version.VER_UE4_0,
+                < EGame.GAME_UE4_2 => UE4Version.VER_UE4_1,
+                < EGame.GAME_UE4_3 => UE4Version.VER_UE4_2,
+                < EGame.GAME_UE4_4 => UE4Version.VER_UE4_3,
+                < EGame.GAME_UE4_5 => UE4Version.VER_UE4_4,
+                < EGame.GAME_UE4_6 => UE4Version.VER_UE4_5,
+                < EGame.GAME_UE4_7 => UE4Version.VER_UE4_6,
+                < EGame.GAME_UE4_8 => UE4Version.VER_UE4_7,
+                < EGame.GAME_UE4_9 => UE4Version.VER_UE4_8,
+                < EGame.GAME_UE4_10 => UE4Version.VER_UE4_9,
+                < EGame.GAME_UE4_11 => UE4Version.VER_UE4_10,
+                < EGame.GAME_UE4_12 => UE4Version.VER_UE4_11,
+                < EGame.GAME_UE4_13 => UE4Version.VER_UE4_12,
+                < EGame.GAME_UE4_14 => UE4Version.VER_UE4_13,
+                < EGame.GAME_UE4_15 => UE4Version.VER_UE4_14,
+                < EGame.GAME_UE4_16 => UE4Version.VER_UE4_15,
+                < EGame.GAME_UE4_17 => UE4Version.VER_UE4_16,
+                < EGame.GAME_UE4_18 => UE4Version.VER_UE4_17,
+                < EGame.GAME_UE4_19 => UE4Version.VER_UE4_18,
+                < EGame.GAME_UE4_20 => UE4Version.VER_UE4_19,
+                < EGame.GAME_UE4_21 => UE4Version.VER_UE4_20,
+                < EGame.GAME_UE4_22 => UE4Version.VER_UE4_21,
+                < EGame.GAME_UE4_23 => UE4Version.VER_UE4_22,
+                < EGame.GAME_UE4_24 => UE4Version.VER_UE4_23,
+                < EGame.GAME_UE4_25 => UE4Version.VER_UE4_24,
+                < EGame.GAME_UE4_26 => UE4Version.VER_UE4_25,
+                < EGame.GAME_UE4_27 => UE4Version.VER_UE4_26,
+                _ => UE4Version.VER_UE4_LATEST
+            };
         }
     }
 }
