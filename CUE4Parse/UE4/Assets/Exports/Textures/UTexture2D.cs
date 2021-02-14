@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Materials;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
@@ -104,7 +105,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FTexture2DMipMap? GetFirstMip() => Mips[FirstMip];
+        public FTexture2DMipMap? GetFirstMip() => Mips.FirstOrDefault(x => x.Data.Data != null);
 
         public override void GetParams(CMaterialParams parameters)
         {
