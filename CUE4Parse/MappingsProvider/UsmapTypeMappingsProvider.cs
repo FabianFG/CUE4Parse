@@ -8,8 +8,6 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.MappingsProvider
 {
-
-
     public abstract class UsmapTypeMappingsProvider : AbstractTypeMappingsProvider
     {
         public override Dictionary<string, TypeMappings> MappingsByGame { get; protected set; } = new Dictionary<string, TypeMappings>();
@@ -18,13 +16,10 @@ namespace CUE4Parse.MappingsProvider
         {
             MappingsByGame[game] = UsmapParser.Parse(usmap, name);
         }
-        
     }
-
 
     public static class UsmapParser
     {
-
         public const ushort FileMagic = 0x30C4;
         
         public enum Version : byte {
@@ -238,5 +233,5 @@ namespace CUE4Parse.MappingsProvider
         FieldPathProperty,
 
         Unknown = 0xFF
-    };
+    }
 }

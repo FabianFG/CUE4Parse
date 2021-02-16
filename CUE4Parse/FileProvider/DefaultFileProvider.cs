@@ -14,14 +14,15 @@ namespace CUE4Parse.FileProvider
 {
     public class DefaultFileProvider : AbstractVfsFileProvider
     {
-        public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
+        public DefaultFileProvider(DirectoryInfo dir, bool isCaseInsensitive = false, bool autoLoadMappings = true, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : base(isCaseInsensitive, game, ver)
         {
             if (!dir.Exists)
                 throw new ArgumentException("Given directory must exist", nameof(dir));
             ScanGameDirectory(dir, true);
             
-            // TODO no useless requests
-            MappingsContainer = new BenBotMappingsProvider("fortnite");
+            if (autoLoadMappings)
+                MappingsContainer = new BenBotMappingsProvider("fortnite");
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)
