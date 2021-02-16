@@ -291,21 +291,22 @@ namespace CUE4Parse.FileProvider
 
         public async Task<IReadOnlyDictionary<string, byte[]>> SavePackageAsync(GameFile file)
         {
-            if (!file.IsUE4Package) throw new ArgumentException("File must be a package to be saved as one", nameof(file));
-            var uexpFile = Files[file.PathWithoutExtension + ".uexp"];
+            Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.ReadAsync();
-            var uexpTask = uexpFile.ReadAsync();
+            var uexpTask = uexpFile?.ReadAsync();
             var ubulkTask = ubulkFile?.ReadAsync();
             var uptnlTask = uptnlFile?.ReadAsync();
             var dict = new Dictionary<string, byte[]>()
             {
-                {file.Path, await uassetTask},
-                {uexpFile.Path, await uexpTask}
+                {file.Path, await uassetTask}
             };
+            var uexp = uexpTask != null ? await uexpTask : null;
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
+            if (uexpFile != null && uexp != null)
+                dict[uexpFile.Path] = uexp;
             if (ubulkFile != null && ubulk != null)
                 dict[ubulkFile.Path] = ubulk;
             if (uptnlFile != null && uptnl != null)
@@ -325,27 +326,27 @@ namespace CUE4Parse.FileProvider
 
         public async Task<IReadOnlyDictionary<string, byte[]>?> TrySavePackageAsync(GameFile file)
         {
-            if (!file.IsUE4Package || !TryFindGameFile(file.PathWithoutExtension + ".uexp", out var uexpFile))
-                return null;
+            Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.TryReadAsync().ConfigureAwait(false);
-            var uexpTask = uexpFile.TryReadAsync().ConfigureAwait(false);
+            var uexpTask = uexpFile?.TryReadAsync().ConfigureAwait(false);
             var ubulkTask = ubulkFile?.TryReadAsync().ConfigureAwait(false);
             var uptnlTask = uptnlFile?.TryReadAsync().ConfigureAwait(false);
 
             var uasset = await uassetTask;
-            var uexp = await uexpTask;
-            if (uasset == null || uexp == null)
+            if (uasset == null)
                 return null;
+            var uexp = uexpTask != null ? await uexpTask.Value : null;
             var ubulk = ubulkTask != null ? await ubulkTask.Value : null;
             var uptnl = uptnlTask != null ? await uptnlTask.Value : null;
             
             var dict = new Dictionary<string, byte[]>()
             {
-                {file.Path, uasset},
-                {uexpFile.Path, uexp}
+                {file.Path, uasset}
             };
+            if (uexpFile != null && uexp != null)
+                dict[uexpFile.Path] = uexp;
             if (ubulkFile != null && ubulk != null)
                 dict[ubulkFile.Path] = ubulk;
             if (uptnlFile != null && uptnl != null)
@@ -427,7 +428,7 @@ namespace CUE4Parse.FileProvider
             await TryLoadObjectAsync(objectPath) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> LoadObjectExports(string? objectPath)
+        public IEnumerable<UExport> ExtractObjectExports(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
 
