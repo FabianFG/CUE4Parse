@@ -4,29 +4,33 @@ namespace CUE4Parse_Fortnite.Enums
 {
     public enum EFortRarity
     {
-        Uncommon, // Default
+        Uncommon = 1, // Default
         
-        Masterwork,
-        Transcendent,
+        Impossible = 7,
+        Unattainable = 7,
+        
+        Exotic = 6,
+        Transcendent = 6,
 
-        Elegant,
-        Mythic,
+        Elegant = 5,
+        Mythic = 5,
 
-        Fine,
-        Legendary,
+        Fine = 4,
+        Legendary = 4,
 
-        Quality,
-        Epic,
+        Quality = 3,
+        Epic = 3,
 
-        Sturdy,
-        Rare,
+        Sturdy = 2,
+        Rare = 2,
 
-        Handmade,
-        Common
+        Handmade = 0,
+        Common = 0
     }
 
     public static class RarityUtil
     {
+        private static readonly FText _unattainable = new FText("Fort.Rarity", "Unattainable", "Unattainable");
         private static readonly FText _transcendent = new FText("Fort.Rarity", "Transcendent", "Transcendent");
         private static readonly FText _mythic = new FText("Fort.Rarity", "Mythic", "Mythic");
         private static readonly FText _legendary = new FText("Fort.Rarity", "Legendary", "Legendary");
@@ -38,17 +42,12 @@ namespace CUE4Parse_Fortnite.Enums
         public static FText GetNameText(this EFortRarity rarity) => rarity switch
         {
             EFortRarity.Uncommon => _uncommon,
-            EFortRarity.Masterwork => _transcendent,
+            EFortRarity.Unattainable => _unattainable,
             EFortRarity.Transcendent => _transcendent,
-            EFortRarity.Elegant => _mythic,
             EFortRarity.Mythic => _mythic,
-            EFortRarity.Fine => _legendary,
             EFortRarity.Legendary => _legendary,
-            EFortRarity.Quality => _epic,
             EFortRarity.Epic => _epic,
-            EFortRarity.Sturdy => _rare,
             EFortRarity.Rare => _rare,
-            EFortRarity.Handmade => _common,
             EFortRarity.Common => _common,
             _ => _uncommon
         };

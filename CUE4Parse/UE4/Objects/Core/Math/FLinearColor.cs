@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -13,6 +14,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly float B;
         public readonly float A;
 
+        public readonly string Hex => A == 1 || A == 0
+            ? UnsafePrint.BytesToHex((byte) System.Math.Round(R * 255), (byte) System.Math.Round(G * 255), (byte) System.Math.Round(B * 255))
+            : UnsafePrint.BytesToHex((byte) System.Math.Round(A * 255), (byte) System.Math.Round(R * 255), (byte) System.Math.Round(G * 255), (byte) System.Math.Round(B * 255));
+
         public FLinearColor(float r, float g, float b, float a)
         {
             R = r;
@@ -21,6 +26,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             A = a;
         }
         
-        public override string ToString() => $"(R={R},G={G},B={B},A={A})";
+        public override string ToString() => Hex;
     }
 }

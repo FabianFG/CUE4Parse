@@ -147,6 +147,18 @@ namespace CUE4Parse.UE4.Assets.Exports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetLazy<T>(this, name, comparisonType);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetByIndex<T>(int index) => PropertyUtil.GetByIndex<T>(this, index);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetOrDefault<T>(params string[] names)
+        {
+            foreach (string name in names)
+            {
+                if (GetOrDefault<T>(name) is T ret)
+                    return ret;
+            }
+            return default;
+        }
     }
 
     public static class PropertyUtil
@@ -191,6 +203,22 @@ namespace CUE4Parse.UE4.Assets.Exports
         public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
             StringComparison comparisonType = StringComparison.Ordinal) =>
             new Lazy<T>(() => Get<T>(holder, name, comparisonType));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T GetByIndex<T>(IPropertyHolder holder, int index)
+        {
+            var tag = holder.Properties[index]?.Tag;
+            if (tag == null)
+            {
+                throw new NullReferenceException($"{holder.GetType().Name} does not have a property at index '{index}'");
+            }
+            var value = tag.GetValue(typeof(T));
+            if (value is T cast)
+            {
+                return cast;
+            }
+            throw new NullReferenceException($"Couldn't get property of type {typeof(T).Name} at index '{index}' in {holder.GetType().Name}");
+        }
     }
     
     public class UObjectConverter : JsonConverter<UObject>

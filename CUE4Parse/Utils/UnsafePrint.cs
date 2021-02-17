@@ -1,4 +1,6 @@
-﻿namespace CUE4Parse.Utils
+﻿using System.Runtime.CompilerServices;
+
+namespace CUE4Parse.Utils
 {
     public static class UnsafePrint
     {
@@ -18,6 +20,16 @@
             }
 
             return new string(c);
+        }
+        
+        public static unsafe string BytesToHex(params byte[] bytes)
+        {
+            var result = string.Empty;
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                result += BytesToHex((byte*) Unsafe.AsPointer(ref bytes[i]), 1);
+            }
+            return result;
         }
     }
 }
