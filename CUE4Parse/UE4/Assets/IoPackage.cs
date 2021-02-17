@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
