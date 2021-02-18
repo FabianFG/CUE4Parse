@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 Properties = DeserializePropertiesTagged(Ar);
             }
 
-            if (Ar.Position + 20 <= Ar.Length && ReadGuid && Ar.ReadBoolean())
+            if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 16 <= Ar.Length)
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
@@ -168,7 +168,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             foreach (var value in from it 
                 in holder.Properties 
-                where it.Name.Text.Equals(name, comparisonType) 
+                where it.Name.Text.Equals(name, comparisonType)
                 select it.Tag?.GetValue(typeof(T)))
             {
                 if (value is T cast)
