@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     [JsonConverter(typeof(FNameConverter))]
     public readonly struct FName
     {
-        public readonly FNameEntrySerialized Name;
+        private readonly FNameEntrySerialized Name;
         /** Index into the Names array (used to find String portion of the string/number pair used for display) */
         public readonly int Index;
         /** Number portion of the string/number pair (stored internally as 1 more than actual, so zero'd memory will be the default, no-instance case) */
@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FName value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.IsNone ? "None" : value.Name.Name);
+            writer.WriteValue(value.Text);
         }
 
         public override FName ReadJson(JsonReader reader, Type objectType, FName existingValue, bool hasExistingValue,

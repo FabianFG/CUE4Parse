@@ -35,7 +35,7 @@ namespace CUE4Parse.MappingsProvider
         {
 
             // Fortnite
-            const string game = "fortnite";
+            const string game = "fortnitegame";
             var zip = await LoadEndpointBytes($"{DownloadRepo}?ref={Branch}");
             if (zip == null) return false;
             var zipAr = new ZipArchive(new MemoryStream(zip));

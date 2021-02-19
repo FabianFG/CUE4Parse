@@ -42,13 +42,7 @@ namespace CUE4Parse.FileProvider
             get
             {
                 string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase));
-
-                if (t == null)
-                    return string.Empty;
-                else if (t.Contains("game", StringComparison.OrdinalIgnoreCase))
-                    return t.SubstringBefore("game", StringComparison.OrdinalIgnoreCase);
-                else
-                    return t.SubstringBefore('/');
+                return t == null ? string.Empty : t.SubstringBefore('/');
             }
         }
 
@@ -79,7 +73,7 @@ namespace CUE4Parse.FileProvider
                     // For files at root level like Game/AssetRegistry.bin
                     var s when s.SubstringAfter('/').SubstringBefore('/').Contains('.') =>
                         string.Concat(gameName, path),
-                    _ => string.Concat(gameName, "Game/Content/", path.Substring(5))
+                    _ => string.Concat(gameName, "/Content/", path.Substring(5))
                 };
             } else if (path.StartsWith("Engine/"))
             {

@@ -88,10 +88,9 @@ namespace CUE4Parse.UE4.Readers
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
             var length = Read<int>();
 
-            if (length > 512 || length < -512)
-            {
+            if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
-            }
+
             if (length == 0)
             {
                 return string.Empty;
@@ -102,7 +101,8 @@ namespace CUE4Parse.UE4.Readers
             {
                 unsafe
                 {
-                    var ucs2Length = -length * sizeof(ushort);
+                    length = -length;
+                    var ucs2Length = length * sizeof(ushort);
                     var ucs2Bytes = stackalloc byte[ucs2Length];
                     Read(ucs2Bytes, ucs2Length);
 #if !NO_STRING_NULL_TERMINATION_VALIDATION
@@ -111,7 +111,7 @@ namespace CUE4Parse.UE4.Readers
                         throw new ParserException(this, "Serialized FString is not null terminated");
                     }
 #endif
-                    return new string((char*) ucs2Bytes, 0 , -length - 1);
+                    return new string((char*) ucs2Bytes, 0 , length - 1);
                 }
             }
 

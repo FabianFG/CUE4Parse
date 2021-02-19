@@ -99,7 +99,7 @@
         {
             int bitsPerSecond = sizeX * _BITS_PER_PIXEL;
             int sizeOfPlane = bitsPerSecond * sizeY;
-            byte[] rawData = new byte[sizeY * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
+            byte[] rawData = new byte[sizeZ * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
             Colour8888[] colours = new Colour8888[4];
             ushort[] alphas = new ushort[8];
 

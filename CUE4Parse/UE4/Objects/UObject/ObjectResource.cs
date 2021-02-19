@@ -340,11 +340,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 case FObjectImport i:
                     writer.WritePropertyName("ObjectName");
-                    writer.WriteValue($"{i.ObjectName.Name.Name}:{i.ClassName.Text}");
+                    writer.WriteValue($"{i.ObjectName.Text}:{i.ClassName.Text}");
                     break;
                 case FObjectExport e:
                     writer.WritePropertyName("ObjectName");
-                    writer.WriteValue($"{e.ObjectName.Name.Name}:{e.ClassName}");
+                    writer.WriteValue($"{e.ObjectName.Text}:{e.ClassName}");
                     break;
             }
 

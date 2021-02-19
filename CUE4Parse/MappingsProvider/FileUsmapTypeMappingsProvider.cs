@@ -16,13 +16,13 @@ namespace CUE4Parse.MappingsProvider
         
         public override bool Reload()
         {
-            AddUsmap(File.ReadAllBytes(usmapFile), "fortnite", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
+            AddUsmap(File.ReadAllBytes(usmapFile), "fortnitegame", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
             return true;
         }
 
         public override async Task<bool> ReloadAsync()
         {
-            AddUsmap(File.ReadAllBytes(usmapFile), "fortnite", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
+            AddUsmap(File.ReadAllBytes(usmapFile), "fortnitegame", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
             return true;
         }
     }

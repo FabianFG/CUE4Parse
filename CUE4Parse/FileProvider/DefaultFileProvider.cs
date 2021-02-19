@@ -22,7 +22,7 @@ namespace CUE4Parse.FileProvider
             ScanGameDirectory(dir, true);
             
             if (autoLoadMappings)
-                MappingsContainer = new BenBotMappingsProvider("fortnite");
+                MappingsContainer = new BenBotMappingsProvider("fortnitegame");
         }
 
         private void ScanGameDirectory(DirectoryInfo dir, bool recurse)
