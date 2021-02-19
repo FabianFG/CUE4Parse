@@ -72,12 +72,12 @@ namespace CUE4Parse.UE4.Localization
             var namespaceCount = Ar.Read<uint>();
             for (var i = 0; i < namespaceCount; i++)
             {
-                var namespce = new FTextKey(Ar);
+                var namespce = new FTextKey(Ar, versionNumber);
                 var keyCount = Ar.Read<uint>();
                 var keyValue = new Dictionary<FTextKey, FEntry>((int)keyCount);
                 for (var j = 0; j < keyCount; j++)
                 {
-                    var key = new FTextKey(Ar);
+                    var key = new FTextKey(Ar, versionNumber);
                     FEntry newEntry = new(Ar) {SourceStringHash = Ar.Read<uint>()};
                     if (versionNumber >= ELocResVersion.Compact)
                     {
@@ -86,10 +86,18 @@ namespace CUE4Parse.UE4.Localization
                         {
                             // Steal the string if possible
                             var localizedString = localizedStringArray[localizedStringIndex];
-                            if (localizedString.RefCount == 1 || localizedString.RefCount != -1)
+                            if (localizedString.RefCount == 1)
                             {
                                 newEntry.LocalizedString = localizedString.String;
                                 localizedString.RefCount--;
+                            }
+                            else
+                            {
+                                newEntry.LocalizedString = localizedString.String;
+                                if (localizedString.RefCount != -1)
+                                {
+                                    localizedString.RefCount--;
+                                }
                             }
                         }
                         else

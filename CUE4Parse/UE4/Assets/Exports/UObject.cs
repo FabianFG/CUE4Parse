@@ -159,6 +159,16 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             return default;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FPropertyTagType? GetOrNull(params string[] names)
+        {
+            foreach (string name in names)
+            {
+                
+            }
+            return null;
+        }
     }
 
     public static class PropertyUtil

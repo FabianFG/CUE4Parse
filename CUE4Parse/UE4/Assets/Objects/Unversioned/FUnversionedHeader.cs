@@ -23,8 +23,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
             do
             {
                 fragment = new FFragment(Ar.Read<ushort>());
-                
                 fragments.Add(fragment);
+                
                 if (fragment.HasAnyZeroes)
                     zeroMaskNum += fragment.ValueNum;
                 else
@@ -52,7 +52,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Unversioned
             }
             else if (numBits <= 16)
             {
-                data = new BitArray(new []{ (int) reader.Read<uint>() });
+                data = new BitArray(new []{ (int) reader.Read<ushort>() });
             }
             else
             {

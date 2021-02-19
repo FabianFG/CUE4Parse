@@ -1,6 +1,6 @@
 ﻿namespace CUE4Parse.UE4.Objects.Core.i18N
 {
-    public enum ELocMetaVersion
+    public enum ELocMetaVersion : byte
     {
         /** Initial format. */
         Initial = 0,

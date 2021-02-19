@@ -36,7 +36,7 @@ namespace CUE4Parse.UE4.Vfs
         protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted)
         {
             if (!isEncrypted) return bytes;
-            if (AesKey != null)
+            if (AesKey != null && TestAesKey(AesKey))
             {
                 return bytes.Decrypt(AesKey);
             }
