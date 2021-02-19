@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.Pak.Objects
 {
     public class FPakEntry : VfsEntry
     {
-        public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
@@ -17,7 +16,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly int CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
-        public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
+        public bool IsCompressed => CompressionMethod != CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info) : base(reader)
@@ -27,9 +26,8 @@ namespace CUE4Parse.UE4.Pak.Objects
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
             Offset = Ar.Read<long>();
-            CompressedSize = Ar.Read<long>();
+            Size = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
-            Size = UncompressedSize;
 
             if (info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
@@ -48,7 +46,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
             else
             {
-                CompressionMethod = (CompressionMethod) Ar.Read<int>();
+                CompressionMethod = (CompressionMethod) Ar.Read<uint>();
             }
 
             if (info.Version < EPakFileVersion.PakFile_Version_NoTimestamps)
@@ -81,13 +79,13 @@ namespace CUE4Parse.UE4.Pak.Objects
             Path = path;
             Ver = reader.Ar.Ver;
             Game = reader.Ar.Game;
-            
+
             // UE4 reference: FPakFile::DecodePakEntry()
             uint bitfield = *(uint*) data;
             data += sizeof(uint);
 
             CompressionMethod = (CompressionMethod) ((bitfield >> 23) & 0x3f);
-            
+
             // Offset follows - either 32 or 64 bit value
             if ((bitfield & 0x80000000) != 0)
             {
@@ -119,18 +117,18 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 if ((bitfield & 0x20000000) != 0)
                 {
-                    CompressedSize = *(uint*) data;
+                    Size = *(uint*) data;
                     data += sizeof(uint);
                 }
                 else
                 {
-                    CompressedSize = *(long*) data;
+                    Size = *(long*) data;
                     data += sizeof(long);
                 }
             }
             else
             {
-                CompressedSize = UncompressedSize;
+                Size = UncompressedSize;
             }
 
             // bEncrypted
@@ -148,7 +146,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             // Compression information
             CompressionBlocks = new FPakCompressedBlock[blockCount];
             CompressionBlockSize = 0;
-            if (blockCount != 0)
+            if (blockCount > 0)
             {
                 // CompressionBlockSize
                 if (UncompressedSize < 65536)
@@ -157,24 +155,25 @@ namespace CUE4Parse.UE4.Pak.Objects
                     CompressionBlockSize = (int) ((bitfield & 0x3f) << 11);
                 
                 // CompressionBlocks
-                if (blockCount == 1)
+                if (blockCount == 1 && !IsEncrypted)
                 {
                     ref var b = ref CompressionBlocks[0];
                     b.CompressedStart = Offset + StructSize;
-                    b.CompressedEnd = b.CompressedStart + CompressedSize;
+                    b.CompressedEnd = b.CompressedStart + Size;
                 }
                 else
                 {
                     var currentOffset = Offset + StructSize;
                     var alignment = IsEncrypted ? Aes.ALIGN : 1;
+
                     for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
                     {
-                        var currentBlockSize = *(long*) data;
-                        data += sizeof(long);
+                        var currentBlockSize = *(uint*) data;
+                        data += sizeof(uint);
 
-                        ref var block = ref CompressionBlocks[0];
+                        ref var block = ref CompressionBlocks[blockIndex];
                         block.CompressedStart = currentOffset;
-                        block.CompressedEnd = block.CompressedStart + currentBlockSize;
+                        block.CompressedEnd = currentOffset + currentBlockSize;
                         currentOffset += currentBlockSize.Align(alignment);
                     }
                 }

@@ -25,7 +25,7 @@ namespace CUE4Parse.Compression
             Decompress(compressed, 0, compressed.Length, dst, 0, dst.Length, method, reader);
         public static void Decompress(byte[] compressed, int compressedOffset, int compressedSize, byte[] uncompressed, int uncompressedOffset, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         {
-            using var srcStream = new MemoryStream(compressed, compressedOffset, compressedSize, false);
+            using var srcStream = new MemoryStream(compressed, compressedOffset, compressedSize, false) {Position = 0};
             switch (method)
             {
                 case CompressionMethod.None:

@@ -1,9 +1,9 @@
 ﻿using CUE4Parse.UE4.Readers;
 using Serilog;
 
-namespace CUE4Parse.UE4.Assets
+namespace CUE4Parse.UE4.Wwise
 {
-    public class WwisePackage
+    public class WwiseReader
     {
         private const uint _AKPK_ID = 0x4B504B41;
         private const uint _BKHD_ID = 0x44484B42;
@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets
         private const uint _ENVS_ID = 0x53564E45;
         private const uint _PLAT_ID = 0x54414C50;
         
-        public WwisePackage(FArchive Ar)
+        public WwiseReader(FArchive Ar)
         {
             while (Ar.Position < Ar.Length)
             {

@@ -57,10 +57,11 @@ namespace CUE4Parse.UE4.Pak
 
             if (pakEntry.IsCompressed)
             {
+                var compressionMethod = Info.CompressionMethods[(int)pakEntry.CompressionMethod];
 #if DEBUG
-                Log.Debug($"{pakEntry.Name} is compressed with {pakEntry.CompressionMethod}");
+                Log.Debug($"{pakEntry.Name} is compressed with {compressionMethod}");
 #endif
-                var data = new MemoryStream((int) pakEntry.UncompressedSize);
+                var data = new MemoryStream((int) pakEntry.UncompressedSize) {Position = 0};
                 foreach (var block in pakEntry.CompressionBlocks)
                 {
                     reader.Position = block.CompressedStart;
@@ -70,8 +71,8 @@ namespace CUE4Parse.UE4.Pak
                     // Calculate the uncompressed size,
                     // its either just the compression block size
                     // or if its the last block its the remaining data size
-                    var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, (pakEntry.UncompressedSize - data.Length));
-                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, pakEntry.CompressionMethod, reader), 0, uncompressedSize);
+                    var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - data.Length);
+                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, compressionMethod, reader), 0, uncompressedSize);
                 }
 
                 if (data.Length == pakEntry.UncompressedSize) return data.GetBuffer();
