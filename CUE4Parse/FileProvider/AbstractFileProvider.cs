@@ -62,33 +62,76 @@ namespace CUE4Parse.FileProvider
                 path = string.Concat(path.SubstringBeforeLast('/'), "/", lastPart.SubstringBefore('.'));
             if (path[path.Length - 1] != '/' && !lastPart.Contains('.'))
                 path += ".uasset";
-            if (path.StartsWith("Game/", comparisonType))
-            {
-                var gameName = GameName;
-                path = path switch
-                {
-                    var s when s.StartsWith("Game/Content", comparisonType) ||
-                               s.StartsWith("Game/Config", comparisonType) ||
-                               s.StartsWith("Game/Plugins", comparisonType) => string.Concat(gameName, path),
-                    // For files at root level like Game/AssetRegistry.bin
-                    var s when s.SubstringAfter('/').SubstringBefore('/').Contains('.') =>
-                        string.Concat(gameName, path),
-                    _ => string.Concat(gameName, "/Content/", path.Substring(5))
-                };
-            } else if (path.StartsWith("Engine/"))
-            {
-                path = path switch
-                {
-                    var s when s.StartsWith("Engine/Content", comparisonType) ||
-                               s.StartsWith("Engine/Config", comparisonType) ||
-                               s.StartsWith("Engine/Plugins", comparisonType) => path,
-                    // For files at root level
-                    var s when s.SubstringAfter('/').SubstringBefore('/').Contains('.') => path,
-                    _ => string.Concat("Engine/Content/", path.Substring(7))
-                };
-            }
 
-            return IsCaseInsensitive ? path.ToLowerInvariant() : path;
+            var trigger = path.SubstringBefore("/", comparisonType);
+            if (trigger.Equals(GameName, comparisonType))
+            {
+                return IsCaseInsensitive ? path.ToLowerInvariant() : path;
+            }
+            
+            switch (trigger)
+            {
+                case "Game":
+                case "Engine":
+                {
+                    var gameName = trigger == "Engine" ? "Engine" : GameName;
+                    var p = path.SubstringAfter("/", comparisonType).SubstringBefore("/", comparisonType);
+                    if (p.Contains('.'))
+                    {
+                        var ret = string.Concat(gameName, path.SubstringAfter("/", comparisonType));
+                        return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                    }
+                    
+                    switch (p)
+                    {
+                        case "Content":
+                        case "Config":
+                        case "Plugins":
+                        {
+                            var ret = string.Concat(gameName, '/', path.SubstringAfter("/", comparisonType));
+                            return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                        }
+                        default:
+                        {
+                            var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
+                            return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                        }
+                    }
+                }
+                case "RegionCN":
+                {
+                    var ret = string.Concat(GameName, "/Plugins/RegionCN/Content/", path.SubstringAfter("/", comparisonType));
+                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                }
+                case "Argon":
+                case "Goose":
+                case "Hydrogen":
+                case "Melt":
+                case "Nickel":
+                case "Nitrogen":
+                case "Phosphorus":
+                case "PhosphorusWipeout":
+                case "Rebirth":
+                case "Score":
+                case "Vendetta":
+                {
+                    var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                }
+                case "SrirachaRanchHoagie":
+                case "SrirachaRanch":
+                case "SrirachaRanchValet":
+                {
+                    if (trigger.Equals("SrirachaRanch", comparisonType)) trigger = string.Concat(trigger, "Core");
+                    var ret = string.Concat(GameName, $"/Plugins/GameFeatures/SrirachaRanch/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                }
+                default:
+                {
+                    var ret = string.Concat(GameName, $"/Plugins/{(GameName == "FortniteGame" ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                }
+            }
         }
 
         #region SaveAsset Methods
@@ -240,14 +283,13 @@ namespace CUE4Parse.FileProvider
                 {
                     return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
                 }
-                else
+                
+                if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
                 {
-                    if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
-                    {
-                        return null;
-                    }
-                    return new IoPackage(uasset, vfsFileProvider.GlobalData, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
+                    return null;
                 }
+                
+                return new IoPackage(uasset, vfsFileProvider.GlobalData, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
             }
             catch
             {

@@ -161,11 +161,12 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPropertyTagType? GetOrNull(params string[] names)
+        public FPropertyTagType? GetOrNull<T>(params string[] names)
         {
             foreach (string name in names)
             {
-                
+                if (PropertyUtil.GetOrNull<T>(this, name) is { } ret)
+                    return ret;
             }
             return null;
         }
@@ -186,6 +187,12 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
 
             return defaultValue;
+        }
+
+        public static FPropertyTagType? GetOrNull<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            var tag = holder.Properties.FirstOrDefault(it => it.Name.Text.Equals(name, comparisonType))?.Tag;
+            return tag is T ? tag : null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
