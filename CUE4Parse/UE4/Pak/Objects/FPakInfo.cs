@@ -90,7 +90,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     OffsetsToTry.Size8_1 => 1,
                     OffsetsToTry.Size8_2 => 2,
                     OffsetsToTry.Size8_3 => 3,
-                    _ => 0
+                    _ => 4
                 };
 
                 unsafe

@@ -65,6 +65,7 @@ namespace CUE4Parse.UE4.Pak
                 foreach (var block in pakEntry.CompressionBlocks)
                 {
                     reader.Position = block.CompressedStart;
+                    
                     var srcSize = (int) (block.CompressedEnd - block.CompressedStart).Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
                     // Read the compressed block
                     byte[] src = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
