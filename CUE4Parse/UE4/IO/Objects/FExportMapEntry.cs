@@ -2,7 +2,6 @@
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FExportMapEntry
     {

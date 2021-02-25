@@ -40,11 +40,7 @@ namespace CUE4Parse.UE4.Assets
         {
             foreach (var it in ExportMap)
             {
-                var exportType = 
-                    (it.ClassName == string.Empty || it.ClassName == "None") && !(this is IoPackage) ? exportAr.ReadFName().Text :
-                        //it.ClassIndex.IsExport ? ExportMap[it.ClassIndex.Index - 1].SuperIndex.Name :
-                        //it.ClassIndex.IsImport ? ImportMap[-it.ClassIndex.Index - 1].ObjectName.Text :
-                        it.ClassName;
+                var exportType = (it.ClassName == string.Empty || it.ClassName == "None") && !(this is IoPackage) ? exportAr.ReadFName().Text : it.ClassName;
                 var export = ConstructExport(exportType, it);
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UExport>(() =>

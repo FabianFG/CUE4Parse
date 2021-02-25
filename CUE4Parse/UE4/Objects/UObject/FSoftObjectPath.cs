@@ -33,6 +33,13 @@ namespace CUE4Parse.UE4.Objects.UObject
             SubPathString = Ar.ReadFString();
             Owner = Ar.Owner;
         }
+
+        public FSoftObjectPath(FName assetPathName, string subPathString, IPackage? owner = null)
+        {
+            AssetPathName = assetPathName;
+            SubPathString = subPathString;
+            Owner = owner;
+        }
         
         #region Loading Methods
         

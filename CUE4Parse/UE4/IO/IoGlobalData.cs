@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -60,15 +58,26 @@ namespace CUE4Parse.UE4.IO
 
         public string FindScriptEntryName(FPackageObjectIndex objectIndex)
         {
-            var hash = ObjectIndexToHash(objectIndex);
-            
-            for (var entry = ObjectHashHeads[hash]; entry != null; entry = entry.Next)
+            if (objectIndex.IsExport)
             {
-                if (entry.ObjectIndex.Value == objectIndex.Value)
+                
+            }
+            else if (objectIndex.IsScriptImport)
+            {
+                var hash = ObjectIndexToHash(objectIndex);
+                for (var entry = ObjectHashHeads[hash]; entry != null; entry = entry.Next)
                 {
-                    return entry.Name;
+                    if (entry.ObjectIndex.Value == objectIndex.Value)
+                    {
+                        return entry.Name;
+                    }
                 }
             }
+            else if (objectIndex.IsPackageImport)
+            {
+                
+            }
+            
             return "None";
         }
 

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -43,6 +41,41 @@ namespace CUE4Parse.UE4.Objects.UObject
             return result;
         }
 
+        public static FNameEntrySerialized[] LoadRegistryNames(FArchive nameAr, int nameCount)
+        {
+            var headers = new FSerializeNameHeader[nameCount];
+            for (var i = 0; i < headers.Length; i++)
+            {
+                headers[i] = new FSerializeNameHeader(nameAr);
+            }
+            
+            var result = new FNameEntrySerialized[nameCount];
+            for (var i = 0; i < result.Length; i++)
+            {
+                var header = headers[i];
+                var length = (int) header.Length;
+                if (header.IsUtf16)
+                {
+                    unsafe
+                    {
+                        var utf16Length = length * 2;
+                        var nameData = stackalloc byte[utf16Length];
+                        nameAr.Read(nameData, utf16Length);
+                        result[i] = new FNameEntrySerialized(new string((char*)nameData, 0, length));
+                    }
+                }
+            
+                unsafe
+                {
+                    var nameData = stackalloc byte[length];
+                    nameAr.Read(nameData, length);
+                    result[i] = new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
+                }
+            }
+
+            return result;
+        }
+
         private static FNameEntrySerialized LoadNameHeader(FArchive nameAr)
         {
             var header = new FSerializeNameHeader(nameAr);
@@ -58,14 +91,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                     return new FNameEntrySerialized(new string((char*)nameData, 0, length));
                 }
             }
-            else
+            
+            unsafe
             {
-                unsafe
-                {
-                    var nameData = stackalloc byte[length];
-                    nameAr.Read(nameData, length);
-                    return new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
-                }
+                var nameData = stackalloc byte[length];
+                nameAr.Read(nameData, length);
+                return new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
             }
         }
 
