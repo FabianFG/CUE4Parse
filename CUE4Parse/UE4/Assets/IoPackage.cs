@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -120,7 +120,23 @@ namespace CUE4Parse.UE4.Assets
                         exp.SerialOffset = (long) e.CookedSerialOffset;
                         exp.SerialSize = (long) e.CookedSerialSize;
                         exp.ObjectName = CreateFNameFromMappedName(e.ObjectName);
-                        exp.ClassName = GlobalData.FindScriptEntryName(e.ClassIndex);
+                        if (e.ClassIndex.IsExport)
+                        {
+                            exp.ClassName = exportMap[e.ClassIndex.TypeAndId].ObjectName.Text;
+                        }
+                        else if (e.ClassIndex.IsScriptImport)
+                        {
+                            exp.ClassName = GlobalData.FindScriptEntryName(e.ClassIndex);
+                        }
+                        else if (e.ClassIndex.IsPackageImport)
+                        {
+                            // ImportHelper.FindObjectInPackages must be used here but is not yet initialized
+                            exp.ClassName = "None";
+                        }
+                        else
+                        {
+                            exp.ClassName = "None";
+                        }
                         var outerIndex = (long) (e.OuterIndex.TypeAndId + 1);
                         if (outerIndex < 0 || outerIndex > exportCount)
                             throw new ParserException($"Invalid outer index {outerIndex}, must be in range [0; {exportCount}]");

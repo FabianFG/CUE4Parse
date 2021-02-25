@@ -58,24 +58,13 @@ namespace CUE4Parse.UE4.IO
 
         public string FindScriptEntryName(FPackageObjectIndex objectIndex)
         {
-            if (objectIndex.IsExport)
+            var hash = ObjectIndexToHash(objectIndex);
+            for (var entry = ObjectHashHeads[hash]; entry != null; entry = entry.Next)
             {
-                
-            }
-            else if (objectIndex.IsScriptImport)
-            {
-                var hash = ObjectIndexToHash(objectIndex);
-                for (var entry = ObjectHashHeads[hash]; entry != null; entry = entry.Next)
+                if (entry.ObjectIndex.Value == objectIndex.Value)
                 {
-                    if (entry.ObjectIndex.Value == objectIndex.Value)
-                    {
-                        return entry.Name;
-                    }
+                    return entry.Name;
                 }
-            }
-            else if (objectIndex.IsPackageImport)
-            {
-                
             }
             
             return "None";
