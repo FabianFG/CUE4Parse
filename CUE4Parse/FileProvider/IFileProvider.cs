@@ -300,6 +300,6 @@ namespace CUE4Parse.FileProvider
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>All exports of the object</returns>
-        public IEnumerable<UExport> ExtractObjectExports(string? objectPath);
+        public IEnumerable<UExport> LoadObjectExports(string? objectPath);
     }
 }

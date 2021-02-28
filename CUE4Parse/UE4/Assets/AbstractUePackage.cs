@@ -47,7 +47,14 @@ namespace CUE4Parse.UE4.Assets
                 {
                     exportAr.SeekAbsolute(it.RealSerialOffset, SeekOrigin.Begin);
                     var validPos = exportAr.Position + it.SerialSize;
-                    export.Deserialize(exportAr, validPos);
+                    try
+                    {
+                        export.Deserialize(exportAr, validPos);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, $"Could not read {exportType} correctly");
+                    }
 #if DEBUG
                     if (validPos != exportAr.Position)
                         Log.Warning($"Did not read {exportType} correctly, {validPos - exportAr.Position} bytes remaining");
