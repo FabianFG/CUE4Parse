@@ -32,6 +32,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             }
         }
     }
+
+    public static class UDataTableUtility
+    {
+        public static bool TryGetDataTableRow(this UDataTable dataTable, string rowKey, StringComparison comparisonType, out UObject rowValue)
+        {
+            foreach (var kvp in dataTable.RowMap)
+            {
+                if (kvp.Key.IsNone || !kvp.Key.Text.Equals(rowKey, comparisonType)) continue;
+
+                rowValue = kvp.Value;
+                return true;
+            }
+            
+            rowValue = default;
+            return false;
+        }
+    }
     
     public class UDataTableConverter : JsonConverter<UDataTable>
     {

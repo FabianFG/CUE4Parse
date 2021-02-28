@@ -27,4 +27,36 @@ namespace CUE4Parse.UE4.Objects.GameplayTags
 
         public override string ToString() => string.Join(", ", GameplayTags);
     }
+    
+    public static class FGameplayTagContainerUtility
+    {
+        public static bool TryGetGameplayTag(this IEnumerable<FName> gameplayTags, string startWith, out FName gameplayTag)
+        {
+            foreach (var tag in gameplayTags)
+            {
+                if (tag.IsNone || !tag.Text.StartsWith(startWith)) continue;
+                
+                gameplayTag = tag;
+                return true;
+            }
+            
+            gameplayTag = default;
+            return false;
+        }
+        
+        public static IList<string> GetAllGameplayTags(this IEnumerable<FName> gameplayTags, params string[] startWith)
+        {
+            var ret = new List<string>();
+            foreach (var tag in gameplayTags)
+            {
+                if (tag.IsNone) continue;
+                foreach (string s in startWith)
+                {
+                    if (!tag.Text.StartsWith(s)) continue;
+                    ret.Add(tag.Text);
+                }
+            }
+            return ret;
+        }
+    }
 }

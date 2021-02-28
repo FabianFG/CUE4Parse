@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Assets
                 "AkMediaAssetData" => new UAkMediaAssetData(export),
                 "Material" => new UMaterial(export),
                 "MaterialInstanceConstant" => new UMaterialInstanceConstant(export),
-                _ => new UObject(export, true)
+                _ => new UObject(export)
             };
             result.Owner = this;
             return result;

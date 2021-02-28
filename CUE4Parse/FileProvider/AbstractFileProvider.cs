@@ -128,7 +128,7 @@ namespace CUE4Parse.FileProvider
                 }
                 default:
                 {
-                    var ret = string.Concat(GameName, $"/Plugins/{(GameName == "FortniteGame" ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(GameName, $"/Plugins/{(GameName.Equals("FortniteGame", comparisonType) ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
                 }
             }

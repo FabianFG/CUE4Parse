@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             foreach (string name in names)
             {
-                if (GetOrDefault<T>(name) is T ret && !ret.Equals(default(T)))
+                if (GetOrDefault<T>(name, comparisonType: StringComparison.OrdinalIgnoreCase) is T ret && !ret.Equals(default(T)))
                 {
                     obj = ret;
                     return true;
