@@ -88,6 +88,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WritePropertyName("Type");
             writer.WriteValue(value.ExportType);
             
+            if (!value.Name.Equals(value.ExportType))
+            {
+                writer.WritePropertyName("Name");
+                writer.WriteValue(value.Name);
+            }
+            
             // export properties
             writer.WritePropertyName("Export");
             writer.WriteStartObject();
