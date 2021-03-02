@@ -114,6 +114,8 @@ namespace CUE4Parse.FileProvider
                 case "Rebirth":
                 case "Score":
                 case "Vendetta":
+                case "Builder":
+                case "Bodyguard":
                 {
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
