@@ -9,6 +9,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 {
     public class FPakEntry : VfsEntry
     {
+        public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
@@ -16,7 +17,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly int CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
-        public bool IsCompressed => CompressionMethod != CompressionMethod.None;
+        public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info) : base(reader)
@@ -26,8 +27,9 @@ namespace CUE4Parse.UE4.Pak.Objects
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
             Offset = Ar.Read<long>();
-            Size = Ar.Read<long>();
+            CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
+            Size = UncompressedSize;
 
             if (info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
@@ -117,18 +119,18 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 if ((bitfield & 0x20000000) != 0)
                 {
-                    Size = *(uint*) data;
+                    CompressedSize = *(uint*) data;
                     data += sizeof(uint);
                 }
                 else
                 {
-                    Size = *(long*) data;
+                    CompressedSize = *(long*) data;
                     data += sizeof(long);
                 }
             }
             else
             {
-                Size = UncompressedSize;
+                CompressedSize = UncompressedSize;
             }
 
             // bEncrypted
@@ -159,7 +161,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     ref var b = ref CompressionBlocks[0];
                     b.CompressedStart = Offset + StructSize;
-                    b.CompressedEnd = b.CompressedStart + Size;
+                    b.CompressedEnd = b.CompressedStart + CompressedSize;
                 }
                 else
                 {

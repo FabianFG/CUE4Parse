@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
 {
     public class FStreamArchive : FArchive
     {
-
         private readonly Stream _baseStream;
 
         public FStreamArchive(string name, Stream baseStream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
@@ -18,6 +18,38 @@ namespace CUE4Parse.UE4.Readers
         }
 
         public override void Close() => _baseStream.Close();
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int Read7BitEncodedInt()
+        {
+            int count = 0, shift = 0;
+            byte b;
+            do
+            {
+                if (shift == 5 * 7)  // 5 bytes max per Int32, shift += 7
+                    throw new FormatException("Stream is corrupted");
+
+                b = Read<byte>();
+                count |= (b & 0x7F) << shift;
+                shift += 7;
+            } while ((b & 0x80) != 0);
+            return count;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ReadString()
+        {
+            var length = Read7BitEncodedInt();
+            if (length <= 0)
+                return string.Empty;
+            
+            unsafe
+            {
+                var ansiBytes = stackalloc byte[length];
+                Read(ansiBytes, length);
+                return new string((sbyte*) ansiBytes, 0, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
@@ -50,7 +82,6 @@ namespace CUE4Parse.UE4.Readers
         {
             var bytes = ReadBytes(length);
             Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
-            Position += length;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

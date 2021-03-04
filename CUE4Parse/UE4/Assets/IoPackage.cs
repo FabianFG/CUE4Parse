@@ -19,60 +19,50 @@ namespace CUE4Parse.UE4.Assets
 {
     public sealed class IoPackage : AbstractUePackage
     {
+        private readonly Lazy<FObjectImport[]> _importMapLazy;
         public readonly FPackageSummary IoSummary;
         public readonly IoGlobalData GlobalData;
+        
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
-
-        private readonly Lazy<FObjectImport[]> _importMapLazy;
         public override FObjectImport[] ImportMap => _importMapLazy.Value;
         public override FObjectExport[] ExportMap { get; }
 
         public FPackageObjectIndex[] ExportIndices { get; private set; }
+        public IReadOnlyList<GameFile> GraphData { get; private set; }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
-            : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
+        public IoPackage(
+            FArchive uasset, IoGlobalData globalData,
+            Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null,
+            IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             GlobalData = globalData;
             var uassetAr = new FAssetArchive(uasset, this);
             IoSummary = uassetAr.Read<FPackageSummary>();
             Summary = new FPackageFileSummary
             {
-                PackageFlags = (PackageFlags) IoSummary.PackageFlags
+                PackageFlags = (PackageFlags) IoSummary.PackageFlags,
+                TotalHeaderSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize,
+                NameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1,
+                ExportCount = (IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
+                ImportCount = (IoSummary.ExportMapOffset - IoSummary.ImportMapOffset) / FPackageObjectIndex.Size
             };
-
-            var headerSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize;
-            Summary.TotalHeaderSize = headerSize;
-
+            
             uassetAr.Position = IoSummary.NameMapNamesOffset;
-            var nameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1;
-            Summary.NameCount = nameCount;
-            NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr, nameCount);
+            NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr, Summary.NameCount);
 
+            uassetAr.Position = IoSummary.ExportBundlesOffset;
             LoadExportBundles(uassetAr, out var bundleHeadersArray, out var bundleEntriesArray);
 
-            var exportTableSize = IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset;
-            var exportCount = exportTableSize / Unsafe.SizeOf<FExportMapEntry>();
-            Summary.ExportCount = exportCount;
-            ExportMap = LoadExportTable(uassetAr, exportCount, exportTableSize, headerSize, bundleHeadersArray,
-                bundleEntriesArray);
+            ExportMap = LoadExportTable(uassetAr, Summary.ExportCount, bundleHeadersArray, bundleEntriesArray);
 
-            var graphData = LoadGraphData(uassetAr);
-            var importMapSize = IoSummary.ExportMapOffset - IoSummary.ImportMapOffset;
-            var importCount = importMapSize / FPackageObjectIndex.Size;
-            Summary.ImportCount = importCount;
-            _importMapLazy = LoadImportTable(uassetAr, importCount, graphData);
+            uassetAr.Position = IoSummary.GraphDataOffset;
+            GraphData = LoadGraphData(uassetAr);
+            
+            _importMapLazy = LoadImportTable(uassetAr, Summary.ImportCount);
 
-            if (ubulk != null)
-            {
-                var offset = Summary.BulkDataStartOffset;
-                uassetAr.AddPayload(PayloadType.UBULK, offset, ubulk);
-            }
-            if (uptnl != null)
-            {
-                var offset = Summary.BulkDataStartOffset;
-                uassetAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
-            }
+            if (ubulk != null) uassetAr.AddPayload(PayloadType.UBULK, Summary.BulkDataStartOffset, ubulk);
+            if (uptnl != null) uassetAr.AddPayload(PayloadType.UPTNL, Summary.BulkDataStartOffset, uptnl);
             
             ProcessExportMap(uassetAr);
         }
@@ -82,20 +72,19 @@ namespace CUE4Parse.UE4.Assets
             IFileProvider? provider = null, TypeMappings? mappings = null)
             : this(uasset, globalData, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
                 uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
-        {
-        }
+        { }
 
-        private FObjectExport[] LoadExportTable(FAssetArchive reader, int exportCount, int exportTableSize,
-            int packageHeaderSize, FExportBundleHeader[] bundleHeaders, FExportBundleEntry[] bundleEntries)
+        private FObjectExport[] LoadExportTable(FAssetArchive reader, int exportCount, FExportBundleHeader[] bundleHeaders, FExportBundleEntry[] bundleEntries)
         {
+            ExportIndices = new FPackageObjectIndex[exportCount];
             var exportMap = new FObjectExport[exportCount];
             for (var i = 0; i < exportMap.Length; i++)
+            {
                 exportMap[i] = new FObjectExport();
-            ExportIndices = new FPackageObjectIndex[exportCount];
+            }
 
             reader.Position = IoSummary.ExportMapOffset;
             var exportEntries = reader.ReadArray<FExportMapEntry>(exportCount);
-            
             var exportOrder = new List<uint>(exportCount);
             
             // Export data is ordered according to export bundles, so we should do the processing in bundle order
@@ -120,26 +109,18 @@ namespace CUE4Parse.UE4.Assets
                         exp.SerialOffset = (long) e.CookedSerialOffset;
                         exp.SerialSize = (long) e.CookedSerialSize;
                         exp.ObjectName = CreateFNameFromMappedName(e.ObjectName);
+                        
                         if (e.ClassIndex.IsExport)
-                        {
                             exp.ClassName = exportMap[e.ClassIndex.TypeAndId].ObjectName.Text;
-                        }
                         else if (e.ClassIndex.IsScriptImport)
-                        {
                             exp.ClassName = GlobalData.FindScriptEntryName(e.ClassIndex);
-                        }
                         else if (e.ClassIndex.IsPackageImport)
-                        {
-                            // ImportHelper.FindObjectInPackages must be used here but is not yet initialized
-                            exp.ClassName = "None";
-                        }
+                            exp.ClassName = "None"; // ImportHelper.FindObjectInPackages must be used here but is not yet initialized
                         else
-                        {
                             exp.ClassName = "None";
-                        }
+                        
                         var outerIndex = (long) (e.OuterIndex.TypeAndId + 1);
-                        if (outerIndex < 0 || outerIndex > exportCount)
-                            throw new ParserException($"Invalid outer index {outerIndex}, must be in range [0; {exportCount}]");
+                        if (outerIndex < 0 || outerIndex > exportCount) throw new ParserException($"Invalid outer index {outerIndex}, must be in range [0; {exportCount}]");
                         exp.OuterIndex = new FPackageIndex(reader, (int) outerIndex);
                         
                         ExportIndices[objectIndex] = e.GlobalImportIndex;
@@ -147,7 +128,7 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
             
-            var currentExportOffset = packageHeaderSize;
+            var currentExportOffset = Summary.TotalHeaderSize;
             foreach (var objectIndex in exportOrder)
             {
                 ref var exp = ref exportMap[objectIndex];
@@ -156,7 +137,6 @@ namespace CUE4Parse.UE4.Assets
             }
 
             Summary.BulkDataStartOffset = currentExportOffset;
-
             return exportMap;
         }
 
@@ -168,7 +148,7 @@ namespace CUE4Parse.UE4.Assets
             private readonly FObjectImport[] _importTable;
             private readonly FPackageObjectIndex[] _importMap;
             private readonly IFileProvider? _provider;
-            private int NextImportToCheck;
+            private int _nextImportToCheck;
 
             public ImportHelper(IReadOnlyList<GameFile> packageFiles, FObjectImport[] importTable, FPackageObjectIndex[] importMap, IFileProvider? provider)
             {
@@ -176,17 +156,25 @@ namespace CUE4Parse.UE4.Assets
                 _packageFiles = packageFiles;
                 _importTable = importTable;
                 _importMap = importMap;
+                
                 _allocatedPackageImports = new int[packageFiles.Count];
-                for (int i = 0; i < _allocatedPackageImports.Length; i++)
+                for (var i = 0; i < _allocatedPackageImports.Length; i++)
+                {
                     _allocatedPackageImports[i] = -1;
+                }
                 
                 // Preload dependencies
                 var packagesTasks = new Task<IPackage?>[packageFiles.Count];
-                for (var i = 0; i < packageFiles.Count; i++)
-                    packagesTasks[i] = _provider?.TryLoadPackageAsync(packageFiles[i]) ?? Task.FromResult<IPackage?>(null);
-                _packages = new IoPackage?[packageFiles.Count];
                 for (var i = 0; i < packagesTasks.Length; i++)
+                {
+                    packagesTasks[i] = _provider?.TryLoadPackageAsync(packageFiles[i]) ?? Task.FromResult<IPackage?>(null);
+                }
+                
+                _packages = new IoPackage?[packageFiles.Count];
+                for (var i = 0; i < _packages.Length; i++)
+                {
                     _packages[i] = packagesTasks[i].GetAwaiter().GetResult() as IoPackage;
+                }
             }
 
             public bool FindObjectInPackages(FPackageObjectIndex objectIndex, out int outPackageIndex, out FObjectExport outExportEntry)
@@ -194,20 +182,18 @@ namespace CUE4Parse.UE4.Assets
                 for (var packageIndex = 0; packageIndex < _packages.Length; packageIndex++)
                 {
                     var importPackage = _packages[packageIndex];
-                    if (importPackage == null) goto Fail;
-                    for (int i = 0; i < importPackage.ExportIndices.Length; i++)
+                    if (importPackage == null) break;
+                    
+                    for (var i = 0; i < importPackage.ExportIndices.Length; i++)
                     {
-                        if (importPackage.ExportIndices[i].Value == objectIndex.Value)
-                        {
-                            // Found
-                            outPackageIndex = packageIndex;
-                            outExportEntry = importPackage.ExportMap[i];
-                            return true;
-                        }
+                        if (importPackage.ExportIndices[i].Value != objectIndex.Value) continue;
+                        
+                        outPackageIndex = packageIndex;
+                        outExportEntry = importPackage.ExportMap[i];
+                        return true;
                     }
                 }
                 
-                Fail:
                 outPackageIndex = 0;
                 outExportEntry = default;
                 return false;
@@ -216,45 +202,41 @@ namespace CUE4Parse.UE4.Assets
             public int GetPackageImportIndex(int packageIndex)
             {
                 var index =_allocatedPackageImports[packageIndex];
-                if (index >= 0)
-                    return index; // Already allocated
+                if (index >= 0) return index; // Already allocated
+                
                 index = FindNullImportEntry();
                 _allocatedPackageImports[packageIndex] = index;
 
-                var file = _packageFiles[packageIndex];
                 var imp = _importTable[index] = new FObjectImport();
-                imp.ObjectName = new FName(file.PathWithoutExtension); // TODO This still has mount point replaced
+                imp.ObjectName = new FName(_packageFiles[packageIndex].PathWithoutExtension); // TODO This still has mount point replaced
                 imp.ClassName = new FName("Package");
-
                 return index;
             }
 
             private int FindNullImportEntry()
             {
-                for (int index = NextImportToCheck; index < _importTable.Length; index++)
+                for (var index = _nextImportToCheck; index < _importTable.Length; index++)
                 {
-                    if (_importMap[index].IsNull)
-                    {
-                        NextImportToCheck = index + 1;
-                        return index;
-                    }
+                    if (!_importMap[index].IsNull) continue;
+                    
+                    _nextImportToCheck = index + 1;
+                    return index;
                 }
                 throw new ParserException("Unable to find Null import entry");
             }
         }
 
-        private Lazy<FObjectImport[]> LoadImportTable(FAssetArchive reader, int importCount, IReadOnlyList<GameFile> importPackages)
+        private Lazy<FObjectImport[]> LoadImportTable(FAssetArchive reader, int importCount)
         {
-            return new Lazy<FObjectImport[]>(() =>
+            return new (() =>
             {
                 var savePos = reader.Position;
                 reader.Position = IoSummary.ImportMapOffset;
                 var importTable = new FObjectImport[importCount];
                 var importMap = reader.ReadArray<FPackageObjectIndex>(importCount);
                 
-                var helper = new ImportHelper(importPackages, importTable, importMap, Provider);
-
-                for (int importIndex = 0; importIndex < importCount; importIndex++)
+                var helper = new ImportHelper(GraphData, importTable, importMap, Provider);
+                for (var importIndex = 0; importIndex < importCount; importIndex++)
                 {
                     var objectIndex = importMap[importIndex];
 
@@ -292,13 +274,11 @@ namespace CUE4Parse.UE4.Assets
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FName CreateFNameFromMappedName(FMappedName mappedName) =>
-            new FName(mappedName, mappedName.IsGlobal ? GlobalData.GlobalNameMap : NameMap);
+            new (mappedName, mappedName.IsGlobal ? GlobalData.GlobalNameMap : NameMap);
 
-        private void LoadExportBundles(FArchive Ar, out FExportBundleHeader[] bundleHeadersArray,
-            out FExportBundleEntry[] bundleEntriesArray)
+        private void LoadExportBundles(FArchive reader, out FExportBundleHeader[] bundleHeadersArray, out FExportBundleEntry[] bundleEntriesArray)
         {
-            Ar.Position = IoSummary.ExportBundlesOffset;
-            var bundleHeadersBytes = Ar.ReadBytes(IoSummary.GraphDataOffset - IoSummary.ExportBundlesOffset);
+            var bundleHeadersBytes = reader.ReadBytes(IoSummary.GraphDataOffset - IoSummary.ExportBundlesOffset);
             
             unsafe
             {
@@ -316,14 +296,16 @@ namespace CUE4Parse.UE4.Assets
                         currentBundleHeader++;
                     }
 
-                    if (foundBundlesCount != remainingBundleEntryCount) 
-                        throw new ParserException(Ar, $"FoundBundlesCount {foundBundlesCount} != RemainingBundleEntryCount {remainingBundleEntryCount}");
+                    if (foundBundlesCount != remainingBundleEntryCount)
+                        throw new ParserException(reader, $"FoundBundlesCount {foundBundlesCount} != RemainingBundleEntryCount {remainingBundleEntryCount}");
+                    
                     // Load export bundles into arrays
                     bundleHeadersArray = new FExportBundleHeader[currentBundleHeader - bundleHeaders];
                     fixed (FExportBundleHeader* bundleHeadersPtr = bundleHeadersArray)
                     {
                         Unsafe.CopyBlockUnaligned(bundleHeadersPtr, bundleHeaders, (uint) (bundleHeadersArray.Length * sizeof(FExportBundleHeader)));
                     }
+                    
                     bundleEntriesArray = new FExportBundleEntry[foundBundlesCount];
                     fixed (FExportBundleEntry* bundleEntriesPtr = bundleEntriesArray)
                     {
@@ -335,27 +317,22 @@ namespace CUE4Parse.UE4.Assets
 
         private IReadOnlyList<GameFile> LoadGraphData(FAssetArchive Ar)
         {
-            Ar.Position = IoSummary.GraphDataOffset;
             var packageCount = Ar.Read<int>();
             if (packageCount == 0) return Array.Empty<GameFile>();
             
             if (Provider == null)
                 throw new ParserException(Ar, "Cannot process graph data without a file provider");
+            
             var packages = new List<GameFile>(packageCount);
-
-            for (int packageIndex = 0; packageIndex < packageCount; packageIndex++)
+            for (var packageIndex = 0; packageIndex < packageCount; packageIndex++)
             {
                 var packageId = Ar.Read<FPackageId>();
                 var bundleCount = Ar.Read<int>();
-                // Skip bundle info
-                Ar.Position += bundleCount * (sizeof(int) + sizeof(int));
+                Ar.Position += bundleCount * (sizeof(int) + sizeof(int)); // Skip FArcs
 
-                if (Provider.FilesById.TryGetValue(packageId, out var file))
-                    packages.Add(file);
-                else
-                    Log.Warning("Can't locate package with id {0:X}", packageId.id);
+                if (Provider.FilesById.TryGetValue(packageId, out var file)) packages.Add(file);
+                else Log.Warning("Can't locate package with id {0:X}", packageId.id);
             }
-
             return packages;
         }
     }
