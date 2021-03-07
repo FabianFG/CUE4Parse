@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine
@@ -56,7 +56,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             }
             
             // export properties
-            writer.WritePropertyName("Export");
+            writer.WritePropertyName("Rows");
             serializer.Serialize(writer, value.RowMap); // will write CurveTableMode
             
             writer.WriteEndObject();

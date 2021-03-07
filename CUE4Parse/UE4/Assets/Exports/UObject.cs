@@ -243,7 +243,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
 
             // export properties
-            writer.WritePropertyName("Export");
+            writer.WritePropertyName("Properties");
             writer.WriteStartObject();
             {
                 foreach (var property in value.Properties)
