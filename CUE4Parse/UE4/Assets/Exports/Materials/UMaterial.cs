@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using Enumerable = System.Linq.Enumerable;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Materials
 {
@@ -174,7 +175,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             }
             else
             {
-                foreach (var texture in Enumerable.Where(ReferencedTextures, texture => !outTextures.Contains(texture)))
+                foreach (var texture in ReferencedTextures.Where(texture => !outTextures.Contains(texture)))
                 {
                     outTextures.Add(texture);
                 }
