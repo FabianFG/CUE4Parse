@@ -14,6 +14,7 @@ using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
 
@@ -81,6 +82,7 @@ namespace CUE4Parse.UE4.Assets
                 "AkMediaAssetData" => new UAkMediaAssetData(export),
                 "Material" => new UMaterial(export),
                 "MaterialInstanceConstant" => new UMaterialInstanceConstant(export),
+                "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(export),
                 _ => new UObject(export)
             };
             result.Owner = this;
