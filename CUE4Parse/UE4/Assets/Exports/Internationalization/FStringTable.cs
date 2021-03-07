@@ -11,9 +11,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization
         public FStringTable(FAssetArchive Ar)
         {
             TableNamespace = Ar.ReadFString();
-            int numEntries = Ar.Read<int>();
+            
+            var numEntries = Ar.Read<int>();
             KeysToMetaData = new Dictionary<string, string>(numEntries);
-            for (int i = 0; i < numEntries; ++i)
+            for (var i = 0; i < numEntries; ++i)
             {
                 KeysToMetaData[Ar.ReadFString()] = Ar.ReadFString();
             }

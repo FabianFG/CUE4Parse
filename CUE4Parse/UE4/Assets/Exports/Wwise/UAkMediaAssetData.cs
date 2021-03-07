@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise
             }
             
             // export properties
-            writer.WritePropertyName("Export");
+            writer.WritePropertyName("Properties");
             writer.WriteStartObject();
             {
                 writer.WritePropertyName("DataChunks");
