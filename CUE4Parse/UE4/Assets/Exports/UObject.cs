@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
@@ -21,9 +22,31 @@ namespace CUE4Parse.UE4.Assets.Exports
     [JsonConverter(typeof(UObjectConverter))]
     public class UObject : UExport, IPropertyHolder
     {
+        public UObject? Outer;
+        public UStruct? Class;
+        public Lazy<UObject>? Template;
         public List<FPropertyTag> Properties { get; private set; }
         public bool ReadGuid { get; }
         public FGuid? ObjectGuid { get; private set; }
+        public int /*EObjectFlags*/ Flags;
+
+        // public FObjectExport Export;
+        public override IPackage? Owner
+        {
+            get
+            {
+                var current = Outer;
+                var next = current?.Outer;
+                while (next != null)
+                {
+                    current = next;
+                    next = current.Outer;
+                }
+
+                return current as Package;
+            }
+        }
+        public override string ExportType => Class?.Name ?? GetType().Name;
 
         public UObject(FObjectExport exportObject, bool readGuid = true) : base(exportObject)
         {
@@ -35,6 +58,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             ExportType = GetType().Name;
             Name = ExportType;
+            ReadGuid = true;
         }
 
         public UObject(List<FPropertyTag> properties, FGuid? objectGuid, string exportType) : base(exportType)
@@ -50,26 +74,37 @@ namespace CUE4Parse.UE4.Assets.Exports
                 var mappings = Ar.Owner.Mappings;
                 if (mappings == null)
                     throw new ParserException("Found unversioned properties but package doesn't have any type mappings");
-                Properties = DeserializePropertiesUnversioned(Ar, ExportType);
+                Properties = DeserializePropertiesUnversioned(Ar, Class);
             }
             else
             {
                 Properties = DeserializePropertiesTagged(Ar);
             }
 
-            if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 16 <= Ar.Length)
+            if ((Flags & 0x00000010) == 0 && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
         }
         
-        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, string type)
+        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, UStruct struc)
         {
             var properties = new List<FPropertyTag>();
             var header = new FUnversionedHeader(Ar);
             if (!header.HasValues)
                 return properties;
-            if (Ar.Owner.Mappings == null || !Ar.Owner.Mappings.Types.TryGetValue(type, out var propMappings))
+            var type = struc.Name;
+            Struct? propMappings;
+            if (struc is UScriptClass)
+            {
+                propMappings = Ar.Owner.Mappings?.Types[type];
+            }
+            else
+            {
+                propMappings = new SerializedStruct(Ar.Owner.Mappings, struc);
+            }
+
+            if (propMappings == null)
             {
                 Log.Warning("Missing prop mappings for type {0} in package {1}", type, Ar.Owner.Name);
                 return properties;

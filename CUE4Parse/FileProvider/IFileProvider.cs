@@ -150,6 +150,13 @@ namespace CUE4Parse.FileProvider
         /// <returns>The parsed package content</returns>
         public IPackage LoadPackage(GameFile file);
         /// <summary>
+        /// Loads and parses an I/O Store Package from the passed package ID. 
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <returns>The parsed package content</returns>
+        public IoPackage LoadPackage(FPackageId id);
+        /// <summary>
         /// Attempts to loads and parse a Package at the passed path. 
         /// </summary>
         /// <param name="path">The package file path</param>

@@ -8,8 +8,6 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageIndex[] Children;
         public FField[] ChildProperties;
 
-        public UStruct(FObjectExport export) : base(export) { }
-
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);

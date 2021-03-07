@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -21,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (Ar.HasUnversionedProperties)
             {
                 if (structType == null) throw new ArgumentException("For unversioned struct fallback the struct type cannot be null", nameof(structType));
-                Properties = UObject.DeserializePropertiesUnversioned(Ar, structType);
+                Properties = UObject.DeserializePropertiesUnversioned(Ar, new UScriptClass(structType));
             }
             else
             {

@@ -35,10 +35,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
-        public FObjectImport? ImportObject => IsImport && -Index <= Owner?.ImportMap.Length ? Owner?.ImportMap[-Index - 1] : null;
+        public FObjectImport? ImportObject => null;//IsImport && -Index <= Owner?.ImportMap.Length ? Owner?.ImportMap[-Index - 1] : null;
         public FObjectImport? OuterImportObject => ImportObject?.OuterIndex?.ImportObject ?? ImportObject;
-        
-        public FObjectExport? ExportObject => IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
+
+        public FObjectExport? ExportObject => null;//IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
         
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
@@ -92,8 +92,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Load<T>() where T : UExport =>
-            Load<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+        public T? Load<T>() where T : Assets.Exports.UObject => Owner?.FindObject(this)?.Value as T;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad<T>(out T export) where T : UExport
         {
@@ -123,9 +123,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (provider == null) return null;
             return await TryLoadAsync<T>(provider).ConfigureAwait(false);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Load<T>(IFileProvider provider) where T : UExport =>
-            Load(provider) as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+        public T? Load<T>(IFileProvider provider) where T : UExport => Load(provider) switch
+        {
+            null => null,
+            T t => t,
+            _ => throw new ParserException($"Loaded {ToString()} but it was of wrong type")
+        };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad<T>(IFileProvider provider, out T export) where T : UExport
@@ -148,8 +153,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport Load(IFileProvider provider) => ImportObject?.Load(provider) ?? ExportObject?.Load(provider) ??
-            throw new ParserException("Package was loaded without a IFileProvider");
+        public UExport? Load(IFileProvider provider) => ImportObject?.Load(provider) ?? ExportObject?.Load(provider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad(IFileProvider provider, out UExport export)
@@ -383,7 +387,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int SerializationBeforeCreateDependencies;
         public int CreateBeforeCreateDependencies;
         public Type ExportType;
-        public Lazy<UExport> ExportObject;
+        public Lazy<Assets.Exports.UObject> ExportObject;
 
         public string ClassName;
 

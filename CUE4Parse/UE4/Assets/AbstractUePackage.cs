@@ -1,34 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.Engine;
-using CUE4Parse.UE4.Assets.Exports.Internationalization;
-using CUE4Parse.UE4.Assets.Exports.Materials;
-using CUE4Parse.UE4.Assets.Exports.Sound;
-using CUE4Parse.UE4.Assets.Exports.Textures;
-using CUE4Parse.UE4.Assets.Exports.Wwise;
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
-    public abstract class AbstractUePackage : IPackage
+    public abstract class AbstractUePackage : UObject, IPackage
     {
-        public string Name { get; }
         public IFileProvider? Provider { get; }
         public TypeMappings? Mappings { get; }
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
-        public abstract FObjectImport[] ImportMap { get; }
-        public abstract FObjectExport[] ExportMap { get; }
+        public abstract Lazy<UObject>[] ExportsLazy { get; }
 
         public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
@@ -37,62 +24,30 @@ namespace CUE4Parse.UE4.Assets
             Mappings = mappings;
         }
 
-        protected void ProcessExportMap(FAssetArchive exportAr)
+        protected static UObject ConstructObject(UStruct? struc)
         {
-            foreach (var it in ExportMap)
+            UObject? obj = null;
+            var current = struc;
+            while (current != null) // Traverse up until a known one is found
             {
-                var exportType = (it.ClassName == string.Empty || it.ClassName == "None") && !(this is IoPackage) ? exportAr.ReadFName().Text : it.ClassName;
-                var export = ConstructExport(exportType, it);
-                it.ExportType = export.GetType();
-                it.ExportObject = new Lazy<UExport>(() =>
+                if (current is UScriptClass h)
                 {
-                    exportAr.SeekAbsolute(it.RealSerialOffset, SeekOrigin.Begin);
-                    var validPos = exportAr.Position + it.SerialSize;
-                    try
-                    {
-                        export.Deserialize(exportAr, validPos);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, $"Could not read {exportType} correctly");
-                    }
-#if DEBUG
-                    if (validPos != exportAr.Position)
-                        Log.Warning($"Did not read {exportType} correctly, {validPos - exportAr.Position} bytes remaining");
-                    else
-                        Log.Debug($"Successfully read {exportType} at {it.RealSerialOffset} with size {it.SerialSize}");
-#endif
+                    obj = h.ConstructObject();
+                    break;
+                }
 
-                    return export;
-                });
+                current = current.SuperStruct.Load<UStruct>();
             }
-        }
-        
-        private UExport ConstructExport(string exportType, FObjectExport export)
-        {
-            var result = exportType switch
-            {
-                "Texture2D" => new UTexture2D(export),
-                "VirtualTexture2D" => new UTexture2D(export),
-                "CurveTable" => new UCurveTable(export),
-                "DataTable" => new UDataTable(export),
-                "SoundWave" => new USoundWave(export),
-                "StringTable" => new UStringTable(export),
-                "Skeleton" => new USkeleton(export),
-                "AkMediaAssetData" => new UAkMediaAssetData(export),
-                "Material" => new UMaterial(export),
-                "MaterialInstanceConstant" => new UMaterialInstanceConstant(export),
-                "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(export),
-                _ => new UObject(export)
-            };
-            result.Owner = this;
-            return result;
+
+            obj ??= new UObject();
+            obj.Class = struc;
+            return obj;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasFlags(PackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /*[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetExportOfTypeOrNull<T>() where T : UExport
         {
             var export = ExportMap.FirstOrDefault(it => typeof(T).IsAssignableFrom(it.ExportType));
@@ -100,7 +55,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 return export?.ExportObject.Value as T;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log.Debug(e, "Failed to get export object");
                 return null;
@@ -110,23 +65,10 @@ namespace CUE4Parse.UE4.Assets
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetExportOfType<T>() where T : UExport =>
             GetExportOfTypeOrNull<T>() ??
-            throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");
+            throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");*/
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
-        {
-            try
-            {
-                return ExportMap
-                    .FirstOrDefault(it => it.ObjectName.Text.Equals(name, comparisonType))?.ExportObject
-                    .Value;
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e, "Failed to get export object");
-                return null;
-            }
-        }
+        public abstract UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -139,10 +81,7 @@ namespace CUE4Parse.UE4.Assets
                 $"Package '{Name}' does not have an export with the name '{name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> GetExports()
-        {
-            return ExportMap.Select(x => x.ExportObject.Value);
-        }
+        public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -150,6 +89,30 @@ namespace CUE4Parse.UE4.Assets
                                  throw new NullReferenceException(
                                      $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
 
+        public Lazy<UObject>? FindObject(FPackageIndex? index)
+        {
+            if (index == null || index.IsNull) return null;
+            if (index.IsImport) return ResolvePackageIndex(index)?.Object;
+            return ExportsLazy[index.Index - 1];
+        }
+
+        public abstract ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
+
         public override string ToString() => Name;
+    }
+
+    public abstract class ResolvedObject
+    {
+        public IPackage Package;
+
+        public ResolvedObject(IPackage package)
+        {
+            Package = package;
+        }
+
+        public abstract FName Name { get; }
+        public virtual ResolvedObject? Outer => null;
+        public virtual ResolvedObject? Super => null;
+        public virtual Lazy<UObject>? Object => null;
     }
 }

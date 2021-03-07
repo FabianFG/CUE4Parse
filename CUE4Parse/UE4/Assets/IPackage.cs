@@ -20,15 +20,16 @@ namespace CUE4Parse.UE4.Assets
         
         public FPackageFileSummary Summary { get; }
         public FNameEntrySerialized[] NameMap { get; }
-        public FObjectImport[] ImportMap { get; }
-        public FObjectExport[] ExportMap { get; }
+        public Lazy<UObject>[] ExportsLazy { get; }
 
         public bool HasFlags(PackageFlags flags);
-        public T? GetExportOfTypeOrNull<T>() where T : UExport;
-        public T GetExportOfType<T>() where T : UExport;
+        /*public T? GetExportOfTypeOrNull<T>() where T : UExport;
+        public T GetExportOfType<T>() where T : UExport;*/
         public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
         public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public Lazy<UObject>? FindObject(FPackageIndex? index);
+        public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
         public IEnumerable<UExport> GetExports();
         
         public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)

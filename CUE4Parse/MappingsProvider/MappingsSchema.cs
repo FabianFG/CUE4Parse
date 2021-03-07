@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.MappingsProvider
 {
@@ -13,10 +13,15 @@ namespace CUE4Parse.MappingsProvider
         public Dictionary<int, PropertyInfo> Properties;
         public int PropertyCount;
 
-        public Struct(TypeMappings context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount)
+        public Struct(TypeMappings context, string name, int propertyCount)
         {
             Context = context;
             Name = name;
+            PropertyCount = propertyCount;
+        }
+
+        public Struct(TypeMappings context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
+        {
             SuperType = superType;
             Super = new Lazy<Struct?>(() =>
             {
@@ -28,18 +33,41 @@ namespace CUE4Parse.MappingsProvider
                 return null;
             });
             Properties = properties;
-            PropertyCount = propertyCount;
         }
 
         public bool TryGetValue(int i, out PropertyInfo info)
         {
             if (!Properties.TryGetValue(i, out info))
             {
-                return i >= PropertyCount && Super.Value != null && 
+                return i >= PropertyCount && Super.Value != null &&
                        Super.Value.TryGetValue(i - PropertyCount, out info);
             }
 
             return true;
+        }
+    }
+
+    public class SerializedStruct : Struct
+    {
+        public SerializedStruct(TypeMappings context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
+        {
+            Super = new Lazy<Struct?>(() =>
+            {
+                //if (struc.SuperStruct.TryLoad<UStruct>(out var superStruct))
+                var superStruct = struc.SuperStruct.Load<UStruct>();
+                if (superStruct != null)
+                {
+                    return superStruct is UScriptClass ? Context.Types[superStruct.Name] : new SerializedStruct(Context, superStruct);
+                }
+
+                return null;
+            });
+            Properties = new Dictionary<int, PropertyInfo>(struc.ChildProperties.Length);
+            for (var i = 0; i < struc.ChildProperties.Length; i++)
+            {
+                var prop = struc.ChildProperties[i] as FProperty;
+                Properties[i] = new PropertyInfo(i, prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
+            }
         }
     }
 
@@ -79,6 +107,35 @@ namespace CUE4Parse.MappingsProvider
             IsEnumAsByte = isEnumAsByte;
             Bool = b;
         }
-        
+
+        public PropertyType(FProperty prop)
+        {
+            Type = prop.GetType().Name.Substring(1);
+            if (prop is FArrayProperty array)
+            {
+                InnerType = new PropertyType(array.Inner);
+            }
+            else if (prop is FByteProperty b)
+            {
+                EnumName = b.Enum.Load().Name; // TODO if enum is UserDefinedEnum it will fail
+            }
+            //is FEnumProperty => {
+            //enumName = prop.enum
+            //}
+            else if (prop is FMapProperty map)
+            {
+                InnerType = new PropertyType(map.KeyProp);
+                ValueType = new PropertyType(map.ValueProp);
+            }
+            else if (prop is FSetProperty set)
+            {
+                InnerType = new PropertyType(set.ElementProp);
+            }
+            else if (prop is FStructProperty struc)
+            {
+                var structClass = struc.Struct.Load<UStruct>();
+                StructType = structClass.Name; // TODO load the mappings for that struct too, currently it will fail if it's a serialized struct
+            }
+        }
     }
 }

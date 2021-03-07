@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.Utils;
+using Enumerable = System.Linq.Enumerable;
 
 namespace CUE4Parse.UE4.Assets.Exports.Materials
 {
@@ -46,11 +45,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
         {
             //!! NOTE: this code will not work when textures are located in the same package - they don't present in import table
             //!! but could be found in export table. That's true for Simplygon-generated materials.
-            foreach (var import in Ar.Owner.ImportMap)
+            /*foreach (var import in Ar.Owner.ImportMap)
             {
                 if (import.ClassName.Text.StartsWith("Texture", StringComparison.OrdinalIgnoreCase) && import.TryLoad<UTexture>(out var tex))
                     ReferencedTextures.Add(tex);
-            }
+            }*/
         }
 
         public override void GetParams(CMaterialParams parameters)
@@ -175,7 +174,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             }
             else
             {
-                foreach (var texture in ReferencedTextures.Where(texture => !outTextures.Contains(texture)))
+                foreach (var texture in Enumerable.Where(ReferencedTextures, texture => !outTextures.Contains(texture)))
                 {
                     outTextures.Add(texture);
                 }
