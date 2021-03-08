@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
@@ -17,9 +16,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new List<UTexture>();
-
-        public UMaterial() { }
-        public UMaterial(FObjectExport export) : base(export) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -115,7 +111,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             for (var i = 0; i < ReferencedTextures.Count; i++)
             {
                 var tex = ReferencedTextures[i];
-                var name = tex.Export!.ObjectName.Text;
+                var name = tex.Name;
                 if (name.Contains("noise", StringComparison.CurrentCultureIgnoreCase)) continue;
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
                 

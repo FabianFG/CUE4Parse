@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Objects.UObject;
+using Serilog;
 
 namespace CUE4Parse.MappingsProvider
 {
@@ -57,16 +58,31 @@ namespace CUE4Parse.MappingsProvider
                 var superStruct = struc.SuperStruct.Load<UStruct>();
                 if (superStruct != null)
                 {
-                    return superStruct is UScriptClass ? Context.Types[superStruct.Name] : new SerializedStruct(Context, superStruct);
+                    if (superStruct is UScriptClass)
+                    {
+                        if (Context.Types.TryGetValue(superStruct.Name, out var scriptStruct))
+                        {
+                            return scriptStruct;
+                        }
+
+                        Log.Warning("Missing prop mappings for type {0}", superStruct.Name);
+                        return null;
+                    }
+
+                    return new SerializedStruct(Context, superStruct);
                 }
 
                 return null;
             });
-            Properties = new Dictionary<int, PropertyInfo>(struc.ChildProperties.Length);
+            Properties = new Dictionary<int, PropertyInfo>();
             for (var i = 0; i < struc.ChildProperties.Length; i++)
             {
                 var prop = struc.ChildProperties[i] as FProperty;
-                Properties[i] = new PropertyInfo(i, prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
+                var propInfo = new PropertyInfo(i, prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
+                for (int j = 0; j < prop.ArrayDim; j++)
+                {
+                    Properties[i + j] = propInfo;
+                }
             }
         }
     }

@@ -2,7 +2,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -16,9 +15,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         public FByteBulkData? RawData { get; private set; }
         public FGuid CompressedDataGuid { get; private set; }
         public FStreamedAudioPlatformData? RunningPlatformData { get; private set; }
-
-        public USoundWave() { }
-        public USoundWave(FObjectExport exportObject) : base(exportObject) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

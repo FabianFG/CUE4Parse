@@ -1,6 +1,5 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise
@@ -11,9 +10,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise
         public bool IsStreamed { get; private set; } = false;
         public bool UseDeviceMemory { get; private set; } = false;
         public FAkMediaDataChunk[] DataChunks { get; private set; }
-
-        public UAkMediaAssetData() { }
-        public UAkMediaAssetData(FObjectExport exportObject) : base(exportObject) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

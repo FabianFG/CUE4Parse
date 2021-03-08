@@ -1,7 +1,5 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Textures;
+﻿using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Materials
 {
@@ -15,10 +13,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
         public float MobileSpecularPower = 16.0f;
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
         public UTexture? MobileMaskTexture;
-
-        public UMaterialInterface() { }
-
-        public UMaterialInterface(FObjectExport export) : base(export) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

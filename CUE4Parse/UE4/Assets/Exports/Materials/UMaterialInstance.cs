@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Materials
 {
@@ -7,10 +6,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
     {
         public UUnrealMaterial? Parent;
         public FMaterialInstanceBasePropertyOverrides BasePropertyOverrides;
-
-        public UMaterialInstance() { }
-
-        public UMaterialInstance(FObjectExport export) : base(export) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

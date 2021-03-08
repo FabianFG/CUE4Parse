@@ -28,6 +28,7 @@ namespace CUE4Parse.UE4.Assets
         public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
         public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
         public Lazy<UObject>? FindObject(FPackageIndex? index);
         public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
         public IEnumerable<UExport> GetExports();

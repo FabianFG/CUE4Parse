@@ -17,12 +17,14 @@ namespace CUE4Parse.UE4.Assets.Objects
             Properties = new List<FPropertyTag>();
         }
 
-        public FStructFallback(FAssetArchive Ar, string? structType)
+        public FStructFallback(FAssetArchive Ar, string? structType) : this(Ar, structType != null ? new UScriptClass(structType) : null) { }
+
+        public FStructFallback(FAssetArchive Ar, UStruct? structType)
         {
             if (Ar.HasUnversionedProperties)
             {
                 if (structType == null) throw new ArgumentException("For unversioned struct fallback the struct type cannot be null", nameof(structType));
-                Properties = UObject.DeserializePropertiesUnversioned(Ar, new UScriptClass(structType));
+                Properties = UObject.DeserializePropertiesUnversioned(Ar, structType);
             }
             else
             {

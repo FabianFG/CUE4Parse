@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Textures;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Materials
@@ -13,9 +12,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
         public FScalarParameterValue[] ScalarParameterValues;
         public FTextureParameterValue[] TextureParameterValues;
         public FVectorParameterValue[] VectorParameterValues;
-        public UMaterialInstanceConstant() { }
-
-        public UMaterialInstanceConstant(FObjectExport export) : base(export) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

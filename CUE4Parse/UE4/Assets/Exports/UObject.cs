@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public UObject? Outer;
         public UStruct? Class;
-        public Lazy<UObject>? Template;
+        public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
         public bool ReadGuid { get; }
         public FGuid? ObjectGuid { get; private set; }
@@ -54,17 +54,14 @@ namespace CUE4Parse.UE4.Assets.Exports
             ReadGuid = readGuid;
         }
 
-        public UObject() : this(new List<FPropertyTag>(), null, "")
+        public UObject() : base("")
         {
-            ExportType = GetType().Name;
-            Name = ExportType;
-            ReadGuid = true;
+            Properties = new List<FPropertyTag>();
         }
 
-        public UObject(List<FPropertyTag> properties, FGuid? objectGuid, string exportType) : base(exportType)
+        public UObject(List<FPropertyTag> properties) : base("")
         {
             Properties = properties;
-            ObjectGuid = objectGuid;
         }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -94,15 +91,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (!header.HasValues)
                 return properties;
             var type = struc.Name;
-            Struct? propMappings;
-            if (struc is UScriptClass)
-            {
-                propMappings = Ar.Owner.Mappings?.Types[type];
-            }
-            else
-            {
-                propMappings = new SerializedStruct(Ar.Owner.Mappings, struc);
-            }
+            var propMappings = struc is UScriptClass ? Ar.Owner.Mappings?.Types[type] : new SerializedStruct(Ar.Owner.Mappings, struc);
 
             if (propMappings == null)
             {
@@ -172,10 +161,10 @@ namespace CUE4Parse.UE4.Assets.Exports
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefault<T>(this, name, defaultValue, comparisonType);
+            PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefaultLazy<T>(this, name, defaultValue, comparisonType);
+            PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
@@ -221,7 +210,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default, 
             StringComparison comparisonType = StringComparison.Ordinal) =>
-            new Lazy<T>(() => GetOrDefault<T>(holder, name, defaultValue, comparisonType));
+            new(() => GetOrDefault(holder, name, defaultValue, comparisonType));
 
         // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
         public static T Get<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -242,7 +231,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
             StringComparison comparisonType = StringComparison.Ordinal) =>
-            new Lazy<T>(() => Get<T>(holder, name, comparisonType));
+            new(() => Get<T>(holder, name, comparisonType));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetByIndex<T>(IPropertyHolder holder, int index)

@@ -10,32 +10,27 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
     [JsonConverter(typeof(UDataTableConverter))]
     public class UDataTable : UObject
     {
-        public Dictionary<FName, UObject> RowMap { get; private set; }
-
-        public UDataTable() { }
-        public UDataTable(FObjectExport exportObject) : base(exportObject) { }
+        public Dictionary<FName, FStructFallback> RowMap { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             // UObject Properties
-            string structType = GetOrDefault<FPackageIndex>("RowStruct").Name; // type of the RowMap values
+            var rowStruct = GetOrDefault<FPackageIndex>("RowStruct").Load<UStruct>(); // type of the RowMap values
 
             var numRows = Ar.Read<int>();
-            RowMap = new Dictionary<FName, UObject>(numRows);
+            RowMap = new Dictionary<FName, FStructFallback>(numRows);
             for (var i = 0; i < numRows; i++)
             {
                 var rowName = Ar.ReadFName();
-                UObject rowValue = new UObject(new List<FPropertyTag>(), null, structType);
-                rowValue.Deserialize(Ar, -1);
-                RowMap[rowName] = rowValue;
+                RowMap[rowName] = new FStructFallback(Ar, rowStruct);
             }
         }
     }
 
     public static class UDataTableUtility
     {
-        public static bool TryGetDataTableRow(this UDataTable dataTable, string rowKey, StringComparison comparisonType, out UObject rowValue)
+        public static bool TryGetDataTableRow(this UDataTable dataTable, string rowKey, StringComparison comparisonType, out FStructFallback rowValue)
         {
             foreach (var kvp in dataTable.RowMap)
             {

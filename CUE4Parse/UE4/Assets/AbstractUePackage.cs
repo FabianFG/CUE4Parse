@@ -81,13 +81,13 @@ namespace CUE4Parse.UE4.Assets
                 $"Package '{Name}' does not have an export with the name '{name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);
+        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport =>
+            GetExportOrNull<T>(name, comparisonType) ??
+            throw new NullReferenceException(
+                $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
-            where T : UExport => GetExportOrNull<T>(name, comparisonType) ??
-                                 throw new NullReferenceException(
-                                     $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
+        public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);
 
         public Lazy<UObject>? FindObject(FPackageIndex? index)
         {

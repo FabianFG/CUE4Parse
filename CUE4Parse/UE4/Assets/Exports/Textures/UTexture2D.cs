@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
@@ -25,9 +24,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         public bool IsVirtual { get; private set; }
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
-
-        public UTexture2D() { }
-        public UTexture2D(FObjectExport exportObject) : base(exportObject) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -75,7 +71,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
                         Log.Debug($"Loading data for format {pixelFormatEnum}");
 #endif
                         var data = new FTexturePlatformData(Ar);
-                        if (Ar.AbsolutePosition + Export!.SerialOffset - Export!.RealSerialOffset != skipOffset)
+                        if (Ar.AbsolutePosition != skipOffset)
                         {
                             Log.Warning(
                                 $"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
