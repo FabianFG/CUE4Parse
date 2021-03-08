@@ -130,7 +130,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
             }
             
             // export properties
-            writer.WritePropertyName("Export");
+            writer.WritePropertyName("Properties");
             writer.WriteStartObject();
             {
                 writer.WritePropertyName("Mips");

@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
@@ -350,12 +351,18 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         {
             public readonly FName TableId;
             public readonly string Key;
-            public override string Text => string.Empty; /* TODO load table from files and get value by key */
+            public override string Text { get; }
 
             public StringTableEntry(FAssetArchive Ar)
             {
                 TableId = Ar.ReadFName();
                 Key = Ar.ReadFString();
+
+                if (Ar.Owner.Provider!.TryLoadObject(TableId.Text, out UStringTable table) &&
+                    table.StringTable.KeysToMetaData.TryGetValue(Key, out var t))
+                {
+                    Text = t;
+                }
             }
         }
 

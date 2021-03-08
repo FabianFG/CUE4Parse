@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization
             }
             
             // export properties
-            writer.WritePropertyName("Export");
+            writer.WritePropertyName("Properties");
             writer.WriteStartObject();
             {
                 writer.WritePropertyName("StringTable");
