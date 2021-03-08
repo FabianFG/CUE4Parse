@@ -112,7 +112,38 @@ namespace CUE4Parse.UE4.Assets
 
         public abstract FName Name { get; }
         public virtual ResolvedObject? Outer => null;
+        public virtual ResolvedObject? Class => null;
         public virtual ResolvedObject? Super => null;
         public virtual Lazy<UObject>? Object => null;
+    }
+
+    public class ResolvedLoadedObject : ResolvedObject
+    {
+        private UObject _object;
+
+        public ResolvedLoadedObject(UObject obj) : base(obj.Owner)
+        {
+            _object = obj;
+        }
+
+        public override FName Name => new(_object.Name);
+        public override ResolvedObject? Outer
+        {
+            get
+            {
+                var obj = _object.Outer;
+                return obj != null ? new ResolvedLoadedObject(obj) : null;
+            }
+        }
+        public override ResolvedObject? Class
+        {
+            get
+            {
+                var obj = _object.Class;
+                return obj != null ? new ResolvedLoadedObject(obj) : null;
+            }
+        }
+        public override ResolvedObject? Super => null; //new ResolvedLoadedObject(_object.Super);
+        public override Lazy<UObject>? Object => new(() => _object);
     }
 }

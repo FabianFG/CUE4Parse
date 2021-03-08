@@ -27,7 +27,7 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             foreach (var file in newFiles.Values)
             {
-                if (file is FIoStoreEntry ioEntry)
+                if (file is FIoStoreEntry {IsUE4Package: true} ioEntry)
                 {
                     _byId[ioEntry.ChunkId.AsPackageId()] = file;
                 }

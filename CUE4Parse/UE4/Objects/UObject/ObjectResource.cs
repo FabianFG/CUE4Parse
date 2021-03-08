@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -12,7 +14,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-
     /// <summary>
     /// Wrapper for index into a ULinker's ImportMap or ExportMap.
     /// Values greater than zero indicate that this is an index into the ExportMap.  The
@@ -35,11 +36,11 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
-        public FObjectImport? ImportObject => null;//IsImport && -Index <= Owner?.ImportMap.Length ? Owner?.ImportMap[-Index - 1] : null;
+        public FObjectImport? ImportObject => null; //IsImport && -Index <= Owner?.ImportMap.Length ? Owner?.ImportMap[-Index - 1] : null;
         public FObjectImport? OuterImportObject => ImportObject?.OuterIndex?.ImportObject ?? ImportObject;
 
-        public FObjectExport? ExportObject => null;//IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
-        
+        public FObjectExport? ExportObject => null; //IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
+
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
@@ -47,13 +48,13 @@ namespace CUE4Parse.UE4.Objects.UObject
         public string Name => ImportObject?.ObjectName.Text ??
                               ExportObject?.ObjectName.Text ??
                               string.Empty;
-        
+
         public FPackageIndex(FAssetArchive Ar, int index)
         {
             Index = index;
             Owner = Ar.Owner;
         }
-        
+
         public FPackageIndex(FAssetArchive Ar)
         {
             Index = Ar.Read<int>();
@@ -72,7 +73,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                    ExportObject?.ObjectName.Text.Insert(0, "Export: ") ??
                    Index.ToString();
         }
-        
+
         #region Loading Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,6 +89,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 export = default;
                 return false;
             }
+
             return TryLoad(provider, out export);
         }
 
@@ -103,10 +105,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                 export = default;
                 return false;
             }
+
             return TryLoad(provider, out export);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport> LoadAsync() => await LoadAsync(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
@@ -114,8 +119,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (provider == null) return null;
             return await TryLoadAsync(provider).ConfigureAwait(false);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>() where T : UExport => await LoadAsync<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>() where T : UExport
         {
@@ -147,7 +154,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>(IFileProvider provider) where T : UExport => await LoadAsync(provider) as T ??
-            throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+                                                                                       throw new ParserException($"Loaded {ToString()} but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
@@ -191,6 +198,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 if (loadedImport != null)
                     return loadedImport;
             }
+
             var exportObj = ExportObject;
             if (exportObj != null)
             {
@@ -201,15 +209,43 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             return null;
         }
-        
+
         #endregion
     }
-    
+
     public class FPackageIndexConverter : JsonConverter<FPackageIndex>
     {
         public override void WriteJson(JsonWriter writer, FPackageIndex value, JsonSerializer serializer)
         {
-            if (value.ImportObject != null)
+            var resolved = value.Owner?.ResolvePackageIndex(value);
+            if (resolved != null)
+            {
+                var outerChain = new List<string>();
+                var current = resolved;
+                while (current != null)
+                {
+                    outerChain.Add(current.Name.Text);
+                    current = current.Outer;
+                }
+
+                var sb = new StringBuilder(256);
+                for (int i = 1; i <= outerChain.Count; i++)
+                {
+                    var name = outerChain[outerChain.Count - i];
+                    sb.Append(name);
+                    if (i < outerChain.Count)
+                    {
+                        sb.Append(i > 1 ? ":" : ".");
+                    }
+                }
+
+                writer.WriteValue($"{resolved.Class?.Name}'{sb}'");
+            }
+            else
+            {
+                writer.WriteValue("None");
+            }
+            /*if (value.ImportObject != null)
             {
                 serializer.Serialize(writer, value.ImportObject);
             }
@@ -220,8 +256,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             else
             {
                 writer.WriteValue(value.Index);
-            }
-            
+            }*/
         }
 
         public override FPackageIndex ReadJson(JsonReader reader, Type objectType, FPackageIndex existingValue, bool hasExistingValue,
@@ -230,8 +265,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             throw new NotImplementedException();
         }
     }
-    
-    
+
+
     /// <summary>
     /// Base class for UObject resource types.  FObjectResources are used to store UObjects on disk
     /// via FLinker's ImportMap (for resources contained in other packages) and ExportMap (for resources
@@ -242,9 +277,9 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public FName ObjectName;
         public FPackageIndex? OuterIndex;
-        
+
         #region Loading Methods
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UExport Load() =>
             Load(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
@@ -258,12 +293,14 @@ namespace CUE4Parse.UE4.Objects.UObject
                 export = default;
                 return false;
             }
+
             return TryLoad(provider, out export);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Load<T>() where T : UExport =>
             Load<T>(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad<T>(out T export) where T : UExport
         {
@@ -273,10 +310,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                 export = default;
                 return false;
             }
+
             return TryLoad(provider, out export);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport> LoadAsync() => await LoadAsync(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
@@ -284,8 +324,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (provider == null) return null;
             return await TryLoadAsync(provider).ConfigureAwait(false);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>() where T : UExport => await LoadAsync<T>(OuterIndex?.Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>() where T : UExport
         {
@@ -293,7 +335,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (provider == null) return null;
             return await TryLoadAsync<T>(provider).ConfigureAwait(false);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Load<T>(IFileProvider provider) where T : UExport =>
             Load(provider) as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
@@ -313,7 +355,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>(IFileProvider provider) where T : UExport => await LoadAsync(provider) as T ??
-            throw new ParserException($"Loaded {ToString()} but it was of wrong type");
+                                                                                       throw new ParserException($"Loaded {ToString()} but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
@@ -325,7 +367,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public abstract Task<UExport> LoadAsync(IFileProvider provider);
 
         public abstract Task<UExport?> TryLoadAsync(IFileProvider provider);
-        
+
         #endregion
 
         public override string ToString()
@@ -333,7 +375,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             return ObjectName.Text;
         }
     }
-    
+
     public class FObjectResourceConverter : JsonConverter<FObjectResource>
     {
         public override void WriteJson(JsonWriter writer, FObjectResource value, JsonSerializer serializer)
@@ -354,7 +396,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             writer.WritePropertyName("OuterIndex");
             serializer.Serialize(writer, value.OuterIndex);
-            
+
             writer.WriteEndObject();
         }
 
@@ -394,9 +436,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 #pragma warning disable 8618
         public FObjectExport()
 #pragma warning restore 8618
-        {
-            
-        }
+        { }
 
         public FObjectExport(FAssetArchive Ar)
         {
@@ -417,6 +457,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerialSize = Ar.Read<long>();
                 SerialOffset = Ar.Read<long>();
             }
+
             RealSerialOffset = SerialOffset;
 
             ForcedExport = Ar.ReadBoolean();
@@ -486,7 +527,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             return $"{ObjectName.Text} ({ClassIndex.Name})";
         }
     }
-    
+
     /// <summary>
     /// UObject resource type for objects that are referenced by this package, but contained
     /// within another package.
@@ -495,13 +536,11 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public readonly FName ClassPackage;
         public FName ClassName;
-        
+
 #pragma warning disable 8618
         public FObjectImport()
 #pragma warning restore 8618
-        {
-            
-        }
+        { }
 
         public FObjectImport(FAssetArchive Ar)
         {

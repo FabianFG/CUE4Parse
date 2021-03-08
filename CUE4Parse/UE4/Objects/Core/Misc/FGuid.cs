@@ -122,7 +122,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     {
         public override void WriteJson(JsonWriter writer, FGuid value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToString(EGuidFormats.UniqueObjectGuid));
+            writer.WriteValue(value.ToString());
         }
 
         public override FGuid ReadJson(JsonReader reader, Type objectType, FGuid existingValue, bool hasExistingValue,

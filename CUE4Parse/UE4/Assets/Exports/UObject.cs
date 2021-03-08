@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                     next = current.Outer;
                 }
 
-                return current as Package;
+                return current as IPackage;
             }
         }
         public override string ExportType => Class?.Name ?? GetType().Name;

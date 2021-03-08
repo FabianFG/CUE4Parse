@@ -146,7 +146,9 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
+            var path = value.ToString();
+            writer.WriteValue(path.Length > 0 ? path : "None");
+            /*writer.WriteStartObject();
             
             writer.WritePropertyName("AssetPathName");
             serializer.Serialize(writer, value.AssetPathName);
@@ -154,7 +156,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WritePropertyName("SubPathString");
             writer.WriteValue(value.SubPathString);
             
-            writer.WriteEndObject();
+            writer.WriteEndObject();*/
         }
 
         public override FSoftObjectPath ReadJson(JsonReader reader, Type objectType, FSoftObjectPath existingValue, bool hasExistingValue,

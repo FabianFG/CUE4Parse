@@ -56,6 +56,7 @@ namespace CUE4Parse.UE4.Assets
             // Name map
             uassetAr.Position = IoSummary.NameMapNamesOffset;
             NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr, Summary.NameCount);
+            Name = CreateFNameFromMappedName(IoSummary.Name).Text;
 
             // Import map
             uassetAr.Position = IoSummary.ImportMapOffset;
@@ -256,7 +257,8 @@ namespace CUE4Parse.UE4.Assets
             }
 
             public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
-            public override ResolvedObject? Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex);
+            public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+            public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
             public override ResolvedObject? Super => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.SuperIndex);
             public override Lazy<UObject> Object => ExportObject;
         }
@@ -273,6 +275,7 @@ namespace CUE4Parse.UE4.Assets
 
             public override FName Name => new(ScriptImportName);
             public override ResolvedObject? Outer => null; //pkg.ResolveObjectIndex(ScriptImport.OuterIndex);
+            public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass("Class"));
             public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
         }
     }
