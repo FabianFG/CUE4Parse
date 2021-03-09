@@ -127,30 +127,34 @@ namespace CUE4Parse.MappingsProvider
         public PropertyType(FProperty prop)
         {
             Type = prop.GetType().Name.Substring(1);
-            if (prop is FArrayProperty array)
+            switch (prop)
             {
-                InnerType = new PropertyType(array.Inner);
-            }
-            else if (prop is FByteProperty b)
-            {
-                EnumName = b.Enum.Load().Name; // TODO if enum is UserDefinedEnum it will fail
-            }
-            //is FEnumProperty => {
-            //enumName = prop.enum
-            //}
-            else if (prop is FMapProperty map)
-            {
-                InnerType = new PropertyType(map.KeyProp);
-                ValueType = new PropertyType(map.ValueProp);
-            }
-            else if (prop is FSetProperty set)
-            {
-                InnerType = new PropertyType(set.ElementProp);
-            }
-            else if (prop is FStructProperty struc)
-            {
-                var structClass = struc.Struct.Load<UStruct>();
-                StructType = structClass.Name; // TODO load the mappings for that struct too, currently it will fail if it's a serialized struct
+                case FArrayProperty array:
+                    var inner = array.Inner;
+                    if (inner != null) InnerType = new PropertyType(inner);
+                    break;
+                case FByteProperty b:
+                    EnumName = b.Enum.Load()?.Name; // TODO if enum is UserDefinedEnum it will fail
+                    break;
+                case FEnumProperty e:
+                    EnumName = e.Enum.Load()?.Name;
+                    break;
+                case FMapProperty map:
+                    var key = map.KeyProp;
+                    var value = map.ValueProp;
+                    if (key != null) InnerType = new PropertyType(key);
+                    if (value != null) ValueType = new PropertyType(value);
+                    break;
+                case FSetProperty set:
+                    var element = set.ElementProp;
+                    if (element != null) InnerType = new PropertyType(element);
+                    break;
+                case FStructProperty struc:
+                {
+                    var structClass = struc.Struct.Load<UStruct>();
+                    if (structClass != null) StructType = structClass.Name; // TODO load the mappings for that struct too, currently it will fail if it's a serialized struct
+                    break;
+                }
             }
         }
     }

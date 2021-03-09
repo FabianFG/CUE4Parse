@@ -72,17 +72,17 @@ namespace CUE4Parse.UE4.Assets
                     try
                     {
                         export.Deserialize(uexpAr, validPos);
+#if DEBUG
+                        if (validPos != uexpAr.Position)
+                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - uexpAr.Position);
+                        else
+                            Log.Debug("Successfully read {0} at {1} with size {2}", exportType, it.RealSerialOffset, it.SerialSize);
+#endif
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, $"Could not read {exportType} correctly");
+                        Log.Error(e, "Could not read {0} correctly", exportType);
                     }
-#if DEBUG
-                    if (validPos != uexpAr.Position)
-                        Log.Warning($"Did not read {exportType} correctly, {validPos - uexpAr.Position} bytes remaining");
-                    else
-                        Log.Debug($"Successfully read {exportType} at {it.RealSerialOffset} with size {it.SerialSize}");
-#endif
 
                     return export;
                 });

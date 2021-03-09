@@ -74,13 +74,25 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBoolean()
         {
-            return Read<int>() != 0;
+            var i = Read<int>();
+            return i switch
+            {
+                0 => false,
+                1 => true,
+                _ => throw new ParserException(this, $"Invalid bool value ({i})")
+            };
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadFlag()
         {
-            return Read<byte>() != 0;
+            var i = Read<byte>();
+            return i switch
+            {
+                0 => false,
+                1 => true,
+                _ => throw new ParserException(this, $"Invalid bool value ({i})")
+            };
         }
 
         public string ReadFString()

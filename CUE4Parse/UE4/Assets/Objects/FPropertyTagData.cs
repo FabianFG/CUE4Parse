@@ -1,8 +1,7 @@
-﻿using CUE4Parse.MappingsProvider;
-using CUE4Parse.UE4.Assets.Objects.Unversioned;
+﻿using System.Text;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -68,6 +67,30 @@ namespace CUE4Parse.UE4.Assets.Objects
             InnerType = InnerTypeData?.Type;
             ValueTypeData = info.ValueType != null ? new FPropertyTagData(info.ValueType) : null;
             ValueType = ValueTypeData?.Type;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder(Type);
+            switch (Type)
+            {
+                case "StructProperty":
+                    sb.AppendFormat("<{0}>", StructType);
+                    break;
+                case "ByteProperty" when EnumName != null:
+                case "EnumProperty":
+                    sb.AppendFormat("<{0}>", EnumName);
+                    break;
+                case "ArrayProperty":
+                case "SetProperty":
+                    sb.AppendFormat("<{0}>", InnerTypeData?.ToString() ?? InnerType);
+                    break;
+                case "MapProperty":
+                    sb.AppendFormat("<{0}, {1}>", InnerTypeData?.ToString() ?? InnerType, ValueTypeData?.ToString() ?? ValueType);
+                    break;
+            }
+
+            return sb.ToString();
         }
     }
 }
