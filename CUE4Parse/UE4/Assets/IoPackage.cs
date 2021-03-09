@@ -108,7 +108,7 @@ namespace CUE4Parse.UE4.Assets
 
                             // Serialize
                             var Ar = (FAssetArchive) uassetAr.Clone();
-                            Ar.AbsoluteOffset = (int) (IoSummary.CookedHeaderSize - allExportDataOffset);
+                            Ar.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
                             Ar.Seek(localExportDataOffset, SeekOrigin.Begin);
                             var validPos = Ar.Position + (long) export.CookedSerialSize;
                             try
@@ -121,9 +121,9 @@ namespace CUE4Parse.UE4.Assets
                             }
 #if DEBUG
                             if (validPos != Ar.Position)
-                                Log.Warning($"Did not read {exportType} correctly, {validPos - Ar.Position} bytes remaining");
+                                Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - Ar.Position);
                             else
-                                Log.Debug($"Successfully read {exportType} at {localExportDataOffset} with size {export.CookedSerialSize}");
+                                Log.Debug("Successfully read {0} at {1} with size {2}", exportType, localExportDataOffset, export.CookedSerialSize);
 #endif
                             return obj;
                         });

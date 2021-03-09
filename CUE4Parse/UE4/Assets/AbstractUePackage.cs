@@ -30,9 +30,9 @@ namespace CUE4Parse.UE4.Assets
             var current = struc;
             while (current != null) // Traverse up until a known one is found
             {
-                if (current is UScriptClass h)
+                if (current is UScriptClass scriptClass)
                 {
-                    obj = h.ConstructObject();
+                    obj = scriptClass.ConstructObject();
                     break;
                 }
 
