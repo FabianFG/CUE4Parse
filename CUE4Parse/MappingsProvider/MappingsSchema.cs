@@ -77,7 +77,7 @@ namespace CUE4Parse.MappingsProvider
             Properties = new Dictionary<int, PropertyInfo>();
             for (var i = 0; i < struc.ChildProperties.Length; i++)
             {
-                var prop = struc.ChildProperties[i] as FProperty;
+                var prop = (FProperty) struc.ChildProperties[i];
                 var propInfo = new PropertyInfo(i, prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
                 for (int j = 0; j < prop.ArrayDim; j++)
                 {

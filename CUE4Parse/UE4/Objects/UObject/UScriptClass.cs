@@ -19,17 +19,18 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public Assets.Exports.UObject ConstructObject() => Name switch
         {
-            "Texture2D" => new UTexture2D(),
-            "VirtualTexture2D" => new UTexture2D(),
+            "AkMediaAssetData" => new UAkMediaAssetData(),
+            "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(),
             "CurveTable" => new UCurveTable(),
             "DataTable" => new UDataTable(),
-            "SoundWave" => new USoundWave(),
-            "StringTable" => new UStringTable(),
-            "Skeleton" => new USkeleton(),
-            "AkMediaAssetData" => new UAkMediaAssetData(),
             "Material" => new UMaterial(),
             "MaterialInstanceConstant" => new UMaterialInstanceConstant(),
-            "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(),
+            "Skeleton" => new USkeleton(),
+            "SoundWave" => new USoundWave(),
+            "StringTable" => new UStringTable(),
+            "Texture2D" => new UTexture2D(),
+            "UserDefinedStruct" => new UUserDefinedStruct(),
+            "VirtualTexture2D" => new UTexture2D(),
             _ => new Assets.Exports.UObject()
         };
     }
