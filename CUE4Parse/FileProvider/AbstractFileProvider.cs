@@ -78,7 +78,7 @@ namespace CUE4Parse.FileProvider
                     var p = path.SubstringAfter("/", comparisonType).SubstringBefore("/", comparisonType);
                     if (p.Contains('.'))
                     {
-                        var ret = string.Concat(gameName, path.SubstringAfter("/", comparisonType));
+                        var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
                         return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
                     }
                     

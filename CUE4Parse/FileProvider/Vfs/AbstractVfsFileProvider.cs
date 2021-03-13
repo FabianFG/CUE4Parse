@@ -22,27 +22,24 @@ namespace CUE4Parse.FileProvider.Vfs
         public override IReadOnlyDictionary<string, GameFile> Files => _files;
         public override IReadOnlyDictionary<FPackageId, GameFile> FilesById => _files.byId;
 
-        protected ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs =
-            new ConcurrentDictionary<IAesVfsReader, object?>();
+        protected ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
 
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs =>
             (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
-        protected ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs =
-            new ConcurrentDictionary<IAesVfsReader, object?>();
+        protected ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
 
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
 
         public IoGlobalData? GlobalData { get; private set; }
 
-        protected ConcurrentDictionary<FGuid, FAesKey> _keys = new ConcurrentDictionary<FGuid, FAesKey>();
+        protected ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
-        protected ConcurrentDictionary<FGuid, object?> _requiredKeys = new ConcurrentDictionary<FGuid, object?>();
+        protected ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
-        protected AbstractVfsFileProvider(bool isCaseInsensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive,
-            game, ver)
+        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : base(isCaseInsensitive, game, ver)
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }

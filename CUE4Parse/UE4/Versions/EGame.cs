@@ -35,6 +35,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_25 = GameUtils.GameUe4Base + 25 << 4,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
+        
         GAME_UE4_LAST,
         GAME_UE4_LATEST = GAME_UE4_LAST - 1
     }

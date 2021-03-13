@@ -95,6 +95,38 @@ namespace CUE4Parse.UE4.Readers
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int Read7BitEncodedInt()
+        {
+            int count = 0, shift = 0;
+            byte b;
+            do
+            {
+                if (shift == 5 * 7)  // 5 bytes max per Int32, shift += 7
+                    throw new FormatException("Stream is corrupted");
+
+                b = Read<byte>();
+                count |= (b & 0x7F) << shift;
+                shift += 7;
+            } while ((b & 0x80) != 0);
+            return count;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ReadString()
+        {
+            var length = Read7BitEncodedInt();
+            if (length <= 0)
+                return string.Empty;
+            
+            unsafe
+            {
+                var ansiBytes = stackalloc byte[length];
+                Read(ansiBytes, length);
+                return new string((sbyte*) ansiBytes, 0, length);
+            }
+        }
+        
         public string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
