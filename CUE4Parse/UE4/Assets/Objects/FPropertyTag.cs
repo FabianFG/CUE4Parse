@@ -30,8 +30,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             var pos = Ar.Position;
             try
             {
-                Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData,
-                    type);
+                Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, type);
             }
             catch (ParserException e)
             {
