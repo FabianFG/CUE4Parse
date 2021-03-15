@@ -108,7 +108,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "SetProperty" => new SetProperty(Ar, tagData, type),
                 "StructProperty" => new StructProperty(Ar, tagData, type),
                 "MapProperty" => new MapProperty(Ar, tagData, type),
-                "FieldPathProperty" => new FieldPathProperty(Ar, tagData, type),
+                "FieldPathProperty" => new FieldPathProperty(Ar, type),
                 _ => null
             };
 #if DEBUG

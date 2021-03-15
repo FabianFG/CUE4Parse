@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     [JsonConverter(typeof(FieldPathPropertyConverter))]
     public class FieldPathProperty : FPropertyTagType<FFieldPath>
     {
-        public FieldPathProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
+        public FieldPathProperty(FAssetArchive Ar, ReadType type)
         {
             Value = type switch
             {
