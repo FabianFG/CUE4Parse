@@ -6,18 +6,15 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FieldPathPropertyConverter))]
-    public class FieldPathProperty : FPropertyTagType<FFieldPath[]>
+    public class FieldPathProperty : FPropertyTagType<FFieldPath>
     {
         public FieldPathProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
         {
-            if (type == ReadType.ZERO)
+            Value = type switch
             {
-                Value = Array.Empty<FFieldPath>();
-            }
-            else
-            {
-                Value = Ar.ReadArray(() => new FFieldPath(Ar));
-            }
+                ReadType.ZERO => new FFieldPath(),
+                _ => new FFieldPath(Ar)
+            };
         }
     }
     
