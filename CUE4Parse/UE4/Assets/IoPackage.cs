@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -28,7 +26,7 @@ namespace CUE4Parse.UE4.Assets
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
 
-        public readonly Lazy<IEnumerable<IoPackage>> ImportedPackages;
+        public readonly Lazy<IoPackage[]> ImportedPackages;
         public override Lazy<UObject>[] ExportsLazy { get; }
 
         public IoPackage(
@@ -76,7 +74,15 @@ namespace CUE4Parse.UE4.Assets
             var importedPackageIds = LoadGraphData(uassetAr);
 
             // Preload dependencies
-            ImportedPackages = new Lazy<IEnumerable<IoPackage>>(() => importedPackageIds.Select(provider.LoadPackage));
+            ImportedPackages = new Lazy<IoPackage[]>(() =>
+            {
+                var packages = new IoPackage[importedPackageIds.Length];
+                for (int i = 0; i < importedPackageIds.Length; i++)
+                {
+                    packages[i] = provider.LoadPackage(importedPackageIds[i]);
+                }
+                return packages;
+            });
 
             // Attach ubulk and uptnl
             if (ubulk != null) uassetAr.AddPayload(PayloadType.UBULK, Summary.BulkDataStartOffset, ubulk);
