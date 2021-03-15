@@ -93,6 +93,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "DelegateProperty" => new DelegateProperty(Ar, type),
                 "DoubleProperty" => new DoubleProperty(Ar, type),
                 "EnumProperty" => new EnumProperty(Ar, tagData, type),
+                "FieldPathProperty" => new FieldPathProperty(Ar, type),
                 "FloatProperty" => new FloatProperty(Ar, type),
                 "Int16Property" => new Int16Property(Ar, type),
                 "Int64Property" => new Int64Property(Ar, type),
