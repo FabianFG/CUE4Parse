@@ -56,7 +56,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 field.Deserialize(Ar);
                 return field;
             }
-
             return null;
         }
     }
