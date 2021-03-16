@@ -45,7 +45,9 @@ namespace CUE4Parse.UE4.Pak
         public PakFileReader(string filePath, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
             : this(new FileInfo(filePath), game, ver) {}
         public PakFileReader(FileInfo file, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FStreamArchive(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
+            : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver) {}
+        public PakFileReader(string filePath, Stream stream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new FStreamArchive(filePath, stream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
 
 
         public override byte[] Extract(VfsEntry entry)

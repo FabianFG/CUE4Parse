@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -37,7 +38,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public IoGlobalData? GlobalData { get; private set; }
         
-        public abstract void Initialize();
+        public abstract void Initialize(string file = "", Stream[] stream = null!);
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST,
             UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)

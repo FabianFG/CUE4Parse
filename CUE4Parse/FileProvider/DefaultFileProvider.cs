@@ -25,12 +25,8 @@ namespace CUE4Parse.FileProvider
             _workingDirectory = directory;
             _searchOption = searchOption;
         }
-
-        /// <summary>
-        /// Scan given <see cref="DirectoryInfo"/> for packages
-        /// </summary>
-        /// <exception cref="ArgumentException">Directory doesn't exist</exception>
-        public override void Initialize()
+        
+        public override void Initialize(string _1 = "", Stream[] _2 = null!)
         {
             if (!_workingDirectory.Exists) throw new ArgumentException("Given directory must exist", nameof(_workingDirectory));
             
