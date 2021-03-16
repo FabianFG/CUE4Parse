@@ -7,8 +7,9 @@ namespace CUE4Parse.UE4.Vfs
     public interface IAesVfsReader : IVfsReader
     {
         public FGuid EncryptionKeyGuid { get; }
+        public long Length { get; set; }
         public FAesKey? AesKey { get; set; }
-        
+
         public bool IsEncrypted { get; }
         public int EncryptedFileCount { get; }
         public bool TestAesKey(FAesKey key);

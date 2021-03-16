@@ -24,30 +24,33 @@ namespace CUE4Parse.UE4.Pak
         public readonly FPakInfo Info;
         
         public override string MountPoint { get; protected set; }
+        public sealed override long Length { get; set; }
 
         public override bool HasDirectoryIndex => true;
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
+
         public override bool IsEncrypted => Info.EncryptedIndex;
 
         public PakFileReader(FArchive Ar) : base(Ar.Name, Ar.Game, Ar.Ver)
         {
             this.Ar = Ar;
+            Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
             if (Info.Version > EPakFileVersion.PakFile_Version_Latest)
             {
-                log.Warning($"Pak file \"{Path}\" has unsupported version {(int) Info.Version}");
+                log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
         }
 
         public PakFileReader(string filePath, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
             : this(new FileInfo(filePath), game, ver) {}
         public PakFileReader(FileInfo file, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FStreamArchive(file.Name, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
+            : this(new FStreamArchive(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
 
 
         public override byte[] Extract(VfsEntry entry)
         {
-            if (!(entry is FPakEntry pakEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Path}, this is {Path}");
+            if (!(entry is FPakEntry pakEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
             // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             // Pak Entry is written before the file data,
@@ -98,7 +101,7 @@ namespace CUE4Parse.UE4.Pak
             else
                 ReadIndexLegacy(caseInsensitive);
             var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"Pak {Path}: {FileCount} files");
+            var sb = new StringBuilder($"Pak \"{Name}\": {FileCount} files");
             if (EncryptedFileCount != 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
             if (MountPoint.Contains("/"))
@@ -111,7 +114,7 @@ namespace CUE4Parse.UE4.Pak
         private IReadOnlyDictionary<string, GameFile> ReadIndexLegacy(bool caseInsensitive)
         {
             Ar.Position = Info.IndexOffset;
-            var index = new FByteArchive($"{Path} - Index", ReadAndDecrypt((int) Info.IndexSize));
+            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize));
             
             string mountPoint;
             try
@@ -120,7 +123,7 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Path}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
             
             ValidateMountPoint(ref mountPoint);
@@ -147,7 +150,7 @@ namespace CUE4Parse.UE4.Pak
         {
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
-            FArchive primaryIndex = new FByteArchive($"{Path} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+            FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
 
             string mountPoint;
             try
@@ -156,7 +159,7 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Path}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
             
             ValidateMountPoint(ref mountPoint);
@@ -186,7 +189,7 @@ namespace CUE4Parse.UE4.Pak
 
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
-            var directoryIndex = new FByteArchive($"{Path} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
+            var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
 
             unsafe { fixed(byte* ptr = encodedPakEntries) {
                 var directoryIndexLength = directoryIndex.Read<int>();

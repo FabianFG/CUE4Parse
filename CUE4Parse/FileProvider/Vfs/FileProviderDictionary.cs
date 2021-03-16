@@ -9,9 +9,9 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {
-        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ConcurrentDictionary<FPackageId, GameFile>();
+        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ();
         public IReadOnlyDictionary<FPackageId, GameFile> byId => _byId;
-        private ConcurrentBag<IReadOnlyDictionary<string, GameFile>> _indicesBag = new ConcurrentBag<IReadOnlyDictionary<string, GameFile>>();
+        private ConcurrentBag<IReadOnlyDictionary<string, GameFile>> _indicesBag = new ();
 
         public bool IsCaseInsensitive;
 
@@ -34,7 +34,6 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             _indicesBag.Add(newFiles);
         }
-        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(string key)

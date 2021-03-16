@@ -27,6 +27,7 @@ namespace CUE4Parse.UE4.IO
         public readonly FIoStoreTocHeader Info;
         public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
+        public sealed override long Length { get; set; }
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
@@ -38,6 +39,7 @@ namespace CUE4Parse.UE4.IO
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
             base(tocStream.Name, tocStream.Game, tocStream.Ver)
         {
+            Length = tocStream.Length;
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
 
             List<FArchive> containerStreams;
@@ -204,7 +206,7 @@ namespace CUE4Parse.UE4.IO
             ProcessIndex(caseInsensitive);
             
             var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"IoStore {Name}: {FileCount} files");
+            var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
             if (EncryptedFileCount != 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
             if (MountPoint.Contains("/"))
