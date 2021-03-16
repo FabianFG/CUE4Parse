@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
@@ -81,6 +82,7 @@ namespace CUE4Parse.UE4.IO
                 }
             }
 
+            Length += containerStreams.Sum(x => x.Length);
             ContainerStreams = containerStreams;
 #if GENERATE_CHUNK_ID_DICT
             Toc = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
@@ -171,7 +173,7 @@ namespace CUE4Parse.UE4.IO
                 if (IsConcurrent)
                 {
                     ref var clone = ref clonedReaders[partitionIndex];
-                    clone ??= (FArchive) ContainerStreams[partitionIndex]/*.Clone()*/;
+                    clone ??= (FArchive) ContainerStreams[partitionIndex].Clone();
                     reader = clone;
                 }
                 else reader = ContainerStreams[partitionIndex];
