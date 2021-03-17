@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
     [JsonConverter(typeof(FFormatContainerConverter))]
     public class FFormatContainer
     {
-        public SortedDictionary<FName, FByteBulkData> Formats;
+        public readonly SortedDictionary<FName, FByteBulkData> Formats;
 
         public FFormatContainer(FAssetArchive Ar)
         {
@@ -29,8 +29,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         {
             writer.WriteStartObject();
             
-            serializer.Serialize(writer, value.Formats);
-
+            foreach (var kvp in value.Formats)
+            {
+                writer.WritePropertyName(kvp.Key.Text);
+                serializer.Serialize(writer, kvp.Value);
+            }
+            
             writer.WriteEndObject();
         }
 

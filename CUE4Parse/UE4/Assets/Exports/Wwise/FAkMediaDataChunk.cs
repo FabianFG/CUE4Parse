@@ -24,6 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise
         {
             writer.WriteStartObject();
             
+            writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.Data);
             
             writer.WritePropertyName("IsPrefetch");

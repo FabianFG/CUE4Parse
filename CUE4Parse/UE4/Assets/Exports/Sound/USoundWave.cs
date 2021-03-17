@@ -26,10 +26,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             // UObject Properties
             if (GetOrDefault<bool>(nameof(bStreaming))) // will return false if not found
                 bStreaming = true;
-            else
-                bStreaming = Ar.Game >= EGame.GAME_UE4_25; // recheck if false
+            else if (GetOrDefault<FName>("LoadingBehavior") is {} loadingBehavior)
+                bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
 
-            bool bCooked = Ar.ReadBoolean();
+            var bCooked = Ar.ReadBoolean();
             if (!bStreaming)
             {
                 if (bCooked)

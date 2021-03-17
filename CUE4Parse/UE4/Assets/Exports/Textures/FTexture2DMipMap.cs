@@ -41,6 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Textures
         {
             writer.WriteStartObject();
             
+            writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.Data);
             
             writer.WritePropertyName("SizeX");

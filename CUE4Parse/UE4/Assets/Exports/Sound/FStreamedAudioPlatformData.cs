@@ -8,9 +8,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
     [JsonConverter(typeof(FStreamedAudioPlatformDataConverter))]
     public class FStreamedAudioPlatformData
     {
-        public int NumChunks;
-        public FName AudioFormat;
-        public FStreamedAudioChunk[] Chunks;
+        public readonly int NumChunks;
+        public readonly FName AudioFormat;
+        public readonly FStreamedAudioChunk[] Chunks;
 
         public FStreamedAudioPlatformData(FAssetArchive Ar)
         {
