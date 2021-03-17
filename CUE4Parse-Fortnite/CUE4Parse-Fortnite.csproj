@@ -5,6 +5,7 @@
         <LangVersion>default</LangVersion>
         <Nullable>enable</Nullable>
         <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+        <IsPublishable>false</IsPublishable>
     </PropertyGroup>
 
     <ItemGroup>
