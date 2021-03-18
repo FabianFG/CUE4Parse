@@ -41,7 +41,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "FrameRate" => type == ReadType.ZERO ? new FFrameRate() : Ar.Read<FFrameRate>(),
                 "Guid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
                 "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
-                "SmartName" => type == ReadType.ZERO ? new FSmartName() : Ar.Read<FSmartName>(),
+                "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
                 "RichCurveKey" => type == ReadType.ZERO ? new FRichCurveKey() : Ar.Read<FRichCurveKey>(),
                 "SimpleCurveKey" => type == ReadType.ZERO ? new FSimpleCurveKey() : Ar.Read<FSimpleCurveKey>(),
                 "ColorMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
