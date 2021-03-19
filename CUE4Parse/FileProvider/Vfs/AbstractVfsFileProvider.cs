@@ -37,8 +37,6 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
         public IoGlobalData? GlobalData { get; private set; }
-        
-        public abstract void Initialize(string file = "", Stream[] stream = null!);
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST,
             UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)

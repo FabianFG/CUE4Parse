@@ -19,7 +19,7 @@ namespace CUE4Parse.FileProvider
             LiveGame = liveGame;
         }
 
-        public override void Initialize(string file = "", Stream[] stream = null!)
+        public void Initialize(string file = "", Stream[] stream = null!)
         {
             var ext = file.SubstringAfter('.');
             if (string.IsNullOrEmpty(ext)) return;

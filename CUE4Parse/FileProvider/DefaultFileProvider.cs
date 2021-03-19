@@ -26,7 +26,7 @@ namespace CUE4Parse.FileProvider
             _searchOption = searchOption;
         }
         
-        public override void Initialize(string _1 = "", Stream[] _2 = null!)
+        public void Initialize()
         {
             if (!_workingDirectory.Exists) throw new ArgumentException("Given directory must exist", nameof(_workingDirectory));
             
