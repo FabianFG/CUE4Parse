@@ -91,7 +91,12 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (!header.HasValues)
                 return properties;
             var type = struc.Name;
-            var propMappings = struc is UScriptClass ? Ar.Owner.Mappings?.Types[type] : new SerializedStruct(Ar.Owner.Mappings, struc);
+            
+            Struct? propMappings = null;
+            if (struc is UScriptClass)
+                Ar.Owner.Mappings?.Types.TryGetValue(type, out propMappings);
+            else
+                propMappings = new SerializedStruct(Ar.Owner.Mappings, struc);
 
             if (propMappings == null)
             {

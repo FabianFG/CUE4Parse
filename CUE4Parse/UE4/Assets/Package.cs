@@ -62,8 +62,8 @@ namespace CUE4Parse.UE4.Assets
 
             foreach (var it in ExportMap)
             {
-                var exportType = (it.ClassName == string.Empty || it.ClassName == "None") && !(this is IoPackage) ? uexpAr.ReadFName().Text : it.ClassName;
-                var export = ConstructObject(null);
+                if (!(ResolvePackageIndex(it.ClassIndex)?.Object?.Value is UStruct uStruct)) continue;
+                var export = ConstructObject(uStruct);
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UObject>(() =>
                 {
@@ -74,14 +74,14 @@ namespace CUE4Parse.UE4.Assets
                         export.Deserialize(uexpAr, validPos);
 #if DEBUG
                         if (validPos != uexpAr.Position)
-                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - uexpAr.Position);
+                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", uStruct.ExportType, validPos - uexpAr.Position);
                         else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", exportType, it.RealSerialOffset, it.SerialSize);
+                            Log.Debug("Successfully read {0} at {1} with size {2}", uStruct.ExportType, it.RealSerialOffset, it.SerialSize);
 #endif
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, "Could not read {0} correctly", exportType);
+                        Log.Error(e, "Could not read {0} correctly", uStruct.ExportType);
                     }
 
                     return export;
@@ -117,30 +117,39 @@ namespace CUE4Parse.UE4.Assets
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
         {
             if (index == null || index.IsNull) return null;
+            if (index.IsImport) return new ResolvedScriptObject(ImportMap[-index.Index - 1], this);
             if (index.IsExport) return new ResolvedExportObject(ExportMap[index.Index - 1], this);
-            var import = ImportMap[-index.Index - 1];
-            if (import.ClassName.Text == "Class")
-            {
-                return null; // TODO
-            }
-            //The needed export is located in another asset, try to load it
-            if (!import.OuterIndex.IsImport) return null;
-            return null; // TODO VERY HUGE
+            return null;
         }
 
         private class ResolvedExportObject : ResolvedObject
         {
-            public FObjectExport Export;
+            private readonly FObjectExport _export;
 
             public ResolvedExportObject(FObjectExport export, Package package) : base(package)
             {
-                Export = export;
+                _export = export;
             }
 
-            public override FName Name => Export.ObjectName;
-            public override ResolvedObject? Outer => Package.ResolvePackageIndex(Export.OuterIndex);
-            public override ResolvedObject? Super => Package.ResolvePackageIndex(Export.SuperIndex);
-            public override Lazy<UObject> Object => Export.ExportObject;
+            public override FName Name => _export.ObjectName;
+            public override ResolvedObject? Outer => Package.ResolvePackageIndex(_export.OuterIndex);
+            public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
+            public override Lazy<UObject> Object => Super.Object /*_export.ExportObject*/;
+        }
+        
+        private class ResolvedScriptObject : ResolvedObject
+        {
+            private readonly FObjectImport _import;
+
+            public ResolvedScriptObject(FObjectImport import, Package package) : base(package)
+            {
+                _import = import;
+            }
+
+            public override FName Name => _import.ObjectName;
+            public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
+            public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass(_import.ClassName.Text));
+            public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
         }
     }
 }

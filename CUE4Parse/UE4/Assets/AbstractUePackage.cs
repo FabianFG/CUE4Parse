@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
         public abstract Lazy<UObject>[] ExportsLazy { get; }
-
+        
         public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
             Name = name;
@@ -119,7 +119,7 @@ namespace CUE4Parse.UE4.Assets
 
     public class ResolvedLoadedObject : ResolvedObject
     {
-        private UObject _object;
+        private readonly UObject _object;
 
         public ResolvedLoadedObject(UObject obj) : base(obj.Owner)
         {
