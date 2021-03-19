@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
@@ -22,48 +23,51 @@ namespace CUE4Parse.FileProvider.Vfs
         public override IReadOnlyDictionary<string, GameFile> Files => _files;
         public override IReadOnlyDictionary<FPackageId, GameFile> FilesById => _files.byId;
 
-        protected ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
+        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
+        public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
-        public IReadOnlyCollection<IAesVfsReader> UnloadedVfs =>
-            (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
-
-        protected ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
-
+        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
+        
+        protected readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
+        public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
+        
+        protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
+        public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
         public IoGlobalData? GlobalData { get; private set; }
 
-        protected ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
-        public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
-        protected ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
-        public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
-
-        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : base(isCaseInsensitive, game, ver)
+        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST,
+            UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }
+        
+        public void LoadMappings()
+        {
+            if (GameName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase))
+            {
+                MappingsContainer = new BenBotMappingsProvider("fortnitegame");
+            }
+        }
 
-        public IEnumerable<IAesVfsReader> UnloadedVfsByGuid(FGuid guid) =>
-            _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid);
+        public IEnumerable<IAesVfsReader> UnloadedVfsByGuid(FGuid guid) => _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid);
 
         public int Mount() => MountAsync().Result;
-
         public async Task<int> MountAsync()
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task>();
-            foreach (var it in _unloadedVfs)
+            foreach (var reader in _unloadedVfs.Keys)
             {
-                var reader = it.Key;
-                if (GlobalData == null && reader is IoStoreReader ioReader &&
-                    reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
+                if (GlobalData == null && reader is IoStoreReader ioReader && reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
                 {
                     GlobalData = new IoGlobalData(ioReader);
                 }
 
                 if (reader.IsEncrypted || !reader.HasDirectoryIndex)
                     continue;
+                
                 tasks.AddLast(Task.Run(() =>
                 {
                     try
@@ -80,28 +84,25 @@ namespace CUE4Parse.FileProvider.Vfs
                     }
                     catch (Exception e)
                     {
-                        Log.Warning(e,
-                            $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
+                        Log.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
                     }
-
                     return null;
                 }));
             }
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
-
             return countNewMounts;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {[guid] = key});
+        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {{ guid, key }});
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys) => SubmitKeysAsync(keys).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<int> SubmitKeyAsync(FGuid guid, FAesKey key) =>
-            await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> {[guid] = key}).ConfigureAwait(false);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys) => SubmitKeysAsync(keys).Result;
+            await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> {{ guid, key }}).ConfigureAwait(false);
 
         public async Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys)
         {
@@ -110,12 +111,10 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var it in keys)
             {
                 var guid = it.Key;
-                // if (!_requiredKeys.ContainsKey(guid)) continue;
                 var key = it.Value;
                 foreach (var reader in UnloadedVfsByGuid(guid))
                 {
-                    if (GlobalData == null && reader is IoStoreReader ioReader &&
-                        reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
+                    if (GlobalData == null && reader is IoStoreReader ioReader && reader.Name.Equals("global.utoc", StringComparison.OrdinalIgnoreCase))
                     {
                         GlobalData = new IoGlobalData(ioReader);
                     }
@@ -139,10 +138,8 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (Exception e)
                         {
-                            Log.Warning(e,
-                                $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
+                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
                         }
-
                         return null;
                     }));
                 }
@@ -162,9 +159,13 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public void Dispose()
         {
-            foreach (var pak in _mountedVfs)
+            _files = new FileProviderDictionary(IsCaseInsensitive);
+            foreach (var reader in _mountedVfs.Keys)
             {
-                pak.Key.Dispose();
+                _keys.TryRemove(reader.EncryptionKeyGuid, out _);
+                _requiredKeys[reader.EncryptionKeyGuid] = null;
+                _mountedVfs.TryRemove(reader, out _);
+                _unloadedVfs[reader] = null;
             }
         }
     }

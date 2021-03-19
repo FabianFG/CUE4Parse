@@ -27,26 +27,30 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FIoStoreTocResource(FArchive Ar, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.Default)
         {
-            Header = new FIoStoreTocHeader(Ar);
-            ChunkIds = Ar.ReadArray<FIoChunkId>((int) Header.TocEntryCount);
+            var streamBuffer = new byte[Ar.Length];
+            Ar.Read(streamBuffer, 0, streamBuffer.Length);
+            using var archive = new FByteArchive(Ar.Name, streamBuffer);
+            
+            Header = new FIoStoreTocHeader(archive);
+            ChunkIds = archive.ReadArray<FIoChunkId>((int) Header.TocEntryCount);
             
             ChunkOffsetLengths = new FIoOffsetAndLength[Header.TocEntryCount];
             for (int i = 0; i < Header.TocEntryCount; i++)
             {
-                ChunkOffsetLengths[i] = new FIoOffsetAndLength(Ar);
+                ChunkOffsetLengths[i] = new FIoOffsetAndLength(archive);
             }
             
             CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
             for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
             {
-                CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(Ar);
+                CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
             }
             
             unsafe
             {
                 var bufferSize = (int) (Header.CompressionMethodNameLength * Header.CompressionMethodNameCount);
                 var buffer = stackalloc byte[bufferSize];
-                Ar.Read(buffer, bufferSize);
+                archive.Read(buffer, bufferSize);
                 CompressionMethods = new CompressionMethod[Header.CompressionMethodNameCount + 1];
                 CompressionMethods[0] = CompressionMethod.None;
                 for (var i = 0; i < Header.CompressionMethodNameCount; i++)
@@ -66,10 +70,10 @@ namespace CUE4Parse.UE4.IO.Objects
             // Chunk block signatures
             if (Header.ContainerFlags.HasFlag(EIoContainerFlags.Signed))
             {
-                var hashSize = Ar.Read<int>();
+                var hashSize = archive.Read<int>();
                 // tocSignature and blockSignature both byte[hashSize]
                 // and ChunkBlockSignature of FSHAHash[Header.TocCompressedBlockEntryCount]
-                Ar.Position += hashSize + hashSize + FSHAHash.SIZE * Header.TocCompressedBlockEntryCount;
+                archive.Position += hashSize + hashSize + FSHAHash.SIZE * Header.TocCompressedBlockEntryCount;
                 
                 // You could verify hashes here but nah
             }
@@ -80,7 +84,7 @@ namespace CUE4Parse.UE4.IO.Objects
                 Header.ContainerFlags.HasFlag(EIoContainerFlags.Indexed) &&
                 Header.DirectoryIndexSize > 0)
             {
-                DirectoryIndexBuffer = Ar.ReadBytes((int) Header.DirectoryIndexSize);
+                DirectoryIndexBuffer = archive.ReadBytes((int) Header.DirectoryIndexSize);
             }
             
             // Meta
@@ -89,7 +93,7 @@ namespace CUE4Parse.UE4.IO.Objects
                 ChunkMetas = new FIoStoreTocEntryMeta[Header.TocEntryCount];
                 for (int i = 0; i < Header.TocEntryCount; i++)
                 {
-                    ChunkMetas[i] = new FIoStoreTocEntryMeta(Ar);
+                    ChunkMetas[i] = new FIoStoreTocEntryMeta(archive);
                 }
             }
         }

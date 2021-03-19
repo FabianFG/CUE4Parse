@@ -28,7 +28,7 @@ namespace CUE4Parse.FileProvider
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
-        public bool IsCaseInsensitive { get; }
+        public bool IsCaseInsensitive { get; } // fabian? is this reversed?
 
         protected AbstractFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {

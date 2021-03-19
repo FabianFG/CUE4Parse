@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Vfs
 
             if (badMountPoint)
             {
-                log.Warning($"\"{Path}\" has strange mount point \"{mountPoint}\", mounting to root");
+                log.Warning($"\"{Name}\" has strange mount point \"{mountPoint}\", mounting to root");
                 mountPoint = "/";
             }
 

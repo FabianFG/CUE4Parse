@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
@@ -27,17 +28,27 @@ namespace CUE4Parse.UE4.IO
         public readonly FIoStoreTocHeader Info;
         public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
+        public sealed override long Length { get; set; }
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
-        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) :
-            this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), 
-                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), 
+        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new FileInfo(tocPath), readOptions, game, ver) {}
+        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName),
+                    game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), 
+                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
                     game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), readOptions) { }
-
-        public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex) : 
-            base(tocStream.Name, tocStream.Game, tocStream.Ver)
+        public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new FStreamArchive(tocPath, tocStream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver),
+                it => new FStreamArchive(it, casStream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), readOptions) { }
+        public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex)
+            : base(tocStream.Name, tocStream.Game, tocStream.Ver)
         {
+            Length = tocStream.Length;
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
 
             List<FArchive> containerStreams;
@@ -71,6 +82,7 @@ namespace CUE4Parse.UE4.IO
                 }
             }
 
+            Length += containerStreams.Sum(x => x.Length);
             ContainerStreams = containerStreams;
 #if GENERATE_CHUNK_ID_DICT
             Toc = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
@@ -86,9 +98,6 @@ namespace CUE4Parse.UE4.IO
                 log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) Info.Version);
             }
         }
-
-        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FileInfo(tocPath), readOptions, game, ver) {}
 
         public override byte[] Extract(VfsEntry entry)
         {
@@ -204,7 +213,7 @@ namespace CUE4Parse.UE4.IO
             ProcessIndex(caseInsensitive);
             
             var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"IoStore {Name}: {FileCount} files");
+            var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
             if (EncryptedFileCount != 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
             if (MountPoint.Contains("/"))

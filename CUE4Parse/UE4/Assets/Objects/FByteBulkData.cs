@@ -91,8 +91,6 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, FByteBulkData value, JsonSerializer serializer)
         {
-            writer.WritePropertyName("Header");
-            
             writer.WriteStartObject();
             
             writer.WritePropertyName("BulkDataFlag");

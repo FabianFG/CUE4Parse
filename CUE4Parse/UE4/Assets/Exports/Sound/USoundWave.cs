@@ -2,7 +2,7 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound
@@ -22,10 +22,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             // UObject Properties
             if (GetOrDefault<bool>(nameof(bStreaming))) // will return false if not found
                 bStreaming = true;
-            else
-                bStreaming = Ar.Game >= EGame.GAME_UE4_25; // recheck if false
+            else if (GetOrDefault<FName>("LoadingBehavior") is {} loadingBehavior)
+                bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
 
-            bool bCooked = Ar.ReadBoolean();
+            var bCooked = Ar.ReadBoolean();
             if (!bStreaming)
             {
                 if (bCooked)
