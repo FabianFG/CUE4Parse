@@ -26,7 +26,6 @@ namespace CUE4Parse.UE4.Assets.Exports
         public UStruct? Class;
         public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
-        public bool ReadGuid { get; }
         public FGuid? ObjectGuid { get; private set; }
         public int /*EObjectFlags*/ Flags;
 
@@ -48,10 +47,9 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
         public override string ExportType => Class?.Name ?? GetType().Name;
 
-        public UObject(FObjectExport exportObject, bool readGuid = true) : base(exportObject)
+        public UObject(FObjectExport exportObject) : base(exportObject)
         {
             Properties = new List<FPropertyTag>();
-            ReadGuid = readGuid;
         }
 
         public UObject() : base("")

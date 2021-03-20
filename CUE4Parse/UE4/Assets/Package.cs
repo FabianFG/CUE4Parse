@@ -64,6 +64,8 @@ namespace CUE4Parse.UE4.Assets
             {
                 if (!(ResolvePackageIndex(it.ClassIndex)?.Object?.Value is UStruct uStruct)) continue;
                 var export = ConstructObject(uStruct);
+                export.Name = it.ObjectName.Text;
+                export.Flags = (int) it.ObjectFlags;
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UObject>(() =>
                 {
@@ -74,14 +76,14 @@ namespace CUE4Parse.UE4.Assets
                         export.Deserialize(uexpAr, validPos);
 #if DEBUG
                         if (validPos != uexpAr.Position)
-                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", uStruct.ExportType, validPos - uexpAr.Position);
+                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", export.ExportType, validPos - uexpAr.Position);
                         else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", uStruct.ExportType, it.RealSerialOffset, it.SerialSize);
+                            Log.Debug("Successfully read {0} at {1} with size {2}", export.ExportType, it.RealSerialOffset, it.SerialSize);
 #endif
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, "Could not read {0} correctly", uStruct.ExportType);
+                        Log.Error(e, "Could not read {0} correctly", export.ExportType);
                     }
 
                     return export;

@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         {
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
-            EncryptedIndex = Ar.ReadFlag();                // PakFile_Version_IndexEncryption
+            EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
             
             // Old FPakInfo fields
             Magic = Ar.Read<uint>();
