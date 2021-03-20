@@ -48,7 +48,22 @@ namespace CUE4Parse.FileProvider
 
         public GameFile this[string path] => Files[FixPath(path)];
 
-        public bool TryFindGameFile(string path, out GameFile file) => Files.TryGetValue(FixPath(path), out file);
+        public bool TryFindGameFile(string path, out GameFile file)
+        {
+            var uassetPath = FixPath(path);
+            if (Files.TryGetValue(uassetPath, out file))
+            {
+                return true;
+            }
+
+            var umapPath = uassetPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1];
+            if (Files.TryGetValue(umapPath, out file))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         public string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         public string FixPath(string path, StringComparison comparisonType)
@@ -61,7 +76,7 @@ namespace CUE4Parse.FileProvider
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeLast('/'), "/", lastPart.SubstringBefore('.'));
             if (path[path.Length - 1] != '/' && !lastPart.Contains('.'))
-                path += ".uasset";
+                path += "." + GameFile.Ue4PackageExtensions[0];
 
             var trigger = path.SubstringBefore("/", comparisonType);
             if (trigger.Equals(GameName, comparisonType))

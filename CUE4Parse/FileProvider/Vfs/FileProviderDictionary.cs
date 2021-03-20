@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
@@ -70,8 +71,12 @@ namespace CUE4Parse.FileProvider.Vfs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                TryGetValue(path, out var file);
-                return file ?? throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
+                if (TryGetValue(path, out var file))
+                    return file;
+                if (TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
+                    return file;
+                
+                throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
             }
         }
 
