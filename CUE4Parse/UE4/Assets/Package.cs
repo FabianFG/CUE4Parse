@@ -118,9 +118,12 @@ namespace CUE4Parse.UE4.Assets
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
         {
-            if (index == null || index.IsNull) return null;
-            if (index.IsImport) return new ResolvedScriptObject(ImportMap[-index.Index - 1], this);
-            if (index.IsExport) return new ResolvedExportObject(ExportMap[index.Index - 1], this);
+            if (index == null || index.IsNull)
+                return null;
+            if (index.IsImport && -index.Index - 1 < ImportMap.Length)
+                return new ResolvedScriptObject(ImportMap[-index.Index - 1], this);
+            if (index.IsExport && index.Index - 1 < ExportMap.Length)
+                return new ResolvedExportObject(ExportMap[index.Index - 1], this);
             return null;
         }
 

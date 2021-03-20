@@ -41,6 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             writer.WritePropertyName("AudioDataSize");
             writer.WriteValue(value.AudioDataSize);
             
+            writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.BulkData);
             
             writer.WriteEndObject();

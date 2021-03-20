@@ -258,6 +258,7 @@ namespace CUE4Parse.UE4.Assets
 
             public ResolvedExportObject(int exportIndex, IoPackage package) : base(package)
             {
+                if (exportIndex >= package.ExportMap.Length) return;
                 ExportMapEntry = package.ExportMap[exportIndex];
                 ExportObject = package.ExportsLazy[exportIndex];
             }
