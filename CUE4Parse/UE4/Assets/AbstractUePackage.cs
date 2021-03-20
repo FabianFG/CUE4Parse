@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Objects.UObject;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -101,9 +103,10 @@ namespace CUE4Parse.UE4.Assets
         public override string ToString() => Name;
     }
 
+    [JsonConverter(typeof(ResolvedObjectConverter))]
     public abstract class ResolvedObject
     {
-        public IPackage Package;
+        public readonly IPackage Package;
 
         public ResolvedObject(IPackage package)
         {
@@ -115,6 +118,36 @@ namespace CUE4Parse.UE4.Assets
         public virtual ResolvedObject? Class => null;
         public virtual ResolvedObject? Super => null;
         public virtual Lazy<UObject>? Object => null;
+    }
+    
+    public class ResolvedObjectConverter : JsonConverter<ResolvedObject>
+    {
+        public override void WriteJson(JsonWriter writer, ResolvedObject value, JsonSerializer serializer)
+        {
+            var outerChain = new List<string>();
+            var current = value.Outer;
+            while (current != null)
+            {
+                outerChain.Add(current.Name.Text);
+                current = current.Outer;
+            }
+            
+            writer.WriteStartObject();
+            
+            writer.WritePropertyName("ObjectName"); // 1:2:3 if we are talking about an export in the current asset
+            writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
+
+            writer.WritePropertyName("ObjectPath"); // package path . object name
+            writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Name.Text}");
+            
+            writer.WriteEndObject();
+        }
+
+        public override ResolvedObject ReadJson(JsonReader reader, Type objectType, ResolvedObject existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ResolvedLoadedObject : ResolvedObject
@@ -144,6 +177,6 @@ namespace CUE4Parse.UE4.Assets
             }
         }
         public override ResolvedObject? Super => null; //new ResolvedLoadedObject(_object.Super);
-        public override Lazy<UObject>? Object => new(() => _object);
+        public override Lazy<UObject> Object => new(() => _object);
     }
 }

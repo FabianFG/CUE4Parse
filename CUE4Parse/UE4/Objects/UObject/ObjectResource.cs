@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -41,12 +39,15 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FObjectExport? ExportObject => null; //IsExport && Index <= Owner?.ExportMap.Length ? Owner?.ExportMap[Index - 1] : null;
 
+        public ResolvedObject? ResolvedObject => Owner?.ResolvePackageIndex(this);
+
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
 
         public string Name => ImportObject?.ObjectName.Text ??
                               ExportObject?.ObjectName.Text ??
+                              ResolvedObject?.Name.Text ??
                               string.Empty;
 
         public FPackageIndex(FAssetArchive Ar, int index)
@@ -217,46 +218,55 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FPackageIndex value, JsonSerializer serializer)
         {
-            var resolved = value.Owner?.ResolvePackageIndex(value);
-            if (resolved != null)
-            {
-                var outerChain = new List<string>();
-                var current = resolved;
-                while (current != null)
-                {
-                    outerChain.Add(current.Name.Text);
-                    current = current.Outer;
-                }
+            #region V3
+            serializer.Serialize(writer, value.ResolvedObject);
+            #endregion
+            
+            #region V2
+            // var resolved = value.Owner?.ResolvePackageIndex(value);
+            // if (resolved != null)
+            // {
+            //     var outerChain = new List<string>();
+            //     var current = resolved;
+            //     while (current != null)
+            //     {
+            //         outerChain.Add(current.Name.Text);
+            //         current = current.Outer;
+            //     }
+            //
+            //     var sb = new StringBuilder(256);
+            //     for (int i = 1; i <= outerChain.Count; i++)
+            //     {
+            //         var name = outerChain[outerChain.Count - i];
+            //         sb.Append(name);
+            //         if (i < outerChain.Count)
+            //         {
+            //             sb.Append(i > 1 ? ":" : ".");
+            //         }
+            //     }
+            //
+            //     writer.WriteValue($"{resolved.Class?.Name}'{sb}'");
+            // }
+            // else
+            // {
+            //     writer.WriteValue("None");
+            // }
+            #endregion
 
-                var sb = new StringBuilder(256);
-                for (int i = 1; i <= outerChain.Count; i++)
-                {
-                    var name = outerChain[outerChain.Count - i];
-                    sb.Append(name);
-                    if (i < outerChain.Count)
-                    {
-                        sb.Append(i > 1 ? ":" : ".");
-                    }
-                }
-
-                writer.WriteValue($"{resolved.Class?.Name}'{sb}'");
-            }
-            else
-            {
-                writer.WriteValue("None");
-            }
-            /*if (value.ImportObject != null)
-            {
-                serializer.Serialize(writer, value.ImportObject);
-            }
-            else if (value.ExportObject != null)
-            {
-                serializer.Serialize(writer, value.ExportObject);
-            }
-            else
-            {
-                writer.WriteValue(value.Index);
-            }*/
+            #region V1
+            // if (value.ImportObject != null)
+            // {
+            //     serializer.Serialize(writer, value.ImportObject);
+            // }
+            // else if (value.ExportObject != null)
+            // {
+            //     serializer.Serialize(writer, value.ExportObject);
+            // }
+            // else
+            // {
+            //     writer.WriteValue(value.Index);
+            // }
+            #endregion
         }
 
         public override FPackageIndex ReadJson(JsonReader reader, Type objectType, FPackageIndex existingValue, bool hasExistingValue,
