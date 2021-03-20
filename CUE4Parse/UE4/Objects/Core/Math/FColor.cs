@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -14,7 +15,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly byte G;
         public readonly byte B;
         public readonly byte A;
+        
+        public readonly string Hex => A == 1 || A == 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
-        public override string ToString() => $"(R={R},G={G},B={B},A={A})";
+        public override string ToString() => Hex;
     }
 }

@@ -64,11 +64,15 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         {
             switch (guidFormat)
             {
-                case EGuidFormats.DigitsWithHyphens: return string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X4}-{4:X4}{5:X8}", A, B >> 16, B & 0xFFFF, C >> 16, C & 0xFFFF, D);
-                case EGuidFormats.DigitsWithHyphensInBraces: return string.Format("{{{0:X8}-{1:X4}-{2:X4}-{3:X4}-{4:X4}{5:X8}}}", A, B >> 16, B & 0xFFFF, C >> 16, C & 0xFFFF, D);
-                case EGuidFormats.DigitsWithHyphensInParentheses: return string.Format("({0:X8}-{1:X4}-{2:X4}-{3:X4}-{4:X4}{5:X8})", A, B >> 16, B & 0xFFFF, C >> 16, C & 0xFFFF, D);
-                case EGuidFormats.HexValuesInBraces: return string.Format("{{0x{0:X8},0x{1:X4},0x{2:X4},{{0x{3:X2},0x{4:X2},0x{5:X2},0x{6:X2},0x{7:X2},0x{8:X2},0x{9:X2},0x{10:X2}}}}}", A, B >> 16, B & 0xFFFF, C >> 24, (C >> 16) & 0xFF, (C >> 8) & 0xFF, C & 0XFF, D >> 24, (D >> 16) & 0XFF, (D >> 8) & 0XFF, D & 0XFF);
-                case EGuidFormats.UniqueObjectGuid: return string.Format("{0:X8}-{1:X8}-{2:X8}-{3:X8}", A, B, C, D);
+                case EGuidFormats.DigitsWithHyphens: return
+                    $"{A:X8}-{B >> 16:X4}-{B & 0xFFFF:X4}-{C >> 16:X4}-{C & 0xFFFF:X4}{D:X8}";
+                case EGuidFormats.DigitsWithHyphensInBraces: return
+                    $"{{{A:X8}-{B >> 16:X4}-{B & 0xFFFF:X4}-{C >> 16:X4}-{C & 0xFFFF:X4}{D:X8}}}";
+                case EGuidFormats.DigitsWithHyphensInParentheses: return
+                    $"({A:X8}-{B >> 16:X4}-{B & 0xFFFF:X4}-{C >> 16:X4}-{C & 0xFFFF:X4}{D:X8})";
+                case EGuidFormats.HexValuesInBraces: return
+                    $"{{0x{A:X8},0x{B >> 16:X4},0x{B & 0xFFFF:X4},{{0x{C >> 24:X2},0x{(C >> 16) & 0xFF:X2},0x{(C >> 8) & 0xFF:X2},0x{C & 0XFF:X2},0x{D >> 24:X2},0x{(D >> 16) & 0XFF:X2},0x{(D >> 8) & 0XFF:X2},0x{D & 0XFF:X2}}}}}";
+                case EGuidFormats.UniqueObjectGuid: return $"{A:X8}-{B:X8}-{C:X8}-{D:X8}";
                 case EGuidFormats.Short:
                     {
                         IEnumerable<byte> data = BitConverter.GetBytes(A).Concat(BitConverter.GetBytes(B)).Concat(BitConverter.GetBytes(C)).Concat(BitConverter.GetBytes(D));
@@ -80,23 +84,23 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
                     }
                 case EGuidFormats.Base36Encoded: // if this doesn't work, i'm not surprised
                     {
-                        char[] Alphabet = new char[36]
+                        char[] alphabet = new char[36]
                         {
                             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
                             'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
                             'W', 'X', 'Y', 'Z'
                         };
 
-                        FUInt128 zero = new FUInt128(0);
-                        FUInt128 value = new FUInt128(A, B, C, D);
-                        StringBuilder builder = new StringBuilder(26);
+                        FUInt128 zero = new (0);
+                        FUInt128 value = new (A, B, C, D);
+                        StringBuilder builder = new (26);
                         while (value.IsGreater(zero))
                         {
-                            value = value.Divide(36, out uint remainder);
-                            builder.Insert(0, Alphabet[remainder]);
+                            value = value.Divide(36, out var remainder);
+                            builder.Insert(0, alphabet[remainder]);
                         }
 
-                        for (int i = builder.Length; i < 25; i++)
+                        for (var i = builder.Length; i < 25; i++)
                         {
                             builder.Insert(0, '0');
                         }
@@ -105,7 +109,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
                         // reverse ?
                         return builder.ToString();
                     }
-                default: return string.Format("{0:X8}{1:X8}{2:X8}{3:X8}", A, B, C, D);
+                default: return $"{A:X8}{B:X8}{C:X8}{D:X8}";
             }
         }
 
