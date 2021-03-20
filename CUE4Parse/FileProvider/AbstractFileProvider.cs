@@ -50,9 +50,9 @@ namespace CUE4Parse.FileProvider
 
         public bool TryFindGameFile(string path, out GameFile file) => Files.TryGetValue(FixPath(path), out file);
 
-        public string FixPath(string path)
+        public string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        public string FixPath(string path, StringComparison comparisonType)
         {
-            var comparisonType = IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
             path = path.Replace('\\', '/');
             if (path[0] == '/')
                 path = path.Substring(1);
@@ -66,7 +66,7 @@ namespace CUE4Parse.FileProvider
             var trigger = path.SubstringBefore("/", comparisonType);
             if (trigger.Equals(GameName, comparisonType))
             {
-                return IsCaseInsensitive ? path.ToLowerInvariant() : path;
+                return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
             
             switch (trigger)
@@ -79,7 +79,7 @@ namespace CUE4Parse.FileProvider
                     if (p.Contains('.'))
                     {
                         var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
-                        return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                        return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                     }
                     
                     switch (p)
@@ -89,19 +89,19 @@ namespace CUE4Parse.FileProvider
                         case "Plugins":
                         {
                             var ret = string.Concat(gameName, '/', path.SubstringAfter("/", comparisonType));
-                            return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                            return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                         }
                         default:
                         {
                             var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
-                            return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                            return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                         }
                     }
                 }
                 case "RegionCN":
                 {
                     var ret = string.Concat(GameName, "/Plugins/RegionCN/Content/", path.SubstringAfter("/", comparisonType));
-                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
                 case "Argon":
                 case "Goose":
@@ -118,7 +118,7 @@ namespace CUE4Parse.FileProvider
                 case "Bodyguard":
                 {
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
-                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
                 case "SrirachaRanchHoagie":
                 case "SrirachaRanch":
@@ -126,12 +126,12 @@ namespace CUE4Parse.FileProvider
                 {
                     if (trigger.Equals("SrirachaRanch", comparisonType)) trigger = string.Concat(trigger, "Core");
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/SrirachaRanch/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
-                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
                 default:
                 {
                     var ret = string.Concat(GameName, $"/Plugins/{(GameName.Equals("FortniteGame", comparisonType) ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
-                    return IsCaseInsensitive ? ret.ToLowerInvariant() : ret;
+                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
             }
         }
