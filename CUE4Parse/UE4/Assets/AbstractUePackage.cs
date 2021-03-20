@@ -138,7 +138,8 @@ namespace CUE4Parse.UE4.Assets
             writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
 
             writer.WritePropertyName("ObjectPath"); // package path . object name
-            writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Name.Text}");
+            if (outerChain.Count <= 0) writer.WriteNull();
+            else writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Name.Text}");
             
             writer.WriteEndObject();
         }
