@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -45,38 +44,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             {
                 CompressedDataGuid = Ar.Read<FGuid>();
                 RunningPlatformData = new FStreamedAudioPlatformData(Ar);
-            }
-        }
-        
-        private byte[]? _sound;
-        public byte[]? Sound
-        {
-            get
-            {
-                if (_sound != null) return _sound;
-
-                if (!bStreaming)
-                {
-                    if (bCooked && CompressedFormatData != null)
-                    {
-                        _sound = CompressedFormatData.Formats.First().Value.Data;
-                    }
-                    else if (RawData != null)
-                    {
-                        _sound = RawData.Data;
-                    }
-                }
-                else if (RunningPlatformData != null)
-                {
-                    var offset = 0;
-                    _sound = new byte[RunningPlatformData.Chunks.Sum(x => x.AudioDataSize)];
-                    foreach (var dataChunk in RunningPlatformData.Chunks)
-                    {
-                        Buffer.BlockCopy(dataChunk.BulkData.Data, 0, _sound, offset, dataChunk.AudioDataSize);
-                        offset += dataChunk.AudioDataSize;
-                    }
-                }
-                return _sound;
             }
         }
     }
