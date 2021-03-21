@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound
@@ -10,6 +12,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
     [JsonConverter(typeof(USoundWaveConverter))]
     public class USoundWave : USoundBase
     {
+        public bool bCooked { get; private set; }
         public bool bStreaming { get; private set; } = true;
         public FFormatContainer? CompressedFormatData { get; private set; }
         public FByteBulkData? RawData { get; private set; }
@@ -19,13 +22,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            // UObject Properties
-            if (GetOrDefault<bool>(nameof(bStreaming))) // will return false if not found
-                bStreaming = true;
-            else if (GetOrDefault<FName>("LoadingBehavior") is {} loadingBehavior)
+            bStreaming = Ar.Game >= EGame.GAME_UE4_25;
+            if (TryGetValue<bool>(out var s, nameof(bStreaming))) // will return false if not found
+                bStreaming = s;
+            else if (TryGetValue<FName>(out var loadingBehavior, "LoadingBehavior"))
                 bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
 
-            var bCooked = Ar.ReadBoolean();
+            bCooked = Ar.ReadBoolean();
             if (!bStreaming)
             {
                 if (bCooked)
@@ -42,6 +45,38 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             {
                 CompressedDataGuid = Ar.Read<FGuid>();
                 RunningPlatformData = new FStreamedAudioPlatformData(Ar);
+            }
+        }
+        
+        private byte[]? _sound;
+        public byte[]? Sound
+        {
+            get
+            {
+                if (_sound != null) return _sound;
+
+                if (!bStreaming)
+                {
+                    if (bCooked && CompressedFormatData != null)
+                    {
+                        _sound = CompressedFormatData.Formats.First().Value.Data;
+                    }
+                    else if (RawData != null)
+                    {
+                        _sound = RawData.Data;
+                    }
+                }
+                else if (RunningPlatformData != null)
+                {
+                    var offset = 0;
+                    _sound = new byte[RunningPlatformData.Chunks.Sum(x => x.AudioDataSize)];
+                    foreach (var dataChunk in RunningPlatformData.Chunks)
+                    {
+                        Buffer.BlockCopy(dataChunk.BulkData.Data, 0, _sound, offset, dataChunk.AudioDataSize);
+                        offset += dataChunk.AudioDataSize;
+                    }
+                }
+                return _sound;
             }
         }
     }

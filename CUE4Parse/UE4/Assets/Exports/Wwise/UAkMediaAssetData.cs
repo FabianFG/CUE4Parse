@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
@@ -19,6 +20,24 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise
             UseDeviceMemory = GetOrDefault<bool>(nameof(UseDeviceMemory));
 
             DataChunks = Ar.ReadArray(Ar.Read<int>(), () => new FAkMediaDataChunk(Ar));
+        }
+
+        private byte[]? _sound;
+        public byte[]? Sound
+        {
+            get
+            {
+                if (_sound != null) return _sound;
+                
+                var offset = 0;
+                _sound = new byte[DataChunks.Sum(x => x.Data.Data.Length)];
+                foreach (var dataChunk in DataChunks)
+                {
+                    Buffer.BlockCopy(dataChunk.Data.Data, 0, _sound, offset, dataChunk.Data.Data.Length);
+                    offset += dataChunk.Data.Data.Length;
+                }
+                return _sound;
+            }
         }
     }
     
