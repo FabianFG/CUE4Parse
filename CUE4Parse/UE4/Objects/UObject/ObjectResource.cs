@@ -72,6 +72,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             return ImportObject?.ObjectName.Text.Insert(0, "Import: ") ??
                    ExportObject?.ObjectName.Text.Insert(0, "Export: ") ??
+                   ResolvedObject?.Name.Text.Insert(0, "ResolvedObject: ") ??
                    Index.ToString();
         }
 
@@ -161,17 +162,17 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport? Load(IFileProvider provider) => ImportObject?.Load(provider) ?? ExportObject?.Load(provider);
+        public UExport? Load(IFileProvider provider) => ImportObject?.Load(provider) ?? ExportObject?.Load(provider) ?? ResolvedObject?.Load(provider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad(IFileProvider provider, out UExport export)
         {
-            var import = ImportObject;
-            if (import != null && import.TryLoad(provider, out export))
-                return true;
-            var exportObj = ExportObject;
-            if (exportObj != null && exportObj.TryLoad(provider, out export))
-                return true;
+            if (ImportObject != null)
+                return ImportObject.TryLoad(provider, out export);
+            if (ExportObject != null)
+                return ExportObject.TryLoad(provider, out export);
+            if (ResolvedObject != null)
+                return ResolvedObject.TryLoad(provider, out export);
 
             export = default;
             return false;
@@ -180,32 +181,37 @@ namespace CUE4Parse.UE4.Objects.UObject
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport> LoadAsync(IFileProvider provider)
         {
-            var import = ImportObject;
-            if (import != null)
-                return await import.LoadAsync(provider);
-            var exportObj = ExportObject;
-            if (exportObj != null)
-                return await exportObj.LoadAsync(provider);
+            if (ImportObject != null)
+                return await ImportObject.LoadAsync(provider);
+            if (ExportObject != null)
+                return await ExportObject.LoadAsync(provider);
+            if (ResolvedObject != null)
+                return await ResolvedObject.LoadAsync(provider);
             throw new ParserException($"{ToString()} could not be loaded");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync(IFileProvider provider)
         {
-            var import = ImportObject;
-            if (import != null)
+            if (ImportObject != null)
             {
-                var loadedImport = await import.TryLoadAsync(provider);
+                var loadedImport = await ImportObject.TryLoadAsync(provider);
                 if (loadedImport != null)
                     return loadedImport;
             }
 
-            var exportObj = ExportObject;
-            if (exportObj != null)
+            if (ExportObject != null)
             {
-                var loadedExport = await exportObj.TryLoadAsync(provider);
+                var loadedExport = await ExportObject.TryLoadAsync(provider);
                 if (loadedExport != null)
                     return loadedExport;
+            }
+            
+            if (ResolvedObject != null)
+            {
+                var loadedObj = await ResolvedObject.TryLoadAsync(provider);
+                if (loadedObj != null)
+                    return loadedObj;
             }
 
             return null;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
@@ -118,6 +119,45 @@ namespace CUE4Parse.UE4.Assets
         public virtual ResolvedObject? Class => null;
         public virtual ResolvedObject? Super => null;
         public virtual Lazy<UObject>? Object => null;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport Load(IFileProvider provider) => Object.Value;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoad(IFileProvider provider, out UExport export)
+        {
+            try
+            {
+                export = Object.Value;
+                return true;
+            }
+            catch
+            {
+                export = default;
+                return false;
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport> LoadAsync(IFileProvider provider) => await Task.FromResult(Object.Value);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            try
+            {
+                return await Task.FromResult(Object.Value);
+            }
+            catch
+            {
+                return await Task.FromResult<UExport?>(null);
+            }
+        }
+        
+        public override string ToString()
+        {
+            return $"{Name.Text} ({Class.Name})";
+        }
     }
     
     public class ResolvedObjectConverter : JsonConverter<ResolvedObject>
