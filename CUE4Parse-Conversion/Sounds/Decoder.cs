@@ -1,14 +1,26 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.Sound;
 using System;
 using System.Linq;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse_Conversion.Sounds.ADPCM;
 
 namespace CUE4Parse_Conversion.Sounds
 {
     public static class Decoder
     {
-        public static void Decode(this USoundWave soundWave, out string audioFormat, out byte[]? data)
+        public static void Decode(this UExport export, bool shouldDecompress, out string audioFormat, out byte[]? data)
+        {
+            switch (export)
+            {
+                case UAkMediaAssetData mediaAsset: mediaAsset.Decode(shouldDecompress, out audioFormat, out data); break;
+                case USoundWave soundWave: soundWave.Decode(shouldDecompress, out audioFormat, out data); break;
+                default: audioFormat = string.Empty; data = null; break;
+            }
+        }
+        
+        public static void Decode(this USoundWave soundWave, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
             audioFormat = string.Empty;
             byte[]? input = null;
@@ -42,28 +54,32 @@ namespace CUE4Parse_Conversion.Sounds
                 input = ret;
             }
 
-            data = Parse(ref audioFormat, input);
+            data = shouldDecompress ? Decompress(ref audioFormat, input) : input;
         }
         
-        public static byte[] Decode(this UAkMediaAssetData mediaData)
+        public static void Decode(this UAkMediaAssetData mediaData, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
             var offset = 0;
+            audioFormat = "WEM";
+            
             var ret = new byte[mediaData.DataChunks.Sum(x => x.Data.Data.Length)];
             foreach (var dataChunk in mediaData.DataChunks)
             {
                 Buffer.BlockCopy(dataChunk.Data.Data, 0, ret, offset, dataChunk.Data.Data.Length);
                 offset += dataChunk.Data.Data.Length;
             }
-            return ret;
+            
+            data = shouldDecompress ? null : ret;
         }
 
-        private static byte[]? Parse(ref string audioFormat, byte[]? input)
+        private static byte[]? Decompress(ref string audioFormat, byte[]? input)
         {
             if (input == null) return null;
             if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase))
             {
                 audioFormat = "WAV";
-                switch (ADPCMDecoder.GetAudioFormat(input))
+                using var archive = new FByteArchive("WhoDoesntLoveCats", input);
+                switch (ADPCMDecoder.GetAudioFormat(archive))
                 {
                     case EAudioFormat.WAVE_FORMAT_PCM:
                         return input;
