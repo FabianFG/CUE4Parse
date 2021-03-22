@@ -90,14 +90,14 @@ namespace CUE4Parse.UE4.Objects.UObject
 
     public class FEnumProperty : FProperty
     {
-        public FNumericProperty? UnderlyingProp;
+        public FProperty? UnderlyingProp;
         public FPackageIndex Enum;
 
         public override void Deserialize(FAssetArchive Ar)
         {
             base.Deserialize(Ar);
             Enum = new FPackageIndex(Ar);
-            UnderlyingProp = (FNumericProperty?) SerializeSingleField(Ar);
+            UnderlyingProp = (FProperty?) SerializeSingleField(Ar); // Unable to cast object of type FByteProperty to FNumericProperty
         }
     }
 

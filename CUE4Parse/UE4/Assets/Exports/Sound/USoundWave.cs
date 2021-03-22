@@ -22,9 +22,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         {
             base.Deserialize(Ar, validPos);
             bStreaming = Ar.Game >= EGame.GAME_UE4_25;
-            if (TryGetValue<bool>(out var s, nameof(bStreaming))) // will return false if not found
+            if (TryGetValue(out bool s, nameof(bStreaming))) // will return false if not found
                 bStreaming = s;
-            else if (TryGetValue<FName>(out var loadingBehavior, "LoadingBehavior"))
+            else if (TryGetValue(out FName loadingBehavior, "LoadingBehavior"))
                 bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
 
             bCooked = Ar.ReadBoolean();
