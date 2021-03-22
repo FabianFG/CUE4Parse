@@ -106,6 +106,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "NameProperty" => new NameProperty(Ar, type),
                 "ObjectProperty" => new ObjectProperty(Ar, type),
                 "SetProperty" => new SetProperty(Ar, tagData, type),
+                "SoftClassProperty" => new SoftObjectProperty(Ar, type),
                 "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
                 "StrProperty" => new StrProperty(Ar, type),
                 "StructProperty" => new StructProperty(Ar, tagData, type),

@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public FStructFallback(FAssetArchive Ar, string? structType) : this(Ar, structType != null ? new UScriptClass(structType) : null) { }
 
-        public FStructFallback(FAssetArchive Ar, UStruct? structType)
+        public FStructFallback(FAssetArchive Ar, UStruct? structType = null)
         {
             if (Ar.HasUnversionedProperties)
             {

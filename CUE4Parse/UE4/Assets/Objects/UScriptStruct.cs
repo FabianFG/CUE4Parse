@@ -1,5 +1,6 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -19,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public readonly IUStruct StructType;
 
-        public UScriptStruct(FAssetArchive Ar, string? structName, ReadType type)
+        public UScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
         {
             StructType = structName switch
             {
@@ -67,7 +68,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector2D" => type == ReadType.ZERO ? new FVector2D() : Ar.Read<FVector2D>(),
                 "Vector4" => type == ReadType.ZERO ? new FVector4() : Ar.Read<FVector4>(),
-                _ => type == ReadType.ZERO ? new FStructFallback() : new FStructFallback(Ar, structName)
+                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };
         }
 

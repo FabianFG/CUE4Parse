@@ -2,6 +2,7 @@
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -18,6 +19,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         public string? ValueType;
         public FPropertyTagData? InnerTypeData;
         public FPropertyTagData? ValueTypeData;
+        public UStruct? Struct;
 
         internal FPropertyTagData(FAssetArchive Ar, string type)
         {
@@ -67,6 +69,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             InnerType = InnerTypeData?.Type;
             ValueTypeData = info.ValueType != null ? new FPropertyTagData(info.ValueType) : null;
             ValueType = ValueTypeData?.Type;
+            Struct = info.Struct;
         }
 
         public override string ToString()

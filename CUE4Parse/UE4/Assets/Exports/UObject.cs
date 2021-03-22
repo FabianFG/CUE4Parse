@@ -98,8 +98,7 @@ namespace CUE4Parse.UE4.Assets.Exports
 
             if (propMappings == null)
             {
-                Log.Warning("Missing prop mappings for type {0} in package {1}", type, Ar.Owner.Name);
-                return properties;
+                throw new ParserException(Ar, "Missing prop mappings for type " + type);
             }
             
             using var it = new FIterator(header);
@@ -116,19 +115,13 @@ namespace CUE4Parse.UE4.Assets.Exports
                             properties.Add(tag);
                         else
                         {
-                            Log.Warning(
-                                "{0}: Failed to serialize property {1} {2}. Can't proceed with serialization (Serialized {3} properties until now)",
-                                type, propertyInfo.MappingType.Type, propertyInfo.Name, properties.Count);
-                            return properties;
+                            throw new ParserException(Ar, $"{type}: Failed to serialize property {propertyInfo.MappingType.Type} {propertyInfo.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
                         }
                     }
                     else
                     {
-                        Log.Warning(
-                            "{0}: Unknown property with value {1}. Can't proceed with serialization (Serialized {2} properties until now)",
-                            type, val, properties.Count);
-                        return properties;
-                    }  
+                        throw new ParserException(Ar, $"{type}: Unknown property with value {val}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
+                    }
                 }
                 // The value is serialized as zero meaning we don't have to read any bytes here
                 else

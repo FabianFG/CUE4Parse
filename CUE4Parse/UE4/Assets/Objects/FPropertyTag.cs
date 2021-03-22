@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             catch (ParserException e)
             {
-                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
+                throw new ParserException($"Failed to read FPropertyTagType {TagData?.ToString() ?? PropertyType.Text} {Name.Text}", e);
             }
 
             Size = (int) (Ar.Position - pos);

@@ -112,6 +112,7 @@ namespace CUE4Parse.MappingsProvider
         public string? EnumName;
         public bool? IsEnumAsByte;
         public bool? Bool;
+        public UStruct Struct;
 
         public PropertyType(string type, string? structType = null, PropertyType? innerType = null, PropertyType? valueType = null, string? enumName = null, bool? isEnumAsByte = null, bool? b = null)
         {
@@ -152,7 +153,12 @@ namespace CUE4Parse.MappingsProvider
                 case FStructProperty struc:
                 {
                     var structClass = struc.Struct.Load<UStruct>();
-                    if (structClass != null) StructType = structClass.Name; // TODO load the mappings for that struct too, currently it will fail if it's a serialized struct
+                    if (structClass != null)
+                    {
+                        Struct = structClass;
+                        StructType = structClass.Name;
+                    }
+
                     break;
                 }
             }
