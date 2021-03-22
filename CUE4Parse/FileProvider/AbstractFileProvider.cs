@@ -145,7 +145,7 @@ namespace CUE4Parse.FileProvider
                 }
                 default:
                 {
-                    var ret = string.Concat(GameName, $"/Plugins/{(GameName.Equals("FortniteGame", comparisonType) ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(GameName, $"/Plugins/{(GameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
             }
@@ -252,17 +252,15 @@ namespace CUE4Parse.FileProvider
             
             if (uexp != null)
             {
-                return new Package(uasset, uexp, 
-                    ubulk, uptnl, this, MappingsForThisGame);
+                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
             }
             
             if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
             {
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
-            
-            return new IoPackage(uasset, vfsFileProvider.GlobalData,
-                ubulk, uptnl, this, MappingsForThisGame);
+
+            return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this, MappingsForThisGame);
         }
 
         public async Task<IPackage?> TryLoadPackageAsync(string path)

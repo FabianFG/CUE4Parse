@@ -113,16 +113,15 @@ namespace CUE4Parse.UE4.Assets
                             var exportType = obj.ExportType;
 
                             // Serialize
-                            var Ar = (FAssetArchive) uassetAr.Clone();
-                            Ar.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
-                            Ar.Seek(localExportDataOffset, SeekOrigin.Begin);
-                            var validPos = Ar.Position + (long) export.CookedSerialSize;
+                            uassetAr.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
+                            uassetAr.Seek(localExportDataOffset, SeekOrigin.Begin);
+                            var validPos = uassetAr.Position + (long) export.CookedSerialSize;
                             try
                             {
-                                obj.Deserialize(Ar, validPos);
+                                obj.Deserialize(uassetAr, validPos);
 #if DEBUG
-                                if (validPos != Ar.Position)
-                                    Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - Ar.Position);
+                                if (validPos != uassetAr.Position)
+                                    Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - uassetAr.Position);
                                 else
                                     Log.Debug("Successfully read {0} at {1} with size {2}", exportType, localExportDataOffset, export.CookedSerialSize);
 #endif
@@ -141,10 +140,9 @@ namespace CUE4Parse.UE4.Assets
             Summary.BulkDataStartOffset = currentExportDataOffset;
         }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null,
-            IFileProvider? provider = null, TypeMappings? mappings = null)
-            : this(uasset, globalData, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
-                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings) { }
+        public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+            : this(uasset, globalData, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
+        { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FName CreateFNameFromMappedName(FMappedName mappedName) =>
