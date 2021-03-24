@@ -234,6 +234,19 @@ namespace CUE4Parse.FileProvider
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoadPackage(FPackageId id, out IoPackage package)
+        {
+            if (FilesById.TryGetValue(id, out var file) && TryLoadPackage(file, out IPackage loaded))
+            {
+                package = (IoPackage) loaded;
+                return true;
+            }
+
+            package = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<IPackage> LoadPackageAsync(string path) => await LoadPackageAsync(this[path]);
         public async Task<IPackage> LoadPackageAsync(GameFile file)
         {

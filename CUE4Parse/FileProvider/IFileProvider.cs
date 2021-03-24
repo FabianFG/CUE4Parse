@@ -171,6 +171,13 @@ namespace CUE4Parse.FileProvider
         /// <returns>true if the package could be parsed; false otherwise</returns>
         public bool TryLoadPackage(GameFile file, out IPackage package);
         /// <summary>
+        /// Attempts to load and parse an I/O Store Package from the passed package ID. 
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
+        /// <returns>true if the package could be parsed; false otherwise</returns>
+        public bool TryLoadPackage(FPackageId id, out IoPackage package);
+        /// <summary>
         /// Asynchronously loads and parses a Package at the passed path. 
         /// Can throw various exceptions
         /// </summary>

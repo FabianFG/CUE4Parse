@@ -31,6 +31,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             "Texture2D" => new UTexture2D(),
             "UserDefinedStruct" => new UUserDefinedStruct(),
             "VirtualTexture2D" => new UTexture2D(),
+            "WidgetBlueprintGeneratedClass" => new UWidgetBlueprintGeneratedClass(),
             _ => new Assets.Exports.UObject()
         };
     }
