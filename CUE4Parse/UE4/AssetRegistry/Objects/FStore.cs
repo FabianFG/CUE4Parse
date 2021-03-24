@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         private const uint _END_MAGIC = 0x87654321u;
 
         public readonly FNumberedPair[] Pairs;
-        public readonly FNumberlessPair[] NumberLessPairs;
+        public readonly FNumberlessPair[] NumberlessPairs;
         public readonly uint[] AnsiStringOffsets;
         public readonly byte[] AnsiStrings;
         public readonly uint[] WideStringOffsets;
@@ -55,7 +55,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             AnsiStrings = Ar.ReadBytes(nums[7]);
             WideStrings = Ar.ReadBytes(nums[8] * 2);
             
-            NumberLessPairs = Ar.ReadArray(nums[9], () => new FNumberlessPair(Ar));
+            NumberlessPairs = Ar.ReadArray(nums[9], () => new FNumberlessPair(Ar));
             Pairs = Ar.ReadArray(nums[10], () => new FNumberedPair(Ar));
 
             Ar.Position += 4; // _END_MAGIC
@@ -132,12 +132,12 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         private IEnumerable<FNumberedPair> GetNumberView()
         {
-            return Store.Pairs.ToList().Skip((int)PairBegin).Take(Num);
+            return new ArraySegment<FNumberedPair>(Store.Pairs, (int) PairBegin, Num);
         }
 
         private IEnumerable<FNumberlessPair> GetNumberlessView()
         {
-            return Store.NumberLessPairs.ToList().Skip((int)PairBegin).Take(Num);
+            return new ArraySegment<FNumberlessPair>(Store.NumberlessPairs, (int) PairBegin, Num);
         }
     }
 }

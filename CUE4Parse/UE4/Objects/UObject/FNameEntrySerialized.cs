@@ -1,4 +1,6 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System;
+using System.Text;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -7,14 +9,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly string Name;
 #if NAME_HASHES
         public readonly ushort NonCasePreservingHash;
-        public readonly ushort CasePreservingHash;        
+        public readonly ushort CasePreservingHash;
 #endif
         public FNameEntrySerialized(FArchive Ar)
         {
             Name = Ar.ReadFString();
 #if NAME_HASHES
             NonCasePreservingHash = Ar.Read<ushort>();
-            CasePreservingHash = Ar.Read<ushort>();            
+            CasePreservingHash = Ar.Read<ushort>();
 #else
             Ar.Position += 4;
 #endif
@@ -41,44 +43,34 @@ namespace CUE4Parse.UE4.Objects.UObject
             return result;
         }
 
-        public static FNameEntrySerialized[] LoadRegistryNames(FArchive nameAr, int nameCount)
+        public static FNameEntrySerialized[] LoadNameBatch(FArchive Ar)
         {
-            var headers = new FSerializeNameHeader[nameCount];
-            for (var i = 0; i < headers.Length; i++)
+            var num = Ar.Read<int>();
+            if (num == 0)
             {
-                headers[i] = new FSerializeNameHeader(nameAr);
+                return Array.Empty<FNameEntrySerialized>();
             }
-            
-            var result = new FNameEntrySerialized[nameCount];
-            for (var i = 0; i < result.Length; i++)
+
+            Ar.Position += sizeof(uint); //var numStringBytes = Ar.Read<uint>();
+            Ar.Position += sizeof(ulong); //var hashVersion = Ar.Read<ulong>();
+
+            Ar.Position += num * sizeof(ulong); //var hashes = Ar.ReadArray<ulong>(num);
+            var headers = Ar.ReadArray<FSerializedNameHeader>(num);
+            var entries = new FNameEntrySerialized[num];
+            for (var i = 0; i < num; i++)
             {
                 var header = headers[i];
                 var length = (int) header.Length;
-                if (header.IsUtf16)
-                {
-                    unsafe
-                    {
-                        var utf16Length = length * 2;
-                        var nameData = stackalloc byte[utf16Length];
-                        nameAr.Read(nameData, utf16Length);
-                        result[i] = new FNameEntrySerialized(new string((char*)nameData, 0, length));
-                    }
-                }
-            
-                unsafe
-                {
-                    var nameData = stackalloc byte[length];
-                    nameAr.Read(nameData, length);
-                    result[i] = new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
-                }
+                string s = header.IsUtf16 ? new string(Ar.ReadArray<char>(length)) : Encoding.UTF8.GetString(Ar.ReadBytes(length));
+                entries[i] = new FNameEntrySerialized(s);
             }
 
-            return result;
+            return entries;
         }
 
-        private static FNameEntrySerialized LoadNameHeader(FArchive nameAr)
+        private static FNameEntrySerialized LoadNameHeader(FArchive Ar)
         {
-            var header = new FSerializeNameHeader(nameAr);
+            var header = Ar.Read<FSerializedNameHeader>();
 
             var length = (int) header.Length;
             if (header.IsUtf16)
@@ -87,33 +79,24 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     var utf16Length = length * 2;
                     var nameData = stackalloc byte[utf16Length];
-                    nameAr.Read(nameData, utf16Length);
-                    return new FNameEntrySerialized(new string((char*)nameData, 0, length));
+                    Ar.Read(nameData, utf16Length);
+                    return new FNameEntrySerialized(new string((char*) nameData, 0, length));
                 }
             }
-            
+
             unsafe
             {
                 var nameData = stackalloc byte[length];
-                nameAr.Read(nameData, length);
+                Ar.Read(nameData, length);
                 return new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
             }
         }
 
-        private readonly struct FSerializeNameHeader
+        private unsafe struct FSerializedNameHeader
         {
-            public readonly bool IsUtf16;
-            public readonly uint Length;
-            public FSerializeNameHeader(FArchive Ar)
-            {
-                unsafe
-                {
-                    var data = stackalloc byte[2];
-                    Ar.Read(data, 2);
-                    IsUtf16 = (data[0] & 0x80u) != 0;
-                    Length = ((data[0] & 0x7Fu) << 8) + data[1];
-                }
-            }
+            private fixed byte _data[2];
+            public bool IsUtf16 => (_data[0] & 0x80u) != 0;
+            public uint Length => ((_data[0] & 0x7Fu) << 8) + _data[1];
         }
     }
 }
