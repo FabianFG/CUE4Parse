@@ -55,7 +55,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
     }
 
-    public class FByteProperty : FProperty
+    public class FByteProperty : FNumericProperty
     {
         public FPackageIndex Enum;
 
@@ -90,14 +90,14 @@ namespace CUE4Parse.UE4.Objects.UObject
 
     public class FEnumProperty : FProperty
     {
-        public FProperty? UnderlyingProp;
+        public FNumericProperty? UnderlyingProp;
         public FPackageIndex Enum;
 
         public override void Deserialize(FAssetArchive Ar)
         {
             base.Deserialize(Ar);
             Enum = new FPackageIndex(Ar);
-            UnderlyingProp = (FProperty?) SerializeSingleField(Ar); // Unable to cast object of type FByteProperty to FNumericProperty
+            UnderlyingProp = (FNumericProperty?) SerializeSingleField(Ar);
         }
     }
 
