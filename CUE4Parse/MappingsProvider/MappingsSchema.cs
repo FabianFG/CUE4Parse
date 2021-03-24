@@ -7,26 +7,26 @@ namespace CUE4Parse.MappingsProvider
 {
     public class Struct
     {
-        public readonly TypeMappings Context;
+        public readonly TypeMappings? Context;
         public string Name;
         public string? SuperType;
         public Lazy<Struct?> Super;
         public Dictionary<int, PropertyInfo> Properties;
         public int PropertyCount;
 
-        public Struct(TypeMappings context, string name, int propertyCount)
+        public Struct(TypeMappings? context, string name, int propertyCount)
         {
             Context = context;
             Name = name;
             PropertyCount = propertyCount;
         }
 
-        public Struct(TypeMappings context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
+        public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
         {
             SuperType = superType;
             Super = new Lazy<Struct?>(() =>
             {
-                if (SuperType != null && Context.Types.TryGetValue(SuperType, out var superStruct))
+                if (SuperType != null && Context != null && Context.Types.TryGetValue(SuperType, out var superStruct))
                 {
                     return superStruct;
                 }
@@ -50,7 +50,7 @@ namespace CUE4Parse.MappingsProvider
 
     public class SerializedStruct : Struct
     {
-        public SerializedStruct(TypeMappings context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
+        public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
         {
             Super = new Lazy<Struct?>(() =>
             {
@@ -60,7 +60,7 @@ namespace CUE4Parse.MappingsProvider
                 {
                     if (superStruct is UScriptClass)
                     {
-                        if (Context.Types.TryGetValue(superStruct.Name, out var scriptStruct))
+                        if (Context != null && Context.Types.TryGetValue(superStruct.Name, out var scriptStruct))
                         {
                             return scriptStruct;
                         }
@@ -112,7 +112,7 @@ namespace CUE4Parse.MappingsProvider
         public string? EnumName;
         public bool? IsEnumAsByte;
         public bool? Bool;
-        public UStruct Struct;
+        public UStruct? Struct;
 
         public PropertyType(string type, string? structType = null, PropertyType? innerType = null, PropertyType? valueType = null, string? enumName = null, bool? isEnumAsByte = null, bool? b = null)
         {

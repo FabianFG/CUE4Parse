@@ -66,9 +66,8 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             if (Ar.HasUnversionedProperties)
             {
-                var mappings = Ar.Owner.Mappings;
-                if (mappings == null)
-                    throw new ParserException("Found unversioned properties but package doesn't have any type mappings");
+                if (Class == null)
+                    throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
                 Properties = DeserializePropertiesUnversioned(Ar, Class);
             }
             else
