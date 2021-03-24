@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
 
-        public readonly Lazy<IoPackage[]> ImportedPackages;
+        public readonly Lazy<IoPackage?[]> ImportedPackages;
         public override Lazy<UObject>[] ExportsLazy { get; }
 
         public IoPackage(
@@ -74,12 +74,12 @@ namespace CUE4Parse.UE4.Assets
             var importedPackageIds = LoadGraphData(uassetAr);
 
             // Preload dependencies
-            ImportedPackages = new Lazy<IoPackage[]>(() =>
+            ImportedPackages = new Lazy<IoPackage?[]>(() =>
             {
-                var packages = new IoPackage[importedPackageIds.Length];
+                var packages = new IoPackage?[importedPackageIds.Length];
                 for (int i = 0; i < importedPackageIds.Length; i++)
                 {
-                    packages[i] = provider.LoadPackage(importedPackageIds[i]);
+                    provider.TryLoadPackage(importedPackageIds[i], out packages[i]);
                 }
                 return packages;
             });
@@ -240,10 +240,13 @@ namespace CUE4Parse.UE4.Assets
 
             if (index.IsPackageImport)
             {
-                foreach (IoPackage pkg in ImportedPackages.Value)
+                foreach (var pkg in ImportedPackages.Value)
+                {
+                    if (pkg == null) continue;
                     for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                         if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
                             return new ResolvedExportObject(exportIndex, pkg);
+                }
             }
 
             return null;
