@@ -7,7 +7,7 @@ using System;
 
 namespace CUE4Parse_Conversion.Textures
 {
-    public static class Decoder
+    public static class TextureDecoder
     {
         public static SKImage? Decode(this UTexture2D texture)
         {

@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Assets
                 if (!(ResolvePackageIndex(it.ClassIndex)?.Object?.Value is UStruct uStruct)) continue;
                 var export = ConstructObject(uStruct);
                 export.Name = it.ObjectName.Text;
-                export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
+                export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
                 export.Template = ResolvePackageIndex(it.TemplateIndex) as ResolvedExportObject;
                 export.Flags = (int) it.ObjectFlags;
                 it.ExportType = export.GetType();
@@ -141,7 +141,7 @@ namespace CUE4Parse.UE4.Assets
             public override FName Name => _export.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_export.OuterIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
-            public override Lazy<UObject> Object => Super?.Object ?? _export.ExportObject;
+            public override Lazy<UObject>? Object => Super?.Object ?? _export.ExportObject ?? null;
         }
         
         private class ResolvedScriptObject : ResolvedObject

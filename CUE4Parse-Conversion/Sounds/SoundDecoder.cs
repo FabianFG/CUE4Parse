@@ -8,7 +8,7 @@ using CUE4Parse_Conversion.Sounds.ADPCM;
 
 namespace CUE4Parse_Conversion.Sounds
 {
-    public static class Decoder
+    public static class SoundDecoder
     {
         public static void Decode(this UExport export, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
@@ -54,7 +54,7 @@ namespace CUE4Parse_Conversion.Sounds
                 input = ret;
             }
 
-            data = shouldDecompress ? Decompress(ref audioFormat, input) : input;
+            data = Decompress(shouldDecompress, ref audioFormat, input);
         }
         
         public static void Decode(this UAkMediaAssetData mediaData, bool shouldDecompress, out string audioFormat, out byte[]? data)
@@ -62,19 +62,20 @@ namespace CUE4Parse_Conversion.Sounds
             var offset = 0;
             audioFormat = "WEM";
             
-            var ret = new byte[mediaData.DataChunks.Sum(x => x.Data.Data.Length)];
+            var input = new byte[mediaData.DataChunks.Sum(x => x.Data.Data.Length)];
             foreach (var dataChunk in mediaData.DataChunks)
             {
-                Buffer.BlockCopy(dataChunk.Data.Data, 0, ret, offset, dataChunk.Data.Data.Length);
+                Buffer.BlockCopy(dataChunk.Data.Data, 0, input, offset, dataChunk.Data.Data.Length);
                 offset += dataChunk.Data.Data.Length;
             }
             
-            data = shouldDecompress ? null : ret;
+            data = Decompress(shouldDecompress, ref audioFormat, input);
         }
 
-        private static byte[]? Decompress(ref string audioFormat, byte[]? input)
+        public static byte[]? Decompress(bool shouldDecompress, ref string audioFormat, byte[]? input)
         {
             if (input == null) return null;
+            if (!shouldDecompress) return input;
             if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase))
             {
                 audioFormat = "WAV";
@@ -88,6 +89,8 @@ namespace CUE4Parse_Conversion.Sounds
                 }
             }
             else if (audioFormat.Equals("OPUS", StringComparison.OrdinalIgnoreCase))
+                return null;
+            else if (audioFormat.Equals("WEM", StringComparison.OrdinalIgnoreCase))
                 return null;
             else if (audioFormat.IndexOf("OGG", StringComparison.OrdinalIgnoreCase) > -1)
             {
