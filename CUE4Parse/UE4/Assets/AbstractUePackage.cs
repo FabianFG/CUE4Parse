@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -114,6 +113,7 @@ namespace CUE4Parse.UE4.Assets
             Package = package;
         }
 
+        public abstract int Index { get; protected set; }
         public abstract FName Name { get; }
         public virtual ResolvedObject? Outer => null;
         public virtual ResolvedObject? Class => null;
@@ -177,10 +177,10 @@ namespace CUE4Parse.UE4.Assets
             writer.WritePropertyName("ObjectName"); // 1:2:3 if we are talking about an export in the current asset
             writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
 
-            writer.WritePropertyName("ObjectPath"); // package path . object name
-            if (outerChain.Count <= 0) writer.WriteNull();
-            else writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Name.Text}");
-            
+            writer.WritePropertyName("ObjectPath"); // package path . object index
+            if (outerChain.Count <= 0) writer.WriteValue(value.Index);
+            else writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Index}");
+
             writer.WriteEndObject();
         }
 
@@ -195,18 +195,20 @@ namespace CUE4Parse.UE4.Assets
     {
         private readonly UObject _object;
 
-        public ResolvedLoadedObject(UObject obj) : base(obj.Owner)
+        public ResolvedLoadedObject(int index, UObject obj) : base(obj.Owner)
         {
             _object = obj;
+            Index = index;
         }
 
+        public sealed override int Index { get; protected set; }
         public override FName Name => new(_object.Name);
         public override ResolvedObject? Outer
         {
             get
             {
                 var obj = _object.Outer;
-                return obj != null ? new ResolvedLoadedObject(obj) : null;
+                return obj != null ? new ResolvedLoadedObject(Index, obj) : null;
             }
         }
         public override ResolvedObject? Class
@@ -214,7 +216,7 @@ namespace CUE4Parse.UE4.Assets
             get
             {
                 var obj = _object.Class;
-                return obj != null ? new ResolvedLoadedObject(obj) : null;
+                return obj != null ? new ResolvedLoadedObject(Index, obj) : null;
             }
         }
         public override ResolvedObject? Super => null; //new ResolvedLoadedObject(_object.Super);

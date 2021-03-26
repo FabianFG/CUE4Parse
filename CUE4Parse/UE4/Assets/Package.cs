@@ -123,9 +123,9 @@ namespace CUE4Parse.UE4.Assets
             if (index == null || index.IsNull)
                 return null;
             if (index.IsImport && -index.Index - 1 < ImportMap.Length)
-                return new ResolvedScriptObject(ImportMap[-index.Index - 1], this);
+                return new ResolvedScriptObject(-index.Index - 1, this);
             if (index.IsExport && index.Index - 1 < ExportMap.Length)
-                return new ResolvedExportObject(ExportMap[index.Index - 1], this);
+                return new ResolvedExportObject(index.Index - 1, this);
             return null;
         }
 
@@ -133,11 +133,13 @@ namespace CUE4Parse.UE4.Assets
         {
             private readonly FObjectExport _export;
 
-            public ResolvedExportObject(FObjectExport export, Package package) : base(package)
+            public ResolvedExportObject(int index, Package package) : base(package)
             {
-                _export = export;
+                Index = index;
+                _export = package.ExportMap[index];
             }
 
+            public sealed override int Index { get; protected set; }
             public override FName Name => _export.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_export.OuterIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
@@ -148,14 +150,16 @@ namespace CUE4Parse.UE4.Assets
         {
             private readonly FObjectImport _import;
 
-            public ResolvedScriptObject(FObjectImport import, Package package) : base(package)
+            public ResolvedScriptObject(int index, Package package) : base(package)
             {
-                _import = import;
+                Index = index;
+                _import = package.ImportMap[index];
             }
 
+            public sealed override int Index { get; protected set; }
             public override FName Name => _import.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
-            public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass(_import.ClassName.Text));
+            public override ResolvedObject Class => new ResolvedLoadedObject(Index, new UScriptClass(_import.ClassName.Text));
             public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
         }
     }
