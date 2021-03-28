@@ -34,6 +34,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         }
     }
     
+    public static class UCurveTableUtility
+    {
+        public static bool TryGetCurveTableRow(this UCurveTable curveTable, string rowKey, StringComparison comparisonType, out FStructFallback rowValue)
+        {
+            foreach (var kvp in curveTable.RowMap)
+            {
+                if (kvp.Key.IsNone || !kvp.Key.Text.Equals(rowKey, comparisonType)) continue;
+
+                rowValue = kvp.Value;
+                return true;
+            }
+            
+            rowValue = default;
+            return false;
+        }
+    }
+    
     public class UCurveTableConverter : JsonConverter<UCurveTable>
     {
         public override void WriteJson(JsonWriter writer, UCurveTable value, JsonSerializer serializer)
