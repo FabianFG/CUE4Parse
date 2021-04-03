@@ -1,30 +1,46 @@
-﻿using CUE4Parse.UE4.Objects.Core.i18N;
+using System.ComponentModel;
+using CUE4Parse.UE4.Objects.Core.i18N;
 
 namespace CUE4Parse_Fortnite.Enums
 {
     public enum EFortRarity
     {
+        [Description("Uncommon")]
         Uncommon = 1, // Default
         
+        [Description("Unattainable")]
         Impossible = 7,
+        [Description("Unattainable")]
         Unattainable = 7,
         
+        [Description("Transcendent")]
         Exotic = 6,
+        [Description("Transcendent")]
         Transcendent = 6,
 
+        [Description("Mythic")]
         Elegant = 5,
+        [Description("Mythic")]
         Mythic = 5,
 
+        [Description("Legendary")]
         Fine = 4,
+        [Description("Legendary")]
         Legendary = 4,
 
+        [Description("Epic")]
         Quality = 3,
+        [Description("Epic")]
         Epic = 3,
 
+        [Description("Rare")]
         Sturdy = 2,
+        [Description("Rare")]
         Rare = 2,
 
+        [Description("Common")]
         Handmade = 0,
+        [Description("Common")]
         Common = 0
     }
 
