@@ -52,7 +52,14 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             foreach (var kvp in value.Properties)
             {
-                writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+                FPropertyTagType? key;
+                if (kvp.Key is StructProperty s && s.Value.StructType is FStructFallback f && f.Properties.Count > 0)
+                    key = f.Properties[0].Tag;
+                else
+                    key = kvp.Key;
+                
+                if (key == null) continue;
+                writer.WritePropertyName(key.ToString().SubstringBefore('(').Trim());
                 serializer.Serialize(writer, kvp.Value);
             }
             
