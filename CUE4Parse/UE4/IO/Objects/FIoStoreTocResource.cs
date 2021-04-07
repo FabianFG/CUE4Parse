@@ -9,8 +9,8 @@ namespace CUE4Parse.UE4.IO.Objects
     public enum EIoStoreTocReadOptions
     {
         Default,
-        ReadDirectoryIndex	= (1 << 0),
-        ReadTocMeta			= (1 << 1),
+        ReadDirectoryIndex	= 1 << 0,
+        ReadTocMeta			= 1 << 1,
         ReadAll				= ReadDirectoryIndex | ReadTocMeta
     } 
     

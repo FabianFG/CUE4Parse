@@ -62,9 +62,8 @@ namespace CUE4Parse.UE4.Pak
 
             if (pakEntry.IsCompressed)
             {
-                var compressionMethod = Info.CompressionMethods[(int)pakEntry.CompressionMethod];
 #if DEBUG
-                Log.Debug($"{pakEntry.Name} is compressed with {compressionMethod}");
+                Log.Debug($"{pakEntry.Name} is compressed with {pakEntry.CompressionMethod}");
 #endif
                 var data = new MemoryStream((int) pakEntry.UncompressedSize) {Position = 0};
                 foreach (var block in pakEntry.CompressionBlocks)
@@ -78,7 +77,7 @@ namespace CUE4Parse.UE4.Pak
                     // its either just the compression block size
                     // or if its the last block its the remaining data size
                     var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - data.Length);
-                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, compressionMethod, reader), 0, uncompressedSize);
+                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, pakEntry.CompressionMethod, reader), 0, uncompressedSize);
                 }
 
                 if (data.Length == pakEntry.UncompressedSize) return data.GetBuffer();
@@ -136,7 +135,7 @@ namespace CUE4Parse.UE4.Pak
             for (var i = 0; i < fileCount; i++)
             {
                 var path = string.Concat(mountPoint, index.ReadFString());
-                var entry = new FPakEntry(this, path, index, Info);
+                var entry = new FPakEntry(this, path, index);
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
                 if (caseInsensitive)

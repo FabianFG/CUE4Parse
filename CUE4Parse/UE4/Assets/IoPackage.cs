@@ -209,7 +209,7 @@ namespace CUE4Parse.UE4.Assets
             for (var i = 0; i < ExportMap.Length; i++)
             {
                 var export = ExportMap[i];
-                if (CreateFNameFromMappedName(export.ObjectName).Text == name)
+                if (CreateFNameFromMappedName(export.ObjectName).Text.Equals(name, comparisonType))
                 {
                     return ExportsLazy[i].Value;
                 }
