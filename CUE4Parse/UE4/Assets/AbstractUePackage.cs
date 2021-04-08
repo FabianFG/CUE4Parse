@@ -89,6 +89,9 @@ namespace CUE4Parse.UE4.Assets
                 $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UExport GetExport(int index) => ExportsLazy[index].Value;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);
 
         public Lazy<UObject>? FindObject(FPackageIndex? index)
@@ -177,7 +180,7 @@ namespace CUE4Parse.UE4.Assets
             writer.WritePropertyName("ObjectName"); // 1:2:3 if we are talking about an export in the current asset
             writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
 
-            writer.WritePropertyName("ObjectPath"); // package path . object index
+            writer.WritePropertyName("ObjectPath"); // package path . index
             if (outerChain.Count <= 0) writer.WriteValue(value.Index);
             else writer.WriteValue($"{outerChain[outerChain.Count - 1]}.{value.Index}");
 
