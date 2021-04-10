@@ -162,7 +162,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (blockCount > 0)
             {
                 // CompressionBlockSize
-                if (UncompressedSize < CompressionBlockSize)
+                if (UncompressedSize < 65536)
                     CompressionBlockSize = (uint) UncompressedSize;
                 
                 // CompressionBlocks

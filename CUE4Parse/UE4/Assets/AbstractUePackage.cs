@@ -89,7 +89,7 @@ namespace CUE4Parse.UE4.Assets
                 $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport GetExport(int index) => ExportsLazy[index].Value;
+        public UExport? GetExport(int index) => index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);

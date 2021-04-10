@@ -41,8 +41,8 @@ namespace CUE4Parse.FileProvider
         {
             get
             {
-                string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase));
-                return t == null ? string.Empty : t.SubstringBefore('/');
+                string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                return t.SubstringBefore('/');
             }
         }
 

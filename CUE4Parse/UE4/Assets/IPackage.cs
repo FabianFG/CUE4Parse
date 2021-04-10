@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets
         public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
         public Lazy<UObject>? FindObject(FPackageIndex? index);
         public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
-        public UExport GetExport(int index);
+        public UExport? GetExport(int index);
         public IEnumerable<UExport> GetExports();
     }
 }

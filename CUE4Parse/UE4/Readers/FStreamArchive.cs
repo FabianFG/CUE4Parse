@@ -73,12 +73,9 @@ namespace CUE4Parse.UE4.Readers
         {
             return _baseStream switch
             {
-                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Game, Ver),
-                FileStream fileStream => new FStreamArchive(Name,
-                        File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Game, Ver)
-                    {Position = Position},
-                _ => throw new InvalidOperationException(
-                    $"Stream of type {_baseStream.GetType().Name} doesn't support cloning")
+                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Game, Ver) {Position = Position},
+                FileStream fileStream => new FStreamArchive(Name, File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Game, Ver) {Position = Position},
+                _ => new FStreamArchive(Name, _baseStream, Game, Ver) {Position = Position}
             };
         }
     }
