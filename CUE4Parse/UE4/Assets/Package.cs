@@ -133,13 +133,11 @@ namespace CUE4Parse.UE4.Assets
         {
             private readonly FObjectExport _export;
 
-            public ResolvedExportObject(int index, Package package) : base(package)
+            public ResolvedExportObject(int index, Package package) : base(package, index)
             {
-                Index = index;
                 _export = package.ExportMap[index];
             }
 
-            public sealed override int Index { get; protected set; }
             public override FName Name => _export.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_export.OuterIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
@@ -150,13 +148,11 @@ namespace CUE4Parse.UE4.Assets
         {
             private readonly FObjectImport _import;
 
-            public ResolvedScriptObject(int index, Package package) : base(package)
+            public ResolvedScriptObject(int index, Package package) : base(package, index)
             {
-                Index = index;
                 _import = package.ImportMap[index];
             }
 
-            public sealed override int Index { get; protected set; }
             public override FName Name => _import.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
             public override ResolvedObject Class => new ResolvedLoadedObject(Index, new UScriptClass(_import.ClassName.Text));

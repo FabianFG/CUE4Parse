@@ -194,7 +194,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             {
                 Namespace = Ar.ReadFString() ?? string.Empty;
                 Key = Ar.ReadFString() ?? string.Empty;
-                SourceString = Ar.ReadFString() ?? string.Empty;
+                SourceString = Ar.Owner.Provider?.GetLocalizedString(Namespace, Key, Ar.ReadFString()) ?? string.Empty;
             }
 
             public Base(string namespacee, string key, string sourceString)

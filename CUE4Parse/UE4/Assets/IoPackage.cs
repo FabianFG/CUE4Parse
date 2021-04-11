@@ -257,16 +257,13 @@ namespace CUE4Parse.UE4.Assets
             public FExportMapEntry ExportMapEntry;
             public Lazy<UObject> ExportObject;
 
-            public ResolvedExportObject(int exportIndex, IoPackage package) : base(package)
+            public ResolvedExportObject(int exportIndex, IoPackage package) : base(package, exportIndex)
             {
-                Index = exportIndex;
                 if (exportIndex >= package.ExportMap.Length) return;
-                
                 ExportMapEntry = package.ExportMap[exportIndex];
                 ExportObject = package.ExportsLazy[exportIndex];
             }
 
-            public sealed override int Index { get; protected set; }
             public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
             public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject(Index, (UObject) Package);
             public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
@@ -279,12 +276,11 @@ namespace CUE4Parse.UE4.Assets
             // public FScriptObjectEntry ScriptImport;
             public string ScriptImportName;
 
-            public ResolvedScriptObject(string scriptImportName, IoPackage package) : base(package)
+            public ResolvedScriptObject(string scriptImportName, IoPackage package) : base(package, 0)
             {
                 ScriptImportName = scriptImportName;
             }
 
-            public sealed override int Index { get; protected set; }
             public override FName Name => new(ScriptImportName);
             public override ResolvedObject? Outer => null; //((IoPackage) Package).ResolveObjectIndex(ScriptImport.OuterIndex);
             public override ResolvedObject Class => new ResolvedLoadedObject(Index, new UScriptClass("Class"));

@@ -111,12 +111,13 @@ namespace CUE4Parse.UE4.Assets
     {
         public readonly IPackage Package;
 
-        public ResolvedObject(IPackage package)
+        public ResolvedObject(IPackage package, int index)
         {
             Package = package;
+            Index = index;
         }
 
-        public abstract int Index { get; protected set; }
+        public int Index { get; }
         public abstract FName Name { get; }
         public virtual ResolvedObject? Outer => null;
         public virtual ResolvedObject? Class => null;
@@ -198,13 +199,11 @@ namespace CUE4Parse.UE4.Assets
     {
         private readonly UObject _object;
 
-        public ResolvedLoadedObject(int index, UObject obj) : base(obj.Owner)
+        public ResolvedLoadedObject(int index, UObject obj) : base(obj.Owner, index)
         {
             _object = obj;
-            Index = index;
         }
 
-        public sealed override int Index { get; protected set; }
         public override FName Name => new(_object.Name);
         public override ResolvedObject? Outer
         {

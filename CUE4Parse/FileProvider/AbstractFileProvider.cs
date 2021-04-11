@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Vfs;
@@ -10,6 +11,7 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -24,26 +26,99 @@ namespace CUE4Parse.FileProvider
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
         public ITypeMappingsProvider? MappingsContainer { get; set; }
-
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
+        public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; } // fabian? is this reversed?
 
-        protected AbstractFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+        protected AbstractFileProvider(
+            bool isCaseInsensitive = false,
+            EGame game = EGame.GAME_UE4_LATEST,
+            UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
             IsCaseInsensitive = isCaseInsensitive;
             Game = game;
             Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
         }
 
+        private string _gameName;
         public string GameName
         {
             get
             {
-                string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
-                return t.SubstringBefore('/');
+                if (string.IsNullOrEmpty(_gameName))
+                {
+                    string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                    _gameName = t.SubstringBefore('/');
+                }
+                return _gameName;
             }
+        }
+
+        public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
+        {
+            var regex = new Regex($"^{GameName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            LocalizedResources.Clear();
+
+            var i = 0;
+            foreach (var file in Files.Where(x => regex.IsMatch(x.Key)))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!file.Value.TryCreateReader(out var archive)) continue;
+                
+                var locres = new FTextLocalizationResource(archive);
+                foreach (var entries in locres.Entries)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!LocalizedResources.ContainsKey(entries.Key.Str))
+                        LocalizedResources[entries.Key.Str] = new Dictionary<string, string>();
+
+                    foreach (var keyValue in entries.Value)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        LocalizedResources[entries.Key.Str][keyValue.Key.Str] = keyValue.Value.LocalizedString;
+                        i++;
+                    }
+                }
+            }
+            return i;
+        }
+
+        public string GetLocalizedString(string namespacee, string key, string? defaultValue)
+        {
+            if (LocalizedResources.TryGetValue(namespacee, out var keyValue) &&
+                keyValue.TryGetValue(key, out var localizedResource))
+                return localizedResource;
+            
+            return defaultValue ?? string.Empty;
+        }
+
+        private string GetLanguageCode(ELanguage language)
+        {
+            return GameName.ToLower() switch
+            {
+                "fortnitegame" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.SpanishLatin => "es-419",
+                    ELanguage.Arabic => "ar",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.Polish => "pl",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Turkish => "tr",
+                    ELanguage.Chinese => "zh-CN",
+                    ELanguage.TraditionalChinese => "zh-Hant",
+                    _ => "en"
+                },
+                _ => "en"
+            };
         }
 
         public GameFile this[string path] => Files[FixPath(path)];
