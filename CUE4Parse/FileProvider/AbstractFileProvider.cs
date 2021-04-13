@@ -206,6 +206,7 @@ namespace CUE4Parse.FileProvider
                 case "Vendetta":
                 case "Builder":
                 case "Bodyguard":
+                case "LeadAlloy":
                 {
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
