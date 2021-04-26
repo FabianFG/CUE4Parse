@@ -11,10 +11,10 @@ namespace CUE4Parse.UE4.Readers
         public UE4Version Ver;
         public EGame Game;
         public abstract string Name { get; }
-        public abstract T Read<T>();
+        public abstract T Read<T>() where T : struct;
         public abstract unsafe void Read(byte* ptr, int length);
         public abstract byte[] ReadBytes(int length);
-        public abstract T[] ReadArray<T>(int length);
+        public abstract T[] ReadArray<T>(int length) where T : struct;
 
         protected FArchive(EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T[] ReadArray<T>()
+        public T[] ReadArray<T>() where T : struct
         {
             var length = Read<int>();
 
