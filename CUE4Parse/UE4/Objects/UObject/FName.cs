@@ -16,11 +16,11 @@ namespace CUE4Parse.UE4.Objects.UObject
         public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
         public bool IsNone => Text == null || Text == "None";
 
-        public FName(string name)
+        public FName(string name, int index = 0, int number = 0)
         {
             Name = new FNameEntrySerialized(name);
-            Index = 0;
-            Number = 0;
+            Index = index;
+            Number = number;
         }
 
         public FName(FNameEntrySerialized name, int index, int number)
