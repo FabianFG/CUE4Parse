@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Readers
         public EGame Game;
         public abstract string Name { get; }
         public abstract T Read<T>() where T : struct;
-        public abstract unsafe void Read(byte* ptr, int length);
+        public abstract unsafe void Serialize(byte* ptr, int length);
         public abstract byte[] ReadBytes(int length);
         public abstract T[] ReadArray<T>(int length) where T : struct;
 
@@ -82,6 +82,16 @@ namespace CUE4Parse.UE4.Readers
         {
             return Read<byte>() != 0;
         }
+        
+        public virtual unsafe void SerializeBits(void* v, long lengthBits)
+        {
+            Serialize((byte*) v, (int) ((lengthBits + 7) / 8));
+
+            if (/*IsLoading &&*/ (lengthBits % 8) != 0)
+            {
+                ((byte*)v)[lengthBits / 8] &= (byte) ((1 << (int)(lengthBits & 7)) - 1);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read7BitEncodedInt()
@@ -110,7 +120,7 @@ namespace CUE4Parse.UE4.Readers
             unsafe
             {
                 var ansiBytes = stackalloc byte[length];
-                Read(ansiBytes, length);
+                Serialize(ansiBytes, length);
                 return new string((sbyte*) ansiBytes, 0, length);
             }
         }
@@ -136,7 +146,7 @@ namespace CUE4Parse.UE4.Readers
                     length = -length;
                     var ucs2Length = length * sizeof(ushort);
                     var ucs2Bytes = stackalloc byte[ucs2Length];
-                    Read(ucs2Bytes, ucs2Length);
+                    Serialize(ucs2Bytes, ucs2Length);
 #if !NO_STRING_NULL_TERMINATION_VALIDATION
                     if (ucs2Bytes[ucs2Length - 1] != 0 || ucs2Bytes[ucs2Length - 2] != 0)
                     {
@@ -150,7 +160,7 @@ namespace CUE4Parse.UE4.Readers
             unsafe
             {
                 var ansiBytes = stackalloc byte[length];
-                Read(ansiBytes, length);
+                Serialize(ansiBytes, length);
 #if !NO_STRING_NULL_TERMINATION_VALIDATION
                 if (ansiBytes[length - 1] != 0)
                 {

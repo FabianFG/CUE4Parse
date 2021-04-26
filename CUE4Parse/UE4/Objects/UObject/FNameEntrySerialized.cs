@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     {
                         var utf16Length = length * 2;
                         var nameData = stackalloc byte[utf16Length];
-                        nameAr.Read(nameData, utf16Length);
+                        nameAr.Serialize(nameData, utf16Length);
                         result[i] = new FNameEntrySerialized(new string((char*)nameData, 0, length));
                     }
                 }
@@ -68,7 +68,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 unsafe
                 {
                     var nameData = stackalloc byte[length];
-                    nameAr.Read(nameData, length);
+                    nameAr.Serialize(nameData, length);
                     result[i] = new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
                 }
             }
@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     var utf16Length = length * 2;
                     var nameData = stackalloc byte[utf16Length];
-                    nameAr.Read(nameData, utf16Length);
+                    nameAr.Serialize(nameData, utf16Length);
                     return new FNameEntrySerialized(new string((char*)nameData, 0, length));
                 }
             }
@@ -95,7 +95,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             unsafe
             {
                 var nameData = stackalloc byte[length];
-                nameAr.Read(nameData, length);
+                nameAr.Serialize(nameData, length);
                 return new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
             }
         }
@@ -109,7 +109,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 unsafe
                 {
                     var data = stackalloc byte[2];
-                    Ar.Read(data, 2);
+                    Ar.Serialize(data, 2);
                     IsUtf16 = (data[0] & 0x80u) != 0;
                     Length = ((data[0] & 0x7Fu) << 8) + data[1];
                 }

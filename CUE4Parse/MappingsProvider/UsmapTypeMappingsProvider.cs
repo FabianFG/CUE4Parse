@@ -197,7 +197,7 @@ namespace CUE4Parse.MappingsProvider
         private static unsafe string ReadStringUnsafe(FArchive Ar, int nameLength)
         {
             var nameBytes = stackalloc byte[nameLength];
-            Ar.Read(nameBytes, nameLength);
+            Ar.Serialize(nameBytes, nameLength);
             return new string((sbyte*) nameBytes, 0, nameLength);
         }
     }
