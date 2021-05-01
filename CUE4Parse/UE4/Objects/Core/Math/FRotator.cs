@@ -19,7 +19,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Roll = roll;
         }
 
-        /* Fabian wtf is this hell :'( */
+        public FVector RotateVector(FVector v)
+        {
+            return new(new FRotationMatrix(this).TransformFVector(v));
+        }
+
+        public FVector UnrotateVector(FVector v)
+        {
+            return new(new FRotationMatrix(this).GetTransposed().TransformFVector(v));
+        }
 
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
     }
