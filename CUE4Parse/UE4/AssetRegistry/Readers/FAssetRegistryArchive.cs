@@ -48,8 +48,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
             => baseArchive.ReadBytes(length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override unsafe void Read(byte* ptr, int length)
-            => baseArchive.Read(ptr, length);
+        public override unsafe void Serialize(byte* ptr, int length)
+            => baseArchive.Serialize(ptr, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)

@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     var bufferSize = COMPRESSION_METHOD_NAME_LEN * maxNumCompressionMethods;
                     var buffer = stackalloc byte[bufferSize];
-                    Ar.Read(buffer, bufferSize);
+                    Ar.Serialize(buffer, bufferSize);
                     CompressionMethods = new List<CompressionMethod>(maxNumCompressionMethods + 1)
                     {
                         CompressionMethod.None
@@ -170,7 +170,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 }
                 Ar.Seek(-maxOffset, SeekOrigin.End);
                 var buffer = stackalloc byte[(int) maxOffset];
-                Ar.Read(buffer, (int) maxOffset);
+                Ar.Serialize(buffer, (int) maxOffset);
                 
                 var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Game, Ar.Ver);
 

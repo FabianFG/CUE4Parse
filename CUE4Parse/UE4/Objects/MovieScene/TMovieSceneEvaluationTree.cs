@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-    public class TMovieSceneEvaluationTree<T> : FMovieSceneEvaluationTree
+    public class TMovieSceneEvaluationTree<T> : FMovieSceneEvaluationTree where T : struct
     {
         /** Tree data container that corresponds to FMovieSceneEvaluationTreeNode::DataID */
         public readonly TEvaluationTreeEntryContainer<T> Data;
@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         }
     }
 
-    public readonly struct TEvaluationTreeEntryContainer<T> : IUStruct
+    public readonly struct TEvaluationTreeEntryContainer<T> : IUStruct where T : struct
     {
         /** List of allocated entries for each allocated entry. Should only ever grow, never shrink. Shrinking would cause previously established handles to become invalid. */
         public readonly FEntry[] Entries;

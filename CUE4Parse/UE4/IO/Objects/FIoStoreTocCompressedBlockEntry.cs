@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.IO.Objects
             unsafe
             {
                 var data = stackalloc byte[5 + 3 + 3 + 1];
-                Ar.Read(data, 5 + 3 + 3 + 1);
+                Ar.Serialize(data, 5 + 3 + 3 + 1);
                 Offset = (long) (*(ulong*) data & OffsetMask);
                 CompressedSize = (*((uint*) data + 1) >> SizeShift) & SizeMask;
                 UncompressedSize = *((uint*) data + 2) & SizeMask;

@@ -66,7 +66,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override unsafe void Read(byte* ptr, int length)
+        public override unsafe void Serialize(byte* ptr, int length)
         {
             Unsafe.CopyBlockUnaligned(ref ptr[0], ref _ptr[Position], (uint) length);
             Position += length;

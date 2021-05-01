@@ -78,20 +78,20 @@ namespace CUE4Parse_Conversion.Sounds
             if (!shouldDecompress) return input;
             if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase))
             {
-                audioFormat = "WAV";
                 using var archive = new FByteArchive("WhoDoesntLoveCats", input);
                 switch (ADPCMDecoder.GetAudioFormat(archive))
                 {
                     case EAudioFormat.WAVE_FORMAT_PCM:
+                        audioFormat = "WAV";
                         return input;
                     case EAudioFormat.WAVE_FORMAT_ADPCM:
-                        return null;
+                        return input;
                 }
             }
             else if (audioFormat.Equals("OPUS", StringComparison.OrdinalIgnoreCase))
-                return null;
+                return input;
             else if (audioFormat.Equals("WEM", StringComparison.OrdinalIgnoreCase))
-                return null;
+                return input;
             else if (audioFormat.IndexOf("OGG", StringComparison.OrdinalIgnoreCase) > -1)
             {
                 audioFormat = "OGG";
