@@ -117,6 +117,20 @@ namespace CUE4Parse.FileProvider
                     ELanguage.TraditionalChinese => "zh-Hant",
                     _ => "en"
                 },
+                "worldexplorers" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Chinese => "zh-Hans",
+                    _ => "en"
+                },
                 _ => "en"
             };
         }
