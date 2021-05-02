@@ -11,10 +11,10 @@ namespace CUE4Parse.UE4.Readers
         public UE4Version Ver;
         public EGame Game;
         public abstract string Name { get; }
-        public abstract T Read<T>();
-        public abstract unsafe void Read(byte* ptr, int length);
+        public abstract T Read<T>() where T : struct;
+        public abstract unsafe void Serialize(byte* ptr, int length);
         public abstract byte[] ReadBytes(int length);
-        public abstract T[] ReadArray<T>(int length);
+        public abstract T[] ReadArray<T>(int length) where T : struct;
 
         protected FArchive(EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T[] ReadArray<T>()
+        public T[] ReadArray<T>() where T : struct
         {
             var length = Read<int>();
 
@@ -94,7 +94,18 @@ namespace CUE4Parse.UE4.Readers
                 _ => throw new ParserException(this, $"Invalid bool value ({i})")
             };
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual unsafe void SerializeBits(void* v, long lengthBits)
+        {
+            Serialize((byte*) v, (int) ((lengthBits + 7) / 8));
 
+            if (/*IsLoading &&*/ (lengthBits % 8) != 0)
+            {
+                ((byte*)v)[lengthBits / 8] &= (byte) ((1 << (int)(lengthBits & 7)) - 1);
+            }
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read7BitEncodedInt()
         {
@@ -122,7 +133,7 @@ namespace CUE4Parse.UE4.Readers
             unsafe
             {
                 var ansiBytes = stackalloc byte[length];
-                Read(ansiBytes, length);
+                Serialize(ansiBytes, length);
                 return new string((sbyte*) ansiBytes, 0, length);
             }
         }
@@ -148,7 +159,7 @@ namespace CUE4Parse.UE4.Readers
                     length = -length;
                     var ucs2Length = length * sizeof(ushort);
                     var ucs2Bytes = stackalloc byte[ucs2Length];
-                    Read(ucs2Bytes, ucs2Length);
+                    Serialize(ucs2Bytes, ucs2Length);
 #if !NO_STRING_NULL_TERMINATION_VALIDATION
                     if (ucs2Bytes[ucs2Length - 1] != 0 || ucs2Bytes[ucs2Length - 2] != 0)
                     {
@@ -162,7 +173,7 @@ namespace CUE4Parse.UE4.Readers
             unsafe
             {
                 var ansiBytes = stackalloc byte[length];
-                Read(ansiBytes, length);
+                Serialize(ansiBytes, length);
 #if !NO_STRING_NULL_TERMINATION_VALIDATION
                 if (ansiBytes[length - 1] != 0)
                 {

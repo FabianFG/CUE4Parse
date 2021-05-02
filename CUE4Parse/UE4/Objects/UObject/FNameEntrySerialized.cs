@@ -79,7 +79,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     var utf16Length = length * 2;
                     var nameData = stackalloc byte[utf16Length];
-                    Ar.Read(nameData, utf16Length);
+                    Ar.Serialize(nameData, utf16Length);
                     return new FNameEntrySerialized(new string((char*) nameData, 0, length));
                 }
             }
@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             unsafe
             {
                 var nameData = stackalloc byte[length];
-                Ar.Read(nameData, length);
+                Ar.Serialize(nameData, length);
                 return new FNameEntrySerialized(new string((sbyte*) nameData, 0, length));
             }
         }

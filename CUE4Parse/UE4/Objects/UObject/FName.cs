@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.IO.Objects;
 using Newtonsoft.Json;
 
@@ -16,11 +17,11 @@ namespace CUE4Parse.UE4.Objects.UObject
         public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
         public bool IsNone => Text == null || Text == "None";
 
-        public FName(string name)
+        public FName(string name, int index = 0, int number = 0)
         {
             Name = new FNameEntrySerialized(name);
-            Index = 0;
-            Number = 0;
+            Index = index;
+            Number = number;
         }
 
         public FName(FNameEntrySerialized name, int index, int number)
@@ -36,6 +37,42 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex)
         {
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(FName a, FName b)
+        {
+            return a.Index == b.Index && a.Number == b.Number;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(FName a, FName b)
+        {
+            return !(a == b);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(FName a, int b)
+        {
+            return a.Index == b;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(FName a, int b)
+        {
+            return a.Index != b;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(FName a, uint b)
+        {
+            return a.Index == b;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(FName a, uint b)
+        {
+            return a.Index != b;
         }
 
         public override string ToString()

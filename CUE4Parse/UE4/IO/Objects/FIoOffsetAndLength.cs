@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.IO.Objects
             unsafe
             {
                 var offsetAndLength = stackalloc byte[10];
-                Ar.Read(offsetAndLength, 10);
+                Ar.Serialize(offsetAndLength, 10);
                 Offset = offsetAndLength[4]
                          | ((ulong) offsetAndLength[3] << 8)
                          | ((ulong) offsetAndLength[2] << 16)

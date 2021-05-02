@@ -96,7 +96,7 @@ namespace CUE4Parse.FileProvider
 
         private string GetLanguageCode(ELanguage language)
         {
-            return GameName.ToLower() switch
+            return GameName.ToLowerInvariant() switch
             {
                 "fortnitegame" => language switch
                 {

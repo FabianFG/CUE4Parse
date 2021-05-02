@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.IO.Objects
             {
                 var bufferSize = (int) (Header.CompressionMethodNameLength * Header.CompressionMethodNameCount);
                 var buffer = stackalloc byte[bufferSize];
-                archive.Read(buffer, bufferSize);
+                archive.Serialize(buffer, bufferSize);
                 CompressionMethods = new CompressionMethod[Header.CompressionMethodNameCount + 1];
                 CompressionMethods[0] = CompressionMethod.None;
                 for (var i = 0; i < Header.CompressionMethodNameCount; i++)

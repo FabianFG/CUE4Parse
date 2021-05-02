@@ -234,7 +234,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public OrderedFormat(FAssetArchive Ar)
             {
                 SourceFmt = new FText(Ar);
-                Arguments = Ar.ReadArray<FFormatArgumentValue>();
+                Arguments = Ar.ReadArray(() => new FFormatArgumentValue(Ar));
             }
         }
 
@@ -247,7 +247,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public ArgumentFormat(FAssetArchive Ar)
             {
                 SourceFmt = new FText(Ar);
-                Arguments = Ar.ReadArray<FFormatArgumentData>();
+                Arguments = Ar.ReadArray(() => new FFormatArgumentData(Ar));
             }
         }
 
