@@ -24,9 +24,9 @@ namespace CUE4Parse.UE4.Versions
         SpanishMexico,
         [Description("العربية")]
         Arabic,
-        [Description("日本語")]
+        [Description("日本語 (Japanese)")]
         Japanese,
-        [Description("한국어")]
+        [Description("한국어 (Korean)")]
         Korean,
         [Description("Polski")]
         Polish,
@@ -38,9 +38,9 @@ namespace CUE4Parse.UE4.Versions
         Russian,
         [Description("Türkçe")]
         Turkish,
-        [Description("中文")]
+        [Description("中文 (Chinese)")]
         Chinese,
-        [Description("中文(台灣)")]
+        [Description("中文(台灣) - (Traditional Chinese)")]
         TraditionalChinese,
         [Description("Svenska")]
         Swedish,
