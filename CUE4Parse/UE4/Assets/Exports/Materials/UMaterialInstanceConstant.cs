@@ -162,13 +162,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             {
                 foreach (var value in TextureParameterValues)
                 {
-                    var tex = value.ParameterValue;
-                    if (tex != null && !outTextures.Contains(tex))
-                        outTextures.Add(tex);
+                    if (value.ParameterValue != null && !outTextures.Contains(value.ParameterValue))
+                        outTextures.Add(value.ParameterValue);
                 }
 
                 if (Parent != null && Parent != this)
-                    Parent.AppendReferencedTextures(outTextures, false);
+                    Parent.AppendReferencedTextures(outTextures, onlyRendered);
             }
         }
     }

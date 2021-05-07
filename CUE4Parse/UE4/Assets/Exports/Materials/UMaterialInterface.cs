@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             MobileBaseTexture = GetOrDefault<UTexture>(nameof(MobileBaseTexture));
             MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
             bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
-            MobileSpecularPower = GetOrDefault<float>(nameof(MobileNormalTexture), 16.0f);
+            MobileSpecularPower = GetOrDefault(nameof(MobileNormalTexture), 16.0f);
             MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
             MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
             MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));

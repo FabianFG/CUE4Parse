@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Textures;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -13,9 +14,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
         public bool TwoSided;
         public bool bDisableDepthTest;
         public bool bIsMasked;
+        public FStructFallback CachedExpressionData;
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
-        public List<UTexture> ReferencedTextures = new List<UTexture>();
+        public List<UTexture> ReferencedTextures = new ();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -23,8 +25,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             TwoSided = GetOrDefault<bool>(nameof(TwoSided));
             bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
-            var referencedTextures = GetOrDefault<UTexture[]>(nameof(ReferencedTextures));
-            if (referencedTextures != null)
+            CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
+            if (CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
+                ReferencedTextures.AddRange(referencedTextures);
+            if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
                 ReferencedTextures.AddRange(referencedTextures);
             BlendMode = GetOrDefault<EBlendMode>(nameof(EBlendMode));
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
@@ -111,6 +115,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             for (var i = 0; i < ReferencedTextures.Count; i++)
             {
                 var tex = ReferencedTextures[i];
+                if (tex == null) continue;
+                
                 var name = tex.Name;
                 if (name.Contains("noise", StringComparison.CurrentCultureIgnoreCase)) continue;
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
@@ -156,8 +162,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             }
             
             // do not allow normal map became a diffuse
-            if ((parameters.Diffuse == parameters.Normal && diffWeight < normWeight) ||
-                (parameters.Diffuse != null && parameters.Diffuse.IsTextureCube))
+            if (parameters.Diffuse == parameters.Normal && diffWeight < normWeight ||
+                parameters.Diffuse != null && parameters.Diffuse.IsTextureCube)
             {
                 parameters.Diffuse = null;
             }
@@ -173,6 +179,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Materials
             {
                 foreach (var texture in ReferencedTextures.Where(texture => !outTextures.Contains(texture)))
                 {
+                    if (texture == null) continue;
                     outTextures.Add(texture);
                 }
             }
