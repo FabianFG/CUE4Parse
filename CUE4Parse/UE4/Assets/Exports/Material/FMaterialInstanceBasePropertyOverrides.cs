@@ -1,7 +1,7 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 
-namespace CUE4Parse.UE4.Assets.Exports.Materials
+namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     [StructFallback]
     public class FMaterialInstanceBasePropertyOverrides

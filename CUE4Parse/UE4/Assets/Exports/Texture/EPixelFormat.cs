@@ -1,4 +1,4 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Textures
+﻿namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
     public enum EPixelFormat : byte
     {

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports.Textures;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.Utils;
 
-namespace CUE4Parse.UE4.Assets.Exports.Materials
+namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class UMaterialInstanceConstant : UMaterialInstance
     {

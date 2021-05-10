@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CUE4Parse.UE4.Assets.Exports.Materials;
-using CUE4Parse.UE4.Assets.Exports.Textures;
+using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures;
 using SkiaSharp;

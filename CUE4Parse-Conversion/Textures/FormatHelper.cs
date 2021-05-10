@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Textures;
+﻿using CUE4Parse.UE4.Assets.Exports.Texture;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 

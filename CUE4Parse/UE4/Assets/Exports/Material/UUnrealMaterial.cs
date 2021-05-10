@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CUE4Parse.UE4.Assets.Exports.Materials
+namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public abstract class UUnrealMaterial : UObject
     {

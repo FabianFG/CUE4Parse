@@ -1,8 +1,8 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Materials;
+﻿using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 
-namespace CUE4Parse.UE4.Assets.Exports.Textures
+namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
     public abstract class UTexture : UUnrealMaterial
     {

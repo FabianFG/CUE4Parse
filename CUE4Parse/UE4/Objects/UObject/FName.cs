@@ -5,6 +5,12 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    public enum FNameComparisonMethod : byte
+    {
+        Index,
+        Text
+    }
+    
     [JsonConverter(typeof(FNameConverter))]
     public readonly struct FName
     {
@@ -16,33 +22,42 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
         public bool IsNone => Text == null || Text == "None";
-
-        public FName(string name, int index = 0, int number = 0)
+        
+        public readonly FNameComparisonMethod ComparisonMethod;
+        
+        public FName(string name, int index = 0, int number = 0, FNameComparisonMethod compare = FNameComparisonMethod.Text)
         {
             Name = new FNameEntrySerialized(name);
             Index = index;
             Number = number;
+            ComparisonMethod = compare;
         }
 
-        public FName(FNameEntrySerialized name, int index, int number)
+        public FName(FNameEntrySerialized name, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index)
         {
             Name = name;
             Index = index;
             Number = number;
+            ComparisonMethod = compare;
         }
 
-        public FName(FNameEntrySerialized[] nameMap, int index, int number) : this(nameMap[index], index, number)
+        public FName(FNameEntrySerialized[] nameMap, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap[index], index, number, compare)
         {
         }
 
-        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex)
+        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare)
         {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FName a, FName b)
         {
-            return a.Index == b.Index && a.Number == b.Number;
+            return a.ComparisonMethod switch
+            {
+                FNameComparisonMethod.Index => a.Index == b.Index && a.Number == b.Number,
+                FNameComparisonMethod.Text => a.Text == b.Text,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

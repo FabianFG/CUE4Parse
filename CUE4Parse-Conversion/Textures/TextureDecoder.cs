@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Textures;
+﻿using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
@@ -11,9 +11,9 @@ namespace CUE4Parse_Conversion.Textures
     {
         public static SKImage? Decode(this UTexture2D texture)
         {
-            if (!texture.IsVirtual && texture.GetFirstMip() is FTexture2DMipMap mip)
+            if (!texture.IsVirtual && texture.GetFirstMip() is { } mip)
             {
-                DecodeTexture(mip, texture.Format, out byte[] data, out SKColorType colorType);
+                DecodeTexture(mip, texture.Format, out byte[] data, out var colorType);
                 using var bitmap = new SKBitmap(new SKImageInfo(mip.SizeX, mip.SizeY, colorType, SKAlphaType.Unpremul));
                 unsafe
                 {

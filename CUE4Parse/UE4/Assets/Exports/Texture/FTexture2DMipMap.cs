@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.Textures
+namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
     [JsonConverter(typeof(FTexture2DMipMapConverter))]
     public class FTexture2DMipMap

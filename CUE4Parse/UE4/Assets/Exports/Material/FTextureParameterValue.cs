@@ -1,25 +1,25 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Materials
+namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     [StructFallback]
-    public class FVectorParameterValue
+    public class FTextureParameterValue
     {
         public string Name => ParameterName?.Text ?? ParameterInfo.Name.Text;
         public readonly FName? ParameterName;
-        public readonly FLinearColor? ParameterValue;
+        public readonly UTexture? ParameterValue;
         public readonly FMaterialParameterInfo ParameterInfo;
 
-        public FVectorParameterValue(FStructFallback fallback)
+        public FTextureParameterValue(FStructFallback fallback)
         {
             ParameterName = fallback.GetOrDefault<FName>(nameof(ParameterName));
-            ParameterValue = fallback.GetOrDefault<FLinearColor>(nameof(ParameterValue));
+            ParameterValue = fallback.GetOrDefault<UTexture>(nameof(ParameterValue));
             ParameterInfo = fallback.GetOrDefault<FMaterialParameterInfo>(nameof(ParameterInfo));
         }
-
+        
         public override string ToString() => $"{Name}: {ParameterValue}";
     }
 }

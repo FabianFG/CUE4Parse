@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse.UE4.Assets.Exports.Textures;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
-namespace CUE4Parse.UE4.Assets.Exports.Materials
+namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class UMaterial : UMaterialInterface
     {
