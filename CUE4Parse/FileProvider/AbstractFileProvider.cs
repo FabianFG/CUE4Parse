@@ -188,8 +188,8 @@ namespace CUE4Parse.FileProvider
                     
                     switch (p)
                     {
-                        case "Content":
                         case "Config":
+                        case "Content":
                         case "Plugins":
                         {
                             var ret = string.Concat(gameName, '/', path.SubstringAfter("/", comparisonType));
@@ -207,29 +207,30 @@ namespace CUE4Parse.FileProvider
                     var ret = string.Concat(GameName, "/Plugins/RegionCN/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
+                case "Melt":
                 case "Argon":
                 case "Goose":
-                case "Hydrogen":
-                case "Melt":
-                case "Nickel":
-                case "Nitrogen":
-                case "Phosphorus":
-                case "PhosphorusWipeout":
-                case "Rebirth":
                 case "Score":
-                case "Vendetta":
+                case "Nickel":
+                case "Rebirth":
                 case "Builder":
-                case "Bodyguard":
-                case "LeadAlloy":
+                case "Hydrogen":
+                case "Nitrogen":
+                case "Vendetta":
                 case "Daybreak":
                 case "Titanium":
+                case "Bodyguard":
+                case "LeadAlloy":
+                case "Phosphorus":
+                case "ArsenicCore":
+                case "PhosphorusWipeout":
                 {
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
-                case "SrirachaRanchHoagie":
                 case "SrirachaRanch":
                 case "SrirachaRanchValet":
+                case "SrirachaRanchHoagie":
                 {
                     if (trigger.Equals("SrirachaRanch", comparisonType)) trigger = string.Concat(trigger, "Core");
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/SrirachaRanch/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
