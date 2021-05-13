@@ -13,9 +13,9 @@ namespace CUE4Parse_Fortnite.Enums
         [Description("Unattainable")]
         Unattainable = 7,
         
-        [Description("Transcendent")]
+        [Description("Exotic")]
         Exotic = 6,
-        [Description("Transcendent")]
+        [Description("Exotic")]
         Transcendent = 6,
 
         [Description("Mythic")]
