@@ -11,10 +11,10 @@ namespace CUE4Parse_Conversion.Materials
 {
     public class MaterialExporter
     {
-        private string _internalFilePath;
-        private string _fileData;
-        private IDictionary<string, SKImage?> _textures;
-        private MaterialExporter? _parentData;
+        private readonly string _internalFilePath;
+        private readonly string _fileData;
+        private readonly IDictionary<string, SKImage?> _textures;
+        private readonly MaterialExporter? _parentData;
 
         public MaterialExporter()
         {
@@ -75,12 +75,12 @@ namespace CUE4Parse_Conversion.Materials
                 _parentData = new MaterialExporter(material.Parent);
         }
 
-        public bool TryWriteTo(string baseDirectory, out string fileName)
+        public bool TryWriteTo(string matDirectory, string texDirectory, out string fileName)
         {
             fileName = string.Empty;
             if (string.IsNullOrEmpty(_fileData)) return false;
 
-            var filePath = FixAndCreatePath(baseDirectory, _internalFilePath, "mat");
+            var filePath = FixAndCreatePath(matDirectory, _internalFilePath, "mat");
             File.WriteAllText(filePath, _fileData);
             fileName = Path.GetFileName(filePath);
 
@@ -88,13 +88,13 @@ namespace CUE4Parse_Conversion.Materials
             {
                 if (kvp.Value == null) continue;
                 
-                var texturePath = FixAndCreatePath(baseDirectory, kvp.Key, "png");
+                var texturePath = FixAndCreatePath(texDirectory, kvp.Key, "png");
                 using var stream = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                 kvp.Value.Encode().AsStream().CopyTo(stream);
             }
 
             if (_parentData != null)
-                _parentData.TryWriteTo(baseDirectory, out _);
+                _parentData.TryWriteTo(matDirectory, texDirectory, out _);
 
             return true;
         }
