@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.Assets
 
             foreach (var it in ExportMap)
             {
-                if (!(ResolvePackageIndex(it.ClassIndex)?.Object?.Value is UStruct uStruct)) continue;
+                if (ResolvePackageIndex(it.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
                 var export = ConstructObject(uStruct);
                 export.Name = it.ObjectName.Text;
                 export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
