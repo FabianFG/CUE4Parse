@@ -71,8 +71,8 @@ namespace CUE4Parse.UE4.Assets
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UObject>(() =>
                 {
-                    var validPos = uexpAr.Position + it.SerialSize;
                     uexpAr.SeekAbsolute(it.RealSerialOffset, SeekOrigin.Begin);
+                    var validPos = uexpAr.Position + it.SerialSize;
                     try
                     {
                         export.Deserialize(uexpAr, validPos);

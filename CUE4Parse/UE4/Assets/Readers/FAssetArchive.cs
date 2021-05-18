@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Readers
 {
@@ -37,6 +39,46 @@ namespace CUE4Parse.UE4.Assets.Readers
             }            
 #endif
             return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
+        }
+
+        // TODO not really optimal, there should be TryReadObject functions etc
+        public Lazy<T?> ReadObject<T>() where T : UObject
+        {
+            var index = new FPackageIndex(this);
+            var resolved = index.ResolvedObject;
+            return new Lazy<T?>(() =>
+            {
+                if (resolved == null)
+                {
+                    if (index.IsNull)
+                    {
+                        // Silent this as it is expected to not have an object
+                        return null;
+                    }
+                    Log.Warning("Failed to resolve index {Index}", index);
+                    return null;
+                }
+
+                if (Owner.Provider == null)
+                {
+                    Log.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
+                    return null;
+                }
+
+                if (!resolved.TryLoad(Owner.Provider, out var obj))
+                {
+                    Log.Warning("Failed to load object {Obj}", resolved.Name);
+                    return null;
+                }
+                
+                if (obj is T cast)
+                {
+                    return cast;
+                }
+                Log.Warning("Object has unexpected type {ObjType}, expected type {Type}", obj.GetType().Name, typeof(T).Name);
+
+                return null;
+            });
         }
 
         public bool TryGetPayload(PayloadType type, out FAssetArchive? ar)
