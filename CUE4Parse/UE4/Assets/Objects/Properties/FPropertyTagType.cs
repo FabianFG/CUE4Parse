@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -82,40 +83,45 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             var tagType = propertyType switch
             {
+                "ArrayProperty" => new ArrayProperty(Ar, tagData, type),
+                "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
+                "BoolProperty" => new BoolProperty(Ar, tagData, type),
                 "ByteProperty" => tagData?.EnumName != null
                     ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)
                     : new ByteProperty(Ar, type),
-                "BoolProperty" => new BoolProperty(Ar, tagData, type),
-                "IntProperty" => new IntProperty(Ar, type),
-                "FloatProperty" => new FloatProperty(Ar, type),
-                "ObjectProperty" => new ObjectProperty(Ar, type),
-                "NameProperty" => new NameProperty(Ar, type),
+                "ClassProperty" => new ClassProperty(Ar, type),
                 "DelegateProperty" => new DelegateProperty(Ar, type),
                 "DoubleProperty" => new DoubleProperty(Ar, type),
-                "StrProperty" => new StrProperty(Ar, type),
-                "TextProperty" => new TextProperty(Ar, type),
-                "InterfaceProperty" => new InterfaceProperty(Ar, type),
-                "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
-                "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
-                "UInt64Property" => new UInt64Property(Ar, type),
-                "UInt32Property" => new UInt32Property(Ar, type),
-                "UInt16Property" => new UInt16Property(Ar, type),
-                "Int64Property" => new Int64Property(Ar, type),
-                "Int16Property" => new Int16Property(Ar, type),
-                "Int8Property" => new Int8Property(Ar, type),
                 "EnumProperty" => new EnumProperty(Ar, tagData, type),
-                "ArrayProperty" => new ArrayProperty(Ar, tagData, type),
-                "SetProperty" => new SetProperty(Ar, tagData, type),
-                "StructProperty" => new StructProperty(Ar, tagData, type),
-                "MapProperty" => new MapProperty(Ar, tagData, type),
                 "FieldPathProperty" => new FieldPathProperty(Ar, type),
+                "FloatProperty" => new FloatProperty(Ar, type),
+                "Int16Property" => new Int16Property(Ar, type),
+                "Int64Property" => new Int64Property(Ar, type),
+                "Int8Property" => new Int8Property(Ar, type),
+                "IntProperty" => new IntProperty(Ar, type),
+                "InterfaceProperty" => new InterfaceProperty(Ar, type),
+                "LazyObjectProperty" => new LazyObjectProperty(Ar, type),
+                "MapProperty" => new MapProperty(Ar, tagData, type),
+                "MulticastDelegateProperty" => new MulticastDelegateProperty(Ar, type),
+                "NameProperty" => new NameProperty(Ar, type),
+                "ObjectProperty" => new ObjectProperty(Ar, type),
+                "SetProperty" => new SetProperty(Ar, tagData, type),
+                "SoftClassProperty" => new SoftObjectProperty(Ar, type),
+                "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
+                "StrProperty" => new StrProperty(Ar, type),
+                "StructProperty" => new StructProperty(Ar, tagData, type),
+                "TextProperty" => new TextProperty(Ar, type),
+                "UInt16Property" => new UInt16Property(Ar, type),
+                "UInt32Property" => new UInt32Property(Ar, type),
+                "UInt64Property" => new UInt64Property(Ar, type),
+                "WeakObjectProperty" => new WeakObjectProperty(Ar, type),
                 _ => null
             };
 #if DEBUG
             if (tagType == null)
             {
-                Console.WriteLine($"Couldn't read property type {propertyType} at {Ar.Position}");  
-            }      
+                Log.Debug("Couldn't read property type {0} at {1}", propertyType, Ar.Position);  
+            }
 #endif
             return tagType;
         }

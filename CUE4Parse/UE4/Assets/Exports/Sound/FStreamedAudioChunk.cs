@@ -9,9 +9,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
     [JsonConverter(typeof(FStreamedAudioChunkConverter))]
     public class FStreamedAudioChunk
     {
-        public int DataSize;
-        public int AudioDataSize;
-        public FByteBulkData BulkData;
+        public readonly int DataSize;
+        public readonly int AudioDataSize;
+        public readonly FByteBulkData BulkData;
 
         public FStreamedAudioChunk(FAssetArchive Ar)
         {
@@ -41,6 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             writer.WritePropertyName("AudioDataSize");
             writer.WriteValue(value.AudioDataSize);
             
+            writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.BulkData);
             
             writer.WriteEndObject();

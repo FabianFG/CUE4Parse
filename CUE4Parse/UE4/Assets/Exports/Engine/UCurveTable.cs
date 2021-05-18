@@ -10,11 +10,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
     [JsonConverter(typeof(UCurveTableConverter))]
     public class UCurveTable : UObject
     {
-        public Dictionary<FName, UObject> RowMap { get; private set; } // UObject is actually FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
+        public Dictionary<FName, FStructFallback> RowMap { get; private set; } // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
         public ECurveTableMode CurveTableMode { get; private set; }
-
-        public UCurveTable() { }
-        public UCurveTable(FObjectExport exportObject) : base(exportObject) { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -22,20 +19,35 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
 
             var numRows = Ar.Read<int>();
             CurveTableMode = Ar.Read<ECurveTableMode>();
-            RowMap = new Dictionary<FName, UObject>(numRows);
+            RowMap = new Dictionary<FName, FStructFallback>(numRows);
             for(var i = 0; i < numRows; i++)
             {
                 var rowName = Ar.ReadFName();
-                string exportType = CurveTableMode switch
+                string rowStruct = CurveTableMode switch
                 {
                     ECurveTableMode.SimpleCurves => "SimpleCurve",
                     ECurveTableMode.RichCurves => "RichCurve",
                     _ => ""
                 };
-                UObject rowValue = new UObject(new List<FPropertyTag>(), null, exportType);
-                rowValue.Deserialize(Ar, -1);
-                RowMap[rowName] = rowValue;
+                RowMap[rowName] = new FStructFallback(Ar, rowStruct);
             }
+        }
+    }
+    
+    public static class UCurveTableUtility
+    {
+        public static bool TryGetCurveTableRow(this UCurveTable curveTable, string rowKey, StringComparison comparisonType, out FStructFallback rowValue)
+        {
+            foreach (var kvp in curveTable.RowMap)
+            {
+                if (kvp.Key.IsNone || !kvp.Key.Text.Equals(rowKey, comparisonType)) continue;
+
+                rowValue = kvp.Value;
+                return true;
+            }
+            
+            rowValue = default;
+            return false;
         }
     }
     

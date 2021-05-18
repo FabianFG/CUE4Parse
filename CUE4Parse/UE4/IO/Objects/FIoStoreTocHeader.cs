@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    
     public enum EIoStoreTocVersion : byte
     {
         Invalid = 0,
@@ -15,7 +14,7 @@ namespace CUE4Parse.UE4.IO.Objects
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     }
-    
+
     public enum EIoContainerFlags : byte
     {
         None,
@@ -24,13 +23,13 @@ namespace CUE4Parse.UE4.IO.Objects
         Signed		= (1 << 2),
         Indexed		= (1 << 3),
     }
-    
+
     public class FIoStoreTocHeader
     {
         public const int SIZE = 144;
         public static byte[] TOC_MAGIC = new byte[]
             {0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D}; // -==--==--==--==-
-        
+
         public readonly byte[] TocMagic;
         public readonly EIoStoreTocVersion Version;
         private readonly byte _reserved0;
@@ -43,14 +42,14 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint CompressionMethodNameLength;
         public readonly uint CompressionBlockSize;
         public readonly uint DirectoryIndexSize;
-        public readonly uint PartitionCount;
+        public uint PartitionCount;
         public readonly FIoContainerId ContainerId;
         public readonly FGuid EncryptionKeyGuid;
         public readonly EIoContainerFlags ContainerFlags;
         private readonly byte _reserved3;
         private readonly ushort _reserved4;
         private readonly uint _reserved5;
-        public readonly ulong PartitionSize;
+        public ulong PartitionSize;
         private readonly ulong[] _reserved6;
 
         public FIoStoreTocHeader(FArchive Ar)

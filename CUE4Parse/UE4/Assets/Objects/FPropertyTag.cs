@@ -34,9 +34,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             catch (ParserException e)
             {
-                Log.Debug(
-                    $"Failed to read FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}), skipping it");
-                Log.Debug(e.ToString());
+                throw new ParserException($"Failed to read FPropertyTagType {TagData?.ToString() ?? PropertyType.Text} {Name.Text}", e);
             }
 
             Size = (int) (Ar.Position - pos);
@@ -68,8 +66,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                     if (finalPos != Ar.Position)
                     {
-                        Log.Debug(
-                            $"FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}) was not read properly, pos {Ar.Position}, calculated pos {finalPos}");
+                        Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
                     }
 #endif
                 }
@@ -78,9 +75,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
                     if (finalPos != Ar.Position)
                     {
-                        Log.Debug(
-                            $"Failed to read FPropertyTagType {Name.Text} ({(TagData != null ? TagData.ToString() : PropertyType.Text)}), skipping it");
-                        Log.Debug(e.ToString());
+                        Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
                     }
 #endif
                 }

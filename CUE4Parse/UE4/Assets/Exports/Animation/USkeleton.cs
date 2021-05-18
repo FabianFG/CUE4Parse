@@ -21,11 +21,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public Dictionary<FName, FSmartNameMapping> NameMappings { get; private set; }
         public FName[] ExistingMarkerNames { get; private set; }
 
-#pragma warning disable 8618
-        public USkeleton() { }
-#pragma warning restore 8618
-        public USkeleton(FObjectExport exportObject) : base(exportObject) { }
-
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);

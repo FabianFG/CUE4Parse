@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -16,7 +17,9 @@ namespace CUE4Parse.UE4.Assets.Objects
             Properties = new List<FPropertyTag>();
         }
 
-        public FStructFallback(FAssetArchive Ar, string? structType)
+        public FStructFallback(FAssetArchive Ar, string? structType) : this(Ar, structType != null ? new UScriptClass(structType) : null) { }
+
+        public FStructFallback(FAssetArchive Ar, UStruct? structType = null)
         {
             if (Ar.HasUnversionedProperties)
             {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Vfs;
@@ -10,6 +11,7 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -24,31 +26,133 @@ namespace CUE4Parse.FileProvider
         public UE4Version Ver { get; set; }
         public EGame Game { get; set; }
         public ITypeMappingsProvider? MappingsContainer { get; set; }
-
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
+        public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; } // fabian? is this reversed?
 
-        protected AbstractFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+        protected AbstractFileProvider(
+            bool isCaseInsensitive = false,
+            EGame game = EGame.GAME_UE4_LATEST,
+            UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
         {
             IsCaseInsensitive = isCaseInsensitive;
             Game = game;
             Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
         }
 
+        private string _gameName;
         public string GameName
         {
             get
             {
-                string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase));
-                return t == null ? string.Empty : t.SubstringBefore('/');
+                if (string.IsNullOrEmpty(_gameName))
+                {
+                    string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                    _gameName = t.SubstringBefore('/');
+                }
+                return _gameName;
             }
+        }
+
+        public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
+        {
+            var regex = new Regex($"^{GameName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            LocalizedResources.Clear();
+
+            var i = 0;
+            foreach (var file in Files.Where(x => regex.IsMatch(x.Key)))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!file.Value.TryCreateReader(out var archive)) continue;
+                
+                var locres = new FTextLocalizationResource(archive);
+                foreach (var entries in locres.Entries)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!LocalizedResources.ContainsKey(entries.Key.Str))
+                        LocalizedResources[entries.Key.Str] = new Dictionary<string, string>();
+
+                    foreach (var keyValue in entries.Value)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        LocalizedResources[entries.Key.Str][keyValue.Key.Str] = keyValue.Value.LocalizedString;
+                        i++;
+                    }
+                }
+            }
+            return i;
+        }
+
+        public string GetLocalizedString(string namespacee, string key, string? defaultValue)
+        {
+            if (LocalizedResources.TryGetValue(namespacee, out var keyValue) &&
+                keyValue.TryGetValue(key, out var localizedResource))
+                return localizedResource;
+            
+            return defaultValue ?? string.Empty;
+        }
+
+        private string GetLanguageCode(ELanguage language)
+        {
+            return GameName.ToLowerInvariant() switch
+            {
+                "fortnitegame" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.SpanishLatin => "es-419",
+                    ELanguage.Arabic => "ar",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.Polish => "pl",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Turkish => "tr",
+                    ELanguage.Chinese => "zh-CN",
+                    ELanguage.TraditionalChinese => "zh-Hant",
+                    _ => "en"
+                },
+                "worldexplorers" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Chinese => "zh-Hans",
+                    _ => "en"
+                },
+                _ => "en"
+            };
         }
 
         public GameFile this[string path] => Files[FixPath(path)];
 
-        public bool TryFindGameFile(string path, out GameFile file) => Files.TryGetValue(FixPath(path), out file);
+        public bool TryFindGameFile(string path, out GameFile file)
+        {
+            var uassetPath = FixPath(path);
+            if (Files.TryGetValue(uassetPath, out file))
+            {
+                return true;
+            }
+
+            var umapPath = uassetPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1];
+            if (Files.TryGetValue(umapPath, out file))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         public string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         public string FixPath(string path, StringComparison comparisonType)
@@ -61,7 +165,7 @@ namespace CUE4Parse.FileProvider
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeLast('/'), "/", lastPart.SubstringBefore('.'));
             if (path[path.Length - 1] != '/' && !lastPart.Contains('.'))
-                path += ".uasset";
+                path += "." + GameFile.Ue4PackageExtensions[0];
 
             var trigger = path.SubstringBefore("/", comparisonType);
             if (trigger.Equals(GameName, comparisonType))
@@ -84,8 +188,8 @@ namespace CUE4Parse.FileProvider
                     
                     switch (p)
                     {
-                        case "Content":
                         case "Config":
+                        case "Content":
                         case "Plugins":
                         {
                             var ret = string.Concat(gameName, '/', path.SubstringAfter("/", comparisonType));
@@ -103,26 +207,30 @@ namespace CUE4Parse.FileProvider
                     var ret = string.Concat(GameName, "/Plugins/RegionCN/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
+                case "Melt":
                 case "Argon":
                 case "Goose":
-                case "Hydrogen":
-                case "Melt":
-                case "Nickel":
-                case "Nitrogen":
-                case "Phosphorus":
-                case "PhosphorusWipeout":
-                case "Rebirth":
                 case "Score":
-                case "Vendetta":
+                case "Nickel":
+                case "Rebirth":
                 case "Builder":
+                case "Hydrogen":
+                case "Nitrogen":
+                case "Vendetta":
+                case "Daybreak":
+                case "Titanium":
                 case "Bodyguard":
+                case "LeadAlloy":
+                case "Phosphorus":
+                case "ArsenicCore":
+                case "PhosphorusWipeout":
                 {
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
-                case "SrirachaRanchHoagie":
                 case "SrirachaRanch":
                 case "SrirachaRanchValet":
+                case "SrirachaRanchHoagie":
                 {
                     if (trigger.Equals("SrirachaRanch", comparisonType)) trigger = string.Concat(trigger, "Core");
                     var ret = string.Concat(GameName, $"/Plugins/GameFeatures/SrirachaRanch/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
@@ -130,7 +238,7 @@ namespace CUE4Parse.FileProvider
                 }
                 default:
                 {
-                    var ret = string.Concat(GameName, $"/Plugins/{(GameName.Equals("FortniteGame", comparisonType) ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(GameName, $"/Plugins/{(GameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
             }
@@ -197,6 +305,9 @@ namespace CUE4Parse.FileProvider
         public IPackage LoadPackage(GameFile file) => LoadPackageAsync(file).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IoPackage LoadPackage(FPackageId id) => (IoPackage) LoadPackage(FilesById[id]);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoadPackage(string path, out IPackage package)
         {
             if (!TryFindGameFile(path, out var file))
@@ -213,6 +324,19 @@ namespace CUE4Parse.FileProvider
         {
             package = TryLoadPackageAsync(file).Result;
             return package != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryLoadPackage(FPackageId id, out IoPackage package)
+        {
+            if (FilesById.TryGetValue(id, out var file) && TryLoadPackage(file, out IPackage loaded))
+            {
+                package = (IoPackage) loaded;
+                return true;
+            }
+
+            package = default;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -234,17 +358,15 @@ namespace CUE4Parse.FileProvider
             
             if (uexp != null)
             {
-                return new Package(uasset, uexp, 
-                    ubulk, uptnl, this, MappingsForThisGame);
+                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
             }
             
             if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
             {
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
-            
-            return new IoPackage(uasset, vfsFileProvider.GlobalData,
-                ubulk, uptnl, this, MappingsForThisGame);
+
+            return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this, MappingsForThisGame);
         }
 
         public async Task<IPackage?> TryLoadPackageAsync(string path)

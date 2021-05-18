@@ -19,7 +19,7 @@ namespace CUE4Parse.FileProvider
         /// The Game that should be used during parsing operations
         /// </summary>
         public EGame Game { get; set; }
-        
+
         /// <summary>
         /// Type Mappings that should be used for unversioned property serialization
         /// Can be null if there is no need for loading such packages
@@ -30,6 +30,19 @@ namespace CUE4Parse.FileProvider
         /// Type Mappings for this specific game (determined by game name)
         /// </summary>
         public TypeMappings? MappingsForThisGame { get; }
+        
+        /// <summary>
+        /// the localized resources (strings) from the game
+        /// </summary>
+        public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; }
+
+        /// <summary>
+        /// return the localized string based on params
+        /// </summary>
+        /// <param name="namespacee">the namespace to search in</param>
+        /// <param name="key">the string key</param>
+        /// <param name="defaultValue">a fallback value in case the localized string doesn't exist</param>
+        public string GetLocalizedString(string namespacee, string key, string defaultValue);
         
         /// <summary>
         /// The files available in this provider in dictionary with their full path as key.
@@ -150,6 +163,13 @@ namespace CUE4Parse.FileProvider
         /// <returns>The parsed package content</returns>
         public IPackage LoadPackage(GameFile file);
         /// <summary>
+        /// Loads and parses an I/O Store Package from the passed package ID. 
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <returns>The parsed package content</returns>
+        public IoPackage LoadPackage(FPackageId id);
+        /// <summary>
         /// Attempts to loads and parse a Package at the passed path. 
         /// </summary>
         /// <param name="path">The package file path</param>
@@ -163,6 +183,13 @@ namespace CUE4Parse.FileProvider
         /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
         /// <returns>true if the package could be parsed; false otherwise</returns>
         public bool TryLoadPackage(GameFile file, out IPackage package);
+        /// <summary>
+        /// Attempts to load and parse an I/O Store Package from the passed package ID. 
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
+        /// <returns>true if the package could be parsed; false otherwise</returns>
+        public bool TryLoadPackage(FPackageId id, out IoPackage package);
         /// <summary>
         /// Asynchronously loads and parses a Package at the passed path. 
         /// Can throw various exceptions

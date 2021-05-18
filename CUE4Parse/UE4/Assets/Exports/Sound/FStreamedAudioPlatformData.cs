@@ -33,14 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             serializer.Serialize(writer, value.AudioFormat);
             
             writer.WritePropertyName("Chunks");
-            writer.WriteStartArray();
-            {
-                foreach (var chunk in value.Chunks)
-                {
-                    serializer.Serialize(writer, chunk);
-                }
-            }
-            writer.WriteEndArray();
+            serializer.Serialize(writer, value.Chunks);
             
             writer.WriteEndObject();
         }

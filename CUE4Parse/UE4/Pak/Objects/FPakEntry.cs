@@ -14,13 +14,13 @@ namespace CUE4Parse.UE4.Pak.Objects
         public override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = new FPakCompressedBlock[0];
         public override bool IsEncrypted { get; }
-        public readonly int CompressionBlockSize;
+        public readonly uint CompressionBlockSize;
 
         public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
         public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar, FPakInfo info) : base(reader)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader)
         {
             Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
@@ -31,38 +31,38 @@ namespace CUE4Parse.UE4.Pak.Objects
             UncompressedSize = Ar.Read<long>();
             Size = UncompressedSize;
 
-            if (info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
+            if (reader.Info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
                 try
                 {
-                    CompressionMethod = info.CompressionMethods[Ar.Read<int>()];
+                    CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
                 }
                 catch
                 {
                     CompressionMethod = CompressionMethod.Unknown;
                 }
             }
-            else if (info.Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && !info.IsSubVersion)
+            else if (reader.Info.Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && !reader.Info.IsSubVersion)
             {
-                CompressionMethod = (CompressionMethod)Ar.Read<byte>();
+                CompressionMethod = reader.Info.CompressionMethods[Ar.Read<byte>()];
             }
             else
             {
-                CompressionMethod = (CompressionMethod) Ar.Read<uint>();
+                CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
             }
 
-            if (info.Version < EPakFileVersion.PakFile_Version_NoTimestamps)
+            if (reader.Info.Version < EPakFileVersion.PakFile_Version_NoTimestamps)
                 Ar.Position += 8; // Timestamp
             Ar.Position += 20; // Hash
-            if (info.Version >= EPakFileVersion.PakFile_Version_CompressionEncryption)
+            if (reader.Info.Version >= EPakFileVersion.PakFile_Version_CompressionEncryption)
             {
                 if (CompressionMethod != CompressionMethod.None)
                     CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
                 IsEncrypted = Ar.ReadFlag();
-                CompressionBlockSize = Ar.Read<int>();
+                CompressionBlockSize = Ar.Read<uint>();
             }
 
-            if (info.Version >= EPakFileVersion.PakFile_Version_RelativeChunkOffsets)
+            if (reader.Info.Version >= EPakFileVersion.PakFile_Version_RelativeChunkOffsets)
             {
                 // Convert relative compressed offsets to absolute
                 for (var i = 0; i < CompressionBlocks.Length; i++)
@@ -86,7 +86,19 @@ namespace CUE4Parse.UE4.Pak.Objects
             uint bitfield = *(uint*) data;
             data += sizeof(uint);
 
-            CompressionMethod = (CompressionMethod) ((bitfield >> 23) & 0x3f);
+            CompressionBlockSize = 0;
+            if ((bitfield & 0x3f) == 0x3f) // flag value to load a field
+            {
+                CompressionBlockSize = *(uint*) data;
+                data += sizeof(uint);
+            }
+            else
+            {
+                // for backwards compatibility with old paks :
+                CompressionBlockSize = (bitfield & 0x3f) << 11;
+            }
+            
+            CompressionMethod = reader.Info.CompressionMethods[(int)((bitfield >> 23) & 0x3f)];
 
             // Offset follows - either 32 or 64 bit value
             if ((bitfield & 0x80000000) != 0)
@@ -147,14 +159,11 @@ namespace CUE4Parse.UE4.Pak.Objects
             
             // Compression information
             CompressionBlocks = new FPakCompressedBlock[blockCount];
-            CompressionBlockSize = 0;
             if (blockCount > 0)
             {
                 // CompressionBlockSize
                 if (UncompressedSize < 65536)
-                    CompressionBlockSize = (int) UncompressedSize;
-                else
-                    CompressionBlockSize = (int) ((bitfield & 0x3f) << 11);
+                    CompressionBlockSize = (uint) UncompressedSize;
                 
                 // CompressionBlocks
                 if (blockCount == 1 && !IsEncrypted)

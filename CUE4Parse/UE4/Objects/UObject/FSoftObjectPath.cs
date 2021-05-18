@@ -146,6 +146,8 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
         {
+            /*var path = value.ToString();
+            writer.WriteValue(path.Length > 0 ? path : "None");*/
             writer.WriteStartObject();
             
             writer.WritePropertyName("AssetPathName");

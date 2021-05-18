@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
@@ -21,58 +22,82 @@ namespace CUE4Parse.UE4.Assets.Exports
     [JsonConverter(typeof(UObjectConverter))]
     public class UObject : UExport, IPropertyHolder
     {
+        public UObject? Outer;
+        public UStruct? Class;
+        public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
-        public bool ReadGuid { get; }
         public FGuid? ObjectGuid { get; private set; }
+        public int /*EObjectFlags*/ Flags;
 
-        public UObject(FObjectExport exportObject, bool readGuid = true) : base(exportObject)
+        // public FObjectExport Export;
+        public override IPackage? Owner
+        {
+            get
+            {
+                var current = Outer;
+                var next = current?.Outer;
+                while (next != null)
+                {
+                    current = next;
+                    next = current.Outer;
+                }
+
+                return current as IPackage;
+            }
+        }
+        public override string ExportType => Class?.Name ?? GetType().Name;
+
+        public UObject(FObjectExport exportObject) : base(exportObject)
         {
             Properties = new List<FPropertyTag>();
-            ReadGuid = readGuid;
         }
 
-        public UObject() : this(new List<FPropertyTag>(), null, "")
+        public UObject() : base("")
         {
-            ExportType = GetType().Name;
-            Name = ExportType;
+            Properties = new List<FPropertyTag>();
         }
 
-        public UObject(List<FPropertyTag> properties, FGuid? objectGuid, string exportType) : base(exportType)
+        public UObject(List<FPropertyTag> properties) : base("")
         {
             Properties = properties;
-            ObjectGuid = objectGuid;
         }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             if (Ar.HasUnversionedProperties)
             {
-                var mappings = Ar.Owner.Mappings;
-                if (mappings == null)
-                    throw new ParserException("Found unversioned properties but package doesn't have any type mappings");
-                Properties = DeserializePropertiesUnversioned(Ar, ExportType);
+                if (Class == null)
+                    throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
+                Properties = DeserializePropertiesUnversioned(Ar, Class);
             }
             else
             {
                 Properties = DeserializePropertiesTagged(Ar);
             }
 
-            if (ReadGuid && Ar.ReadBoolean() && Ar.Position + 20 <= Ar.Length)
+            if ((Flags & 0x00000010) == 0 && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
         }
         
-        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, string type)
+        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, UStruct struc)
         {
             var properties = new List<FPropertyTag>();
             var header = new FUnversionedHeader(Ar);
             if (!header.HasValues)
                 return properties;
-            if (Ar.Owner.Mappings == null || !Ar.Owner.Mappings.Types.TryGetValue(type, out var propMappings))
+            var type = struc.Name;
+            
+            Struct? propMappings = null;
+            if (struc is UScriptClass)
+                Ar.Owner.Mappings?.Types.TryGetValue(type, out propMappings);
+            else
+                propMappings = new SerializedStruct(Ar.Owner.Mappings, struc);
+
+            if (propMappings == null)
             {
-                Log.Warning("Missing prop mappings for type {0} in package {1}", type, Ar.Owner.Name);
-                return properties;
+                throw new ParserException(Ar, "Missing prop mappings for type " + type);
             }
             
             using var it = new FIterator(header);
@@ -89,19 +114,13 @@ namespace CUE4Parse.UE4.Assets.Exports
                             properties.Add(tag);
                         else
                         {
-                            Log.Warning(
-                                "{0}: Failed to serialize property {1} of type {2}. Can't proceed with serialization (Serialized {3} properties until now)",
-                                type, propertyInfo.Name, propertyInfo.MappingType.Type, properties.Count);
-                            return properties;
+                            throw new ParserException(Ar, $"{type}: Failed to serialize property {propertyInfo.MappingType.Type} {propertyInfo.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
                         }
                     }
                     else
                     {
-                        Log.Warning(
-                            "{0}: Unknown property with value {1}. Can't proceed with serialization (Serialized {2} properties until now)",
-                            type, val, properties.Count);
-                        return properties;
-                    }  
+                        throw new ParserException(Ar, $"{type}: Unknown property with value {val}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
+                    }
                 }
                 // The value is serialized as zero meaning we don't have to read any bytes here
                 else
@@ -137,10 +156,10 @@ namespace CUE4Parse.UE4.Assets.Exports
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefault<T>(this, name, defaultValue, comparisonType);
+            PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
-            PropertyUtil.GetOrDefaultLazy<T>(this, name, defaultValue, comparisonType);
+            PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
@@ -186,7 +205,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default, 
             StringComparison comparisonType = StringComparison.Ordinal) =>
-            new Lazy<T>(() => GetOrDefault<T>(holder, name, defaultValue, comparisonType));
+            new(() => GetOrDefault(holder, name, defaultValue, comparisonType));
 
         // Not optimal as well. Can't really compare against null or default. That's why this is a copy of GetOrDefault that throws instead
         public static T Get<T>(IPropertyHolder holder, string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -207,7 +226,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
             StringComparison comparisonType = StringComparison.Ordinal) =>
-            new Lazy<T>(() => Get<T>(holder, name, comparisonType));
+            new(() => Get<T>(holder, name, comparisonType));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetByIndex<T>(IPropertyHolder holder, int index)

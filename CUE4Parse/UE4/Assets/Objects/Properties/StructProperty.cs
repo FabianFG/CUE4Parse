@@ -10,12 +10,12 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public StructProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
         {
-            Value = new UScriptStruct(Ar, tagData?.StructType, type);
+            Value = new UScriptStruct(Ar, tagData?.StructType, tagData?.Struct, type);
         }
 
         public override string ToString() => Value.ToString().SubstringBeforeLast(')') + ", StructProperty)";
     }
-    
+
     public class StructPropertyConverter : JsonConverter<StructProperty>
     {
         public override void WriteJson(JsonWriter writer, StructProperty value, JsonSerializer serializer)

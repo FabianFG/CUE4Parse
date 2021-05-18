@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else
             {
-                Value = tagData?.EnumName == null ? new FName() : Ar.ReadFName();
+                Value = Ar.ReadFName();
             }
         }
 

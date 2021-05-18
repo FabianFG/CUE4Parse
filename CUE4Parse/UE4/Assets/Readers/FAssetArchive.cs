@@ -11,16 +11,14 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
+        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new (); // FYI cloning will clear this dictionary
         private readonly FArchive _baseArchive;
+        
+        public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
         public readonly IPackage Owner;
         public int AbsoluteOffset;
 
-        public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
-
-        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new Dictionary<PayloadType, Lazy<FAssetArchive?>>();
-
-        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0)
-            : base(baseArchive.Game, baseArchive.Ver)
+        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Game, baseArchive.Ver)
         {
             _baseArchive = baseArchive;
             Owner = owner;
@@ -73,6 +71,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             {
                 throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
+            
             _payloads[type] = new Lazy<FAssetArchive?>(() =>
             {
                 var rawAr = payload.Value;

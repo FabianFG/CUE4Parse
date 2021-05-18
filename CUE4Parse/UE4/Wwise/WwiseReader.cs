@@ -20,9 +20,12 @@ namespace CUE4Parse.UE4.Wwise
         public Hierarchy[]? Hierarchy { get; }
         public Dictionary<uint, string>? IdToString { get; }
         public string? Platform { get; }
+        public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
         
         public WwiseReader(FArchive Ar)
         {
+            IdToString = new Dictionary<uint, string>();
+            WwiseEncodedMedias = new Dictionary<string, byte[]>();
             while (Ar.Position < Ar.Length)
             {
                 var sectionIdentifier = Ar.Read<ESectionIdentifier>();
@@ -77,6 +80,7 @@ namespace CUE4Parse.UE4.Wwise
                         {
                             Ar.Position = position + WemIndexes[i].Offset;
                             WemSounds[i] = Ar.ReadBytes(WemIndexes[i].Length);
+                            WwiseEncodedMedias[WemIndexes[i].Id.ToString()] = WemSounds[i];
                         }
                         break;
                     case ESectionIdentifier.HIRC:
@@ -88,7 +92,6 @@ namespace CUE4Parse.UE4.Wwise
                     case ESectionIdentifier.STID:
                         Ar.Position += 4;
                         var count = Ar.Read<int>();
-                        IdToString = new Dictionary<uint, string>(count);
                         for (var i = 0; i < count; i++)
                         {
                             IdToString[Ar.Read<uint>()] = Ar.ReadString();
@@ -117,6 +120,19 @@ namespace CUE4Parse.UE4.Wwise
                     Log.Warning($"Didn't read 0x{sectionIdentifier:X} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                     Ar.Position = shouldBe;
+                }
+            }
+
+            
+            if (Folders != null)
+            {
+                foreach (var folder in Folders)
+                {
+                    foreach (var entry in folder.Entries)
+                    {
+                        if (entry.IsSoundBank || entry.Data == null) continue;
+                        WwiseEncodedMedias[IdToString.TryGetValue(entry.NameHash, out var k) ? k : $"{entry.Path.ToUpper()}_{entry.NameHash}"] = entry.Data;
+                    }
                 }
             }
         }

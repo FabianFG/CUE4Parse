@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -27,15 +26,15 @@ namespace CUE4Parse.FileProvider.Vfs
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
-        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
+        private readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
-        
-        protected readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
+
+        private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
         
         protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
-
+        
         public IoGlobalData? GlobalData { get; private set; }
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST,
@@ -53,6 +52,17 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         public IEnumerable<IAesVfsReader> UnloadedVfsByGuid(FGuid guid) => _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid);
+        public void UnloadAllVfs()
+        {
+            _files = new FileProviderDictionary(IsCaseInsensitive);
+            foreach (var reader in _mountedVfs.Keys)
+            {
+                _keys.TryRemove(reader.EncryptionKeyGuid, out _);
+                _requiredKeys[reader.EncryptionKeyGuid] = null;
+                _mountedVfs.TryRemove(reader, out _);
+                _unloadedVfs[reader] = null;
+            }
+        }
 
         public int Mount() => MountAsync().Result;
         public async Task<int> MountAsync()
@@ -161,13 +171,13 @@ namespace CUE4Parse.FileProvider.Vfs
         public void Dispose()
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
-            foreach (var reader in _mountedVfs.Keys)
-            {
-                _keys.TryRemove(reader.EncryptionKeyGuid, out _);
-                _requiredKeys[reader.EncryptionKeyGuid] = null;
-                _mountedVfs.TryRemove(reader, out _);
-                _unloadedVfs[reader] = null;
-            }
+            foreach (var reader in UnloadedVfs) reader.Dispose();
+            _unloadedVfs.Clear();
+            foreach (var reader in MountedVfs) reader.Dispose();
+            _mountedVfs.Clear();
+            _keys.Clear();
+            _requiredKeys.Clear();
+            GlobalData = null;
         }
     }
 }

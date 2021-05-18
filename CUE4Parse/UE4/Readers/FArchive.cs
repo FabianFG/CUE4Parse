@@ -74,15 +74,28 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBoolean()
         {
-            return Read<int>() != 0;
+            var i = Read<int>();
+            return i switch
+            {
+                0 => false,
+                1 => true,
+                _ => throw new ParserException(this, $"Invalid bool value ({i})")
+            };
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadFlag()
         {
-            return Read<byte>() != 0;
+            var i = Read<byte>();
+            return i switch
+            {
+                0 => false,
+                1 => true,
+                _ => throw new ParserException(this, $"Invalid bool value ({i})")
+            };
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual unsafe void SerializeBits(void* v, long lengthBits)
         {
             Serialize((byte*) v, (int) ((lengthBits + 7) / 8));
@@ -92,7 +105,7 @@ namespace CUE4Parse.UE4.Readers
                 ((byte*)v)[lengthBits / 8] &= (byte) ((1 << (int)(lengthBits & 7)) - 1);
             }
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read7BitEncodedInt()
         {

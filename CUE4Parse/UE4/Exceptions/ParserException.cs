@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Exceptions
         { }
         
         public ParserException(FArchive reader, string? message = null, Exception? innerException = null)
-            : base($"{message} (Archive {reader.Name} Pos {reader.Position} Length {reader.Length})", innerException)
+            : base($"{message}\n{reader.GetType().Name} Info: {reader.Name} Pos {reader.Position} Length {reader.Length}", innerException)
         { }
     }
 }

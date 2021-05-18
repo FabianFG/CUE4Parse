@@ -32,8 +32,6 @@ namespace CUE4Parse.UE4.Objects.UObject
          */
         public FImplementedInterface[] Interfaces;
 
-        public UClass(FObjectExport export) : base(export) { }
-
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);

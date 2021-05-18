@@ -22,9 +22,9 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
         public bool IsNone => Text == null || Text == "None";
-
+        
         public readonly FNameComparisonMethod ComparisonMethod;
-
+        
         public FName(string name, int index = 0, int number = 0, FNameComparisonMethod compare = FNameComparisonMethod.Text)
         {
             Name = new FNameEntrySerialized(name);
@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare)
         {
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FName a, FName b)
         {
@@ -65,25 +65,25 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             return !(a == b);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FName a, int b)
         {
             return a.Index == b;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(FName a, int b)
         {
             return a.Index != b;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FName a, uint b)
         {
             return a.Index == b;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(FName a, uint b)
         {

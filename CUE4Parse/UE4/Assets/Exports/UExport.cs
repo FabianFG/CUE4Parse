@@ -5,10 +5,10 @@ namespace CUE4Parse.UE4.Assets.Exports
 {
     public abstract class UExport
     {
-        public string ExportType { get; protected set; }
+        public virtual string ExportType { get; protected set; }
         public FObjectExport? Export { get; }
-        public string Name { get; protected set; }
-        public IPackage? Owner { get; set; }
+        public string Name { get; set; }
+        public virtual IPackage? Owner { get; set; }
         
         public abstract void Deserialize(FAssetArchive Ar, long validPos);
 

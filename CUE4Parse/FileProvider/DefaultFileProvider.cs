@@ -14,11 +14,11 @@ namespace CUE4Parse.FileProvider
     public class DefaultFileProvider : AbstractVfsFileProvider
     {
         private DirectoryInfo _workingDirectory;
-        private SearchOption _searchOption;
+        private readonly SearchOption _searchOption;
         
         public DefaultFileProvider(string directory, SearchOption searchOption, bool caseSensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) :
-            this(new DirectoryInfo(directory), searchOption, caseSensitive, game, ver) {}
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+            : this(new DirectoryInfo(directory), searchOption, caseSensitive, game, ver) {}
         public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool caseSensitive = false,
             EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
         {

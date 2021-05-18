@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         {
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
-            EncryptedIndex = Ar.ReadFlag();                // PakFile_Version_IndexEncryption
+            EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
             
             // Old FPakInfo fields
             Magic = Ar.Read<uint>();
@@ -172,7 +172,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 var buffer = stackalloc byte[(int) maxOffset];
                 Ar.Serialize(buffer, (int) maxOffset);
                 
-                var reader = new FPointerArchive(Ar.Name, buffer, (long) OffsetsToTry.SizeMax, Ar.Game, Ar.Ver);
+                var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Game, Ar.Ver);
 
                 foreach (var offset in _offsetsToTry)
                 {
