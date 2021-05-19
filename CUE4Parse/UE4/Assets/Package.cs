@@ -82,6 +82,9 @@ namespace CUE4Parse.UE4.Assets
                         else
                             Log.Debug("Successfully read {0} at {1} with size {2}", export.ExportType, it.RealSerialOffset, it.SerialSize);
 #endif
+                        
+                        // TODO right place ???
+                        export.PostLoad();
                     }
                     catch (Exception e)
                     {

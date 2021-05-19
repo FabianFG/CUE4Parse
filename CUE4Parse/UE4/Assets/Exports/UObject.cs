@@ -80,7 +80,36 @@ namespace CUE4Parse.UE4.Assets.Exports
                 ObjectGuid = Ar.Read<FGuid>();
             }
         }
-        
+
+        /** 
+         * Walks up the list of outers until it finds the highest one.
+         *
+         * @return outermost non NULL Outer.
+         */
+        public AbstractUePackage? GetOutermost()
+        {
+            var top = this;
+            for (;;)
+            {
+                var currentOuter = top.Outer;
+                if (currentOuter == null)
+                {
+                    if (top is not AbstractUePackage)
+                    {
+                        Log.Warning("GetOutermost expects an IPackage as outermost object but '{Top}' isn't one", top);
+                    }
+
+                    return top as AbstractUePackage;
+                }
+                top = currentOuter;
+            }
+        }
+
+        public override void PostLoad()
+        {
+            
+        }
+
         internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, UStruct struc)
         {
             var properties = new List<FPropertyTag>();

@@ -125,6 +125,8 @@ namespace CUE4Parse.UE4.Assets
                                 else
                                     Log.Debug("Successfully read {0} at {1} with size {2}", exportType, localExportDataOffset, export.CookedSerialSize);
 #endif
+                                // TODO right place ???
+                                obj.PostLoad();
                             }
                             catch (Exception e)
                             {
