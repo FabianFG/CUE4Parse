@@ -20,7 +20,7 @@ provider.Initialize();
 
 This file provider lets you load packages from their stream and gives you more control over what one you wanna load.
 ```csharp
-var provider = new StreamedFileProvider(gameName, SearchOption.TopDirectoryOnly); // gameName is not useful for most cases
+var provider = new StreamedFileProvider(gameName); // gameName is not useful for most cases
 provider.Initialize(fileName, new []{fileStream}); // foreach file you wanna load
 // the 'fileStream' array must contains both .utoc AND .ucas streams in case you're loading an IO Store Package
 ```
