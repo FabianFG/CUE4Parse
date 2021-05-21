@@ -18,7 +18,7 @@ provider.Initialize();
 <details>
 <summary>StreamedFileProvider</summary>
 
-This file provider lets you load packages from their stream and gives you more control over what one you wanna load.
+This file provider lets you load packages from their stream and gives you more control over what one you want to load.
 ```csharp
 var provider = new StreamedFileProvider(gameName); // gameName is not useful for most cases
 provider.Initialize(fileName, new []{fileStream}); // foreach file you wanna load
@@ -28,7 +28,7 @@ provider.Initialize(fileName, new []{fileStream}); // foreach file you wanna loa
 
 #### Mounting
 
-The next step is mounting files you loaded, you can do so by using the `SubmitKey` method. You have the provide a [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) of one of the packages and its working aes key.
+The next step is mounting files you loaded, you can do so by using the `SubmitKey` method. You must provide a [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) of one of the packages and its working aes key.
 ```csharp
 Provider.SubmitKey(guid, aesKey);
 ```
@@ -64,7 +64,7 @@ var json = JsonConvert.SerializeObject(export, Formatting.Indented);
 
 #### Export
 
-An asset usually has its data split between multiple other assets. In order to grab them all, use `TrySavePackage` who will out `IReadOnlyDictionary<string, byte[]>` for you to loop it.
+An asset usually has its data split between multiple other assets. In order to grab them all, use `TrySavePackage` which will out a `IReadOnlyDictionary<string, byte[]>` for you to loop through.
 ```csharp
 if (Provider.TrySavePackage(fullPath, out var assets))
 {
