@@ -131,6 +131,28 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-Hans",
                     _ => "en"
                 },
+                _ when Game is EGame.GAME_VALORANT => language switch
+                {
+                    ELanguage.English => "en-US",
+                    ELanguage.French => "fr-FR",
+                    ELanguage.German => "de-DE",
+                    ELanguage.Italian => "it-IT",
+                    ELanguage.Spanish => "es-ES",
+                    ELanguage.SpanishLatin => "es-MX",
+                    ELanguage.Arabic => "ar-AE",
+                    ELanguage.Japanese => "ja-JP",
+                    ELanguage.Korean => "ko-KR",
+                    ELanguage.Polish => "pl-PL",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru-RU",
+                    ELanguage.Turkish => "tr-TR",
+                    ELanguage.Chinese => "zh-CN",
+                    ELanguage.TraditionalChinese => "zh-TW",
+                    ELanguage.Indonesian => "id-ID",
+                    ELanguage.Thai => "th-TH",
+                    ELanguage.VietnameseVietnam => "vi-VN",
+                    _ => "en-US"
+                },
                 _ => "en"
             };
         }
