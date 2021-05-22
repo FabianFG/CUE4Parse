@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         private const float SmallNumber = 1e-8f;
         private const float KindaSmallNumber = 1e-4f;
+
+        public static readonly FVector ZeroVector = new(0, 0, 0);
         
         public float X;
         public float Y;
@@ -204,6 +206,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public float SizeSquared() => X * X + Y * Y + Z * Z;
         public double Size2D() => System.Math.Sqrt(X * X + Y * Y);
         public float SizeSquared2D() => X * X + Y * Y;
+
+        public bool ContainsNaN() => !float.IsFinite(X) || !float.IsFinite(Y) || !float.IsFinite(Z);
 
         /// <summary>
         /// Checks whether vector is near to zero within a specified tolerance.

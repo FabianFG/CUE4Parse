@@ -29,6 +29,32 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return new(new FRotationMatrix(this).GetTransposed().TransformFVector(v));
         }
 
+        public FQuat Quaternion()
+        {
+            //PLATFORM_ENABLE_VECTORINTRINSICS
+            const float DEG_TO_RAD = (float) (System.Math.PI / 180.0f);
+            const float DIVIDE_BY_2 = DEG_TO_RAD / 2.0f;
+            float sp, sy, sr;
+            float cp, cy, cr;
+
+            sp = (float) System.Math.Sin(Pitch * DIVIDE_BY_2);
+            cp = (float) System.Math.Cos(Pitch * DIVIDE_BY_2);
+            sy = (float) System.Math.Sin(Yaw * DIVIDE_BY_2);
+            cy = (float) System.Math.Cos(Yaw * DIVIDE_BY_2);
+            sr = (float) System.Math.Sin(Roll * DIVIDE_BY_2);
+            cr = (float) System.Math.Cos(Roll * DIVIDE_BY_2);
+
+            var rotationQuat = new FQuat
+            {
+                X = cr * sp * sy - sr * cp * cy,
+                Y = -cr * sp * cy - sr * cp * sy,
+                Z = cr * cp * sy - sr * sp * cy,
+                W = cr * cp * cy + sr * sp * sy
+            };
+
+            return rotationQuat;
+        }
+
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
     }
 }

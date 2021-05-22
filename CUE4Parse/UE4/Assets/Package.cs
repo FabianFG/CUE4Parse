@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Assets
                 var offset = Summary.BulkDataStartOffset;
                 uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
-
+            
             foreach (var it in ExportMap)
             {
                 if (ResolvePackageIndex(it.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
