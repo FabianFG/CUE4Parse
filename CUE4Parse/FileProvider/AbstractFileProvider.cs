@@ -131,7 +131,7 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-Hans",
                     _ => "en"
                 },
-                _ when Game is EGame.GAME_VALORANT => language switch
+                "shootergame" => language switch
                 {
                     ELanguage.English => "en-US",
                     ELanguage.French => "fr-FR",
