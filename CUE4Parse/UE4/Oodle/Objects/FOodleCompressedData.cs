@@ -1,18 +1,12 @@
-using CUE4Parse.UE4.Readers;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Oodle.Objects
 {
-    public class FOodleCompressedData
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FOodleCompressedData
     {
         public readonly uint Offset;
         public readonly uint CompressedLength;
         public readonly uint DecompressedLength;
-
-        public FOodleCompressedData(FArchive Ar)
-        {
-            Offset = Ar.Read<uint>();
-            CompressedLength = Ar.Read<uint>();
-            DecompressedLength = Ar.Read<uint>();
-        }
     }
 }

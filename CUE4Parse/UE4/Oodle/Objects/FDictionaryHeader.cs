@@ -20,8 +20,8 @@ namespace CUE4Parse.UE4.Oodle.Objects
             DictionaryVersion = Ar.Read<uint>();
             OodleMajorHeaderVersion = Ar.Read<uint>();
             HashTableSize = Ar.Read<int>();
-            DictionaryData = new FOodleCompressedData(Ar);
-            CompressorData = new FOodleCompressedData(Ar);
+            DictionaryData = Ar.Read<FOodleCompressedData>();
+            CompressorData = Ar.Read<FOodleCompressedData>();
         }
     }
     
