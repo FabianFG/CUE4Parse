@@ -1,15 +1,18 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FRotator : IUStruct
+    public struct FRotator : IUStruct
     {
         private const float KindaSmallNumber = 1e-4f;
+        
+        public static readonly FRotator ZeroRotator = new(0, 0, 0);
 
-        public readonly float Pitch;
-        public readonly float Yaw;
-        public readonly float Roll;
+        public float Pitch;
+        public float Yaw;
+        public float Roll;
 
         public FRotator(float f) : this(f, f, f) { }
         public FRotator(float pitch, float yaw, float roll)
@@ -54,6 +57,63 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
             return rotationQuat;
         }
+
+        public void Normalize()
+        {
+            Pitch = NormalizeAxis(Pitch);
+            Yaw = NormalizeAxis(Yaw);
+            Roll = NormalizeAxis(Roll);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FRotator GetNormalized()
+        {
+            var rot = this;
+            rot.Normalize();
+            return rot;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ClampAxis(float angle)
+        {
+            // returns Angle in the range (-360,360)
+            angle %= 360.0f;
+
+            if (angle < 0.0f)
+            {
+                // shift to [0,360) range
+                angle += 360.0f;
+            }
+
+            return angle;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float NormalizeAxis(float angle)
+        {
+            // returns Angle in the range [0,360)
+            angle = ClampAxis(angle);
+
+            if (angle > 180.0f)
+            {
+                // shift to (-180,180]
+                angle -= 360.0f;
+            }
+
+            return angle;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(FRotator a, FRotator b) =>
+            a.Pitch == b.Pitch && a.Yaw == b.Yaw && a.Roll == b.Roll;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(FRotator a, FRotator b) => !(a == b);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(FRotator r, float tolerance = KindaSmallNumber) => System.Math.Abs(NormalizeAxis(Pitch - r.Pitch)) <= tolerance &&
+                                                           System.Math.Abs(NormalizeAxis(Yaw - r.Yaw)) <= tolerance &&
+                                                           System.Math.Abs(NormalizeAxis(Roll - r.Roll)) <= tolerance;
 
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
     }

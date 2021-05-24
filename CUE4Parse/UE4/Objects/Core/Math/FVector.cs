@@ -11,10 +11,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// </summary>
         public const float ThreshVectorNormalized = 0.01f;
 
-        private const float SmallNumber = 1e-8f;
-        private const float KindaSmallNumber = 1e-4f;
+        public const float SmallNumber = 1e-8f;
+        public const float KindaSmallNumber = 1e-4f;
 
         public static readonly FVector ZeroVector = new(0, 0, 0);
+        public static readonly FVector OneVector = new(1, 1, 1);
         
         public float X;
         public float Y;
@@ -85,6 +86,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return this;
         }
 
+        public FVector GetSignVector() => new FVector
+        {
+            //FloatSelect: return Comparand >= 0.f ? ValueGEZero : ValueLTZero;
+            X = X >= 0 ? 1 : -1,
+            Y = Y >= 0 ? 1 : -1,
+            Z = Z >= 0 ? 1 : -1
+        };
+
         public static FVector operator +(FVector a) => a;
         public static FVector operator -(FVector a) => new FVector(-a.X, -a.Y, -a.Z);
         
@@ -153,11 +162,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                         throw new IndexOutOfRangeException();
                 }
             }
-        }
-
-        public readonly bool Equals(FVector other)
-        {
-            return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
         }
 
         public override bool Equals(object? obj)

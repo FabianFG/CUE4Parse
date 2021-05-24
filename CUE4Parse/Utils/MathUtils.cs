@@ -27,6 +27,16 @@ namespace CUE4Parse.Utils
             }
         }
         
+        public static float InvSqrt(this float x)
+        {
+            float xhalf = 0.5f * x;
+            int i = BitConverter.SingleToInt32Bits(x);
+            i = 0x5f3759df - (i >> 1);
+            x = BitConverter.Int32BitsToSingle(i);
+            x = x * (1.5f - xhalf * x * x);
+            return x;
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
     }
