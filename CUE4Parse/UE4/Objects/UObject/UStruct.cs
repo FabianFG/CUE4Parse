@@ -1,4 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -12,8 +14,20 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             SuperStruct = new FPackageIndex(Ar);
-            Children = Ar.ReadArray(() => new FPackageIndex(Ar));
-            DeserializeProperties(Ar);
+            if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveUField_Next)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                Children = Ar.ReadArray(() => new FPackageIndex(Ar));
+                
+            }
+
+            if (FCoreObjectVersion.Get(Ar) >= FCoreObjectVersion.Type.FProperties)
+            {
+                DeserializeProperties(Ar);    
+            }
             var bytecodeBufferSize = Ar.Read<int>();
             var serializedScriptSize = Ar.Read<int>();
             Ar.Position += serializedScriptSize; // should we read the bytecode some day?

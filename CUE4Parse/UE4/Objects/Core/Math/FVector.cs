@@ -133,6 +133,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return new FVector(a.X * rScale, a.Y * rScale, a.Z * rScale);
         }
 
+        public static bool operator ==(FVector a, FVector b) => a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+        public static bool operator !=(FVector a, FVector b) => a.X != b.X || a.Y != b.Y || a.Z != b.Z;
+
         public float this[int i]
         {
             get
