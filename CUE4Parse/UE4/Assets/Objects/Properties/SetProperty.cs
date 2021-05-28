@@ -5,14 +5,14 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(SetPropertyConverter))]
-    public class SetProperty : FPropertyTagType<UScriptArray>
+    public class SetProperty : FPropertyTagType<UScriptSet>
     {
         public SetProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
         {
             Value = type switch
             {
-                ReadType.ZERO => new UScriptArray(tagData?.InnerType ?? "ZeroUnknown"),
-                _ => new UScriptArray(Ar, tagData)
+                ReadType.ZERO => new UScriptSet(tagData?.InnerType ?? "ZeroUnknown"),
+                _ => new UScriptSet(Ar, tagData)
             };
         }
     }

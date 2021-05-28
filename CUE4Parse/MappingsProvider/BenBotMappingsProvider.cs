@@ -9,19 +9,19 @@ namespace CUE4Parse.MappingsProvider
 {
     public class BenBotMappingsProvider : UsmapTypeMappingsProvider
     {
-        public string? SpecificVersion = null;
+        private readonly string? _specificVersion;
         private readonly string _gameName;
         private readonly bool _isWindows64Bit;
 
         public BenBotMappingsProvider(string gameName, string? specificVersion = null)
         {
-            SpecificVersion = specificVersion;
+            _specificVersion = specificVersion;
             _gameName = gameName;
             _isWindows64Bit = Environment.Is64BitOperatingSystem && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             Reload();
         }
         
-        public const string BenMappingsEndpoint = "https://benbotfn.tk/api/v1/mappings";
+        public const string BenMappingsEndpoint = "https://benbot.app/api/v1/mappings";
         
         private readonly HttpClient _client = new HttpClient { Timeout = TimeSpan.FromSeconds(2), DefaultRequestHeaders = { { "User-Agent", "CUE4Parse" } }};
         
@@ -34,8 +34,8 @@ namespace CUE4Parse.MappingsProvider
         {
             try
             {
-                var jsonText = SpecificVersion != null
-                    ? await LoadEndpoint(BenMappingsEndpoint + $"?version={SpecificVersion}")
+                var jsonText = _specificVersion != null
+                    ? await LoadEndpoint(BenMappingsEndpoint + $"?version={_specificVersion}")
                     : await LoadEndpoint(BenMappingsEndpoint);
                 if (jsonText == null)
                 {
