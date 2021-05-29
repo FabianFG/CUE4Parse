@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public List<FPropertyTag> Properties { get; }
     }
-
+    
     [JsonConverter(typeof(UObjectConverter))]
     public class UObject : UExport, IPropertyHolder
     {
@@ -212,6 +212,35 @@ namespace CUE4Parse.UE4.Assets.Exports
             obj = default;
             return false;
         }
+        
+        // Just ignore it for the parser
+        /*-----------------------------------------------------------------------------
+	        Replication.
+        -----------------------------------------------------------------------------*/
+
+        /** Returns properties that are replicated for the lifetime of the actor channel */
+        public virtual void GetLifetimeReplicatedProps(List<FLifetimeProperty> outLifetimeProps)
+        {
+            
+        }
+
+        /** Called right before receiving a bunch */
+        public virtual void PreNetReceive()
+        {
+            
+        }
+
+        /** Called right after receiving a bunch */
+        public virtual void PostNetReceive()
+        {
+            
+        }
+
+        /** Called right before being marked for destruction due to network replication */
+        public virtual void PreDestroyFromReplication()
+        {
+            
+        }
     }
 
     public static class PropertyUtil
@@ -311,4 +340,89 @@ namespace CUE4Parse.UE4.Assets.Exports
             throw new NotImplementedException();
         }
     }
+    
+    // ~Fabian: Please just ignore that, needed it in a different project
+
+    /** FLifetimeProperty
+     *	This class is used to track a property that is marked to be replicated for the lifetime of the actor channel.
+     *  This doesn't mean the property will necessarily always be replicated, it just means:
+     *	"check this property for replication for the life of the actor, and I don't want to think about it anymore"
+     *  A secondary condition can also be used to skip replication based on the condition results
+     */
+    public class FLifetimeProperty
+    {
+        public ushort RepIndex;
+        public ELifetimeCondition Condition;
+        public ELifetimeRepNotifyCondition RepNotifyCondition;
+
+        public FLifetimeProperty()
+        {
+            RepIndex = 0;
+            Condition = ELifetimeCondition.COND_None;
+            RepNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged;
+        }
+
+        public FLifetimeProperty(int repIndex)
+        {
+            RepIndex = (ushort) repIndex;
+            Condition = ELifetimeCondition.COND_None;
+            RepNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged;
+        }
+
+        public FLifetimeProperty(ushort repIndex, ELifetimeCondition condition, ELifetimeRepNotifyCondition repNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged)
+        {
+            RepIndex = repIndex;
+            Condition = condition;
+            RepNotifyCondition = repNotifyCondition;
+        }
+
+        protected bool Equals(FLifetimeProperty other)
+        {
+            return RepIndex == other.RepIndex && Condition == other.Condition && RepNotifyCondition == other.RepNotifyCondition;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((FLifetimeProperty) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(RepIndex, (int) Condition, (int) RepNotifyCondition);
+        }
+
+        public static bool operator ==(FLifetimeProperty a, FLifetimeProperty b) => a.RepIndex == b.RepIndex && a.Condition == b.Condition && a.RepNotifyCondition == b.RepNotifyCondition;
+        public static bool operator !=(FLifetimeProperty a, FLifetimeProperty b) => !(a == b);
+    }
+    
+    /** Secondary condition to check before considering the replication of a lifetime property. */
+    public enum ELifetimeCondition
+    {
+	    COND_None = 0,							// This property has no condition, and will send anytime it changes
+	    COND_InitialOnly = 1,					// This property will only attempt to send on the initial bunch
+	    COND_OwnerOnly = 2,						// This property will only send to the actor's owner
+	    COND_SkipOwner = 3,						// This property send to every connection EXCEPT the owner
+	    COND_SimulatedOnly = 4,					// This property will only send to simulated actors
+	    COND_AutonomousOnly = 5,				// This property will only send to autonomous actors
+	    COND_SimulatedOrPhysics = 6,			// This property will send to simulated OR bRepPhysics actors
+	    COND_InitialOrOwner = 7,				// This property will send on the initial packet, or to the actors owner
+	    COND_Custom = 8,						// This property has no particular condition, but wants the ability to toggle on/off via SetCustomIsActiveOverride
+	    COND_ReplayOrOwner = 9,					// This property will only send to the replay connection, or to the actors owner
+	    COND_ReplayOnly = 10,					// This property will only send to the replay connection
+	    COND_SimulatedOnlyNoReplay = 11,	    // This property will send to actors only, but not to replay connections
+	    COND_SimulatedOrPhysicsNoReplay = 12,	// This property will send to simulated Or bRepPhysics actors, but not to replay connections
+	    COND_SkipReplay = 13,					// This property will not send to the replay connection
+	    COND_Max = 14							
+    };
+
+
+    public enum ELifetimeRepNotifyCondition
+    {
+	    REPNOTIFY_OnChanged = 0,		// Only call the property's RepNotify function if it changes from the local value
+	    REPNOTIFY_Always = 1,		// Always Call the property's RepNotify function when it is received from the server
+    }
+    
 }
