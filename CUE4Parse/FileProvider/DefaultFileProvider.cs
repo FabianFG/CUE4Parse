@@ -15,27 +15,54 @@ namespace CUE4Parse.FileProvider
     {
         private DirectoryInfo _workingDirectory;
         private readonly SearchOption _searchOption;
-        
+        private readonly List<DirectoryInfo> _extraDirectories;
+
         public DefaultFileProvider(string directory, SearchOption searchOption, bool caseSensitive = false,
             EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new DirectoryInfo(directory), searchOption, caseSensitive, game, ver) {}
+            : this(new DirectoryInfo(directory), searchOption, caseSensitive, game, ver)
+        {
+        }
+
         public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool caseSensitive = false,
             EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
         {
             _workingDirectory = directory;
             _searchOption = searchOption;
         }
-        
+
+        public DefaultFileProvider(DirectoryInfo mainDirectory, List<DirectoryInfo> extraDirectories, SearchOption searchOption, bool caseSensitive = false,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
+        {
+            _workingDirectory = mainDirectory;
+            _extraDirectories = extraDirectories;
+            _searchOption = searchOption;
+        }
+
         public void Initialize()
         {
             if (!_workingDirectory.Exists) throw new ArgumentException("Given directory must exist", nameof(_workingDirectory));
-            
+
+            var availableFiles = new List<Dictionary<string, GameFile>> {IterateFiles(_workingDirectory, _searchOption)};
+
+            if (_extraDirectories is {Count: > 0})
+            {
+                availableFiles.AddRange(_extraDirectories.Select(directory => IterateFiles(directory, _searchOption)));
+            }
+
+            foreach (var osFiles in availableFiles)
+            {
+                _files.AddFiles(osFiles);
+            }
+        }
+
+        private Dictionary<string, GameFile> IterateFiles(DirectoryInfo directory, SearchOption option)
+        {
             var osFiles = new Dictionary<string, GameFile>();
-            foreach (var file in _workingDirectory.EnumerateFiles("*.*", _searchOption))
+
+            foreach (var file in directory.EnumerateFiles("*.*", option))
             {
                 var ext = file.Extension.SubstringAfter('.');
-                if (!file.Exists || string.IsNullOrEmpty(ext)) return;
-                
+                if (!file.Exists || string.IsNullOrEmpty(ext)) continue;
                 if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
                 {
                     try
@@ -45,6 +72,7 @@ namespace CUE4Parse.FileProvider
                         {
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
                         }
+
                         _unloadedVfs[reader] = null;
                     }
                     catch (Exception e)
@@ -61,7 +89,8 @@ namespace CUE4Parse.FileProvider
                         {
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
                         }
-                        _unloadedVfs[reader] = null; 
+
+                        _unloadedVfs[reader] = null;
                     }
                     catch (Exception e)
                     {
@@ -72,14 +101,14 @@ namespace CUE4Parse.FileProvider
                 {
                     // Register local file only if it has a known extension, we don't need every file
                     if (!GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
-                    
+
                     var osFile = new OsGameFile(_workingDirectory, file, Game, Ver);
                     if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
                     else osFiles[osFile.Path] = osFile;
                 }
             }
-            
-            _files.AddFiles(osFiles);
+
+            return osFiles;
         }
     }
 }
