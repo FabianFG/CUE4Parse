@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.PhysicsEngine;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -34,6 +35,8 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UTexture2D));
             RegisterClass(typeof(UTexture2D));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
+            RegisterClass(typeof(UBodySetup));
+            RegisterClass(typeof(UModel));
         }
 
         public static void RegisterClass(Type type)

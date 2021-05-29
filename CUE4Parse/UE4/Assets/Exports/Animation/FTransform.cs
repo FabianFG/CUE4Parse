@@ -76,6 +76,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             return result;
         }
 
+        public static FVector SubstractTranslations(FTransform a, FTransform b) => a.Translation - b.Translation;
+
         public static void GetRelativeTransformUsingMatrixWithScale(ref FTransform outTransform, ref FTransform Base,
             ref FTransform Relative)
         {

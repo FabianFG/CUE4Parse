@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -69,6 +71,26 @@ namespace CUE4Parse.UE4.Readers
                 return new T[0];
 
             return ReadArray<T>(length);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(int length, Func<(TKey, TValue)> getter) where TKey : notnull
+        {
+            var res = new Dictionary<TKey, TValue>(length);
+            for (var i = 0; i < length; i++)
+            {
+                var (key, value) = getter();
+                res[key] = value;
+            }
+
+            return res;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(Func<(TKey, TValue)> getter) where TKey : notnull
+        {
+            var length = Read<int>();
+            return ReadMap(length, getter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

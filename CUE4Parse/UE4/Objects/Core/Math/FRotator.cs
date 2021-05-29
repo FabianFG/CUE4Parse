@@ -14,6 +14,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public float Yaw;
         public float Roll;
 
+        public FRotator(EForceInit forceInit) : this(0, 0, 0) {}
         public FRotator(float f) : this(f, f, f) { }
         public FRotator(float pitch, float yaw, float roll)
         {
