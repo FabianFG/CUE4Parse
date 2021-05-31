@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets
 
         private static void RegisterEngine()
         {
-            RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here???
+            RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here??? Yes
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
             RegisterClass(typeof(UDataTable));
@@ -32,7 +32,6 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(USkeleton));
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
-            RegisterClass(typeof(UTexture2D));
             RegisterClass(typeof(UTexture2D));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
             RegisterClass(typeof(UBodySetup));
