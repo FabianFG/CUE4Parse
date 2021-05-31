@@ -20,9 +20,9 @@ namespace CUE4Parse.UE4.Pak
     public class PakFileReader : AbstractAesVfsReader
     {
         public readonly FArchive Ar;
-        
+
         public readonly FPakInfo Info;
-        
+
         public override string MountPoint { get; protected set; }
         public sealed override long Length { get; set; }
 
@@ -48,7 +48,6 @@ namespace CUE4Parse.UE4.Pak
             : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver) {}
         public PakFileReader(string filePath, Stream stream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
             : this(new FStreamArchive(filePath, stream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
-
 
         public override byte[] Extract(VfsEntry entry)
         {
@@ -116,7 +115,7 @@ namespace CUE4Parse.UE4.Pak
         {
             Ar.Position = Info.IndexOffset;
             var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize));
-            
+
             string mountPoint;
             try
             {
@@ -126,7 +125,7 @@ namespace CUE4Parse.UE4.Pak
             {
                 throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
-            
+
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
             var fileCount = index.Read<int>();
@@ -143,7 +142,7 @@ namespace CUE4Parse.UE4.Pak
                 else
                     files[path] = entry;
             }
-            
+
             return Files = files;
         }
 
@@ -162,7 +161,7 @@ namespace CUE4Parse.UE4.Pak
             {
                 throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
             }
-            
+
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
@@ -191,35 +190,40 @@ namespace CUE4Parse.UE4.Pak
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
             var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
+            var directoryIndexLength = directoryIndex.Read<int>();
+            var files = new Dictionary<string, GameFile>(fileCount);
 
-            unsafe { fixed(byte* ptr = encodedPakEntries) {
-                var directoryIndexLength = directoryIndex.Read<int>();
-
-                var files = new Dictionary<string, GameFile>(fileCount);
-                
-                for (var i = 0; i < directoryIndexLength; i++)
+            unsafe
+            {
+                fixed (byte* ptr = encodedPakEntries)
                 {
-                    var dir = directoryIndex.ReadFString();
-                    var dirDictLength = directoryIndex.Read<int>();
-                    
-                    for (var j = 0; j < dirDictLength; j++)
+                    for (var i = 0; i < directoryIndexLength; i++)
                     {
-                        var name = directoryIndex.ReadFString();
-                        var path = string.Concat(mountPoint, dir, name);
-                        var entry = new FPakEntry(this, path, ptr + directoryIndex.Read<int>());
-                        if (entry.IsEncrypted)
-                            EncryptedFileCount++;
-                        if (caseInsensitive)
-                            files[path.ToLowerInvariant()] = entry;
-                        else
-                            files[path] = entry;
+                        var dir = directoryIndex.ReadFString();
+                        var dirDictLength = directoryIndex.Read<int>();
+
+                        for (var j = 0; j < dirDictLength; j++)
+                        {
+                            var name = directoryIndex.ReadFString();
+                            string path;
+                            if (mountPoint.EndsWith('/') && dir.StartsWith('/'))
+                                path = dir.Length == 1 ? string.Concat(mountPoint, name) : string.Concat(mountPoint, dir[1..], name);
+                            else
+                                path = string.Concat(mountPoint, dir, name);
+
+                            var entry = new FPakEntry(this, path, ptr + directoryIndex.Read<int>());
+                            if (entry.IsEncrypted)
+                                EncryptedFileCount++;
+                            if (caseInsensitive)
+                                files[path.ToLowerInvariant()] = entry;
+                            else
+                                files[path] = entry;
+                        }
                     }
                 }
+            }
 
-                Files = files;
-                
-                return files;
-            } }
+            return Files = files;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -228,9 +232,9 @@ namespace CUE4Parse.UE4.Pak
         public override byte[] MountPointCheckBytes()
         {
             Ar.Position = Info.IndexOffset;
-            return Ar.ReadBytes((int) (4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
+            return Ar.ReadBytes((4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
         }
-        
+
         public override void Dispose()
         {
             Ar.Dispose();
