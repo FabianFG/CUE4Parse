@@ -20,6 +20,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         public FPropertyTagData? InnerTypeData;
         public FPropertyTagData? ValueTypeData;
         public UStruct? Struct;
+        public UEnum? Enum;
 
         internal FPropertyTagData(FAssetArchive Ar, string type)
         {
@@ -70,6 +71,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             ValueTypeData = info.ValueType != null ? new FPropertyTagData(info.ValueType) : null;
             ValueType = ValueTypeData?.Type;
             Struct = info.Struct;
+            Enum = info.Enum;
         }
 
         public override string ToString()
