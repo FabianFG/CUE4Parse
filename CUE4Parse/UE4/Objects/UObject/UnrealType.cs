@@ -1,4 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -9,7 +11,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public ulong SaveFlags;
         public ushort RepIndex;
         public FName RepNotifyFunc;
-        public byte BlueprintReplicationCondition;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ELifetimeCondition BlueprintReplicationCondition;
 
         public override void Deserialize(FAssetArchive Ar)
         {
@@ -19,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             SaveFlags = Ar.Read<ulong>();
             RepIndex = Ar.Read<ushort>();
             RepNotifyFunc = Ar.ReadFName();
-            BlueprintReplicationCondition = Ar.Read<byte>();
+            BlueprintReplicationCondition = (ELifetimeCondition) Ar.Read<byte>();
         }
     }
 
