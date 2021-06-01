@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public int ArrayDim;
         public int ElementSize;
-        public ulong SaveFlags;
+        public ulong PropertyFlags;
         public ushort RepIndex;
         public FName RepNotifyFunc;
         [JsonConverter(typeof(StringEnumConverter))]
@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             ArrayDim = Ar.Read<int>();
             ElementSize = Ar.Read<int>();
-            SaveFlags = Ar.Read<ulong>();
+            PropertyFlags = Ar.Read<ulong>();
             RepIndex = Ar.Read<ushort>();
             RepNotifyFunc = Ar.ReadFName();
             BlueprintReplicationCondition = (ELifetimeCondition) Ar.Read<byte>();
