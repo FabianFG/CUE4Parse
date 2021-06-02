@@ -541,26 +541,26 @@ namespace CUE4Parse.FileProvider
         #region LoadObject Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport LoadObject(string? objectPath) => LoadObjectAsync(objectPath).Result;
+        public UObject LoadObject(string? objectPath) => LoadObjectAsync(objectPath).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadObject(string? objectPath, out UExport export)
+        public bool TryLoadObject(string? objectPath, out UObject export)
         {
             export = TryLoadObjectAsync(objectPath).Result;
             return export != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T LoadObject<T>(string? objectPath) where T : UExport => LoadObjectAsync<T>(objectPath).Result;
+        public T LoadObject<T>(string? objectPath) where T : UObject => LoadObjectAsync<T>(objectPath).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UExport
+        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UObject
         {
             export = TryLoadObjectAsync<T>(objectPath).Result;
             return export != null;
         }
 
-        public async Task<UExport> LoadObjectAsync(string? objectPath)
+        public async Task<UObject> LoadObjectAsync(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
             var packagePath = objectPath;
@@ -580,7 +580,7 @@ namespace CUE4Parse.FileProvider
             return pkg.GetExport(objectName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        public async Task<UExport?> TryLoadObjectAsync(string? objectPath)
+        public async Task<UObject?> TryLoadObjectAsync(string? objectPath)
         {
             if (objectPath == null) return null;
             var packagePath = objectPath;
@@ -601,16 +601,16 @@ namespace CUE4Parse.FileProvider
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> LoadObjectAsync<T>(string? objectPath) where T : UExport =>
+        public async Task<T> LoadObjectAsync<T>(string? objectPath) where T : UObject =>
             await LoadObjectAsync(objectPath) as T ??
             throw new ParserException("Loaded object but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport =>
+        public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UObject =>
             await TryLoadObjectAsync(objectPath) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> LoadObjectExports(string? objectPath)
+        public IEnumerable<UObject> LoadObjectExports(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
 

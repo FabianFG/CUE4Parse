@@ -207,7 +207,7 @@ namespace CUE4Parse.UE4.Assets
             return packageIds;
         }
 
-        public override UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             for (var i = 0; i < ExportMap.Length; i++)
             {

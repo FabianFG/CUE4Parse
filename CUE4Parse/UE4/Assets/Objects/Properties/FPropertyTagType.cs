@@ -53,11 +53,11 @@ namespace CUE4Parse.UE4.Assets.Objects
                         result.SetValue(array[i].GetValue(contentType), i);
                     }
                     return result;
-                case FPropertyTagType<FPackageIndex> objProp when typeof(UExport).IsAssignableFrom(type):
+                case FPropertyTagType<FPackageIndex> objProp when typeof(UObject).IsAssignableFrom(type):
                     if (objProp.Value.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
                         return objExport;
                     return null;
-                case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UExport).IsAssignableFrom(type):
+                case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UObject).IsAssignableFrom(type):
                     if (softObjProp.Value.TryLoad(out var softExport) && type.IsInstanceOfType(softExport))
                         return softExport;
                     return null;

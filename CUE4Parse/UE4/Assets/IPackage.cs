@@ -23,15 +23,15 @@ namespace CUE4Parse.UE4.Assets
         public Lazy<UObject>[] ExportsLazy { get; }
 
         public bool HasFlags(PackageFlags flags);
-        /*public T? GetExportOfTypeOrNull<T>() where T : UExport;
-        public T GetExportOfType<T>() where T : UExport;*/
-        public UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
-        public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
-        public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
-        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport;
+        /*public T? GetExportOfTypeOrNull<T>() where T : UObject;
+        public T GetExportOfType<T>() where T : UObject;*/
+        public UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject;
+        public UObject GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject;
         public Lazy<UObject>? FindObject(FPackageIndex? index);
         public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
-        public UExport? GetExport(int index);
-        public IEnumerable<UExport> GetExports();
+        public UObject? GetExport(int index);
+        public IEnumerable<UObject> GetExports();
     }
 }

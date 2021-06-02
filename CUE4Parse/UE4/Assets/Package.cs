@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Assets
                 ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
                 uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider) { }
 
-        public override UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             try
             {

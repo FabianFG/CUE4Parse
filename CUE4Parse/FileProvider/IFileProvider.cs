@@ -276,57 +276,57 @@ namespace CUE4Parse.FileProvider
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object</returns>
-        public UExport LoadObject(string? objectPath);
+        public UObject LoadObject(string? objectPath);
         /// <summary>
         /// Attempts to load an object from the Package at the passed path
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <param name="export">The loaded object if loaded successfully; default otherwise</param>
         /// <returns>true if object was loaded; false otherwise</returns>
-        public bool TryLoadObject(string? objectPath, out UExport export);
+        public bool TryLoadObject(string? objectPath, out UObject export);
         /// <summary>
         /// Loads an object from the Package at the passed path with type T
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object of type T</returns>
-        public T LoadObject<T>(string? objectPath) where T : UExport;
+        public T LoadObject<T>(string? objectPath) where T : UObject;
         /// <summary>
         /// Attempts to load an object from the Package at the passed path with type T
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <param name="export">The loaded object if loaded successfully and of correct type; default otherwise</param>
         /// <returns>true if object was loaded and of correct type; false otherwise</returns>
-        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UExport;
+        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UObject;
         /// <summary>
         /// Asynchronously loads an object from the Package at the passed path
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object</returns>
-        public Task<UExport> LoadObjectAsync(string? objectPath);
+        public Task<UObject> LoadObjectAsync(string? objectPath);
         /// <summary>
         /// Asynchronously attempts to load an object from the Package at the passed path
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object if loaded successfully; null otherwise</returns>
-        public Task<UExport?> TryLoadObjectAsync(string? objectPath);
+        public Task<UObject?> TryLoadObjectAsync(string? objectPath);
         /// <summary>
         /// Asynchronously loads an object from the Package at the passed path with type T
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object of type T</returns>
-        public Task<T> LoadObjectAsync<T>(string? objectPath) where T : UExport;
+        public Task<T> LoadObjectAsync<T>(string? objectPath) where T : UObject;
         /// <summary>
         /// Asynchronously attempts to load an object from the Package at the passed path with type T
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object if loaded successfully and of correct type; null otherwise</returns>
-        public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport;
+        public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UObject;
         
         /// <summary>
         /// Loads an object from the Package at the passed path
         /// </summary>
         /// <param name="objectPath">The object path</param>
         /// <returns>All exports of the object</returns>
-        public IEnumerable<UExport> LoadObjectExports(string? objectPath);
+        public IEnumerable<UObject> LoadObjectExports(string? objectPath);
     }
 }

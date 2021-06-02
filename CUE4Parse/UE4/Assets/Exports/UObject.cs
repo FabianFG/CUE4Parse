@@ -19,10 +19,11 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public List<FPropertyTag> Properties { get; }
     }
-    
+
     [JsonConverter(typeof(UObjectConverter))]
-    public class UObject : UExport, IPropertyHolder
+    public class UObject : IPropertyHolder
     {
+        public string Name { get; set; }
         public UObject? Outer;
         public UStruct? Class;
         public ResolvedObject? Super;
@@ -32,7 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public int /*EObjectFlags*/ Flags;
 
         // public FObjectExport Export;
-        public override IPackage? Owner
+        public IPackage? Owner
         {
             get
             {
@@ -47,24 +48,19 @@ namespace CUE4Parse.UE4.Assets.Exports
                 return current as IPackage;
             }
         }
-        public override string ExportType => Class?.Name ?? GetType().Name;
+        public string ExportType => Class?.Name ?? GetType().Name;
 
-        public UObject(FObjectExport exportObject) : base(exportObject)
+        public UObject()
         {
             Properties = new List<FPropertyTag>();
         }
 
-        public UObject() : base("")
-        {
-            Properties = new List<FPropertyTag>();
-        }
-
-        public UObject(List<FPropertyTag> properties) : base("")
+        public UObject(List<FPropertyTag> properties)
         {
             Properties = properties;
         }
 
-        public override void Deserialize(FAssetArchive Ar, long validPos)
+        public virtual void Deserialize(FAssetArchive Ar, long validPos)
         {
             if (Ar.HasUnversionedProperties)
             {
@@ -107,7 +103,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
         }
 
-        public override void PostLoad()
+        /** 
+	     * Do any object-specific cleanup required immediately after loading an object, 
+	     * and immediately after any undo/redo.
+	     */
+        public virtual void PostLoad()
         {
             
         }
@@ -295,6 +295,8 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             
         }
+
+        public override string ToString() => $"{Name} | {ExportType}";
     }
 
     public static class PropertyUtil
