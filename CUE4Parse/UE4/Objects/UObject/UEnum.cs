@@ -34,9 +34,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WriteEndObject();
 
             writer.WritePropertyName("CppForm");
-            serializer.Serialize(writer, CppForm.ToString());
-
-            writer.WriteEndObject();
+            writer.WriteValue(CppForm.ToString());
         }
 
         public enum ECppForm
