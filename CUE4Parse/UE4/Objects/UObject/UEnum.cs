@@ -1,10 +1,8 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    [JsonConverter(typeof(UEnumConverter))]
     public class UEnum : Assets.Exports.UObject
     {
         /** List of pairs of all enum names and values. */
@@ -20,46 +18,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             CppForm = (ECppForm) Ar.Read<byte>();
         }
 
-        public enum ECppForm
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            Regular,
-            Namespaced,
-            EnumClass
-        }
-    }
-
-    public class UEnumConverter : JsonConverter<UEnum>
-    {
-        public override void WriteJson(JsonWriter writer, UEnum value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
+            base.WriteJson(writer, serializer);
 
             writer.WritePropertyName("Names");
             writer.WriteStartObject();
             {
-                foreach (var (name, enumValue) in value.Names)
+                foreach (var (name, enumValue) in Names)
                 {
                     writer.WritePropertyName(name.Text);
                     writer.WriteValue(enumValue);
@@ -68,15 +34,16 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WriteEndObject();
 
             writer.WritePropertyName("CppForm");
-            serializer.Serialize(writer, value.CppForm.ToString());
+            serializer.Serialize(writer, CppForm.ToString());
 
             writer.WriteEndObject();
         }
 
-        public override UEnum ReadJson(JsonReader reader, Type objectType, UEnum existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
+        public enum ECppForm
         {
-            throw new NotImplementedException();
+            Regular,
+            Namespaced,
+            EnumClass
         }
     }
 }

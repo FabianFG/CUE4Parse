@@ -108,6 +108,7 @@ namespace CUE4Parse.UE4.Assets
                             var obj = ConstructObject(ResolveObjectIndex(export.ClassIndex)?.Object?.Value as UStruct);
                             obj.Name = objectName.Text;
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
+                            obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
                             obj.Flags = (int) export.ObjectFlags;
                             var exportType = obj.ExportType;

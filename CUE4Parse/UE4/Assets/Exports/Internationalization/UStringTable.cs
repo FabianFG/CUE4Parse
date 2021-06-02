@@ -1,10 +1,8 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Internationalization
 {
-    [JsonConverter(typeof(UStringTableConverter))]
     public class UStringTable : UObject
     {
         public FStringTable StringTable { get; private set; }
@@ -17,43 +15,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization
             StringTable = new FStringTable(Ar);
             StringTableId = Ar.Read<int>();
         }
-    }
-    
-    public class UStringTableConverter : JsonConverter<UStringTable>
-    {
-        public override void WriteJson(JsonWriter writer, UStringTable value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                writer.WritePropertyName("StringTable");
-                serializer.Serialize(writer, value.StringTable);
-                
-                writer.WritePropertyName("StringTableId");
-                writer.WriteValue(value.StringTableId);
-            }
-            writer.WriteEndObject();
-            
-            writer.WriteEndObject();
-        }
 
-        public override UStringTable ReadJson(JsonReader reader, Type objectType, UStringTable existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("StringTable");
+            serializer.Serialize(writer, StringTable);
+
+            writer.WritePropertyName("StringTableId");
+            writer.WriteValue(StringTableId);
         }
     }
 }

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    [JsonConverter(typeof(UClassConverter))]
     public class UClass : UStruct
     {
         /** Used to check if the class was cooked or not */
@@ -71,6 +69,35 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassDefaultObject = new FPackageIndex(Ar);
         }
 
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("FuncMap");
+            serializer.Serialize(writer, FuncMap);
+
+            writer.WritePropertyName("ClassFlags");
+            serializer.Serialize(writer, ClassFlags);
+
+            writer.WritePropertyName("ClassWithin");
+            serializer.Serialize(writer, ClassWithin);
+
+            writer.WritePropertyName("ClassConfigName");
+            serializer.Serialize(writer, ClassConfigName);
+
+            writer.WritePropertyName("ClassGeneratedBy");
+            serializer.Serialize(writer, ClassGeneratedBy);
+
+            writer.WritePropertyName("Interfaces");
+            serializer.Serialize(writer, Interfaces);
+
+            writer.WritePropertyName("bCooked");
+            serializer.Serialize(writer, bCooked);
+
+            writer.WritePropertyName("ClassDefaultObject");
+            serializer.Serialize(writer, ClassDefaultObject);
+        }
+
         public class FImplementedInterface
         {
             /** the interface class */
@@ -88,79 +115,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 PointerOffset = Ar.Read<int>();
                 bImplementedByK2 = Ar.ReadBoolean();
             }
-        }
-    }
-
-    public class UClassConverter : JsonConverter<UClass>
-    {
-        public override void WriteJson(JsonWriter writer, UClass value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-
-            // begin UStruct
-            writer.WritePropertyName("SuperStruct");
-            serializer.Serialize(writer, value.SuperStruct);
-
-            writer.WritePropertyName("Children");
-            serializer.Serialize(writer, value.Children);
-
-            writer.WritePropertyName("ChildProperties");
-            serializer.Serialize(writer, value.ChildProperties);
-            // end UStruct
-
-            writer.WritePropertyName("FuncMap");
-            serializer.Serialize(writer, value.FuncMap);
-
-            writer.WritePropertyName("ClassFlags");
-            serializer.Serialize(writer, value.ClassFlags);
-
-            writer.WritePropertyName("ClassWithin");
-            serializer.Serialize(writer, value.ClassWithin);
-
-            writer.WritePropertyName("ClassConfigName");
-            serializer.Serialize(writer, value.ClassConfigName);
-
-            writer.WritePropertyName("ClassGeneratedBy");
-            serializer.Serialize(writer, value.ClassGeneratedBy);
-
-            writer.WritePropertyName("Interfaces");
-            serializer.Serialize(writer, value.Interfaces);
-
-            writer.WritePropertyName("bCooked");
-            serializer.Serialize(writer, value.bCooked);
-
-            writer.WritePropertyName("ClassDefaultObject");
-            serializer.Serialize(writer, value.ClassDefaultObject);
-
-            writer.WriteEndObject();
-        }
-
-        public override UClass ReadJson(JsonReader reader, Type objectType, UClass existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

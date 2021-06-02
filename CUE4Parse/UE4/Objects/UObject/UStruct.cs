@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    [JsonConverter(typeof(UStructConverter))]
     public class UStruct : Assets.Exports.UObject
     {
         public FPackageIndex SuperStruct;
@@ -45,52 +44,19 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return prop;
             });
         }
-    }
 
-    public class UStructConverter : JsonConverter<UStruct>
-    {
-        public override void WriteJson(JsonWriter writer, UStruct value, JsonSerializer serializer)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
-
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
+            base.WriteJson(writer, serializer);
 
             writer.WritePropertyName("SuperStruct");
-            serializer.Serialize(writer, value.SuperStruct);
+            serializer.Serialize(writer, SuperStruct);
 
             writer.WritePropertyName("Children");
-            serializer.Serialize(writer, value.Children);
+            serializer.Serialize(writer, Children);
 
             writer.WritePropertyName("ChildProperties");
-            serializer.Serialize(writer, value.ChildProperties);
-
-            writer.WriteEndObject();
-        }
-
-        public override UStruct ReadJson(JsonReader reader, Type objectType, UStruct existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
+            serializer.Serialize(writer, ChildProperties);
         }
     }
 }

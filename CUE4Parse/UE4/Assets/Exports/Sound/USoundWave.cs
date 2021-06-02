@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Objects;
+﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -8,7 +7,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound
 {
-    [JsonConverter(typeof(USoundWaveConverter))]
     public class USoundWave : USoundBase
     {
         public bool bCooked { get; private set; }
@@ -46,55 +44,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 RunningPlatformData = new FStreamedAudioPlatformData(Ar);
             }
         }
-    }
-    
-    public class USoundWaveConverter : JsonConverter<USoundWave>
-    {
-        public override void WriteJson(JsonWriter writer, USoundWave value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                writer.WritePropertyName("CompressedFormatData");
-                serializer.Serialize(writer, value.CompressedFormatData);
-                
-                writer.WritePropertyName("RawData");
-                serializer.Serialize(writer, value.RawData);
-                
-                writer.WritePropertyName("CompressedDataGuid");
-                serializer.Serialize(writer, value.CompressedDataGuid);
-                
-                writer.WritePropertyName("RunningPlatformData");
-                serializer.Serialize(writer, value.RunningPlatformData);
-                
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-            
-            writer.WriteEndObject();
-        }
 
-        public override USoundWave ReadJson(JsonReader reader, Type objectType, USoundWave existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("CompressedFormatData");
+            serializer.Serialize(writer, CompressedFormatData);
+
+            writer.WritePropertyName("RawData");
+            serializer.Serialize(writer, RawData);
+
+            writer.WritePropertyName("CompressedDataGuid");
+            serializer.Serialize(writer, CompressedDataGuid);
+
+            writer.WritePropertyName("RunningPlatformData");
+            serializer.Serialize(writer, RunningPlatformData);
         }
     }
 }

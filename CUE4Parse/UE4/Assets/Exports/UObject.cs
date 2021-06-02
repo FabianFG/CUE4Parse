@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -24,6 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public UObject? Outer;
         public UStruct? Class;
+        public ResolvedObject? Super;
         public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
         public FGuid? ObjectGuid { get; private set; }
@@ -183,6 +185,58 @@ namespace CUE4Parse.UE4.Assets.Exports
             return properties;
         }
 
+        protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            var package = Owner;
+
+            // export type
+            writer.WritePropertyName("Type");
+            writer.WriteValue(ExportType);
+
+            // object name
+            var packageName = package?.Name.SubstringAfterLast('/');
+            if (packageName != Name)
+            {
+                writer.WritePropertyName("Name");
+                writer.WriteValue(Name);
+            }
+
+            // outer
+            if (Outer != null && Outer != package)
+            {
+                writer.WritePropertyName("Outer");
+                writer.WriteValue(Outer.Name); // TODO serialize the path too
+            }
+
+            // super
+            if (Super != null)
+            {
+                writer.WritePropertyName("Super");
+                writer.WriteValue(Super.Name.Text);
+            }
+
+            // template
+            if (Template != null)
+            {
+                writer.WritePropertyName("Template");
+                writer.WriteValue(Template.Name.Text);
+            }
+
+            // export properties
+            if (Properties.Count > 0)
+            {
+                writer.WritePropertyName("Properties");
+                writer.WriteStartObject();
+                foreach (var property in Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+
+                writer.WriteEndObject();
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
@@ -308,29 +362,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public override void WriteJson(JsonWriter writer, UObject value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-            
+            value.WriteJson(writer, serializer);
             writer.WriteEndObject();
         }
 
