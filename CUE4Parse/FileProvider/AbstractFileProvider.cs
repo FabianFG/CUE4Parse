@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -139,7 +139,7 @@ namespace CUE4Parse.FileProvider
                     ELanguage.German => "de-DE",
                     ELanguage.Italian => "it-IT",
                     ELanguage.Spanish => "es-ES",
-                    ELanguage.SpanishLatin => "es-MX",
+                    ELanguage.SpanishMexico => "es-MX",
                     ELanguage.Arabic => "ar-AE",
                     ELanguage.Japanese => "ja-JP",
                     ELanguage.Korean => "ko-KR",
@@ -152,6 +152,19 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Indonesian => "id-ID",
                     ELanguage.Thai => "th-TH",
                     ELanguage.VietnameseVietnam => "vi-VN",
+                    _ => "en-US"
+                },
+                "stateofdecay2" => language switch
+                {
+                    ELanguage.English => "en-US",
+                    ELanguage.AustralianEnglish => "en-AU",
+                    ELanguage.French => "fr-FR",
+                    ELanguage.German => "de-DE",
+                    ELanguage.Italian => "it-IT",
+                    ELanguage.SpanishMexico => "es-MX",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru-RU",
+                    ELanguage.Chinese => "zh-CN",
                     _ => "en-US"
                 },
                 _ => "en"
