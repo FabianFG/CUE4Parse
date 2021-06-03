@@ -45,8 +45,8 @@ namespace CUE4Parse.Compression
                     Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
                 case CompressionMethod.LZ4:
-                    var result = LZ4Codec.Decode(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize);
-                    if (result != uncompressedSize) throw new FileLoadException($"Failed to decompress data (Expected: {uncompressedSize}, Result: {result})");
+                    LZ4Codec.Decode(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize);
+                    //if (result != uncompressedSize) throw new FileLoadException($"Failed to decompress LZ4 data (Expected: {uncompressedSize}, Result: {result})");
                     //var lz4 = LZ4Stream.Decode(srcStream);
                     //lz4.Read(uncompressed, uncompressedOffset, uncompressedSize);
                     //lz4.Dispose();
