@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets
             IoSummary = uassetAr.Read<FPackageSummary>();
             Summary = new FPackageFileSummary
             {
-                PackageFlags = (PackageFlags) IoSummary.PackageFlags,
+                PackageFlags = IoSummary.PackageFlags,
                 TotalHeaderSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize,
                 NameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1,
                 ExportCount = (IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),

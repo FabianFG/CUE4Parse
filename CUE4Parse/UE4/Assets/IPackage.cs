@@ -7,22 +7,17 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
 {
-    public enum PackageFlags : uint
-    {
-        UnversionedProperties = 0x00002000    // UE4.25+
-    }
-    
     public interface IPackage
     {
         public string Name { get; }
         public IFileProvider? Provider { get; }
         public TypeMappings? Mappings { get; }
-        
+
         public FPackageFileSummary Summary { get; }
         public FNameEntrySerialized[] NameMap { get; }
         public Lazy<UObject>[] ExportsLazy { get; }
 
-        public bool HasFlags(PackageFlags flags);
+        public bool HasFlags(EPackageFlags flags);
         /*public T? GetExportOfTypeOrNull<T>() where T : UObject;
         public T GetExportOfType<T>() where T : UObject;*/
         public UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);

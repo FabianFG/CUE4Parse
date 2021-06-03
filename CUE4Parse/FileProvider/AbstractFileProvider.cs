@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
+using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -377,13 +378,13 @@ namespace CUE4Parse.FileProvider
             var uexp = uexpTask != null ? await uexpTask : null;
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
-            
-            if (uexp != null)
+
+            if (file is FPakEntry)
             {
                 return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
             }
-            
-            if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+
+            if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
             {
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }

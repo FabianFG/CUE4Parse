@@ -9,7 +9,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
-    public enum EPakFileVersion : int
+    public enum EPakFileVersion : short
     {
         PakFile_Version_Initial = 1,
         PakFile_Version_NoTimestamps = 2,
@@ -36,6 +36,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         
         public readonly uint Magic;
         public readonly EPakFileVersion Version;
+        public readonly short SubVersion;
         public readonly bool IsSubVersion;
         public readonly long IndexOffset;
         public readonly long IndexSize;
@@ -61,6 +62,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             Version = Ar.Read<EPakFileVersion>();
+            SubVersion = Ar.Read<short>();
             IsSubVersion = (Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a);
             IndexOffset = Ar.Read<long>();
             IndexSize = Ar.Read<long>();
@@ -78,7 +80,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 CompressionMethods = new List<CompressionMethod>
                 {
-                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Custom, CompressionMethod.Oodle
+                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4
                 };
             }
             else

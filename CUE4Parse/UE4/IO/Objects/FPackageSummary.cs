@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -7,7 +8,7 @@ namespace CUE4Parse.UE4.IO.Objects
     {
         public readonly FMappedName Name;
         public readonly FMappedName SourceName;
-        public readonly uint PackageFlags;
+        public readonly EPackageFlags PackageFlags;
         public readonly uint CookedHeaderSize;
         public readonly int NameMapNamesOffset;
         public readonly int NameMapNamesSize;

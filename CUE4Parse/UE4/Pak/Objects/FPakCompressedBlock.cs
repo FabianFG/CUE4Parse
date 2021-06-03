@@ -7,5 +7,6 @@ namespace CUE4Parse.UE4.Pak.Objects
     {
         public long CompressedStart;
         public long CompressedEnd;
+        public long Size => CompressedEnd - CompressedStart;
     }
 }

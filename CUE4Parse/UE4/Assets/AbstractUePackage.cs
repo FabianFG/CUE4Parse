@@ -47,7 +47,7 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasFlags(PackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
+        public bool HasFlags(EPackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
 
         /*[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetExportOfTypeOrNull<T>() where T : UObject
