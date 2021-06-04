@@ -194,12 +194,8 @@ namespace CUE4Parse.UE4.Assets.Exports
             writer.WriteValue(ExportType);
 
             // object name
-            var packageName = package?.Name.SubstringAfterLast('/');
-            if (packageName != Name)
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(Name);
-            }
+            writer.WritePropertyName("Name"); // ctrl click depends on the name, we always need it
+            writer.WriteValue(Name);
 
             // outer
             if (Outer != null && Outer != package)
