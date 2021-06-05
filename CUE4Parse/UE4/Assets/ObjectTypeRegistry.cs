@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -27,6 +28,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
             RegisterClass(typeof(UDataTable));
+            RegisterClass(typeof(UFunction));
             RegisterClass(typeof(UMaterial));
             RegisterClass(typeof(UMaterialInstanceConstant));
             RegisterClass(typeof(USkeleton));
