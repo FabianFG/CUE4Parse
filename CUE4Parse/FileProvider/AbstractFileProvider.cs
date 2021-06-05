@@ -439,12 +439,12 @@ namespace CUE4Parse.FileProvider
 
             try
             {
-                if (uexp != null)
+                if (file is FPakEntry)
                 {
                     return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
                 }
                 
-                if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+                if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
                 {
                     return null;
                 }
