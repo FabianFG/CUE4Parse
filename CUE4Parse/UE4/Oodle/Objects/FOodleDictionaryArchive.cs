@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Readers;
-using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Oodle.Objects
 {
     public class FOodleDictionaryArchive
     {
-        private readonly int MAX_COMPRESS_BUFFER = (1024 * 1024 * 2047);
+        private readonly int MAX_COMPRESS_BUFFER = 1024 * 1024 * 2047;
         private readonly int OODLE_DICTIONARY_SLACK = 65536;
         private FArchive InnerArchive;
         public readonly FDictionaryHeader Header;
@@ -17,44 +16,50 @@ namespace CUE4Parse.UE4.Oodle.Objects
         {
             InnerArchive = Ar;
             Header = new FDictionaryHeader(Ar);
-            SerializeOodleDecompressData(Header.DictionaryData, out DictionaryData, out UInt32 _);
-            SerializeOodleDecompressData(Header.CompressorData, out CompactCompresorState, out UInt32 _);
+            SerializeOodleDecompressData(Header.DictionaryData, out DictionaryData);
+            SerializeOodleDecompressData(Header.CompressorData, out CompactCompresorState);
         }
 
-        private bool SerializeOodleDecompressData(FOodleCompressedData DataInfo, out byte [] OutData, out UInt32 OutDataBytes, bool bOutDataSlack=false)
+        private bool SerializeOodleDecompressData(FOodleCompressedData DataInfo, out byte [] OutData, bool bOutDataSlack=false)
         {
             OutData = new byte[0];
-            OutDataBytes = 0;
+            if (bOutDataSlack) throw new NotImplementedException(); // Only needed if Archive is loading?
 
-            bool bSuccess = true;
+            bool bSuccess = false;
             int DecompressedLength = (int)DataInfo.DecompressedLength;
             int CompressedLength = (int)DataInfo.CompressedLength;
-            UInt32 DataOffset = DataInfo.Offset;
+            uint DataOffset = DataInfo.Offset;
 
-            if (
-                CompressedLength <= InnerArchive.Length - DataOffset &&
-                DecompressedLength <= MAX_COMPRESS_BUFFER &&
-                CompressedLength <= MAX_COMPRESS_BUFFER
-            )
+            bSuccess = CompressedLength <= InnerArchive.Length - DataOffset;
+            bSuccess = bSuccess && DecompressedLength <= MAX_COMPRESS_BUFFER;
+            bSuccess = bSuccess && CompressedLength <= MAX_COMPRESS_BUFFER;
+
+            if (bSuccess)
             {
                 InnerArchive.Position = DataOffset;
 
                 byte [] DecompressedData = new byte[DecompressedLength];
                 if (CompressedLength == DecompressedLength)
                 {
-                    DecompressedData = InnerArchive.ReadBytes(DecompressedLength); // InnerArchive.Serialize(DecompressedData, DecompressedLength);
+                    DecompressedData = InnerArchive.ReadBytes(DecompressedLength);
+                    bSuccess = true;
                 }
                 else
                 {
                     byte[] CompressedData = InnerArchive.ReadBytes(CompressedLength + (bOutDataSlack ? OODLE_DICTIONARY_SLACK : 0));
-                    /*int OodleLen = */Compression.Oodle.Decompress(CompressedData, 0, CompressedLength, DecompressedData, 0, DecompressedLength);
-                    // bSuccess = OodleLen == DecompressedLength;
+                    try
+                    {
+                        Compression.Oodle.Decompress(CompressedData, 0, CompressedLength, DecompressedData, 0, DecompressedLength);
+                        bSuccess = true;
+                    } catch (Compression.OodleException)
+                    {
+                        bSuccess = false;
+                    }
                 }
 
                 if (bSuccess)
                 {
                     OutData = DecompressedData;
-                    OutDataBytes = (UInt32)DecompressedLength;
                 }
             }
             return bSuccess;
