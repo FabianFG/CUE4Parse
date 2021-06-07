@@ -20,8 +20,8 @@ namespace CUE4Parse_Conversion.Textures
                 
                 var bNearest = false;
                 if (texture.TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
-                    bNearest = trigger.Text.Equals("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
-                               trigger.Text.Equals("TF_Nearest", StringComparison.OrdinalIgnoreCase);
+                    bNearest = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
+                               trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
 
                 var width = mip.SizeX;
                 var heigth = mip.SizeY;
