@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
                 "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
                 "MovieSceneEvaluationKey" => type == ReadType.ZERO ? new FMovieSceneEvaluationKey() : Ar.Read<FMovieSceneEvaluationKey>(),
-                "MovieSceneFloatChannel" => type == ReadType.ZERO ? new MovieSceneFloatChannel() : new MovieSceneFloatChannel(Ar),
+                "MovieSceneFloatChannel" => type == ReadType.ZERO ? new FMovieSceneFloatChannel() : new FMovieSceneFloatChannel(Ar),
                 "MovieSceneFloatValue" => type == ReadType.ZERO ? new FMovieSceneFloatValue() : Ar.Read<FMovieSceneFloatValue>(),
                 "MovieSceneFrameRange" => type == ReadType.ZERO ? new FMovieSceneFrameRange() : Ar.Read<FMovieSceneFrameRange>(),
                 "MovieSceneSegment" => type == ReadType.ZERO ? new FMovieSceneSegment() : new FMovieSceneSegment(Ar),
