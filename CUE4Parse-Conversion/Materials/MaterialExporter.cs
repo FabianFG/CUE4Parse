@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures;
 using SkiaSharp;
@@ -67,8 +69,14 @@ namespace CUE4Parse_Conversion.Materials
 
             foreach (var texture in toExport)
             {
-                if (texture == unrealMaterial || !(texture is UTexture2D t)) continue;
-                _textures[t.Owner?.Name ?? t.Name] = t.Decode();
+                if (texture == unrealMaterial || texture is not UTexture2D t) continue;
+                
+                var bNearest = false;
+                if (t.TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
+                    bNearest = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
+                               trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
+                
+                _textures[t.Owner?.Name ?? t.Name] = t.Decode(bNearest);
             }
 
             if (unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)

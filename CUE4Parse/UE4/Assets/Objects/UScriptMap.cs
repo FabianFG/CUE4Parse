@@ -56,11 +56,17 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             foreach (var kvp in value.Properties)
             {
-                FPropertyTagType? key;
-                if (kvp.Key is StructProperty s && s.Value.StructType is FStructFallback f && f.Properties.Count > 0)
-                    key = f.Properties[0].Tag;
-                else
-                    key = kvp.Key;
+                FPropertyTagType? key = null;
+                if (kvp.Key is StructProperty s1 && s1.Value.StructType is FStructFallback f)
+                {
+                    foreach (var prop in f.Properties)
+                    {
+                        if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
+                        key = prop.Tag;
+                        break;
+                    }
+                }
+                else key = kvp.Key;
                 
                 if (key == null) continue;
                 writer.WritePropertyName(key.ToString().SubstringBefore('(').Trim());
