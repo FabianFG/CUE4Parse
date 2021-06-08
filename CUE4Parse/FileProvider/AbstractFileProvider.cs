@@ -195,12 +195,12 @@ namespace CUE4Parse.FileProvider
         {
             path = path.Replace('\\', '/');
             if (path[0] == '/')
-                path = path.Substring(1);
+                path = path[1..];
             var lastPart = path.SubstringAfterLast('/');
             // This part is only for FSoftObjectPaths and not really needed anymore internally, but it's still in here for user input
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeLast('/'), "/", lastPart.SubstringBefore('.'));
-            if (path[path.Length - 1] != '/' && !lastPart.Contains('.'))
+            if (path[^1] != '/' && !lastPart.Contains('.'))
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
             var trigger = path.SubstringBefore("/", comparisonType);
