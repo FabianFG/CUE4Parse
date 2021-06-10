@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -31,6 +32,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector UnrotateVector(FVector v)
         {
             return new(new FRotationMatrix(this).GetTransposed().TransformFVector(v));
+        }
+
+        public FVector Vector()
+        {
+            float cp, sp, cy, sy;
+            var pitchRadians = Pitch.ToRadians();
+            sp = (float) System.Math.Sin(pitchRadians);
+            cp = (float) System.Math.Cos(pitchRadians);
+            var yawRadians = Yaw.ToRadians();
+            sy = (float) System.Math.Sin(yawRadians);
+            cy = (float) System.Math.Cos(yawRadians);
+
+            return new FVector(cp * cy, cp * sy, sp);
         }
 
         public FQuat Quaternion()
@@ -104,6 +118,28 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return angle;
         }
 
+        public static byte CompressAxisToByte(float angle)
+        {
+            // map [0->360) to [0->256) and mask off any winding
+            return (byte) ((angle * 256.0f / 360.0f).RoundToInt() & 0xFF);
+        }
+        public static float DecompressAxisFromByte(byte angle)
+        {
+            // map [0->256) to [0->360)
+            return angle * 360.0f / 256.0f;
+        }
+        
+        public static ushort CompressAxisToShort(float angle)
+        {
+            // map [0->360) to [0->65536) and mask off any winding
+            return (ushort) ((angle * 65536.0f / 360.0f).RoundToInt() & 0xFFF);
+        }
+        public static float DecompressAxisFromShort(ushort angle)
+        {
+            // map [0->65536) to [0->360)
+            return angle * 360.0f / 65536.0f;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FRotator a, FRotator b) =>
             a.Pitch == b.Pitch && a.Yaw == b.Yaw && a.Roll == b.Roll;
@@ -115,6 +151,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public bool Equals(FRotator r, float tolerance = KindaSmallNumber) => System.Math.Abs(NormalizeAxis(Pitch - r.Pitch)) <= tolerance &&
                                                            System.Math.Abs(NormalizeAxis(Yaw - r.Yaw)) <= tolerance &&
                                                            System.Math.Abs(NormalizeAxis(Roll - r.Roll)) <= tolerance;
+
+        public override bool Equals(object? obj) => obj is FRotator other && Equals(other, 0f);
 
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
     }

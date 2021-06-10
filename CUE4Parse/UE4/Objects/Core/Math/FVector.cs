@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -167,10 +168,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is FVector other && Equals(other);
-        }
+        public override bool Equals(object? obj) => obj is FVector other && Equals(other, 0f);
 
         public override int GetHashCode()
         {
@@ -299,5 +297,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
             return distSquared;
         }
+
+        public static float DistSquared(FVector v1, FVector v2) =>
+            (v2.X - v1.X).Square() + (v2.Y - v1.Y).Square() + (v2.Z - v1.Z).Square();
     }
 }

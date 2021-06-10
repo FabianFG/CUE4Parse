@@ -36,7 +36,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly FCustomVersion[] CustomContainerVersion;
         public int TotalHeaderSize;
         public readonly string FolderName;
-        public PackageFlags PackageFlags;
+        public EPackageFlags PackageFlags;
         public int NameCount;
         public readonly int NameOffset;
         public readonly int GatherableTextDataCount;
@@ -85,7 +85,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             CustomContainerVersion = Ar.ReadArray<FCustomVersion>();
             TotalHeaderSize = Ar.Read<int>();
             FolderName = Ar.ReadFString();
-            PackageFlags = Ar.Read<PackageFlags>();
+            PackageFlags = Ar.Read<EPackageFlags>();
             NameCount = Ar.Read<int>();
             NameOffset = Ar.Read<int>();
             GatherableTextDataCount = Ar.Read<int>();

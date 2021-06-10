@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
         public FGuid? ObjectGuid { get; private set; }
-        public int /*EObjectFlags*/ Flags;
+        public EObjectFlags Flags;
 
         // public FObjectExport Export;
         public override IPackage? Owner
@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 Properties = DeserializePropertiesTagged(Ar);
             }
 
-            if ((Flags & 0x00000010) == 0 && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
+            if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
             {
                 ObjectGuid = Ar.Read<FGuid>();
             }
@@ -369,9 +369,9 @@ namespace CUE4Parse.UE4.Assets.Exports
             RepNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged;
         }
 
-        public FLifetimeProperty(ushort repIndex, ELifetimeCondition condition, ELifetimeRepNotifyCondition repNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged)
+        public FLifetimeProperty(int repIndex, ELifetimeCondition condition, ELifetimeRepNotifyCondition repNotifyCondition = ELifetimeRepNotifyCondition.REPNOTIFY_OnChanged)
         {
-            RepIndex = repIndex;
+            RepIndex = (ushort) repIndex;
             Condition = condition;
             RepNotifyCondition = repNotifyCondition;
         }

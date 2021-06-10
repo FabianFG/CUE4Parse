@@ -67,7 +67,7 @@ namespace CUE4Parse.UE4.Assets
                 export.Name = it.ObjectName.Text;
                 export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
                 export.Template = ResolvePackageIndex(it.TemplateIndex) as ResolvedExportObject;
-                export.Flags = (int) it.ObjectFlags;
+                export.Flags = (EObjectFlags) it.ObjectFlags;
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UObject>(() =>
                 {

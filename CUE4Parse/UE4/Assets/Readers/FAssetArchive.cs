@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new (); // FYI cloning will clear this dictionary
         private readonly FArchive _baseArchive;
         
-        public bool HasUnversionedProperties => Owner.HasFlags(PackageFlags.UnversionedProperties);
+        public bool HasUnversionedProperties => Owner.HasFlags(EPackageFlags.PKG_UnversionedProperties);
         public readonly IPackage Owner;
         public int AbsoluteOffset;
 

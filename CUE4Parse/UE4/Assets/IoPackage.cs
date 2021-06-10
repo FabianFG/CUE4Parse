@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets
             IoSummary = uassetAr.Read<FPackageSummary>();
             Summary = new FPackageFileSummary
             {
-                PackageFlags = (PackageFlags) IoSummary.PackageFlags,
+                PackageFlags = (EPackageFlags) IoSummary.PackageFlags,
                 TotalHeaderSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize,
                 NameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1,
                 ExportCount = (IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
@@ -109,7 +109,7 @@ namespace CUE4Parse.UE4.Assets
                             obj.Name = objectName.Text;
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
-                            obj.Flags = (int) export.ObjectFlags;
+                            obj.Flags = (EObjectFlags) export.ObjectFlags;
                             var exportType = obj.ExportType;
 
                             // Serialize
