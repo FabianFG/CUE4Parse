@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -23,17 +24,19 @@ namespace CUE4Parse.UE4.Assets
 
         private static void RegisterEngine()
         {
-            RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here???
+            RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here??? Yes
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
             RegisterClass(typeof(UDataTable));
+            RegisterClass(typeof(UFunction));
             RegisterClass(typeof(UMaterial));
             RegisterClass(typeof(UMaterialInstanceConstant));
             RegisterClass(typeof(USkeleton));
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
-            RegisterClass(typeof(UTexture2D));
+            RegisterClass(typeof(UUserDefinedEnum));
+            RegisterClass(typeof(UUserDefinedStruct));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
             RegisterClass(typeof(UBodySetup));
             RegisterClass(typeof(UModel));

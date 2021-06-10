@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine
 {
-    [JsonConverter(typeof(UCurveTableConverter))]
     public class UCurveTable : UObject
     {
         public Dictionary<FName, FStructFallback> RowMap { get; private set; } // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
@@ -20,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             var numRows = Ar.Read<int>();
             CurveTableMode = Ar.Read<ECurveTableMode>();
             RowMap = new Dictionary<FName, FStructFallback>(numRows);
-            for(var i = 0; i < numRows; i++)
+            for (var i = 0; i < numRows; i++)
             {
                 var rowName = Ar.ReadFName();
                 string rowStruct = CurveTableMode switch
@@ -32,8 +31,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 RowMap[rowName] = new FStructFallback(Ar, rowStruct);
             }
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Rows");
+            serializer.Serialize(writer, RowMap);
+        }
     }
-    
+
     public static class UCurveTableUtility
     {
         public static bool TryGetCurveTableRow(this UCurveTable curveTable, string rowKey, StringComparison comparisonType, out FStructFallback rowValue)
@@ -45,39 +52,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 rowValue = kvp.Value;
                 return true;
             }
-            
+
             rowValue = default;
             return false;
-        }
-    }
-    
-    public class UCurveTableConverter : JsonConverter<UCurveTable>
-    {
-        public override void WriteJson(JsonWriter writer, UCurveTable value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Rows");
-            serializer.Serialize(writer, value.RowMap); // will write CurveTableMode
-            
-            writer.WriteEndObject();
-        }
-
-        public override UCurveTable ReadJson(JsonReader reader, Type objectType, UCurveTable existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -18,19 +19,21 @@ namespace CUE4Parse.UE4.Assets.Exports
     {
         public List<FPropertyTag> Properties { get; }
     }
-    
+
     [JsonConverter(typeof(UObjectConverter))]
-    public class UObject : UExport, IPropertyHolder
+    public class UObject : IPropertyHolder
     {
+        public string Name { get; set; }
         public UObject? Outer;
         public UStruct? Class;
+        public ResolvedObject? Super;
         public ResolvedObject? Template;
         public List<FPropertyTag> Properties { get; private set; }
         public FGuid? ObjectGuid { get; private set; }
         public EObjectFlags Flags;
 
         // public FObjectExport Export;
-        public override IPackage? Owner
+        public IPackage? Owner
         {
             get
             {
@@ -45,24 +48,19 @@ namespace CUE4Parse.UE4.Assets.Exports
                 return current as IPackage;
             }
         }
-        public override string ExportType => Class?.Name ?? GetType().Name;
+        public string ExportType => Class?.Name ?? GetType().Name;
 
-        public UObject(FObjectExport exportObject) : base(exportObject)
+        public UObject()
         {
             Properties = new List<FPropertyTag>();
         }
 
-        public UObject() : base("")
-        {
-            Properties = new List<FPropertyTag>();
-        }
-
-        public UObject(List<FPropertyTag> properties) : base("")
+        public UObject(List<FPropertyTag> properties)
         {
             Properties = properties;
         }
 
-        public override void Deserialize(FAssetArchive Ar, long validPos)
+        public virtual void Deserialize(FAssetArchive Ar, long validPos)
         {
             if (Ar.HasUnversionedProperties)
             {
@@ -105,7 +103,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
         }
 
-        public override void PostLoad()
+        /** 
+	     * Do any object-specific cleanup required immediately after loading an object, 
+	     * and immediately after any undo/redo.
+	     */
+        public virtual void PostLoad()
         {
             
         }
@@ -183,6 +185,54 @@ namespace CUE4Parse.UE4.Assets.Exports
             return properties;
         }
 
+        protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            var package = Owner;
+
+            // export type
+            writer.WritePropertyName("Type");
+            writer.WriteValue(ExportType);
+
+            // object name
+            writer.WritePropertyName("Name"); // ctrl click depends on the name, we always need it
+            writer.WriteValue(Name);
+
+            // outer
+            if (Outer != null && Outer != package)
+            {
+                writer.WritePropertyName("Outer");
+                writer.WriteValue(Outer.Name); // TODO serialize the path too
+            }
+
+            // super
+            if (Super != null)
+            {
+                writer.WritePropertyName("Super");
+                writer.WriteValue(Super.Name.Text);
+            }
+
+            // template
+            if (Template != null)
+            {
+                writer.WritePropertyName("Template");
+                writer.WriteValue(Template.Name.Text);
+            }
+
+            // export properties
+            if (Properties.Count > 0)
+            {
+                writer.WritePropertyName("Properties");
+                writer.WriteStartObject();
+                foreach (var property in Properties)
+                {
+                    writer.WritePropertyName(property.Name.Text);
+                    serializer.Serialize(writer, property.Tag);
+                }
+
+                writer.WriteEndObject();
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
@@ -241,6 +291,8 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             
         }
+
+        public override string ToString() => $"{Name} | {ExportType}";
     }
 
     public static class PropertyUtil
@@ -308,29 +360,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public override void WriteJson(JsonWriter writer, UObject value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-            
+            value.WriteJson(writer, serializer);
             writer.WriteEndObject();
         }
 
@@ -397,32 +427,4 @@ namespace CUE4Parse.UE4.Assets.Exports
         public static bool operator ==(FLifetimeProperty a, FLifetimeProperty b) => a.RepIndex == b.RepIndex && a.Condition == b.Condition && a.RepNotifyCondition == b.RepNotifyCondition;
         public static bool operator !=(FLifetimeProperty a, FLifetimeProperty b) => !(a == b);
     }
-    
-    /** Secondary condition to check before considering the replication of a lifetime property. */
-    public enum ELifetimeCondition
-    {
-	    COND_None = 0,							// This property has no condition, and will send anytime it changes
-	    COND_InitialOnly = 1,					// This property will only attempt to send on the initial bunch
-	    COND_OwnerOnly = 2,						// This property will only send to the actor's owner
-	    COND_SkipOwner = 3,						// This property send to every connection EXCEPT the owner
-	    COND_SimulatedOnly = 4,					// This property will only send to simulated actors
-	    COND_AutonomousOnly = 5,				// This property will only send to autonomous actors
-	    COND_SimulatedOrPhysics = 6,			// This property will send to simulated OR bRepPhysics actors
-	    COND_InitialOrOwner = 7,				// This property will send on the initial packet, or to the actors owner
-	    COND_Custom = 8,						// This property has no particular condition, but wants the ability to toggle on/off via SetCustomIsActiveOverride
-	    COND_ReplayOrOwner = 9,					// This property will only send to the replay connection, or to the actors owner
-	    COND_ReplayOnly = 10,					// This property will only send to the replay connection
-	    COND_SimulatedOnlyNoReplay = 11,	    // This property will send to actors only, but not to replay connections
-	    COND_SimulatedOrPhysicsNoReplay = 12,	// This property will send to simulated Or bRepPhysics actors, but not to replay connections
-	    COND_SkipReplay = 13,					// This property will not send to the replay connection
-	    COND_Max = 14							
-    };
-
-
-    public enum ELifetimeRepNotifyCondition
-    {
-	    REPNOTIFY_OnChanged = 0,		// Only call the property's RepNotify function if it changes from the local value
-	    REPNOTIFY_Always = 1,		// Always Call the property's RepNotify function when it is received from the server
-    }
-    
 }

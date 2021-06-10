@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine
 {
-    [JsonConverter(typeof(UDataTableConverter))]
     public class UDataTable : UObject
     {
         public Dictionary<FName, FStructFallback> RowMap { get; private set; }
@@ -26,6 +25,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 RowMap[rowName] = new FStructFallback(Ar, rowStruct);
             }
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Rows");
+            serializer.Serialize(writer, RowMap);
+        }
     }
 
     public static class UDataTableUtility
@@ -42,36 +49,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             
             rowValue = default;
             return false;
-        }
-    }
-    
-    public class UDataTableConverter : JsonConverter<UDataTable>
-    {
-        public override void WriteJson(JsonWriter writer, UDataTable value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Rows");
-            serializer.Serialize(writer, value.RowMap); // will write structType from base Properties
-            
-            writer.WriteEndObject();
-        }
-
-        public override UDataTable ReadJson(JsonReader reader, Type objectType, UDataTable existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

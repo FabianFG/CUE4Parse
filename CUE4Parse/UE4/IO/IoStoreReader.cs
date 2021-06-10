@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.IO
     public class IoStoreReader : AbstractAesVfsReader
     {
         public readonly IReadOnlyList<FArchive> ContainerStreams;
-        
+
         public readonly FIoStoreTocResource TocResource;
 #if GENERATE_CHUNK_ID_DICT
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
@@ -91,7 +91,6 @@ namespace CUE4Parse.UE4.IO
                 Toc[TocResource.ChunkIds[i]] = TocResource.ChunkOffsetLengths[i];
             }
 #endif
-            
             Info = TocResource.Header;
             if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
             {
@@ -104,13 +103,12 @@ namespace CUE4Parse.UE4.IO
             if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
             return Read(ioEntry.ChunkId, ioEntry.Offset, ioEntry.Size);
         }
-        
+
         // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
         // UE Code builds a Map<FIoChunkId, FIoOffsetAndLength> to optimize loading of chunks just by their id
         // After some testing this appeared to take ~30mb of memory
         // We can save that memory since we rarely use loading by FIoChunkId directly (I'm pretty sure we just do for the global reader)
         // If anyone want to use the map anyway the define GENERATE_CHUNK_ID_DICT exists
-        
 
         public bool DoesChunkExist(FIoChunkId chunkId)
         {
@@ -133,7 +131,7 @@ namespace CUE4Parse.UE4.IO
 #endif
             return Read(chunkId, (long) offsetLength.Offset, (long) offsetLength.Length);
         }
-        
+
         private byte[] Read(FIoChunkId chunkId, long offset, long length)
         {
             var compressionBlockSize = TocResource.Header.CompressionBlockSize;
@@ -177,7 +175,7 @@ namespace CUE4Parse.UE4.IO
                     reader = clone;
                 }
                 else reader = ContainerStreams[partitionIndex];
-                
+
                 reader.Position = partitionOffset;
                 reader.Read(compressedBuffer, 0, (int) rawSize);
                 compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
@@ -209,9 +207,9 @@ namespace CUE4Parse.UE4.IO
         {
             var watch = new Stopwatch();
             watch.Start();
-            
+
             ProcessIndex(caseInsensitive);
-            
+
             var elapsed = watch.Elapsed;
             var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
             if (EncryptedFileCount != 0)
@@ -226,7 +224,7 @@ namespace CUE4Parse.UE4.IO
         {
             if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
             var directoryIndex = new FByteArchive(Path, DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
-            
+
             string mountPoint;
             try
             {
@@ -236,7 +234,7 @@ namespace CUE4Parse.UE4.IO
             {
                 throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Path}'", e);
             }
-            
+
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
@@ -244,12 +242,9 @@ namespace CUE4Parse.UE4.IO
             var fileEntries = directoryIndex.ReadArray<FIoFileIndexEntry>();
             var stringTable = directoryIndex.ReadArray(directoryIndex.ReadFString);
 
-            ref var root = ref directoryEntries[0];
-
             var files = new Dictionary<string, GameFile>(fileEntries.Length);
-            
-            ReadIndex(MountPoint, root.FirstChildEntry);
-            
+            ReadIndex(MountPoint, 0U);
+
             void ReadIndex(string directoryName, uint dir)
             {
                 const uint invalidHandle = uint.MaxValue;
@@ -257,13 +252,13 @@ namespace CUE4Parse.UE4.IO
                 while (dir != invalidHandle)
                 {
                     ref var dirEntry = ref directoryEntries[dir];
-                    var subDirectoryName = string.Concat(directoryName, stringTable[dirEntry.Name], '/');
+                    var subDirectoryName = dirEntry.Name == invalidHandle ? directoryName : $"{directoryName}{stringTable[dirEntry.Name]}/";
 
                     var file = dirEntry.FirstFileEntry;
                     while (file != invalidHandle)
                     {
                         ref var fileEntry = ref fileEntries[file];
-                        
+
                         var path = string.Concat(subDirectoryName, stringTable[fileEntry.Name]);
                         var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
                         if (entry.IsEncrypted)
@@ -275,12 +270,12 @@ namespace CUE4Parse.UE4.IO
 
                         file = fileEntry.NextFileEntry;
                     }
-                    
+
                     ReadIndex(subDirectoryName, dirEntry.FirstChildEntry);
                     dir = dirEntry.NextSiblingEntry;
                 }
             }
-            
+
             return Files = files;
         }
 
@@ -293,7 +288,6 @@ namespace CUE4Parse.UE4.IO
             {
                 stream.Dispose();
             }
-
         }
     }
 }

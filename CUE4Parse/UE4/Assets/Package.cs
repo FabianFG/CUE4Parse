@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets
         public FObjectExport[] ExportMap { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
 
-        public Package(FArchive uasset, FArchive uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+        public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             var uassetAr = new FAssetArchive(uasset, this);
@@ -46,7 +46,8 @@ namespace CUE4Parse.UE4.Assets
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
-            var uexpAr = new FAssetArchive(uexp, this, Summary.TotalHeaderSize);
+            FAssetArchive uexpAr = uexp == null ? uassetAr : new FAssetArchive(uexp, this, Summary.TotalHeaderSize); // allows embedded uexp data
+
             if (ubulk != null)
             {
                 //var offset = (int) (Summary.TotalHeaderSize + ExportMap.Sum(export => export.SerialSize));
@@ -66,6 +67,7 @@ namespace CUE4Parse.UE4.Assets
                 var export = ConstructObject(uStruct);
                 export.Name = it.ObjectName.Text;
                 export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
+                export.Super = ResolvePackageIndex(it.SuperIndex) as ResolvedExportObject;
                 export.Template = ResolvePackageIndex(it.TemplateIndex) as ResolvedExportObject;
                 export.Flags = (EObjectFlags) it.ObjectFlags;
                 it.ExportType = export.GetType();
@@ -96,17 +98,17 @@ namespace CUE4Parse.UE4.Assets
             }
         }
 
-        public Package(FArchive uasset, FArchive uexp, FArchive? ubulk = null, FArchive? uptnl = null,
+        public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null,
             IFileProvider? provider = null, TypeMappings? mappings = null)
             : this(uasset, uexp, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
                 uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings) { }
 
-        public Package(string name, byte[] uasset, byte[] uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null)
-            : this(new FByteArchive($"{name}.uasset", uasset), new FByteArchive($"{name}.uexp", uexp),
+        public Package(string name, byte[] uasset, byte[]? uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null)
+            : this(new FByteArchive($"{name}.uasset", uasset), uexp != null ? new FByteArchive($"{name}.uexp", uexp) : null,
                 ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
                 uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider) { }
 
-        public override UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             try
             {

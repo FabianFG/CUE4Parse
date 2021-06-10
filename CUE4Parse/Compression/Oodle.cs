@@ -40,14 +40,16 @@ namespace CUE4Parse.Compression
             {
                 fixed (byte* compressedPtr = compressed, uncompressedPtr = uncompressed)
                 {
-                    var decodedSize = Oodle.OodleLZ_Decompress(compressedPtr + compressedOffset, compressedSize,
+                    var decodedSize = OodleLZ_Decompress(compressedPtr + compressedOffset, compressedSize,
                         uncompressedPtr + uncompressedOffset, uncompressedSize, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    
                     if (decodedSize <= 0)
                     {
                         if (reader != null) throw new OodleException(reader, $"Oodle decompression failed with result {decodedSize}");
-                        else throw new OodleException($"Oodle decompression failed with result {decodedSize}");
+                        throw new OodleException($"Oodle decompression failed with result {decodedSize}");
                     }
-                    else if (decodedSize < uncompressedSize)
+                    
+                    if (decodedSize < uncompressedSize)
                     {
                         // Not sure whether this should be an exception or not
                         Log.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
@@ -64,26 +66,28 @@ namespace CUE4Parse.Compression
         private static async Task<bool> DownloadOodleDll()
         {
             using var client = new HttpClient {Timeout = TimeSpan.FromSeconds(2)};
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(WARFRAME_INDEX_URL));
+            using HttpRequestMessage request = new (HttpMethod.Get, new Uri(WARFRAME_INDEX_URL));
             try
             {
                 using var httpResponseMessage = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 var lzma = await httpResponseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
                 var input = new MemoryStream(lzma);
                 var output = new MemoryStream();
+                
                 Lzma.Decompress(input, output);
                 output.Position = 0;
-                using var reader = new StreamReader(output);
+                
                 string? line, dllUrl = null;
+                using var reader = new StreamReader(output);
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
                     if (line.Contains(OODLE_DLL_NAME))
                     {
-                        dllUrl = WARFRAME_CDN_HOST + line.Substring(0, line.IndexOf(','));
+                        dllUrl = WARFRAME_CDN_HOST + line[..line.IndexOf(',')];
                         break;
                     }
                 }
+                
                 if (dllUrl == null)
                 {
                     Log.Warning("Warframe index did not contain oodle dll");
@@ -95,10 +99,12 @@ namespace CUE4Parse.Compression
                 var dllLzma = await dllResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
                 input = new MemoryStream(dllLzma);
                 output = new MemoryStream();
+                
                 Lzma.Decompress(input, output);
                 output.Position = 0;
-                File.WriteAllBytes(OODLE_DLL_NAME, output.ToArray());
-                Log.Information("Successfully downloaded oodle dll");
+                
+                await File.WriteAllBytesAsync(OODLE_DLL_NAME, output.ToArray());
+                Log.Information($"Successfully downloaded oodle dll at \"{OODLE_DLL_NAME}\"");
                 return true;
             }
             catch (Exception e)

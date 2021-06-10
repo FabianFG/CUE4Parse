@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Assets
         public bool HasFlags(EPackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
 
         /*[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T? GetExportOfTypeOrNull<T>() where T : UExport
+        public T? GetExportOfTypeOrNull<T>() where T : UObject
         {
             var export = ExportMap.FirstOrDefault(it => typeof(T).IsAssignableFrom(it.ExportType));
             try
@@ -65,34 +65,34 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetExportOfType<T>() where T : UExport =>
+        public T GetExportOfType<T>() where T : UObject =>
             GetExportOfTypeOrNull<T>() ??
             throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");*/
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
+        public abstract UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
-            where T : UExport => GetExportOrNull(name, comparisonType) as T;
+            where T : UObject => GetExportOrNull(name, comparisonType) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+        public UObject GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             GetExportOrNull(name, comparisonType) ??
             throw new NullReferenceException(
                 $"Package '{Name}' does not have an export with the name '{name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UExport =>
+        public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject =>
             GetExportOrNull<T>(name, comparisonType) ??
             throw new NullReferenceException(
                 $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport? GetExport(int index) => index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
+        public UObject? GetExport(int index) => index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> GetExports() => ExportsLazy.Select(x => x.Value);
+        public IEnumerable<UObject> GetExports() => ExportsLazy.Select(x => x.Value);
 
         public Lazy<UObject>? FindObject(FPackageIndex? index)
         {
@@ -125,10 +125,10 @@ namespace CUE4Parse.UE4.Assets
         public virtual Lazy<UObject>? Object => null;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport Load(IFileProvider provider) => Object.Value;
+        public UObject Load(IFileProvider provider) => Object.Value;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(IFileProvider provider, out UExport export)
+        public bool TryLoad(IFileProvider provider, out UObject export)
         {
             try
             {
@@ -143,10 +143,10 @@ namespace CUE4Parse.UE4.Assets
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport> LoadAsync(IFileProvider provider) => await Task.FromResult(Object.Value);
+        public async Task<UObject> LoadAsync(IFileProvider provider) => await Task.FromResult(Object.Value);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        public async Task<UObject?> TryLoadAsync(IFileProvider provider)
         {
             try
             {
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Assets
             }
             catch
             {
-                return await Task.FromResult<UExport?>(null);
+                return await Task.FromResult<UObject?>(null);
             }
         }
         

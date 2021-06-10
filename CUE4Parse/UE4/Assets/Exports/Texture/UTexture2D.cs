@@ -13,14 +13,13 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
-    [JsonConverter(typeof(UTexture2DConverter))]
     public class UTexture2D : UTexture
     {
         public FTexture2DMipMap[] Mips { get; private set; }
         public int FirstMip { get; private set; }
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
-        public int NumSlices { get; private set; }    // important only while UTextureCube4 is derived from UTexture2D in out implementation
+        public int NumSlices { get; private set; } // important only while UTextureCube4 is derived from UTexture2D in out implementation
         public bool IsVirtual { get; private set; }
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
@@ -30,12 +29,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             base.Deserialize(Ar, validPos);
             // UObject Properties
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
-            
-            
+
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-
             var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
-
             if (Ar.Ver < UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR)
             {
                 Log.Warning("Untested code: UTexture2D::LegacySerialize");
@@ -77,7 +73,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                                 $"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                             Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                         }
-                        
+
                         // copy data to UTexture2D
                         Mips = data.Mips;
                         FirstMip = data.FirstMip;
@@ -90,7 +86,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                     else
                     {
 #if DEBUG
-                        Log.Debug($"Skipping data for format {pixelFormatEnum}");               
+                        Log.Debug($"Skipping data for format {pixelFormatEnum}");
 #endif
                         Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                     }
@@ -107,71 +103,38 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             // ???
         }
-    }
-    
-    public class UTexture2DConverter : JsonConverter<UTexture2D>
-    {
-        public override void WriteJson(JsonWriter writer, UTexture2D value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                writer.WritePropertyName("Mips");
-                writer.WriteStartArray();
-                {
-                    foreach (var mip in value.Mips)
-                    {
-                        serializer.Serialize(writer, mip);
-                    }
-                }
-                writer.WriteEndArray();
-                
-                writer.WritePropertyName("FirstMip");
-                writer.WriteValue(value.FirstMip);
-                
-                writer.WritePropertyName("SizeX");
-                writer.WriteValue(value.SizeX);
-                
-                writer.WritePropertyName("SizeY");
-                writer.WriteValue(value.SizeY);
-                
-                writer.WritePropertyName("NumSlices");
-                writer.WriteValue(value.NumSlices);
-                
-                writer.WritePropertyName("IsVirtual");
-                writer.WriteValue(value.IsVirtual);
-                
-                writer.WritePropertyName("Format");
-                writer.WriteValue(value.Format.ToString());
-                
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-            
-            writer.WriteEndObject();
-        }
 
-        public override UTexture2D ReadJson(JsonReader reader, Type objectType, UTexture2D existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Mips");
+            writer.WriteStartArray();
+            {
+                foreach (var mip in Mips)
+                {
+                    serializer.Serialize(writer, mip);
+                }
+            }
+            writer.WriteEndArray();
+
+            writer.WritePropertyName("FirstMip");
+            writer.WriteValue(FirstMip);
+
+            writer.WritePropertyName("SizeX");
+            writer.WriteValue(SizeX);
+
+            writer.WritePropertyName("SizeY");
+            writer.WriteValue(SizeY);
+
+            writer.WritePropertyName("NumSlices");
+            writer.WriteValue(NumSlices);
+
+            writer.WritePropertyName("IsVirtual");
+            writer.WriteValue(IsVirtual);
+
+            writer.WritePropertyName("Format");
+            writer.WriteValue(Format.ToString());
         }
     }
 }

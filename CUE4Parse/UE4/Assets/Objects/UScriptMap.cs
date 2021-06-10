@@ -22,23 +22,27 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (tagData.InnerType == null || tagData.ValueType == null)
                 throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
             
-            var numKeyToRemove = Ar.Read<int>();
-            for (var i = 0; i < numKeyToRemove; i++)
+            var numKeysToRemove = Ar.Read<int>();
+            for (var i = 0; i < numKeysToRemove; i++)
             {
-                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData, ReadType.MAP);
+                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
             }
 
             var numEntries = Ar.Read<int>();
             Properties = new Dictionary<FPropertyTagType?, FPropertyTagType?>(numEntries);
             for (var i = 0; i < numEntries; i++)
             {
+                var isReadingValue = false;
                 try
                 {
-                    Properties[FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP)] = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
+                    var key = FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+                    isReadingValue = true;
+                    var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
+                    Properties[key] = value;
                 }
                 catch (ParserException e)
                 {
-                    throw new ParserException(Ar, $"Failed to read key/value pair for index {i} in map", e);
+                    throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
                 }
             }
         }
@@ -52,11 +56,17 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             foreach (var kvp in value.Properties)
             {
-                FPropertyTagType? key;
-                if (kvp.Key is StructProperty s && s.Value.StructType is FStructFallback f && f.Properties.Count > 0)
-                    key = f.Properties[0].Tag;
-                else
-                    key = kvp.Key;
+                FPropertyTagType? key = null;
+                if (kvp.Key is StructProperty s1 && s1.Value.StructType is FStructFallback f)
+                {
+                    foreach (var prop in f.Properties)
+                    {
+                        if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
+                        key = prop.Tag;
+                        break;
+                    }
+                }
+                else key = kvp.Key;
                 
                 if (key == null) continue;
                 writer.WritePropertyName(key.ToString().SubstringBefore('(').Trim());

@@ -7,6 +7,7 @@
         Gzip = 2, //???
         Custom = 3,
         Oodle = 4,
+        LZ4,
         Unknown
     }
 }

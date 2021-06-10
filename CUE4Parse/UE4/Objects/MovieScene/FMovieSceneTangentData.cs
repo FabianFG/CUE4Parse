@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FMovieSceneTangentData : IUStruct
     {
         public readonly float ArriveTangent;

@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -6,20 +7,43 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public int ArrayDim;
         public int ElementSize;
-        public ulong SaveFlags;
+        public ulong PropertyFlags;
         public ushort RepIndex;
         public FName RepNotifyFunc;
-        public byte BlueprintReplicationCondition;
+        public ELifetimeCondition BlueprintReplicationCondition;
 
         public override void Deserialize(FAssetArchive Ar)
         {
             base.Deserialize(Ar);
             ArrayDim = Ar.Read<int>();
             ElementSize = Ar.Read<int>();
-            SaveFlags = Ar.Read<ulong>();
+            PropertyFlags = Ar.Read<ulong>();
             RepIndex = Ar.Read<ushort>();
             RepNotifyFunc = Ar.ReadFName();
-            BlueprintReplicationCondition = Ar.Read<byte>();
+            BlueprintReplicationCondition = (ELifetimeCondition) Ar.Read<byte>();
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("ArrayDim");
+            writer.WriteValue(ArrayDim);
+
+            writer.WritePropertyName("ElementSize");
+            writer.WriteValue(ElementSize);
+
+            writer.WritePropertyName("PropertyFlags");
+            writer.WriteValue(PropertyFlags);
+
+            writer.WritePropertyName("RepIndex");
+            writer.WriteValue(RepIndex);
+
+            writer.WritePropertyName("RepNotifyFunc");
+            serializer.Serialize(writer, RepNotifyFunc);
+
+            writer.WritePropertyName("BlueprintReplicationCondition");
+            writer.WriteValue(BlueprintReplicationCondition.ToString());
         }
     }
 
@@ -32,6 +56,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             Inner = (FProperty?) SerializeSingleField(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Inner");
+            serializer.Serialize(writer, Inner);
+        }
     }
 
     public class FBoolProperty : FProperty
@@ -41,7 +73,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public byte ByteMask;
         public byte FieldMask;
         public byte BoolSize;
-        public byte NativeBool;
+        public bool bIsNativeBool;
 
         public override void Deserialize(FAssetArchive Ar)
         {
@@ -51,7 +83,30 @@ namespace CUE4Parse.UE4.Objects.UObject
             ByteMask = Ar.Read<byte>();
             FieldMask = Ar.Read<byte>();
             BoolSize = Ar.Read<byte>();
-            NativeBool = Ar.Read<byte>();
+            bIsNativeBool = Ar.ReadFlag();
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("FieldSize");
+            writer.WriteValue(FieldSize);
+
+            writer.WritePropertyName("ByteOffset");
+            writer.WriteValue(ByteOffset);
+
+            writer.WritePropertyName("ByteMask");
+            writer.WriteValue(ByteMask);
+
+            writer.WritePropertyName("FieldMask");
+            writer.WriteValue(FieldMask);
+
+            writer.WritePropertyName("BoolSize");
+            writer.WriteValue(BoolSize);
+
+            writer.WritePropertyName("bIsNativeBool");
+            writer.WriteValue(bIsNativeBool);
         }
     }
 
@@ -64,6 +119,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             Enum = new FPackageIndex(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Enum");
+            serializer.Serialize(writer, Enum);
+        }
     }
 
     public class FClassProperty : FObjectProperty
@@ -75,6 +138,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             MetaClass = new FPackageIndex(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("MetaClass");
+            serializer.Serialize(writer, MetaClass);
+        }
     }
 
     public class FDelegateProperty : FProperty
@@ -85,6 +156,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar);
             SignatureFunction = new FPackageIndex(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("SignatureFunction");
+            serializer.Serialize(writer, SignatureFunction);
         }
     }
 
@@ -98,6 +177,17 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             Enum = new FPackageIndex(Ar);
             UnderlyingProp = (FNumericProperty?) SerializeSingleField(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Enum");
+            serializer.Serialize(writer, Enum);
+
+            writer.WritePropertyName("UnderlyingProp");
+            serializer.Serialize(writer, UnderlyingProp);
         }
     }
 
@@ -120,6 +210,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             InterfaceClass = new FPackageIndex(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("InterfaceClass");
+            serializer.Serialize(writer, InterfaceClass);
+        }
     }
 
     public class FMapProperty : FProperty
@@ -133,6 +231,17 @@ namespace CUE4Parse.UE4.Objects.UObject
             KeyProp = (FProperty?) SerializeSingleField(Ar);
             ValueProp = (FProperty?) SerializeSingleField(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("KeyProp");
+            serializer.Serialize(writer, KeyProp);
+
+            writer.WritePropertyName("ValueProp");
+            serializer.Serialize(writer, ValueProp);
+        }
     }
 
     public class FMulticastDelegateProperty : FProperty
@@ -144,6 +253,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             SignatureFunction = new FPackageIndex(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("SignatureFunction");
+            serializer.Serialize(writer, SignatureFunction);
+        }
     }
 
     public class FMulticastInlineDelegateProperty : FProperty
@@ -154,6 +271,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar);
             SignatureFunction = new FPackageIndex(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("SignatureFunction");
+            serializer.Serialize(writer, SignatureFunction);
         }
     }
 
@@ -170,6 +295,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             PropertyClass = new FPackageIndex(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("PropertyClass");
+            serializer.Serialize(writer, PropertyClass);
+        }
     }
 
     public class FSoftClassProperty : FObjectProperty
@@ -180,6 +313,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar);
             MetaClass = new FPackageIndex(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("MetaClass");
+            serializer.Serialize(writer, MetaClass);
         }
     }
 
@@ -194,6 +335,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar);
             ElementProp = (FProperty?) SerializeSingleField(Ar);
         }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("ElementProp");
+            serializer.Serialize(writer, ElementProp);
+        }
     }
 
     public class FStrProperty : FProperty { }
@@ -206,6 +355,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar);
             Struct = new FPackageIndex(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Struct");
+            serializer.Serialize(writer, Struct);
         }
     }
 
