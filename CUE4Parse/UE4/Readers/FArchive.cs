@@ -72,7 +72,19 @@ namespace CUE4Parse.UE4.Readers
 
             return ReadArray<T>(length);
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] ReadBulkArray<T>(Func<T> getter)
+        {
+            int elementSize = Read<int>();
+            int elementCount = Read<int>();
+            long pos = Position;
+            T[] array = ReadArray<T>(elementCount, getter);
+            if (Position != pos + array.Length * elementSize)
+                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
+            return array;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(int length, Func<(TKey, TValue)> getter) where TKey : notnull
         {
