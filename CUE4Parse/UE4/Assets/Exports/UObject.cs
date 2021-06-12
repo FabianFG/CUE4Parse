@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 return current as IPackage;
             }
         }
-        public string ExportType => Class?.Name ?? GetType().Name;
+        public virtual string ExportType => Class?.Name ?? GetType().Name;
 
         public UObject()
         {
