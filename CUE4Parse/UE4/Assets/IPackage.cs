@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Assets
 
     public interface IPackage
     {
-        public string Name { get; }
+        public string Name { get; set; }
         public IFileProvider? Provider { get; }
         public TypeMappings? Mappings { get; }
 
