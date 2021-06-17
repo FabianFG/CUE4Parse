@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -18,7 +19,7 @@ namespace CUE4Parse.UE4.Assets
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
         public abstract Lazy<UObject>[] ExportsLazy { get; }
-        
+
         public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
             Name = name;
@@ -90,7 +91,7 @@ namespace CUE4Parse.UE4.Assets
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UObject? GetExport(int index) => index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<UObject> GetExports() => ExportsLazy.Select(x => x.Value);
 
@@ -123,10 +124,50 @@ namespace CUE4Parse.UE4.Assets
         public virtual ResolvedObject? Class => null;
         public virtual ResolvedObject? Super => null;
         public virtual Lazy<UObject>? Object => null;
-        
+
+        public string GetFullName(ResolvedObject? stopOuter = null, bool includeClassPackage = false)
+        {
+            var result = new StringBuilder(128);
+            GetFullName(stopOuter, result, includeClassPackage);
+            return result.ToString();
+        }
+
+        public void GetFullName(ResolvedObject? stopOuter, StringBuilder resultString, bool includeClassPackage = false)
+        {
+            resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name);
+            resultString.Append(' ');
+            GetPathName(stopOuter, resultString);
+        }
+
+        public string GetPathName(ResolvedObject? stopOuter = null)
+        {
+            var result = new StringBuilder();
+            GetPathName(stopOuter, result);
+            return result.ToString();
+        }
+
+        public void GetPathName(ResolvedObject? stopOuter, StringBuilder resultString)
+        {
+            if (this != stopOuter)
+            {
+                var objOuter = Outer;
+                if (objOuter != null && objOuter != stopOuter)
+                {
+                    objOuter.GetPathName(stopOuter, resultString);
+                    resultString.Append(objOuter.Outer?.Class?.Name.Text == "Package" ? ':' : '.');
+                }
+
+                resultString.Append(Name);
+            }
+            else
+            {
+                resultString.Append("None");
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UObject Load(IFileProvider provider) => Object.Value;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad(IFileProvider provider, out UObject export)
         {
@@ -141,10 +182,10 @@ namespace CUE4Parse.UE4.Assets
                 return false;
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UObject> LoadAsync(IFileProvider provider) => await Task.FromResult(Object.Value);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UObject?> TryLoadAsync(IFileProvider provider)
         {
@@ -157,27 +198,22 @@ namespace CUE4Parse.UE4.Assets
                 return await Task.FromResult<UObject?>(null);
             }
         }
-        
-        public override string ToString()
-        {
-            return $"{Name.Text} ({Class.Name})";
-        }
+
+        public override string ToString() => GetFullName();
     }
-    
+
     public class ResolvedObjectConverter : JsonConverter<ResolvedObject>
     {
         public override void WriteJson(JsonWriter writer, ResolvedObject value, JsonSerializer serializer)
         {
             var outerChain = new List<string>();
-            var current = value.Outer;
-            while (current != null)
+            for (var current = value.Outer; current != null; current = current.Outer)
             {
                 outerChain.Add(current.Name.Text);
-                current = current.Outer;
             }
-            
+
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("ObjectName"); // 1:2:3 if we are talking about an export in the current asset
             writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
 

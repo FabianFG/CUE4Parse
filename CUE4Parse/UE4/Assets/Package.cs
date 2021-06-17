@@ -60,40 +60,40 @@ namespace CUE4Parse.UE4.Assets
                 var offset = Summary.BulkDataStartOffset;
                 uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
-            
-            foreach (var it in ExportMap)
+
+            foreach (var export in ExportMap)
             {
-                if (ResolvePackageIndex(it.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
-                var export = ConstructObject(uStruct);
-                export.Name = it.ObjectName.Text;
-                export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
-                export.Super = ResolvePackageIndex(it.SuperIndex) as ResolvedExportObject;
-                export.Template = ResolvePackageIndex(it.TemplateIndex) as ResolvedExportObject;
-                export.Flags = (EObjectFlags) it.ObjectFlags;
-                it.ExportType = export.GetType();
-                it.ExportObject = new Lazy<UObject>(() =>
+                if (ResolvePackageIndex(export.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
+                var obj = ConstructObject(uStruct);
+                obj.Name = export.ObjectName.Text;
+                obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
+                obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
+                obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                obj.Flags = (EObjectFlags) export.ObjectFlags;
+                export.ExportType = obj.GetType();
+                export.ExportObject = new Lazy<UObject>(() =>
                 {
-                    uexpAr.SeekAbsolute(it.RealSerialOffset, SeekOrigin.Begin);
-                    var validPos = uexpAr.Position + it.SerialSize;
+                    uexpAr.SeekAbsolute(export.RealSerialOffset, SeekOrigin.Begin);
+                    var validPos = uexpAr.Position + export.SerialSize;
                     try
                     {
-                        export.Deserialize(uexpAr, validPos);
+                        obj.Deserialize(uexpAr, validPos);
 #if DEBUG
                         if (validPos != uexpAr.Position)
-                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", export.ExportType, validPos - uexpAr.Position);
+                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - uexpAr.Position);
                         else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", export.ExportType, it.RealSerialOffset, it.SerialSize);
+                            Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, export.RealSerialOffset, export.SerialSize);
 #endif
-                        
+
                         // TODO right place ???
-                        export.PostLoad();
+                        obj.PostLoad();
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, "Could not read {0} correctly", export.ExportType);
+                        Log.Error(e, "Could not read {0} correctly", obj.ExportType);
                     }
 
-                    return export;
+                    return obj;
                 });
             }
         }
@@ -128,9 +128,67 @@ namespace CUE4Parse.UE4.Assets
             if (index == null || index.IsNull)
                 return null;
             if (index.IsImport && -index.Index - 1 < ImportMap.Length)
-                return new ResolvedScriptObject(-index.Index - 1, this);
+                return ResolveImport(index);
             if (index.IsExport && index.Index - 1 < ExportMap.Length)
                 return new ResolvedExportObject(index.Index - 1, this);
+            return null;
+        }
+
+        private ResolvedObject? ResolveImport(FPackageIndex importIndex)
+        {
+            var import = ImportMap[-importIndex.Index - 1];
+            if (import.ClassName.Text == "Class")
+            {
+                return new ResolvedLoadedObject(-importIndex.Index - 1, new UScriptClass(import.ObjectName.Text));
+            }
+            var outerMostIndex = importIndex;
+            FObjectImport outerMostImport;
+            while (true)
+            {
+                outerMostImport = ImportMap[-outerMostIndex.Index - 1];
+                if (outerMostImport.OuterIndex.IsNull)
+                    break;
+                outerMostIndex = outerMostImport.OuterIndex;
+            }
+
+            outerMostImport = ImportMap[-outerMostIndex.Index - 1];
+            if (outerMostImport.ObjectName.Text.StartsWith("/Script/"))
+            {
+                return null; // TODO handle script CDO references
+            }
+
+            var importPackage = Provider?.LoadPackage(outerMostImport.ObjectName.Text) as AbstractUePackage;
+            if (importPackage == null)
+            {
+                Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
+                return null;
+            }
+
+            string? outer = null;
+            if (outerMostIndex != import.OuterIndex && import.OuterIndex.IsImport)
+            {
+                var outerImport = ImportMap[-import.OuterIndex.Index - 1];
+                outer = ResolveImport(import.OuterIndex)?.GetPathName();
+                if (outer == null)
+                {
+                    Log.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
+                    return null;
+                }
+            }
+
+            if (importPackage is not Package casted)
+                return null;
+            for (var i = 0; i < casted.ExportMap.Length; i++)
+            {
+                FObjectExport export = casted.ExportMap[i];
+                if (export.ObjectName.Text != import.ObjectName.Text)
+                    continue;
+                var thisOuter = ResolvePackageIndex(export.OuterIndex);
+                if (thisOuter?.GetPathName() == outer)
+                    return new ResolvedExportObject(i, casted);
+            }
+
+            Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
             return null;
         }
 
@@ -144,24 +202,10 @@ namespace CUE4Parse.UE4.Assets
             }
 
             public override FName Name => _export.ObjectName;
-            public override ResolvedObject? Outer => Package.ResolvePackageIndex(_export.OuterIndex);
+            public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject(Index, (UObject) Package);
+            public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
-            public override Lazy<UObject>? Object => Super?.Object ?? _export.ExportObject ?? null;
-        }
-        
-        private class ResolvedScriptObject : ResolvedObject
-        {
-            private readonly FObjectImport _import;
-
-            public ResolvedScriptObject(int index, Package package) : base(package, index)
-            {
-                _import = package.ImportMap[index];
-            }
-
-            public override FName Name => _import.ObjectName;
-            public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
-            public override ResolvedObject Class => new ResolvedLoadedObject(Index, new UScriptClass(_import.ClassName.Text));
-            public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
+            public override Lazy<UObject> Object => _export.ExportObject;
         }
     }
 }

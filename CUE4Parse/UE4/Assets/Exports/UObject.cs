@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
@@ -76,6 +77,64 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
             {
                 ObjectGuid = Ar.Read<FGuid>();
+            }
+        }
+
+        /**
+         * Returns the fully qualified pathname for this object as well as the name of the class, in the format:
+         * 'ClassName Outermost.[Outer:]Name'.
+         *
+         * @param   stopOuter   if specified, indicates that the output string should be relative to this object.  if StopOuter
+         *                      does not exist in this object's Outer chain, the result would be the same as passing NULL.
+         */
+        public string GetFullName(UObject? stopOuter = null, bool includeClassPackage = false)
+        {
+            var result = new StringBuilder(128);
+            GetFullName(stopOuter, result, includeClassPackage);
+            return result.ToString();
+        }
+
+        public void GetFullName(UObject? stopOuter, StringBuilder resultString, bool includeClassPackage = false)
+        {
+            resultString.Append(includeClassPackage ? Class?.GetPathName() : ExportType);
+            resultString.Append(' ');
+            GetPathName(stopOuter, resultString);
+        }
+
+        /**
+         * Returns the fully qualified pathname for this object, in the format:
+         * 'Outermost[.Outer].Name'
+         *
+         * @param   stopOuter   if specified, indicates that the output string should be relative to this object.  if stopOuter
+         *                      does not exist in this object's outer chain, the result would be the same as passing null.
+         */
+        public string GetPathName(UObject? stopOuter = null)
+        {
+            var result = new StringBuilder();
+            GetPathName(stopOuter, result);
+            return result.ToString();
+        }
+
+        /**
+         * Versions of getPathName() that eliminates unnecessary copies and allocations.
+         */
+        public void GetPathName(UObject? stopOuter, StringBuilder resultString)
+        {
+            if (this != stopOuter)
+            {
+                var objOuter = Outer;
+                if (objOuter != null && objOuter != stopOuter)
+                {
+                    objOuter.GetPathName(stopOuter, resultString);
+                    // SUBOBJECT_DELIMITER_CHAR is used to indicate that this object's outer is not a UPackage
+                    resultString.Append(objOuter.Outer is IPackage ? ':' : '.');
+                }
+
+                resultString.Append(Name);
+            }
+            else
+            {
+                resultString.Append("None");
             }
         }
 
@@ -292,7 +351,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             
         }
 
-        public override string ToString() => $"{Name} | {ExportType}";
+        public override string ToString() => GetFullName();
     }
 
     public static class PropertyUtil
