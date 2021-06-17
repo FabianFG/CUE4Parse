@@ -157,7 +157,11 @@ namespace CUE4Parse.UE4.Assets
                 return null; // TODO handle script CDO references
             }
 
-            var importPackage = Provider?.LoadPackage(outerMostImport.ObjectName.Text) as AbstractUePackage;
+            if (Provider == null)
+                return null;
+            Package? importPackage = null;
+            if (Provider.TryLoadPackage(outerMostImport.ObjectName.Text, out var package))
+                importPackage = package as Package;
             if (importPackage == null)
             {
                 Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
@@ -176,16 +180,14 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
 
-            if (importPackage is not Package casted)
-                return null;
-            for (var i = 0; i < casted.ExportMap.Length; i++)
+            for (var i = 0; i < importPackage.ExportMap.Length; i++)
             {
-                FObjectExport export = casted.ExportMap[i];
+                FObjectExport export = importPackage.ExportMap[i];
                 if (export.ObjectName.Text != import.ObjectName.Text)
                     continue;
                 var thisOuter = ResolvePackageIndex(export.OuterIndex);
                 if (thisOuter?.GetPathName() == outer)
-                    return new ResolvedExportObject(i, casted);
+                    return new ResolvedExportObject(i, importPackage);
             }
 
             Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
