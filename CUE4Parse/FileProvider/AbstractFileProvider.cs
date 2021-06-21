@@ -204,7 +204,7 @@ namespace CUE4Parse.FileProvider
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
             var trigger = path.SubstringBefore("/", comparisonType);
-            if (trigger.Equals(GameName, comparisonType))
+            if (trigger.Equals(GameName, StringComparison.OrdinalIgnoreCase))
             {
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
