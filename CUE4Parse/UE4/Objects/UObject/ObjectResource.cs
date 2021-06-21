@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public override string ToString()
         {
-            return ResolvedObject?.ToString().Insert(0, "ResolvedObject: ") ?? Index.ToString();
+            return ResolvedObject?.ToString() ?? Index.ToString();
         }
 
         #region Loading Methods

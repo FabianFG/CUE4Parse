@@ -168,6 +168,9 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
+            if (length is < -65536 or > 65536)
+                throw new ParserException($"Invalid FString length '{length}'");
+
             if (length == 0)
             {
                 return string.Empty;
