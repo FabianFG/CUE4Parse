@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -74,15 +73,32 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T[] ReadBulkArray<T>(Func<T> getter)
+        public T[] ReadBulkArray<T>(int elementSize, int elementCount, Func<T> getter)
         {
-            int elementSize = Read<int>();
-            int elementCount = Read<int>();
             long pos = Position;
             T[] array = ReadArray<T>(elementCount, getter);
             if (Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
             return array;
+        }
+        public T[] ReadBulkArray<T>() where T : struct
+        {
+            int elementSize = Read<int>();
+            int elementCount = Read<int>();
+            long pos = Position;
+            T[] array = ReadArray<T>(elementCount);
+            if (Position != pos + array.Length * elementSize)
+                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
+            return array;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] ReadBulkArray<T>(Func<T> getter)
+        {
+            int elementSize = Read<int>();
+            int elementCount = Read<int>();
+            long pos = Position;
+            return ReadBulkArray<T>(elementSize, elementCount, getter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

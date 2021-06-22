@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 
@@ -30,6 +31,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UMaterial));
             RegisterClass(typeof(UMaterialInstanceConstant));
             RegisterClass(typeof(USkeleton));
+            RegisterClass(typeof(UStaticMesh));
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
