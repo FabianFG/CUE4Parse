@@ -28,6 +28,14 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             _changeList = Ar.Read<uint>();
         }
 
+        public FEngineVersionBase(ushort major, ushort minor, ushort patch, uint changeList)
+        {
+            Major = major;
+            Minor = minor;
+            Patch = patch;
+            _changeList = changeList;
+        }
+
         /** Checks if the changelist number represents licensee changelist number. */
         public bool IsLicenseeVersion()
         {

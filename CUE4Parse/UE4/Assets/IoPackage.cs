@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets
             IoSummary = uassetAr.Read<FPackageSummary>();
             Summary = new FPackageFileSummary
             {
-                PackageFlags = (PackageFlags) IoSummary.PackageFlags,
+                PackageFlags = IoSummary.PackageFlags,
                 TotalHeaderSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize,
                 NameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1,
                 ExportCount = (IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
@@ -108,8 +108,9 @@ namespace CUE4Parse.UE4.Assets
                             var obj = ConstructObject(ResolveObjectIndex(export.ClassIndex)?.Object?.Value as UStruct);
                             obj.Name = objectName.Text;
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
+                            obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
-                            obj.Flags = (int) export.ObjectFlags;
+                            obj.Flags = (EObjectFlags) export.ObjectFlags;
                             var exportType = obj.ExportType;
 
                             // Serialize
@@ -206,7 +207,7 @@ namespace CUE4Parse.UE4.Assets
             return packageIds;
         }
 
-        public override UExport? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             for (var i = 0; i < ExportMap.Length; i++)
             {
@@ -222,9 +223,13 @@ namespace CUE4Parse.UE4.Assets
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
         {
-            if (index == null || index.IsNull) return null;
-            if (index.IsExport) return new ResolvedExportObject(index.Index - 1, this);
-            return ResolveObjectIndex(ImportMap[-index.Index - 1]);
+            if (index == null || index.IsNull)
+                return null;
+            if (index.IsImport && -index.Index - 1 < ImportMap.Length)
+                return ResolveObjectIndex(ImportMap[-index.Index - 1]);
+            if (index.IsExport && index.Index - 1 < ExportMap.Length)
+                return new ResolvedExportObject(index.Index - 1, this);
+            return null;
         }
 
         public ResolvedObject? ResolveObjectIndex(FPackageObjectIndex index)

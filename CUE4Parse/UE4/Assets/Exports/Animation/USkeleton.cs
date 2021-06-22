@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -10,7 +9,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    [JsonConverter(typeof(USkeletonConverter))]
     public class USkeleton : UObject
     {
         public FBoneNode[] BoneTree { get; private set; }
@@ -71,58 +69,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
         }
-    }
-    
-    public class USkeletonConverter : JsonConverter<USkeleton>
-    {
-        public override void WriteJson(JsonWriter writer, USkeleton value, JsonSerializer serializer)
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
-            
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-            
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-            
-            // export properties
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                writer.WritePropertyName("ReferenceSkeleton");
-                serializer.Serialize(writer, value.ReferenceSkeleton);
-                
-                writer.WritePropertyName("Guid");
-                serializer.Serialize(writer, value.Guid);
-                
-                writer.WritePropertyName("AnimRetargetSources");
-                serializer.Serialize(writer, value.AnimRetargetSources);
+            base.WriteJson(writer, serializer);
 
-                writer.WritePropertyName("NameMappings");
-                serializer.Serialize(writer, value.NameMappings);
+            writer.WritePropertyName("ReferenceSkeleton");
+            serializer.Serialize(writer, ReferenceSkeleton);
 
-                writer.WritePropertyName("ExistingMarkerNames");
-                serializer.Serialize(writer, value.ExistingMarkerNames);
+            writer.WritePropertyName("Guid");
+            serializer.Serialize(writer, Guid);
 
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
-            
-            writer.WriteEndObject();
-        }
+            writer.WritePropertyName("AnimRetargetSources");
+            serializer.Serialize(writer, AnimRetargetSources);
 
-        public override USkeleton ReadJson(JsonReader reader, Type objectType, USkeleton existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
+            writer.WritePropertyName("NameMappings");
+            serializer.Serialize(writer, NameMappings);
+
+            writer.WritePropertyName("ExistingMarkerNames");
+            serializer.Serialize(writer, ExistingMarkerNames);
         }
     }
 }

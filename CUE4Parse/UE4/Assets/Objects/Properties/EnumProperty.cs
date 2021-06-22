@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             if (type == ReadType.ZERO)
             {
-                Value = new FName(IndexToEnum(Ar, tagData?.EnumName, 0));
+                Value = new FName(IndexToEnum(Ar, tagData, 0));
             }
             else if (Ar.HasUnversionedProperties && type == ReadType.NORMAL)
             {
@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 {
                     index = Ar.Read<byte>();
                 }
-                Value = new FName(IndexToEnum(Ar, tagData?.EnumName, index));
+                Value = new FName(IndexToEnum(Ar, tagData, index));
             }
             else
             {
@@ -36,10 +36,20 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        private static string IndexToEnum(FAssetArchive Ar, string? enumName, int index)
+        private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, int index)
         {
+            var enumName = tagData?.EnumName;
             if (enumName == null)
                 return index.ToString();
+
+            if (tagData.Enum != null) // serialized
+            {
+                foreach (var (name, value) in tagData.Enum.Names)
+                    if (value == index)
+                        return name.Text;
+
+                return string.Concat(enumName, "::", index);
+            }
 
             if (Ar.Owner.Mappings != null &&
                 Ar.Owner.Mappings.Enums.TryGetValue(enumName, out var values) &&
@@ -47,10 +57,8 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 return string.Concat(enumName, "::", member);
             }
-            else
-            {
-                return string.Concat(enumName, "::", index);
-            }
+
+            return string.Concat(enumName, "::", index);
         }
     }
 

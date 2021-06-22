@@ -10,22 +10,15 @@ namespace CUE4Parse_Conversion.Textures
 {
     public static class TextureDecoder
     {
-        private const int _UPSCALE_SIZE = 512;
-        
-        public static SKImage? Decode(this UTexture2D texture)
+        public static SKImage? Decode(this UTexture2D texture, bool bNearest = false)
         {
             if (!texture.IsVirtual && texture.GetFirstMip() is { } mip)
             {
                 DecodeTexture(mip, texture.Format, out byte[] data, out var colorType);
                 
-                var bNearest = false;
-                if (texture.TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
-                    bNearest = trigger.Text.Equals("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
-                               trigger.Text.Equals("TF_Nearest", StringComparison.OrdinalIgnoreCase);
-
                 var width = mip.SizeX;
-                var heigth = mip.SizeY;
-                using var bitmap = new SKBitmap(new SKImageInfo(width, heigth, colorType, SKAlphaType.Unpremul));
+                var height = mip.SizeY;
+                using var bitmap = new SKBitmap(new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul));
                 unsafe
                 {
                     fixed (byte* p = data)
@@ -34,13 +27,7 @@ namespace CUE4Parse_Conversion.Textures
                     }
                 }
 
-                if (!bNearest) return SKImage.FromBitmap(bitmap);
-                while (width < _UPSCALE_SIZE && heigth < _UPSCALE_SIZE)
-                {
-                    width *= 2;
-                    heigth *= 2;
-                }
-                return SKImage.FromBitmap(bitmap.Resize(new SKImageInfo(width, heigth), SKFilterQuality.None));
+                return SKImage.FromBitmap(!bNearest ? bitmap : bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None));
             }
             return null;
         }

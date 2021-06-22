@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int Number;
 
         public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
+        public string PlainText => Name.Name;
         public bool IsNone => Text == null || Text == "None";
         
         public readonly FNameComparisonMethod ComparisonMethod;

@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             Value = type switch
             {
-                ReadType.ZERO => new UScriptSet(tagData?.InnerType ?? "ZeroUnknown"),
+                ReadType.ZERO => new UScriptSet(),
                 _ => new UScriptSet(Ar, tagData)
             };
         }

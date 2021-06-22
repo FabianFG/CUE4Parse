@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
@@ -16,7 +17,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public override bool IsEncrypted { get; }
         public readonly uint CompressionBlockSize;
 
-        public readonly ushort StructSize;    // computed value: size of FPakEntry prepended to each file
+        public readonly int StructSize;    // computed value: size of FPakEntry prepended to each file
         public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -33,14 +34,36 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             if (reader.Info.Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
-                try
+                var LegacyCompressionMethod = Ar.Read<ECompressionFlags>();
+                int CompressionMethodIndex;
+
+                if (LegacyCompressionMethod == ECompressionFlags.COMPRESS_None)
                 {
-                    CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
+                    CompressionMethodIndex = 0;
                 }
-                catch
+                else if (LegacyCompressionMethod == ECompressionFlags.COMPRESS_LZ4)
                 {
-                    CompressionMethod = CompressionMethod.Unknown;
+                    CompressionMethodIndex = 4;
                 }
+                else if (LegacyCompressionMethod.HasFlag(ECompressionFlags.COMPRESS_ZLIB))
+                {
+                    CompressionMethodIndex = 1;
+                }
+                else if (LegacyCompressionMethod.HasFlag(ECompressionFlags.COMPRESS_GZIP))
+                {
+                    CompressionMethodIndex = 2;
+                }
+                else if (LegacyCompressionMethod.HasFlag(ECompressionFlags.COMPRESS_Custom))
+                {
+                    CompressionMethodIndex = 3;
+                }
+                else
+                {
+                    CompressionMethodIndex = -1;
+                    //throw new ParserException("Found an unknown compression type in pak file, will need to be supported for legacy files");
+                }
+
+                CompressionMethod = CompressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[CompressionMethodIndex];
             }
             else if (reader.Info.Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && !reader.Info.IsSubVersion)
             {
@@ -72,7 +95,14 @@ namespace CUE4Parse.UE4.Pak.Objects
                 }
             }
 
-            StructSize = (ushort) (Ar.Position - startOffset);
+            if (reader.Info.Version > EPakFileVersion.PakFile_Version_CompressionEncryption)
+            {
+                StructSize = (int)(Ar.Position - startOffset);
+            }
+            else
+            {
+                StructSize = 0; // doesnt seem to be the case with older pak versions
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -97,7 +127,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 // for backwards compatibility with old paks :
                 CompressionBlockSize = (bitfield & 0x3f) << 11;
             }
-            
+
             CompressionMethod = reader.Info.CompressionMethods[(int)((bitfield >> 23) & 0x3f)];
 
             // Offset follows - either 32 or 64 bit value
@@ -111,7 +141,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 Offset = *(long*) data; // Should be ulong
                 data += sizeof(long);
             }
-            
+
             // The same for UncompressedSize
             if ((bitfield & 0x40000000) != 0)
             {
@@ -125,7 +155,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             Size = UncompressedSize;
-            
+
             // Size field
             if (CompressionMethod != CompressionMethod.None)
             {
@@ -147,16 +177,16 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             // bEncrypted
             IsEncrypted = ((bitfield >> 22) & 1) != 0;
-            
+
             // Compressed block count
             var blockCount = (bitfield >> 6) & 0xffff;
-            
+
             // Compute StructSize: each file still have FPakEntry data prepended, and it should be skipped.
             StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
             // Take into account CompressionBlocks
             if (CompressionMethod != CompressionMethod.None)
                 StructSize += (ushort) (sizeof(int) + blockCount * 2 * sizeof(long));
-            
+
             // Compression information
             CompressionBlocks = new FPakCompressedBlock[blockCount];
             if (blockCount > 0)
@@ -164,7 +194,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 // CompressionBlockSize
                 if (UncompressedSize < 65536)
                     CompressionBlockSize = (uint) UncompressedSize;
-                
+
                 // CompressionBlocks
                 if (blockCount == 1 && !IsEncrypted)
                 {

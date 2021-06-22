@@ -1,8 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    [JsonConverter(typeof(FFieldConverter))]
     public class FField
     {
         public FName Name;
@@ -12,6 +15,18 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             Name = Ar.ReadFName();
             Flags = Ar.Read<uint>();
+        }
+
+        protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            writer.WritePropertyName("Type");
+            serializer.Serialize(writer, GetType().Name[1..]);
+
+            writer.WritePropertyName("Name");
+            serializer.Serialize(writer, Name);
+
+            writer.WritePropertyName("Flags");
+            writer.WriteValue(Flags);
         }
 
         public override string ToString() => Name.Text;
@@ -57,6 +72,22 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return field;
             }
             return null;
+        }
+    }
+
+    public class FFieldConverter : JsonConverter<FField>
+    {
+        public override void WriteJson(JsonWriter writer, FField value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+            value.WriteJson(writer, serializer);
+            writer.WriteEndObject();
+        }
+
+        public override FField ReadJson(JsonReader reader, Type objectType, FField existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

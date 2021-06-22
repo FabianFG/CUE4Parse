@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
 
@@ -113,6 +114,7 @@ namespace CUE4Parse.MappingsProvider
         public bool? IsEnumAsByte;
         public bool? Bool;
         public UStruct? Struct;
+        public UEnum? Enum;
 
         public PropertyType(string type, string? structType = null, PropertyType? innerType = null, PropertyType? valueType = null, string? enumName = null, bool? isEnumAsByte = null, bool? b = null)
         {
@@ -135,10 +137,10 @@ namespace CUE4Parse.MappingsProvider
                     if (inner != null) InnerType = new PropertyType(inner);
                     break;
                 case FByteProperty b:
-                    EnumName = b.Enum.Load()?.Name; // TODO if enum is UserDefinedEnum it will fail
+                    ApplyEnum(prop, b.Enum.Load<UEnum>());
                     break;
                 case FEnumProperty e:
-                    EnumName = e.Enum.Load()?.Name;
+                    ApplyEnum(prop, e.Enum.Load<UEnum>());
                     break;
                 case FMapProperty map:
                     var key = map.KeyProp;
@@ -162,6 +164,22 @@ namespace CUE4Parse.MappingsProvider
                     break;
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ApplyEnum(FProperty prop, UEnum? enumClass)
+        {
+            if (enumClass != null)
+            {
+                Enum = enumClass;
+                EnumName = enumClass.Name;
+            }
+
+            InnerType = prop.ElementSize switch
+            {
+                4 => new PropertyType("IntProperty"),
+                _ => null
+            };
         }
     }
 }

@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+
+using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
@@ -57,7 +59,7 @@ namespace CUE4Parse.UE4.Pak
             // Pak Entry is written before the file data,
             // but its the same as the one from the index, just without a name
             // We don't need to serialize that again so + file.StructSize
-            reader.Position = pakEntry.Offset + pakEntry.StructSize;
+            reader.Position = pakEntry.Offset + pakEntry.StructSize; // doesnt seem to be the case with older pak versions
 
             if (pakEntry.IsCompressed)
             {
@@ -68,8 +70,8 @@ namespace CUE4Parse.UE4.Pak
                 foreach (var block in pakEntry.CompressionBlocks)
                 {
                     reader.Position = block.CompressedStart;
-                    
-                    var srcSize = (int) (block.CompressedEnd - block.CompressedStart).Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
+
+                    var srcSize = (int) block.Size.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
                     // Read the compressed block
                     byte[] src = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,

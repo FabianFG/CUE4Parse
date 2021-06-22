@@ -10,7 +10,7 @@ namespace CUE4Parse_Conversion.Sounds
 {
     public static class SoundDecoder
     {
-        public static void Decode(this UExport export, bool shouldDecompress, out string audioFormat, out byte[]? data)
+        public static void Decode(this UObject export, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
             switch (export)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
+using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -138,7 +139,7 @@ namespace CUE4Parse.FileProvider
                     ELanguage.German => "de-DE",
                     ELanguage.Italian => "it-IT",
                     ELanguage.Spanish => "es-ES",
-                    ELanguage.SpanishLatin => "es-MX",
+                    ELanguage.SpanishMexico => "es-MX",
                     ELanguage.Arabic => "ar-AE",
                     ELanguage.Japanese => "ja-JP",
                     ELanguage.Korean => "ko-KR",
@@ -151,6 +152,19 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Indonesian => "id-ID",
                     ELanguage.Thai => "th-TH",
                     ELanguage.VietnameseVietnam => "vi-VN",
+                    _ => "en-US"
+                },
+                "stateofdecay2" => language switch
+                {
+                    ELanguage.English => "en-US",
+                    ELanguage.AustralianEnglish => "en-AU",
+                    ELanguage.French => "fr-FR",
+                    ELanguage.German => "de-DE",
+                    ELanguage.Italian => "it-IT",
+                    ELanguage.SpanishMexico => "es-MX",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru-RU",
+                    ELanguage.Chinese => "zh-CN",
                     _ => "en-US"
                 },
                 _ => "en"
@@ -181,16 +195,16 @@ namespace CUE4Parse.FileProvider
         {
             path = path.Replace('\\', '/');
             if (path[0] == '/')
-                path = path.Substring(1);
+                path = path[1..];
             var lastPart = path.SubstringAfterLast('/');
             // This part is only for FSoftObjectPaths and not really needed anymore internally, but it's still in here for user input
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeLast('/'), "/", lastPart.SubstringBefore('.'));
-            if (path[path.Length - 1] != '/' && !lastPart.Contains('.'))
+            if (path[^1] != '/' && !lastPart.Contains('.'))
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
             var trigger = path.SubstringBefore("/", comparisonType);
-            if (trigger.Equals(GameName, comparisonType))
+            if (trigger.Equals(GameName, StringComparison.OrdinalIgnoreCase))
             {
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
@@ -377,13 +391,13 @@ namespace CUE4Parse.FileProvider
             var uexp = uexpTask != null ? await uexpTask : null;
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
-            
-            if (uexp != null)
+
+            if (file is FPakEntry)
             {
                 return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
             }
-            
-            if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+
+            if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
             {
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
@@ -425,12 +439,12 @@ namespace CUE4Parse.FileProvider
 
             try
             {
-                if (uexp != null)
+                if (file is FPakEntry)
                 {
                     return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
                 }
                 
-                if (!(this is IVfsFileProvider vfsFileProvider) || vfsFileProvider.GlobalData == null)
+                if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
                 {
                     return null;
                 }
@@ -541,26 +555,26 @@ namespace CUE4Parse.FileProvider
         #region LoadObject Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport LoadObject(string? objectPath) => LoadObjectAsync(objectPath).Result;
+        public UObject LoadObject(string? objectPath) => LoadObjectAsync(objectPath).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadObject(string? objectPath, out UExport export)
+        public bool TryLoadObject(string? objectPath, out UObject export)
         {
             export = TryLoadObjectAsync(objectPath).Result;
             return export != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T LoadObject<T>(string? objectPath) where T : UExport => LoadObjectAsync<T>(objectPath).Result;
+        public T LoadObject<T>(string? objectPath) where T : UObject => LoadObjectAsync<T>(objectPath).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UExport
+        public bool TryLoadObject<T>(string? objectPath, out T export) where T : UObject
         {
             export = TryLoadObjectAsync<T>(objectPath).Result;
             return export != null;
         }
 
-        public async Task<UExport> LoadObjectAsync(string? objectPath)
+        public async Task<UObject> LoadObjectAsync(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
             var packagePath = objectPath;
@@ -580,7 +594,7 @@ namespace CUE4Parse.FileProvider
             return pkg.GetExport(objectName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        public async Task<UExport?> TryLoadObjectAsync(string? objectPath)
+        public async Task<UObject?> TryLoadObjectAsync(string? objectPath)
         {
             if (objectPath == null) return null;
             var packagePath = objectPath;
@@ -601,16 +615,16 @@ namespace CUE4Parse.FileProvider
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> LoadObjectAsync<T>(string? objectPath) where T : UExport =>
+        public async Task<T> LoadObjectAsync<T>(string? objectPath) where T : UObject =>
             await LoadObjectAsync(objectPath) as T ??
             throw new ParserException("Loaded object but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UExport =>
+        public async Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UObject =>
             await TryLoadObjectAsync(objectPath) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UExport> LoadObjectExports(string? objectPath)
+        public IEnumerable<UObject> LoadObjectExports(string? objectPath)
         {
             if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
 
