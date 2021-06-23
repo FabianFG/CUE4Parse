@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             if (useStaticFloatUVs)
                 return Enumerable.Repeat(new FMeshUVFloat(Ar), numStaticUVSets).ToArray();
-            return Enumerable.Repeat((FMeshUVFloat) new FMeshUVHalf(Ar), numStaticUVSets).ToArray();
+            return Enumerable.Repeat((FMeshUVFloat)new FMeshUVHalf(Ar), numStaticUVSets).ToArray();
         }
     }
 }

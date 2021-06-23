@@ -1,6 +1,5 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -50,19 +49,19 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("MinVertexIndex");
             writer.WriteValue(value.MinVertexIndex);
-            
+
             writer.WritePropertyName("MaxVertexIndex");
             writer.WriteValue(value.MaxVertexIndex);
-            
+
             writer.WritePropertyName("EnableCollision");
             writer.WriteValue(value.EnableCollision);
-            
+
             writer.WritePropertyName("CastShadow");
             writer.WriteValue(value.CastShadow);
-            
+
             writer.WritePropertyName("ForceOpaque");
             writer.WriteValue(value.ForceOpaque);
-            
+
             writer.WritePropertyName("VisibleInRayTracing");
             writer.WriteValue(value.VisibleInRayTracing);
 

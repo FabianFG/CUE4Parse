@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                 if (is32bit)
                 {
-                    int count = (int) tempAr.Length / sizeof(uint);
+                    int count = (int)tempAr.Length / sizeof(uint);
                     Indices16 = new ushort[0];
                     Indices32 = tempAr.ReadArray(count, () => tempAr.Read<uint>());
                 }

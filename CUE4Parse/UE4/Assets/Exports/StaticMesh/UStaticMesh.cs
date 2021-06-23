@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -15,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     {
         public bool bCooked { get; private set; }
         public FGuid LightingGuid { get; private set; }
-        public Lazy<UObject?>[] Sockets { get; private set; }
+        public FPackageIndex[] Sockets { get; private set; } // Lazy<UObject?>[]
         public FStaticMeshRenderData RenderData { get; private set; }
         public FStaticMaterial[]? StaticMaterials { get; private set; }
         public Lazy<UMaterialInterface?>[]? Materials { get; private set; }
@@ -45,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
 
             LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
-            Sockets = Ar.ReadArray(() => Ar.ReadObject<UObject>());
+            Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
 
             RenderData = new FStaticMeshRenderData(Ar, bCooked);
 
@@ -53,8 +54,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 bool hasOccluderData = Ar.ReadBoolean();
                 if (hasOccluderData)
+                {
                     Ar.ReadArray<FVector>(); // Vertices
                     Ar.ReadArray<ushort>();  // Indics
+                }
             }
 
             if (Ar.Game >= EGame.GAME_UE4_14)
@@ -64,7 +67,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 {
                     Ar.Seek(validPos, SeekOrigin.Begin);
                     return;
-                } else
+                }
+                else
                 {
                     if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
                     {
@@ -104,20 +108,19 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("Properties");
             writer.WriteStartObject();
             {
-                writer.WritePropertyName("RenderData");
-                serializer.Serialize(writer, value.RenderData);
-
-                writer.WritePropertyName("LightingGuid");
-                serializer.Serialize(writer, value.LightingGuid);
-
                 foreach (var property in value.Properties)
                 {
                     writer.WritePropertyName(property.Name.Text);
                     serializer.Serialize(writer, property.Tag);
                 }
-
             }
             writer.WriteEndObject();
+
+            writer.WritePropertyName("LightingGuid");
+            serializer.Serialize(writer, value.LightingGuid);
+
+            writer.WritePropertyName("RenderData");
+            serializer.Serialize(writer, value.RenderData);
 
             writer.WriteEndObject();
         }

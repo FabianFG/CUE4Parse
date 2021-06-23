@@ -1,11 +1,11 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.RenderCore;
+using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using System;
-using CUE4Parse.UE4.Objects.RenderCore;
-using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -22,17 +22,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FStaticMeshVertexBuffer(FArchive Ar)
         {
             var stripDataFlags = Ar.Ver >= UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX ? Ar.Read<FStripDataFlags>() : new FStripDataFlags();
-            
+
             // SerializeMetaData
             NumTexCoords = Ar.Read<int>();
             Strides = Ar.Game < EGame.GAME_UE4_19 ? Ar.Read<int>() : -1;
             NumVertices = Ar.Read<int>();
-            UseFullPrecisionUVs  = Ar.ReadBoolean();
+            UseFullPrecisionUVs = Ar.ReadBoolean();
             UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 ? Ar.ReadBoolean() : false;
 
-            if(!stripDataFlags.IsDataStrippedForServer()) 
+            if (!stripDataFlags.IsDataStrippedForServer())
             {
-                if(Ar.Game < EGame.GAME_UE4_19) 
+                if (Ar.Game < EGame.GAME_UE4_19)
                 {
                     UV = Ar.ReadArray(() => new FStaticMeshUVItem(Ar, UseHighPrecisionTangentBasis, NumTexCoords, UseFullPrecisionUVs));
                 }
