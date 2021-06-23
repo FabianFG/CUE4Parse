@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
-    [JsonConverter(typeof(UStaticMeshConverter))]
     public class UStaticMesh : UObject
     {
         public bool bCooked { get; private set; }
@@ -87,48 +86,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
         }
-    }
 
-    public class UStaticMeshConverter : JsonConverter<UStaticMesh>
-    {
-        public override void WriteJson(JsonWriter writer, UStaticMesh value, JsonSerializer serializer)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
-
-            // export type
-            writer.WritePropertyName("Type");
-            writer.WriteValue(value.ExportType);
-
-            if (!value.Name.Equals(value.ExportType))
-            {
-                writer.WritePropertyName("Name");
-                writer.WriteValue(value.Name);
-            }
-
-            writer.WritePropertyName("Properties");
-            writer.WriteStartObject();
-            {
-                foreach (var property in value.Properties)
-                {
-                    writer.WritePropertyName(property.Name.Text);
-                    serializer.Serialize(writer, property.Tag);
-                }
-            }
-            writer.WriteEndObject();
+            base.WriteJson(writer, serializer);
 
             writer.WritePropertyName("LightingGuid");
-            serializer.Serialize(writer, value.LightingGuid);
+            serializer.Serialize(writer, LightingGuid);
 
             writer.WritePropertyName("RenderData");
-            serializer.Serialize(writer, value.RenderData);
-
-            writer.WriteEndObject();
-        }
-
-        public override UStaticMesh ReadJson(JsonReader reader, Type objectType, UStaticMesh existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
+            serializer.Serialize(writer, RenderData);
         }
     }
 }
