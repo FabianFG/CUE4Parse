@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
         {
-            return new FMeshUVFloat(uvHalf.U, uvHalf.V);
+            return new (uvHalf.U, uvHalf.V);
         }
     }
 }

@@ -10,6 +10,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     [JsonConverter(typeof(FStaticMeshRenderDataConverter))]
     public class FStaticMeshRenderData
     {
+        private const int MAX_STATIC_UV_SETS_UE4 = 8;
+        private const int MAX_STATIC_LODS_UE4 = 8;
+        
         public readonly FStaticMeshLODResources[] LODs;
         public readonly FBoxSphereBounds Bounds;
         public readonly bool? LODsShareStaticLighting;
@@ -17,35 +20,31 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
         {
-            const int MAX_STATIC_UV_SETS_UE4 = 8;
-            const int MAX_STATIC_LODS_UE4 = 8;
-
-            int MinMobileLODIdx = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<int>() : 0;
+            var minMobileLODIdx = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<int>() : 0;
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
-            int NumInlinedLODs = Ar.Game >= EGame.GAME_UE4_23 ? Ar.ReadByte() : -1;
+            var numInlinedLODs = Ar.Game >= EGame.GAME_UE4_23 ? Ar.ReadByte() : -1;
 
             if (bCooked)
             {
                 if (Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
                 {
-                    bool Stripped = false;
+                    var stripped = false;
                     if (Ar.Ver >= UE4Version.VER_UE4_RENAME_WIDGET_VISIBILITY)
                     {
-                        FStripDataFlags stripDataFlags = Ar.Read<FStripDataFlags>();
-                        Stripped = stripDataFlags.IsDataStrippedForServer();
+                        var stripDataFlags = Ar.Read<FStripDataFlags>();
+                        stripped = stripDataFlags.IsDataStrippedForServer();
                         if (Ar.Game >= EGame.GAME_UE4_21)
                         {
-                            byte DistanceFieldDataStripFlag = 1;
-                            Stripped |= stripDataFlags.IsClassDataStripped(DistanceFieldDataStripFlag);
+                            stripped |= stripDataFlags.IsClassDataStripped(1);
                         }
                     }
-                    if (!Stripped)
+                    
+                    if (!stripped)
                     {
-                        for (int i = 0; i < LODs.Length; i++)
+                        for (var i = 0; i < LODs.Length; i++)
                         {
-                            bool hasDistanceDataField = Ar.ReadBoolean();
-                            if (hasDistanceDataField)
-                                new FDistanceFieldVolumeData(Ar);
+                            if (!Ar.ReadBoolean()) continue;
+                            new FDistanceFieldVolumeData(Ar);
                         }
                     }
                 }
@@ -56,27 +55,26 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game != EGame.GAME_UE4_15)
                 LODsShareStaticLighting = Ar.ReadBoolean();
 
-            bool bReducedBySimplygon;
             if (Ar.Game < EGame.GAME_UE4_15)
-                bReducedBySimplygon = Ar.ReadBoolean();
+                Ar.Position += 4; // bReducedBySimplygon
 
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             {
-                for (int i = 0; i < MAX_STATIC_UV_SETS_UE4; i++)
+                for (var i = 0; i < MAX_STATIC_UV_SETS_UE4; i++)
                 {
-                    var _ = Ar.Read<float>(); // StreamingTextureFactor for each UV set
+                    Ar.Position += 4; // StreamingTextureFactor for each UV set
                 }
-                Ar.Read<float>();  // MaxStreamingTextureFactor
+                Ar.Position += 4;  // MaxStreamingTextureFactor
             }
 
             if (bCooked)
             {
-                int maxNumLods = Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4;
-                ScreenSize = new float[maxNumLods];
-                for (int i = 0; i < maxNumLods; i++)
+                ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
+                for (var i = 0; i < ScreenSize.Length; i++)
                 {
                     if (Ar.Game >= EGame.GAME_UE4_20)
-                        Ar.ReadBoolean(); // bFloatCooked
+                        Ar.Position += 4; // bFloatCooked
+                    
                     ScreenSize[i] = Ar.Read<float>();
                 }
             }
@@ -90,15 +88,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WriteStartObject();
 
             writer.WritePropertyName("LODs");
-            writer.WriteStartObject();
-            {
-                for (int i = 0; i < value.LODs.Length; i++)
-                {
-                    writer.WritePropertyName(i.ToString());
-                    serializer.Serialize(writer, value.LODs[i]);
-                }
-            }
-            writer.WriteEndObject();
+            serializer.Serialize(writer, value.LODs);
+            
+            writer.WritePropertyName("Bounds");
+            serializer.Serialize(writer, value.Bounds);
+            
+            writer.WritePropertyName("LODsShareStaticLighting");
+            writer.WriteValue(value.LODsShareStaticLighting);
+            
+            writer.WritePropertyName("ScreenSize");
+            serializer.Serialize(writer, value.ScreenSize);
 
             writer.WriteEndObject();
         }

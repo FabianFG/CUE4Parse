@@ -58,17 +58,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 if (bInlined) SerializeBuffers(Ar);
                 else
                 {
-                    var BulkData = new FByteBulkData(Ar);
-                    if (BulkData.Header.ElementCount > 0)
+                    var bulkData = new FByteBulkData(Ar);
+                    if (bulkData.Header.ElementCount > 0)
                     {
-                        var tempAr = new FAssetArchive(new FByteArchive("FStaticMeshBufferReader", BulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
+                        var tempAr = new FAssetArchive(new FByteArchive("FStaticMeshBufferReader", bulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
                         SerializeBuffers(tempAr);
                     }
-
-                    uint depthOnlyNumTriangles = Ar.Read<uint>();
-                    uint packedData = Ar.Read<uint>();
-
-                    Ar.Position += 4 * 4 + 2 * 4 + 2 * 4 + 6 * (2 * 4);
+                    
+                    // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
+                    Ar.Position += 8; // DepthOnlyNumTriangles + Packed
+                    Ar.Position += 4 * 4 + 2 * 4 + 2 * 4 + 6 * 2 * 4;
                                 // StaticMeshVertexBuffer = 2x int32, 2x bool
                                 // PositionVertexBuffer = 2x int32
                                 // ColorVertexBuffer = 2x int32
@@ -82,9 +81,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
 
             // FStaticMeshBuffersSize
-            uint serializedBuffersSize = Ar.Read<uint>();
-            uint depthOnlyIBSize = Ar.Read<uint>();
-            uint reversedIBsSize = Ar.Read<uint>();
+            // uint32 SerializedBuffersSize = 0;
+            // uint32 DepthOnlyIBSize       = 0;
+            // uint32 ReversedIBsSize       = 0;
+            Ar.Position += 12;
         }
 
         // Pre-UE4.23 code
@@ -97,32 +97,33 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
-            this.PositionVertexBuffer = new FPositionVertexBuffer(Ar);
-            this.VertexBuffer = new FStaticMeshVertexBuffer(Ar);
-            this.ColorVertexBuffer = new FColorVertexBuffer(Ar);
-            this.IndexBuffer = new FRawStaticIndexBuffer(Ar);
+            PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+            ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
             {
-                this.ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar); ;
+                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar); ;
             }
 
-            this.DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
-                this.ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())
-                this.WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_AdjacencyData))
-                this.AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_RayTracingResources))
-                Ar.ReadBulkArray(() => Ar.ReadByte());
+                Ar.ReadBulkArray(Ar.ReadByte);
 
-            Enumerable.Repeat(new FWeightedRandomSampler(Ar), Sections.Length); // FStaticMeshSectionAreaWeightedTriangleSampler
-            new FWeightedRandomSampler(Ar);  // FStaticMeshAreaWeightedSectionSample
+            // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
+            Enumerable.Repeat(new FWeightedRandomSampler(Ar), Sections.Length);
+            new FWeightedRandomSampler(Ar);
         }
     }
 
@@ -137,6 +138,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("MaxDeviation");
             writer.WriteValue(value.MaxDeviation);
+            
+            writer.WritePropertyName("PositionVertexBuffer");
+            serializer.Serialize(writer, value.PositionVertexBuffer);
+            
+            writer.WritePropertyName("VertexBuffer");
+            serializer.Serialize(writer, value.VertexBuffer);
+            
+            writer.WritePropertyName("ColorVertexBuffer");
+            serializer.Serialize(writer, value.ColorVertexBuffer);
 
             writer.WriteEndObject();
         }

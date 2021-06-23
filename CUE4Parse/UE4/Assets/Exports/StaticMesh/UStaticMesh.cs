@@ -24,12 +24,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             base.Deserialize(Ar, validPos);
 
-            FStripDataFlags stripDataFlags = Ar.Read<FStripDataFlags>();
-
-            bool bCooked = Ar.ReadBoolean();
-
+            var stripDataFlags = Ar.Read<FStripDataFlags>();
+            bCooked = Ar.ReadBoolean();
             var bodySetup = Ar.ReadObject<UObject>();
-
             var navCollision = Ar.Ver >= UE4Version.VER_UE4_STATIC_MESH_STORE_NAV_COLLISION ? Ar.ReadObject<UObject>() : null;
 
             if (!stripDataFlags.IsEditorDataStripped())
@@ -51,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (bCooked & Ar.Game >= EGame.GAME_UE4_20)
             {
-                bool hasOccluderData = Ar.ReadBoolean();
+                var hasOccluderData = Ar.ReadBoolean();
                 if (hasOccluderData)
                 {
                     Ar.ReadArray<FVector>(); // Vertices
@@ -61,26 +58,24 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game >= EGame.GAME_UE4_14)
             {
-                bool hasSpeedTreeWind = Ar.ReadBoolean();
+                var hasSpeedTreeWind = Ar.ReadBoolean();
                 if (hasSpeedTreeWind)
                 {
                     Ar.Seek(validPos, SeekOrigin.Begin);
                     return;
                 }
-                else
+                
+                if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
                 {
-                    if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
-                    {
-                        // UE4.14+ - "Materials" are deprecated, added StaticMaterials
-                        StaticMaterials = Ar.ReadArray(() => new FStaticMaterial(Ar));
-                    }
+                    // UE4.14+ - "Materials" are deprecated, added StaticMaterials
+                    StaticMaterials = Ar.ReadArray(() => new FStaticMaterial(Ar));
                 }
             }
 
             if (StaticMaterials != null && StaticMaterials.Length != 0)
             {
                 Materials = new Lazy<UMaterialInterface?>[StaticMaterials.Length];
-                for (int i = 0; i < StaticMaterials.Length; i++)
+                for (var i = 0; i < StaticMaterials.Length; i++)
                 {
                     Materials[i] = StaticMaterials[i].MaterialInterface;
                 }

@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             if (Ar.Game >= EGame.GAME_UE4_16)
             {
-                CompressedDistanceFieldVolume = Ar.ReadArray(() => Ar.ReadByte());
+                CompressedDistanceFieldVolume = Ar.ReadArray(Ar.ReadByte);
                 Size = Ar.Read<FIntVector>();
                 LocalBoundingBox = Ar.Read<FBox>();
                 DistanceMinMax = Ar.Read<FVector2D>();
@@ -35,8 +35,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 Size = Ar.Read<FIntVector>();
                 LocalBoundingBox = Ar.Read<FBox>();
                 MeshWasClosed = Ar.ReadBoolean();
-                BuiltAsIfTwoSided = Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN ? Ar.ReadBoolean() : false;
-                MeshWasPlane = Ar.Ver >= UE4Version.VER_UE4_DEPRECATE_UMG_STYLE_ASSETS ? Ar.ReadBoolean() : false;
+                BuiltAsIfTwoSided = Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN && Ar.ReadBoolean();
+                MeshWasPlane = Ar.Ver >= UE4Version.VER_UE4_DEPRECATE_UMG_STYLE_ASSETS && Ar.ReadBoolean();
                 CompressedDistanceFieldVolume = new int[0];
                 DistanceMinMax = new FVector2D(0f, 0f);
             }

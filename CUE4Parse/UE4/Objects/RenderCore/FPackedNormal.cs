@@ -17,11 +17,9 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public FPackedNormal(FArchive Ar)
         {
-            Data = Ar.Read<UInt32>();
-
-            if (Ar.Game >= EGame.GAME_UE4_20) {
-                Data = Data ^ 0x80808080; 
-            }
+            Data = Ar.Read<uint>();
+            if (Ar.Game >= EGame.GAME_UE4_20)
+                Data ^= 0x80808080; 
         }
 
         public FPackedNormal(uint data)
@@ -36,12 +34,12 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public static explicit operator FVector(FPackedNormal packedNormal)
         {
-            return new FVector(packedNormal.X, packedNormal.Y, packedNormal.Z);
+            return new (packedNormal.X, packedNormal.Y, packedNormal.Z);
         }
 
         public static explicit operator FVector4(FPackedNormal packedNormal)
         {
-            return new FVector4(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
+            return new (packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
         }
     }
 

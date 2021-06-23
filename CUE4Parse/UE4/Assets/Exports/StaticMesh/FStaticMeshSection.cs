@@ -20,15 +20,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FStaticMeshSection(FAssetArchive Ar)
         {
-            MaterialIndex = Ar.Read<Int32>();
-            FirstIndex = Ar.Read<Int32>();
-            NumTriangles = Ar.Read<Int32>();
-            MinVertexIndex = Ar.Read<Int32>();
-            MaxVertexIndex = Ar.Read<Int32>();
+            MaterialIndex = Ar.Read<int>();
+            FirstIndex = Ar.Read<int>();
+            NumTriangles = Ar.Read<int>();
+            MinVertexIndex = Ar.Read<int>();
+            MaxVertexIndex = Ar.Read<int>();
             EnableCollision = Ar.ReadBoolean();
             CastShadow = Ar.ReadBoolean();
-            ForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField ? Ar.ReadBoolean() : false;
-            VisibleInRayTracing = Ar.Game >= EGame.GAME_UE4_26 ? Ar.ReadBoolean() : false;
+            ForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
+            VisibleInRayTracing = Ar.Game >= EGame.GAME_UE4_26 && Ar.ReadBoolean();
         }
     }
 
