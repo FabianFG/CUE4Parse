@@ -15,6 +15,11 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             SuperStruct = new FPackageIndex(Ar);
+            if (Ar.Game == EGame.GAME_SOD2)
+            {
+                Ar.Position += 4; //var someScriptImport = new FPackageIndex(Ar);
+            }
+
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveUField_Next)
             {
                 var firstChild = new FPackageIndex(Ar);
