@@ -83,6 +83,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
             DefaultValue = Ar.Read<float>();
             bHasDefaultValue = Ar.ReadBoolean();
             TickResolution = Ar.Read<FFrameRate>();
+            Ar.Position += 4; // Mysterious 4 byte padding, could this be KeyHandles which is inside if (Ar.IsTransacting())?
         }
     }
 }

@@ -32,11 +32,8 @@ namespace CUE4Parse.UE4.Assets
         public IoPackage(
             FArchive uasset, IoGlobalData globalData,
             Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null,
-            IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
+            IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
         {
-            if (provider == null)
-                throw new ParserException("Cannot load I/O store package without a file provider. This is needed to link the package imports.");
-
             GlobalData = globalData;
             var uassetAr = new FAssetArchive(uasset, this);
 
@@ -74,7 +71,7 @@ namespace CUE4Parse.UE4.Assets
             var importedPackageIds = LoadGraphData(uassetAr);
 
             // Preload dependencies
-            ImportedPackages = new Lazy<IoPackage?[]>(() =>
+            ImportedPackages = new Lazy<IoPackage?[]>(provider != null ? () =>
             {
                 var packages = new IoPackage?[importedPackageIds.Length];
                 for (int i = 0; i < importedPackageIds.Length; i++)
@@ -82,7 +79,7 @@ namespace CUE4Parse.UE4.Assets
                     provider.TryLoadPackage(importedPackageIds[i], out packages[i]);
                 }
                 return packages;
-            });
+            } : Array.Empty<IoPackage?>);
 
             // Attach ubulk and uptnl
             if (ubulk != null) uassetAr.AddPayload(PayloadType.UBULK, Summary.BulkDataStartOffset, ubulk);
