@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Assets
                 export.Outer = (ResolvePackageIndex(it.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
                 export.Super = ResolvePackageIndex(it.SuperIndex) as ResolvedExportObject;
                 export.Template = ResolvePackageIndex(it.TemplateIndex) as ResolvedExportObject;
-                export.Flags = (EObjectFlags) it.ObjectFlags;
+                export.Flags |= (EObjectFlags) it.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
                 it.ExportType = export.GetType();
                 it.ExportObject = new Lazy<UObject>(() =>
                 {
@@ -86,6 +86,7 @@ namespace CUE4Parse.UE4.Assets
 #endif
                         
                         // TODO right place ???
+                        export.Flags |= EObjectFlags.RF_LoadCompleted;
                         export.PostLoad();
                     }
                     catch (Exception e)

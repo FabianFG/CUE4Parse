@@ -18,12 +18,15 @@ namespace CUE4Parse.UE4.Assets
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
         public abstract Lazy<UObject>[] ExportsLazy { get; }
-        
+
+        public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
+
         public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
             Name = name;
             Provider = provider;
             Mappings = mappings;
+            Flags |= EObjectFlags.RF_WasLoaded;
         }
 
         protected static UObject ConstructObject(UStruct? struc)
@@ -43,6 +46,7 @@ namespace CUE4Parse.UE4.Assets
 
             obj ??= new UObject();
             obj.Class = struc;
+            obj.Flags |= EObjectFlags.RF_WasLoaded;
             return obj;
         }
 

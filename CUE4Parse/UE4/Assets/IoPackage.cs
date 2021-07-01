@@ -110,7 +110,7 @@ namespace CUE4Parse.UE4.Assets
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
                             obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
-                            obj.Flags = (EObjectFlags) export.ObjectFlags;
+                            obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
                             var exportType = obj.ExportType;
 
                             // Serialize
@@ -127,6 +127,7 @@ namespace CUE4Parse.UE4.Assets
                                     Log.Debug("Successfully read {0} at {1} with size {2}", exportType, localExportDataOffset, export.CookedSerialSize);
 #endif
                                 // TODO right place ???
+                                obj.Flags |= EObjectFlags.RF_LoadCompleted;
                                 obj.PostLoad();
                             }
                             catch (Exception e)
