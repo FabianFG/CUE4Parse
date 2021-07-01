@@ -95,14 +95,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 }
             }
 
-            if (reader.Info.Version > EPakFileVersion.PakFile_Version_CompressionEncryption)
-            {
-                StructSize = (int)(Ar.Position - startOffset);
-            }
-            else
-            {
-                StructSize = 0; // doesnt seem to be the case with older pak versions
-            }
+            StructSize = (int)(Ar.Position - startOffset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
