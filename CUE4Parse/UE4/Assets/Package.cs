@@ -63,36 +63,19 @@ namespace CUE4Parse.UE4.Assets
 
             foreach (var export in ExportMap)
             {
-                if (ResolvePackageIndex(export.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
-                var obj = ConstructObject(uStruct);
-                obj.Name = export.ObjectName.Text;
-                obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
-                obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
-                obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
-                obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
                 export.ExportObject = new Lazy<UObject>(() =>
                 {
+                    // Create
+                    var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
+                    obj.Name = export.ObjectName.Text;
+                    obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
+                    obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
+                    obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                    obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
+
+                    // Serialize
                     uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
-                    var validPos = uexpAr.Position + export.SerialSize;
-                    try
-                    {
-                        obj.Deserialize(uexpAr, validPos);
-#if DEBUG
-                        if (validPos != uexpAr.Position)
-                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - uexpAr.Position);
-                        else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, export.SerialOffset, export.SerialSize);
-#endif
-
-                        // TODO right place ???
-                        obj.Flags |= EObjectFlags.RF_LoadCompleted;
-                        obj.PostLoad();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, "Could not read {0} correctly", obj.ExportType);
-                    }
-
+                    DeserializeObject(obj, uexpAr, export.SerialSize);
                     return obj;
                 });
             }

@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -49,6 +51,30 @@ namespace CUE4Parse.UE4.Assets
             obj.Class = struc;
             obj.Flags |= EObjectFlags.RF_WasLoaded;
             return obj;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static void DeserializeObject(UObject obj, FAssetArchive Ar, long serialSize)
+        {
+            var serialOffset = Ar.Position;
+            var validPos = serialOffset + serialSize;
+            try
+            {
+                obj.Deserialize(Ar, validPos);
+#if DEBUG
+                if (validPos != Ar.Position)
+                    Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - Ar.Position);
+                else
+                    Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, serialOffset, serialSize);
+#endif
+                // TODO right place ???
+                obj.Flags |= EObjectFlags.RF_LoadCompleted;
+                obj.PostLoad();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Could not read {0} correctly", obj.ExportType);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
