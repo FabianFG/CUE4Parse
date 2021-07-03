@@ -70,10 +70,9 @@ namespace CUE4Parse.UE4.Assets
                 obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
                 obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
                 obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
-                export.ExportType = obj.GetType();
                 export.ExportObject = new Lazy<UObject>(() =>
                 {
-                    uexpAr.SeekAbsolute(export.RealSerialOffset, SeekOrigin.Begin);
+                    uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
                     var validPos = uexpAr.Position + export.SerialSize;
                     try
                     {
@@ -82,7 +81,7 @@ namespace CUE4Parse.UE4.Assets
                         if (validPos != uexpAr.Position)
                             Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - uexpAr.Position);
                         else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, export.RealSerialOffset, export.SerialSize);
+                            Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, export.SerialOffset, export.SerialSize);
 #endif
 
                         // TODO right place ???
@@ -183,10 +182,10 @@ namespace CUE4Parse.UE4.Assets
 
             for (var i = 0; i < importPackage.ExportMap.Length; i++)
             {
-                FObjectExport export = importPackage.ExportMap[i];
+                var export = importPackage.ExportMap[i];
                 if (export.ObjectName.Text != import.ObjectName.Text)
                     continue;
-                var thisOuter = ResolvePackageIndex(export.OuterIndex);
+                var thisOuter = importPackage.ResolvePackageIndex(export.OuterIndex);
                 if (thisOuter?.GetPathName() == outer)
                     return new ResolvedExportObject(i, importPackage);
             }
