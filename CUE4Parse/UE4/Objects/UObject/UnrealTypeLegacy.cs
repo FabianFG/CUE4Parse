@@ -169,7 +169,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
     }
 
-    public class UInterfaceProperty2 : UProperty
+    public class UInterfaceProperty : UProperty
     {
         public FPackageIndex InterfaceClass; // UClass
 

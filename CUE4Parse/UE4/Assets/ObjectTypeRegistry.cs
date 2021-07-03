@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(USoftObjectProperty));
             RegisterClass(typeof(UClassProperty));
             RegisterClass(typeof(USoftClassProperty));
-            RegisterClass(typeof(UInterfaceProperty2));
+            RegisterClass(typeof(UInterfaceProperty));
             RegisterClass(typeof(UNameProperty));
             RegisterClass(typeof(UStrProperty));
             RegisterClass(typeof(UArrayProperty));
