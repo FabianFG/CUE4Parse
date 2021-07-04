@@ -120,7 +120,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #if DEBUG
             if (tagType == null)
             {
-                Log.Debug("Couldn't read property type {0} at {1}", propertyType, Ar.Position);  
+                Log.Warning("Couldn't read property type {0} at {1}", propertyType, Ar.Position);
             }
 #endif
             return tagType;

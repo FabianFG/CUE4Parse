@@ -6,7 +6,6 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -16,8 +15,6 @@ namespace CUE4Parse.UE4.Assets
 {
     public sealed class Package : AbstractUePackage
     {
-        public const uint PackageMagic = 0x9E2A83C1u;
-
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public FObjectImport[] ImportMap { get; }
@@ -29,10 +26,6 @@ namespace CUE4Parse.UE4.Assets
         {
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
-            if (Summary.Tag != PackageMagic)
-            {
-                throw new ParserException(uassetAr, $"Invalid uasset magic: {Summary.Tag} != {PackageMagic}");
-            }
 
             uassetAr.Seek(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];

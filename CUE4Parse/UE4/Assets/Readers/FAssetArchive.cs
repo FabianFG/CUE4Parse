@@ -7,20 +7,22 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new (); // FYI cloning will clear this dictionary
+        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new(); // FYI cloning will clear this dictionary
         private readonly FArchive _baseArchive;
-        
+
         public bool HasUnversionedProperties => Owner.HasFlags(EPackageFlags.PKG_UnversionedProperties);
         public readonly IPackage Owner;
         public int AbsoluteOffset;
 
-        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Game, baseArchive.Ver)
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Game, owner.Summary != null && owner.Summary.FileVersionUE4 != 0 ? (UE4Version) owner.Summary.FileVersionUE4 : baseArchive.Ver)
         {
             _baseArchive = baseArchive;
             Owner = owner;
@@ -36,7 +38,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             if (nameIndex < 0 || nameIndex >= Owner.NameMap.Length)
             {
                 throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner.NameMap.Length}");
-            }            
+            }
 #endif
             return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
         }
@@ -70,7 +72,7 @@ namespace CUE4Parse.UE4.Assets.Readers
                     Log.Warning("Failed to load object {Obj}", resolved.Name);
                     return null;
                 }
-                
+
                 if (obj is T cast)
                 {
                     return cast;
@@ -85,7 +87,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         {
             ar = null;
             if (!_payloads.TryGetValue(type, out var ret)) return false;
-            
+
             ar = ret.Value;
             return true;
         }
@@ -106,14 +108,14 @@ namespace CUE4Parse.UE4.Assets.Readers
 
             _payloads[type] = new Lazy<FAssetArchive?>(() => payload);
         }
-        
+
         public void AddPayload(PayloadType type, int absoluteOffset, Lazy<FArchive?> payload)
         {
             if (_payloads.ContainsKey(type))
             {
                 throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
-            
+
             _payloads[type] = new Lazy<FAssetArchive?>(() =>
             {
                 var rawAr = payload.Value;
@@ -132,7 +134,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long SeekAbsolute(long offset, SeekOrigin origin)
             => _baseArchive.Seek(offset - AbsoluteOffset, origin);
-        
+
         public override bool CanSeek => _baseArchive.CanSeek;
         public override long Length => _baseArchive.Length;
         public long AbsolutePosition => AbsoluteOffset + Position;
@@ -145,7 +147,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         }
 
         public override string Name => _baseArchive.Name;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
             => _baseArchive.Read<T>();

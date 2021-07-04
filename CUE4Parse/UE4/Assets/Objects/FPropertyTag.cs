@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -50,10 +51,13 @@ namespace CUE4Parse.UE4.Assets.Objects
             Size = Ar.Read<int>();
             ArrayIndex = Ar.Read<int>();
             TagData = new FPropertyTagData(Ar, PropertyType.Text);
-            HasPropertyGuid = Ar.ReadFlag();
-            if (HasPropertyGuid)
+            if (Ar.Ver >= UE4Version.VER_UE4_PROPERTY_GUID_IN_PROPERTY_TAG)
             {
-                PropertyGuid = Ar.Read<FGuid>();
+                HasPropertyGuid = Ar.ReadFlag();
+                if (HasPropertyGuid)
+                {
+                    PropertyGuid = Ar.Read<FGuid>();
+                }
             }
 
             if (readData)
