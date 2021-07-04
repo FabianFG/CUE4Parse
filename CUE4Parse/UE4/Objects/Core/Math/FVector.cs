@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -300,5 +301,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static float DistSquared(FVector v1, FVector v2) =>
             (v2.X - v1.X).Square() + (v2.Y - v1.Y).Square() + (v2.Z - v1.Z).Square();
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(X);
+            Ar.Write(Y);
+            Ar.Write(Z);
+        }
     }
 }

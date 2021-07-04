@@ -15,6 +15,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /** Holds the radius of the bounding sphere. */
         public readonly float SphereRadius;
 
+        public FBoxSphereBounds(FVector origin, FVector boxExtent, float sphereRadius)
+        {
+            Origin = origin;
+            BoxExtend = boxExtent;
+            SphereRadius = sphereRadius;
+        }
+        
         public override string ToString() => $"Origin=({Origin}), BoxExtend=({BoxExtend}), SphereRadius={SphereRadius}";
     }
 }

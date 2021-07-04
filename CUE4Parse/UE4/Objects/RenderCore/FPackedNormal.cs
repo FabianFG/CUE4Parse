@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.RenderCore
     [JsonConverter(typeof(FPackedNormalConverter))]
     public class FPackedNormal
     {
-        public readonly uint Data;
+        public uint Data;
         public float X => (Data & 0xFF) / (float) 127.5 - 1;
         public float Y => ((Data >> 8) & 0xFF) / (float) 127.5 - 1;
         public float Z => ((Data >> 16) & 0xFF) / (float) 127.5 - 1;
