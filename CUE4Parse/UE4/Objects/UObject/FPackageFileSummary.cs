@@ -151,7 +151,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     // this file is unversioned, remember that, then use current versions
                     bUnversioned = true;
                     // set the versions to latest here, etc.
-                    FileVersionUE4 = EUnrealEngineObjectUE4Version.VER_UE4_AUTOMATIC_VERSION;
+                    FileVersionUE4 = (EUnrealEngineObjectUE4Version) Ar.Ver;
                     FileVersionLicenseUE4 = EUnrealEngineObjectLicenseeUE4Version.VER_LIC_AUTOMATIC_VERSION;
                 }
                 else
