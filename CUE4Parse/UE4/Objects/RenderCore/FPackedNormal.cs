@@ -29,7 +29,12 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public FPackedNormal(FVector Vector)
         {
-            Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5)) << 16;
+            Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5) << 16);
+        }
+        
+        public FPackedNormal(FVector4 Vector)
+        {
+            Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5) << 16 +  (int)(Vector.W + 1 * 127.5) << 24);
         }
 
         public static explicit operator FVector(FPackedNormal packedNormal)

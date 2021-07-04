@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Writers;
 namespace CUE4Parse.UE4.Objects.Meshes
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class FMeshUVFloat : IUStruct
+    public struct FMeshUVFloat : IUStruct
     {
         public float U;
         public float V;

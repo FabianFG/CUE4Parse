@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Writers
             OutStream = _memoryData;
         }
 
-        public byte[] GetBuffer() => _memoryData.GetBuffer();
+        public byte[] GetBuffer() => _memoryData.ToArray();
 
         public void SerializeChunkHeader(VChunkHeader header, string name)
         {

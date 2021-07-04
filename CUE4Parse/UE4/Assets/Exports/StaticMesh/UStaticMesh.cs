@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         private const int MAX_MESH_UV_SETS = 8;
         
         public bool bCooked { get; private set; }
+        public Lazy<UObject?> BodySetup { get; private set; }
         public FGuid LightingGuid { get; private set; }
         public FPackageIndex[] Sockets { get; private set; } // Lazy<UObject?>[]
         public FStaticMeshRenderData? RenderData { get; private set; }
@@ -33,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             bCooked = Ar.ReadBoolean();
-            var bodySetup = Ar.ReadObject<UObject>();
+            BodySetup = Ar.ReadObject<UObject>();
             var navCollision = Ar.Ver >= UE4Version.VER_UE4_STATIC_MESH_STORE_NAV_COLLISION ? Ar.ReadObject<UObject>() : null;
 
             if (!stripDataFlags.IsEditorDataStripped())
@@ -92,7 +93,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-
+            
             writer.WritePropertyName("LightingGuid");
             serializer.Serialize(writer, LightingGuid);
 
