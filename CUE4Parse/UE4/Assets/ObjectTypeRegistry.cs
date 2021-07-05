@@ -39,6 +39,8 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
+            RegisterClass(typeof(UTextureCube));
+            RegisterClass(typeof(UVolumeTexture));
             RegisterClass(typeof(UUserDefinedEnum));
             RegisterClass(typeof(UUserDefinedStruct));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
