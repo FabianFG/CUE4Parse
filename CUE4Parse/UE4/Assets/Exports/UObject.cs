@@ -139,30 +139,6 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         /** 
-         * Walks up the list of outers until it finds the highest one.
-         *
-         * @return outermost non NULL Outer.
-         */
-        public AbstractUePackage? GetOutermost()
-        {
-            var top = this;
-            for (;;)
-            {
-                var currentOuter = top.Outer;
-                if (currentOuter == null)
-                {
-                    if (top is not AbstractUePackage)
-                    {
-                        Log.Warning("GetOutermost expects an IPackage as outermost object but '{Top}' isn't one", top);
-                    }
-
-                    return top as AbstractUePackage;
-                }
-                top = currentOuter;
-            }
-        }
-
-        /** 
 	     * Do any object-specific cleanup required immediately after loading an object, 
 	     * and immediately after any undo/redo.
 	     */
@@ -349,6 +325,26 @@ namespace CUE4Parse.UE4.Assets.Exports
         public virtual void PreDestroyFromReplication()
         {
             
+        }
+        
+        /** IsNameStableForNetworking means an object can be referred to its path name (relative to outer) over the network */
+        public virtual bool IsNameStableForNetworking() => Flags.HasFlag(EObjectFlags.RF_WasLoaded) || Flags.HasFlag(EObjectFlags.RF_DefaultSubObject) /* || IsNative() || IsDefaultSubobject() */;
+
+        /** IsFullNameStableForNetworking means an object can be referred to its full path name over the network */
+        public virtual bool IsFullNameStableForNetworking()
+        {
+            if (Outer != null && !Outer.IsNameStableForNetworking())
+            {
+                return false;	// If any outer isn't stable, we can't consider the full name stable
+            }
+
+            return IsNameStableForNetworking();
+        }
+
+        /** IsSupportedForNetworking means an object can be referenced over the network */
+        public virtual bool IsSupportedForNetworking()
+        {
+            return IsFullNameStableForNetworking();
         }
 
         public override string ToString() => GetFullName();

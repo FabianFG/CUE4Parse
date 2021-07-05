@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
@@ -34,6 +35,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UMaterialInstanceConstant));
             RegisterClass(typeof(USkeleton));
             RegisterClass(typeof(UStaticMesh));
+            RegisterClass(typeof(USkeletalMesh));
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
@@ -44,6 +46,42 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
             RegisterClass(typeof(UBodySetup));
             RegisterClass(typeof(UModel));
+
+            // Pre-4.25 property types
+            RegisterClass(typeof(UField));
+            RegisterClass(typeof(UProperty));
+            RegisterClass(typeof(UNumericProperty));
+            RegisterClass(typeof(UByteProperty));
+            RegisterClass(typeof(UInt8Property));
+            RegisterClass(typeof(UInt16Property));
+            RegisterClass(typeof(UIntProperty));
+            RegisterClass(typeof(UInt64Property));
+            RegisterClass(typeof(UUInt16Property));
+            RegisterClass(typeof(UUInt32Property));
+            RegisterClass(typeof(UUInt64Property));
+            RegisterClass(typeof(UFloatProperty));
+            RegisterClass(typeof(UDoubleProperty));
+            RegisterClass(typeof(UBoolProperty));
+            RegisterClass(typeof(UObjectPropertyBase));
+            RegisterClass(typeof(UObjectProperty));
+            RegisterClass(typeof(UWeakObjectProperty));
+            RegisterClass(typeof(ULazyObjectProperty));
+            RegisterClass(typeof(USoftObjectProperty));
+            RegisterClass(typeof(UClassProperty));
+            RegisterClass(typeof(USoftClassProperty));
+            RegisterClass(typeof(UInterfaceProperty));
+            RegisterClass(typeof(UNameProperty));
+            RegisterClass(typeof(UStrProperty));
+            RegisterClass(typeof(UArrayProperty));
+            RegisterClass(typeof(UMapProperty));
+            RegisterClass(typeof(USetProperty));
+            RegisterClass(typeof(UStructProperty));
+            RegisterClass(typeof(UDelegateProperty));
+            RegisterClass(typeof(UMulticastDelegateProperty));
+            RegisterClass(typeof(UMulticastInlineDelegateProperty));
+            RegisterClass(typeof(UMulticastSparseDelegateProperty));
+            RegisterClass(typeof(UEnumProperty));
+            RegisterClass(typeof(UTextProperty));
         }
 
         public static void RegisterClass(Type type)

@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(int elementSize, int elementCount, Func<T> getter)
         {
-            long pos = Position;
+            var pos = Position;
             T[] array = ReadArray<T>(elementCount, getter);
             if (Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
@@ -83,9 +83,9 @@ namespace CUE4Parse.UE4.Readers
         }
         public T[] ReadBulkArray<T>() where T : struct
         {
-            int elementSize = Read<int>();
-            int elementCount = Read<int>();
-            long pos = Position;
+            var elementSize = Read<int>();
+            var elementCount = Read<int>();
+            var pos = Position;
             T[] array = ReadArray<T>(elementCount);
             if (Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
@@ -95,10 +95,18 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(Func<T> getter)
         {
-            int elementSize = Read<int>();
-            int elementCount = Read<int>();
-            long pos = Position;
+            var elementSize = Read<int>();
+            var elementCount = Read<int>();
+            var pos = Position;
             return ReadBulkArray<T>(elementSize, elementCount, getter);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipBulkArrayData(int size = -1)
+        {
+            var elementSize = Read<int>();
+            var elementCount = Read<int>();
+            Position += elementSize * elementCount;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

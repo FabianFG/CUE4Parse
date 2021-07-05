@@ -6,7 +6,6 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -16,8 +15,6 @@ namespace CUE4Parse.UE4.Assets
 {
     public sealed class Package : AbstractUePackage
     {
-        public const uint PackageMagic = 0x9E2A83C1u;
-
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public FObjectImport[] ImportMap { get; }
@@ -29,10 +26,6 @@ namespace CUE4Parse.UE4.Assets
         {
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
-            if (Summary.Tag != PackageMagic)
-            {
-                throw new ParserException(uassetAr, $"Invalid uasset magic: {Summary.Tag} != {PackageMagic}");
-            }
 
             uassetAr.Seek(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];
@@ -63,36 +56,19 @@ namespace CUE4Parse.UE4.Assets
 
             foreach (var export in ExportMap)
             {
-                if (ResolvePackageIndex(export.ClassIndex)?.Object?.Value is not UStruct uStruct) continue;
-                var obj = ConstructObject(uStruct);
-                obj.Name = export.ObjectName.Text;
-                obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
-                obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
-                obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
-                obj.Flags = (EObjectFlags) export.ObjectFlags;
-                export.ExportType = obj.GetType();
                 export.ExportObject = new Lazy<UObject>(() =>
                 {
-                    uexpAr.SeekAbsolute(export.RealSerialOffset, SeekOrigin.Begin);
-                    var validPos = uexpAr.Position + export.SerialSize;
-                    try
-                    {
-                        obj.Deserialize(uexpAr, validPos);
-#if DEBUG
-                        if (validPos != uexpAr.Position)
-                            Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - uexpAr.Position);
-                        else
-                            Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, export.RealSerialOffset, export.SerialSize);
-#endif
+                    // Create
+                    var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
+                    obj.Name = export.ObjectName.Text;
+                    obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
+                    obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
+                    obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                    obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
 
-                        // TODO right place ???
-                        obj.PostLoad();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, "Could not read {0} correctly", obj.ExportType);
-                    }
-
+                    // Serialize
+                    uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
+                    DeserializeObject(obj, uexpAr, export.SerialSize);
                     return obj;
                 });
             }
@@ -182,10 +158,10 @@ namespace CUE4Parse.UE4.Assets
 
             for (var i = 0; i < importPackage.ExportMap.Length; i++)
             {
-                FObjectExport export = importPackage.ExportMap[i];
+                var export = importPackage.ExportMap[i];
                 if (export.ObjectName.Text != import.ObjectName.Text)
                     continue;
-                var thisOuter = ResolvePackageIndex(export.OuterIndex);
+                var thisOuter = importPackage.ResolvePackageIndex(export.OuterIndex);
                 if (thisOuter?.GetPathName() == outer)
                     return new ResolvedExportObject(i, importPackage);
             }

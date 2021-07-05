@@ -4,26 +4,21 @@ using System.Runtime.InteropServices;
 namespace CUE4Parse.UE4.Objects.Meshes
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class FMeshUVFloat : IUStruct
+    public struct FMeshUVHalf
     {
-        public readonly float U;
-        public readonly float V;
+        public readonly ushort U;
+        public readonly ushort V;
 
-        public FMeshUVFloat(FArchive Ar)
+        public FMeshUVHalf(FArchive Ar)
         {
-            U = Ar.Read<float>();
-            V = Ar.Read<float>();
+            U = Ar.Read<ushort>();
+            V = Ar.Read<ushort>();
         }
 
-        public FMeshUVFloat(float u, float v)
+        public FMeshUVHalf(ushort u, ushort v)
         {
             U = u;
             V = v;
-        }
-
-        public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
-        {
-            return new (uvHalf.U, uvHalf.V);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
@@ -46,6 +47,18 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     Indices32 = new uint[0];
                 }
                 tempAr.Dispose();
+            }
+        }
+        
+        public int this[int i]
+        {
+            get
+            {
+                if (Indices32.Length > 0)
+                    return (int)Indices32[i];
+                if (Indices16.Length > 0)
+                    return Indices16[i];
+                throw new IndexOutOfRangeException();
             }
         }
     }

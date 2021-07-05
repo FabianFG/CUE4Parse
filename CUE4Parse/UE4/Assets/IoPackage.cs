@@ -86,8 +86,7 @@ namespace CUE4Parse.UE4.Assets
             if (uptnl != null) uassetAr.AddPayload(PayloadType.UPTNL, Summary.BulkDataStartOffset, uptnl);
 
             // Populate lazy exports
-            var allExportDataOffset = IoSummary.GraphDataOffset + IoSummary.GraphDataSize;
-            var currentExportDataOffset = allExportDataOffset;
+            var currentExportDataOffset = IoSummary.GraphDataOffset + IoSummary.GraphDataSize;
             foreach (var exportBundle in exportBundleHeaders)
             {
                 for (var i = 0u; i < exportBundle.EntryCount; i++)
@@ -101,35 +100,17 @@ namespace CUE4Parse.UE4.Assets
                         ExportsLazy[localExportIndex] = new Lazy<UObject>(() =>
                         {
                             // Create
-                            var objectName = CreateFNameFromMappedName(export.ObjectName);
                             var obj = ConstructObject(ResolveObjectIndex(export.ClassIndex)?.Object?.Value as UStruct);
-                            obj.Name = objectName.Text;
+                            obj.Name = CreateFNameFromMappedName(export.ObjectName).Text;
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
                             obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
-                            obj.Flags = (EObjectFlags) export.ObjectFlags;
-                            var exportType = obj.ExportType;
+                            obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
 
                             // Serialize
                             uassetAr.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
                             uassetAr.Seek(localExportDataOffset, SeekOrigin.Begin);
-                            var validPos = uassetAr.Position + (long) export.CookedSerialSize;
-                            try
-                            {
-                                obj.Deserialize(uassetAr, validPos);
-#if DEBUG
-                                if (validPos != uassetAr.Position)
-                                    Log.Warning("Did not read {0} correctly, {1} bytes remaining", exportType, validPos - uassetAr.Position);
-                                else
-                                    Log.Debug("Successfully read {0} at {1} with size {2}", exportType, localExportDataOffset, export.CookedSerialSize);
-#endif
-                                // TODO right place ???
-                                obj.PostLoad();
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Error(e, "Could not read {0} correctly", exportType);
-                            }
+                            DeserializeObject(obj, uassetAr, (long) export.CookedSerialSize);
                             return obj;
                         });
                         currentExportDataOffset += (int) export.CookedSerialSize;

@@ -85,6 +85,25 @@ namespace CUE4Parse.UE4.Assets.Objects
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
         }
+
+        protected FByteBulkData(FAssetArchive Ar, bool skip = false)
+        {
+            Header = new FByteBulkDataHeader(Ar);
+            var bulkDataFlags = Header.BulkDataFlags;
+            
+            if (EBulkData.BULKDATA_Unused.Check(bulkDataFlags) ||
+                EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags) ||
+                EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
+            {
+                return;
+            }
+            
+            if (EBulkData.BULKDATA_ForceInlinePayload.Check(bulkDataFlags) ||
+                Header.OffsetInFile == Ar.Position)
+            {
+                Ar.Position += Header.SizeOnDisk;
+            }
+        }
     }
     
     public class FByteBulkDataConverter : JsonConverter<FByteBulkData>

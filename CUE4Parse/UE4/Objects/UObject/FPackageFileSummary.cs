@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {
-                throw new ParserException($"Not a UE package - {Tag}");
+                throw new ParserException($"Invalid uasset magic: {Tag} != {PACKAGE_FILE_TAG}");
             }
 
             // The package has been stored in a separate endianness than the linker expected so we need to force
@@ -151,12 +151,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                     // this file is unversioned, remember that, then use current versions
                     bUnversioned = true;
                     // set the versions to latest here, etc.
-                    FileVersionUE4 = EUnrealEngineObjectUE4Version.VER_UE4_AUTOMATIC_VERSION;
+                    FileVersionUE4 = (EUnrealEngineObjectUE4Version) Ar.Ver;
                     FileVersionLicenseUE4 = EUnrealEngineObjectLicenseeUE4Version.VER_LIC_AUTOMATIC_VERSION;
                 }
                 else
                 {
                     bUnversioned = false;
+                    Ar.Ver = (UE4Version) FileVersionUE4;
                 }
             }
             else

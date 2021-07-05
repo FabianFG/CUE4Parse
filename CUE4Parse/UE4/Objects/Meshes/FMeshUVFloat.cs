@@ -1,24 +1,36 @@
 ﻿using CUE4Parse.UE4.Readers;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Objects.Meshes
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class FMeshUVHalf
+    public struct FMeshUVFloat : IUStruct
     {
-        public readonly ushort U;
-        public readonly ushort V;
+        public float U;
+        public float V;
 
-        public FMeshUVHalf(FArchive Ar)
+        public FMeshUVFloat(FArchive Ar)
         {
-            U = Ar.Read<ushort>();
-            V = Ar.Read<ushort>();
+            U = Ar.Read<float>();
+            V = Ar.Read<float>();
         }
 
-        public FMeshUVHalf(ushort u, ushort v)
+        public FMeshUVFloat(float u, float v)
         {
             U = u;
             V = v;
+        }
+
+        public void Serialize(FArchiveWriter ar)
+        {
+            ar.Write(U);
+            ar.Write(V);
+        }
+
+        public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
+        {
+            return new (uvHalf.U, uvHalf.V);
         }
     }
 }

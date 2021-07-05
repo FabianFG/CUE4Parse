@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -16,7 +17,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly byte B;
         public readonly byte A;
         
-        public readonly string Hex => A == 1 || A == 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
+        public readonly string Hex => A is 1 or 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
+
+        public void Serialize(FArchiveWriter ar)
+        {
+            ar.Write(R);
+            ar.Write(G);
+            ar.Write(B);
+            ar.Write(A);
+        }
 
         public override string ToString() => Hex;
     }
