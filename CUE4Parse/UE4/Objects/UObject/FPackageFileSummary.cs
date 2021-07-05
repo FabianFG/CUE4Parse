@@ -157,7 +157,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 else
                 {
                     bUnversioned = false;
-                    Ar.Ver = (UE4Version) FileVersionUE4;
+                    // Only apply the version if an explicit version is not set
+                    if (Ar.Ver == UE4Version.VER_UE4_DETERMINE_BY_GAME)
+                    {
+                        Ar.Ver = (UE4Version) FileVersionUE4;
+                    }
                 }
             }
             else
