@@ -1,9 +1,9 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using System;
+using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -17,9 +17,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public readonly bool UseHighPrecisionTangentBasis;
         public readonly FStaticMeshUVItem[] UV;  // TangentsData ?
 
-        public FStaticMeshVertexBuffer(FArchive Ar)
+        public FStaticMeshVertexBuffer(FAssetArchive Ar)
         {
-            var stripDataFlags = Ar.Ver >= UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX ? Ar.Read<FStripDataFlags>() : new FStripDataFlags();
+            var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 
             // SerializeMetaData
             NumTexCoords = Ar.Read<int>();
@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 if (Ar.Game < EGame.GAME_UE4_19)
                 {
-                    UV = Ar.ReadArray(() => new FStaticMeshUVItem(Ar, UseHighPrecisionTangentBasis, NumTexCoords, UseFullPrecisionUVs));
+                    UV = Ar.ReadBulkArray(() => new FStaticMeshUVItem(Ar, UseHighPrecisionTangentBasis, NumTexCoords, UseFullPrecisionUVs));
                 }
                 else
                 {
@@ -44,8 +44,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     if (itemCount != NumVertices)
                         throw new ParserException($"NumVertices={itemCount} != NumVertices={NumVertices}");
                     
-                    var tempTangents = Ar.ReadArray(itemCount, () => FStaticMeshUVItem.SerializeTangents(Ar, UseHighPrecisionTangentBasis));
-                    if (Ar.Position - position != itemSize * itemCount)
+                    var tempTangents = Ar.ReadArray(NumVertices, () => FStaticMeshUVItem.SerializeTangents(Ar, UseHighPrecisionTangentBasis));
+                    if (Ar.Position - position != itemCount * itemSize)
                         throw new ParserException($"Read incorrect amount of tangent bytes, at {Ar.Position}, should be: {position + itemSize * itemCount} behind: {position + (itemSize * itemCount) - Ar.Position}");
 
                     itemSize = Ar.Read<int>();
@@ -55,8 +55,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     if (itemCount != NumVertices * NumTexCoords)
                         throw new ParserException($"NumVertices={itemCount} != {NumVertices * NumTexCoords}");
 
-                    var uv = Ar.ReadArray(itemCount, () => FStaticMeshUVItem.SerializeTexcoords(Ar, NumTexCoords, UseFullPrecisionUVs));
-                    if (Ar.Position - position != itemSize * itemCount)
+                    var uv = Ar.ReadArray(NumVertices, () => FStaticMeshUVItem.SerializeTexcoords(Ar, NumTexCoords, UseFullPrecisionUVs));
+                    if (Ar.Position - position != itemCount * itemSize)
                         throw new ParserException($"Read incorrect amount of Texture Coordinate bytes, at {Ar.Position}, should be: {position + itemSize * itemCount} behind: {position + (itemSize * itemCount) - Ar.Position}");
 
                     UV = new FStaticMeshUVItem[NumVertices];

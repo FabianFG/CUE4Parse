@@ -215,6 +215,9 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
         
+        /// <param name="baseDirectory"></param>
+        /// <param name="savedFileName"></param>
+        /// <returns>true if *ALL* lods were successfully exported</returns>
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
             var b = false;

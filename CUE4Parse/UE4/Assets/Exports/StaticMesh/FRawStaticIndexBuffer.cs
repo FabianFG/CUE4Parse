@@ -36,14 +36,14 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                 if (is32bit)
                 {
-                    var count = (int)tempAr.Length / sizeof(uint);
+                    var count = (int)tempAr.Length / 4;
                     Indices16 = new ushort[0];
-                    Indices32 = tempAr.ReadArray(count, () => tempAr.Read<uint>());
+                    Indices32 = tempAr.ReadArray<uint>(count);
                 }
                 else
                 {
-                    var count = (int)tempAr.Length / sizeof(ushort);
-                    Indices16 = tempAr.ReadArray(count, () => tempAr.Read<ushort>());
+                    var count = (int)tempAr.Length / 2;
+                    Indices16 = tempAr.ReadArray<ushort>(count);
                     Indices32 = new uint[0];
                 }
                 tempAr.Dispose();

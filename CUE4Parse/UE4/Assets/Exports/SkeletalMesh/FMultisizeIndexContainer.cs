@@ -23,11 +23,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var dataSize = Ar.Read<byte>();
             if (dataSize == 0x02)
             {
-                Indices16 = Ar.ReadBulkArray(Ar.Read<ushort>);
+                Indices16 = Ar.ReadBulkArray<ushort>();
             }
             else
             {
-                Indices32 = Ar.ReadBulkArray(Ar.Read<uint>);
+                Indices32 = Ar.ReadBulkArray<uint>();
             }
         }
     }

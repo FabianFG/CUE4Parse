@@ -35,9 +35,22 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public static FMeshUVFloat[] SerializeTexcoords(FArchive Ar, int numStaticUVSets, bool useStaticFloatUVs)
         {
+            var uv = new FMeshUVFloat[numStaticUVSets];
             if (useStaticFloatUVs)
-                return Enumerable.Repeat(new FMeshUVFloat(Ar), numStaticUVSets).ToArray();
-            return Enumerable.Repeat((FMeshUVFloat)new FMeshUVHalf(Ar), numStaticUVSets).ToArray();
+            {
+                for (var i = 0; i < uv.Length; i++)
+                {
+                    uv[i] = Ar.Read<FMeshUVFloat>();
+                }
+            }
+            else
+            {
+                for (var i = 0; i < uv.Length; i++)
+                {
+                    uv[i] = (FMeshUVFloat) Ar.Read<FMeshUVHalf>();
+                }
+            }
+            return uv;
         }
     }
     

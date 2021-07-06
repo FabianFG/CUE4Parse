@@ -16,10 +16,10 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public FPackedRGBA16N(FArchive Ar)
         {
-            X = Ar.Read<UInt16>();
-            Y = Ar.Read<UInt16>();
-            Z = Ar.Read<UInt16>();
-            W = Ar.Read<UInt16>();
+            X = Ar.Read<ushort>();
+            Y = Ar.Read<ushort>();
+            Z = Ar.Read<ushort>();
+            W = Ar.Read<ushort>();
 
             if (Ar.Game >= EGame.GAME_UE4_20) {
                 X = X ^ 0x8000;
@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
        public static explicit operator FPackedNormal(FPackedRGBA16N packedRGBA16N)
        {
-            return new FPackedNormal((FVector)packedRGBA16N);
+            return new ((FVector)packedRGBA16N);
        }
     }
 
