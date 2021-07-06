@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
     {
         public readonly TMovieSceneEvaluationTree<FSectionEvaluationData> Tree;
 
-        public FSectionEvaluationDataTree(FAssetArchive Ar)
+        public FSectionEvaluationDataTree(FArchive Ar)
         {
             Tree = new TMovieSceneEvaluationTree<FSectionEvaluationData>(Ar);
         }

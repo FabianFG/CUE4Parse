@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FScriptInterface value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.Object);
+            serializer.Serialize(writer, value.Object);
         }
 
         public override FScriptInterface ReadJson(JsonReader reader, Type objectType, FScriptInterface existingValue, bool hasExistingValue,

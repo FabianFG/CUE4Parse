@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         /** Segmented array of all child nodes within this tree (in no particular order) */
         public readonly TEvaluationTreeEntryContainer<FMovieSceneEvaluationTreeNode> ChildNodes;
 
-        public FMovieSceneEvaluationTree(FAssetArchive Ar)
+        public FMovieSceneEvaluationTree(FArchive Ar)
         {
             RootNode = Ar.Read<FMovieSceneEvaluationTreeNode>();
             ChildNodes = new TEvaluationTreeEntryContainer<FMovieSceneEvaluationTreeNode>(Ar);

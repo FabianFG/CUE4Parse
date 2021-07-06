@@ -1,9 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    public enum ERangeBoundTypes : sbyte
+    /**
+     * Enumerates the valid types of range bounds.
+     */
+    public enum ERangeBoundTypes : byte
     {
         /** The range excludes the bound. */
         Exclusive,
@@ -13,16 +15,20 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         /** The bound is open. */
         Open
-    };
+    }
 
-    [StructLayout(LayoutKind.Sequential)]
+    /**
+     * Template for range bounds.
+     */
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct TRangeBound<T> : IUStruct
     {
         /** Holds the type of the bound. */
-        public readonly ERangeBoundTypes BoundType;
-        /** Holds the bound's value. */
-        public readonly T BoundValue;
+        public readonly ERangeBoundTypes Type;
 
-        public override string ToString() => BoundValue?.ToString() ?? string.Empty;
+        /** Holds the bound's value. */
+        public readonly T Value;
+
+        public override string ToString() => Value?.ToString() ?? string.Empty;
     }
 }

@@ -1,10 +1,10 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FMovieSceneEvaluationTreeNode : IUStruct
     {
         /** The time-range that this node represents */

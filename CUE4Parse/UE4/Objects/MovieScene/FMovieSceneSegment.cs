@@ -1,6 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         public readonly bool bAllowEmpty;
         public readonly FSectionEvaluationData[] Impls;
 
-        public FMovieSceneSegment(FAssetArchive Ar)
+        public FMovieSceneSegment(FArchive Ar)
         {
             Range = Ar.Read<TRange<FFrameNumber>>();
             ID = Ar.Read<FMovieSceneSegmentIdentifier>();

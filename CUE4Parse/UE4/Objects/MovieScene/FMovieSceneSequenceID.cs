@@ -5,6 +5,6 @@ namespace CUE4Parse.UE4.Objects.MovieScene
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct FMovieSceneSequenceID : IUStruct
     {
-        public readonly int SequenceIDValue;
+        public readonly int Value;
     }
 }

@@ -5,8 +5,8 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct FFrameNumber : IUStruct
     {
-        public readonly int FrameNumberValue;
+        public readonly int Value;
 
-        public override string ToString() => FrameNumberValue.ToString();
+        public override string ToString() => Value.ToString();
     }
 }

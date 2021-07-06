@@ -1,5 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         /** Tree data container that corresponds to FMovieSceneEvaluationTreeNode::DataID */
         public readonly TEvaluationTreeEntryContainer<T> Data;
 
-        public TMovieSceneEvaluationTree(FAssetArchive Ar) : base(Ar)
+        public TMovieSceneEvaluationTree(FArchive Ar) : base(Ar)
         {
             Data = new TEvaluationTreeEntryContainer<T>(Ar);
         }
@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         /** Linear array of allocated entry contents. Once allocated, indices are never invalidated until Compact is called. Entries needing more capacity are re-allocated on the end of the array. */
         public readonly T[] Items;
 
-        public TEvaluationTreeEntryContainer(FAssetArchive Ar)
+        public TEvaluationTreeEntryContainer(FArchive Ar)
         {
             Entries = Ar.ReadArray<FEntry>();
             Items = Ar.ReadArray<T>();
