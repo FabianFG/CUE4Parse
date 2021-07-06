@@ -2,7 +2,7 @@
 using System.Text;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse.UE4.Objects.Meshes
+namespace CUE4Parse_Conversion.Meshes.Common
 {
     public class VChunkHeader
     {

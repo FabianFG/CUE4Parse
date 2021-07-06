@@ -8,22 +8,27 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
     public class FSkelMeshSection4
     {
-        public readonly short MaterialIndex;
-        public readonly int BaseIndex;
-        public readonly int NumTriangles;
-        public readonly bool bDisabled;
-        public readonly short CorrespondClothSectionIndex;
-        public readonly int GenerateUpToLodIndex;
+        public short MaterialIndex;
+        public int BaseIndex;
+        public int NumTriangles;
+        public bool bDisabled;
+        public short CorrespondClothSectionIndex;
+        public int GenerateUpToLodIndex;
         // Data from FSkelMeshChunk, appeared in FSkelMeshSection after UE4.13
-        public readonly int NumVertices;
-        public readonly uint BaseVertexIndex;
-        public readonly FSoftVertex4[] SoftVertices;
-        public readonly ushort[] BoneMap;
-        public readonly int MaxBoneInfluences;
-        public readonly bool HasClothData;
+        public int NumVertices;
+        public uint BaseVertexIndex;
+        public FSoftVertex4[] SoftVertices;
+        public ushort[] BoneMap;
+        public int MaxBoneInfluences;
+        public bool HasClothData;
         // UE4.14
-        public readonly bool bCastShadow;
-
+        public bool bCastShadow;
+        
+        public FSkelMeshSection4()
+        {
+            
+        }
+        
         public FSkelMeshSection4(FAssetArchive Ar)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
@@ -76,7 +81,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     SoftVertices = Ar.ReadArray(() => new FSoftVertex4(Ar));
                 }
                 
-                BoneMap = Ar.ReadArray(Ar.Read<ushort>);
+                BoneMap = Ar.ReadArray<ushort>();
                 if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.SaveNumVertices)
                     NumVertices = Ar.Read<int>();
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
@@ -87,8 +92,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
                 {
-                    physicalMeshVertices = Ar.ReadArray(Ar.Read<FVector>);
-                    physicalMeshNormals = Ar.ReadArray(Ar.Read<FVector>);
+                    physicalMeshVertices = Ar.ReadArray<FVector>();
+                    physicalMeshNormals = Ar.ReadArray<FVector>();
                 }
 
                 short clothAssetSubmeshIndex;
@@ -111,7 +116,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     var overlappingVertices = new Dictionary<int, int[]>();
                     for (var i = 0; i < size; i++)
                     {
-                        overlappingVertices[i] = Ar.ReadArray(Ar.Read<int>);
+                        overlappingVertices[i] = Ar.ReadArray<int>();
                     }
                 }
                 if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
@@ -123,6 +128,41 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     GenerateUpToLodIndex = Ar.Read<int>();
                 }
             }
+        }
+
+        public void SerializeRenderItem(FAssetArchive Ar)
+        {
+            var stripDataFlags = Ar.Read<FStripDataFlags>();
+            
+            MaterialIndex = Ar.Read<short>();
+            BaseIndex = Ar.Read<int>();
+            NumTriangles = Ar.Read<int>();
+
+            var bRecomputeTangent = Ar.ReadBoolean();
+            if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask)
+            {
+                Ar.Position += 1;
+            }
+            
+            bCastShadow = Ar.ReadBoolean();
+            BaseVertexIndex = Ar.Read<uint>();
+            
+            var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
+            HasClothData = clothMappingData.Length > 0;
+            
+            BoneMap = Ar.ReadArray<ushort>();
+            NumVertices = Ar.Read<int>();
+            MaxBoneInfluences = Ar.Read<int>();
+
+            var correspondClothAssetIndex = Ar.Read<short>();
+            var clothingData = Ar.Read<FClothingSectionData>();
+            
+            if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
+            {
+                Ar.SkipFixedArray(4);
+                Ar.SkipFixedArray(8);
+            }
+            bDisabled = Ar.ReadBoolean();
         }
     }
 }

@@ -8,6 +8,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         private const int _MAX_SKELETAL_UV_SETS_UE4 = 4;
         public readonly FMeshUVFloat[] UV;
 
+        public FGPUVert4Float() : base()
+        {
+            
+        }
+        
         public FGPUVert4Float(FAssetArchive Ar, int numSkelUVSets)
         {
             SerializeForGPU(Ar);

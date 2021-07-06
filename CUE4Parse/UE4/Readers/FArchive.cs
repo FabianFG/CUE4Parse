@@ -108,6 +108,13 @@ namespace CUE4Parse.UE4.Readers
             var elementCount = Read<int>();
             Position += elementSize * elementCount;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipFixedArray(int size = -1)
+        {
+            var elementSize = Read<int>();
+            Position += elementSize * size;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(int length, Func<(TKey, TValue)> getter) where TKey : notnull

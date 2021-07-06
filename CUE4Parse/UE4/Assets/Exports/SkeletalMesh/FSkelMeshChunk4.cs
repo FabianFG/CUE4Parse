@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 SoftVertices = Ar.ReadArray(() => new FSoftVertex4(Ar));
             }
             
-            BoneMap = Ar.ReadArray(Ar.Read<ushort>);
+            BoneMap = Ar.ReadArray<ushort>();
             NumRigidVertices = Ar.Read<int>();
             NumSoftVertices = Ar.Read<int>();
             MaxBoneInfluences = Ar.Read<int>();
@@ -40,8 +40,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 // Physics data, drop
                 var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
-                Ar.ReadArray(Ar.Read<FVector>); // PhysicalMeshVertices
-                Ar.ReadArray(Ar.Read<FVector>); // PhysicalMeshNormals
+                Ar.ReadArray<FVector>(); // PhysicalMeshVertices
+                Ar.ReadArray<FVector>(); // PhysicalMeshNormals
                 Ar.Position += 4; // CorrespondClothAssetIndex, ClothAssetSubmeshIndex
                 HasClothData = clothMappingData.Length > 0;
             }

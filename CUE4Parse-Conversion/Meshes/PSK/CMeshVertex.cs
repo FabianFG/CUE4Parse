@@ -1,7 +1,8 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 
-namespace CUE4Parse.UE4.Objects.Meshes
+namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CMeshVertex
     {

@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -48,13 +49,16 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
                 if (bCooked && LODModels == null)
                 {
-                    // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1845
-                    // serialize cooked data only if editor data not exists - use custom array serializer function
-                    // LODModels.Serialize2<FStaticLODModel4::SerializeRenderItem>(Ar);
+                    LODModels = new FStaticLODModel4[Ar.Read<int>()];
+                    for (var i = 0; i < LODModels.Length; i++)
+                    {
+                        LODModels[i] = new FStaticLODModel4();
+                        LODModels[i].SerializeRenderItem(Ar);
+                    }
                 }
             }
         }
-        
+
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);

@@ -20,63 +20,61 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
         {
+            if (!bCooked) return;
+            
             var minMobileLODIdx = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<int>() : 0;
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
             var numInlinedLODs = Ar.Game >= EGame.GAME_UE4_23 ? Ar.ReadByte() : -1;
-
-            if (bCooked)
+            
+            if (Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
             {
-                if (Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
+                var stripped = false;
+                if (Ar.Ver >= UE4Version.VER_UE4_RENAME_WIDGET_VISIBILITY)
                 {
-                    var stripped = false;
-                    if (Ar.Ver >= UE4Version.VER_UE4_RENAME_WIDGET_VISIBILITY)
+                    var stripDataFlags = Ar.Read<FStripDataFlags>();
+                    stripped = stripDataFlags.IsDataStrippedForServer();
+                    if (Ar.Game >= EGame.GAME_UE4_21)
                     {
-                        var stripDataFlags = Ar.Read<FStripDataFlags>();
-                        stripped = stripDataFlags.IsDataStrippedForServer();
-                        if (Ar.Game >= EGame.GAME_UE4_21)
-                        {
-                            stripped |= stripDataFlags.IsClassDataStripped(1);
-                        }
+                        stripped |= stripDataFlags.IsClassDataStripped(0x01);
                     }
+                }
                     
-                    if (!stripped)
+                if (!stripped)
+                {
+                    for (var i = 0; i < LODs.Length; i++)
                     {
-                        for (var i = 0; i < LODs.Length; i++)
+                        var bValid = Ar.ReadBoolean();
+                        if (bValid)
                         {
-                            if (!Ar.ReadBoolean()) continue;
-                            new FDistanceFieldVolumeData(Ar);
+                            var _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
                 }
             }
 
+            // FortniteGame/Plugins/GameFeatures/Skyfire/Content/Cosmetics/Effects/Prop_Materialize/SM_FX_Skyfire_Backpack.uasset
+            // Bounds doesn't seem correct and LODsShareStaticLighting will crash afterward
             Bounds = Ar.Read<FBoxSphereBounds>();
 
             if (Ar.Game != EGame.GAME_UE4_15)
                 LODsShareStaticLighting = Ar.ReadBoolean();
 
-            if (Ar.Game < EGame.GAME_UE4_15)
+            if (Ar.Game < EGame.GAME_UE4_14)
                 Ar.Position += 4; // bReducedBySimplygon
 
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             {
-                for (var i = 0; i < MAX_STATIC_UV_SETS_UE4; i++)
-                {
-                    Ar.Position += 4; // StreamingTextureFactor for each UV set
-                }
+                Ar.Position += 4 * MAX_STATIC_UV_SETS_UE4; // StreamingTextureFactor for each UV set
                 Ar.Position += 4;  // MaxStreamingTextureFactor
             }
 
-            if (bCooked)
+            ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
+            for (var i = 0; i < ScreenSize.Length; i++)
             {
-                ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
-                for (var i = 0; i < ScreenSize.Length; i++)
-                {
-                    if (Ar.Game >= EGame.GAME_UE4_20)
-                        Ar.Position += 4; // bFloatCooked
+                if (Ar.Game >= EGame.GAME_UE4_20)
+                    Ar.Position += 4; // bFloatCooked
                     
-                    ScreenSize[i] = Ar.Read<float>();
-                }
+                ScreenSize[i] = Ar.Read<float>();
             }
         }
     }

@@ -11,6 +11,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FPackedNormal[] Normal;
         public FSkinWeightInfo Infs;
 
+        public FSkelMeshVertexBase()
+        {
+            
+        }
+
         public void SerializeForGPU(FAssetArchive Ar)
         {
             Normal = new FPackedNormal[3];

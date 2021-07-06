@@ -11,17 +11,17 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /** Holds the origin of the bounding box and sphere. */
         public readonly FVector Origin;
         /** Holds the extent of the bounding box. */
-        public readonly FVector BoxExtend;
+        public readonly FVector BoxExtent;
         /** Holds the radius of the bounding sphere. */
         public readonly float SphereRadius;
 
         public FBoxSphereBounds(FVector origin, FVector boxExtent, float sphereRadius)
         {
             Origin = origin;
-            BoxExtend = boxExtent;
+            BoxExtent = boxExtent;
             SphereRadius = sphereRadius;
         }
         
-        public override string ToString() => $"Origin=({Origin}), BoxExtend=({BoxExtend}), SphereRadius={SphereRadius}";
+        public override string ToString() => $"Origin=({Origin}), BoxExtent=({BoxExtent}), SphereRadius={SphereRadius}";
     }
 }

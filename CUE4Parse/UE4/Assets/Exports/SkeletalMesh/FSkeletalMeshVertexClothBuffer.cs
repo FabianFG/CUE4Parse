@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             Ar.SkipBulkArrayData();
             if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.CompactClothVertexBuffer)
             {
-                ClothIndexMapping = Ar.ReadArray(Ar.Read<ulong>);
+                ClothIndexMapping = Ar.ReadArray<ulong>();
             }
         }
     }

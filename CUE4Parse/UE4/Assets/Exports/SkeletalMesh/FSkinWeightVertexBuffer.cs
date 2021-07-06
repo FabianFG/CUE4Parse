@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
                 else
                 {
-                    newData = Ar.ReadArray(Ar.Read<byte>);
+                    newData = Ar.ReadBulkArray<byte>();
                 }
             }
 
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var numLookupVertices = Ar.Read<int>();
                 
                 if (!lookupStripFlags.IsDataStrippedForServer())
-                    Ar.ReadArray(Ar.Read<uint>); // LookupVertexBuffer
+                    Ar.ReadArray<uint>(); // LookupVertexBuffer
                 
                 // Convert influence data
                 if (newData.Length > 0)
@@ -74,6 +74,34 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     }
                 }
             }
+        }
+
+        public static int MetadataSize(FAssetArchive Ar)
+        {
+            var numBytes = 0;
+            var bNewWeightFormat = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences;
+            
+            if (Ar.Game < EGame.GAME_UE4_24)
+            {
+                numBytes = 2 * 4;
+            }
+            else if (!bNewWeightFormat)
+            {
+                numBytes = 3 * 4;
+            }
+            else
+            {
+                numBytes = 4 * 4;
+                if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
+                    numBytes += 4;
+            }
+            
+            if (bNewWeightFormat)
+            {
+                numBytes += 4;
+            }
+            
+            return numBytes;
         }
     }
 }

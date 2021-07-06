@@ -7,13 +7,18 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
     public class FSkeletalMeshVertexBuffer4
     {
-        public readonly int NumTexCoords;
-        public readonly FVector MeshExtension;
-        public readonly FVector MeshOrigin;
-        public readonly bool bUseFullPrecisionUVs;
-        public readonly bool bExtraBoneInfluences;
-        public readonly FGPUVert4Half[]? VertsHalf;
-        public readonly FGPUVert4Float[]? VertsFloat;
+        public int NumTexCoords;
+        public FVector MeshExtension;
+        public FVector MeshOrigin;
+        public bool bUseFullPrecisionUVs;
+        public bool bExtraBoneInfluences;
+        public FGPUVert4Half[]? VertsHalf;
+        public FGPUVert4Float[]? VertsFloat;
+
+        public FSkeletalMeshVertexBuffer4()
+        {
+            
+        }
         
         public FSkeletalMeshVertexBuffer4(FAssetArchive Ar)
         {

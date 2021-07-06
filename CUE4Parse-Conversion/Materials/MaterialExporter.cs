@@ -5,13 +5,12 @@ using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures;
 using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Materials
 {
-    public class MaterialExporter
+    public class MaterialExporter : ExporterBase
     {
         private readonly string _internalFilePath;
         private readonly string _fileData;
@@ -83,36 +82,38 @@ namespace CUE4Parse_Conversion.Materials
                 _parentData = new MaterialExporter(material.Parent);
         }
 
-        public bool TryWriteTo(string matDirectory, string texDirectory, out string fileName)
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
-            fileName = string.Empty;
-            if (string.IsNullOrEmpty(_fileData)) return false;
+            savedFileName = string.Empty;
+            if (!baseDirectory.Exists || string.IsNullOrEmpty(_fileData)) return false;
 
-            var filePath = FixAndCreatePath(matDirectory, _internalFilePath, "mat");
+            var filePath = FixAndCreatePath(baseDirectory, _internalFilePath, "mat");
             File.WriteAllText(filePath, _fileData);
-            fileName = Path.GetFileName(filePath);
+            savedFileName = Path.GetFileName(filePath);
 
             foreach (var kvp in _textures)
             {
                 if (kvp.Value == null) continue;
                 
-                var texturePath = FixAndCreatePath(texDirectory, kvp.Key, "png");
+                var texturePath = FixAndCreatePath(baseDirectory, kvp.Key, "png");
                 using var stream = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                 kvp.Value.Encode().AsStream().CopyTo(stream);
             }
 
             if (_parentData != null)
-                _parentData.TryWriteTo(matDirectory, texDirectory, out _);
+                _parentData.TryWriteToDir(baseDirectory, out _);
 
             return true;
         }
-        
-        private string FixAndCreatePath(string baseDirectory, string fullPath, string ext)
+
+        public override bool TryWriteToZip(out byte[] zipFile)
         {
-            if (fullPath.StartsWith("/")) fullPath = fullPath.Substring(1);
-            var ret = Path.Combine(baseDirectory, fullPath) + $".{ext.ToLower()}";
-            Directory.CreateDirectory(ret.Replace('\\', '/').SubstringBeforeLast('/'));
-            return ret;
+            throw new NotImplementedException();
+        }
+
+        public override void AppendToZip()
+        {
+            throw new NotImplementedException();
         }
     }
 }

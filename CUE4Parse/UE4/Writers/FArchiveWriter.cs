@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse.UE4.Writers
 {
@@ -14,13 +13,6 @@ namespace CUE4Parse.UE4.Writers
         }
 
         public byte[] GetBuffer() => _memoryData.ToArray();
-
-        public void SerializeChunkHeader(VChunkHeader header, string name)
-        {
-            header.ChunkId = name;
-            header.TypeFlag = 20100422;
-            header.Serialize(this);
-        }
 
         protected override void Dispose(bool disposing)
         {

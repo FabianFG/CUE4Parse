@@ -1,7 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Material;
 
-namespace CUE4Parse.UE4.Objects.Meshes
+namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CMeshSection
     {

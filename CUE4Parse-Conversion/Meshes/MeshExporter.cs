@@ -1,44 +1,55 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
-using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.Materials;
+using CUE4Parse_Conversion.Meshes.Common;
 using CUE4Parse_Conversion.Meshes.PSK;
 using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes
 {
-    public class MeshExporter
+    public class MeshExporter : ExporterBase
     {
-        public readonly StaticMeshExport[] StaticMeshes;
+        private readonly string _meshName;
+        private readonly Mesh[] _meshLods;
         
-        public MeshExporter(CStaticMesh? mesh, bool exportLods = false, bool exportMaterials = true)
+        public MeshExporter(UStaticMesh originalMesh, bool exportLods = false, bool exportMaterials = true)
         {
-            if (mesh == null || mesh.LODs.Count <= 0)
+            _meshName = originalMesh.Name;
+            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
             {
-                Log.Logger.Warning($"Mesh {mesh?.OriginalMesh.Name} has no LODs");
-                StaticMeshes = new StaticMeshExport[0];
+                Log.Logger.Warning($"Mesh {_meshName} has no LODs");
+                _meshLods = new Mesh[0];
                 return;
             }
 
-            StaticMeshes = new StaticMeshExport[exportLods ? mesh.LODs.Count : 1];
-            for (var i = 0; i < StaticMeshes.Length; i++)
+            _meshLods = new Mesh[exportLods ? convertedMesh.LODs.Length : 1];
+            for (var i = 0; i < _meshLods.Length; i++)
             {
-                if (mesh.LODs[i].Sections.Value.Length <= 0)
+                if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh {mesh.OriginalMesh.Name} has no section");
+                    Log.Logger.Warning($"LOD {i} in mesh {_meshName} has no section");
                     continue;
                 }
 
-                using var writer = new FArchiveWriter();
+                using var writer = new FCustomArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportStaticMeshLods(mesh.LODs[i], writer, materialExports);
-                StaticMeshes[i] = new StaticMeshExport($"{mesh.OriginalMesh.Name}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>());
+                ExportStaticMeshLods(convertedMesh.LODs[i], writer, materialExports);
+                _meshLods[i] = new Mesh($"{_meshName}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>());
             }
         }
 
-        private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter writer, List<MaterialExporter>? materialExports)
+        public MeshExporter(USkeletalMesh originalMesh)
+        {
+            if (!originalMesh.TryConvert()) return;
+            throw new NotImplementedException();
+        }
+
+        private void ExportStaticMeshLods(CStaticMeshLod lod, FCustomArchiveWriter writer, List<MaterialExporter>? materialExports)
         {
             var share = new CVertexShare();
             var boneHdr = new VChunkHeader();
@@ -64,7 +75,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(writer, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportCommonMeshData(FArchiveWriter writer, CMeshSection[] sections, CMeshVertex[] verts,
+        private void ExportCommonMeshData(FCustomArchiveWriter writer, CMeshSection[] sections, CMeshVertex[] verts,
             FRawStaticIndexBuffer indices, CVertexShare share, List<MaterialExporter>? materialExports)
         {
             var mainHdr = new VChunkHeader();
@@ -178,7 +189,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public void ExportVertexColors(FArchiveWriter writer, FColor[]? colors, int numVerts)
+        public void ExportVertexColors(FCustomArchiveWriter writer, FColor[]? colors, int numVerts)
         {
             if (colors == null) return;
 
@@ -191,7 +202,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
         
-        public void ExportExtraUV(FArchiveWriter writer, FMeshUVFloat[][] extraUV, int numVerts, int numTexCoords)
+        public void ExportExtraUV(FCustomArchiveWriter writer, FMeshUVFloat[][] extraUV, int numVerts, int numTexCoords)
         {
             var uvHdr = new VChunkHeader {DataCount = numVerts, DataSize = 8};
             for (var i = 1; i < numTexCoords; i++)
@@ -202,6 +213,29 @@ namespace CUE4Parse_Conversion.Meshes
                     extraUV[i - 1][j].Serialize(writer);
                 }
             }
+        }
+        
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
+        {
+            var b = false;
+            savedFileName = _meshName;
+            
+            foreach (var meshLod in _meshLods)
+            {
+                b |= meshLod.TryWriteToDir(baseDirectory, out savedFileName);
+            }
+            
+            return b;
+        }
+
+        public override bool TryWriteToZip(out byte[] zipFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void AppendToZip()
+        {
+            throw new NotImplementedException();
         }
     }
 }
