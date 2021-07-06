@@ -13,13 +13,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             if (Ar.Ver < UE4Version.VER_UE4_SUPPORT_32BIT_STATIC_MESH_INDICES)
             {
-                Indices16 = Ar.ReadBulkArray(Ar.Read<ushort>);
+                Indices16 = Ar.ReadBulkArray<ushort>();
                 Indices32 = new uint[0];
             }
             else
             {
                 var is32bit = Ar.ReadBoolean();
-                var data = Ar.ReadBulkArray(Ar.Read<byte>);
+                var data = Ar.ReadBulkArray<byte>();
                 var tempAr = new FByteArchive("IndicesReader", data, Ar.Game, Ar.Ver);
 
                 if (Ar.Game >= EGame.GAME_UE4_25)

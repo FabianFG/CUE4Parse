@@ -88,9 +88,41 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         }
 
         // Pre-UE4.23 code
-        public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
+        public void SerializeBuffersLegacy(FAssetArchive Ar, FStripDataFlags stripDataFlags)
         {
-            throw new NotImplementedException();
+            PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+            ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            IndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+            if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            {
+                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            }
+            else
+            {
+                // UE4.8 or older, or when has CDSF_ReversedIndexBuffer
+                DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            }
+
+            if (Ar.Ver is >= UE4Version.VER_UE4_FTEXT_HISTORY and < UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
+            {
+                new FDistanceFieldVolumeData(Ar); // distanceFieldData
+            }
+
+            if (!stripDataFlags.IsEditorDataStripped())
+                WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+            if (Ar.Game >= EGame.GAME_UE4_16)
+            {
+                Enumerable.Repeat(new FWeightedRandomSampler(Ar), Sections.Length);
+                new FWeightedRandomSampler(Ar);
+            }
         }
 
         public void SerializeBuffers(FAssetArchive Ar)
