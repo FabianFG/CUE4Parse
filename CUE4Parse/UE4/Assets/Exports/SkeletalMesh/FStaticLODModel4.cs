@@ -187,7 +187,48 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         private void SerializeRenderItem_Legacy(FAssetArchive Ar)
         {
-            throw new NotImplementedException();
+            var stripDataFlags = Ar.Read<FStripDataFlags>();
+            
+            Sections = new FSkelMeshSection4[Ar.Read<int>()];
+            for (var i = 0; i < Sections.Length; i++)
+            {
+                Sections[i] = new FSkelMeshSection4();
+                Sections[i].SerializeRenderItem(Ar);
+            }
+            
+            Indices = new FMultisizeIndexContainer(Ar);
+            VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer4 {bUseFullPrecisionUVs = true};
+            
+            ActiveBoneIndices = Ar.ReadArray<short>();
+            RequiredBones = Ar.ReadArray<short>();
+
+            if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+            {
+                var positionVertexBuffer = new FPositionVertexBuffer(Ar);
+                var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
+                var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
+                
+                // new FColorVertexBuffer(Ar);
+
+                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                    AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
+
+                if (HasClothData())
+                    ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
+
+                VertexBufferGPUSkin.bUseFullPrecisionUVs = true;
+                NumVertices = positionVertexBuffer.NumVertices;
+                NumTexCoords = staticMeshVertexBuffer.NumTexCoords;
+
+                VertexBufferGPUSkin.VertsFloat = new FGPUVert4Float[NumVertices];
+                for (var i = 0; i < VertexBufferGPUSkin.VertsFloat.Length; i++)
+                {
+                    VertexBufferGPUSkin.VertsFloat[i] = new FGPUVert4Float
+                    {
+                        Pos = positionVertexBuffer.Verts[i], Infs = skinWeightVertexBuffer.Weights[i]
+                    };
+                }
+            }
         }
 
         private void SerializeStreamedData(FAssetArchive Ar)
