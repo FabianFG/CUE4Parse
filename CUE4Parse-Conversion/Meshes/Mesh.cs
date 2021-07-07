@@ -4,35 +4,41 @@ using CUE4Parse_Conversion.Materials;
 
 namespace CUE4Parse_Conversion.Meshes
 {
-    public class Mesh : IExporter
+    public class Mesh : ExporterBase
     {
-        private readonly string _fileName;
+        private readonly string _internalFilePath;
         private readonly byte[] _fileData;
         private readonly List<MaterialExporter> _materials;
 
         public Mesh(string fileName, byte[] fileData, List<MaterialExporter> materials)
         {
-            _fileName = fileName;
+            _internalFilePath = fileName;
             _fileData = fileData;
             _materials = materials;
         }
 
-        public bool TryWriteToDir(DirectoryInfo directoryInfo, out string savedFileName)
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
-            savedFileName = _fileName;
-            if (_fileData.Length <= 0) return false;
+            savedFileName = string.Empty;
+            if (!baseDirectory.Exists || _fileData.Length <= 0) return false;
 
-            var filePath = Path.Combine(directoryInfo.FullName, _fileName);
+            foreach (var material in _materials)
+            {
+                material.TryWriteToDir(baseDirectory, out _);
+            }
+            
+            var filePath = FixAndCreatePath(baseDirectory, _internalFilePath);
             File.WriteAllBytes(filePath, _fileData);
+            savedFileName = Path.GetFileName(filePath);
             return File.Exists(filePath);
         }
 
-        public bool TryWriteToZip(out byte[] zipFile)
+        public override bool TryWriteToZip(out byte[] zipFile)
         {
             throw new System.NotImplementedException();
         }
 
-        public void AppendToZip()
+        public override void AppendToZip()
         {
             throw new System.NotImplementedException();
         }

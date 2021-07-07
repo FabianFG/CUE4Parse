@@ -52,8 +52,6 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
 
-            // FortniteGame/Plugins/GameFeatures/Skyfire/Content/Cosmetics/Effects/Prop_Materialize/SM_FX_Skyfire_Backpack.uasset
-            // Bounds doesn't seem correct and LODsShareStaticLighting will crash afterward
             Bounds = Ar.Read<FBoxSphereBounds>();
 
             if (Ar.Game != EGame.GAME_UE4_15)

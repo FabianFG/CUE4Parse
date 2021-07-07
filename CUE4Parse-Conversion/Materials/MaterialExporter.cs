@@ -25,7 +25,7 @@ namespace CUE4Parse_Conversion.Materials
             _parentData = null;
         }
         
-        public MaterialExporter(UUnrealMaterial? unrealMaterial) : this()
+        public MaterialExporter(UUnrealMaterial? unrealMaterial, bool bNoOtherTextures) : this()
         {
             if (unrealMaterial == null) return;
             _internalFilePath = unrealMaterial.Owner?.Name ?? unrealMaterial.Name;
@@ -44,7 +44,13 @@ namespace CUE4Parse_Conversion.Materials
             {
                 if (arg == null) return;
                 sb.AppendLine($"{name}={arg.Name}");
-                toExport.Add(arg);
+                switch (bNoOtherTextures)
+                {
+                    case true when !name.StartsWith("Other["):
+                    case false:
+                        toExport.Add(arg);
+                        break;
+                }
             }
             
             Proc("Diffuse", parameters.Diffuse);
@@ -78,8 +84,8 @@ namespace CUE4Parse_Conversion.Materials
                 _textures[t.Owner?.Name ?? t.Name] = t.Decode(bNearest);
             }
 
-            if (unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
-                _parentData = new MaterialExporter(material.Parent);
+            if (!bNoOtherTextures && unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
+                _parentData = new MaterialExporter(material.Parent, bNoOtherTextures);
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)

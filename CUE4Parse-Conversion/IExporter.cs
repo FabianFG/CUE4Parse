@@ -23,10 +23,10 @@ namespace CUE4Parse_Conversion
         public abstract bool TryWriteToZip(out byte[] zipFile);
         public abstract void AppendToZip();
         
-        protected string FixAndCreatePath(DirectoryInfo baseDirectory, string fullPath, string ext)
+        protected string FixAndCreatePath(DirectoryInfo baseDirectory, string fullPath, string? ext = null)
         {
             if (fullPath.StartsWith("/")) fullPath = fullPath[1..];
-            var ret = Path.Combine(baseDirectory.FullName, fullPath) + $".{ext.ToLower()}";
+            var ret = Path.Combine(baseDirectory.FullName, fullPath) + (ext != null ? $".{ext.ToLower()}" : "");
             Directory.CreateDirectory(ret.Replace('\\', '/').SubstringBeforeLast('/'));
             return ret;
         }
@@ -40,7 +40,7 @@ namespace CUE4Parse_Conversion
         {
             _exporterBase = export switch
             {
-                UMaterialInterface material => new MaterialExporter(material),
+                UMaterialInterface material => new MaterialExporter(material, false),
                 UStaticMesh staticMesh => new MeshExporter(staticMesh),
                 USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)

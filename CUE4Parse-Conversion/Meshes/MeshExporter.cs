@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.Common;
 using CUE4Parse_Conversion.Meshes.PSK;
@@ -19,10 +20,10 @@ namespace CUE4Parse_Conversion.Meshes
         
         public MeshExporter(UStaticMesh originalMesh, bool exportLods = false, bool exportMaterials = true)
         {
-            _meshName = originalMesh.Name;
+            _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
             {
-                Log.Logger.Warning($"Mesh {_meshName} has no LODs");
+                Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
                 _meshLods = new Mesh[0];
                 return;
             }
@@ -32,7 +33,7 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh {_meshName} has no section");
+                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
                     continue;
                 }
 
@@ -45,7 +46,14 @@ namespace CUE4Parse_Conversion.Meshes
 
         public MeshExporter(USkeletalMesh originalMesh)
         {
-            if (!originalMesh.TryConvert()) return;
+            _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
+            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
+            {
+                Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
+                _meshLods = new Mesh[0];
+                return;
+            }
+            
             throw new NotImplementedException();
         }
 
@@ -181,7 +189,7 @@ namespace CUE4Parse_Conversion.Meshes
                 if (sections[i].Material?.Value is { } tex)
                 {
                     materialName = tex.Name;
-                    materialExports?.Add(new MaterialExporter(tex));
+                    materialExports?.Add(new MaterialExporter(tex, true));
                 }
                 else materialName = $"material_{i}";
 
@@ -221,7 +229,7 @@ namespace CUE4Parse_Conversion.Meshes
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
             var b = false;
-            savedFileName = _meshName;
+            savedFileName = _meshName.SubstringAfterLast('/');
             
             foreach (var meshLod in _meshLods)
             {

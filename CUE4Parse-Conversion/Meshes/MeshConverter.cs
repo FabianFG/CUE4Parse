@@ -88,9 +88,52 @@ namespace CUE4Parse_Conversion.Meshes
             return true;
         }
         
-        public static bool TryConvert(this USkeletalMesh originalMesh)
+        public static bool TryConvert(this USkeletalMesh originalMesh, out CSkeletalMesh convertedMesh)
         {
-            throw new NotImplementedException();
+            convertedMesh = new CSkeletalMesh();
+            if (originalMesh.LODModels == null) return false;
+
+            var numLods = originalMesh.LODModels.Length;
+            convertedMesh.LODs = new CSkelMeshLod[numLods];
+            for (var i = 0; i < convertedMesh.LODs.Length; i++)
+            {
+                if (originalMesh.LODModels[i] is not { } srcLod) continue;
+                
+                if (srcLod.Indices.Indices16.Length == 0 && srcLod.Indices.Indices32.Length == 0)
+                {
+                    Log.Logger.Debug($"LOD {i} has no indices, skipping...");
+                    continue;
+                }
+                
+                var numTexCoords = srcLod.NumTexCoords;
+                if (numTexCoords > _MAX_MESH_UV_SETS)
+                    throw new ParserException($"Skeletal mesh has too many UV sets ({numTexCoords})");
+                
+                convertedMesh.LODs[i] = new CSkelMeshLod
+                {
+                    NumTexCoords = numTexCoords,
+                    HasNormals = true,
+                    HasTangents = true,
+                };
+                
+                var bUseVerticesFromSections = false;
+                var vertexCount = srcLod.VertexBufferGPUSkin.GetVertexCount();
+                if (vertexCount == 0 && srcLod.Sections.Length > 0 && srcLod.Sections[0].SoftVertices.Length > 0)
+                {
+                    bUseVerticesFromSections = true;
+                    for (var j = 0; j < srcLod.Sections.Length; j++)
+                    {
+                        vertexCount += srcLod.Sections[i].SoftVertices.Length;
+                    }
+                }
+                
+                convertedMesh.LODs[i].AllocateVerts(vertexCount);
+                
+                // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1981
+            }
+            
+            convertedMesh.FinalizeMesh();
+            return true;
         }
     }
 }
