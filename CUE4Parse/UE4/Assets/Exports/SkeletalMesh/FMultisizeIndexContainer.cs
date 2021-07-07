@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
@@ -10,10 +11,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public FMultisizeIndexContainer()
         {
-            
+            Indices16 = Array.Empty<ushort>();
+            Indices32 = Array.Empty<uint>();
         }
         
-        public FMultisizeIndexContainer(FArchive Ar)
+        public FMultisizeIndexContainer(FArchive Ar) : this()
         {
             if (Ar.Ver < UE4Version.VER_UE4_KEEP_SKEL_MESH_INDEX_DATA)
             {

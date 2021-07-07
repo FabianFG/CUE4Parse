@@ -5,14 +5,14 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
-    public class FSoftVertex4 : FSkelMeshVertexBase
+    public class FSoftVertex : FSkelMeshVertexBase
     {
         private const int _MAX_SKELETAL_UV_SETS_UE4 = 4;
         
         public FMeshUVFloat[] UV;
         public FColor Color;
         
-        public FSoftVertex4(FAssetArchive Ar, bool isRigid = false)
+        public FSoftVertex(FAssetArchive Ar, bool isRigid = false)
         {
             SerializeForEditor(Ar);
 
@@ -34,9 +34,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         }
     }
     
-    public class FRigidVertex4 : FSoftVertex4
+    public class FRigidVertex : FSoftVertex
     {
-        public FRigidVertex4(FAssetArchive Ar) : base(Ar, true)
+        public FRigidVertex(FAssetArchive Ar) : base(Ar, true)
         {
             
         }

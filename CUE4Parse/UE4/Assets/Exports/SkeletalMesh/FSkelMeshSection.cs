@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -6,7 +7,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
-    public class FSkelMeshSection4
+    public class FSkelMeshSection
     {
         public short MaterialIndex;
         public int BaseIndex;
@@ -17,19 +18,19 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         // Data from FSkelMeshChunk, appeared in FSkelMeshSection after UE4.13
         public int NumVertices;
         public uint BaseVertexIndex;
-        public FSoftVertex4[] SoftVertices;
+        public FSoftVertex[] SoftVertices;
         public ushort[] BoneMap;
         public int MaxBoneInfluences;
         public bool HasClothData;
         // UE4.14
         public bool bCastShadow;
         
-        public FSkelMeshSection4()
+        public FSkelMeshSection()
         {
-            
+            SoftVertices = Array.Empty<FSoftVertex>();
         }
         
-        public FSkelMeshSection4(FAssetArchive Ar)
+        public FSkelMeshSection(FAssetArchive Ar) : this()
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
@@ -76,9 +77,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
-                        Ar.ReadArray(() => new FRigidVertex4(Ar)); // RigidVertices
+                        Ar.ReadArray(() => new FRigidVertex(Ar)); // RigidVertices
                     
-                    SoftVertices = Ar.ReadArray(() => new FSoftVertex4(Ar));
+                    SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
                 }
                 
                 BoneMap = Ar.ReadArray<ushort>();

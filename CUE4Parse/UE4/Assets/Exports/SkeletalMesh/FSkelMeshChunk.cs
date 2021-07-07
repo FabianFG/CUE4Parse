@@ -5,29 +5,28 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
-    public class FSkelMeshChunk4
+    public class FSkelMeshChunk
     {
         public readonly int BaseVertexIndex;
-        public readonly FRigidVertex4[] RigidVertices;
-        public readonly FSoftVertex4[] SoftVertices;
+        public readonly FRigidVertex[] RigidVertices;
+        public readonly FSoftVertex[] SoftVertices;
         public readonly ushort[] BoneMap;
         public readonly int NumRigidVertices;
         public readonly int NumSoftVertices;
         public readonly int MaxBoneInfluences;
         public readonly bool HasClothData;
 
-        public FSkelMeshChunk4(FAssetArchive Ar)
+        public FSkelMeshChunk(FAssetArchive Ar)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-            var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
             
             if (!stripDataFlags.IsDataStrippedForServer())
                 BaseVertexIndex = Ar.Read<int>();
             
             if (!stripDataFlags.IsEditorDataStripped())
             {
-                RigidVertices = Ar.ReadArray(() => new FRigidVertex4(Ar));
-                SoftVertices = Ar.ReadArray(() => new FSoftVertex4(Ar));
+                RigidVertices = Ar.ReadArray(() => new FRigidVertex(Ar));
+                SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
             }
             
             BoneMap = Ar.ReadArray<ushort>();

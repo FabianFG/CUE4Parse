@@ -1,7 +1,10 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System;
+using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
+    // [JsonConverter(typeof(FSkinWeightInfoConverter))]
     public class FSkinWeightInfo
     {
         private const int _NUM_INFLUENCES_UE4 = 4;
@@ -42,6 +45,51 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     BoneWeight[i] = boneWeight2[i];
                 }
             }
+        }
+        
+        public int ConvertToInt(byte[] value) => BitConverter.ToInt32(value, 0);
+        public long ConvertToLong(byte[] value) => BitConverter.ToInt64(value, 0);
+    }
+    
+    public class FSkinWeightInfoConverter : JsonConverter<FSkinWeightInfo>
+    {
+        public override void WriteJson(JsonWriter writer, FSkinWeightInfo value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("BoneIndex");
+            switch (value.BoneIndex.Length)
+            {
+                case 4:
+                    writer.WriteValue(value.ConvertToInt(value.BoneIndex));
+                    break;
+                case 8:
+                    writer.WriteValue(value.ConvertToLong(value.BoneIndex));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
+            writer.WritePropertyName("BoneWeight");
+            switch (value.BoneWeight.Length)
+            {
+                case 4:
+                    writer.WriteValue(value.ConvertToInt(value.BoneWeight));
+                    break;
+                case 8:
+                    writer.WriteValue(value.ConvertToLong(value.BoneWeight));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            writer.WriteEndObject();
+        }
+
+        public override FSkinWeightInfo ReadJson(JsonReader reader, Type objectType, FSkinWeightInfo existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

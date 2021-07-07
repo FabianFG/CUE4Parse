@@ -1,19 +1,20 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
-    public class FGPUVert4Float : FSkelMeshVertexBase
+    public class FGPUVertFloat : FSkelMeshVertexBase
     {
         private const int _MAX_SKELETAL_UV_SETS_UE4 = 4;
         public readonly FMeshUVFloat[] UV;
 
-        public FGPUVert4Float() : base()
+        public FGPUVertFloat() : base()
         {
-            
+            UV = Array.Empty<FMeshUVFloat>();
         }
         
-        public FGPUVert4Float(FAssetArchive Ar, int numSkelUVSets)
+        public FGPUVertFloat(FAssetArchive Ar, int numSkelUVSets) : this()
         {
             SerializeForGPU(Ar);
 

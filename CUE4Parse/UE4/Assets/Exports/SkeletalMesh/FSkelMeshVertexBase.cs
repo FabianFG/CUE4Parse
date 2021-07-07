@@ -1,19 +1,22 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
+    [JsonConverter(typeof(FSkelMeshVertexBaseConverter))]
     public class FSkelMeshVertexBase
     {
         public FVector Pos;
         public FPackedNormal[] Normal;
-        public FSkinWeightInfo Infs;
+        public FSkinWeightInfo? Infs;
 
         public FSkelMeshVertexBase()
         {
-            
+            Normal = Array.Empty<FPackedNormal>();
         }
 
         public void SerializeForGPU(FAssetArchive Ar)
@@ -46,6 +49,40 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 Normal[1] = new FPackedNormal(Ar.Read<FVector>());
                 Normal[2] = new FPackedNormal(Ar.Read<FVector4>());
             }
+        }
+    }
+    
+    public class FSkelMeshVertexBaseConverter : JsonConverter<FSkelMeshVertexBase>
+    {
+        public override void WriteJson(JsonWriter writer, FSkelMeshVertexBase value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            if (!value.Pos.IsZero())
+            {
+                writer.WritePropertyName("Pos");
+                serializer.Serialize(writer, value.Pos);
+            }
+            
+            if (value.Normal.Length > 0)
+            {
+                writer.WritePropertyName("Normal");
+                serializer.Serialize(writer, value.Normal);
+            }
+            
+            if (value.Infs != null)
+            {
+                writer.WritePropertyName("Pos");
+                serializer.Serialize(writer, value.Infs);
+            }
+            
+            writer.WriteEndObject();
+        }
+
+        public override FSkelMeshVertexBase ReadJson(JsonReader reader, Type objectType, FSkelMeshVertexBase existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

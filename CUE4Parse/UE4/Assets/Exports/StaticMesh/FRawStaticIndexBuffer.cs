@@ -9,12 +9,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public ushort[] Indices16; // LegacyIndices
         public uint[] Indices32;
 
-        public FRawStaticIndexBuffer(FArchive Ar)
+        public FRawStaticIndexBuffer()
+        {
+            Indices16 = Array.Empty<ushort>();
+            Indices32 = Array.Empty<uint>();
+        }
+
+        public FRawStaticIndexBuffer(FArchive Ar) : this()
         {
             if (Ar.Ver < UE4Version.VER_UE4_SUPPORT_32BIT_STATIC_MESH_INDICES)
             {
                 Indices16 = Ar.ReadBulkArray<ushort>();
-                Indices32 = new uint[0];
             }
             else
             {
@@ -28,23 +33,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
 
                 if (tempAr.Length == 0)
-                {
-                    Indices16 = new ushort[0];
-                    Indices32 = new uint[0];
                     return;
-                }
 
                 if (is32bit)
                 {
                     var count = (int)tempAr.Length / 4;
-                    Indices16 = new ushort[0];
                     Indices32 = tempAr.ReadArray<uint>(count);
                 }
                 else
                 {
                     var count = (int)tempAr.Length / 2;
                     Indices16 = tempAr.ReadArray<ushort>(count);
-                    Indices32 = new uint[0];
                 }
                 tempAr.Dispose();
             }
