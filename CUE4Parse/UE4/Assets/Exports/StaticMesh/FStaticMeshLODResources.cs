@@ -63,6 +63,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     {
                         var tempAr = new FAssetArchive(new FByteArchive("FStaticMeshBufferReader", bulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
                         SerializeBuffers(tempAr);
+                        tempAr.Dispose();
                     }
                     
                     // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560

@@ -47,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 if (!bNewWeightFormat)
                 {
-                    Weights = Ar.ReadArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences));
+                    Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences));
                 }
                 else
                 {
