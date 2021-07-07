@@ -49,9 +49,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 return;
             }
 
-            bool bIsLODCookedOut, bInlined;
-            bIsLODCookedOut = Ar.ReadBoolean();
-            bInlined = Ar.ReadBoolean();
+            var bIsLODCookedOut = Ar.ReadBoolean();
+            var bInlined = Ar.ReadBoolean();
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
@@ -121,7 +120,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game >= EGame.GAME_UE4_16)
             {
-                Enumerable.Repeat(new FWeightedRandomSampler(Ar), Sections.Length);
+                for (var i = 0; i < Sections.Length; i++)
+                {
+                    new FWeightedRandomSampler(Ar);
+                }
                 new FWeightedRandomSampler(Ar);
             }
         }
@@ -154,8 +156,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_RayTracingResources))
                 Ar.ReadBulkArray(Ar.ReadByte);
 
-            // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
-            Enumerable.Repeat(new FWeightedRandomSampler(Ar), Sections.Length);
+            for (var i = 0; i < Sections.Length; i++)
+            {
+                new FWeightedRandomSampler(Ar);
+            }
             new FWeightedRandomSampler(Ar);
         }
     }
