@@ -17,21 +17,21 @@ namespace CUE4Parse.FileProvider
         private readonly SearchOption _searchOption;
         private readonly List<DirectoryInfo> _extraDirectories;
 
-        public DefaultFileProvider(string directory, SearchOption searchOption, bool caseSensitive = false,
+        public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false,
             EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new DirectoryInfo(directory), searchOption, caseSensitive, game, ver)
+            : this(new DirectoryInfo(directory), searchOption, isCaseInsensitive, game, ver)
         {
         }
 
-        public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool caseSensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
+        public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
         {
             _workingDirectory = directory;
             _searchOption = searchOption;
         }
 
-        public DefaultFileProvider(DirectoryInfo mainDirectory, List<DirectoryInfo> extraDirectories, SearchOption searchOption, bool caseSensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
+        public DefaultFileProvider(DirectoryInfo mainDirectory, List<DirectoryInfo> extraDirectories, SearchOption searchOption, bool isCaseInsensitive = false,
+            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
         {
             _workingDirectory = mainDirectory;
             _extraDirectories = extraDirectories;
