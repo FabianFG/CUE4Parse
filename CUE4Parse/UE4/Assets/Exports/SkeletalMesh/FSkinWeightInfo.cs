@@ -31,8 +31,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             else
             {
-                var boneIndex2 = new byte[_NUM_INFLUENCES_UE4];
-                var boneWeight2 = new byte[_NUM_INFLUENCES_UE4];
+                var boneIndex2 = new byte[_MAX_TOTAL_INFLUENCES_UE4];
+                var boneWeight2 = new byte[_MAX_TOTAL_INFLUENCES_UE4];
                 for (var i = 0; i < numSkelInfluences; i++)
                     boneIndex2[i] = Ar.Read<byte>();
                 for (var i = 0; i < numSkelInfluences; i++)
