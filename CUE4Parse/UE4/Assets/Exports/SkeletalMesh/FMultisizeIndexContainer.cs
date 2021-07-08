@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             if (Ar.Ver < UE4Version.VER_UE4_KEEP_SKEL_MESH_INDEX_DATA)
             {
-                Ar.Position += 4;
+                Ar.Position += 4; //var bOldNeedsCPUAccess = Ar.ReadBoolean();
             }
             
             var dataSize = Ar.Read<byte>();

@@ -153,7 +153,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
                 
                 ActiveBoneIndices = Ar.ReadArray<short>();
-                Ar.Position += 4;
+                Ar.Position += 4; //var buffersSize = Ar.Read<uint>();
                 
                 if (bInlined)
                 {
