@@ -26,12 +26,18 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             uint numVertices;
             uint numBones;
 
-            if (!bNewWeightFormat)
+            if (Ar.Game < EGame.GAME_UE4_24)
+            {
+                var bExtraBoneInfluences = Ar.ReadBoolean();
+                numVertices = Ar.Read<uint>();
+                maxBoneInfluences = bExtraBoneInfluences ? 8u : 4u;
+            }
+            else if (!bNewWeightFormat)
             {
                 var bExtraBoneInfluences = Ar.ReadBoolean();
                 if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
                 {
-                    Ar.Position += 4; //var stride = Ar.Read<uint>();
+                    Ar.Position += 4; // var stride = Ar.Read<uint>();
                 }
                 numVertices = Ar.Read<uint>();
                 maxBoneInfluences = bExtraBoneInfluences ? 8u : 4u;
@@ -44,12 +50,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 maxBoneInfluences = Ar.Read<uint>();
                 numBones = Ar.Read<uint>();
                 numVertices = Ar.Read<uint>();
-            }
-
-            // bUse16BitBoneIndex doesn't exist before version IncreaseBoneIndexLimitPerChunk
-            if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
-            {
-                bUse16BitBoneIndex = Ar.ReadBoolean();
+                // bUse16BitBoneIndex doesn't exist before version IncreaseBoneIndexLimitPerChunk
+                if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
+                {
+                    bUse16BitBoneIndex = Ar.ReadBoolean();
+                }
             }
             #endregion
 

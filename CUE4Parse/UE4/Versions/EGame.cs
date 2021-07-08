@@ -32,8 +32,8 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_22 = GameUtils.GameUe4Base + 22 << 4,
         GAME_UE4_23 = GameUtils.GameUe4Base + 23 << 4,
         GAME_UE4_24 = GameUtils.GameUe4Base + 24 << 4,
-            GAME_VALORANT = GAME_UE4_24 + 1,
         GAME_UE4_25 = GameUtils.GameUe4Base + 25 << 4,
+            GAME_VALORANT = GAME_UE4_25 + 2,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
         

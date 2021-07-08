@@ -226,7 +226,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 {
                     VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat
                     {
-                        Pos = positionVertexBuffer.Verts[i], Infs = skinWeightVertexBuffer.Weights[i]
+                        Pos = positionVertexBuffer.Verts[i],
+                        Infs = skinWeightVertexBuffer.Weights[i],
+                        Normal = staticMeshVertexBuffer.UV[i].Normal,
+                        UV = staticMeshVertexBuffer.UV[i].UV
                     };
                 }
             }
