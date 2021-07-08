@@ -22,10 +22,10 @@ namespace CUE4Parse.UE4.Objects.Meshes
             V = v;
         }
 
-        public void Serialize(FArchiveWriter ar)
+        public void Serialize(FArchiveWriter Ar)
         {
-            ar.Write(U);
-            ar.Write(V);
+            Ar.Write(U);
+            Ar.Write(V);
         }
 
         public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)

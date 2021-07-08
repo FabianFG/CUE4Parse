@@ -37,6 +37,16 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5) << 16 +  (int)(Vector.W + 1 * 127.5) << 24);
         }
 
+        public void SetW(float value)
+        {
+            Data = (Data & 0xFFFFFF) | (uint)((int)Math.Round(value * 127.0f) << 24);
+        }
+        
+        public float GetW()
+        {
+            return (byte)(Data >> 24) / 127.0f;
+        }
+
         public static explicit operator FVector(FPackedNormal packedNormal)
         {
             return new (packedNormal.X, packedNormal.Y, packedNormal.Z);

@@ -3,15 +3,12 @@
     public class CSkeletalMesh
     {
         public CSkelMeshLod[] LODs;
+        public CSkelMeshBone[] RefSkeleton;
         
         public CSkeletalMesh()
         {
             LODs = new CSkelMeshLod[0];
-        }
-        
-        public CSkeletalMesh(CSkelMeshLod[] lods)
-        {
-            LODs = lods;
+            RefSkeleton = new CSkelMeshBone[0];
         }
         
         public void FinalizeMesh()

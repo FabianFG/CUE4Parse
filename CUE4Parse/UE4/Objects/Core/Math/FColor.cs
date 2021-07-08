@@ -19,12 +19,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         
         public readonly string Hex => A is 1 or 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
-        public void Serialize(FArchiveWriter ar)
+        public void Serialize(FArchiveWriter Ar)
         {
-            ar.Write(R);
-            ar.Write(G);
-            ar.Write(B);
-            ar.Write(A);
+            Ar.Write(R);
+            Ar.Write(G);
+            Ar.Write(B);
+            Ar.Write(A);
         }
 
         public override string ToString() => Hex;

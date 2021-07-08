@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
     public class FGPUVertFloat : FSkelMeshVertexBase
     {
         private const int _MAX_SKELETAL_UV_SETS_UE4 = 4;
-        public readonly FMeshUVFloat[] UV;
+        public FMeshUVFloat[] UV;
 
         public FGPUVertFloat() : base()
         {

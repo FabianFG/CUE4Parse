@@ -251,10 +251,6 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (HasClothData())
                 ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
 
-            // FortniteGame/Content/Accessories/Hats/Mesh/Reindeer_Hat.uasset
-            // reads ubulk before getting into this method but not fully
-            // so here we are at the end of the archive but not actually
-            // will crash even tho we are like half way in the ubulk
             var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
             
             NumVertices = positionVertexBuffer.NumVertices;
@@ -265,7 +261,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat
                 {
-                    Pos = positionVertexBuffer.Verts[i], Infs = skinWeightVertexBuffer.Weights[i]
+                    Pos = positionVertexBuffer.Verts[i],
+                    Infs = skinWeightVertexBuffer.Weights[i],
+                    Normal = staticMeshVertexBuffer.UV[i].Normal,
+                    UV = staticMeshVertexBuffer.UV[i].UV
                 };
             }
         }

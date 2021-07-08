@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -133,6 +134,30 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             {
                 this = Identity;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Conjugate() // public FQuat Inverse()
+        {
+            X = -X;
+            Y = -Y;
+            Z = -Z;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Negate()
+        {
+            X = -X;
+            Y = -Y;
+            W = -W;
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(X);
+            Ar.Write(Y);
+            Ar.Write(Z);
+            Ar.Write(W);
         }
 
         public FQuat GetNormalized(float tolerance = FVector.SmallNumber)

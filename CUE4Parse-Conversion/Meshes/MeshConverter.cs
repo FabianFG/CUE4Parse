@@ -2,6 +2,8 @@
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse_Conversion.Meshes.PSK;
 using Serilog;
 
@@ -52,7 +54,6 @@ namespace CUE4Parse_Conversion.Meshes
                             sections[j] = new CMeshSection(originalMesh.Materials?[srcLod.Sections[j].MaterialIndex],
                                 srcLod.Sections[j].FirstIndex, srcLod.Sections[j].NumTriangles);
                         }
-
                         return sections;
                     })
                 };
@@ -68,8 +69,7 @@ namespace CUE4Parse_Conversion.Meshes
                         throw new ParserException("Not implemented: should only be used in UE3");
                     
                     convertedMesh.LODs[i].Verts[j].Position = srcLod.PositionVertexBuffer.Verts[j];
-                    convertedMesh.LODs[i].Verts[j].Normal.Data = suv.Normal[2].Data;
-                    convertedMesh.LODs[i].Verts[j].Tangent.Data = suv.Normal[0].Data;
+                    UnpackNormals(suv.Normal, convertedMesh.LODs[i].Verts[j]);
                     convertedMesh.LODs[i].Verts[j].UV.U = suv.UV[0].U;
                     convertedMesh.LODs[i].Verts[j].UV.V = suv.UV[0].V;
                     
@@ -114,6 +114,24 @@ namespace CUE4Parse_Conversion.Meshes
                     NumTexCoords = numTexCoords,
                     HasNormals = true,
                     HasTangents = true,
+                    Indices = new Lazy<FRawStaticIndexBuffer>(() => new FRawStaticIndexBuffer
+                    {
+                        Indices16 = srcLod.Indices.Indices16, Indices32 = srcLod.Indices.Indices32
+                    }),
+                    Sections = new Lazy<CMeshSection[]>(() =>
+                    {
+                        var sections = new CMeshSection[srcLod.Sections.Length];
+                        for (var j = 0; j < sections.Length; j++)
+                        {
+                            int materialIndex = srcLod.Sections[j].MaterialIndex;
+                            if (materialIndex < 0)	// UE4 using Clamp(0, Materials.Num()), not Materials.Num()-1
+                                materialIndex = 0;
+
+                            var m = materialIndex < originalMesh.Materials?.Length ? originalMesh.Materials[materialIndex].Material : null;
+                            sections[j] = new CMeshSection(m, srcLod.Sections[j].BaseIndex, srcLod.Sections[j].NumTriangles);
+                        }
+                        return sections;
+                    })
                 };
                 
                 var bUseVerticesFromSections = false;
@@ -129,11 +147,124 @@ namespace CUE4Parse_Conversion.Meshes
                 
                 convertedMesh.LODs[i].AllocateVerts(vertexCount);
                 
-                // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1981
+                var chunkIndex = -1;
+                var chunkVertexIndex = 0;
+                long lastChunkVertex = -1;
+                ushort[]? boneMap = null;
+                var vertBuffer = srcLod.VertexBufferGPUSkin;
+
+                for (var vert = 0; vert < vertexCount; vert++)
+                {
+                    while (vert >= lastChunkVertex) // this will fix any issues with empty chunks or sections
+                    {
+                        // proceed to next chunk or section
+                        if (srcLod.Chunks.Length > 0)
+                        {
+                            // pre-UE4.13 code: chunks
+                            var c = srcLod.Chunks[++chunkIndex];
+                            lastChunkVertex = c.BaseVertexIndex + c.NumRigidVertices + c.NumSoftVertices;
+                            boneMap = c.BoneMap;
+                        }
+                        else
+                        {
+                            // UE4.13+ code: chunk information migrated to sections
+                            var s = srcLod.Sections[++chunkIndex];
+                            lastChunkVertex = s.BaseVertexIndex + s.NumVertices;
+                            boneMap = s.BoneMap;
+                        }
+                        chunkVertexIndex = 0;
+                    }
+                    
+                    FSkelMeshVertexBase v; // has everything but UV[]
+                    if (bUseVerticesFromSections)
+                    {
+                        var v0 = srcLod.Sections[chunkIndex].SoftVertices[chunkVertexIndex++];
+                        v = v0;
+                        
+                        // UV: simply copy float data
+                        convertedMesh.LODs[i].Verts[vert].UV = v0.UV[0];
+                        for (var texCoordIndex = 1; texCoordIndex < numTexCoords; texCoordIndex++)
+                        {
+                            convertedMesh.LODs[i].ExtraUV.Value[texCoordIndex - 1][vert] = v0.UV[texCoordIndex];
+                        }
+                    }
+                    else if (!vertBuffer.bUseFullPrecisionUVs)
+                    {
+                        var v0 = vertBuffer.VertsHalf[vert];
+                        v = v0;
+                        
+                        // UV: convert half -> float
+                        convertedMesh.LODs[i].Verts[vert].UV = (FMeshUVFloat)v0.UV[0];
+                        for (var texCoordIndex = 1; texCoordIndex < numTexCoords; texCoordIndex++)
+                        {
+                            convertedMesh.LODs[i].ExtraUV.Value[texCoordIndex - 1][vert] = (FMeshUVFloat)v0.UV[texCoordIndex];
+                        }
+                    }
+                    else
+                    {
+                        var v0 = vertBuffer.VertsFloat[vert];
+                        v = v0;
+                        
+                        // UV: simply copy float data
+                        convertedMesh.LODs[i].Verts[vert].UV = v0.UV[0];
+                        for (var texCoordIndex = 1; texCoordIndex < numTexCoords; texCoordIndex++)
+                        {
+                            convertedMesh.LODs[i].ExtraUV.Value[texCoordIndex - 1][vert] = v0.UV[texCoordIndex];
+                        }
+                    }
+
+                    convertedMesh.LODs[i].Verts[vert].Position = v.Pos;
+                    UnpackNormals(v.Normal, convertedMesh.LODs[i].Verts[vert]);
+                    
+                    var i2 = 0;
+                    uint packedWeights = 0;
+                    for (var j = 0; j < 4; j++)
+                    {
+                        uint boneWeight = v.Infs.BoneWeight[j];
+                        if (boneWeight == 0) continue; // skip this influence (but do not stop the loop!)
+                        
+                        packedWeights |= boneWeight << (i2 * 8);
+                        convertedMesh.LODs[i].Verts[vert].Bone[i2] = (short)boneMap[v.Infs.BoneIndex[j]];
+                        i2++;
+                    }
+                    convertedMesh.LODs[i].Verts[vert].PackedWeights = packedWeights;
+                    if (i2 < 4) convertedMesh.LODs[i].Verts[vert].Bone[i2] = -1; // mark end of list
+                }
+            }
+            
+            var numBones = originalMesh.ReferenceSkeleton.FinalRefBoneInfo.Length;
+            convertedMesh.RefSkeleton = new CSkelMeshBone[numBones];
+            for (var i = 0; i < convertedMesh.RefSkeleton.Length; i++)
+            {
+                convertedMesh.RefSkeleton[i] = new CSkelMeshBone
+                {
+                    Name = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
+                    ParentIndex = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
+                    Position = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Translation,
+                    Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
+                };
+                
+                // fix skeleton; all bones but 0
+                if (i >= 1)
+                    convertedMesh.RefSkeleton[i].Orientation.Conjugate();
             }
             
             convertedMesh.FinalizeMesh();
             return true;
+        }
+
+        private static void UnpackNormals(FPackedNormal[] normal, CMeshVertex v)
+        {
+            // tangents: convert to FVector (unpack) then cast to CVec3
+            v.Tangent = normal[0];
+            v.Normal  = normal[2];
+
+            // new UE3 version - binormal is not serialized and restored in vertex shader
+
+            if (normal[1].Data != 0)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

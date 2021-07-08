@@ -9,11 +9,6 @@
             LODs = new CStaticMeshLod[0];
         }
         
-        public CStaticMesh(CStaticMeshLod[] lods)
-        {
-            LODs = lods;
-        }
-        
         public void FinalizeMesh()
         {
             foreach (var levelOfDetail in LODs)

@@ -44,7 +44,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh)
+        public MeshExporter(USkeletalMesh originalMesh, bool exportLods = false, bool exportMaterials = true)
         {
             _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
@@ -54,7 +54,21 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
             
-            throw new NotImplementedException();
+            _meshLods = new Mesh[exportLods ? convertedMesh.LODs.Length : 1];
+            for (var i = 0; i < _meshLods.Length; i++)
+            {
+                if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
+                {
+                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
+                    continue;
+                }
+                
+                var usePskx = convertedMesh.LODs[i].NumVerts > 65536;
+                using var writer = new FCustomArchiveWriter();
+                var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
+                ExportSkeletalMeshLod(convertedMesh.LODs[i], convertedMesh.RefSkeleton, writer, materialExports);
+                _meshLods[i] = new Mesh($"{_meshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>());
+            }
         }
 
         private void ExportStaticMeshLods(CStaticMeshLod lod, FCustomArchiveWriter writer, List<MaterialExporter>? materialExports)
@@ -78,6 +92,90 @@ namespace CUE4Parse_Conversion.Meshes
             infHdr.DataCount = 0;
             infHdr.DataSize = 12;
             writer.SerializeChunkHeader(infHdr, "RAWWEIGHTS");
+
+            ExportVertexColors(writer, lod.VertexColors, lod.NumVerts);
+            ExportExtraUV(writer, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
+        }
+
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, CSkelMeshBone[] bones, FCustomArchiveWriter writer, List<MaterialExporter>? materialExports)
+        {
+            var share = new CVertexShare();
+            var boneHdr = new VChunkHeader();
+            var infHdr = new VChunkHeader();
+            
+            share.Prepare(lod.Verts);
+            foreach (var vert in lod.Verts)
+            {
+                var weightsHash = vert.PackedWeights;
+                for (var i = 0; i < vert.Bone.Length; i++)
+                {
+                    weightsHash ^= (uint)vert.Bone[i] << i;
+                }
+                
+                share.AddVertex(vert.Position, vert.Normal, weightsHash);
+            }
+            
+            ExportCommonMeshData(writer, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
+
+            var numBones = bones.Length;
+            boneHdr.DataCount = numBones;
+            boneHdr.DataSize = 120;
+            writer.SerializeChunkHeader(boneHdr, "REFSKELT");
+            for (var i = 0; i < numBones; i++)
+            {
+                var numChildren = 0;
+                for (var j = 0; j < numBones; j++)
+                    if (j != i && bones[j].ParentIndex == i)
+                        numChildren++;
+                
+                var bone = new VBone
+                {
+                    Name = bones[i].Name.Text,
+                    NumChildren = numChildren,
+                    ParentIndex = bones[i].ParentIndex,
+                    BonePos = new VJointPosPsk
+                    {
+                        Position = bones[i].Position,
+                        Orientation = bones[i].Orientation
+                    }
+                };
+
+                // MIRROR_MESH
+                bone.BonePos.Orientation.Y *= -1;
+                bone.BonePos.Orientation.W *= -1;
+                bone.BonePos.Position.Y *= -1;
+                
+                bone.Serialize(writer);
+            }
+            
+            var numInfluences = 0;
+            for (var i = 0; i < share.Points.Count; i++)
+            {
+                for (var j = 0; j < 4; j++)
+                {
+                    if (lod.Verts[share.VertToWedge.Value[i]].Bone[j] < 0)
+                        break;
+                    numInfluences++;
+                }
+            }
+            infHdr.DataCount = numInfluences;
+            infHdr.DataSize = 12;
+            writer.SerializeChunkHeader(infHdr, "RAWWEIGHTS");
+            for (var i = 0; i < share.Points.Count; i++)
+            {
+                var v = lod.Verts[share.VertToWedge.Value[i]];
+                var unpackedWeights = v.UnpackWeights();
+                
+                for (var j = 0; j < 4; j++)
+                {
+                    if (v.Bone[j] < 0)
+                        break;
+
+                    writer.Write(unpackedWeights[j]);
+                    writer.Write(i);
+                    writer.Write((int)v.Bone[j]);
+                }
+            }
 
             ExportVertexColors(writer, lod.VertexColors, lod.NumVerts);
             ExportExtraUV(writer, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
