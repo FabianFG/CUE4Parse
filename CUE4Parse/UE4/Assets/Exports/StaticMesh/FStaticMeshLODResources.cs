@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     var bulkData = new FByteBulkData(Ar);
                     if (bulkData.Header.ElementCount > 0)
                     {
-                        var tempAr = new FAssetArchive(new FByteArchive("FStaticMeshBufferReader", bulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
+                        var tempAr = new FAssetArchive(new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
                         SerializeBuffers(tempAr);
                         tempAr.Dispose();
                     }

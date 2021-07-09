@@ -30,7 +30,17 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
         {
-            return new (uvHalf.U, uvHalf.V);
+            return new (Half2Float(uvHalf.U), Half2Float(uvHalf.V));
+        }
+
+        private static float Half2Float(ushort h)
+        {
+            var sign = (h >> 15) & 0x00000001;
+            var exp  = (h >> 10) & 0x0000001F;
+            var mant =  h        & 0x000003FF;
+
+            exp += 127 - 15;
+            return (sign << 31) | (exp << 23) | (mant << 13);
         }
     }
 }

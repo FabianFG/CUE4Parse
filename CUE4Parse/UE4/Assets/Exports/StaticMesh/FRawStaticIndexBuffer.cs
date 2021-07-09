@@ -33,7 +33,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
 
                 if (tempAr.Length == 0)
+                {
+                    tempAr.Dispose();
                     return;
+                }
 
                 if (is32bit)
                 {

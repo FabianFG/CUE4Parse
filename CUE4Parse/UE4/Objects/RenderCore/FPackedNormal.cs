@@ -56,6 +56,9 @@ namespace CUE4Parse.UE4.Objects.RenderCore
         {
             return new (packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
         }
+        
+        public static bool operator ==(FPackedNormal a, FPackedNormal b) => a.Data == b.Data && a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
+        public static bool operator !=(FPackedNormal a, FPackedNormal b) => a.Data != b.Data || a.X != b.X || a.Y != b.Y || a.Z != b.Z || a.W != b.W;
     }
 
     public class FPackedNormalConverter : JsonConverter<FPackedNormal>

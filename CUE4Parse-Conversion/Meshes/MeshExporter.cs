@@ -15,6 +15,8 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
+        private const int _PSK_VERSION = 20100422;
+        
         private readonly string _meshName;
         private readonly Mesh[] _meshLods;
         
@@ -190,6 +192,7 @@ namespace CUE4Parse_Conversion.Meshes
             var facesHdr = new VChunkHeader();
             var matrHdr = new VChunkHeader();
 
+            mainHdr.TypeFlag = _PSK_VERSION;
             writer.SerializeChunkHeader(mainHdr, "ACTRHEAD");
 
             var numPoints = share.Points.Count;
@@ -223,8 +226,8 @@ namespace CUE4Parse_Conversion.Meshes
             for (var i = 0; i < numVerts; i++)
             {
                 writer.Write(share.WedgeToVert[i]);
-                writer.Write(verts[i].UV.U);
-                writer.Write(verts[i].UV.V);
+                writer.Write((int)verts[i].UV.U); // the 4 bit int value is the actual needed float value
+                writer.Write((int)verts[i].UV.V); // the 4 bit int value is the actual needed float value
                 writer.Write((byte) wedgeMat[i]);
                 writer.Write((byte) 0);
                 writer.Write((short) 0);
