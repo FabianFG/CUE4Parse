@@ -111,6 +111,9 @@ namespace CUE4Parse.UE4.Assets
                             uassetAr.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
                             uassetAr.Seek(localExportDataOffset, SeekOrigin.Begin);
                             DeserializeObject(obj, uassetAr, (long) export.CookedSerialSize);
+                            // TODO right place ???
+                            obj.Flags |= EObjectFlags.RF_LoadCompleted;
+                            obj.PostLoad();
                             return obj;
                         });
                         currentExportDataOffset += (int) export.CookedSerialSize;

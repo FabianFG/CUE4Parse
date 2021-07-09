@@ -32,6 +32,7 @@ namespace CUE4Parse.FileProvider
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; } // fabian? is this reversed?
+        public bool UseLazySerialization { get; set; } = true;
 
         protected AbstractFileProvider(
             bool isCaseInsensitive = false,
@@ -390,7 +391,7 @@ namespace CUE4Parse.FileProvider
 
             if (file is FPakEntry)
             {
-                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame);
+                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame, UseLazySerialization);
             }
 
             if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
@@ -437,7 +438,7 @@ namespace CUE4Parse.FileProvider
             {
                 if (file is FPakEntry)
                 {
-                    return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
+                    return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame, UseLazySerialization);
                 }
                 
                 if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)

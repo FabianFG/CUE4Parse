@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider;
@@ -21,7 +23,7 @@ namespace CUE4Parse.UE4.Assets
         public FObjectExport[] ExportMap { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
 
-        public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+        public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
             var uassetAr = new FAssetArchive(uasset, this);
@@ -54,35 +56,99 @@ namespace CUE4Parse.UE4.Assets
                 uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
 
-            foreach (var export in ExportMap)
+            if (useLazySerialization)
             {
-                export.ExportObject = new Lazy<UObject>(() =>
+                foreach (var export in ExportMap)
                 {
-                    // Create
-                    var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
-                    obj.Name = export.ObjectName.Text;
-                    obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
-                    obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
-                    obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
-                    obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
+                    export.ExportObject = new Lazy<UObject>(() =>
+                    {
+                        // Create
+                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
+                        obj.Name = export.ObjectName.Text;
+                        obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
+                        obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
+                        obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                        obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
 
-                    // Serialize
-                    uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
-                    DeserializeObject(obj, uexpAr, export.SerialSize);
-                    return obj;
-                });
+                        // Serialize
+                        uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
+                        DeserializeObject(obj, uexpAr, export.SerialSize);
+                        // TODO right place ???
+                        obj.Flags |= EObjectFlags.RF_LoadCompleted;
+                        obj.PostLoad();
+                        return obj;
+                    });
+                }    
+            }
+            else
+            {
+                var newObjNames = new List<string>();
+                foreach (var export in ExportMap)
+                {
+                    if (export.ExportObject == null)
+                    {
+                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
+                        obj.Name = export.ObjectName.Text;
+                        obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
+                        obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                        obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
+                        
+                        export.ExportObject = new Lazy<UObject>(obj);
+                        newObjNames.Add(export.ObjectName.Text);
+                    }
+                    else
+                    {
+                        Debugger.Break();
+                    }
+                }
+
+                foreach (var export in ExportMap)
+                {
+                    if (newObjNames.Contains(export.ObjectName.Text))
+                    {
+                        var obj = export.ExportObject.Value;
+                        
+                        uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
+                        DeserializeObject(obj, uexpAr, export.SerialSize);
+                    }
+                }
+
+                if (this.Name.Contains("Athena_Terrain.umap"))
+                {
+                    Debugger.Break();
+                }
+                foreach (var export in ExportMap)
+                {
+                    if (newObjNames.Contains(export.ObjectName.Text))
+                    {
+                        var obj = export.ExportObject.Value;
+                        obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
+                    }
+                }
+                
+                foreach (var export in ExportMap)
+                {
+                    if (newObjNames.Contains(export.ObjectName.Text))
+                    {
+                        var obj = export.ExportObject.Value;
+                        
+                        // TODO right place ???
+                        obj.Flags |= EObjectFlags.RF_LoadCompleted;
+                        obj.PostLoad();
+                    }
+                }
             }
         }
 
         public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null,
-            IFileProvider? provider = null, TypeMappings? mappings = null)
+            IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
             : this(uasset, uexp, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
-                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings) { }
+                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings, useLazySerialization) { }
 
-        public Package(string name, byte[] uasset, byte[]? uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null)
+        public Package(string name, byte[] uasset, byte[]? uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null, bool useLazySerialization = true)
             : this(new FByteArchive($"{name}.uasset", uasset), uexp != null ? new FByteArchive($"{name}.uexp", uexp) : null,
                 ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
-                uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider) { }
+                uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider, null, useLazySerialization) { }
 
         public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {

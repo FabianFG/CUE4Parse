@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets
                     break;
                 }
 
-                current = current.SuperStruct.Load<UStruct>();
+                current = current.SuperStruct?.Load<UStruct>();
             }
 
             obj ??= new UObject();
@@ -67,9 +67,6 @@ namespace CUE4Parse.UE4.Assets
                 else
                     Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, serialOffset, serialSize);
 #endif
-                // TODO right place ???
-                obj.Flags |= EObjectFlags.RF_LoadCompleted;
-                obj.PostLoad();
             }
             catch (Exception e)
             {
