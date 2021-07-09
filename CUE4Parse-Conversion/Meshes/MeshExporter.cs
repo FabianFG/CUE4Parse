@@ -20,7 +20,7 @@ namespace CUE4Parse_Conversion.Meshes
         private readonly string _meshName;
         private readonly Mesh[] _meshLods;
         
-        public MeshExporter(UStaticMesh originalMesh, bool exportLods = false, bool exportMaterials = true)
+        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
             _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
@@ -30,7 +30,7 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
-            _meshLods = new Mesh[exportLods ? convertedMesh.LODs.Length : 1];
+            _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
             for (var i = 0; i < _meshLods.Length; i++)
             {
                 if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
@@ -46,7 +46,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, bool exportLods = false, bool exportMaterials = true)
+        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
             _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
@@ -56,7 +56,7 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
             
-            _meshLods = new Mesh[exportLods ? convertedMesh.LODs.Length : 1];
+            _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
             for (var i = 0; i < _meshLods.Length; i++)
             {
                 if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
@@ -331,12 +331,15 @@ namespace CUE4Parse_Conversion.Meshes
         {
             var b = false;
             savedFileName = _meshName.SubstringAfterLast('/');
-            
-            foreach (var meshLod in _meshLods)
+
+            var outText = "LOD ";
+            for (var i = 0; i < _meshLods.Length; i++)
             {
-                b |= meshLod.TryWriteToDir(baseDirectory, out savedFileName);
+                b |= _meshLods[i].TryWriteToDir(baseDirectory, out savedFileName);
+                outText += $"{i} ";
             }
-            
+
+            savedFileName = outText + $"as '{savedFileName.SubstringAfterWithLast('.')}' for '{_meshName.SubstringAfterLast('/')}'";
             return b;
         }
 

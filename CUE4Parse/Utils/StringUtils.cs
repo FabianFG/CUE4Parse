@@ -70,6 +70,13 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string SubstringAfterWithLast(this string s, char delimiter)
+        {
+            var index = s.LastIndexOf(delimiter);
+            return index == -1 ? s : s.Substring(index, s.Length - index);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringAfterLast(this string s, string delimiter, StringComparison comparisonType = StringComparison.Ordinal)
         {
             var index = s.LastIndexOf(delimiter, comparisonType);

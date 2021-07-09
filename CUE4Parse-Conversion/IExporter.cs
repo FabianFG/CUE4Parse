@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.Textures;
 
 namespace CUE4Parse_Conversion
 {
@@ -36,13 +37,13 @@ namespace CUE4Parse_Conversion
     {
         private readonly ExporterBase _exporterBase;
         
-        public Exporter(UObject export)
+        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod)
         {
             _exporterBase = export switch
             {
                 UMaterialInterface material => new MaterialExporter(material, false),
-                UStaticMesh staticMesh => new MeshExporter(staticMesh),
-                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh),
+                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat),
+                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }
