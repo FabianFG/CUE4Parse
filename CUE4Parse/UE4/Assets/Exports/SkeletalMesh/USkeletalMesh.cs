@@ -14,10 +14,12 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FSkeletalMaterial[] Materials { get; private set; }
         public FReferenceSkeleton ReferenceSkeleton { get; private set; }
         public FStaticLODModel[]? LODModels { get; private set; }
+        public bool bHasVertexColors { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+            bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = Ar.Read<FBoxSphereBounds>();
@@ -26,13 +28,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {
-                LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar));
+                LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
             }
             else
             {
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
-                    LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar));
+                    LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
                 }
 
                 var bCooked = Ar.ReadBoolean();
@@ -46,9 +48,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     LODModels = new FStaticLODModel[Ar.Read<int>()];
                     for (var i = 0; i < LODModels.Length; i++)
                     {
-                        var lodModel = new FStaticLODModel();
-                        lodModel.SerializeRenderItem(Ar);
-                        LODModels[i] = lodModel;
+                        LODModels[i] = new FStaticLODModel();
+                        LODModels[i].SerializeRenderItem(Ar, bHasVertexColors);
                     }
 
                     var numInlinedLODs = Ar.Read<byte>();

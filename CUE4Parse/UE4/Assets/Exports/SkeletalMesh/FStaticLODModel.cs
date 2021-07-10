@@ -32,6 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public int MaxImportVertex;
         public int NumTexCoords;
         public FSkeletalMeshVertexBuffer VertexBufferGPUSkin;
+        public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
         public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
 
@@ -41,7 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MeshToImportVertexMap = Array.Empty<int>();
         }
         
-        public FStaticLODModel(FAssetArchive Ar)
+        public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
@@ -109,7 +110,18 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         }
                     }
                     
-                    // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1393
+                    if (bHasVertexColors)
+                    {
+                        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.UseSharedColorBufferFormat)
+                        {
+                            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                        }
+                        else
+                        {
+                            var newColorVertexBuffer = new FColorVertexBuffer(Ar);
+                            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
+                        }
+                    }
                     
                     if (Ar.Ver < UE4Version.VER_UE4_REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
                         throw new ParserException("Unsupported: extra SkelMesh vertex influences (old mesh format)");
@@ -130,11 +142,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
         
-        public void SerializeRenderItem(FAssetArchive Ar)
+        public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors)
         {
             if (Ar.Game < EGame.GAME_UE4_24)
             {
-                SerializeRenderItem_Legacy(Ar);
+                SerializeRenderItem_Legacy(Ar, bHasVertexColors);
                 return;
             }
             
@@ -157,7 +169,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 
                 if (bInlined)
                 {
-                    SerializeStreamedData(Ar);
+                    SerializeStreamedData(Ar, bHasVertexColors);
                 }
                 else
                 {
@@ -166,7 +178,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     {
                         using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Game, Ar.Ver), Ar.Owner, Ar.AbsoluteOffset))
                         {
-                            SerializeStreamedData(tempAr);
+                            SerializeStreamedData(tempAr, bHasVertexColors);
                         }
                         
                         var skipBytes = 5;
@@ -187,7 +199,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
 
-        private void SerializeRenderItem_Legacy(FAssetArchive Ar)
+        private void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             
@@ -210,7 +222,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
                 var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
                 
-                // new FColorVertexBuffer(Ar);
+                if (bHasVertexColors)
+                {
+                    var newColorVertexBuffer = new FColorVertexBuffer(Ar);
+                    ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
+                }
 
                 if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                     AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
@@ -235,7 +251,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
 
-        private void SerializeStreamedData(FAssetArchive Ar)
+        private void SerializeStreamedData(FAssetArchive Ar, bool bHasVertexColors)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             
@@ -245,10 +261,14 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var positionVertexBuffer = new FPositionVertexBuffer(Ar);
             var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
             var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
-            
-            // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1695
-            
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_AdjacencyData))
+
+            if (bHasVertexColors)
+            {
+                var newColorVertexBuffer = new FColorVertexBuffer(Ar);
+                ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
+            }
+
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
 
             if (HasClothData())
@@ -300,16 +320,19 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             serializer.Serialize(writer, value.ActiveBoneIndices);
             
             writer.WritePropertyName("NumVertices");
-            serializer.Serialize(writer, value.NumVertices);
+            writer.WriteValue(value.NumVertices);
             
             writer.WritePropertyName("NumTexCoords");
-            serializer.Serialize(writer, value.NumTexCoords);
+            writer.WriteValue(value.NumTexCoords);
             
             writer.WritePropertyName("RequiredBones");
             serializer.Serialize(writer, value.RequiredBones);
             
             writer.WritePropertyName("VertexBufferGPUSkin");
             serializer.Serialize(writer, value.VertexBufferGPUSkin);
+            
+            writer.WritePropertyName("ColorVertexBuffer");
+            serializer.Serialize(writer, value.ColorVertexBuffer);
 
             writer.WritePropertyName("AdjacencyIndexBuffer");
             serializer.Serialize(writer, value.AdjacencyIndexBuffer);

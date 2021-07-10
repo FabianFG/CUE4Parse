@@ -153,6 +153,9 @@ namespace CUE4Parse_Conversion.Meshes
                 ushort[]? boneMap = null;
                 var vertBuffer = srcLod.VertexBufferGPUSkin;
 
+                if (srcLod.ColorVertexBuffer != null && srcLod.ColorVertexBuffer.Data.Length == vertexCount)
+                    convertedMesh.LODs[i].AllocateVertexColorBuffer();
+
                 for (var vert = 0; vert < vertexCount; vert++)
                 {
                     while (vert >= lastChunkVertex) // this will fix any issues with empty chunks or sections
@@ -215,6 +218,10 @@ namespace CUE4Parse_Conversion.Meshes
 
                     convertedMesh.LODs[i].Verts[vert].Position = v.Pos;
                     UnpackNormals(v.Normal, convertedMesh.LODs[i].Verts[vert]);
+                    if (convertedMesh.LODs[i].VertexColors != null)
+                    {
+                        convertedMesh.LODs[i].VertexColors[vert] = srcLod.ColorVertexBuffer.Data[vert];
+                    }
                     
                     var i2 = 0;
                     uint packedWeights = 0;
