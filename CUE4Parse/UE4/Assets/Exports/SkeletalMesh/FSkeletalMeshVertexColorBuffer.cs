@@ -11,6 +11,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
     public class FSkeletalMeshVertexColorBuffer
     {
         public readonly FColor[] Data;
+
+        public FSkeletalMeshVertexColorBuffer()
+        {
+            Data = Array.Empty<FColor>();
+        }
         
         public FSkeletalMeshVertexColorBuffer(FAssetArchive Ar)
         {

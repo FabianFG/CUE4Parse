@@ -153,7 +153,7 @@ namespace CUE4Parse_Conversion.Meshes
                 ushort[]? boneMap = null;
                 var vertBuffer = srcLod.VertexBufferGPUSkin;
 
-                if (srcLod.ColorVertexBuffer != null && srcLod.ColorVertexBuffer.Data.Length == vertexCount)
+                if (srcLod.ColorVertexBuffer.Data.Length == vertexCount)
                     convertedMesh.LODs[i].AllocateVertexColorBuffer();
 
                 for (var vert = 0; vert < vertexCount; vert++)
@@ -227,11 +227,12 @@ namespace CUE4Parse_Conversion.Meshes
                     uint packedWeights = 0;
                     for (var j = 0; j < 4; j++)
                     {
+                        var index = v.Infs.BoneIndex[j];
                         uint boneWeight = v.Infs.BoneWeight[j];
-                        if (boneWeight == 0) continue; // skip this influence (but do not stop the loop!)
+                        if (boneWeight == 0 || index > boneMap.Length - 1) continue; // skip this influence (but do not stop the loop!)
                         
                         packedWeights |= boneWeight << (i2 * 8);
-                        convertedMesh.LODs[i].Verts[vert].Bone[i2] = (short)boneMap[v.Infs.BoneIndex[j]];
+                        convertedMesh.LODs[i].Verts[vert].Bone[i2] = (short)boneMap[index];
                         i2++;
                     }
                     convertedMesh.LODs[i].Verts[vert].PackedWeights = packedWeights;

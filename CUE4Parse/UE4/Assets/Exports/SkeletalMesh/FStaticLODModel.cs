@@ -46,9 +46,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
+            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
 
-            Sections = new FSkelMeshSection[Ar.Read<int>()];
-            Ar.ReadArray(Sections, () => new FSkelMeshSection(Ar));
+            Sections = Ar.ReadArray(Ar.Read<int>(), () => new FSkelMeshSection(Ar));
             
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {
