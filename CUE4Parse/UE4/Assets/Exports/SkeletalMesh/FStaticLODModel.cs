@@ -40,13 +40,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             Chunks = Array.Empty<FSkelMeshChunk>();
             MeshToImportVertexMap = Array.Empty<int>();
+            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
         }
         
         public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
-            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
 
             Sections = Ar.ReadArray(Ar.Read<int>(), () => new FSkelMeshSection(Ar));
             
