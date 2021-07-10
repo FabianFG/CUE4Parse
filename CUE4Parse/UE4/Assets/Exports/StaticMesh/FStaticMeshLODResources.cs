@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -42,10 +42,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game < EGame.GAME_UE4_23)
             {
-                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
+                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
                 {
                     SerializeBuffersLegacy(Ar, stripDataFlags);
                 }
+
                 return;
             }
 
@@ -92,7 +93,28 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
-            ColorVertexBuffer = new FColorVertexBuffer(Ar);
+
+            if (Ar.Game == EGame.GAME_BORDERLANDS3)
+            {
+                var numColorStreams = Ar.Read<int>();
+
+                for (var i = 0; i < numColorStreams; i++)
+                {
+                    if (i == 0)
+                    {
+                        ColorVertexBuffer = new FColorVertexBuffer(Ar);
+                    }
+                    else
+                    {
+                        var _ = new FColorVertexBuffer(Ar);
+                    }
+                }
+            }
+            else
+            {
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            }
+
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
@@ -124,6 +146,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 {
                     new FWeightedRandomSampler(Ar);
                 }
+
                 new FWeightedRandomSampler(Ar);
             }
         }
@@ -137,29 +160,30 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
             {
-                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar); ;
+                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
 
             DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
                 ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_AdjacencyData))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_RayTracingResources))
+            if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
                 Ar.ReadBulkArray(Ar.ReadByte);
 
             for (var i = 0; i < Sections.Length; i++)
             {
                 new FWeightedRandomSampler(Ar);
             }
+
             new FWeightedRandomSampler(Ar);
         }
     }
@@ -175,13 +199,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("MaxDeviation");
             writer.WriteValue(value.MaxDeviation);
-            
+
             writer.WritePropertyName("PositionVertexBuffer");
             serializer.Serialize(writer, value.PositionVertexBuffer);
-            
+
             writer.WritePropertyName("VertexBuffer");
             serializer.Serialize(writer, value.VertexBuffer);
-            
+
             writer.WritePropertyName("ColorVertexBuffer");
             serializer.Serialize(writer, value.ColorVertexBuffer);
 

@@ -221,7 +221,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var positionVertexBuffer = new FPositionVertexBuffer(Ar);
                 var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
                 var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
-                
+
                 if (bHasVertexColors)
                 {
                     var newColorVertexBuffer = new FColorVertexBuffer(Ar);
