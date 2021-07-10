@@ -21,7 +21,31 @@ namespace CUE4Parse.UE4.IO.Objects
         LoaderGlobalNameHashes,
         ContainerHeader
     }
-    
+
+    /// <summary>
+    /// Addressable chunk types.
+    /// <br/><br/>
+    /// The enumerators have explicitly defined values here to encourage backward/forward
+    /// compatible updates. 
+    /// <br/><br/>
+    /// Also note that for certain discriminators, Zen Store will assume certain things
+    /// about the structure of the chunk ID so changes must be made carefully.
+    /// </summary>
+    public enum EIoChunkType5 : byte
+    {
+        Invalid = 0,
+        ExportBundleData = 1,
+        BulkData = 2,
+        OptionalBulkData = 3,
+        MemoryMappedBulkData = 4,
+        ScriptObjects = 5,
+        ContainerHeader = 6,
+        ExternalFile = 7,
+        ShaderCodeLibrary = 8,
+        ShaderCode = 9,
+        PackageStoreEntry = 10
+    }
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
 #pragma warning disable 660,661
     public readonly struct FIoChunkId
@@ -30,15 +54,18 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly ulong ChunkId;
         public readonly ushort ChunkIndex;
         private readonly byte _padding;
-        public readonly EIoChunkType ChunkType;
+        public readonly byte ChunkType;
 
-        public FIoChunkId(ulong chunkId, ushort chunkIndex, EIoChunkType chunkType)
+        public FIoChunkId(ulong chunkId, ushort chunkIndex, byte chunkType)
         {
             ChunkId = chunkId;
             ChunkIndex = chunkIndex;
             ChunkType = chunkType;
             _padding = 0;
         }
+
+        public FIoChunkId(ulong chunkId, ushort chunkIndex, EIoChunkType chunkType) : this(chunkId, chunkIndex, (byte) chunkType) { }
+        public FIoChunkId(ulong chunkId, ushort chunkIndex, EIoChunkType5 chunkType) : this(chunkId, chunkIndex, (byte) chunkType) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPackageId AsPackageId()
