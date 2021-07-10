@@ -21,11 +21,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             
             Data = new FByteBulkData(Ar);
 
-            SizeX = Ar.Read<int>();
-            SizeY = Ar.Read<int>();
-            if (Ar.Game >= EGame.GAME_UE4_20)
+            if (Ar.Game == EGame.GAME_BORDERLANDS3)
             {
-                SizeZ = Ar.Read<int>();    
+                SizeX = Ar.Read<ushort>();
+                SizeY = Ar.Read<ushort>();
+                SizeZ = Ar.Read<ushort>();
+            }
+            else
+            {
+                SizeX = Ar.Read<int>();
+                SizeY = Ar.Read<int>();
+                if (Ar.Game >= EGame.GAME_UE4_20)
+                {
+                    SizeZ = Ar.Read<int>();
+                }
             }
 
             if (Ar.Ver >= UE4Version.VER_UE4_TEXTURE_DERIVED_DATA2 && !cooked)
