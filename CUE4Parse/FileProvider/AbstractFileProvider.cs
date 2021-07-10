@@ -168,6 +168,21 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-CN",
                     _ => "en-US"
                 },
+                "oakgame" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Chinese => "zh-Hans-CN",
+                    ELanguage.TraditionalChinese => "zh-Hant-TW",
+                    _ => "en"
+                },
                 _ => "en"
             };
         }
