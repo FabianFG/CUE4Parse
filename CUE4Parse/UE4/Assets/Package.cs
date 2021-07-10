@@ -96,10 +96,6 @@ namespace CUE4Parse.UE4.Assets
                         export.ExportObject = new Lazy<UObject>(obj);
                         newObjNames.Add(export.ObjectName.Text);
                     }
-                    else
-                    {
-                        Debugger.Break();
-                    }
                 }
 
                 foreach (var export in ExportMap)
@@ -112,11 +108,7 @@ namespace CUE4Parse.UE4.Assets
                         DeserializeObject(obj, uexpAr, export.SerialSize);
                     }
                 }
-
-                if (this.Name.Contains("Athena_Terrain.umap"))
-                {
-                    Debugger.Break();
-                }
+                
                 foreach (var export in ExportMap)
                 {
                     if (newObjNames.Contains(export.ObjectName.Text))
@@ -132,7 +124,6 @@ namespace CUE4Parse.UE4.Assets
                     {
                         var obj = export.ExportObject.Value;
                         
-                        // TODO right place ???
                         obj.Flags |= EObjectFlags.RF_LoadCompleted;
                         obj.PostLoad();
                     }
