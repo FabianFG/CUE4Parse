@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             #region FSkinWeightDataVertexBuffer::SerializeMetaData
             bool bVariableBonesPerVertex;
+            bool bExtraBoneInfluences;
             uint maxBoneInfluences;
             bool bUse16BitBoneIndex;
             uint numVertices;
@@ -28,13 +29,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             if (Ar.Game < EGame.GAME_UE4_24)
             {
-                var bExtraBoneInfluences = Ar.ReadBoolean();
+                bExtraBoneInfluences = Ar.ReadBoolean();
                 numVertices = Ar.Read<uint>();
                 maxBoneInfluences = bExtraBoneInfluences ? 8u : 4u;
             }
             else if (!bNewWeightFormat)
             {
-                var bExtraBoneInfluences = Ar.ReadBoolean();
+                bExtraBoneInfluences = Ar.ReadBoolean();
                 if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
                 {
                     Ar.Position += 4; // var stride = Ar.Read<uint>();
@@ -50,6 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 maxBoneInfluences = Ar.Read<uint>();
                 numBones = Ar.Read<uint>();
                 numVertices = Ar.Read<uint>();
+                bExtraBoneInfluences = maxBoneInfluences > _NUM_INFLUENCES_UE4;
                 // bUse16BitBoneIndex doesn't exist before version IncreaseBoneIndexLimitPerChunk
                 if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
                 {
@@ -63,7 +65,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 if (!bNewWeightFormat)
                 {
-                    Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, maxBoneInfluences > _NUM_INFLUENCES_UE4));
+                    Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences));
                 }
                 else
                 {
@@ -97,7 +99,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     Weights = new FSkinWeightInfo[numVertices];
                     for (var i = 0; i < Weights.Length; i++)
                     {
-                        Weights[i] = new FSkinWeightInfo(tempAr, numSkelCondition);
+                        Weights[i] = new FSkinWeightInfo(tempAr, !dataStripFlags.IsDataStrippedForServer() ? bExtraBoneInfluences : numSkelCondition);
                     }
                 }
             }
