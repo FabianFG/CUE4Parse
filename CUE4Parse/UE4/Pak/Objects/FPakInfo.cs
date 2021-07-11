@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             Version = Ar.Read<EPakFileVersion>();
             SubVersion = Ar.Read<short>();
-            IsSubVersion = (Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a);
+            IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             IndexOffset = Ar.Read<long>();
             IndexSize = Ar.Read<long>();
             IndexHash = new FSHAHash(Ar);

@@ -78,7 +78,6 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game == EGame.GAME_BORDERLANDS3)
             {
                 var count = Ar.Read<int>();
-
                 for (var i = 0; i < count; i++)
                 {
                     var count2 = Ar.Read<byte>();

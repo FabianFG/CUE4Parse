@@ -1,4 +1,4 @@
-using CUE4Parse.UE4.Assets.Objects;
+﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -96,17 +96,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game == EGame.GAME_BORDERLANDS3)
             {
                 var numColorStreams = Ar.Read<int>();
-
-                for (var i = 0; i < numColorStreams; i++)
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+                for (var i = 0; i < numColorStreams - 1; i++)
                 {
-                    if (i == 0)
-                    {
-                        ColorVertexBuffer = new FColorVertexBuffer(Ar);
-                    }
-                    else
-                    {
-                        var _ = new FColorVertexBuffer(Ar);
-                    }
+                    var _ = new FColorVertexBuffer(Ar);
                 }
             }
             else

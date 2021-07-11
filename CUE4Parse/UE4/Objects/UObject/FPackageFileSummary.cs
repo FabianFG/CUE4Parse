@@ -321,7 +321,6 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (LegacyFileVersion > -7)
             {
                 var NumTextureAllocations = Ar.Read<int>();
-
                 if (NumTextureAllocations != 0)
                 {
                     // We haven't used texture allocation info for ages and it's no longer supported anyway

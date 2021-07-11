@@ -72,6 +72,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     newData = Ar.ReadBulkArray<byte>();
                 }
             }
+            else
+            {
+                bExtraBoneInfluences = numSkelCondition;
+            }
             #endregion
 
             if (bNewWeightFormat)
@@ -99,7 +103,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     Weights = new FSkinWeightInfo[numVertices];
                     for (var i = 0; i < Weights.Length; i++)
                     {
-                        Weights[i] = new FSkinWeightInfo(tempAr, !dataStripFlags.IsDataStrippedForServer() ? bExtraBoneInfluences : numSkelCondition);
+                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences);
                     }
                 }
             }

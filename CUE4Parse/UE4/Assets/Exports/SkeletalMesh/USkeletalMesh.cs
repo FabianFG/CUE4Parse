@@ -30,13 +30,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {
-                LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors, NumVertexColorChannels));
+                LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
             }
             else
             {
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
-                    LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors, NumVertexColorChannels));
+                    LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
                 }
 
                 var bCooked = Ar.ReadBoolean();

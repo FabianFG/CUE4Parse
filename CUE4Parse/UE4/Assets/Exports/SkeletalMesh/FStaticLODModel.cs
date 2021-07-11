@@ -42,8 +42,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MeshToImportVertexMap = Array.Empty<int>();
             ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
         }
-
-        public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
+        
+        public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors) : this()
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
@@ -223,18 +223,15 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
                 var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
-                if (Ar.Game == EGame.GAME_BORDERLANDS3)
+                if (!bHasVertexColors && Ar.Game == EGame.GAME_BORDERLANDS3)
                 {
-                    bHasVertexColors = false;
-
                     for (var i = 0; i < numVertexColorChannels; i++)
                     {
                         var newColorVertexBuffer = new FColorVertexBuffer(Ar);
                         ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
                     }
                 }
-
-                if (bHasVertexColors)
+                else if (bHasVertexColors)
                 {
                     var newColorVertexBuffer = new FColorVertexBuffer(Ar);
                     ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
