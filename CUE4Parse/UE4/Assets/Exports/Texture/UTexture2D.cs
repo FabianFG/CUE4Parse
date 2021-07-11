@@ -67,6 +67,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                         Log.Debug($"Loading data for format {pixelFormatEnum}");
 #endif
                         var data = new FTexturePlatformData(Ar);
+
+                        if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+                        {
+                            Ar.Position += 4;
+                        }
+                        
                         if (Ar.AbsolutePosition != skipOffset)
                         {
                             Log.Warning(
