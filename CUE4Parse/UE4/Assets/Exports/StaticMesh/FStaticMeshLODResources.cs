@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using System;
-using System.Linq;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
