@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -8,6 +9,8 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         
         public CSkelMeshLod[] LODs;
         public CSkelMeshBone[] RefSkeleton;
+        public FBox BoundingBox;
+        public FSphere BoundingShere;
         
         public CSkeletalMesh()
         {

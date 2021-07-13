@@ -9,36 +9,38 @@ namespace CUE4Parse.UE4.Shaders
     [JsonConverter(typeof(FShaderCodeArchiveConverter))]
     public class FShaderCodeArchive
     {
-        public readonly List<byte[]> ShaderCode;
+        public readonly byte[][] ShaderCode;
         public readonly FSerializedShaderArchive SerializedShaders;
         public readonly Dictionary<FSHAHash, FShaderCodeEntry> PrevCookedShaders;
 
         public FShaderCodeArchive(FArchive Ar)
         {
             var archiveVersion = Ar.Read<uint>();
-
-            if (archiveVersion == 2)
+            switch (archiveVersion)
             {
-                SerializedShaders = new FSerializedShaderArchive(Ar);
-
-                ShaderCode = new List<byte[]>(SerializedShaders.ShaderEntries.Length);
-                foreach (var entry in SerializedShaders.ShaderEntries)
+                case 2:
                 {
-                    ShaderCode.Add(Ar.ReadBytes((int) entry.Size));
+                    SerializedShaders = new FSerializedShaderArchive(Ar);
+                    ShaderCode = new byte[SerializedShaders.ShaderEntries.Length][];
+                    for (var i = 0; i < SerializedShaders.ShaderEntries.Length; i++)
+                    {
+                        ShaderCode[i] = Ar.ReadBytes((int) SerializedShaders.ShaderEntries[i].Size);
+                    }
+
+                    break;
                 }
-            }
-            else if (archiveVersion == 1)
-            {
-                // TODO - Need to figure out how this should work
-                // https://github.com/EpicGames/UnrealEngine/blob/4.22/Engine/Source/Runtime/RenderCore/Private/ShaderCodeLibrary.cpp#L910
+                case 1:
+                    // TODO - Need to figure out how this should work
+                    // https://github.com/EpicGames/UnrealEngine/blob/4.22/Engine/Source/Runtime/RenderCore/Private/ShaderCodeLibrary.cpp#L910
                 
-                // var mapVarNameNum = Ar.Read<int>();
-                //
-                // PrevCookedShaders = new Dictionary<FSHAHash, FShaderCodeEntry>(mapVarNameNum);
-                // for (var i = 0; i < mapVarNameNum; ++i)
-                // {
-                //     PrevCookedShaders[Ar.Read<FSHAHash>()] = new FShaderCodeEntry(Ar);
-                // }
+                    // var mapVarNameNum = Ar.Read<int>();
+                    //
+                    // PrevCookedShaders = new Dictionary<FSHAHash, FShaderCodeEntry>(mapVarNameNum);
+                    // for (var i = 0; i < mapVarNameNum; ++i)
+                    // {
+                    //     PrevCookedShaders[Ar.Read<FSHAHash>()] = new FShaderCodeEntry(Ar);
+                    // }
+                    break;
             }
         }
     }

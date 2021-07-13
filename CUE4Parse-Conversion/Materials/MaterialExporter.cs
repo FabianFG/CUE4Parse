@@ -14,14 +14,14 @@ namespace CUE4Parse_Conversion.Materials
     {
         private readonly string _internalFilePath;
         private readonly string _fileData;
-        private readonly IDictionary<string, SKImage?> _textures;
         private readonly MaterialExporter? _parentData;
+        public readonly IDictionary<string, SKImage?> Textures;
 
         public MaterialExporter()
         {
             _internalFilePath = string.Empty;
             _fileData = string.Empty;
-            _textures = new Dictionary<string, SKImage?>();
+            Textures = new Dictionary<string, SKImage?>();
             _parentData = null;
         }
         
@@ -81,7 +81,7 @@ namespace CUE4Parse_Conversion.Materials
                     bNearest = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
                                trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
                 
-                _textures[t.Owner?.Name ?? t.Name] = t.Decode(bNearest);
+                Textures[t.Owner?.Name ?? t.Name] = t.Decode(bNearest);
             }
 
             if (!bNoOtherTextures && unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
@@ -97,7 +97,7 @@ namespace CUE4Parse_Conversion.Materials
             File.WriteAllText(filePath, _fileData);
             savedFileName = Path.GetFileName(filePath);
 
-            foreach (var kvp in _textures)
+            foreach (var kvp in Textures)
             {
                 if (kvp.Value == null) continue;
                 
