@@ -3,11 +3,12 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.Versions
 {
-    class FReleaseObjectVersion
+    public static class FReleaseObjectVersion
     {
         public enum Type
         {
             BeforeCustomVersionWasAdded = 0,
+
             // UE4.19 = 12
             AddSkeletalMeshSectionDisable = 12,
             PropertiesSerializeRepCondition = 21,
@@ -20,39 +21,27 @@ namespace CUE4Parse.UE4.Versions
 
         public static Type Get(FAssetArchive Ar)
         {
-            int ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
             if (ver >= 0)
-                return (Type)ver;
-            if (Ar.Game < EGame.GAME_UE4_11)
-                return Type.BeforeCustomVersionWasAdded;
-            if (Ar.Game < EGame.GAME_UE4_13)
-                return (Type)1;
-            if (Ar.Game < EGame.GAME_UE4_14)
-                return (Type)3;
-            if (Ar.Game < EGame.GAME_UE4_15)
-                return (Type)4;
-            if (Ar.Game < EGame.GAME_UE4_16)
-                return (Type)7;
-            if (Ar.Game < EGame.GAME_UE4_17)
-                return (Type)9;
-            if (Ar.Game < EGame.GAME_UE4_19)
-                return (Type)10;
-            if (Ar.Game < EGame.GAME_UE4_20)
-                return Type.AddSkeletalMeshSectionDisable;
-            if (Ar.Game < EGame.GAME_UE4_21)
-                return (Type)17;
-            if (Ar.Game < EGame.GAME_UE4_23)
-                return (Type)20;
-            if (Ar.Game < EGame.GAME_UE4_24)
-                return (Type)23;
-            if (Ar.Game < EGame.GAME_UE4_25)
-                return (Type)28;
-            if (Ar.Game < EGame.GAME_UE4_26)
-                return (Type)30;
-//          if (Ar.Game < EGame.GAME_UE4_27)
-                return (Type)37;
-            // NEW_ENGINE_VERSION
-//          return LatestVersion;
+                return (Type) ver;
+
+            return Ar.Game switch
+            {
+                < EGame.GAME_UE4_11 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_13 => (Type) 1,
+                < EGame.GAME_UE4_14 => (Type) 3,
+                < EGame.GAME_UE4_15 => (Type) 4,
+                < EGame.GAME_UE4_16 => (Type) 7,
+                < EGame.GAME_UE4_17 => (Type) 9,
+                < EGame.GAME_UE4_19 => (Type) 10,
+                < EGame.GAME_UE4_20 => Type.AddSkeletalMeshSectionDisable,
+                < EGame.GAME_UE4_21 => (Type) 17,
+                < EGame.GAME_UE4_23 => (Type) 20,
+                < EGame.GAME_UE4_24 => (Type) 23,
+                < EGame.GAME_UE4_25 => (Type) 28,
+                < EGame.GAME_UE4_26 => (Type) 30,
+                _ => (Type) 37
+            };
         }
     }
 }

@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.Versions
 {
-    class FRenderingObjectVersion
+    public static class FRenderingObjectVersion
     {
         public enum Type
         {
@@ -84,42 +84,31 @@ namespace CUE4Parse.UE4.Versions
         }
 
         public static readonly FGuid GUID = new(0x12F88B9F, 0x88754AFC, 0xA67CD90C, 0x383ABD29);
+
         public static Type Get(FAssetArchive Ar)
         {
-            int ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
             if (ver >= 0)
-                return (Type)ver;
+                return (Type) ver;
 
-            if (Ar.Game < EGame.GAME_UE4_12)
-                return Type.BeforeCustomVersionWasAdded;
-            if (Ar.Game < EGame.GAME_UE4_13)
-                return Type.CustomReflectionCaptureResolutionSupport;
-            if (Ar.Game < EGame.GAME_UE4_14)
-                return Type.IntroducedMeshDecals;
-            if (Ar.Game < EGame.GAME_UE4_16) //  4.14 and 4.15
-                return Type.MotionBlurAndTAASupportInSceneCapture2d;
-            if (Ar.Game < EGame.GAME_UE4_17)
-                return Type.ShaderResourceCodeSharing;
-            if (Ar.Game < EGame.GAME_UE4_18)
-                return Type.AddedbUseShowOnlyList;
-            if (Ar.Game < EGame.GAME_UE4_19)
-                return Type.VolumetricLightmaps;
-            if (Ar.Game < EGame.GAME_UE4_20)
-                return Type.ShaderPermutationId;
-            if (Ar.Game < EGame.GAME_UE4_21)
-                return Type.IncreaseNormalPrecision;
-            if (Ar.Game < EGame.GAME_UE4_22)
-                return Type.VirtualTexturedLightmaps;
-            if (Ar.Game < EGame.GAME_UE4_23)
-                return Type.GeometryCacheFastDecoder;
-            if (Ar.Game < EGame.GAME_UE4_24)
-                return Type.VirtualTexturedLightmapsV2;
-            if (Ar.Game < EGame.GAME_UE4_25)
-                return Type.MaterialShaderMapIdSerialization;
-            if (Ar.Game < EGame.GAME_UE4_26)
-                return Type.AutoExposureDefaultFix;
-            return Type.LatestVersion;
+            return Ar.Game switch
+            {
+                < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_13 => Type.CustomReflectionCaptureResolutionSupport,
+                < EGame.GAME_UE4_14 => Type.IntroducedMeshDecals,
+                < EGame.GAME_UE4_16 => Type.MotionBlurAndTAASupportInSceneCapture2d, //  4.14 and 4.15
+                < EGame.GAME_UE4_17 => Type.ShaderResourceCodeSharing,
+                < EGame.GAME_UE4_18 => Type.AddedbUseShowOnlyList,
+                < EGame.GAME_UE4_19 => Type.VolumetricLightmaps,
+                < EGame.GAME_UE4_20 => Type.ShaderPermutationId,
+                < EGame.GAME_UE4_21 => Type.IncreaseNormalPrecision,
+                < EGame.GAME_UE4_22 => Type.VirtualTexturedLightmaps,
+                < EGame.GAME_UE4_23 => Type.GeometryCacheFastDecoder,
+                < EGame.GAME_UE4_24 => Type.VirtualTexturedLightmapsV2,
+                < EGame.GAME_UE4_25 => Type.MaterialShaderMapIdSerialization,
+                < EGame.GAME_UE4_26 => Type.AutoExposureDefaultFix,
+                _ => Type.LatestVersion
+            };
         }
     }
-
 }

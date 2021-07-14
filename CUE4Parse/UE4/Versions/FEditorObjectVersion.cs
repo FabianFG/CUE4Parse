@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 namespace CUE4Parse.UE4.Versions
 {
     // Custom serialization version for changes made in Dev-Editor stream
-    class FEditorObjectVersion
+    public static class FEditorObjectVersion
     {
         public enum Type
         {
@@ -90,47 +90,38 @@ namespace CUE4Parse.UE4.Versions
             NumberParsingOptionsNumberLimitsAndClamping,
             //Make sure we can have more then 255 material in the skeletal mesh source data
             SkeletalMeshSourceDataSupport16bitOfMaterialNumber,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
         }
 
         public static readonly FGuid GUID = new(0xE4B068ED, 0xF49442E9, 0xA231DA0B, 0x2E46BB41);
+
         public static Type Get(FAssetArchive Ar)
         {
-            int ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
             if (ver >= 0)
-                return (Type)ver;
+                return (Type) ver;
 
-            if (Ar.Game < EGame.GAME_UE4_12)
-                return Type.BeforeCustomVersionWasAdded;
-            if (Ar.Game < EGame.GAME_UE4_13)
-                return (Type)2;
-            if (Ar.Game < EGame.GAME_UE4_14)
-                return (Type)6;
-            if (Ar.Game < EGame.GAME_UE4_15)
-                return (Type)8;
-            if (Ar.Game < EGame.GAME_UE4_16)
-                return (Type)14;
-            if (Ar.Game < EGame.GAME_UE4_17)
-                return (Type)17;
-            if (Ar.Game < EGame.GAME_UE4_19)
-                return (Type)20;
-            if (Ar.Game < EGame.GAME_UE4_20)
-                return (Type)23;
-            if (Ar.Game < EGame.GAME_UE4_21)
-                return (Type)24;
-            if (Ar.Game < EGame.GAME_UE4_22)
-                return (Type)26;
-            if (Ar.Game < EGame.GAME_UE4_23)
-                return (Type)30;
-            if (Ar.Game < EGame.GAME_UE4_24)
-                return (Type)34;
-            if (Ar.Game < EGame.GAME_UE4_25)
-                return (Type)37;
-            if (Ar.Game < EGame.GAME_UE4_26)
-                return (Type)38;
-            return Type.LatestVersion;
+            return Ar.Game switch
+            {
+                < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_13 => (Type) 2,
+                < EGame.GAME_UE4_14 => (Type) 6,
+                < EGame.GAME_UE4_15 => (Type) 8,
+                < EGame.GAME_UE4_16 => (Type) 14,
+                < EGame.GAME_UE4_17 => (Type) 17,
+                < EGame.GAME_UE4_19 => (Type) 20,
+                < EGame.GAME_UE4_20 => (Type) 23,
+                < EGame.GAME_UE4_21 => (Type) 24,
+                < EGame.GAME_UE4_22 => (Type) 26,
+                < EGame.GAME_UE4_23 => (Type) 30,
+                < EGame.GAME_UE4_24 => (Type) 34,
+                < EGame.GAME_UE4_25 => (Type) 37,
+                < EGame.GAME_UE4_26 => (Type) 38,
+                _ => Type.LatestVersion
+            };
         }
     }
 }

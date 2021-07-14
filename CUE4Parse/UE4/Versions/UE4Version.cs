@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Versions
         public static int GetUE4CustomVersion(FAssetArchive Ar, FGuid guid)
         {
             var summary = Ar.Owner.Summary;
-            for (int i = 0; i < summary.CustomContainerVersion.Length; i++)
+            for (var i = 0; i < summary.CustomContainerVersion.Length; i++)
             {
                 if (summary.CustomContainerVersion[i].Key == guid)
                 {
