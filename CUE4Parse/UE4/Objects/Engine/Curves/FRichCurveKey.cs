@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 		RCTWM_WeightedBoth
 	};
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FRichCurveKey : IUStruct
     {
         public readonly ERichCurveInterpMode InterpMode;
