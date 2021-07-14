@@ -3,14 +3,19 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.Versions
 {
+    // custom version for overlapping vertcies code
     public static class FOverlappingVerticesCustomVersion
     {
         public enum Type
         {
+            // Before any version changes were made in the plugin
             BeforeCustomVersionWasAdded = 0,
-
             // UE4.19
+            // Converted to use HierarchicalInstancedStaticMeshComponent
             DetectOVerlappingVertices = 1,
+            // -----<new versions can be added above this line>-------------------------------------------------
+            VersionPlusOne,
+            LatestVersion = VersionPlusOne - 1
         }
 
         public static readonly FGuid GUID = new(0x612FBE52, 0xDA53400B, 0x910D4F91, 0x9FB1857C);

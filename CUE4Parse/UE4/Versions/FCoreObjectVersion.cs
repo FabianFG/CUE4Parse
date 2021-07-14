@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.Versions
 {
+    // Custom serialization version for changes made in Dev-Core stream
     public static class FCoreObjectVersion
     {
         public enum Type

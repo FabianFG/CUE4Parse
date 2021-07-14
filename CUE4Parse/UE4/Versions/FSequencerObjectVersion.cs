@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.Versions
 {
+    // Custom serialization version for changes made in Dev-Sequencer stream
     public class FSequencerObjectVersion
     {
         public enum Type
@@ -45,6 +46,9 @@ namespace CUE4Parse.UE4.Versions
 
             // Full Manual serialization of float channel
             SerializeFloatChannelCompletely,
+
+            // Set ContinuouslyRespawn to false by default, added FMovieSceneSpawnable::bNetAddressableName
+            SpawnableImprovements,
 
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
