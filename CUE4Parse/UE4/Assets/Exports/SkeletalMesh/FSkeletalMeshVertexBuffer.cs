@@ -38,10 +38,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MeshExtension = Ar.Read<FVector>();
             MeshOrigin = Ar.Read<FVector>();
 
-            if (bUseFullPrecisionUVs)
-                VertsHalf = Ar.ReadArray(() => new FGPUVertHalf(Ar, NumTexCoords));
+            if (!bUseFullPrecisionUVs)
+                VertsHalf = Ar.ReadBulkArray(() => new FGPUVertHalf(Ar, NumTexCoords));
             else
-                VertsFloat = Ar.ReadArray(() => new FGPUVertFloat(Ar, NumTexCoords));
+                VertsFloat = Ar.ReadBulkArray(() => new FGPUVertFloat(Ar, NumTexCoords));
         }
 
         public int GetVertexCount()
