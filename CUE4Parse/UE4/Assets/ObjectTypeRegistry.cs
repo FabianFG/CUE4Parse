@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets
         private static void RegisterEngine()
         {
             RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here??? Yes
-            //RegisterClass(typeof(UAnimSequence));
+            RegisterClass(typeof(UAnimSequence));
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
             RegisterClass(typeof(UDataTable));

@@ -7,6 +7,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public int[] OffsetData;
         public int StripSize;
 
+        public FCompressedOffsetData(int stripSize = 2)
+        {
+            StripSize = stripSize;
+        }
+
         public FCompressedOffsetData(FArchive Ar)
         {
             OffsetData = Ar.ReadArray<int>();

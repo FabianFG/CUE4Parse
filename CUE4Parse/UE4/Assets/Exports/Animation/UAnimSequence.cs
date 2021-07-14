@@ -1,15 +1,15 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    public class UAnimSequence : UObject
+    public class UAnimSequence : UAnimationAsset
     {
         public FRawAnimSequenceTrack[] RawAnimationData;
         public byte[] CompressedByteStream;
@@ -29,11 +29,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            /*if (Ar.Game == EGame.GAME_MontereySetup)
-            {
-                var guid = Ar.Read<FGuid>();
-            }*/
-
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
             {
@@ -131,11 +126,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             // compressed data
             var numBytes = Ar.Read<int>();
-
-            if (numBytes > 0)
-            {
-                CompressedByteStream = Ar.ReadBytes(numBytes);
-            }
+            CompressedByteStream = Ar.ReadBytes(numBytes);
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {
@@ -150,14 +141,129 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
         }
 
+        // UE4.23-4.24 has changed compressed data layout for streaming, so it's worth making a separate
+        // serializer function for it.
         private void SerializeCompressedData2(FAssetArchive Ar)
         {
-            throw new NotImplementedException();
+            var compressedRawDataSize = Ar.Read<int>();
+            CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
+            var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
+
+            // Since 4.23, this is FUECompressedAnimData::SerializeCompressedData
+            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
+            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
+            var compressedNumFrames = Ar.Read<int>();
+
+            // SerializeView() just serializes array size
+            var compressedTrackOffsetsNum = Ar.Read<int>();
+            var compressedScaleOffsetsNum = Ar.Read<int>();
+            CompressedScaleOffsets = new FCompressedOffsetData(Ar.Read<int>());
+            var compressedByteStreamNum = Ar.Read<int>();
+            // ... end of FUECompressedAnimData::SerializeCompressedData
+
+            var numBytes = Ar.Read<int>();
+            var bUseBulkDataForLoad = Ar.ReadBoolean();
+
+            // In UE4.23 CompressedByteStream field exists in FUECompressedAnimData (as TArrayView) and in
+            // FCompressedAnimSequence (as byte array). Serialization is done in FCompressedAnimSequence,
+            // either as TArray or as bulk, and then array is separated onto multiple "views" for
+            // FUECompressedAnimData. We'll use a different name for "joined" serialized array here to
+            // avoid confuse.
+            byte[] serializedByteStream;
+
+            if (bUseBulkDataForLoad)
+            {
+                throw new NotImplementedException("Anim: bUseBulkDataForLoad not implemented");
+                //todo: read from bulk to serializedByteStream
+            }
+            else
+            {
+                serializedByteStream = Ar.ReadBytes(numBytes);
+            }
+
+            // Setup all array views from single array. In UE4 this is done in FUECompressedAnimData::InitViewsFromBuffer.
+            // We'll simply copy array data away from SerializedByteStream, and then SerializedByteStream
+            // will be released from memory as it is a local variable here.
+            // Note: copying is not byte-order wise, so if there will be any problems in the future,
+            // should use byte swap functions.
+            using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Game, Ar.Ver))
+            {
+                CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
+                CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);
+                CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
+            }
+
+            var curveCodecPath = Ar.ReadFString();
+            var compressedCurveByteStream = Ar.ReadArray<byte>();
         }
 
+        // UE4.25 has changed data layout, and therefore serialization order has been changed too.
+        // In UE4.25 serialization is done in FCompressedAnimSequence::SerializeCompressedData().
         private void SerializeCompressedData3(FAssetArchive Ar)
         {
-            throw new NotImplementedException();
+            var compressedRawDataSize = Ar.Read<int>();
+            CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
+            var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
+
+            var numBytes = Ar.Read<int>();
+            var bUseBulkDataForLoad = Ar.ReadBoolean();
+
+            // In UE4.23 CompressedByteStream field exists in FUECompressedAnimData (as TArrayView) and in
+            // FCompressedAnimSequence (as byte array). Serialization is done in FCompressedAnimSequence,
+            // either as TArray or as bulk, and then array is separated onto multiple "views" for
+            // FUECompressedAnimData. We'll use a different name for "joined" serialized array here to
+            // avoid confuse.
+            byte[] serializedByteStream;
+
+            if (bUseBulkDataForLoad)
+            {
+                throw new NotImplementedException("Anim: bUseBulkDataForLoad not implemented");
+                //todo: read from bulk to serializedByteStream
+            }
+            else
+            {
+                serializedByteStream = Ar.ReadBytes(numBytes);
+            }
+
+            var boneCodecDDCHandle = Ar.ReadFString();
+            var curveCodecPath = Ar.ReadFString();
+
+            var numCurveBytes = Ar.Read<int>();
+            var compressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
+
+            if (boneCodecDDCHandle.Length > 0)
+            {
+                // The following part is ICompressedAnimData::SerializeCompressedData
+                var compressedNumFrames = Ar.Read<int>();
+                // todo: editor-only data here
+
+                // FUECompressedAnimData::SerializeCompressedData
+                KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
+                TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+                RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+                ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
+                // SerializeView() just serializes array size
+                var compressedByteStreamNum = Ar.Read<int>();
+                var compressedTrackOffsetsNum = Ar.Read<int>();
+                var compressedScaleOffsetsNum = Ar.Read<int>();
+                CompressedScaleOffsets = new FCompressedOffsetData(Ar.Read<int>());
+
+                // Setup all array views from single array. In UE4 this is done in FUECompressedAnimData::InitViewsFromBuffer.
+                // We'll simply copy array data away from SerializedByteStream, and then SerializedByteStream
+                // will be released from memory as it is a local variable here.
+                // Note: copying is not byte-order wise, so if there will be any problems in the future,
+                // should use byte swap functions.
+                using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Game, Ar.Ver))
+                {
+                    CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
+                    CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);
+                    CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
+                }
+            }
         }
     }
 }

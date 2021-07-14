@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 //     var dummyThumbnailAngle = Ar.Read<FRotator>();
                 //     var dummyThumbnailDistance = Ar.Read<float>();
                 // }
-                // var highResSourceMeshName = Ar.ReadString();
+                // var highResSourceMeshName = Ar.ReadFString();
                 // var highResSourceMeshCRC = Ar.Read<uint>();
             }
 
