@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Shaders
 {
     [JsonConverter(typeof(FSerializedShaderArchiveConverter))]
-    public class FSerializedShaderArchive
+    public class FSerializedShaderArchive : FRHIShaderLibrary
     {
         public readonly FSHAHash[] ShaderMapHashes;
         public readonly FSHAHash[] ShaderHashes;
@@ -76,16 +76,16 @@ namespace CUE4Parse.UE4.Shaders
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FShaderMapEntry
+    public readonly struct FShaderMapEntry
     {
-        public readonly uint ShaderIndecesOffset;
+        public readonly uint ShaderIndicesOffset;
         public readonly uint NumShaders;
         public readonly uint FirstPreloadIndex;
         public readonly uint NumPreloadEntries;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FShaderCodeEntry
+    public readonly struct FShaderCodeEntry
     {
         public readonly ulong Offset;
         public readonly uint Size;
@@ -94,7 +94,7 @@ namespace CUE4Parse.UE4.Shaders
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FFileCachePreloadEntry
+    public readonly struct FFileCachePreloadEntry
     {
         public readonly long Offset;
         public readonly long Size;
