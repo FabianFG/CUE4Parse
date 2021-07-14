@@ -54,7 +54,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
-                if (bInlined) SerializeBuffers(Ar);
+                if (Ar.Game == EGame.GAME_ROGUECOMPANY || bInlined)
+                {
+                    SerializeBuffers(Ar);
+                    if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                        Ar.Position += 10;
+                }
                 else
                 {
                     var bulkData = new FByteBulkData(Ar);
@@ -64,6 +69,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         SerializeBuffers(tempAr);
                         tempAr.Dispose();
                     }
+                    
                     
                     // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
                     Ar.Position += 8; // DepthOnlyNumTriangles + Packed
@@ -150,6 +156,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            
+            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                new FColorVertexBuffer(Ar);
+            
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
