@@ -109,7 +109,10 @@ namespace CUE4Parse_Conversion.Meshes
             convertedMesh.LODs = new CSkelMeshLod[numLods];
             for (var i = 0; i < convertedMesh.LODs.Length; i++)
             {
-                if (originalMesh.LODModels[i] is not { } srcLod) continue;
+                if (originalMesh.LODModels[i] is not
+                {
+                    Indices: not null
+                } srcLod) continue;
                 
                 if (srcLod.Indices.Indices16.Length == 0 && srcLod.Indices.Indices32.Length == 0)
                 {

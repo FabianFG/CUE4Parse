@@ -51,10 +51,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             var bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
+            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                bInlined = true;
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
-                if (Ar.Game == EGame.GAME_ROGUECOMPANY || bInlined)
+                if (bInlined)
                 {
                     SerializeBuffers(Ar);
                     if (Ar.Game == EGame.GAME_ROGUECOMPANY)
