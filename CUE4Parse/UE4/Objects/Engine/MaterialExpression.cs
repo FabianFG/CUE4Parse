@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             }*/
 
             OutputIndex = Ar.Read<int>();
-            InputName = FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.MaterialInputNativeSerialize ? Ar.ReadFName() : new FName(Ar.ReadFString());
+            InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());
             Mask = Ar.Read<int>();
             MaskR = Ar.Read<int>();
             MaskG = Ar.Read<int>();
