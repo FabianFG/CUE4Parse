@@ -13,6 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     public class FStaticMeshLODResources
     {
         public FStaticMeshSection[] Sections { get; private set; }
+        public FCardRepresentationData CardRepresentationData;
         public float MaxDeviation { get; private set; }
         public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
         public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
@@ -177,18 +178,19 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
-                Ar.ReadBulkArray(Ar.ReadByte);
+                Ar.ReadBulkArray<byte>();
 
-            for (var i = 0; i < Sections.Length; i++)
+            // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
+            for (var i = 0; i < Sections.Length; i++) // AreaWeightedSectionSamplers
             {
                 new FWeightedRandomSampler(Ar);
             }
 
-            new FWeightedRandomSampler(Ar);
+            var h = new FWeightedRandomSampler(Ar); // AreaWeightedSampler
         }
     }
 

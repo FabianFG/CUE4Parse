@@ -12,8 +12,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     {
         private const int MAX_STATIC_UV_SETS_UE4 = 8;
         private const int MAX_STATIC_LODS_UE4 = 8;
-        
+
         public readonly FStaticMeshLODResources[] LODs;
+        public readonly FNaniteResources NaniteResources;
         public readonly FBoxSphereBounds Bounds;
         public readonly bool? LODsShareStaticLighting;
         public readonly float[]? ScreenSize;
@@ -21,11 +22,18 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
         {
             if (!bCooked) return;
-            
+
+            // TODO Read minMobileLODIdx only when platform is desktop and CVar r.StaticMesh.KeepMobileMinLODSettingOnDesktop is nonzero
             var minMobileLODIdx = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<int>() : 0;
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
             var numInlinedLODs = Ar.Game >= EGame.GAME_UE4_23 ? Ar.ReadByte() : -1;
-            
+
+            if (Ar.Game >= EGame.GAME_UE5_0)
+            {
+                NaniteResources = new FNaniteResources(Ar);
+                SerializeInlineDataRepresentations(Ar);
+            }
+
             if (Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
             {
                 var stripped = false;
@@ -38,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         stripped |= stripDataFlags.IsClassDataStripped(0x01);
                     }
                 }
-                    
+
                 if (!stripped)
                 {
                     for (var i = 0; i < LODs.Length; i++)
@@ -46,7 +54,14 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         var bValid = Ar.ReadBoolean();
                         if (bValid)
                         {
-                            var _ = new FDistanceFieldVolumeData(Ar);
+                            if (Ar.Game >= EGame.GAME_UE5_0)
+                            {
+                                var _ = new FDistanceFieldVolumeData5(Ar);
+                            }
+                            else
+                            {
+                                var _ = new FDistanceFieldVolumeData(Ar);
+                            }
                         }
                     }
                 }
@@ -63,7 +78,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             {
                 Ar.Position += 4 * MAX_STATIC_UV_SETS_UE4; // StreamingTextureFactor for each UV set
-                Ar.Position += 4;  // MaxStreamingTextureFactor
+                Ar.Position += 4; // MaxStreamingTextureFactor
             }
 
             ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
@@ -71,7 +86,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 if (Ar.Game >= EGame.GAME_UE4_20)
                     Ar.Position += 4; // bFloatCooked
-                    
+
                 ScreenSize[i] = Ar.Read<float>();
             }
 
@@ -85,6 +100,25 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
         }
+
+        private void SerializeInlineDataRepresentations(FAssetArchive Ar)
+        {
+            // Defined class flags for possible stripping
+            const byte CardRepresentationDataStripFlag = 2;
+
+            var stripFlags = new FStripDataFlags(Ar);
+            if (!stripFlags.IsDataStrippedForServer() && !stripFlags.IsClassDataStripped(CardRepresentationDataStripFlag))
+            {
+                foreach (var lod in LODs)
+                {
+                    var bValid = Ar.ReadBoolean();
+                    if (bValid)
+                    {
+                        lod.CardRepresentationData = new FCardRepresentationData(Ar);
+                    }
+                }
+            }
+        }
     }
 
     public class FStaticMeshRenderDataConverter : JsonConverter<FStaticMeshRenderData>
@@ -95,13 +129,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("LODs");
             serializer.Serialize(writer, value.LODs);
-            
+
             writer.WritePropertyName("Bounds");
             serializer.Serialize(writer, value.Bounds);
-            
+
             writer.WritePropertyName("LODsShareStaticLighting");
             writer.WriteValue(value.LODsShareStaticLighting);
-            
+
             writer.WritePropertyName("ScreenSize");
             serializer.Serialize(writer, value.ScreenSize);
 

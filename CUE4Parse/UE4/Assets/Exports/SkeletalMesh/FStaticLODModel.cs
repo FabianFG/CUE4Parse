@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             else
             {
                 // UE4.19+ uses 32-bit index buffer (for editor data)
-                Indices = new FMultisizeIndexContainer {Indices32 = Ar.ReadBulkArray(Ar.Read<uint>)};
+                Indices = new FMultisizeIndexContainer {Indices32 = Ar.ReadBulkArray<uint>()};
             }
 
             ActiveBoneIndices = Ar.ReadArray<short>();
