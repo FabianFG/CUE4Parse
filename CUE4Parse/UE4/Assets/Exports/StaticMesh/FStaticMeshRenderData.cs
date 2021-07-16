@@ -139,6 +139,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("ScreenSize");
             serializer.Serialize(writer, value.ScreenSize);
 
+            writer.WritePropertyName("NaniteResources");
+            serializer.Serialize(writer, value.NaniteResources);
+            
             writer.WriteEndObject();
         }
 
