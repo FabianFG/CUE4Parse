@@ -17,8 +17,9 @@
         COND_SimulatedOnlyNoReplay = 11,		// This property will send to actors only, but not to replay connections
         COND_SimulatedOrPhysicsNoReplay = 12,	// This property will send to simulated Or bRepPhysics actors, but not to replay connections
         COND_SkipReplay = 13,					// This property will not send to the replay connection
-        COND_Never = 15,						// This property will never be replicated
-        COND_Max = 16
+        COND_Max = 14
+        //COND_Never = 15,						// This property will never be replicated
+        //COND_Max = 16
     }
 
     public enum ELifetimeRepNotifyCondition

@@ -17,6 +17,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public bool IsRotationNormalized => Rotation.IsNormalized;
 
+        public FTransform(EForceInit init = EForceInit.ForceInit)
+        {
+            Rotation = new FQuat(0f, 0f, 0f, 1f);
+            Translation = new FVector(0f);
+            Scale3D = FVector.OneVector;
+        }
+
         public FTransform(FQuat rotation, FVector translation, FVector scale3D)
         {
             Rotation = rotation;
@@ -52,7 +59,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // Rotation = Q(B)(-1) * Q(A)
             // Translation = 1/S(B) *[Q(B)(-1)*(T(A)-T(B))*Q(B)]
             // where A = this, B = Other
-            var result = new FTransform();
+            var result = new FTransform(EForceInit.ForceInit);
 
             if (AnyHasNegativeScale(Scale3D, other.Scale3D))
             {
@@ -223,7 +230,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             //	S(AxB) = S(A)*S(B)
             //	T(AxB) = Q(B)*S(B)*T(A)*-Q(B) + T(B)
 
-            var result = new FTransform();
+            var result = new FTransform(EForceInit.ForceInit);
             if (AnyHasNegativeScale(a.Scale3D, b.Scale3D))
             {
                 // @note, if you have 0 scale with negative, you're going to lose rotation as it can't convert back to quat
