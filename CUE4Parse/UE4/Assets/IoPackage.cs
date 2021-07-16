@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
@@ -11,14 +12,13 @@ using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
     public sealed class IoPackage : AbstractUePackage
     {
-        public readonly FPackageSummary IoSummary;
         public readonly IoGlobalData GlobalData;
 
         public override FPackageFileSummary Summary { get; }
@@ -37,38 +37,88 @@ namespace CUE4Parse.UE4.Assets
             GlobalData = globalData;
             var uassetAr = new FAssetArchive(uasset, this);
 
-            // Summary
-            IoSummary = uassetAr.Read<FPackageSummary>();
-            Summary = new FPackageFileSummary
+            FExportBundleHeader[] exportBundleHeaders;
+            FExportBundleEntry[] exportBundleEntries;
+            FPackageId[] importedPackageIds;
+            int allExportDataOffset;
+
+            if (uassetAr.Game >= EGame.GAME_UE5_0)
             {
-                PackageFlags = IoSummary.PackageFlags,
-                TotalHeaderSize = IoSummary.GraphDataOffset + IoSummary.GraphDataSize,
-                NameCount = IoSummary.NameMapHashesSize / sizeof(ulong) - 1,
-                ExportCount = (IoSummary.ExportBundlesOffset - IoSummary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
-                ImportCount = (IoSummary.ExportMapOffset - IoSummary.ImportMapOffset) / FPackageObjectIndex.Size
-            };
+                // Summary
+                var summary = uassetAr.Read<FPackageSummary5>();
+                Summary = new FPackageFileSummary
+                {
+                    PackageFlags = summary.PackageFlags,
+                    TotalHeaderSize = summary.GraphDataOffset + (int) summary.HeaderSize,
+                    ExportCount = (summary.ExportBundleEntriesOffset - summary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
+                    ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
+                };
 
-            // Name map
-            uassetAr.Position = IoSummary.NameMapNamesOffset;
-            NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr, Summary.NameCount);
-            Name = CreateFNameFromMappedName(IoSummary.Name).Text;
+                // Name map
+                NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
+                Summary.NameCount = NameMap.Length;
+                Name = CreateFNameFromMappedName(summary.Name).Text;
 
-            // Import map
-            uassetAr.Position = IoSummary.ImportMapOffset;
-            ImportMap = uasset.ReadArray<FPackageObjectIndex>(Summary.ImportCount);
+                // Import map
+                uassetAr.Position = summary.ImportMapOffset;
+                ImportMap = uasset.ReadArray<FPackageObjectIndex>(Summary.ImportCount);
 
-            // Export map
-            uassetAr.Position = IoSummary.ExportMapOffset;
-            ExportMap = uasset.ReadArray<FExportMapEntry>(Summary.ExportCount);
-            ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
+                // Export map
+                uassetAr.Position = summary.ExportMapOffset;
+                ExportMap = uasset.ReadArray<FExportMapEntry>(Summary.ExportCount);
+                ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
 
-            // Export bundles
-            uassetAr.Position = IoSummary.ExportBundlesOffset;
-            LoadExportBundles(uassetAr, out var exportBundleHeaders, out var exportBundleEntries);
+                // Export bundle entries
+                uassetAr.Position = summary.ExportBundleEntriesOffset;
+                exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
-            // Graph data
-            uassetAr.Position = IoSummary.GraphDataOffset;
-            var importedPackageIds = LoadGraphData(uassetAr);
+                // Export bundle headers
+                uassetAr.Position = summary.GraphDataOffset;
+                var exportBundleHeadersCount = 1; // TODO just a placeholder until loading of package store entries are implemented
+                exportBundleHeaders = uassetAr.ReadArray<FExportBundleHeader>(exportBundleHeadersCount);
+                // We don't read the graph data
+
+                importedPackageIds = Array.Empty<FPackageId>(); // TODO imported packages are now only stored in the package store entry, no longer in the graph data too
+
+                allExportDataOffset = (int) summary.HeaderSize;
+            }
+            else
+            {
+                // Summary
+                var summary = uassetAr.Read<FPackageSummary>();
+                Summary = new FPackageFileSummary
+                {
+                    PackageFlags = summary.PackageFlags,
+                    TotalHeaderSize = summary.GraphDataOffset + summary.GraphDataSize,
+                    NameCount = summary.NameMapHashesSize / sizeof(ulong) - 1,
+                    ExportCount = (summary.ExportBundlesOffset - summary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
+                    ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
+                };
+
+                // Name map
+                uassetAr.Position = summary.NameMapNamesOffset;
+                NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr, Summary.NameCount);
+                Name = CreateFNameFromMappedName(summary.Name).Text;
+
+                // Import map
+                uassetAr.Position = summary.ImportMapOffset;
+                ImportMap = uasset.ReadArray<FPackageObjectIndex>(Summary.ImportCount);
+
+                // Export map
+                uassetAr.Position = summary.ExportMapOffset;
+                ExportMap = uasset.ReadArray<FExportMapEntry>(Summary.ExportCount);
+                ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
+
+                // Export bundles
+                uassetAr.Position = summary.ExportBundlesOffset;
+                LoadExportBundles(uassetAr, summary.GraphDataOffset - summary.ExportBundlesOffset, out exportBundleHeaders, out exportBundleEntries);
+
+                // Graph data
+                uassetAr.Position = summary.GraphDataOffset;
+                importedPackageIds = LoadGraphData(uassetAr);
+
+                allExportDataOffset = summary.GraphDataOffset + summary.GraphDataSize;
+            }
 
             // Preload dependencies
             ImportedPackages = new Lazy<IoPackage?[]>(provider != null ? () =>
@@ -86,7 +136,7 @@ namespace CUE4Parse.UE4.Assets
             if (uptnl != null) uassetAr.AddPayload(PayloadType.UPTNL, Summary.BulkDataStartOffset, uptnl);
 
             // Populate lazy exports
-            var currentExportDataOffset = IoSummary.GraphDataOffset + IoSummary.GraphDataSize;
+            var currentExportDataOffset = allExportDataOffset;
             foreach (var exportBundle in exportBundleHeaders)
             {
                 for (var i = 0u; i < exportBundle.EntryCount; i++)
@@ -132,46 +182,29 @@ namespace CUE4Parse.UE4.Assets
         private FName CreateFNameFromMappedName(FMappedName mappedName) =>
             new(mappedName, mappedName.IsGlobal ? GlobalData.GlobalNameMap : NameMap);
 
-        private void LoadExportBundles(FArchive reader, out FExportBundleHeader[] bundleHeadersArray, out FExportBundleEntry[] bundleEntriesArray)
+        private void LoadExportBundles(FArchive Ar, int graphDataSize, out FExportBundleHeader[] bundleHeadersArray, out FExportBundleEntry[] bundleEntriesArray)
         {
-            var bundleHeadersBytes = reader.ReadBytes(IoSummary.GraphDataOffset - IoSummary.ExportBundlesOffset);
-
-            unsafe
+            var remainingBundleEntryCount = graphDataSize / (4 + 4);
+            var foundBundlesCount = 0;
+            var foundBundleHeaders = new List<FExportBundleHeader>();
+            while (foundBundlesCount < remainingBundleEntryCount)
             {
-                fixed (byte* bundleHeadersRaw = bundleHeadersBytes)
-                {
-                    var bundleHeaders = (FExportBundleHeader*) bundleHeadersRaw;
-                    var remainingBundleEntryCount = (IoSummary.GraphDataOffset - IoSummary.ExportBundlesOffset) / sizeof(FExportBundleEntry);
-                    var foundBundlesCount = 0;
-                    var currentBundleHeader = bundleHeaders;
-                    while (foundBundlesCount < remainingBundleEntryCount)
-                    {
-                        // This location is occupied by header, so it is not a bundle entry
-                        remainingBundleEntryCount--;
-                        foundBundlesCount += (int) currentBundleHeader->EntryCount;
-                        currentBundleHeader++;
-                    }
-
-                    if (foundBundlesCount != remainingBundleEntryCount)
-                        throw new ParserException(reader, $"FoundBundlesCount {foundBundlesCount} != RemainingBundleEntryCount {remainingBundleEntryCount}");
-
-                    // Load export bundles into arrays
-                    bundleHeadersArray = new FExportBundleHeader[currentBundleHeader - bundleHeaders];
-                    fixed (FExportBundleHeader* bundleHeadersPtr = bundleHeadersArray)
-                    {
-                        Unsafe.CopyBlockUnaligned(bundleHeadersPtr, bundleHeaders, (uint) (bundleHeadersArray.Length * sizeof(FExportBundleHeader)));
-                    }
-
-                    bundleEntriesArray = new FExportBundleEntry[foundBundlesCount];
-                    fixed (FExportBundleEntry* bundleEntriesPtr = bundleEntriesArray)
-                    {
-                        Unsafe.CopyBlockUnaligned(bundleEntriesPtr, currentBundleHeader, (uint) (foundBundlesCount * sizeof(FExportBundleEntry)));
-                    }
-                }
+                // This location is occupied by header, so it is not a bundle entry
+                remainingBundleEntryCount--;
+                var bundleHeader = new FExportBundleHeader(Ar);
+                foundBundlesCount += (int) bundleHeader.EntryCount;
+                foundBundleHeaders.Add(bundleHeader);
             }
+
+            if (foundBundlesCount != remainingBundleEntryCount)
+                throw new ParserException(Ar, $"FoundBundlesCount {foundBundlesCount} != RemainingBundleEntryCount {remainingBundleEntryCount}");
+
+            // Load export bundles into arrays
+            bundleHeadersArray = foundBundleHeaders.ToArray();
+            bundleEntriesArray = Ar.ReadArray<FExportBundleEntry>(foundBundlesCount);
         }
 
-        private FPackageId[] LoadGraphData(FAssetArchive Ar)
+        private FPackageId[] LoadGraphData(FArchive Ar)
         {
             var packageCount = Ar.Read<int>();
             if (packageCount == 0) return Array.Empty<FPackageId>();

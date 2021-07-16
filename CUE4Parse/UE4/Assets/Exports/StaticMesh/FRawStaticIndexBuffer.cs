@@ -52,6 +52,18 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
         }
         
+        public int Length
+        {
+            get
+            {
+                if (Indices32.Length > 0)
+                    return Indices32.Length;
+                if (Indices16.Length > 0)
+                    return Indices16.Length;
+                return -1;
+            }
+        }
+        
         public int this[int i]
         {
             get

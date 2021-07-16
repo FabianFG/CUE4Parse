@@ -21,6 +21,6 @@ namespace CUE4Parse.UE4.Assets.Objects
     public static class BulkDataFlagUtil
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Check(this EBulkData bulkData, int bulkDataFlags) => ((int) bulkData & bulkDataFlags) != 0;
+        public static bool Check(this EBulkData bulkData, uint bulkDataFlags) => ((int) bulkData & bulkDataFlags) != 0;
     }
 }

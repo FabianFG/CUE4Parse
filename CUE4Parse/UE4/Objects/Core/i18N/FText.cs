@@ -176,9 +176,13 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             }
             public None(FAssetArchive Ar)
             {
-                if (Ar.ReadBoolean()) // bHasCultureInvariantString
+                if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.CultureInvariantTextSerializationKeyStability)
                 {
-                    CultureInvariantString = Ar.ReadFString();
+                    var bHasCultureInvariantString = Ar.ReadBoolean();
+                    if (bHasCultureInvariantString)
+                    {
+                        CultureInvariantString = Ar.ReadFString();
+                    }
                 }
             }
         }

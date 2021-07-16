@@ -26,6 +26,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
 
             bCooked = Ar.ReadBoolean();
+
+            if (Ar.Ver >= UE4Version.VER_UE4_SOUND_COMPRESSION_TYPE_ADDED && FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveSoundWaveCompressionName)
+            {
+                Ar.Read<FName>(); // DummyCompressionName
+            }
+            
             if (!bStreaming)
             {
                 if (bCooked)
@@ -36,6 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 {
                     RawData = new FByteBulkData(Ar);
                 }
+                
                 CompressedDataGuid = Ar.Read<FGuid>();
             }
             else

@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly FEngineVersion? CompatibleWithEngineVersion;
         public readonly ECompressionFlags CompressionFlags;
         public readonly FCompressedChunk[] CompressedChunks;
-        public readonly uint PackageSource;
+        public readonly int PackageSource;
         public readonly string[] AdditionalPackagesToCook;
         public readonly int AssetRegistryDataOffset;
         public int BulkDataStartOffset; // serialized as long
@@ -315,13 +315,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException("Package level compression is enabled");
             }
 
-            PackageSource = Ar.Read<uint>();
+            PackageSource = Ar.Read<int>();
             AdditionalPackagesToCook = Ar.ReadArray(Ar.ReadFString);
 
             if (LegacyFileVersion > -7)
             {
                 var NumTextureAllocations = Ar.Read<int>();
-
                 if (NumTextureAllocations != 0)
                 {
                     // We haven't used texture allocation info for ages and it's no longer supported anyway
@@ -329,8 +328,20 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
             }
 
-            AssetRegistryDataOffset = Ar.Read<int>();
-            BulkDataStartOffset = (int)Ar.Read<long>();
+            if (Ar.Ver >= UE4Version.VER_UE4_ASSET_REGISTRY_TAGS)
+            {
+                AssetRegistryDataOffset = Ar.Read<int>();
+            }
+
+            if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+            {
+                Ar.Position += 6; // no idea what's going on here.
+            }
+            
+            if (Ar.Ver >= UE4Version.VER_UE4_SUMMARY_HAS_BULKDATA_OFFSET)
+            {
+                BulkDataStartOffset = (int) Ar.Read<long>();
+            }
 
             if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_WORLD_LEVEL_INFO)
             {

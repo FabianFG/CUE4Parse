@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -29,9 +30,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Path.Clear();
             }
 
-            //if (Ar.CustomVer(FFortniteMainBranchObjectVersion.GUID) >= FFortniteMainBranchObjectVersion.FFieldPathOwnerSerialization || Ar.CustomVer(FReleaseObjectVersion.GUID) >= FReleaseObjectVersion.FFieldPathOwnerSerialization) {
-            ResolvedOwner = new FPackageIndex(Ar);
-            //}
+            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.FFieldPathOwnerSerialization || FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.FFieldPathOwnerSerialization)
+            {
+                ResolvedOwner = new FPackageIndex(Ar);
+            }
         }
     }
 }

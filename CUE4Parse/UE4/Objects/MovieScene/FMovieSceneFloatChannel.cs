@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine.Curves;
-using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-	public readonly struct FMovieSceneFloatChannel : IUStruct
+    public readonly struct FMovieSceneFloatChannel : IUStruct
     {
         public readonly ERichCurveExtrapolation PreInfinityExtrap;
         public readonly ERichCurveExtrapolation PostInfinityExtrap;
@@ -16,9 +16,16 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         public readonly float DefaultValue;
         public readonly bool bHasDefaultValue; // 4 bytes
         public readonly FFrameRate TickResolution;
+        public readonly bool bShowCurve;
 
-        public FMovieSceneFloatChannel(FArchive Ar)
+        public FMovieSceneFloatChannel(FAssetArchive Ar)
         {
+            // if (FSequencerObjectVersion.Get(Ar) < FSequencerObjectVersion.Type.SerializeFloatChannelCompletely &&
+            //     FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve)
+            // {
+            //     return;
+            // }
+            
             PreInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
             PostInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
 
@@ -83,7 +90,7 @@ namespace CUE4Parse.UE4.Objects.MovieScene
             DefaultValue = Ar.Read<float>();
             bHasDefaultValue = Ar.ReadBoolean();
             TickResolution = Ar.Read<FFrameRate>();
-            Ar.Position += 4; // Mysterious 4 byte padding, could this be KeyHandles which is inside if (Ar.IsTransacting())?
+            bShowCurve = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve && Ar.ReadBoolean(); // bShowCurve should still only be assigned while in editor
         }
     }
 }

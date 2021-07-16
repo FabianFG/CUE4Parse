@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -13,13 +14,19 @@ namespace CUE4Parse.UE4.Objects.UObject
 #endif
         public FNameEntrySerialized(FArchive Ar)
         {
+            var bHasNameHashes = Ar.Ver >= UE4Version.VER_UE4_NAME_HASHES_SERIALIZED;
+            
             Name = Ar.ReadFString();
+            if (bHasNameHashes)
+            {
 #if NAME_HASHES
             NonCasePreservingHash = Ar.Read<ushort>();
             CasePreservingHash = Ar.Read<ushort>();
 #else
-            Ar.Position += 4;
+                Ar.Position += 4;
 #endif
+            }
+            
         }
 
         public FNameEntrySerialized(string name)

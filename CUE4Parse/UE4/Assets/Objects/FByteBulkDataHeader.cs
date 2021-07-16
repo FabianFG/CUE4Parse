@@ -9,18 +9,18 @@ namespace CUE4Parse.UE4.Assets.Objects
     [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
     public readonly struct FByteBulkDataHeader
     {
-        public readonly int BulkDataFlags;
+        public readonly uint BulkDataFlags;
         public readonly int ElementCount;
-        public readonly int SizeOnDisk;
+        public readonly uint SizeOnDisk;
         public readonly long OffsetInFile;
 
         public FByteBulkDataHeader(FAssetArchive Ar)
         {
-            BulkDataFlags = Ar.Read<int>();
+            BulkDataFlags = Ar.Read<uint>();
             if (EBulkData.BULKDATA_Size64Bit.Check(BulkDataFlags))
                 throw new ParserException(Ar, "Must not have Size64Bit flag");
             ElementCount = Ar.Read<int>();
-            SizeOnDisk = Ar.Read<int>();
+            SizeOnDisk = Ar.Read<uint>();
             OffsetInFile = Ar.Ver >= UE4Version.VER_UE4_BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
             if (!EBulkData.BULKDATA_NoOffsetFixUp.Check(BulkDataFlags)) // UE4.26 flag
             {
@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (EBulkData.BULKDATA_BadDataVersion.Check(BulkDataFlags))
             {
                 Ar.Position += sizeof(ushort);
-                BulkDataFlags &= ~(int)EBulkData.BULKDATA_BadDataVersion;
+                BulkDataFlags &= ~(uint)EBulkData.BULKDATA_BadDataVersion;
             }
         }
     }

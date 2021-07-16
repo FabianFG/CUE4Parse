@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -39,14 +40,22 @@ namespace CUE4Parse.UE4.Objects.Engine
 
         public FExpressionInput(FAssetArchive Ar)
         {
+            /*if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.MaterialInputNativeSerialize)
+            {
+                // TODO use property serialization instead
+            }*/
+
             OutputIndex = Ar.Read<int>();
-            InputName = Ar.ReadFName();
+            InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());
             Mask = Ar.Read<int>();
             MaskR = Ar.Read<int>();
             MaskG = Ar.Read<int>();
             MaskB = Ar.Read<int>();
             MaskA = Ar.Read<int>();
-            ExpressionName = Ar.ReadFName();
+            if (Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly))
+            {
+                ExpressionName = Ar.ReadFName();
+            }
         }
     }
 }

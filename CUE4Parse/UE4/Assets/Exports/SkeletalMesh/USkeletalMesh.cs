@@ -15,11 +15,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FReferenceSkeleton ReferenceSkeleton { get; private set; }
         public FStaticLODModel[]? LODModels { get; private set; }
         public bool bHasVertexColors { get; private set; }
+        public byte NumVertexColorChannels { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
+            NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = Ar.Read<FBoxSphereBounds>();
@@ -49,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     for (var i = 0; i < LODModels.Length; i++)
                     {
                         LODModels[i] = new FStaticLODModel();
-                        LODModels[i].SerializeRenderItem(Ar, bHasVertexColors);
+                        LODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
                     }
 
                     var numInlinedLODs = Ar.Read<byte>();

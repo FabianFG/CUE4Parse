@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -6,7 +7,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Shaders
 {
     [JsonConverter(typeof(FSerializedShaderArchiveConverter))]
-    public class FSerializedShaderArchive
+    public class FSerializedShaderArchive : FRHIShaderLibrary
     {
         public readonly FSHAHash[] ShaderMapHashes;
         public readonly FSHAHash[] ShaderHashes;
@@ -21,9 +22,9 @@ namespace CUE4Parse.UE4.Shaders
         {
             ShaderMapHashes = Ar.ReadArray(() => new FSHAHash(Ar));
             ShaderHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-            ShaderMapEntries = Ar.ReadArray(() => new FShaderMapEntry(Ar));
-            ShaderEntries = Ar.ReadArray(() => new FShaderCodeEntry(Ar));
-            PreloadEntries = Ar.ReadArray(() => new FFileCachePreloadEntry(Ar));
+            ShaderMapEntries = Ar.ReadArray<FShaderMapEntry>();
+            ShaderEntries = Ar.ReadArray<FShaderCodeEntry>();
+            PreloadEntries = Ar.ReadArray<FFileCachePreloadEntry>();
             ShaderIndices = Ar.ReadArray<uint>();
         }
 
@@ -74,47 +75,28 @@ namespace CUE4Parse.UE4.Shaders
         }
     }
 
-    public class FShaderMapEntry
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public readonly struct FShaderMapEntry
     {
-        public readonly uint ShaderIndecesOffset;
+        public readonly uint ShaderIndicesOffset;
         public readonly uint NumShaders;
         public readonly uint FirstPreloadIndex;
         public readonly uint NumPreloadEntries;
-
-        public FShaderMapEntry(FArchive Ar)
-        {
-            ShaderIndecesOffset = Ar.Read<uint>();
-            NumShaders = Ar.Read<uint>();
-            FirstPreloadIndex = Ar.Read<uint>();
-            NumPreloadEntries = Ar.Read<uint>();
-        }
     }
 
-    public class FShaderCodeEntry
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public readonly struct FShaderCodeEntry
     {
         public readonly ulong Offset;
         public readonly uint Size;
         public readonly uint UncompressedSize;
         public readonly byte Frequency;
-
-        public FShaderCodeEntry(FArchive Ar)
-        {
-            Offset = Ar.Read<ulong>();
-            Size = Ar.Read<uint>();
-            UncompressedSize = Ar.Read<uint>();
-            Frequency = Ar.Read<byte>();
-        }
     }
 
-    public class FFileCachePreloadEntry
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public readonly struct FFileCachePreloadEntry
     {
         public readonly long Offset;
         public readonly long Size;
-
-        public FFileCachePreloadEntry(FArchive Ar)
-        {
-            Offset = Ar.Read<long>();
-            Size = Ar.Read<long>();
-        }
     }
 }

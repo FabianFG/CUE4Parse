@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using System;
-using System.Linq;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -42,19 +41,27 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game < EGame.GAME_UE4_23)
             {
-                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
+                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
                 {
                     SerializeBuffersLegacy(Ar, stripDataFlags);
                 }
+
                 return;
             }
 
             var bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
+            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                bInlined = true;
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
-                if (bInlined) SerializeBuffers(Ar);
+                if (bInlined)
+                {
+                    SerializeBuffers(Ar);
+                    if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                        Ar.Position += 10;
+                }
                 else
                 {
                     var bulkData = new FByteBulkData(Ar);
@@ -64,6 +71,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         SerializeBuffers(tempAr);
                         tempAr.Dispose();
                     }
+                    
                     
                     // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
                     Ar.Position += 8; // DepthOnlyNumTriangles + Packed
@@ -92,7 +100,21 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
-            ColorVertexBuffer = new FColorVertexBuffer(Ar);
+
+            if (Ar.Game == EGame.GAME_BORDERLANDS3)
+            {
+                var numColorStreams = Ar.Read<int>();
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+                for (var i = 0; i < numColorStreams - 1; i++)
+                {
+                    var _ = new FColorVertexBuffer(Ar);
+                }
+            }
+            else
+            {
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            }
+
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
@@ -124,6 +146,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 {
                     new FWeightedRandomSampler(Ar);
                 }
+
                 new FWeightedRandomSampler(Ar);
             }
         }
@@ -135,31 +158,36 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            
+            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                new FColorVertexBuffer(Ar);
+            
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
             {
-                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar); ;
+                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
 
             DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
                 ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_AdjacencyData))
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_RayTracingResources))
+            if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
                 Ar.ReadBulkArray(Ar.ReadByte);
 
             for (var i = 0; i < Sections.Length; i++)
             {
                 new FWeightedRandomSampler(Ar);
             }
+
             new FWeightedRandomSampler(Ar);
         }
     }
@@ -175,13 +203,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("MaxDeviation");
             writer.WriteValue(value.MaxDeviation);
-            
+
             writer.WritePropertyName("PositionVertexBuffer");
             serializer.Serialize(writer, value.PositionVertexBuffer);
-            
+
             writer.WritePropertyName("VertexBuffer");
             serializer.Serialize(writer, value.VertexBuffer);
-            
+
             writer.WritePropertyName("ColorVertexBuffer");
             serializer.Serialize(writer, value.ColorVertexBuffer);
 

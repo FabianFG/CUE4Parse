@@ -25,13 +25,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             TwoSided = GetOrDefault<bool>(nameof(TwoSided));
             bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
-            CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
-            if (CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
-                ReferencedTextures.AddRange(referencedTextures);
-            if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
-                ReferencedTextures.AddRange(referencedTextures);
             BlendMode = GetOrDefault<EBlendMode>(nameof(EBlendMode));
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
+            
+            // 4.25+
+            if (Ar.Ver >= UE4Version.VER_UE4_25)
+            {
+                CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
+                if (CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
+                    ReferencedTextures.AddRange(referencedTextures);
+
+                if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
+                    ReferencedTextures.AddRange(referencedTextures);
+            }
 
             if (Ar.Game >= EGame.GAME_UE4_0)
             {

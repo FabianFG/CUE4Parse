@@ -6,9 +6,9 @@ namespace CUE4Parse_Conversion.Textures
     {
         [Description("PNG")]
         Png,
-        [Description("TGA")]
+        [Description("TGA (Not Implemented)")]
         Tga,
-        [Description("DDS")]
+        [Description("DDS (Not Implemented)")]
         Dds
     }
 }

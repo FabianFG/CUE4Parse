@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -6,8 +7,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     {
         private const int _NUM_INFLUENCES = 4;
         
-        public CSkelMeshLod[] LODs;
+        public CSkelMeshLod?[] LODs;
         public CSkelMeshBone[] RefSkeleton;
+        public FBox BoundingBox;
+        public FSphere BoundingShere;
         
         public CSkeletalMesh()
         {
@@ -19,7 +22,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         {
             foreach (var levelOfDetail in LODs)
             {
-                levelOfDetail.BuildNormals();
+                levelOfDetail?.BuildNormals();
             }
             
             // SortBones();

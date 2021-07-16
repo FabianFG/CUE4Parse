@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse_Conversion.Meshes.PSK;
@@ -16,7 +17,13 @@ namespace CUE4Parse_Conversion.Meshes
         public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh)
         {
             convertedMesh = new CStaticMesh();
-            if (originalMesh.RenderData == null) return false;
+            if (originalMesh.RenderData == null)
+                return false;
+
+            convertedMesh.BoundingShere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
+            convertedMesh.BoundingBox = new FBox(
+                originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
+                originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
             
             var numLods = originalMesh.RenderData.LODs.Length;
             convertedMesh.LODs = new CStaticMeshLod[numLods];
@@ -92,12 +99,20 @@ namespace CUE4Parse_Conversion.Meshes
         {
             convertedMesh = new CSkeletalMesh();
             if (originalMesh.LODModels == null) return false;
+            
+            convertedMesh.BoundingShere = new FSphere(0f, 0f, 0f, originalMesh.ImportedBounds.SphereRadius / 2);
+            convertedMesh.BoundingBox = new FBox(
+                originalMesh.ImportedBounds.Origin - originalMesh.ImportedBounds.BoxExtent,
+                originalMesh.ImportedBounds.Origin + originalMesh.ImportedBounds.BoxExtent);
 
             var numLods = originalMesh.LODModels.Length;
             convertedMesh.LODs = new CSkelMeshLod[numLods];
             for (var i = 0; i < convertedMesh.LODs.Length; i++)
             {
-                if (originalMesh.LODModels[i] is not { } srcLod) continue;
+                if (originalMesh.LODModels[i] is not
+                {
+                    Indices: not null
+                } srcLod) continue;
                 
                 if (srcLod.Indices.Indices16.Length == 0 && srcLod.Indices.Indices32.Length == 0)
                 {
@@ -268,7 +283,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             // new UE3 version - binormal is not serialized and restored in vertex shader
 
-            if (normal[1].Data != 0)
+            if (normal[1] is not null && normal[1].Data != 0)
             {
                 throw new NotImplementedException();
             }

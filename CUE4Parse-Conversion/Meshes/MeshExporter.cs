@@ -331,6 +331,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             var b = false;
             savedFileName = _meshName.SubstringAfterLast('/');
+            if (_meshLods.Length == 0) return b;
 
             var outText = "LOD ";
             for (var i = 0; i < _meshLods.Length; i++)

@@ -1,8 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO
 {
@@ -22,13 +22,22 @@ namespace CUE4Parse.UE4.IO
 
         public IoGlobalData(IoStoreReader globalReader)
         {
-            var nameHashesChunk = globalReader.ChunkIndex(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNameHashes));
-            var nameCount = (int) (globalReader.TocResource.ChunkOffsetLengths[nameHashesChunk].Length / sizeof(ulong) - 1);
-            
-            var nameAr = new FByteArchive("LoaderGlobalNames", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNames)));
-            GlobalNameMap = FNameEntrySerialized.LoadNameBatch(nameAr, nameCount);
-            
-            var metaAr = new FByteArchive("LoaderInitialLoadMeta", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderInitialLoadMeta)));
+            FByteArchive metaAr;
+            if (globalReader.Game >= EGame.GAME_UE5_0)
+            {
+                metaAr = new FByteArchive("ScriptObjects", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType5.ScriptObjects)));
+                GlobalNameMap = FNameEntrySerialized.LoadNameBatch(metaAr);
+            }
+            else // UE4.26+
+            {
+                var nameHashesChunk = globalReader.ChunkIndex(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNameHashes));
+                var nameCount = (int) (globalReader.TocResource.ChunkOffsetLengths[nameHashesChunk].Length / sizeof(ulong) - 1);
+
+                var nameAr = new FByteArchive("LoaderGlobalNames", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNames)));
+                GlobalNameMap = FNameEntrySerialized.LoadNameBatch(nameAr, nameCount);
+
+                metaAr = new FByteArchive("LoaderInitialLoadMeta", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderInitialLoadMeta)));
+            }
 
             var numObjects = metaAr.Read<int>();
             var scriptObjects = metaAr.ReadArray<FScriptObjectEntry>(numObjects);

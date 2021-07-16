@@ -16,6 +16,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_8 = GameUtils.GameUe4Base + 8 << 4,
         GAME_UE4_9 = GameUtils.GameUe4Base + 9 << 4,
         GAME_UE4_10 = GameUtils.GameUe4Base + 10 << 4,
+            GAME_SEAOFTHIEVES = GAME_UE4_10 + 1,
         GAME_UE4_11 = GameUtils.GameUe4Base + 11 << 4,
         GAME_UE4_12 = GameUtils.GameUe4Base + 12 << 4,
         GAME_UE4_13 = GameUtils.GameUe4Base + 13 << 4,
@@ -33,17 +34,27 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_23 = GameUtils.GameUe4Base + 23 << 4,
         GAME_UE4_24 = GameUtils.GameUe4Base + 24 << 4,
         GAME_UE4_25 = GameUtils.GameUe4Base + 25 << 4,
+            GAME_ROGUECOMPANY = GAME_UE4_25 + 1,
             GAME_VALORANT = GAME_UE4_25 + 2,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
         
         GAME_UE4_LAST,
-        GAME_UE4_LATEST = GAME_UE4_LAST - 1
+        GAME_UE4_LATEST = GAME_UE4_LAST - 1,
+
+        // TODO Figure out the enum name for UE5 Early Access
+        // The commit https://github.com/EpicGames/UnrealEngine/commit/cf116088ae6b65c1701eee99288e43c7310d6bb1#diff-6178e9d97c98e321fc3f53770109ea7f6a8ea7a86cac542717a81922f2f93613R723
+        // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess
+        GAME_UE5_0 = GameUtils.GameUe5Base + 0 << 4, 
+
+        GAME_UE5_LAST,
+        GAME_UE5_LATEST = GAME_UE5_LAST - 1
     }
     
     public static class GameUtils
     {
         public const int GameUe4Base = 0x1000000;
+        public const int GameUe5Base = 0x2000000;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GAME_UE4(int x)

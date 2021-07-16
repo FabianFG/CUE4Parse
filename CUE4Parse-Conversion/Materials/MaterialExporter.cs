@@ -14,8 +14,8 @@ namespace CUE4Parse_Conversion.Materials
     {
         private readonly string _internalFilePath;
         private readonly string _fileData;
-        private readonly IDictionary<string, SKImage?> _textures;
         private readonly MaterialExporter? _parentData;
+        private readonly IDictionary<string, SKImage?> _textures;
 
         public MaterialExporter()
         {
