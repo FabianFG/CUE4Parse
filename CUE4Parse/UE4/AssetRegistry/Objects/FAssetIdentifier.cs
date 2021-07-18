@@ -1,13 +1,18 @@
 ﻿using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
     public class FAssetIdentifier
     {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public readonly FName PackageName;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public readonly FName PrimaryAssetType;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public readonly FName ObjectName;
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public readonly FName ValueName;
 
         public FAssetIdentifier(FAssetRegistryArchive Ar)
