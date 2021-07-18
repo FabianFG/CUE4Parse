@@ -14,9 +14,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         private const int MAX_STATIC_LODS_UE4 = 8;
 
         public readonly FStaticMeshLODResources[] LODs;
-        public readonly FNaniteResources NaniteResources;
+        public readonly FNaniteResources? NaniteResources;
         public readonly FBoxSphereBounds Bounds;
-        public readonly bool? LODsShareStaticLighting;
+        public readonly bool bLODsShareStaticLighting;
         public readonly float[]? ScreenSize;
 
         public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
@@ -24,9 +24,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!bCooked) return;
 
             // TODO Read minMobileLODIdx only when platform is desktop and CVar r.StaticMesh.KeepMobileMinLODSettingOnDesktop is nonzero
-            var minMobileLODIdx = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<int>() : 0;
+            if (Ar.Game >= EGame.GAME_UE4_27)
+            {
+                var minMobileLODIdx = Ar.Read<int>();
+            }
+
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
-            var numInlinedLODs = Ar.Game >= EGame.GAME_UE4_23 ? Ar.ReadByte() : -1;
+            if (Ar.Game >= EGame.GAME_UE4_23)
+            {
+                var numInlinedLODs = Ar.Read<byte>();
+            }
 
             if (Ar.Game >= EGame.GAME_UE5_0)
             {
@@ -70,7 +77,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             Bounds = Ar.Read<FBoxSphereBounds>();
 
             if (Ar.Game != EGame.GAME_UE4_15)
-                LODsShareStaticLighting = Ar.ReadBoolean();
+                bLODsShareStaticLighting = Ar.ReadBoolean();
 
             if (Ar.Game < EGame.GAME_UE4_14)
                 Ar.Position += 4; // bReducedBySimplygon
@@ -130,17 +137,20 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("LODs");
             serializer.Serialize(writer, value.LODs);
 
+            if (value.NaniteResources != null)
+            {
+                writer.WritePropertyName("NaniteResources");
+                serializer.Serialize(writer, value.NaniteResources);
+            }
+
             writer.WritePropertyName("Bounds");
             serializer.Serialize(writer, value.Bounds);
 
-            writer.WritePropertyName("LODsShareStaticLighting");
-            writer.WriteValue(value.LODsShareStaticLighting);
+            writer.WritePropertyName("bLODsShareStaticLighting");
+            writer.WriteValue(value.bLODsShareStaticLighting);
 
             writer.WritePropertyName("ScreenSize");
             serializer.Serialize(writer, value.ScreenSize);
-
-            writer.WritePropertyName("NaniteResources");
-            serializer.Serialize(writer, value.NaniteResources);
             
             writer.WriteEndObject();
         }
