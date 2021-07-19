@@ -202,7 +202,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             }
         }
 
-        private static void DeserializeInlineShaderMaps(FAssetArchive Ar, List<FMaterialResource> loadedMaterialResources)
+        private static void DeserializeInlineShaderMaps(FAssetArchive Ar, List<FMaterialResource> loadedResources)
         {
             var numLoadedResources = Ar.Read<int>();
             if (numLoadedResources > 0)
@@ -212,7 +212,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 {
                     var loadedResource = new FMaterialResource();
                     loadedResource.DeserializeInlineShaderMap(resourceAr);
-                    loadedMaterialResources.Add(loadedResource);
+                    loadedResources.Add(loadedResource);
                 }
             }
         }
