@@ -185,7 +185,13 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
-                < EGame.GAME_UE4_26 => Type.ChaosSolverPropertiesMoved,
+                < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded, // Not sure whether there where earlier ones but I can't find them
+                < EGame.GAME_UE4_21 => Type.CachedMaterialQualityNodeUsage,
+                < EGame.GAME_UE4_22 => Type.FoliageLazyObjPtrToSoftObjPtr,
+                < EGame.GAME_UE4_23 => Type.FortHUDElementNowRequiresTag,
+                < EGame.GAME_UE4_24 => Type.SupportVirtualBoneInRetargeting,
+                < EGame.GAME_UE4_26 => Type.AnimLayerGuidConformation,
+                < EGame.GAME_UE4_27 => Type.ChaosSolverPropertiesMoved,
                 _ => Type.LatestVersion
             };
         }

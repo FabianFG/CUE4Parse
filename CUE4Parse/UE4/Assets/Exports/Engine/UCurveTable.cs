@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine
@@ -17,7 +18,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             base.Deserialize(Ar, validPos);
 
             var numRows = Ar.Read<int>();
-            CurveTableMode = Ar.Read<ECurveTableMode>();
+
+            var bUpgradingCurveTable = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ShrinkCurveTableSize;
+            if (bUpgradingCurveTable)
+                CurveTableMode = numRows > 0 ? ECurveTableMode.RichCurves : ECurveTableMode.Empty;
+            else
+                CurveTableMode = Ar.Read<ECurveTableMode>();
             RowMap = new Dictionary<FName, FStructFallback>(numRows);
             for (var i = 0; i < numRows; i++)
             {
