@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 var is32bit = Ar.ReadBoolean();
                 var data = Ar.ReadBulkArray<byte>();
-                var tempAr = new FByteArchive("IndicesReader", data, Ar.Game, Ar.Ver);
+                var tempAr = new FByteArchive("IndicesReader", data, Ar.Versions);
 
                 if (Ar.Game >= EGame.GAME_UE4_25)
                 {

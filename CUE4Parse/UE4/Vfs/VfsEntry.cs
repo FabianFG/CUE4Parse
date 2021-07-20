@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Vfs
 
         public long Offset { get; protected set; }
         
-        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size, vfs.Game, vfs.Ver)
+        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size, vfs.Versions)
         {
             Vfs = vfs;
         }
@@ -19,15 +19,10 @@ namespace CUE4Parse.UE4.Vfs
             Vfs = vfs;
         }
 
-        public override UE4Version Ver
+        public override VersionContainer Versions
         {
-            get => Vfs.Ver;
-            protected set => Vfs.Ver = value;
-        }
-        public override EGame Game
-        {
-            get => Vfs.Game;
-            protected set => Vfs.Game = value;
+            get => Vfs.Versions;
+            protected set => Vfs.Versions = value;
         }
     }
 }

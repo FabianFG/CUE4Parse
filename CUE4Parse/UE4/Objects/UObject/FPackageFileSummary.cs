@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -36,7 +37,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly LegacyUE3Version LegacyUE3Version;
         public readonly EUnrealEngineObjectUE4Version FileVersionUE4;
         public readonly EUnrealEngineObjectLicenseeUE4Version FileVersionLicenseUE4;
-        public readonly FCustomVersion[] CustomContainerVersion;
+        public readonly FCustomVersion[] CustomVersionContainer;
         public int TotalHeaderSize;
         public readonly string FolderName;
         public EPackageFlags PackageFlags;
@@ -73,7 +74,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FPackageFileSummary()
         {
-            CustomContainerVersion = Array.Empty<FCustomVersion>();
+            CustomVersionContainer = Array.Empty<FCustomVersion>();
             FolderName = string.Empty;
             Generations = Array.Empty<FGenerationInfo>();
             CompressedChunks = Array.Empty<FCompressedChunk>();
@@ -139,11 +140,16 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 if (LegacyFileVersion <= -2)
                 {
-                    CustomContainerVersion = Ar.ReadArray<FCustomVersion>();
+                    CustomVersionContainer = Ar.ReadArray<FCustomVersion>();
                 }
                 else
                 {
-                    CustomContainerVersion = Array.Empty<FCustomVersion>();
+                    CustomVersionContainer = Array.Empty<FCustomVersion>();
+                }
+
+                if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Length > 0)
+                {
+                    Ar.Versions.CustomVersions = CustomVersionContainer.ToList();
                 }
 
                 if (FileVersionUE4 == 0 && FileVersionLicenseUE4 == 0)

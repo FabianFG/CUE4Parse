@@ -17,21 +17,18 @@ namespace CUE4Parse.FileProvider
         private readonly SearchOption _searchOption;
         private readonly List<DirectoryInfo> _extraDirectories;
 
-        public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new DirectoryInfo(directory), searchOption, isCaseInsensitive, game, ver)
-        {
-        }
+        public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : this(new DirectoryInfo(directory), searchOption, isCaseInsensitive, versions) { }
 
-        public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
+        public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : base(isCaseInsensitive, versions)
         {
             _workingDirectory = directory;
             _searchOption = searchOption;
         }
 
-        public DefaultFileProvider(DirectoryInfo mainDirectory, List<DirectoryInfo> extraDirectories, SearchOption searchOption, bool isCaseInsensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
+        public DefaultFileProvider(DirectoryInfo mainDirectory, List<DirectoryInfo> extraDirectories, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : base(isCaseInsensitive, versions)
         {
             _workingDirectory = mainDirectory;
             _extraDirectories = extraDirectories;
@@ -67,7 +64,7 @@ namespace CUE4Parse.FileProvider
                 {
                     try
                     {
-                        var reader = new PakFileReader(file, Game, Ver) {IsConcurrent = true};
+                        var reader = new PakFileReader(file, Versions) {IsConcurrent = true};
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                         {
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -84,7 +81,7 @@ namespace CUE4Parse.FileProvider
                 {
                     try
                     {
-                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Game, Ver) {IsConcurrent = true};
+                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) {IsConcurrent = true};
                         if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                         {
                             _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -102,7 +99,7 @@ namespace CUE4Parse.FileProvider
                     // Register local file only if it has a known extension, we don't need every file
                     if (!GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
-                    var osFile = new OsGameFile(_workingDirectory, file, Game, Ver);
+                    var osFile = new OsGameFile(_workingDirectory, file, Versions);
                     if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
                     else osFiles[osFile.Path] = osFile;
                 }

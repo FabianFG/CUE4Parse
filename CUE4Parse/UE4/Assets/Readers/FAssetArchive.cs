@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Readers
@@ -22,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         public int AbsoluteOffset;
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Game, owner.Summary != null && owner.Summary.FileVersionUE4 != 0 ? (UE4Version) owner.Summary.FileVersionUE4 : baseArchive.Ver)
+        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Versions)
         {
             _baseArchive = baseArchive;
             Owner = owner;

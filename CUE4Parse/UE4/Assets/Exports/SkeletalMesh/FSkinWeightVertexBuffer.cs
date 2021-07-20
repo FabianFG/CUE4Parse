@@ -99,7 +99,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 // Convert influence data
                 if (newData.Length > 0)
                 {
-                    using var tempAr = new FByteArchive("WeightsReader", newData, Ar.Game, Ar.Ver);
+                    using var tempAr = new FByteArchive("WeightsReader", newData, Ar.Versions);
                     Weights = new FSkinWeightInfo[numVertices];
                     for (var i = 0; i < Weights.Length; i++)
                     {

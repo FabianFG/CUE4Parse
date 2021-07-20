@@ -9,8 +9,7 @@ namespace CUE4Parse.UE4.Readers
     {
         private readonly Stream _baseStream;
 
-        public FStreamArchive(string name, Stream baseStream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : base(game, ver)
+        public FStreamArchive(string name, Stream baseStream, VersionContainer? versions = null) : base(versions)
         {
             _baseStream = baseStream;
             Name = name;
@@ -73,9 +72,9 @@ namespace CUE4Parse.UE4.Readers
         {
             return _baseStream switch
             {
-                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Game, Ver) {Position = Position},
-                FileStream fileStream => new FStreamArchive(Name, File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Game, Ver) {Position = Position},
-                _ => new FStreamArchive(Name, _baseStream, Game, Ver) {Position = Position}
+                ICloneable cloneable => new FStreamArchive(Name, (Stream) cloneable.Clone(), Versions) {Position = Position},
+                FileStream fileStream => new FStreamArchive(Name, File.Open(fileStream.Name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Versions) {Position = Position},
+                _ => new FStreamArchive(Name, _baseStream, Versions) {Position = Position}
             };
         }
     }

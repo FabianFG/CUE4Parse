@@ -202,13 +202,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     var bulk = new FByteBulkData(Ar);
                     if (bulk.Header.ElementCount > 0)
                     {
-                        using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Game, Ar.Ver), Ar.Owner, Ar.AbsoluteOffset))
+                        using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Versions), Ar.Owner, Ar.AbsoluteOffset))
                         {
                             SerializeStreamedData(tempAr, bHasVertexColors);
                         }
 
                         var skipBytes = 5;
-                        if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                        if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                             skipBytes += 5;
                         skipBytes += 4 * 4 + 2 * 4 + 2 * 4;
                         skipBytes += FSkinWeightVertexBuffer.MetadataSize(Ar);

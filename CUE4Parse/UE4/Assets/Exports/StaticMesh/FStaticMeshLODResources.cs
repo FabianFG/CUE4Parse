@@ -68,15 +68,14 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     var bulkData = new FByteBulkData(Ar);
                     if (bulkData.Header.ElementCount > 0)
                     {
-                        var tempAr = new FAssetArchive(new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Game, Ar.Ver), Ar.Owner);
+                        var tempAr = new FAssetArchive(new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions), Ar.Owner);
                         SerializeBuffers(tempAr);
                         tempAr.Dispose();
                     }
-                    
-                    
+
                     // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
                     Ar.Position += 8; // DepthOnlyNumTriangles + Packed
-                    Ar.Position += 4 * 4 + 2 * 4 + 2 * 4 + 6 * 2 * 4;
+                    Ar.Position += 4 * 4 + 2 * 4 + 2 * 4 + 5 * 2 * 4;
                                 // StaticMeshVertexBuffer = 2x int32, 2x bool
                                 // PositionVertexBuffer = 2x int32
                                 // ColorVertexBuffer = 2x int32
@@ -85,7 +84,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                                 // DepthOnlyIndexBuffer
                                 // ReversedDepthOnlyIndexBuffer
                                 // WireframeIndexBuffer
-                                // AdjacencyIndexBuffer
+                    if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation)
+                    {
+                        Ar.Position += 2 * 4; // AdjacencyIndexBuffer
+                    }
                 }
             }
 
@@ -190,7 +192,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 new FWeightedRandomSampler(Ar);
             }
 
-            var h = new FWeightedRandomSampler(Ar); // AreaWeightedSampler
+            var areaWeightedSampler = new FWeightedRandomSampler(Ar);
         }
     }
 

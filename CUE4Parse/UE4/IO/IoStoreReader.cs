@@ -32,21 +32,16 @@ namespace CUE4Parse.UE4.IO
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
-        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FileInfo(tocPath), readOptions, game, ver) {}
-        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName),
-                    game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), 
-                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
-                    game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), readOptions) { }
-        public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FStreamArchive(tocPath, tocStream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver),
-                it => new FStreamArchive(it, casStream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver), readOptions) { }
+        public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FileInfo(tocPath), readOptions, versions) {}
+        public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), versions), 
+                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions), readOptions) { }
+        public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FStreamArchive(tocPath, tocStream, versions),
+                it => new FStreamArchive(it, casStream, versions), readOptions) { }
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex)
-            : base(tocStream.Name, tocStream.Game, tocStream.Ver)
+            : base(tocStream.Name, tocStream.Versions)
         {
             Length = tocStream.Length;
             TocResource = new FIoStoreTocResource(tocStream, readOptions);

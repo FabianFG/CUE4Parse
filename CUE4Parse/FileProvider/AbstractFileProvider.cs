@@ -24,8 +24,7 @@ namespace CUE4Parse.FileProvider
     {
         protected static readonly ILogger Log = Serilog.Log.ForContext<IFileProvider>();
 
-        public UE4Version Ver { get; set; }
-        public EGame Game { get; set; }
+        public VersionContainer Versions { get; set; }
         public ITypeMappingsProvider? MappingsContainer { get; set; }
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
@@ -34,14 +33,10 @@ namespace CUE4Parse.FileProvider
         public bool IsCaseInsensitive { get; } // fabian? is this reversed?
         public bool UseLazySerialization { get; set; } = true;
 
-        protected AbstractFileProvider(
-            bool isCaseInsensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST,
-            UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+        protected AbstractFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null)
         {
             IsCaseInsensitive = isCaseInsensitive;
-            Game = game;
-            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
+            Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
         }
 
         private string _gameName;

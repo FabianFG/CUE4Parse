@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Serilog;
 
@@ -26,6 +27,8 @@ namespace CUE4Parse.UE4.Assets
         public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
         {
+            // We clone the version container because it can be modified with package specific versions when reading the summary
+            uasset.Versions = (VersionContainer) uasset.Versions.Clone();
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
 

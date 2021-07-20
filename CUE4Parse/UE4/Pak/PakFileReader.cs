@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Pak
 
         public override bool IsEncrypted => Info.EncryptedIndex;
 
-        public PakFileReader(FArchive Ar) : base(Ar.Name, Ar.Game, Ar.Ver)
+        public PakFileReader(FArchive Ar) : base(Ar.Name, Ar.Versions)
         {
             this.Ar = Ar;
             Length = Ar.Length;
@@ -44,12 +44,12 @@ namespace CUE4Parse.UE4.Pak
             }
         }
 
-        public PakFileReader(string filePath, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FileInfo(filePath), game, ver) {}
-        public PakFileReader(FileInfo file, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game, ver) {}
-        public PakFileReader(string filePath, Stream stream, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : this(new FStreamArchive(filePath, stream, game, ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver)) {}
+        public PakFileReader(string filePath, VersionContainer? versions = null)
+            : this(new FileInfo(filePath), versions) {}
+        public PakFileReader(FileInfo file, VersionContainer? versions = null)
+            : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) {}
+        public PakFileReader(string filePath, Stream stream, VersionContainer? versions = null)
+            : this(new FStreamArchive(filePath, stream, versions)) {}
 
         public override byte[] Extract(VfsEntry entry)
         {
