@@ -9,18 +9,26 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : Stream, ICloneable
     {
-        public UE4Version Ver;
-        public EGame Game;
+        public VersionContainer Versions;
+        public EGame Game
+        {
+            get => Versions.Game;
+            set => Versions.Game = value;
+        }
+        public UE4Version Ver
+        {
+            get => Versions.Ver;
+            set => Versions.Ver = value;
+        }
         public abstract string Name { get; }
         public abstract T Read<T>() where T : struct;
         public abstract unsafe void Serialize(byte* ptr, int length);
         public abstract byte[] ReadBytes(int length);
         public abstract T[] ReadArray<T>(int length) where T : struct;
 
-        protected FArchive(EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
+        protected FArchive(VersionContainer? versions = null)
         {
-            Game = game;
-            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
+            Versions = versions;
         }
 
         public override void Flush() { }

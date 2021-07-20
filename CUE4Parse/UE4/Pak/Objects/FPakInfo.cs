@@ -174,7 +174,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 var buffer = stackalloc byte[(int) maxOffset];
                 Ar.Serialize(buffer, (int) maxOffset);
                 
-                var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Game, Ar.Ver);
+                var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
                 foreach (var offset in _offsetsToTry)
                 {

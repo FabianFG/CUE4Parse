@@ -12,9 +12,8 @@ namespace CUE4Parse.FileProvider
     public class StreamedFileProvider : AbstractVfsFileProvider
     {
         public string LiveGame { get; }
-        
-        public StreamedFileProvider(string liveGame, bool caseSensitive = false,
-            EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(caseSensitive, game, ver)
+
+        public StreamedFileProvider(string liveGame, bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
         {
             LiveGame = liveGame;
         }
@@ -28,7 +27,7 @@ namespace CUE4Parse.FileProvider
             {
                 try
                 {
-                    var reader = new PakFileReader(file, stream[0], Game, Ver) {IsConcurrent = true};
+                    var reader = new PakFileReader(file, stream[0], Versions) {IsConcurrent = true};
                     if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -44,7 +43,7 @@ namespace CUE4Parse.FileProvider
             {
                 try
                 {
-                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Game, Ver) {IsConcurrent = true};
+                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) {IsConcurrent = true};
                     if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;

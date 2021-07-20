@@ -15,18 +15,16 @@ namespace CUE4Parse.FileProvider
         public static readonly string[] Ue4KnownExtensions = { "uasset", "umap", "uexp", "ubulk", "uptnl" };
 
         protected GameFile() { }
-        protected GameFile(string path, long size, EGame game, UE4Version ver)
+        protected GameFile(string path, long size, VersionContainer versions)
         {
             Path = path;
             Size = size;
-            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
-            Game = game;
+            Versions = versions;
         }
 
         public abstract bool IsEncrypted { get; }
         public abstract CompressionMethod CompressionMethod { get; }
-        public virtual UE4Version Ver { get; protected set; }
-        public virtual EGame Game { get; protected set; }
+        public virtual VersionContainer Versions { get; protected set; }
         public string Path { get; protected set; }
         public long Size { get; protected set; }
 

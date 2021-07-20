@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Vfs
         public abstract bool IsEncrypted { get; }
         public int EncryptedFileCount { get; protected set; }
         
-        protected AbstractAesVfsReader(string path, EGame game, UE4Version ver) : base(path, game, ver)
+        protected AbstractAesVfsReader(string path, VersionContainer versions) : base(path, versions)
         {
         }
 

@@ -23,15 +23,23 @@ namespace CUE4Parse.UE4.Vfs
         public bool IsConcurrent { get; set; } = false;
         public bool IsMounted { get; } = false;
 
-        public UE4Version Ver { get; set; }
-        public EGame Game { get; set; }
+        public VersionContainer Versions { get; set; }
+        public EGame Game
+        {
+            get => Versions.Game;
+            set => Versions.Game = value;
+        }
+        public UE4Version Ver
+        {
+            get => Versions.Ver;
+            set => Versions.Ver = value;
+        }
 
-        protected AbstractVfsReader(string path, EGame game, UE4Version ver)
+        protected AbstractVfsReader(string path, VersionContainer versions)
         {
             Path = path;
             Name = path.Replace('\\', '/').SubstringAfterLast('/');
-            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
-            Game = game;
+            Versions = versions;
             Files = new Dictionary<string, GameFile>();
         }
 

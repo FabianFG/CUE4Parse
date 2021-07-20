@@ -12,13 +12,10 @@ namespace CUE4Parse.FileProvider
     public interface IFileProvider
     {
         /// <summary>
-        /// The UE4Version that should be used during parsing operations
+        /// The version container that should be used during parsing operations
+        /// You can specify the game, serialization version, and custom versions here
         /// </summary>
-        public UE4Version Ver { get; set; }
-        /// <summary>
-        /// The Game that should be used during parsing operations
-        /// </summary>
-        public EGame Game { get; set; }
+        public VersionContainer Versions { get; set; }
 
         /// <summary>
         /// Type Mappings that should be used for unversioned property serialization

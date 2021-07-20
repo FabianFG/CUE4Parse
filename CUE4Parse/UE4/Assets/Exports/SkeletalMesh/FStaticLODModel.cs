@@ -202,7 +202,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     var bulk = new FByteBulkData(Ar);
                     if (bulk.Header.ElementCount > 0)
                     {
-                        using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Game, Ar.Ver), Ar.Owner, Ar.AbsoluteOffset))
+                        using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Versions), Ar.Owner, Ar.AbsoluteOffset))
                         {
                             SerializeStreamedData(tempAr, bHasVertexColors);
                         }

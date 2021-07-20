@@ -7,12 +7,12 @@ namespace CUE4Parse.UE4.Objects.Core.Serialization
     /// Structure to hold unique custom key with its version.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FCustomVersion
+    public struct FCustomVersion
     {
         /** Unique custom key. */
-        public readonly FGuid Key;
+        public FGuid Key;
         /** Custom version */
-        public readonly int Version;
+        public int Version;
 
         public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
     }

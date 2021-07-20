@@ -9,8 +9,7 @@ namespace CUE4Parse.UE4.Readers
     {
         private readonly unsafe byte* _ptr;
 
-        public unsafe FPointerArchive(string name, byte* ptr, long length, EGame game = EGame.GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME)
-            : base(game, ver)
+        public unsafe FPointerArchive(string name, byte* ptr, long length, VersionContainer? versions = null) : base(versions)
         {
             _ptr = ptr;
             Name = name;
@@ -89,7 +88,7 @@ namespace CUE4Parse.UE4.Readers
         {
             unsafe
             {
-                return new FPointerArchive(Name, _ptr, Length, Game, Ver) {Position = Position};
+                return new FPointerArchive(Name, _ptr, Length, Versions) {Position = Position};
             }
         }
     }

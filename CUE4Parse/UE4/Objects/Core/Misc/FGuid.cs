@@ -48,15 +48,11 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public FGuid(string hexString)
         {
-            var bytes = hexString.ParseHexBinary(); 
-            A = BitConverter.ToUInt32(bytes, 0);
-            B = BitConverter.ToUInt32(bytes, 4);
-            C = BitConverter.ToUInt32(bytes, 8);
-            D = BitConverter.ToUInt32(bytes, 12);
+            A = Convert.ToUInt32(hexString.Substring(0, 8), 16);
+            B = Convert.ToUInt32(hexString.Substring(8, 8), 16);
+            C = Convert.ToUInt32(hexString.Substring(16, 8), 16);
+            D = Convert.ToUInt32(hexString.Substring(24, 8), 16);
         }
-
-        public unsafe string HexString => UnsafePrint.BytesToHex(
-            (byte*) Unsafe.AsPointer(ref this), 16);
 
         public bool IsValid() => (A | B | C | D) != 0;
 

@@ -10,21 +10,22 @@ namespace CUE4Parse.UE4.Vfs
     {
         public string Path { get; }
         public string Name { get; }
-        
+
         public IReadOnlyDictionary<string, GameFile> Files { get; }
         public int FileCount { get; }
-        
+
         public bool HasDirectoryIndex { get; }
         public string MountPoint { get; }
         public bool IsConcurrent { get; set; }
         public bool IsMounted { get; }
 
-        public UE4Version Ver { get; set; }
+        public VersionContainer Versions { get; set; }
         public EGame Game { get; set; }
-        
+        public UE4Version Ver { get; set; }
+
         public IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
         public void MountTo(FileProviderDictionary files, bool caseInsensitive);
-        
+
         public abstract byte[] Extract(VfsEntry entry);
     }
 }

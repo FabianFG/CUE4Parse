@@ -189,7 +189,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // will be released from memory as it is a local variable here.
             // Note: copying is not byte-order wise, so if there will be any problems in the future,
             // should use byte swap functions.
-            using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Game, Ar.Ver))
+            using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Versions))
             {
                 CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
                 CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);
@@ -257,7 +257,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 // will be released from memory as it is a local variable here.
                 // Note: copying is not byte-order wise, so if there will be any problems in the future,
                 // should use byte swap functions.
-                using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Game, Ar.Ver))
+                using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Versions))
                 {
                     CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
                     CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);

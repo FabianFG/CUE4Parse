@@ -37,8 +37,7 @@ namespace CUE4Parse.FileProvider.Vfs
         
         public IoGlobalData? GlobalData { get; private set; }
 
-        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, EGame game = EGame.GAME_UE4_LATEST,
-            UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME) : base(isCaseInsensitive, game, ver)
+        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }
