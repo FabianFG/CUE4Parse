@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             else
             {
                 // UE4.19+ uses 32-bit index buffer (for editor data)
-                Indices = new FMultisizeIndexContainer {Indices32 = Ar.ReadBulkArray(Ar.Read<uint>)};
+                Indices = new FMultisizeIndexContainer {Indices32 = Ar.ReadBulkArray<uint>()};
             }
 
             ActiveBoneIndices = Ar.ReadArray<short>();
@@ -303,13 +303,18 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
             }
 
-            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
 
             if (HasClothData())
                 ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
 
             var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
+
+            if (Ar.Game >= EGame.GAME_UE5_0) // Note: This was added in UE4.27, but we're only reading it on UE5 for compatibility with Fortnite
+            {
+                var rayTracingData = Ar.ReadArray<byte>();
+            }
 
             NumVertices = positionVertexBuffer.NumVertices;
             NumTexCoords = staticMeshVertexBuffer.NumTexCoords;

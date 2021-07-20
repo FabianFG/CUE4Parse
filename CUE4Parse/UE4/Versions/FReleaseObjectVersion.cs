@@ -131,6 +131,12 @@ namespace CUE4Parse.UE4.Versions
             // Some sequencer event sections that were copy-pasted left broken links to the director BP
             FixupCopiedEventSections,
 
+            // Serialize the number of bytes written when serializing function arguments
+            RemoteControlSerializeFunctionArgumentsSize,
+
+            // Add loop counters to sequencer's compiled sub-sequence data
+            AddedSubSequenceEntryWarpCounter,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -147,19 +153,22 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_11 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE4_13 => (Type) 1,
-                < EGame.GAME_UE4_14 => (Type) 3,
-                < EGame.GAME_UE4_15 => (Type) 4,
-                < EGame.GAME_UE4_16 => (Type) 7,
-                < EGame.GAME_UE4_17 => (Type) 9,
-                < EGame.GAME_UE4_19 => (Type) 10,
+                < EGame.GAME_UE4_13 => Type.StaticMeshExtendedBoundsFix,
+                < EGame.GAME_UE4_14 => Type.LevelTransArrayConvertedToTArray,
+                < EGame.GAME_UE4_15 => Type.AddComponentNodeTemplateUniqueNames,
+                < EGame.GAME_UE4_16 => Type.SpeedTreeBillboardSectionInfoFixup,
+                < EGame.GAME_UE4_17 => Type.SkyLightRemoveMobileIrradianceMap,
+                < EGame.GAME_UE4_19 => Type.RenameNoTwistToAllowTwistInTwoBoneIK,
                 < EGame.GAME_UE4_20 => Type.AddSkeletalMeshSectionDisable,
-                < EGame.GAME_UE4_21 => (Type) 17,
-                < EGame.GAME_UE4_23 => (Type) 20,
-                < EGame.GAME_UE4_24 => (Type) 23,
-                < EGame.GAME_UE4_25 => (Type) 28,
-                < EGame.GAME_UE4_26 => (Type) 30,
-                _ => (Type) 37
+                < EGame.GAME_UE4_21 => Type.MeshDescriptionNewSerialization,
+                < EGame.GAME_UE4_23 => Type.TrailNodeBlendVariableNameChange,
+                < EGame.GAME_UE4_24 => Type.Unused_SoundClass2DReverbSend,
+                < EGame.GAME_UE4_25 => Type.DeprecateFilmbackSettings,
+                < EGame.GAME_UE4_26 => Type.FFieldPathOwnerSerialization,
+                < EGame.GAME_UE4_27 => Type.StructureDataAddedToConvex,
+                < EGame.GAME_UE5_0 => Type.AddedSubSequenceEntryWarpCounter,
+                EGame.GAME_UE5_0 => Type.FixupCopiedEventSections, // ue5-main, please check again after release
+                _ => Type.LatestVersion
             };
         }
     }

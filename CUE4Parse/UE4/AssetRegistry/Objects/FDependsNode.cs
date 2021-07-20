@@ -3,25 +3,32 @@ using System.Collections;
 using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
+    [JsonConverter(typeof(FDependsNodeConverter))]
     public class FDependsNode
     {
         private const int _packageFlagWidth = 3;
-        private readonly int _packageFlagSetWidth = 1 >> _packageFlagWidth;
+        private const int _packageFlagSetWidth = 1 >> _packageFlagWidth;
         private const int _manageFlagWidth = 1;
-        private readonly int _manageFlagSetWidth = 1 >> _manageFlagWidth;
-        
+        private const int _manageFlagSetWidth = 1 >> _manageFlagWidth;
+
         public FAssetIdentifier Identifier;
         public List<FDependsNode> PackageDependencies;
         public List<FDependsNode> NameDependencies;
         public List<FDependsNode> ManageDependencies;
         public List<FDependsNode> Referencers;
-        public BitArray PackageFlags;
-        public BitArray ManageFlags;
+        public BitArray? PackageFlags;
+        public BitArray? ManageFlags;
 
-        public FDependsNode() { }
+        internal int _index;
+
+        public FDependsNode(int index)
+        {
+            _index = index;
+        }
 
         public void SerializeLoad(FAssetRegistryArchive Ar, Func<int, FDependsNode?> GetNodeFromSerializeIndex)
         {
@@ -118,6 +125,59 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             SerializeNodeArray(numSoftManage, ref ManageDependencies);
             SerializeNodeArray(numHardManage, ref ManageDependencies);
             SerializeNodeArray(numReferencers, ref Referencers);
+        }
+    }
+
+    public class FDependsNodeConverter : JsonConverter<FDependsNode>
+    {
+        public override void WriteJson(JsonWriter writer, FDependsNode value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Identifier");
+            serializer.Serialize(writer, value.Identifier);
+
+            WriteDependsNodeList("PackageDependencies", writer, value.PackageDependencies);
+            WriteDependsNodeList("NameDependencies", writer, value.NameDependencies);
+            WriteDependsNodeList("ManageDependencies", writer, value.ManageDependencies);
+            WriteDependsNodeList("Referencers", writer, value.Referencers);
+
+            if (value.PackageFlags != null)
+            {
+                writer.WritePropertyName("PackageFlags");
+                serializer.Serialize(writer, value.PackageFlags);
+            }
+
+            if (value.ManageFlags != null)
+            {
+                writer.WritePropertyName("ManageFlags");
+                serializer.Serialize(writer, value.ManageFlags);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        /** Custom serializer to avoid circular reference */
+        private static void WriteDependsNodeList(string name, JsonWriter writer, List<FDependsNode> dependsNodeList)
+        {
+            if (dependsNodeList.Count == 0)
+            {
+                return;
+            }
+
+            writer.WritePropertyName(name);
+            writer.WriteStartArray();
+            foreach (var dependsNode in dependsNodeList)
+            {
+                writer.WriteValue(dependsNode._index);
+            }
+            writer.WriteEndArray();
+        }
+
+        public override FDependsNode ReadJson(JsonReader reader, Type objectType, FDependsNode existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

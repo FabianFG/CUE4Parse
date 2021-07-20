@@ -203,7 +203,7 @@ namespace CUE4Parse.FileProvider
                 return true;
             }
 
-            return false;
+            return Files.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file);
         }
 
         public string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);

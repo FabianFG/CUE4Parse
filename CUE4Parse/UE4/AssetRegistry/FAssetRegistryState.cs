@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
@@ -45,7 +44,11 @@ namespace CUE4Parse.UE4.AssetRegistry
             if (version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
                 var localNumDependsNodes = Ar.Read<int>();
-                PreallocatedDependsNodeDataBuffers = Ar.ReadArray(localNumDependsNodes, () => new FDependsNode());
+                PreallocatedDependsNodeDataBuffers = new FDependsNode[localNumDependsNodes];
+                for (int i = 0; i < localNumDependsNodes; i++)
+                {
+                    PreallocatedDependsNodeDataBuffers[i] = new FDependsNode(i);
+                }
                 if (localNumDependsNodes > 0)
                 {
                     LoadDependencies_BeforeFlags(Ar, version);
@@ -56,16 +59,19 @@ namespace CUE4Parse.UE4.AssetRegistry
                 var dependencySectionSize = Ar.Read<long>();
                 var dependencySectionEnd = Ar.Position + dependencySectionSize;
                 var localNumDependsNodes = Ar.Read<int>();
-                PreallocatedDependsNodeDataBuffers = Ar.ReadArray(localNumDependsNodes, () => new FDependsNode());
+                PreallocatedDependsNodeDataBuffers = new FDependsNode[localNumDependsNodes];
+                for (int i = 0; i < localNumDependsNodes; i++)
+                {
+                    PreallocatedDependsNodeDataBuffers[i] = new FDependsNode(i);
+                }
                 if (localNumDependsNodes > 0)
                 {
                     LoadDependencies(Ar);
                 }
-                Ar.Seek(dependencySectionEnd, SeekOrigin.Begin);
+                Ar.Position = dependencySectionEnd;
             }
 
-            var serializeHash = version < FAssetRegistryVersionType.AddedCookedMD5Hash;
-            PreallocatedPackageDataBuffers = Ar.ReadArray(() => new FAssetPackageData(Ar, serializeHash));
+            PreallocatedPackageDataBuffers = Ar.ReadArray(() => new FAssetPackageData(Ar, version));
         }
 
         private void LoadDependencies_BeforeFlags(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)

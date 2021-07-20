@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -17,7 +16,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FStructFallback CachedExpressionData;
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
-        public List<UTexture> ReferencedTextures = new ();
+        public List<UTexture> ReferencedTextures = new();
+        public List<FMaterialResource> LoadedMaterialResources = new();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
             BlendMode = GetOrDefault<EBlendMode>(nameof(EBlendMode));
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
-            
+
             // 4.25+
             if (Ar.Ver >= UE4Version.VER_UE4_25)
             {
@@ -39,12 +39,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     ReferencedTextures.AddRange(referencedTextures);
             }
 
-            if (Ar.Game >= EGame.GAME_UE4_0)
+            // UE4 has complex FMaterialResource format, so avoid reading anything here, but
+            // scan package's imports for UTexture objects instead
+            ScanForTextures(Ar);
+
+            if (Ar.Ver >= (UE4Version) 260) // VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS
             {
-                // UE4 has complex FMaterialResource format, so avoid reading anything here, but
-                // scan package's imports for UTexture objects instead
-                ScanForTextures(Ar);
+#if READ_SHADER_MAPS
+                DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+#else
                 Ar.Position = validPos;
+#endif
             }
         }
 
@@ -69,50 +74,56 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var specPowWeight = 0;
             var opWeight = 0;
             var emWeight = 0;
-            
+
             void Diffuse(bool check, int weight, UTexture tex)
             {
-                if (check && weight > diffWeight) {
+                if (check && weight > diffWeight)
+                {
                     parameters.Diffuse = tex;
                     diffWeight = weight;
                 }
             }
-            
+
             void Normal(bool check, int weight, UTexture tex)
             {
-                if (check && weight > normWeight) {
+                if (check && weight > normWeight)
+                {
                     parameters.Normal = tex;
                     normWeight = weight;
                 }
             }
-            
+
             void Specular(bool check, int weight, UTexture tex)
             {
-                if (check && weight > specWeight) {
+                if (check && weight > specWeight)
+                {
                     parameters.Specular = tex;
                     specWeight = weight;
                 }
             }
-            
+
             void SpecPower(bool check, int weight, UTexture tex)
             {
-                if (check && weight > specPowWeight) {
+                if (check && weight > specPowWeight)
+                {
                     parameters.SpecPower = tex;
                     specPowWeight = weight;
                 }
             }
-            
+
             void Opacity(bool check, int weight, UTexture tex)
             {
-                if (check && weight > opWeight) {
+                if (check && weight > opWeight)
+                {
                     parameters.Opacity = tex;
                     opWeight = weight;
                 }
             }
-            
+
             void Emissive(bool check, int weight, UTexture tex)
             {
-                if (check && weight > emWeight) {
+                if (check && weight > emWeight)
+                {
                     parameters.Emissive = tex;
                     emWeight = weight;
                 }
@@ -122,11 +133,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 var tex = ReferencedTextures[i];
                 if (tex == null) continue;
-                
+
                 var name = tex.Name;
                 if (name.Contains("noise", StringComparison.CurrentCultureIgnoreCase)) continue;
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
-                
+
                 Diffuse(name.Contains("diff", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Normal(name.Contains("norm", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Diffuse(name.EndsWith("_Tex", StringComparison.CurrentCultureIgnoreCase), 80, tex);
@@ -164,9 +175,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Opacity(name.Contains("Opac", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Opacity(name.Contains("Alpha", StringComparison.CurrentCultureIgnoreCase), 100, tex);
 
-                Diffuse(i == 0, 1, tex);    // 1st texture as lowest weight
+                Diffuse(i == 0, 1, tex); // 1st texture as lowest weight
             }
-            
+
             // do not allow normal map became a diffuse
             if (parameters.Diffuse == parameters.Normal && diffWeight < normWeight ||
                 parameters.Diffuse != null && parameters.Diffuse.IsTextureCube)
@@ -179,7 +190,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         {
             if (onlyRendered)
             {
-                base.AppendReferencedTextures(outTextures, onlyRendered);    
+                base.AppendReferencedTextures(outTextures, onlyRendered);
             }
             else
             {
@@ -187,6 +198,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 {
                     if (texture == null) continue;
                     outTextures.Add(texture);
+                }
+            }
+        }
+
+        private static void DeserializeInlineShaderMaps(FAssetArchive Ar, List<FMaterialResource> loadedResources)
+        {
+            var numLoadedResources = Ar.Read<int>();
+            if (numLoadedResources > 0)
+            {
+                var resourceAr = new FMaterialResourceProxyReader(Ar);
+                for (var resourceIndex = 0; resourceIndex < numLoadedResources; ++resourceIndex)
+                {
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.DeserializeInlineShaderMap(resourceAr);
+                    loadedResources.Add(loadedResource);
                 }
             }
         }
