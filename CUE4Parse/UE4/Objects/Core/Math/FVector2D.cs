@@ -14,6 +14,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Y = y;
         }
 
-        public override string ToString() => $"X={X:###.###} Y={Y:###.###}";
+        public override string ToString() => $"X={X,3:F3} Y={Y,3:F3}";
     }
 }

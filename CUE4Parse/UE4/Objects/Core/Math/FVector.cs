@@ -240,7 +240,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <returns>true if normalized, false otherwise.</returns>
         public bool IsNormalized() => System.Math.Abs(1f - SizeSquared()) < ThreshVectorNormalized;
 
-        public override string ToString() => $"X={X:###.###} Y={Y:###.###} Z={Z:###.###}";
+        public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3}";
 
         /// <summary>
         /// Calculate the cross product of two vectors.
