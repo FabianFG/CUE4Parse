@@ -1,7 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
         public readonly FName[] LinkedBones;
         public readonly byte MaxLOD;
 
-        public FCurveMetaData(FAssetArchive Ar, FAnimPhysObjectVersion.Type FrwAniVer)
+        public FCurveMetaData(FArchive Ar, FAnimPhysObjectVersion.Type FrwAniVer)
         {
             Type = new FAnimCurveType(Ar);
             LinkedBones = Ar.ReadArray(Ar.Read<int>(), () => Ar.ReadFName());

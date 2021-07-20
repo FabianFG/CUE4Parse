@@ -12,7 +12,6 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         public FNameEntrySerialized[] NameMap;
 
         public abstract void SerializeTagsAndBundles(FAssetData assetData);
-        public abstract FName ReadFName();
 
         public FAssetRegistryArchive(FArchive Ar)
         {

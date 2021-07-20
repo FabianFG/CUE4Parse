@@ -1,5 +1,5 @@
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
 {
@@ -177,7 +177,7 @@ namespace CUE4Parse.UE4.Versions
         public static readonly FGuid GUID = new(0x601D1886, 0xAC644F84, 0xAA16D3DE, 0x0DEAC7D6);
         
         // TODO: Complete this
-        public static Type Get(FAssetArchive Ar)
+        public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
             if (ver >= 0)

@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         /** Area weighted sampler for the whole mesh at this LOD.*/
         public readonly FSkeletalMeshAreaWeightedTriangleSampler AreaWeightedTriangleSampler;
 
-        public FSkeletalMeshSamplingLODBuiltData(FAssetArchive Ar)
+        public FSkeletalMeshSamplingLODBuiltData(FArchive Ar)
         {
             AreaWeightedTriangleSampler = new FSkeletalMeshAreaWeightedTriangleSampler(Ar);
         }
@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         //public readonly int[] TriangleIndices;
         //public readonly int LODIndex;
 
-        public FSkeletalMeshAreaWeightedTriangleSampler(FAssetArchive Ar) : base(Ar) { }
+        public FSkeletalMeshAreaWeightedTriangleSampler(FArchive Ar) : base(Ar) { }
     }
 
     public class FWeightedRandomSampler : IUClass
@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public readonly int[] Alias;
         public readonly float TotalWeight;
 
-        public FWeightedRandomSampler(FAssetArchive Ar)
+        public FWeightedRandomSampler(FArchive Ar)
         {
             Prob = Ar.ReadArray<float>();
             Alias = Ar.ReadArray<int>();

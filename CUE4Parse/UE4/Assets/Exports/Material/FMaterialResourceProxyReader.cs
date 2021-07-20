@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FName ReadFName()
+        public override FName ReadFName()
         {
             var nameIndex = baseArchive.Read<int>();
             var number = baseArchive.Read<int>();

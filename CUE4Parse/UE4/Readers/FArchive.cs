@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -261,6 +262,9 @@ namespace CUE4Parse.UE4.Readers
                 return new string((sbyte*) ansiBytes, 0, length - 1);
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual FName ReadFName() => new(ReadFString());
 
         public abstract object Clone();
     }

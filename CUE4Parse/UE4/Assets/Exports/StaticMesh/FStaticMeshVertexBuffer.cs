@@ -1,9 +1,9 @@
+using System;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using System;
-using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public readonly bool UseHighPrecisionTangentBasis;
         public readonly FStaticMeshUVItem[] UV;  // TangentsData ?
 
-        public FStaticMeshVertexBuffer(FAssetArchive Ar)
+        public FStaticMeshVertexBuffer(FArchive Ar)
         {
             var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 

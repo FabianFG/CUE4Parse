@@ -1,11 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using System;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -68,7 +68,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     var bulkData = new FByteBulkData(Ar);
                     if (bulkData.Header.ElementCount > 0)
                     {
-                        var tempAr = new FAssetArchive(new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions), Ar.Owner);
+                        var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
                         SerializeBuffers(tempAr);
                         tempAr.Dispose();
                     }
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
         }
 
-        public void SerializeBuffers(FAssetArchive Ar)
+        public void SerializeBuffers(FArchive Ar)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
