@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
     public class FRuntimeSkinWeightProfileData
     {
-        public readonly Dictionary<uint, uint> VertexIndexOverrideIndex;
+        public readonly Dictionary<uint, uint> VertexIndexToInfluenceOffset;
         public readonly FSkinWeightOverrideInfo[] OverridesInfo;
         public readonly ushort[] Weights;
         public readonly byte[] BoneIDs;
@@ -30,10 +30,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             
             var length = Ar.Read<int>();
-            VertexIndexOverrideIndex = new Dictionary<uint, uint>();
+            VertexIndexToInfluenceOffset = new Dictionary<uint, uint>();
             for (var i = 0; i < length; i++)
             {
-                VertexIndexOverrideIndex[Ar.Read<uint>()] = Ar.Read<uint>();
+                VertexIndexToInfluenceOffset[Ar.Read<uint>()] = Ar.Read<uint>();
             }
         }
     }

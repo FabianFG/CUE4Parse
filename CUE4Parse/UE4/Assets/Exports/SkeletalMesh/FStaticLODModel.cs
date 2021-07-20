@@ -208,7 +208,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         }
 
                         var skipBytes = 5;
-                        if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                        if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                             skipBytes += 5;
                         skipBytes += 4 * 4 + 2 * 4 + 2 * 4;
                         skipBytes += FSkinWeightVertexBuffer.MetadataSize(Ar);
