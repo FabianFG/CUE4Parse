@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -27,6 +28,7 @@ namespace CUE4Parse.UE4.Assets
         private static void RegisterEngine()
         {
             RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here??? Yes
+            RegisterClass(typeof(UAnimBlueprintGeneratedClass));
             RegisterClass(typeof(UAnimSequence));
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
