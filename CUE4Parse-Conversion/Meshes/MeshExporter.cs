@@ -33,7 +33,7 @@ namespace CUE4Parse_Conversion.Meshes
             _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
             for (var i = 0; i < _meshLods.Length; i++)
             {
-                if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
+                if (convertedMesh.LODs[i].Sections.Value.Length <= 0 || convertedMesh.LODs[i].Indices.Value == null)
                 {
                     Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
                     continue;
@@ -59,7 +59,7 @@ namespace CUE4Parse_Conversion.Meshes
             _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
             for (var i = 0; i < _meshLods.Length; i++)
             {
-                if (convertedMesh.LODs[i].Sections.Value.Length <= 0)
+                if (convertedMesh.LODs[i].Sections.Value.Length <= 0 || convertedMesh.LODs[i].Indices.Value == null)
                 {
                     Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
                     continue;
