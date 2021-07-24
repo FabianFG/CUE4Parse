@@ -3,7 +3,7 @@
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructLayout(LayoutKind.Sequential, Size = 16)]
-    public struct FPlane
+    public struct FPlane : IUStruct
     {
         public FVector Vector;
 

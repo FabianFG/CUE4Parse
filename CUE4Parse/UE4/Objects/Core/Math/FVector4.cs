@@ -30,6 +30,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FVector4(FLinearColor color) : this(color.R, color.G, color.B, color.A) { }
 
-        public override string ToString() => $"X={X:###.###} Y={Y:###.###} Z={Z:###.###} W={W:###.###}";
+        public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3} W={W,3:F3}";
     }
 }

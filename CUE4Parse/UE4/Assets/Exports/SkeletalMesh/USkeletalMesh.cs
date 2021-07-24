@@ -54,8 +54,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         LODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
                     }
 
-                    var numInlinedLODs = Ar.Read<byte>();
-                    var numNonOptionalLODs = Ar.Read<byte>();
+                    if (Ar.Game >= EGame.GAME_UE4_24)
+                    {
+                        var numInlinedLODs = Ar.Read<byte>();
+                        var numNonOptionalLODs = Ar.Read<byte>();
+                    }
                 }
             }
 

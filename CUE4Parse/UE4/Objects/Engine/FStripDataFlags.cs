@@ -1,5 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public readonly byte GlobalStripFlags;
         public readonly byte ClassStripFlags;
 
-        public FStripDataFlags(FAssetArchive Ar, int minVersion = 130)
+        public FStripDataFlags(FArchive Ar, int minVersion = 130)
         {
             if ((int)Ar.Ver >= minVersion)
             {

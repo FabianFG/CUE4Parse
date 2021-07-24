@@ -1,10 +1,10 @@
 ﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 		public readonly Dictionary<ushort, FName> UidMap;
 		public readonly Dictionary<FName, FCurveMetaData> CurveMetaDataMap;
 
-		public FSmartNameMapping(FAssetArchive Ar)
+		public FSmartNameMapping(FArchive Ar)
         {
             var frwObjVer = FFrameworkObjectVersion.Get(Ar);
             var frwAniVer = FAnimPhysObjectVersion.Get(Ar);

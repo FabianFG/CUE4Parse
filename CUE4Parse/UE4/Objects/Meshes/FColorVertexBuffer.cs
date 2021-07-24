@@ -1,7 +1,7 @@
 ﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
         public readonly int Stride;
         public readonly int NumVertices;
 
-        public FColorVertexBuffer(FAssetArchive Ar)
+        public FColorVertexBuffer(FArchive Ar)
         {
             var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 

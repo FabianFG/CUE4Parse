@@ -1,5 +1,4 @@
 ﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -12,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public readonly FSkinWeightInfo[] Weights;
 
-        public FSkinWeightVertexBuffer(FAssetArchive Ar, bool numSkelCondition)
+        public FSkinWeightVertexBuffer(FArchive Ar, bool numSkelCondition)
         {
             var bNewWeightFormat = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences;
 
@@ -109,7 +108,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
 
-        public static int MetadataSize(FAssetArchive Ar)
+        public static int MetadataSize(FArchive Ar)
         {
             var numBytes = 0;
             var bNewWeightFormat = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences;

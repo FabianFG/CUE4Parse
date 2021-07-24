@@ -202,7 +202,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     var bulk = new FByteBulkData(Ar);
                     if (bulk.Header.ElementCount > 0)
                     {
-                        using (var tempAr = new FAssetArchive(new FByteArchive("LodReader", bulk.Data, Ar.Versions), Ar.Owner, Ar.AbsoluteOffset))
+                        using (var tempAr = new FByteArchive("LodReader", bulk.Data, Ar.Versions))
                         {
                             SerializeStreamedData(tempAr, bHasVertexColors);
                         }
@@ -284,9 +284,14 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     };
                 }
             }
+
+            if (Ar.Game >= EGame.GAME_UE4_23)
+            {
+                var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
+            }
         }
 
-        private void SerializeStreamedData(FAssetArchive Ar, bool bHasVertexColors)
+        private void SerializeStreamedData(FArchive Ar, bool bHasVertexColors)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
