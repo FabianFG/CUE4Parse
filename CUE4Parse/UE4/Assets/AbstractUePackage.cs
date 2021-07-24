@@ -193,10 +193,10 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UObject Load(IFileProvider provider) => Object.Value;
+        public UObject Load() => Object.Value;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(IFileProvider provider, out UObject export)
+        public bool TryLoad(out UObject export)
         {
             try
             {
@@ -211,10 +211,10 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UObject> LoadAsync(IFileProvider provider) => await Task.FromResult(Object.Value);
+        public async Task<UObject> LoadAsync() => await Task.FromResult(Object.Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UObject?> TryLoadAsync(IFileProvider provider)
+        public async Task<UObject?> TryLoadAsync()
         {
             try
             {

@@ -66,7 +66,7 @@ namespace CUE4Parse.UE4.Assets.Readers
                     return null;
                 }
 
-                if (!resolved.TryLoad(Owner.Provider, out var obj))
+                if (!resolved.TryLoad(out var obj))
                 {
                     Log.Warning("Failed to load object {Obj}", resolved.Name);
                     return null;
