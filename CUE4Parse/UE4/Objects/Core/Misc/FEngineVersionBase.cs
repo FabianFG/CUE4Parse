@@ -1,45 +1,55 @@
-﻿using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
-    [StructLayout(LayoutKind.Sequential)]
+    /** Enum for the components of a version string. */
+    public enum EVersionComponent {
+        /** Major version increments introduce breaking API changes. */
+        Major,
+        /** Minor version increments add additional functionality without breaking existing APIs. */
+        Minor,
+        /** Patch version increments fix existing functionality without changing the API. */
+        Patch,
+        /** The pre-release field adds additional versioning through a series of comparable dotted strings or numbers. */
+        Changelist,
+        Branch
+    }
+
     public class FEngineVersionBase
     {
         /** Major version number. */
-        public readonly ushort Major;
+        public ushort Major;
 
         /** Minor version number. */
-        public readonly ushort Minor;
+        public ushort Minor;
 
         /** Patch version number. */
-        public readonly ushort Patch;
+        public ushort Patch;
 
         /** Changelist number. This is used to arbitrate when Major/Minor/Patch version numbers match. */
-        private readonly uint _changeList;
-
-        public uint ChangeList => _changeList & 0x7fffffffu; // Mask to ignore licensee bit
+        public uint Changelist => _changelist & 0x7fffffffu; // Mask to ignore licensee bit
+        protected uint _changelist;
 
         public FEngineVersionBase(FArchive Ar)
         {
             Major = Ar.Read<ushort>();
             Minor = Ar.Read<ushort>();
             Patch = Ar.Read<ushort>();
-            _changeList = Ar.Read<uint>();
+            _changelist = Ar.Read<uint>();
         }
 
-        public FEngineVersionBase(ushort major, ushort minor, ushort patch, uint changeList)
+        public FEngineVersionBase(ushort major, ushort minor, ushort patch, uint changelist)
         {
             Major = major;
             Minor = minor;
             Patch = patch;
-            _changeList = changeList;
+            _changelist = changelist;
         }
 
         /** Checks if the changelist number represents licensee changelist number. */
         public bool IsLicenseeVersion()
         {
-            return (ChangeList & 0x80000000u) != 0u;
+            return (_changelist & 0x80000000u) != 0u;
         }
 
         /** Returns whether the current version is empty. */
@@ -49,18 +59,15 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         }
 
         /** Returns whether the engine version has a changelist component. */
-        public bool HasChangeList()
+        public bool HasChangelist()
         {
-            return ChangeList != 0;
+            return Changelist != 0;
         }
 
         /** Encodes a licensee changelist number (by setting the top bit) */
-        public static uint encodeLicenseeChangeList(uint changeList)
+        public static uint EncodeLicenseeChangeList(uint changelist)
         {
-            return changeList | 0x80000000u;
+            return changelist | 0x80000000u;
         }
-
-        public override string ToString() =>
-            $"{nameof(Major)}: {Major}, {nameof(Minor)}: {Minor}, {nameof(Patch)}: {Patch}, {nameof(ChangeList)}: {ChangeList}";
     }
 }

@@ -32,19 +32,19 @@ namespace CUE4Parse.UE4.Assets
             var uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
 
-            uassetAr.Seek(Summary.NameOffset, SeekOrigin.Begin);
+            uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];
             uassetAr.ReadArray(NameMap, () => new FNameEntrySerialized(uassetAr));
 
-            uassetAr.Seek(Summary.ImportOffset, SeekOrigin.Begin);
+            uassetAr.SeekAbsolute(Summary.ImportOffset, SeekOrigin.Begin);
             ImportMap = new FObjectImport[Summary.ImportCount];
             uassetAr.ReadArray(ImportMap, () => new FObjectImport(uassetAr));
 
-            uassetAr.Seek(Summary.ExportOffset, SeekOrigin.Begin);
+            uassetAr.SeekAbsolute(Summary.ExportOffset, SeekOrigin.Begin);
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
-            FAssetArchive uexpAr = uexp == null ? uassetAr : new FAssetArchive(uexp, this, Summary.TotalHeaderSize); // allows embedded uexp data
+            FAssetArchive uexpAr = uexp != null ? new FAssetArchive(uexp, this, (int) uassetAr.Length) : uassetAr; // allows embedded uexp data
 
             if (ubulk != null)
             {

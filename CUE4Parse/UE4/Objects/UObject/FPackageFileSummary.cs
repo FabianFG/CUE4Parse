@@ -7,6 +7,9 @@ using CUE4Parse.UE4.Versions;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Readers;
+using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
+using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -31,6 +34,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         private const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         private const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
+        private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
 
         public readonly uint Tag;
         public readonly int LegacyFileVersion;
@@ -82,13 +86,26 @@ namespace CUE4Parse.UE4.Objects.UObject
             ChunkIds = Array.Empty<int>();
         }
 
-        internal FPackageFileSummary(FArchive Ar)
+        internal FPackageFileSummary(FAssetArchive Ar)
         {
             Tag = Ar.Read<uint>();
 
+            if (Tag == PACKAGE_FILE_TAG_ONE) // SOD2, "one"
+            {
+                Ar.Game = EGame.GAME_SOD2;
+                Ar.Ver = Ar.Game.GetVersion();
+                var legacyFileVersion = Ar.Read<int>(); // seems to be always int.MinValue
+                bUnversioned = true;
+                FileVersionUE4 = (EUnrealEngineObjectUE4Version) Ar.Ver;
+                CustomVersionContainer = Array.Empty<FCustomVersion>();
+                FolderName = "None";
+                PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
+                goto afterPackageFlags;
+            }
+
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {
-                throw new ParserException($"Invalid uasset magic: {Tag} != {PACKAGE_FILE_TAG}");
+                throw new ParserException($"Invalid uasset magic: 0x{Tag:X8} != 0x{PACKAGE_FILE_TAG:X8}");
             }
 
             // The package has been stored in a separate endianness than the linker expected so we need to force
@@ -126,26 +143,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                     throw new ParserException("Can't load legacy UE3 file");
                 }
 
-                if (LegacyFileVersion != -4)
-                {
-                    LegacyUE3Version = Ar.Read<LegacyUE3Version>();
-                }
-                else
-                {
-                    LegacyUE3Version = 0;
-                }
-
+                LegacyUE3Version = LegacyFileVersion != -4 ? Ar.Read<LegacyUE3Version>() : 0;
                 FileVersionUE4 = Ar.Read<EUnrealEngineObjectUE4Version>();
                 FileVersionLicenseUE4 = Ar.Read<EUnrealEngineObjectLicenseeUE4Version>();
-
-                if (LegacyFileVersion <= -2)
-                {
-                    CustomVersionContainer = Ar.ReadArray<FCustomVersion>();
-                }
-                else
-                {
-                    CustomVersionContainer = Array.Empty<FCustomVersion>();
-                }
+                CustomVersionContainer = LegacyFileVersion <= -2 ? Ar.ReadArray<FCustomVersion>() : Array.Empty<FCustomVersion>();
 
                 if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Length > 0)
                 {
@@ -179,26 +180,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             TotalHeaderSize = Ar.Read<int>();
             FolderName = Ar.ReadFString();
             PackageFlags = Ar.Read<EPackageFlags>();
+
+            afterPackageFlags:
             NameCount = Ar.Read<int>();
             NameOffset = Ar.Read<int>();
 
-            if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly)) // IsFilterEditorOnly
-            {
-                if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID)
-                {
-                    LocalizationId = Ar.ReadFString();
-                }
-                else
-                {
-                    LocalizationId = null;
-                }
-            }
-            else
-            {
-                LocalizationId = null;
-            }
+            LocalizationId = !PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly) && FileVersionUE4 >= VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID ? Ar.ReadFString() : null;
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_SERIALIZE_TEXT_IN_PACKAGES)
+            if (FileVersionUE4 >= VER_UE4_SERIALIZE_TEXT_IN_PACKAGES)
             {
                 GatherableTextDataCount = Ar.Read<int>();
                 GatherableTextDataOffset = Ar.Read<int>();
@@ -214,7 +203,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ImportOffset = Ar.Read<int>();
             DependsOffset = Ar.Read<int>();
 
-            if (FileVersionUE4 is < EUnrealEngineObjectUE4Version.VER_UE4_OLDEST_LOADABLE_PACKAGE or > EUnrealEngineObjectUE4Version.VER_UE4_AUTOMATIC_VERSION)
+            if (FileVersionUE4 is < VER_UE4_OLDEST_LOADABLE_PACKAGE or > VER_UE4_AUTOMATIC_VERSION)
             {
                 SoftPackageReferencesCount = 0;
                 SoftPackageReferencesOffset = 0;
@@ -224,7 +213,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Generations = Array.Empty<FGenerationInfo>();
                 SavedByEngineVersion = default;
                 CompatibleWithEngineVersion = default;
-                CompressionFlags = ECompressionFlags.COMPRESS_None;
+                CompressionFlags = COMPRESS_None;
                 PackageSource = 0;
                 AssetRegistryDataOffset = 0;
                 WorldTileInfoDataOffset = 0;
@@ -236,7 +225,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return; // we can't safely load more than this because the below was different in older files.
             }
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP)
+            if (FileVersionUE4 >= VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP)
             {
                 SoftPackageReferencesCount = Ar.Read<int>();
                 SoftPackageReferencesOffset = Ar.Read<int>();
@@ -246,15 +235,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SoftPackageReferencesCount = SoftPackageReferencesOffset = 0;
             }
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SEARCHABLE_NAMES)
-            {
-                SearchableNamesOffset = Ar.Read<int>();
-            }
-            else
-            {
-                SearchableNamesOffset = 0;
-            }
-
+            SearchableNamesOffset = FileVersionUE4 >= VER_UE4_ADDED_SEARCHABLE_NAMES ? Ar.Read<int>() : 0;
             ThumbnailTableOffset = Ar.Read<int>();
 
             if (Ar.Game == EGame.GAME_VALORANT) Ar.Position += 8;
@@ -263,44 +244,31 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             Generations = Ar.ReadArray<FGenerationInfo>();
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_ENGINE_VERSION_OBJECT)
+            if (FileVersionUE4 >= VER_UE4_ENGINE_VERSION_OBJECT)
             {
-                var savedByEngineVersion = new FEngineVersion(Ar);
+                SavedByEngineVersion = new FEngineVersion(Ar);
 
-                if (FileVersionUE4 < EUnrealEngineObjectUE4Version.VER_UE4_CORRECT_LICENSEE_FLAG
-                    && savedByEngineVersion.Major == 4
-                    && savedByEngineVersion.Minor == 26
-                    && savedByEngineVersion.Patch == 0
-                    && savedByEngineVersion.ChangeList >= 12740027
-                    && savedByEngineVersion.IsLicenseeVersion())
+                if (FileVersionUE4 < VER_UE4_CORRECT_LICENSEE_FLAG
+                    && SavedByEngineVersion.Major == 4
+                    && SavedByEngineVersion.Minor == 26
+                    && SavedByEngineVersion.Patch == 0
+                    && SavedByEngineVersion.Changelist >= 12740027
+                    && SavedByEngineVersion.IsLicenseeVersion())
                 {
-                    // void Set(uint16 InMajor, uint16 InMinor, uint16 InPatch, uint32 InChangelist, const FString &InBranch);
-                    //Version.Set(4, 26, 0, Version.GetChangelist(), Version.GetBranch());
-                    SavedByEngineVersion = new FEngineVersion(4, 26, 0, savedByEngineVersion.ChangeList, savedByEngineVersion.Branch);
-                }
-                else
-                {
-                    SavedByEngineVersion = savedByEngineVersion;
+                    SavedByEngineVersion.Set(4, 26, 0, SavedByEngineVersion.Changelist, SavedByEngineVersion.Branch);
                 }
             }
             else
             {
-                var EngineChangelist = Ar.Read<int>();
-                SavedByEngineVersion = EngineChangelist == 0 ? null : new FEngineVersion(4, 0, 0, (uint)EngineChangelist, string.Empty);
+                var engineChangelist = Ar.Read<int>();
+                SavedByEngineVersion = engineChangelist == 0 ? null : new FEngineVersion(4, 0, 0, (uint) engineChangelist, string.Empty);
             }
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION)
-            {
-                CompatibleWithEngineVersion = new FEngineVersion(Ar);
-            }
-            else
-            {
-                CompatibleWithEngineVersion = SavedByEngineVersion;
-            }
+            CompatibleWithEngineVersion = FileVersionUE4 >= VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION ? new FEngineVersion(Ar) : SavedByEngineVersion;
 
             static bool VerifyCompressionFlagsValid(int InCompressionFlags)
             {
-                const int CompressionFlagsMask = (int)(ECompressionFlags.COMPRESS_DeprecatedFormatFlagsMask | ECompressionFlags.COMPRESS_OptionsFlagsMask);
+                const int CompressionFlagsMask = (int) (COMPRESS_DeprecatedFormatFlagsMask | COMPRESS_OptionsFlagsMask);
 
                 return (InCompressionFlags & ~CompressionFlagsMask) == 0;
 
@@ -309,9 +277,9 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             CompressionFlags = Ar.Read<ECompressionFlags>();
 
-            if (!VerifyCompressionFlagsValid((int)CompressionFlags))
+            if (!VerifyCompressionFlagsValid((int) CompressionFlags))
             {
-                throw new ParserException($"Incompatible compression flags ({(uint)CompressionFlags})");
+                throw new ParserException($"Incompatible compression flags ({(uint) CompressionFlags})");
             }
 
             CompressedChunks = Ar.ReadArray<FCompressedChunk>();
@@ -343,38 +311,29 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 Ar.Position += 6; // no idea what's going on here.
             }
-            
+
             if (Ar.Ver >= UE4Version.VER_UE4_SUMMARY_HAS_BULKDATA_OFFSET)
             {
                 BulkDataStartOffset = (int) Ar.Read<long>();
             }
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_WORLD_LEVEL_INFO)
-            {
-                WorldTileInfoDataOffset = Ar.Read<int>();
-            }
-            else
-            {
-                WorldTileInfoDataOffset = 0;
-            }
+            WorldTileInfoDataOffset = FileVersionUE4 >= VER_UE4_WORLD_LEVEL_INFO ? Ar.Read<int>() : 0;
 
             switch (FileVersionUE4)
             {
-                case >= EUnrealEngineObjectUE4Version.VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS:
+                case >= VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS:
                     ChunkIds = Ar.ReadArray<int>();
                     break;
-                case >= EUnrealEngineObjectUE4Version.VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE:
-                    {
-                        var ChunkID = Ar.Read<int>();
-                        ChunkIds = ChunkID < 0 ? Array.Empty<int>() : new[] { ChunkID };
-                        break;
-                    }
+                case >= VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE:
+                    var chunkId = Ar.Read<int>();
+                    ChunkIds = chunkId < 0 ? Array.Empty<int>() : new[] { chunkId };
+                    break;
                 default:
                     ChunkIds = Array.Empty<int>();
                     break;
             }
 
-            if (FileVersionUE4 >= EUnrealEngineObjectUE4Version.VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
+            if (FileVersionUE4 >= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
             {
                 PreloadDependencyCount = Ar.Read<int>();
                 PreloadDependencyOffset = Ar.Read<int>();
@@ -383,6 +342,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 PreloadDependencyCount = -1;
                 PreloadDependencyOffset = 0;
+            }
+
+            if (Tag == PACKAGE_FILE_TAG_ONE)
+            {
+                Ar.AbsoluteOffset = NameOffset - (int) Ar.Position;
             }
         }
     }
