@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
 
-        public string Name => ResolvedObject?.Name.Text ?? string.Empty;
+        public string Name => ResolvedObject?.Name.Text ?? "None";
 
         public FPackageIndex(FAssetArchive Ar, int index)
         {

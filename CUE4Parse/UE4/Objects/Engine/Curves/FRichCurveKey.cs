@@ -60,8 +60,8 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
         public readonly ERichCurveInterpMode InterpMode;
 		public readonly ERichCurveTangentMode TangentMode;
 		public readonly ERichCurveTangentWeightMode TangentWeightMode;
-		public readonly float KeyTime;
-		public readonly float KeyValue;
+		public readonly float Time;
+		public readonly float Value;
 		public readonly float ArriveTangent;
 		public readonly float ArriveTangentWeight;
 		public readonly float LeaveTangent;

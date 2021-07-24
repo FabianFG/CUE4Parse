@@ -137,10 +137,10 @@ namespace CUE4Parse.MappingsProvider
                     if (inner != null) InnerType = new PropertyType(inner);
                     break;
                 case FByteProperty b:
-                    ApplyEnum(prop, b.Enum.Load<UEnum>());
+                    ApplyEnum(prop, b.Enum);
                     break;
                 case FEnumProperty e:
-                    ApplyEnum(prop, e.Enum.Load<UEnum>());
+                    ApplyEnum(prop, e.Enum);
                     break;
                 case FMapProperty map:
                     var key = map.KeyProp;
@@ -153,28 +153,17 @@ namespace CUE4Parse.MappingsProvider
                     if (element != null) InnerType = new PropertyType(element);
                     break;
                 case FStructProperty struc:
-                {
-                    var structClass = struc.Struct.Load<UStruct>();
-                    if (structClass != null)
-                    {
-                        Struct = structClass;
-                        StructType = structClass.Name;
-                    }
-
+                    Struct = struc.Struct.Load<UStruct>();
+                    StructType = struc.Struct.ResolvedObject?.Name.Text;
                     break;
-                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ApplyEnum(FProperty prop, UEnum? enumClass)
+        private void ApplyEnum(FProperty prop, FPackageIndex enumIndex)
         {
-            if (enumClass != null)
-            {
-                Enum = enumClass;
-                EnumName = enumClass.Name;
-            }
-
+            Enum = enumIndex.Load<UEnum>();
+            EnumName = enumIndex.ResolvedObject?.Name.Text;
             InnerType = prop.ElementSize switch
             {
                 4 => new PropertyType("IntProperty"),
