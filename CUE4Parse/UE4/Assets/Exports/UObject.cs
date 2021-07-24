@@ -320,6 +320,12 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             
         }
+        
+        /** Called right after calling all OnRep notifies (called even when there are no notifies) */
+        public virtual void PostRepNotifies()
+        {
+            
+        }
 
         /** Called right before being marked for destruction due to network replication */
         public virtual void PreDestroyFromReplication()
