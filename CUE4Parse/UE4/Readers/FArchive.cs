@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -265,6 +266,11 @@ namespace CUE4Parse.UE4.Readers
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual FName ReadFName() => new(ReadFString());
+
+        public virtual UObject ReadUObject()
+        {
+            throw new InvalidOperationException("Generic FArchive can't read UObject's");
+        }
 
         public abstract object Clone();
     }
