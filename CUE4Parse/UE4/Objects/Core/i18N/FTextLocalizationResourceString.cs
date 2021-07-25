@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
 {
-    public class FTextLocalizationResourceString : IUClass
+    public class FTextLocalizationResourceString : IUStruct
     {
         public readonly string String;
         public int RefCount;

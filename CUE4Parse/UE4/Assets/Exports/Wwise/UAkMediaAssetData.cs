@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise
             IsStreamed = GetOrDefault<bool>(nameof(IsStreamed));
             UseDeviceMemory = GetOrDefault<bool>(nameof(UseDeviceMemory));
 
-            DataChunks = Ar.ReadArray(Ar.Read<int>(), () => new FAkMediaDataChunk(Ar));
+            DataChunks = Ar.ReadArray(() => new FAkMediaDataChunk(Ar));
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

@@ -1,11 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using Serilog;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 var stripDataFlags = Ar.Read<FStripDataFlags>();
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
-                    ExistingMarkerNames = Ar.ReadArray(Ar.Read<int>(), Ar.ReadFName);
+                    ExistingMarkerNames = Ar.ReadArray(Ar.ReadFName);
                 }
             }
         }

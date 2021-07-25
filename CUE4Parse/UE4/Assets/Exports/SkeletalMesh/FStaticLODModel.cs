@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
             if (Ar.Game == EGame.GAME_SEAOFTHIEVES) Ar.Position += 4;
 
-            Sections = Ar.ReadArray(Ar.Read<int>(), () => new FSkelMeshSection(Ar));
+            Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar));
 
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {

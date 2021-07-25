@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public FSkeletalMeshAreaWeightedTriangleSampler(FArchive Ar) : base(Ar) { }
     }
 
-    public class FWeightedRandomSampler : IUClass
+    public class FWeightedRandomSampler : IUStruct
     {
         public readonly float[] Prob;
         public readonly int[] Alias;

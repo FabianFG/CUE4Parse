@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
 {
-    public class FEntry : IUClass
+    public class FEntry : IUStruct
     {
         public string LocalizedString;
         public readonly string LocResName;

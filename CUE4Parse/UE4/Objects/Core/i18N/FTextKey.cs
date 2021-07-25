@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
 {
-    public class FTextKey : IUClass
+    public class FTextKey : IUStruct
     {
         public readonly string Str;
         public readonly uint StrHash;

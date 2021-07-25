@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N
@@ -101,7 +101,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
     }
 
     [JsonConverter(typeof(FTextConverter))]
-    public class FText : IUClass
+    public class FText : IUStruct
     {
         public readonly uint Flags;
         public readonly ETextHistoryType HistoryType;
@@ -161,7 +161,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         }
     }
 
-    public abstract class FTextHistory : IUClass
+    public abstract class FTextHistory : IUStruct
     {
         [JsonIgnore] public abstract string Text { get; }
 
@@ -388,7 +388,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         }
     }
 
-    public class FFormatArgumentValue : IUClass
+    public class FFormatArgumentValue : IUStruct
     {
         public EFormatArgumentType Type;
         public object Value;
@@ -408,7 +408,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         }
     }
 
-    public class FFormatArgumentData : IUClass
+    public class FFormatArgumentData : IUStruct
     {
         public string ArgumentName;
         public FFormatArgumentValue ArgumentValue;
@@ -420,7 +420,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         }
     }
 
-    public class FNumberFormattingOptions : IUClass
+    public class FNumberFormattingOptions : IUStruct
     {
         private const int _DBL_DIG = 15;
         private const int _DBL_MAX_10_EXP = 308;

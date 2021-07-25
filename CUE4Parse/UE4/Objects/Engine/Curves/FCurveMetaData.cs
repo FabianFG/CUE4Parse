@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
         public FCurveMetaData(FArchive Ar, FAnimPhysObjectVersion.Type FrwAniVer)
         {
             Type = new FAnimCurveType(Ar);
-            LinkedBones = Ar.ReadArray(Ar.Read<int>(), () => Ar.ReadFName());
+            LinkedBones = Ar.ReadArray(() => Ar.ReadFName());
             if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
             {
                 MaxLOD = Ar.Read<byte>();

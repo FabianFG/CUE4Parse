@@ -39,7 +39,7 @@ namespace CUE4Parse.UE4.Wwise
                             throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
                         
                         Ar.Position += 16;
-                        Folders = Ar.ReadArray(Ar.Read<int>(), () => new AkFolder(Ar));
+                        Folders = Ar.ReadArray(() => new AkFolder(Ar));
                         foreach (var folder in Folders) folder.PopulateName(Ar);
                         foreach (var folder in Folders)
                         {
@@ -64,7 +64,7 @@ namespace CUE4Parse.UE4.Wwise
                         Header = Ar.Read<BankHeader>();
                         break;
                     case ESectionIdentifier.INIT:
-                        Initialization = Ar.ReadArray(Ar.Read<int>(), () =>
+                        Initialization = Ar.ReadArray(() =>
                         {
                             Ar.Position += 4;
                             return Ar.ReadFString();
@@ -84,7 +84,7 @@ namespace CUE4Parse.UE4.Wwise
                         }
                         break;
                     case ESectionIdentifier.HIRC:
-                        Hierarchy = Ar.ReadArray(Ar.Read<int>(), () => new Hierarchy(Ar));
+                        Hierarchy = Ar.ReadArray(() => new Hierarchy(Ar));
                         break;
                     case ESectionIdentifier.RIFF:
                         // read byte[sectionLength] it's simply a wem file

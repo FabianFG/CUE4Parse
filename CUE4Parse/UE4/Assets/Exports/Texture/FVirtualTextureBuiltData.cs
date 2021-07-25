@@ -1,5 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using System;
+﻿using System;
+using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             }
 
             LayerTypes = Ar.ReadArray((int)NumLayers, () => (EPixelFormat)Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
-            Chunks = Ar.ReadArray(Ar.Read<int>(), () => new FVirtualTextureDataChunk(Ar, NumLayers));
+            Chunks = Ar.ReadArray(() => new FVirtualTextureDataChunk(Ar, NumLayers));
         }
     }
 }
