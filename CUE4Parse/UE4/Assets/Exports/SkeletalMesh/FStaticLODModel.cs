@@ -164,7 +164,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
         {
-            if (Ar.Game < EGame.GAME_UE4_24)
+            if (!Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
             {
                 SerializeRenderItem_Legacy(Ar, bHasVertexColors, numVertexColorChannels);
                 return;

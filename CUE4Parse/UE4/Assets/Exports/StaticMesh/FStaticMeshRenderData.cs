@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!bCooked) return;
 
             // TODO Read minMobileLODIdx only when platform is desktop and CVar r.StaticMesh.KeepMobileMinLODSettingOnDesktop is nonzero
-            if (Ar.Game >= EGame.GAME_UE4_27)
+            if (Ar.Versions["StaticMesh.KeepMobileMinLODSettingOnDesktop"])
             {
                 var minMobileLODIdx = Ar.Read<int>();
             }

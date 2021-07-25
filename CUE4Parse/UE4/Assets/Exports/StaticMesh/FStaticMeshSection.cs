@@ -13,10 +13,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public readonly int NumTriangles;
         public readonly int MinVertexIndex;
         public readonly int MaxVertexIndex;
-        public readonly bool EnableCollision;
-        public readonly bool CastShadow;
-        public readonly bool ForceOpaque;
-        public readonly bool VisibleInRayTracing;
+        public readonly bool bEnableCollision;
+        public readonly bool bCastShadow;
+        public readonly bool bForceOpaque;
+        public readonly bool bVisibleInRayTracing;
 
         public FStaticMeshSection(FArchive Ar)
         {
@@ -25,10 +25,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             NumTriangles = Ar.Read<int>();
             MinVertexIndex = Ar.Read<int>();
             MaxVertexIndex = Ar.Read<int>();
-            EnableCollision = Ar.ReadBoolean();
-            CastShadow = Ar.ReadBoolean();
-            ForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
-            VisibleInRayTracing = Ar.Game >= EGame.GAME_UE4_26 && Ar.ReadBoolean();
+            bEnableCollision = Ar.ReadBoolean();
+            bCastShadow = Ar.ReadBoolean();
+            bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
+            bVisibleInRayTracing = Ar.Versions["StaticMesh.HasVisibleInRayTracing"] && Ar.ReadBoolean();
             if (Ar.Game == EGame.GAME_ROGUECOMPANY) Ar.Position += 4;
         }
     }
@@ -54,17 +54,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("MaxVertexIndex");
             writer.WriteValue(value.MaxVertexIndex);
 
-            writer.WritePropertyName("EnableCollision");
-            writer.WriteValue(value.EnableCollision);
+            writer.WritePropertyName("bEnableCollision");
+            writer.WriteValue(value.bEnableCollision);
 
-            writer.WritePropertyName("CastShadow");
-            writer.WriteValue(value.CastShadow);
+            writer.WritePropertyName("bCastShadow");
+            writer.WriteValue(value.bCastShadow);
 
-            writer.WritePropertyName("ForceOpaque");
-            writer.WriteValue(value.ForceOpaque);
+            writer.WritePropertyName("bForceOpaque");
+            writer.WriteValue(value.bForceOpaque);
 
-            writer.WritePropertyName("VisibleInRayTracing");
-            writer.WriteValue(value.VisibleInRayTracing);
+            writer.WritePropertyName("bVisibleInRayTracing");
+            writer.WriteValue(value.bVisibleInRayTracing);
 
             writer.WriteEndObject();
         }

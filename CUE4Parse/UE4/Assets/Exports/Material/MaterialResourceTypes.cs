@@ -22,9 +22,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     // MaterialShader.cpp
     public class FMaterialShaderMap : FShaderMapBase
     {
+        public FMaterialShaderMapId ShaderMapId;
+
         public void Deserialize(FMaterialResourceProxyReader Ar)
         {
-            var shaderMapId = new FMaterialShaderMapId(Ar);
+            ShaderMapId = new FMaterialShaderMapId(Ar);
             base.Deserialize(Ar);
         }
     }
@@ -37,12 +39,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     // Shader.h
     public class FShaderMapBase
     {
-        private const bool GIsHybridUE5 = false;
-
         public void Deserialize(FMaterialResourceProxyReader Ar)
         {
+            var bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
             #region FMemoryImageResult::LoadFromArchive, MemoryImage.cpp
-            if (GIsHybridUE5)
+            if (bUseNewFormat)
             {
                 var layoutParameters = Ar.Read<FPlatformTypeLayoutParameters>();
             }
@@ -50,10 +51,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var frozenSize = Ar.Read<int>();
             var frozenObject = Ar.ReadBytes(frozenSize);
 
-            if (GIsHybridUE5)
+            if (bUseNewFormat)
             {
                 //var bFrozenObjectIsValid = pointerTable.LoadFromArchive(Ar, layoutParameters, frozenObject);
-                FShaderMapPointerTable_LoadFromArchive(Ar);
+                FShaderMapPointerTable_LoadFromArchive(Ar, bUseNewFormat);
             }
 
             var numVTables = Ar.Read<uint>();
@@ -96,13 +97,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             #endregion
 
-            if (!GIsHybridUE5)
+            if (!bUseNewFormat)
             {
-                FShaderMapPointerTable_LoadFromArchive(Ar);
+                FShaderMapPointerTable_LoadFromArchive(Ar, bUseNewFormat);
             }
 
             var bShareCode = Ar.ReadBoolean();
-            if (GIsHybridUE5)
+            if (bUseNewFormat)
             {
                 var shaderPlatform = Ar.Read<byte>();
             }
@@ -118,9 +119,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
 
         // Shader.h
-        private static void FShaderMapPointerTable_LoadFromArchive(FMaterialResourceProxyReader Ar)
+        private static void FShaderMapPointerTable_LoadFromArchive(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
         {
-            if (GIsHybridUE5)
+            if (bUseNewFormat)
             {
                 FPointerTableBase_LoadFromArchive(Ar);
             }
@@ -138,7 +139,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 var vfTypeName = Ar.Read<FHashedName>();
             }
 
-            if (!GIsHybridUE5)
+            if (!bUseNewFormat)
             {
                 FPointerTableBase_LoadFromArchive(Ar);
             }

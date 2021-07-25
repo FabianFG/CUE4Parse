@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
@@ -7,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     {
         public readonly int SizeX;
         public readonly int SizeY;
-        public readonly int NumSlices;        // 1 for simple texture, 6 for cubemap - 6 textures are joined into one
+        public readonly int NumSlices; // 1 for simple texture, 6 for cubemap - 6 textures are joined into one
         public readonly string PixelFormat;
         public readonly int FirstMip;
         public readonly FTexture2DMipMap[] Mips;
@@ -22,10 +21,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
             PixelFormat = Ar.ReadFString();
 
-            FirstMip = Ar.Read<int>();       // only for cooked, but we don't read FTexturePlatformData for non-cooked textures
+            FirstMip = Ar.Read<int>(); // only for cooked, but we don't read FTexturePlatformData for non-cooked textures
             Mips = Ar.ReadArray(() => new FTexture2DMipMap(Ar));
 
-            if (Ar.Game >= EGame.GAME_UE4_23) // bIsVirtual
+            if (Ar.Versions["VirtualTextures"])
             {
                 bIsVirtual = Ar.ReadBoolean();
                 if (bIsVirtual)

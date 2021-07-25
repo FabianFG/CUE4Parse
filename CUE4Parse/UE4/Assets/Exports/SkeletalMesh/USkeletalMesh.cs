@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
 
                 var bCooked = Ar.ReadBoolean();
-                if (Ar.Game >= EGame.GAME_UE4_27)
+                if (Ar.Versions["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"])
                 {
                     var minMobileLODIdx = Ar.Read<int>();
                 }
@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         LODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
                     }
 
-                    if (Ar.Game >= EGame.GAME_UE4_24)
+                    if (Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
                     {
                         var numInlinedLODs = Ar.Read<byte>();
                         var numNonOptionalLODs = Ar.Read<byte>();

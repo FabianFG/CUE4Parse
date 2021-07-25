@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
             MaxDeviation = Ar.Read<float>();
 
-            if (Ar.Game < EGame.GAME_UE4_23)
+            if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
             {
                 if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
                 {
@@ -143,7 +143,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (Ar.Game >= EGame.GAME_UE4_16)
+            if (Ar.Game > EGame.GAME_UE4_16)
             {
                 for (var i = 0; i < Sections.Length; i++)
                 {
@@ -183,13 +183,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (Ar.Game >= EGame.GAME_UE4_25 & !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
-                Ar.ReadBulkArray<byte>();
+            if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
+            {
+                var rayTracingGeometry = Ar.ReadBulkArray<byte>();
+            }
 
             // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
-            for (var i = 0; i < Sections.Length; i++) // AreaWeightedSectionSamplers
+            var areaWeightedSectionSamplers = new FWeightedRandomSampler[Sections.Length];
+            for (var i = 0; i < Sections.Length; i++)
             {
-                new FWeightedRandomSampler(Ar);
+                areaWeightedSectionSamplers[i] = new FWeightedRandomSampler(Ar);
             }
 
             var areaWeightedSampler = new FWeightedRandomSampler(Ar);

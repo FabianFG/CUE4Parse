@@ -27,9 +27,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 var data = Ar.ReadBulkArray<byte>();
                 var tempAr = new FByteArchive("IndicesReader", data, Ar.Versions);
 
-                if (Ar.Game >= EGame.GAME_UE4_25)
+                if (Ar.Versions["RawIndexBuffer.HasShouldExpandTo32Bit"])
                 {
-                    Ar.Position += 4;
+                    var bShouldExpandTo32Bit = Ar.ReadBoolean();
                 }
 
                 if (tempAr.Length == 0)

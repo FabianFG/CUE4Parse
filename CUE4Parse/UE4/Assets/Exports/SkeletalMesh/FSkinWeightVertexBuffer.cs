@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             uint numVertices;
             uint numBones;
 
-            if (Ar.Game < EGame.GAME_UE4_24)
+            if (!Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
             {
                 bExtraBoneInfluences = Ar.ReadBoolean();
                 numVertices = Ar.Read<uint>();
@@ -113,7 +113,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var numBytes = 0;
             var bNewWeightFormat = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences;
 
-            if (Ar.Game < EGame.GAME_UE4_24)
+            if (!Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
             {
                 numBytes = 2 * 4;
             }
