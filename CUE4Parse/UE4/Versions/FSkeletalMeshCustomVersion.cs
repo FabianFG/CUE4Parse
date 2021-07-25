@@ -73,9 +73,9 @@ namespace CUE4Parse.UE4.Versions
             {
                 < EGame.GAME_UE4_13 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_14 => Type.SaveNumVertices,
-                < EGame.GAME_UE4_15 => (Type) 5,
+                < EGame.GAME_UE4_15 => Type.RegenerateClothingShadowFlags,
                 < EGame.GAME_UE4_16 => Type.UseSeparateSkinWeightBuffer,
-                < EGame.GAME_UE4_18 => (Type) 9,
+                < EGame.GAME_UE4_18 => Type.CachedClothInverseMasses,
                 < EGame.GAME_UE4_19 => Type.CompactClothVertexBuffer,
                 < EGame.GAME_UE4_20 => Type.DeprecateSectionDisabledFlag,
                 < EGame.GAME_UE4_23 => Type.SectionIgnoreByReduceAdded,

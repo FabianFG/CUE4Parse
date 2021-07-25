@@ -144,7 +144,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_13 => Type.CustomReflectionCaptureResolutionSupport,
                 < EGame.GAME_UE4_14 => Type.IntroducedMeshDecals,
-                < EGame.GAME_UE4_16 => Type.MotionBlurAndTAASupportInSceneCapture2d, //  4.14 and 4.15
+                < EGame.GAME_UE4_16 => Type.FixedBSPLightmaps, // 4.14 and 4.15
                 < EGame.GAME_UE4_17 => Type.ShaderResourceCodeSharing,
                 < EGame.GAME_UE4_18 => Type.AddedbUseShowOnlyList,
                 < EGame.GAME_UE4_19 => Type.VolumetricLightmaps,

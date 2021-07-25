@@ -48,10 +48,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
             RenderData = new FStaticMeshRenderData(Ar, bCooked);
 
-            if (bCooked & Ar.Game >= EGame.GAME_UE4_20)
+            if (bCooked && Ar.Game >= EGame.GAME_UE4_20)
             {
-                var hasOccluderData = Ar.ReadBoolean();
-                if (hasOccluderData)
+                var bHasOccluderData = Ar.ReadBoolean();
+                if (bHasOccluderData)
                 {
                     Ar.ReadArray<FVector>(); // Vertices
                     Ar.ReadArray<ushort>();  // Indics
@@ -60,8 +60,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game >= EGame.GAME_UE4_14)
             {
-                var hasSpeedTreeWind = Ar.ReadBoolean();
-                if (hasSpeedTreeWind)
+                var bHasSpeedTreeWind = Ar.ReadBoolean();
+                if (bHasSpeedTreeWind)
                 {
                     Ar.Seek(validPos, SeekOrigin.Begin);
                     return;

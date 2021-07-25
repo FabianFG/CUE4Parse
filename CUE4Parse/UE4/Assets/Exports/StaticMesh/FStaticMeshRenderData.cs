@@ -76,11 +76,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             Bounds = Ar.Read<FBoxSphereBounds>();
 
-            if (Ar.Game != EGame.GAME_UE4_15)
+            if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
                 bLODsShareStaticLighting = Ar.ReadBoolean();
 
             if (Ar.Game < EGame.GAME_UE4_14)
-                Ar.Position += 4; // bReducedBySimplygon
+            {
+                var bReducedBySimplygon = Ar.ReadBoolean();
+            }
 
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             {
@@ -92,7 +94,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             for (var i = 0; i < ScreenSize.Length; i++)
             {
                 if (Ar.Game >= EGame.GAME_UE4_20)
-                    Ar.Position += 4; // bFloatCooked
+                {
+                    var bFloatCooked = Ar.ReadBoolean();
+                }
 
                 ScreenSize[i] = Ar.Read<float>();
             }
