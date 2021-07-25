@@ -164,7 +164,9 @@ namespace CUE4Parse.UE4.Versions
         VER_UE4_24 = 518,
         VER_UE4_25 = 518,
         VER_UE4_SKINWEIGHT_PROFILE_DATA_LAYOUT_CHANGES = 519,
-        VER_UE4_26 = 519, //?? todo: review later
+        VER_UE4_NON_OUTER_PACKAGE_IMPORT = 520,
+        VER_UE4_26 = 522,
+        VER_UE4_27 = 523, //?? TODO
         //Add new ones here
         VER_UE4_LAST,
         VER_UE4_LATEST = VER_UE4_LAST - 1
