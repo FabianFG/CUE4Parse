@@ -51,6 +51,34 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public static bool AnyHasNegativeScale(FVector scale3D, FVector otherScale3D) => scale3D.X < 0 || scale3D.Y < 0 || scale3D.Z < 0 || 
             otherScale3D.X < 0 || otherScale3D.Y < 0 || otherScale3D.Z < 0;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyTranslation(ref FTransform other)
+        {
+            Translation = other.Translation;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyRotation(ref FTransform other)
+        {
+            Rotation = other.Rotation;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyScale3D(ref FTransform other)
+        {
+            Scale3D = other.Scale3D;
+        }
+
+        public FTransform Inverse()
+        {
+            var invRotation = Rotation.Inverse();
+            // this used to cause NaN if Scale contained 0 
+            var invScale3D = GetSafeScaleReciprocal(Scale3D);
+            var invTranslation = invRotation * (invScale3D * -Translation);
+
+            return new FTransform(invRotation, invTranslation, invScale3D);
+        }
+
         public FTransform GetRelativeTransform(FTransform other)
         {
             // A * B(-1) = VQS(B)(-1) (VQS (A))
@@ -188,7 +216,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         // also returning BIG_NUMBER causes sequential NaN issues by multiplying 
         // so we hardcode as 0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance)
+        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FVector.SmallNumber)
         {
             var safeReciprocalScale = new FVector();
             if (Math.Abs(scale.X) <= tolerance)
