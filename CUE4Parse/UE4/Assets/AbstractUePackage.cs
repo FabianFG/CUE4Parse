@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Assets
         public abstract FPackageFileSummary Summary { get; }
         public abstract FNameEntrySerialized[] NameMap { get; }
         public abstract Lazy<UObject>[] ExportsLazy { get; }
+        public abstract bool IsFullyLoaded { get; }
 
         public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
         

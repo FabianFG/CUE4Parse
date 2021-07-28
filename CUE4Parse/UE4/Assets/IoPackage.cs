@@ -28,6 +28,7 @@ namespace CUE4Parse.UE4.Assets
 
         public readonly Lazy<IoPackage?[]> ImportedPackages;
         public override Lazy<UObject>[] ExportsLazy { get; }
+        public override bool IsFullyLoaded { get; }
 
         public IoPackage(
             FArchive uasset, IoGlobalData globalData,
@@ -172,6 +173,8 @@ namespace CUE4Parse.UE4.Assets
             }
 
             Summary.BulkDataStartOffset = currentExportDataOffset;
+
+            IsFullyLoaded = true;
         }
 
         public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)

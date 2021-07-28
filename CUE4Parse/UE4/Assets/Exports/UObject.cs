@@ -138,6 +138,35 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
         }
 
+        /**
+         * Traverses the outer chain searching for the next object of a certain type.  (T must be derived from UObject)
+         *
+         * @param	Target class to search for
+         * @return	a pointer to the first object in this object's Outer chain which is of the correct type.
+         */
+        public UObject? GetTypedOuter(Type target)
+        {
+            UObject? result = null;
+            for (var nextOuter = Outer; result == null && nextOuter != null; nextOuter = nextOuter.Outer)
+            {
+                if (target.IsInstanceOfType(nextOuter))
+                {
+                    result = nextOuter;
+                }
+            }
+            return result;
+        }
+
+        /**
+	     * Traverses the outer chain searching for the next object of a certain type.  (T must be derived from UObject)
+	     *
+	     * @return	a pointer to the first object in this object's Outer chain which is of the correct type.
+	     */
+        public T? GetTypedOuter<T>() where T : UObject
+        {
+            return GetTypedOuter(typeof(T)) as T;
+        }
+
         /** 
 	     * Do any object-specific cleanup required immediately after loading an object, 
 	     * and immediately after any undo/redo.

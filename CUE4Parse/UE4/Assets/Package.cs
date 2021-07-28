@@ -23,6 +23,7 @@ namespace CUE4Parse.UE4.Assets
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
+        public override bool IsFullyLoaded { get; } = false;
 
         public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
             : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
@@ -132,6 +133,8 @@ namespace CUE4Parse.UE4.Assets
                     }
                 }
             }
+
+            IsFullyLoaded = true;
         }
 
         public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null,
