@@ -18,58 +18,66 @@ namespace CUE4Parse_Conversion.Meshes
         private const int _PSK_VERSION = 20100422;
         
         private readonly string _meshName;
-        private readonly Mesh[] _meshLods;
+        private readonly List<Mesh> _meshLods;
         
         public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
+            _meshLods = new List<Mesh>();
             _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
-            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
+            
+            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count < 1)
             {
                 Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
-                _meshLods = new Mesh[0];
                 return;
             }
 
-            _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
-            for (var i = 0; i < _meshLods.Length; i++)
+            var i = 0;
+            foreach (var lod in convertedMesh.LODs)
             {
-                if (convertedMesh.LODs[i].Sections.Value.Length <= 0 || convertedMesh.LODs[i].Indices.Value == null)
+                if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
+                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' should be skipped");
                     continue;
                 }
-
+                
                 using var writer = new FCustomArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportStaticMeshLods(convertedMesh.LODs[i], writer, materialExports);
-                _meshLods[i] = new Mesh($"{_meshName}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>());
+                ExportStaticMeshLods(lod, writer, materialExports);
+                
+                _meshLods.Add(new Mesh($"{_meshName}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                if (lodFormat == ELodFormat.FirstLod) break;
+                i++;
             }
         }
 
         public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
+            _meshLods = new List<Mesh>();
             _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
-            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Length <= 0)
+            
+            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count < 1)
             {
                 Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
-                _meshLods = new Mesh[0];
                 return;
             }
             
-            _meshLods = new Mesh[lodFormat == ELodFormat.AllLods ? convertedMesh.LODs.Length : 1];
-            for (var i = 0; i < _meshLods.Length; i++)
+            var i = 0;
+            foreach (var lod in convertedMesh.LODs)
             {
-                if (convertedMesh.LODs[i].Sections.Value.Length <= 0 || convertedMesh.LODs[i].Indices.Value == null)
+                if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' has no section");
+                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' should be skipped");
                     continue;
                 }
                 
                 var usePskx = convertedMesh.LODs[i].NumVerts > 65536;
                 using var writer = new FCustomArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportSkeletalMeshLod(convertedMesh.LODs[i], convertedMesh.RefSkeleton, writer, materialExports);
-                _meshLods[i] = new Mesh($"{_meshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>());
+                ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, writer, materialExports);
+                
+                _meshLods.Add(new Mesh($"{_meshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                if (lodFormat == ELodFormat.FirstLod) break;
+                i++;
             }
         }
 
@@ -99,7 +107,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(writer, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, CSkelMeshBone[] bones, FCustomArchiveWriter writer, List<MaterialExporter>? materialExports)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FCustomArchiveWriter writer, List<MaterialExporter>? materialExports)
         {
             var share = new CVertexShare();
             var boneHdr = new VChunkHeader();
@@ -119,7 +127,7 @@ namespace CUE4Parse_Conversion.Meshes
             
             ExportCommonMeshData(writer, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
 
-            var numBones = bones.Length;
+            var numBones = bones.Count;
             boneHdr.DataCount = numBones;
             boneHdr.DataSize = 120;
             writer.SerializeChunkHeader(boneHdr, "REFSKELT");
@@ -331,10 +339,10 @@ namespace CUE4Parse_Conversion.Meshes
         {
             var b = false;
             savedFileName = _meshName.SubstringAfterLast('/');
-            if (_meshLods.Length == 0) return b;
+            if (_meshLods.Count == 0) return b;
 
             var outText = "LOD ";
-            for (var i = 0; i < _meshLods.Length; i++)
+            for (var i = 0; i < _meshLods.Count; i++)
             {
                 b |= _meshLods[i].TryWriteToDir(baseDirectory, out savedFileName);
                 outText += $"{i} ";

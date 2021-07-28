@@ -12,9 +12,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     [JsonConverter(typeof(FStaticMeshLODResourcesConverter))]
     public class FStaticMeshLODResources
     {
-        public FStaticMeshSection[] Sections { get; private set; }
+        public FStaticMeshSection[] Sections { get; }
         public FCardRepresentationData CardRepresentationData;
-        public float MaxDeviation { get; private set; }
+        public float MaxDeviation { get; }
         public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
         public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
         public FColorVertexBuffer? ColorVertexBuffer { get; private set; }
@@ -24,6 +24,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
         public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
         public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
+        public bool SkipLod => VertexBuffer == null || IndexBuffer == null ||
+                               PositionVertexBuffer == null || ColorVertexBuffer == null;
 
         public enum EClassDataStripFlag : byte
         {

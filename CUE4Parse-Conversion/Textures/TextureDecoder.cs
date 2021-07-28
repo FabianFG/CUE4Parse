@@ -10,7 +10,7 @@ namespace CUE4Parse_Conversion.Textures
 {
     public static class TextureDecoder
     {
-        public static SKImage? Decode(this UTexture2D texture, bool bNearest = false)
+        public static SKImage? Decode(this UTexture2D texture)
         {
             if (!texture.IsVirtual && texture.GetFirstMip() is { } mip)
             {
@@ -27,7 +27,7 @@ namespace CUE4Parse_Conversion.Textures
                     }
                 }
 
-                return SKImage.FromBitmap(!bNearest ? bitmap : bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None));
+                return SKImage.FromBitmap(!texture.bRenderNearestNeighbor ? bitmap : bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None));
             }
             return null;
         }

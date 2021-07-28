@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
@@ -23,12 +24,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public bool IsVirtual { get; private set; }
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
+        public bool bRenderNearestNeighbor { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            // UObject Properties
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
+            if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
+                bRenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
+                                         trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();

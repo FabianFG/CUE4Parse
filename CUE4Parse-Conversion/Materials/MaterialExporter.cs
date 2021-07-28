@@ -75,13 +75,7 @@ namespace CUE4Parse_Conversion.Materials
             foreach (var texture in toExport)
             {
                 if (texture == unrealMaterial || texture is not UTexture2D t) continue;
-                
-                var bNearest = false;
-                if (t.TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
-                    bNearest = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
-                               trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
-                
-                _textures[t.Owner?.Name ?? t.Name] = t.Decode(bNearest);
+                _textures[t.Owner?.Name ?? t.Name] = t.Decode();
             }
 
             if (!bNoOtherTextures && unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)

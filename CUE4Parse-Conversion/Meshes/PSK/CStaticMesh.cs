@@ -1,16 +1,17 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CStaticMesh
     {
-        public CStaticMeshLod?[] LODs;
+        public List<CStaticMeshLod> LODs;
         public FBox BoundingBox;
         public FSphere BoundingShere;
 
         public CStaticMesh()
         {
-            LODs = new CStaticMeshLod[0];
+            LODs = new List<CStaticMeshLod>();
         }
         
         public void FinalizeMesh()

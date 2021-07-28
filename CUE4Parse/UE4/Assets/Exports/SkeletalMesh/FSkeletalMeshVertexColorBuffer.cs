@@ -20,15 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FSkeletalMeshVertexColorBuffer(FAssetArchive Ar)
         {
             var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
-
-            if (!stripDataFlags.IsDataStrippedForServer())
-            {
-                Data = Ar.ReadBulkArray<FColor>();
-            }
-            else
-            {
-                Data = new FColor[0];
-            }
+            Data = !stripDataFlags.IsDataStrippedForServer() ? Ar.ReadBulkArray<FColor>() : new FColor[0];
         }
 
         public FSkeletalMeshVertexColorBuffer(FColor[] data)

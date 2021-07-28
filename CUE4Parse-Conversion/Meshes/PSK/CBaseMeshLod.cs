@@ -15,6 +15,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public Lazy<FMeshUVFloat[][]> ExtraUV;
         public FColor[]? VertexColors;
         public Lazy<FRawStaticIndexBuffer> Indices;
+        public bool SkipLod => Sections.Value.Length < 1 || Indices.Value == null;
 
         public void AllocateUVBuffers()
         {
