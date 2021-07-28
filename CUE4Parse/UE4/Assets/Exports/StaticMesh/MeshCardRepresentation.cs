@@ -1,16 +1,20 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct FLumenCardBuildData
     {
-        public FVector Center;
-        public FVector Extent;
+        public FLumenCardOBB OBB;
+        public byte LODLevel;
+        public byte AxisAlignedDirectionIndex;
+    }
 
-        // -X, +X, -Y, +Y, -Z, +Z
-        public int Orientation;
-        public int LODLevel;
+    public struct FLumenCardOBB
+    {
+        public FVector Origin, AxisX, AxisY, AxisZ, Extent;
     }
 
     public class FCardRepresentationData
