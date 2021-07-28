@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
+using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
@@ -21,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             if (tagData.InnerType == null || tagData.ValueType == null)
                 throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
-            
+
             var numKeysToRemove = Ar.Read<int>();
             for (var i = 0; i < numKeysToRemove; i++)
             {
@@ -47,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
     }
-    
+
     public class UScriptMapConverter : JsonConverter<UScriptMap>
     {
         public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
@@ -56,23 +57,37 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             foreach (var kvp in value.Properties)
             {
-                FPropertyTagType? key = null;
-                if (kvp.Key is StructProperty s1 && s1.Value.StructType is FStructFallback f)
+                string? key = null;
+
+                if (kvp.Key is StructProperty s1)
                 {
-                    foreach (var prop in f.Properties)
+                    switch (s1.Value.StructType)
                     {
-                        if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
-                        key = prop.Tag;
-                        break;
+                        case FStructFallback f:
+                        {
+                            foreach (var prop in f.Properties)
+                            {
+                                if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
+                                key = prop.Tag?.ToString();
+                                break;
+                            }
+
+                            break;
+                        }
+                        case FNiagaraVariable n:
+                        {
+                            key = n.Name.Text;
+                            break;
+                        }
                     }
                 }
-                else key = kvp.Key;
-                
-                if (key == null) continue;
-                writer.WritePropertyName(key.ToString().SubstringBefore('(').Trim());
+                else key = kvp.Key?.ToString();
+
+                if (string.IsNullOrWhiteSpace(key)) continue;
+                writer.WritePropertyName(key.SubstringBefore('(').Trim());
                 serializer.Serialize(writer, kvp.Value);
             }
-            
+
             writer.WriteEndObject();
         }
 
