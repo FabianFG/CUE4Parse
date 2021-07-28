@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
+using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
@@ -51,6 +52,9 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
                 "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
                 "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
+                "NiagaraVariable" => new FNiagaraVariable(Ar),
+                "NiagaraVariableBase" => new FNiagaraVariableBase(Ar),
+                "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
                 "MovieSceneEvalTemplatePtr" => new FMovieSceneEvalTemplatePtr(Ar),
                 "MovieSceneEvaluationFieldEntityTree" => new FMovieSceneEvaluationFieldEntityTree(Ar),
                 "MovieSceneEvaluationKey" => type == ReadType.ZERO ? new FMovieSceneEvaluationKey() : Ar.Read<FMovieSceneEvaluationKey>(),
