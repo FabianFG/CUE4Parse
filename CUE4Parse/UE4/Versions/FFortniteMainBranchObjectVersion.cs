@@ -176,7 +176,6 @@ namespace CUE4Parse.UE4.Versions
         
         public static readonly FGuid GUID = new(0x601D1886, 0xAC644F84, 0xAA16D3DE, 0x0DEAC7D6);
         
-        // TODO: Complete this
         public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
@@ -185,7 +184,7 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
-                < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded, // Not sure whether there where earlier ones but I can't find them
+                < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_21 => Type.CachedMaterialQualityNodeUsage,
                 < EGame.GAME_UE4_22 => Type.FoliageLazyObjPtrToSoftObjPtr,
                 < EGame.GAME_UE4_23 => Type.FortHUDElementNowRequiresTag,

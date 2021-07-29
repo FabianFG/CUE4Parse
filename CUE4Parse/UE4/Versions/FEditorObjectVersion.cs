@@ -107,19 +107,19 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE4_13 => (Type) 2,
-                < EGame.GAME_UE4_14 => (Type) 6,
-                < EGame.GAME_UE4_15 => (Type) 8,
-                < EGame.GAME_UE4_16 => (Type) 14,
-                < EGame.GAME_UE4_17 => (Type) 17,
-                < EGame.GAME_UE4_19 => (Type) 20,
-                < EGame.GAME_UE4_20 => (Type) 23,
-                < EGame.GAME_UE4_21 => (Type) 24,
-                < EGame.GAME_UE4_22 => (Type) 26,
-                < EGame.GAME_UE4_23 => (Type) 30,
-                < EGame.GAME_UE4_24 => (Type) 34,
-                < EGame.GAME_UE4_25 => (Type) 37,
-                < EGame.GAME_UE4_26 => (Type) 38,
+                < EGame.GAME_UE4_13 => Type.GatheredTextPackageCacheFixesV1,
+                < EGame.GAME_UE4_14 => Type.SplineComponentCurvesInStruct,
+                < EGame.GAME_UE4_15 => Type.RefactorMeshEditorMaterials,
+                < EGame.GAME_UE4_16 => Type.AddedInlineFontFaceAssets,
+                < EGame.GAME_UE4_17 => Type.MaterialThumbnailRenderingChanges,
+                < EGame.GAME_UE4_19 => Type.GatheredTextEditorOnlyPackageLocId,
+                < EGame.GAME_UE4_20 => Type.AddedMorphTargetSectionIndices,
+                < EGame.GAME_UE4_21 => Type.SerializeInstancedStaticMeshRenderData,
+                < EGame.GAME_UE4_22 => Type.MeshDescriptionNewAttributeFormat,
+                < EGame.GAME_UE4_23 => Type.MeshDescriptionRemovedHoles,
+                < EGame.GAME_UE4_24 => Type.RemoveLandscapeHoleMaterial,
+                < EGame.GAME_UE4_25 => Type.SkeletalMeshBuildRefactor,
+                < EGame.GAME_UE4_26 => Type.SkeletalMeshMoveEditorSourceDataToPrivateAsset,
                 _ => Type.LatestVersion
             };
         }

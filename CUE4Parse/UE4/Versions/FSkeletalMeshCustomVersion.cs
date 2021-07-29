@@ -63,6 +63,7 @@ namespace CUE4Parse.UE4.Versions
 
         public static readonly FGuid GUID = new(0xD78A4A00, 0xE8584697, 0xBAA819B5, 0x487D46B4);
 
+        // TODO: This has been moved to "Legacy" in UE5
         public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);

@@ -60,11 +60,11 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_16 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE4_17 => (Type) 3,
-                < EGame.GAME_UE4_18 => (Type) 7,
+                < EGame.GAME_UE4_17 => Type.ThumbnailSceneInfoAndAssetImportDataAreTransactional,
+                < EGame.GAME_UE4_18 => Type.TuneSoftLimitStiffnessAndDamping,
                 < EGame.GAME_UE4_19 => Type.AddLODToCurveMetaData,
-                < EGame.GAME_UE4_20 => (Type) 16,
-                < EGame.GAME_UE4_26 => (Type) 17,
+                < EGame.GAME_UE4_20 => Type.SaveEditorOnlyFullPoseForPoseAsset,
+                < EGame.GAME_UE4_26 => Type.GeometryCacheAssetDeprecation,
                 _ => Type.LatestVersion
             };
         }

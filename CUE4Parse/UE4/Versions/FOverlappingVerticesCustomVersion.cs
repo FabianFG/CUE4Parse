@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_19 => Type.BeforeCustomVersionWasAdded,
-                _ => Type.DetectOVerlappingVertices
+                _ => Type.LatestVersion
             };
         }
     }

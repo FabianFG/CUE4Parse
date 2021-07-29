@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             {
                 Ar.Read<FName>(); // DummyCompressionName
             }
-            
+
             if (!bStreaming)
             {
                 if (bCooked)

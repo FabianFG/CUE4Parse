@@ -143,18 +143,18 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE4_13 => (Type) 6,
+                < EGame.GAME_UE4_13 => Type.FixNonTransactionalPins,
                 < EGame.GAME_UE4_14 => Type.RemoveSoundWaveCompressionName,
                 < EGame.GAME_UE4_15 => Type.GeometryCacheMissingMaterials,
-                < EGame.GAME_UE4_16 => (Type) 22,
-                < EGame.GAME_UE4_17 => (Type) 23,
-                < EGame.GAME_UE4_18 => (Type) 28,
-                < EGame.GAME_UE4_19 => (Type) 30,
-                < EGame.GAME_UE4_20 => (Type) 33,
-                < EGame.GAME_UE4_22 => (Type) 34,
-                < EGame.GAME_UE4_24 => (Type) 35,
-                < EGame.GAME_UE4_25 => (Type) 36,
-                < EGame.GAME_UE4_26 => (Type) 37,
+                < EGame.GAME_UE4_16 => Type.ChangeAudioComponentOverrideSubtitlePriorityDefault,
+                < EGame.GAME_UE4_17 => Type.HardSoundReferences,
+                < EGame.GAME_UE4_18 => Type.LocalVariablesBlueprintVisible,
+                < EGame.GAME_UE4_19 => Type.UserDefinedStructsBlueprintVisible,
+                < EGame.GAME_UE4_20 => Type.FunctionTerminatorNodesUseMemberReference,
+                < EGame.GAME_UE4_22 => Type.EditableEventsUseConstRefParameters,
+                < EGame.GAME_UE4_24 => Type.BlueprintGeneratedClassIsAlwaysAuthoritative,
+                < EGame.GAME_UE4_25 => Type.EnforceBlueprintFunctionVisibility,
+                < EGame.GAME_UE4_26 => Type.StoringUCSSerializationIndex,
                 _ => Type.LatestVersion
             };
         }

@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
@@ -72,8 +72,7 @@ namespace CUE4Parse.UE4.Versions
             {
                 < EGame.GAME_UE4_21 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_25 => Type.StoreMarkerNamesOnSkeleton,
-                < EGame.GAME_UE4_26 => (Type) 7,
-                < EGame.GAME_UE4_27 => (Type) 15,
+                < EGame.GAME_UE4_26 => Type.NotifyAndSyncMarkerGuids,
                 _ => Type.LatestVersion
             };
         }

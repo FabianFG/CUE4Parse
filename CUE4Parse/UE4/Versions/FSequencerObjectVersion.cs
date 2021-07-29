@@ -57,7 +57,6 @@ namespace CUE4Parse.UE4.Versions
         
         public static readonly FGuid GUID = new(0x7B5AE74C, 0xD2704C10, 0xA9585798, 0x0B212A5A);
         
-        // TODO: Complete this
         public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
@@ -66,6 +65,14 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_14 => Type.RenameMediaSourcePlatformPlayers,
+                < EGame.GAME_UE4_15 => Type.ConvertMultipleRowsToTracks,
+                < EGame.GAME_UE4_18 => Type.WhenFinishedDefaultsToRestoreState,
+                < EGame.GAME_UE4_19 => Type.WhenFinishedDefaultsToProjectDefault,
+                < EGame.GAME_UE4_21 => Type.FinishUMGEvaluation,
+                < EGame.GAME_UE4_24 => Type.ModifyLinearKeysForOldInterp,
+                < EGame.GAME_UE4_25 => Type.SerializeFloatChannelCompletely,
                 _ => Type.LatestVersion
             };
         }
