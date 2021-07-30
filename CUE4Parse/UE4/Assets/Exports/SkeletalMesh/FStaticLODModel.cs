@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
     public class FStaticLODModel
     {
         public FSkelMeshSection[] Sections;
-        public FMultisizeIndexContainer Indices;
+        public FMultisizeIndexContainer? Indices;
         public short[] ActiveBoneIndices;
         public FSkelMeshChunk[] Chunks;
         public int Size;
@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
         public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
-        public bool SkipLod => Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
+        public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
 
         public FStaticLODModel()
         {
