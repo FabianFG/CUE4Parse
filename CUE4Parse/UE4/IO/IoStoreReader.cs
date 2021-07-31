@@ -26,6 +26,7 @@ namespace CUE4Parse.UE4.IO
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
 #endif
         public readonly FIoStoreTocHeader Info;
+        public FContainerHeader? ContainerHeader { get; private set; }
         public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public sealed override long Length { get; set; }
@@ -33,9 +34,9 @@ namespace CUE4Parse.UE4.IO
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
         public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
-            : this(new FileInfo(tocPath), readOptions, versions) {}
+            : this(new FileInfo(tocPath), readOptions, versions) { }
         public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
-            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), versions), 
+            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), versions),
                 it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions), readOptions) { }
         public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FStreamArchive(tocPath, tocStream, versions),
@@ -108,9 +109,9 @@ namespace CUE4Parse.UE4.IO
         public bool DoesChunkExist(FIoChunkId chunkId)
         {
 #if GENERATE_CHUNK_ID_DICT
-            return Toc.ContainsKey(chunkId);      
+            return Toc.ContainsKey(chunkId);
 #else
-            return Array.IndexOf(TocResource.ChunkIds, chunkId) >= 0;          
+            return Array.IndexOf(TocResource.ChunkIds, chunkId) >= 0;
 #endif
         }
 
@@ -139,7 +140,7 @@ namespace CUE4Parse.UE4.IO
 
             var compressedBuffer = Array.Empty<byte>();
             var uncompressedBuffer = Array.Empty<byte>();
-            
+
             var clonedReaders = new FArchive[ContainerStreams.Count];
 
             for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
@@ -204,6 +205,10 @@ namespace CUE4Parse.UE4.IO
             watch.Start();
 
             ProcessIndex(caseInsensitive);
+            if (Game >= EGame.GAME_UE5_0) // We can safely skip reading container header on UE4
+            {
+                ProcessContainerHeader();
+            }
 
             var elapsed = watch.Elapsed;
             var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
@@ -215,6 +220,7 @@ namespace CUE4Parse.UE4.IO
             log.Information(sb.ToString());
             return Files;
         }
+
         public IReadOnlyDictionary<string, GameFile> ProcessIndex(bool caseInsensitive)
         {
             if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
@@ -274,8 +280,15 @@ namespace CUE4Parse.UE4.IO
             return Files = files;
         }
 
+        public FContainerHeader ProcessContainerHeader()
+        {
+            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
+            var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
+            return ContainerHeader = new FContainerHeader(Ar);
+        }
+
         public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
-        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("Io Store can't read bytes without context");//ReadAndDecrypt(length, Ar, IsEncrypted);
+        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("Io Store can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
 
         public override void Dispose()
         {

@@ -10,6 +10,7 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Pak.Objects;
@@ -63,7 +64,7 @@ namespace CUE4Parse.FileProvider
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!file.Value.TryCreateReader(out var archive)) continue;
-                
+
                 var locres = new FTextLocalizationResource(archive);
                 foreach (var entries in locres.Entries)
                 {
@@ -87,7 +88,7 @@ namespace CUE4Parse.FileProvider
             if (LocalizedResources.TryGetValue(namespacee, out var keyValue) &&
                 keyValue.TryGetValue(key, out var localizedResource))
                 return localizedResource;
-            
+
             return defaultValue ?? string.Empty;
         }
 
@@ -310,7 +311,7 @@ namespace CUE4Parse.FileProvider
             TrySaveAsset(path, out var data);
             return data;
         });
-        
+
         #endregion
 
         #region CreateReader Methods
@@ -329,14 +330,14 @@ namespace CUE4Parse.FileProvider
 
             return file.TryCreateReader(out reader);
         }
-        
+
         public async Task<FArchive> CreateReaderAsync(string path) => await Task.Run(() => CreateReader(path));
         public async Task<FArchive?> TryCreateReaderAsync(string path) => await Task.Run(() =>
         {
             TryCreateReader(path, out var reader);
             return reader;
         });
-        
+
         #endregion
 
         #region LoadPackage Methods
@@ -409,7 +410,10 @@ namespace CUE4Parse.FileProvider
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
 
-            return new IoPackage(uasset, vfsFileProvider.GlobalData, ubulk, uptnl, this, MappingsForThisGame);
+            var ioEntry = (FIoStoreEntry) file;
+            var containerHeader = ((IoStoreReader) ioEntry.Vfs).ContainerHeader;
+            var storeEntry = containerHeader?.StoreEntries[Array.IndexOf(containerHeader.PackageIds, new FPackageId(ioEntry.ChunkId.ChunkId))];
+            return new IoPackage(uasset, vfsFileProvider.GlobalData, storeEntry, ubulk, uptnl, this, MappingsForThisGame);
         }
 
         public async Task<IPackage?> TryLoadPackageAsync(string path)
@@ -434,7 +438,7 @@ namespace CUE4Parse.FileProvider
             var lazyUbulk = ubulkFile != null
                 ? new Lazy<FArchive?>(() => ubulkFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
                 : null;
-            
+
             var lazyUptnl = uptnlFile != null
                 ? new Lazy<FArchive?>(() => uptnlFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
                 : null;
@@ -450,20 +454,23 @@ namespace CUE4Parse.FileProvider
                 {
                     return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame, UseLazySerialization);
                 }
-                
+
                 if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
                 {
                     return null;
                 }
-                
-                return new IoPackage(uasset, vfsFileProvider.GlobalData, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
+
+                var ioEntry = (FIoStoreEntry) file;
+                var containerHeader = ((IoStoreReader) ioEntry.Vfs).ContainerHeader;
+                var storeEntry = containerHeader?.StoreEntries[Array.IndexOf(containerHeader.PackageIds, new FPackageId(ioEntry.ChunkId.ChunkId))];
+                return new IoPackage(uasset, vfsFileProvider.GlobalData, storeEntry, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
             }
             catch
             {
                 return null;
             }
         }
-        
+
         #endregion
 
         #region SavePackageMethods
@@ -501,9 +508,9 @@ namespace CUE4Parse.FileProvider
             var uexpTask = uexpFile?.ReadAsync();
             var ubulkTask = ubulkFile?.ReadAsync();
             var uptnlTask = uptnlFile?.ReadAsync();
-            var dict = new Dictionary<string, byte[]>()
+            var dict = new Dictionary<string, byte[]>
             {
-                {file.Path, await uassetTask}
+                { file.Path, await uassetTask }
             };
             var uexp = uexpTask != null ? await uexpTask : null;
             var ubulk = ubulkTask != null ? await ubulkTask : null;
@@ -543,10 +550,10 @@ namespace CUE4Parse.FileProvider
             var uexp = uexpTask != null ? await uexpTask.Value : null;
             var ubulk = ubulkTask != null ? await ubulkTask.Value : null;
             var uptnl = uptnlTask != null ? await uptnlTask.Value : null;
-            
-            var dict = new Dictionary<string, byte[]>()
+
+            var dict = new Dictionary<string, byte[]>
             {
-                {file.Path, uasset}
+                { file.Path, uasset }
             };
             if (uexpFile != null && uexp != null)
                 dict[uexpFile.Path] = uexp;

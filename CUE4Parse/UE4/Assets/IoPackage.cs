@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets
         public override bool IsFullyLoaded { get; }
 
         public IoPackage(
-            FArchive uasset, IoGlobalData globalData,
+            FArchive uasset, IoGlobalData globalData, FPackageStoreEntry? storeEntry = null,
             Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null,
             IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
         {
@@ -75,11 +75,11 @@ namespace CUE4Parse.UE4.Assets
 
                 // Export bundle headers
                 uassetAr.Position = summary.GraphDataOffset;
-                var exportBundleHeadersCount = 1; // TODO just a placeholder until loading of package store entries are implemented
+                var exportBundleHeadersCount = storeEntry?.ExportBundleCount ?? 1;
                 exportBundleHeaders = uassetAr.ReadArray<FExportBundleHeader>(exportBundleHeadersCount);
                 // We don't read the graph data
 
-                importedPackageIds = Array.Empty<FPackageId>(); // TODO imported packages are now only stored in the package store entry, no longer in the graph data too
+                importedPackageIds = storeEntry?.ImportedPackages ?? Array.Empty<FPackageId>();
 
                 allExportDataOffset = (int) summary.HeaderSize;
             }
@@ -177,8 +177,8 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
-            : this(uasset, globalData, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
+        public IoPackage(FArchive uasset, IoGlobalData globalData, FPackageStoreEntry? storeEntry = null, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+            : this(uasset, globalData, storeEntry, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
         { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
