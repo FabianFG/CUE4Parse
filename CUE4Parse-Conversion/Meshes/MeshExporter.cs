@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -17,17 +18,17 @@ namespace CUE4Parse_Conversion.Meshes
     {
         private const int _PSK_VERSION = 20100422;
         
-        private readonly string _meshName;
-        private readonly List<Mesh> _meshLods;
+        public readonly string MeshName;
+        public readonly List<Mesh> MeshLods;
         
         public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
-            _meshLods = new List<Mesh>();
-            _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
+            MeshLods = new List<Mesh>();
+            MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count < 1)
             {
-                Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
+                Log.Logger.Warning($"Mesh '{MeshName}' has no LODs");
                 return;
             }
 
@@ -36,7 +37,7 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' should be skipped");
+                    Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
                     continue;
                 }
                 
@@ -44,7 +45,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
                 ExportStaticMeshLods(lod, writer, materialExports);
                 
-                _meshLods.Add(new Mesh($"{_meshName}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.pskx", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
                 if (lodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
@@ -52,12 +53,12 @@ namespace CUE4Parse_Conversion.Meshes
 
         public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
-            _meshLods = new List<Mesh>();
-            _meshName = originalMesh.Owner?.Name ?? originalMesh.Name;
+            MeshLods = new List<Mesh>();
+            MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
             
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count < 1)
             {
-                Log.Logger.Warning($"Mesh '{_meshName}' has no LODs");
+                Log.Logger.Warning($"Mesh '{MeshName}' has no LODs");
                 return;
             }
             
@@ -66,7 +67,7 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{_meshName}' should be skipped");
+                    Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
                     continue;
                 }
                 
@@ -75,7 +76,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
                 ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, writer, materialExports);
                 
-                _meshLods.Add(new Mesh($"{_meshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", writer.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
                 if (lodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
@@ -295,7 +296,7 @@ namespace CUE4Parse_Conversion.Meshes
             for (var i = 0; i < numSections; i++)
             {
                 string materialName;
-                if (sections[i].Material?.Value is { } tex)
+                if (sections[i].Material?.Load<UMaterialInterface>() is { } tex)
                 {
                     materialName = tex.Name;
                     materialExports?.Add(new MaterialExporter(tex, true));
@@ -338,17 +339,17 @@ namespace CUE4Parse_Conversion.Meshes
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
             var b = false;
-            savedFileName = _meshName.SubstringAfterLast('/');
-            if (_meshLods.Count == 0) return b;
+            savedFileName = MeshName.SubstringAfterLast('/');
+            if (MeshLods.Count == 0) return b;
 
             var outText = "LOD ";
-            for (var i = 0; i < _meshLods.Count; i++)
+            for (var i = 0; i < MeshLods.Count; i++)
             {
-                b |= _meshLods[i].TryWriteToDir(baseDirectory, out savedFileName);
+                b |= MeshLods[i].TryWriteToDir(baseDirectory, out savedFileName);
                 outText += $"{i} ";
             }
 
-            savedFileName = outText + $"as '{savedFileName.SubstringAfterWithLast('.')}' for '{_meshName.SubstringAfterLast('/')}'";
+            savedFileName = outText + $"as '{savedFileName.SubstringAfterWithLast('.')}' for '{MeshName.SubstringAfterLast('/')}'";
             return b;
         }
 

@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse_Conversion.Meshes.PSK;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes
 {
@@ -20,7 +19,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (originalMesh.RenderData == null)
                 return false;
 
-            convertedMesh.BoundingShere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
+            convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
             convertedMesh.BoundingBox = new FBox(
                 originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
                 originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);

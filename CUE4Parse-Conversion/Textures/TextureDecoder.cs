@@ -1,18 +1,20 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+﻿using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
 using SkiaSharp;
-using System;
 
 namespace CUE4Parse_Conversion.Textures
 {
-    public static class TextureDecoder
-    {
-        public static SKImage? Decode(this UTexture2D texture)
+    public static class TextureDecoder {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SKImage? Decode(this UTexture2D texture) => texture.Decode(texture.GetFirstMip());
+
+        public static SKImage? Decode(this UTexture2D texture, FTexture2DMipMap? mip)
         {
-            if (!texture.IsVirtual && texture.GetFirstMip() is { } mip)
+            if (!texture.IsVirtual && mip != null)
             {
                 DecodeTexture(mip, texture.Format, out byte[] data, out var colorType);
                 

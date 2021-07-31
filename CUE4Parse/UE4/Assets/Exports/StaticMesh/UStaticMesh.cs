@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -17,10 +16,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FPackageIndex BodySetup { get; private set; }
         public FPackageIndex NavCollision { get; private set; }
         public FGuid LightingGuid { get; private set; }
-        public FPackageIndex[] Sockets { get; private set; } // Lazy<UObject?>[]
+        public FPackageIndex[] Sockets { get; private set; } // UStaticMeshSocket[]
         public FStaticMeshRenderData? RenderData { get; private set; }
         public FStaticMaterial[]? StaticMaterials { get; private set; }
-        public Lazy<UMaterialInterface?>[]? Materials { get; private set; }
+        public FPackageIndex[]? Materials { get; private set; } // UMaterialInterface[]
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -76,7 +75,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (StaticMaterials != null && StaticMaterials.Length != 0)
             {
-                Materials = new Lazy<UMaterialInterface?>[StaticMaterials.Length];
+                Materials = new FPackageIndex[StaticMaterials.Length];
                 for (var i = 0; i < Materials.Length; i++)
                 {
                     Materials[i] = StaticMaterials[i].MaterialInterface;

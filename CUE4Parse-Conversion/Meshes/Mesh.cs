@@ -6,29 +6,29 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class Mesh : ExporterBase
     {
-        private readonly string _internalFilePath;
-        private readonly byte[] _fileData;
-        private readonly List<MaterialExporter> _materials;
+        public readonly string FileName;
+        public readonly byte[] FileData;
+        public readonly List<MaterialExporter> Materials;
 
         public Mesh(string fileName, byte[] fileData, List<MaterialExporter> materials)
         {
-            _internalFilePath = fileName;
-            _fileData = fileData;
-            _materials = materials;
+            FileName = fileName;
+            FileData = fileData;
+            Materials = materials;
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
             savedFileName = string.Empty;
-            if (!baseDirectory.Exists || _fileData.Length <= 0) return false;
+            if (!baseDirectory.Exists || FileData.Length <= 0) return false;
 
-            foreach (var material in _materials)
+            foreach (var material in Materials)
             {
                 material.TryWriteToDir(baseDirectory, out _);
             }
             
-            var filePath = FixAndCreatePath(baseDirectory, _internalFilePath);
-            File.WriteAllBytes(filePath, _fileData);
+            var filePath = FixAndCreatePath(baseDirectory, FileName);
+            File.WriteAllBytes(filePath, FileData);
             savedFileName = Path.GetFileName(filePath);
             return File.Exists(filePath);
         }

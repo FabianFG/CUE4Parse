@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -118,7 +117,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             foreach (var p in TextureParameterValues)
             {
                 var name = p.Name;
-                var tex = p.ParameterValue;
+                var tex = p.ParameterValue.Load<UTexture>();
                 if (tex == null) continue;
                 
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
@@ -148,7 +147,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             
             // try to get diffuse texture when nothing found
             if (parameters.Diffuse == null && TextureParameterValues.Length == 1)
-                parameters.Diffuse = TextureParameterValues[0].ParameterValue;
+                parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
@@ -162,8 +161,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 foreach (var value in TextureParameterValues)
                 {
-                    if (value.ParameterValue != null && !outTextures.Contains(value.ParameterValue))
-                        outTextures.Add(value.ParameterValue);
+                    var parameterValue = value.ParameterValue.Load<UTexture>();
+                    if (parameterValue != null && !outTextures.Contains(parameterValue))
+                        outTextures.Add(parameterValue);
                 }
 
                 if (Parent != null && Parent != this)
