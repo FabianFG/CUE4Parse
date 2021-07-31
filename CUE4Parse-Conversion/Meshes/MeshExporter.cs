@@ -234,8 +234,8 @@ namespace CUE4Parse_Conversion.Meshes
             for (var i = 0; i < numVerts; i++)
             {
                 writer.Write(share.WedgeToVert[i]);
-                writer.Write((int)verts[i].UV.U); // the 4 bit int value is the actual needed float value
-                writer.Write((int)verts[i].UV.V); // the 4 bit int value is the actual needed float value
+                writer.Write(verts[i].UV.U);
+                writer.Write(verts[i].UV.V);
                 writer.Write((byte) wedgeMat[i]);
                 writer.Write((byte) 0);
                 writer.Write((short) 0);

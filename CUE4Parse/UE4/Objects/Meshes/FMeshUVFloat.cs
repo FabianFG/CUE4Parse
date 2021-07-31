@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System;
+using CUE4Parse.UE4.Readers;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
 
@@ -40,7 +41,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
             var mant =  h        & 0x000003FF;
 
             exp += 127 - 15;
-            return (sign << 31) | (exp << 23) | (mant << 13);
+            return BitConverter.ToSingle(BitConverter.GetBytes((sign << 31) | (exp << 23) | (mant << 13)));
         }
     }
 }
