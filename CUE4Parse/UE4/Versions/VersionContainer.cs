@@ -20,7 +20,17 @@ namespace CUE4Parse.UE4.Versions
             }
         }
         private EGame _game;
-        public UE4Version Ver;
+        public UE4Version Ver
+        {
+            get => _ver;
+            set
+            {
+                bExplicitVer = value != UE4Version.VER_UE4_DETERMINE_BY_GAME;
+                _ver = bExplicitVer ? value : _game.GetVersion();
+            }
+        }
+        private UE4Version _ver;
+        public bool bExplicitVer { get; private set; } 
         public List<FCustomVersion>? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
@@ -29,7 +39,7 @@ namespace CUE4Parse.UE4.Versions
         {
             _optionOverrides = optionOverrides;
             Game = game;
-            Ver = ver == UE4Version.VER_UE4_DETERMINE_BY_GAME ? game.GetVersion() : ver;
+            Ver = ver;
             CustomVersions = customVersions;
         }
 
@@ -62,6 +72,6 @@ namespace CUE4Parse.UE4.Versions
             get => Options[optionKey];
         }
 
-        public object Clone() => new VersionContainer(Game, Ver, CustomVersions, _optionOverrides);
+        public object Clone() => new VersionContainer(Game, Ver, CustomVersions, _optionOverrides) { bExplicitVer = bExplicitVer };
     }
 }

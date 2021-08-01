@@ -24,11 +24,11 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (Ar.HasUnversionedProperties)
             {
                 if (structType == null) throw new ArgumentException("For unversioned struct fallback the struct type cannot be null", nameof(structType));
-                Properties = UObject.DeserializePropertiesUnversioned(Ar, structType);
+                UObject.DeserializePropertiesUnversioned(Properties = new List<FPropertyTag>(), Ar, structType);
             }
             else
             {
-                Properties = UObject.DeserializePropertiesTagged(Ar);
+                UObject.DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar);
             }
         }
         

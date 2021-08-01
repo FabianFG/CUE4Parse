@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -67,11 +66,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 if (Class == null)
                     throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
-                Properties = DeserializePropertiesUnversioned(Ar, Class);
+                DeserializePropertiesUnversioned(Properties = new List<FPropertyTag>(), Ar, Class);
             }
             else
             {
-                Properties = DeserializePropertiesTagged(Ar);
+                DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar);
             }
 
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
@@ -176,12 +175,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             
         }
 
-        internal static List<FPropertyTag> DeserializePropertiesUnversioned(FAssetArchive Ar, UStruct struc)
+        internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc)
         {
-            var properties = new List<FPropertyTag>();
             var header = new FUnversionedHeader(Ar);
             if (!header.HasValues)
-                return properties;
+                return;
             var type = struc.Name;
             
             Struct? propMappings = null;
@@ -232,12 +230,10 @@ namespace CUE4Parse.UE4.Assets.Exports
                     }
                 }
             } while (it.MoveNext());
-            return properties;
         }
         
-        internal static List<FPropertyTag> DeserializePropertiesTagged(FAssetArchive Ar)
+        internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar)
         {
-            var properties = new List<FPropertyTag>();
             while (true)
             {
                 var tag = new FPropertyTag(Ar, true);
@@ -245,8 +241,6 @@ namespace CUE4Parse.UE4.Assets.Exports
                     break;
                 properties.Add(tag);
             }
-
-            return properties;
         }
 
         protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)

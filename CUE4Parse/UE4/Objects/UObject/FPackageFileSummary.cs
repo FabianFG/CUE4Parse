@@ -1,13 +1,12 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using System.Linq;
+using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using System;
-using System.Linq;
-using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Assets.Readers;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
@@ -165,7 +164,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     bUnversioned = false;
                     // Only apply the version if an explicit version is not set
-                    if (Ar.Ver == UE4Version.VER_UE4_DETERMINE_BY_GAME)
+                    if (!Ar.Versions.bExplicitVer)
                     {
                         Ar.Ver = (UE4Version) FileVersionUE4;
                     }
