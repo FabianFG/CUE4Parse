@@ -46,7 +46,11 @@ namespace CUE4Parse_Conversion.Textures
                     data = DXTDecoder.DXT5(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
+                case EPixelFormat.PF_ASTC_4x4:
+                case EPixelFormat.PF_ASTC_6x6:
                 case EPixelFormat.PF_ASTC_8x8:
+                case EPixelFormat.PF_ASTC_10x10:
+                case EPixelFormat.PF_ASTC_12x12:
                     data = ASTCDecoder.RGBA8888(
                         mip.Data.Data,
                         FormatHelper.GetBlockWidth(format),
