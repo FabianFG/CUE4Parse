@@ -69,7 +69,6 @@ namespace CUE4Parse_Conversion.Textures
                            fixed (byte* d = data)
                            for (int i = 0; i < mip.SizeX * mip.SizeY; i++)
                            {
-
                                byte u = d[offset];
                                byte v = d[offset+1];
                                float uf = u / 255.0f * 2 - 1;
