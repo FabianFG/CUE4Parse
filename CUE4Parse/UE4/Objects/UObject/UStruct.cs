@@ -55,14 +55,23 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.WriteJson(writer, serializer);
 
-            writer.WritePropertyName("SuperStruct");
-            serializer.Serialize(writer, SuperStruct);
+            if (SuperStruct is { IsNull: false })
+            {
+                writer.WritePropertyName("SuperStruct");
+                serializer.Serialize(writer, SuperStruct);
+            }
 
-            writer.WritePropertyName("Children");
-            serializer.Serialize(writer, Children);
+            if (Children is { Length: > 0 })
+            {
+                writer.WritePropertyName("Children");
+                serializer.Serialize(writer, Children);
+            }
 
-            writer.WritePropertyName("ChildProperties");
-            serializer.Serialize(writer, ChildProperties);
+            if (ChildProperties is { Length: > 0 })
+            {
+                writer.WritePropertyName("ChildProperties");
+                serializer.Serialize(writer, ChildProperties);
+            }
         }
     }
 }

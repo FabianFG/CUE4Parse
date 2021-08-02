@@ -37,11 +37,17 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WritePropertyName("FunctionFlags");
             writer.WriteValue(FunctionFlags);
 
-            writer.WritePropertyName("EventGraphFunction");
-            serializer.Serialize(writer, EventGraphFunction);
+            if (EventGraphFunction is { IsNull: false })
+            {
+                writer.WritePropertyName("EventGraphFunction");
+                serializer.Serialize(writer, EventGraphFunction);
+            }
 
-            writer.WritePropertyName("EventGraphCallOffset");
-            writer.WriteValue(EventGraphCallOffset);
+            if (EventGraphCallOffset != 0)
+            {
+                writer.WritePropertyName("EventGraphCallOffset");
+                writer.WriteValue(EventGraphCallOffset);
+            }
         }
     }
 }

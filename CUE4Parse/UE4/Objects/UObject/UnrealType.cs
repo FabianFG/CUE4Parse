@@ -27,23 +27,41 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.WriteJson(writer, serializer);
 
-            writer.WritePropertyName("ArrayDim");
-            writer.WriteValue(ArrayDim);
+            if (ArrayDim != 1)
+            {
+                writer.WritePropertyName("ArrayDim");
+                writer.WriteValue(ArrayDim);
+            }
 
-            writer.WritePropertyName("ElementSize");
-            writer.WriteValue(ElementSize);
+            if (ElementSize != 0)
+            {
+                writer.WritePropertyName("ElementSize");
+                writer.WriteValue(ElementSize);
+            }
 
-            writer.WritePropertyName("PropertyFlags");
-            writer.WriteValue(PropertyFlags);
+            if (PropertyFlags != 0)
+            {
+                writer.WritePropertyName("PropertyFlags");
+                writer.WriteValue(PropertyFlags);
+            }
 
-            writer.WritePropertyName("RepIndex");
-            writer.WriteValue(RepIndex);
+            if (RepIndex != 0)
+            {
+                writer.WritePropertyName("RepIndex");
+                writer.WriteValue(RepIndex);
+            }
 
-            writer.WritePropertyName("RepNotifyFunc");
-            serializer.Serialize(writer, RepNotifyFunc);
+            if (!RepNotifyFunc.IsNone)
+            {
+                writer.WritePropertyName("RepNotifyFunc");
+                serializer.Serialize(writer, RepNotifyFunc);
+            }
 
-            writer.WritePropertyName("BlueprintReplicationCondition");
-            writer.WriteValue(BlueprintReplicationCondition.ToString());
+            if (BlueprintReplicationCondition != ELifetimeCondition.COND_None)
+            {
+                writer.WritePropertyName("BlueprintReplicationCondition");
+                writer.WriteValue(BlueprintReplicationCondition.ToString());
+            }
         }
     }
 

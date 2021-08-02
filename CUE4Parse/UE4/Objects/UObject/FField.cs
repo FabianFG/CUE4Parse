@@ -25,8 +25,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WritePropertyName("Name");
             serializer.Serialize(writer, Name);
 
-            writer.WritePropertyName("Flags");
-            writer.WriteValue(Flags);
+            if (Flags != 0)
+            {
+                writer.WritePropertyName("Flags");
+                writer.WriteValue(Flags);
+            }
         }
 
         public override string ToString() => Name.Text;
