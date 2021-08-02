@@ -57,7 +57,7 @@ namespace CUE4Parse_Conversion.Textures
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetBaseFormat(EPixelFormat format)
         {
-            string[] items = { "_UNORM", "_SRGB", "_SINT", "_SNORM", "_UINT", "_UFLOAT", "_SFLOAT", "_FLOAT", "H_SF16", "H_UF16" };
+            string[] items = { "_UNORM", "_SRGB", "_SINT", "_SNORM", "_UINT", "_UFLOAT", "_SFLOAT", "_FLOAT", "H_SF16", "H_UF16", "PF_" };
             string output = format.ToString();
             for (int i = 0; i < items.Length; i++)
                 output = output.Replace(items[i], string.Empty);

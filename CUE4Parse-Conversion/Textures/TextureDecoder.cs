@@ -16,8 +16,8 @@ namespace CUE4Parse_Conversion.Textures
         {
             if (!texture.IsVirtual && mip != null)
             {
-                DecodeTexture(mip, texture.Format, out byte[] data, out var colorType);
-                
+                DecodeTexture(mip, texture.Format, texture.isNormalMap, out byte[] data, out var colorType);
+
                 var width = mip.SizeX;
                 var height = mip.SizeY;
                 using var bitmap = new SKBitmap(new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul));
@@ -34,7 +34,7 @@ namespace CUE4Parse_Conversion.Textures
             return null;
         }
 
-        private static void DecodeTexture(FTexture2DMipMap mip, EPixelFormat format, out byte[] data, out SKColorType colorType)
+        private static void DecodeTexture(FTexture2DMipMap mip, EPixelFormat format, bool isNormalMap, out byte[] data, out SKColorType colorType)
         {
             switch (format)
             {
@@ -46,7 +46,11 @@ namespace CUE4Parse_Conversion.Textures
                     data = DXTDecoder.DXT5(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
+                case EPixelFormat.PF_ASTC_4x4:
+                case EPixelFormat.PF_ASTC_6x6:
                 case EPixelFormat.PF_ASTC_8x8:
+                case EPixelFormat.PF_ASTC_10x10:
+                case EPixelFormat.PF_ASTC_12x12:
                     data = ASTCDecoder.RGBA8888(
                         mip.Data.Data,
                         FormatHelper.GetBlockWidth(format),
@@ -54,6 +58,30 @@ namespace CUE4Parse_Conversion.Textures
                         FormatHelper.GetBlockDepth(format),
                         mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
+
+                    if (isNormalMap)
+                    {
+                        // UE4 drops blue channel for normal maps before encoding, restore it
+                       int offset;
+                       unsafe
+                       {
+                           offset = 0;
+                           fixed (byte* d = data)
+                           for (int i = 0; i < mip.SizeX * mip.SizeY; i++)
+                           {
+                               byte u = d[offset];
+                               byte v = d[offset+1];
+                               float uf = u / 255.0f * 2 - 1;
+                               float vf = v / 255.0f * 2 - 1;
+                               float t = 1.0f - uf * uf - vf * vf;
+                               if (t >= 0)
+                                   d[offset+2] = (byte)Math.Floor((t + 1.0f) * 127.5f);
+                               else
+                                   d[offset+2] = 255;
+                               offset += 4;
+                           }
+                       }
+                    }
                     break;
                 case EPixelFormat.PF_BC4:
                     data = BCDecoder.BC4(mip.Data.Data, mip.SizeX, mip.SizeY);

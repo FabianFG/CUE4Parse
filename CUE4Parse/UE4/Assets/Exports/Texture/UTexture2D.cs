@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
         public bool bRenderNearestNeighbor { get; private set; }
+        public bool isNormalMap { get; private set; } = false;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -33,6 +34,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
                 bRenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
                                          trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
+            if (TryGetValue(out FName normalTrigger, "CompressionSettings") && !normalTrigger.IsNone)
+                isNormalMap = normalTrigger.Text.EndsWith("TC_Normalmap", StringComparison.OrdinalIgnoreCase);
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
