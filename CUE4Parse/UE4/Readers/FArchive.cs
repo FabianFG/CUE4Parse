@@ -171,8 +171,23 @@ namespace CUE4Parse.UE4.Readers
                 _ => throw new ParserException(this, $"Invalid bool value ({i})")
             };
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        public virtual uint ReadIntPacked()
+        {
+            uint value = 0;
+            byte cnt = 0;
+            bool more = true;
+            while (more)
+            {
+                var nextByte = Read<byte>();               // Read next byte
+                more = (nextByte & 1) != 0;                // Check 1 bit to see if there's more after this
+                nextByte = (byte) (nextByte >> 1);         // Shift to get actual 7 bit value
+                value += (uint) (nextByte << (7 * cnt++)); // Add to total value
+            }
+
+            return value;
+        }
+
         public virtual unsafe void SerializeBits(void* v, long lengthBits)
         {
             Serialize((byte*) v, (int) ((lengthBits + 7) / 8));
@@ -264,7 +279,6 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual FName ReadFName() => new(ReadFString());
 
         public virtual UObject ReadUObject()
