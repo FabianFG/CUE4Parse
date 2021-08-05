@@ -37,15 +37,19 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             get
             {
-                var current = Outer;
-                var next = current?.Outer;
-                while (next != null)
+                var top = this;
+                while (true)
                 {
-                    current = next;
-                    next = current.Outer;
+                    var outer = top.Outer;
+                    if (outer == null)
+                    {
+                        break;
+                    }
+
+                    top = outer;
                 }
 
-                return current as IPackage;
+                return top as IPackage;
             }
         }
         public virtual string ExportType => Class?.Name ?? GetType().Name;
