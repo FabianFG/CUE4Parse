@@ -240,6 +240,28 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <returns>true if normalized, false otherwise.</returns>
         public bool IsNormalized() => System.Math.Abs(1f - SizeSquared()) < ThreshVectorNormalized;
 
+        /// <summary>
+        /// Create a copy of this vector, with its maximum magnitude clamped to MaxSize.
+        /// </summary>
+        public FVector GetClampedToMaxSize(float maxSize)
+        {
+            if (maxSize < KindaSmallNumber)
+            {
+                return new(0, 0, 0); // ZeroVector
+            }
+
+            var vSq = SizeSquared();
+            if (vSq > maxSize * maxSize)
+            {
+                var scale = maxSize * vSq.InvSqrt();
+                return new(X * scale, Y * scale, Z * scale);
+            }
+            else
+            {
+                return new(X, Y, Z);
+            }
+        }
+
         public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3}";
 
         /// <summary>

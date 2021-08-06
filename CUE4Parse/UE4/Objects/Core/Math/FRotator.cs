@@ -4,15 +4,25 @@ using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
+    /**
+     * Implements a container for rotation information.
+     *
+     * All rotation values are stored in degrees.
+     */
     [StructLayout(LayoutKind.Sequential)]
     public struct FRotator : IUStruct
     {
         private const float KindaSmallNumber = 1e-4f;
-        
+
         public static readonly FRotator ZeroRotator = new(0, 0, 0);
 
+        /** Rotation around the right axis (around Y axis), Looking up and down (0=Straight Ahead, +Up, -Down) */
         public float Pitch;
+
+        /** Rotation around the up axis (around Z axis), Running in circles 0=East, +North, -South. */
         public float Yaw;
+
+        /** Rotation around the forward axis (around X axis), Tilting your head, 0=Straight, +Clockwise, -CCW. */
         public float Roll;
 
         public FRotator(EForceInit forceInit) : this(0, 0, 0) {}
@@ -23,6 +33,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Yaw = yaw;
             Roll = roll;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FRotator operator +(FRotator a, FRotator b) => new(a.Pitch + b.Pitch, a.Yaw + b.Yaw, a.Roll + b.Roll);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FRotator operator -(FRotator a, FRotator b) => new(a.Pitch - b.Pitch, a.Yaw - b.Yaw, a.Roll - b.Roll);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FRotator operator *(FRotator r, float scale) => new(r.Pitch * scale, r.Yaw * scale, r.Roll * scale);
 
         public FVector RotateVector(FVector v)
         {
