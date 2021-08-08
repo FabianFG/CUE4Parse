@@ -3,7 +3,8 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
 {
-    public class FNiagaraCustomVersion
+    // Custom serialization version for all packages containing Niagara asset types
+    public static class FNiagaraCustomVersion
     {
         public enum Type
         {
@@ -172,7 +173,6 @@ namespace CUE4Parse.UE4.Versions
 
         public static readonly FGuid GUID = new(0xFCF57AFA, 0x50764283, 0xB9A9E658, 0xFFA02D32);
 
-        // TODO: Work this out
         public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
@@ -181,6 +181,12 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_23 => Type.SkelMeshInterfaceAPIImprovements,
+                < EGame.GAME_UE4_24 => Type.AddLibraryAssetProperty,
+                < EGame.GAME_UE4_25 => Type.DisableSortingByDefault,
+                < EGame.GAME_UE4_26 => Type.StandardizeParameterNames,
+                < EGame.GAME_UE4_27 => Type.SignificanceHandlers,
                 _ => Type.LatestVersion
             };
         }
