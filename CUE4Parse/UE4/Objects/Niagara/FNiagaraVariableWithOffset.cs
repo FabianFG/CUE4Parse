@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.Niagara
     public class FNiagaraVariableWithOffset : FNiagaraVariableBase
     {
         public int Offset;
-        
+
         public FNiagaraVariableWithOffset(FAssetArchive Ar) : base(Ar)
         {
             Offset = Ar.Read<int>();

@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.Niagara
     public class FNiagaraVariable : FNiagaraVariableBase
     {
         public byte[] VarData;
-        
+
         public FNiagaraVariable(FAssetArchive Ar) : base(Ar)
         {
             VarData = Ar.ReadArray<byte>();
