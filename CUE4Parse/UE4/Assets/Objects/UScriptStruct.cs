@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Ai;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
+using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
@@ -73,6 +74,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "SoftClassPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
                 "SoftObjectPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
                 "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
+                "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
                 "Vector" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector2D" => type == ReadType.ZERO ? new FVector2D() : Ar.Read<FVector2D>(),
                 "Vector4" => type == ReadType.ZERO ? new FVector4() : Ar.Read<FVector4>(),
