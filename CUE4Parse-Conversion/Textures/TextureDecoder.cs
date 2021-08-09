@@ -62,16 +62,16 @@ namespace CUE4Parse_Conversion.Textures
                     if (isNormalMap)
                     {
                         // UE4 drops blue channel for normal maps before encoding, restore it
-                       unsafe
-                       {
-                           int offset = 0;
-                           fixed (byte* d = data)
-                           for (int i = 0; i < mip.SizeX * mip.SizeY; i++)
-                           {
-                               d[offset+2] = BCDecoder.GetZNormal(d[offset], d[offset+1]);
-                               offset += 4;
-                           }
-                       }
+                        unsafe
+                        {
+                            var offset = 0;
+                            fixed (byte* d = data)
+                                for (var i = 0; i < mip.SizeX * mip.SizeY; i++)
+                                {
+                                    d[offset+2] = BCDecoder.GetZNormal(d[offset], d[offset+1]);
+                                    offset += 4;
+                                }
+                        }
                     }
                     break;
                 case EPixelFormat.PF_BC4:

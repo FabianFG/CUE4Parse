@@ -128,7 +128,10 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         public override FGuid ReadJson(JsonReader reader, Type objectType, FGuid existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader.Value is not string s)
+                throw new JsonSerializationException();
+
+            return new FGuid(s.Replace("-", ""));
         }
     }
 }
