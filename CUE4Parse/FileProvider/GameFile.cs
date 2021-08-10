@@ -6,6 +6,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Serilog;
 
 namespace CUE4Parse.FileProvider
 {
@@ -63,8 +64,9 @@ namespace CUE4Parse.FileProvider
                 reader = CreateReader();
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Log.Warning(e, "An error occured while creating GameFile reader");
                 reader = default;
                 return false;
             }

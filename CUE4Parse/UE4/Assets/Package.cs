@@ -255,30 +255,30 @@ namespace CUE4Parse.UE4.Assets
                     {
                         var dep = _package.PreloadDependencies[runningIndex++];
                         // don't request IO for this export until these are serialized
-                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Serialize, ResolveNode(dep)));
+                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Serialize, ResolveLoader(dep)));
                     }
                     for (var index = _export.CreateBeforeSerializationDependencies; index > 0; index--)
                     {
                         var dep = _package.PreloadDependencies[runningIndex++];
                         // don't request IO for this export until these are done
-                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Create, ResolveNode(dep)));
+                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Create, ResolveLoader(dep)));
                     }
                     for (var index = _export.SerializationBeforeCreateDependencies; index > 0; index--)
                     {
                         var dep = _package.PreloadDependencies[runningIndex++];
                         // can't create this export until these things are serialized
-                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Serialize, ResolveNode(dep)));
+                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Serialize, ResolveLoader(dep)));
                     }
                     for (var index = _export.CreateBeforeCreateDependencies; index > 0; index--)
                     {
                         var dep = _package.PreloadDependencies[runningIndex++];
                         // can't create this export until these things are created
-                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveNode(dep)));
+                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveLoader(dep)));
                     }
                 }
             }
 
-            private ExportLoader? ResolveNode(FPackageIndex index)
+            private ExportLoader? ResolveLoader(FPackageIndex index)
             {
                 if (index.IsExport)
                 {

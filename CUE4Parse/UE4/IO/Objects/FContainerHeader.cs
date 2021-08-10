@@ -37,6 +37,11 @@ namespace CUE4Parse.UE4.IO.Objects
             var storeEntriesEnd = Ar.Position + storeEntriesSize;
             StoreEntries = Ar.ReadArray((int) PackageCount, () => new FPackageStoreEntry(Ar));
             Ar.Position = storeEntriesEnd;
+            if (Ar.Game >= EGame.GAME_UE5_0)
+            {
+                ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar); // Actual name is RedirectsNameMap
+            }
+
             // Skip CulturePackageMap and PackageRedirects
         }
     }
