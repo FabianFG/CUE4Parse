@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             {
                 SizeX = Ar.Read<int>();
                 SizeY = Ar.Read<int>();
-                if (Ar.Game >= EGame.GAME_UE4_20)
+                if (Ar.Versions["Texture.64BitSkipOffsets"])
                 {
                     SizeZ = Ar.Read<int>();
                 }

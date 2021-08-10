@@ -281,7 +281,7 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual FName ReadFName() => new(ReadFString());
 
-        public virtual UObject ReadUObject()
+        public virtual UObject? ReadUObject()
         {
             throw new InvalidOperationException("Generic FArchive can't read UObject's");
         }

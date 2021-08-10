@@ -55,6 +55,7 @@ namespace CUE4Parse.UE4.Versions
             Options["StaticMesh.HasVisibleInRayTracing"] = Game >= GAME_UE4_26;
             Options["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = Game >= GAME_UE4_27;
             Options["StaticMesh.UseNewCookedFormat"] = Game >= GAME_UE4_23;
+            Options["Texture.64BitSkipOffsets"] = Game >= GAME_UE4_20; // TODO check other occurrences of Game >= GAME_UE4_20 and rename this
             Options["VirtualTextures"] = Game >= GAME_UE4_23;
 
             if (_optionOverrides != null)

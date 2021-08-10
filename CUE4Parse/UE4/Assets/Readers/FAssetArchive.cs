@@ -82,6 +82,8 @@ namespace CUE4Parse.UE4.Assets.Readers
             });
         }
 
+        public override UObject? ReadUObject() => ReadObject<UObject>().Value;
+
         public bool TryGetPayload(PayloadType type, out FAssetArchive? ar)
         {
             ar = null;

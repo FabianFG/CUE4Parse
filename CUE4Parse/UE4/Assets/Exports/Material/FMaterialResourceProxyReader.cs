@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FNameEntrySerialized[] NameMap;
         private long _offsetToFirstResource;
 
-        public FMaterialResourceProxyReader(FArchive Ar)
+        public FMaterialResourceProxyReader(FArchive Ar) : base(Ar.Versions)
         {
             baseArchive = Ar;
             NameMap = Ar.ReadArray(() => new FNameEntrySerialized(Ar));
