@@ -22,11 +22,13 @@ namespace CUE4Parse.UE4.Assets
         public override FNameEntrySerialized[] NameMap { get; }
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
+        public FPackageIndex[] PreloadDependencies { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
         public override bool IsFullyLoaded { get; } = false;
+        private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
         public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast(".uasset"), provider, mappings)
+            : base(uasset.Name.SubstringBeforeLast("."), provider, mappings)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
@@ -45,7 +47,13 @@ namespace CUE4Parse.UE4.Assets
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
-            FAssetArchive uexpAr = uexp != null ? new FAssetArchive(uexp, this, (int) uassetAr.Length) : uassetAr; // allows embedded uexp data
+            if (!useLazySerialization && Summary.PreloadDependencyCount > 0 && Summary.PreloadDependencyOffset > 0)
+            {
+                uassetAr.SeekAbsolute(Summary.PreloadDependencyOffset, SeekOrigin.Begin);
+                PreloadDependencies = uassetAr.ReadArray(Summary.PreloadDependencyCount, () => new FPackageIndex(uassetAr));
+            }
+
+            var uexpAr = uexp != null ? new FAssetArchive(uexp, this, (int) uassetAr.Length) : uassetAr;
 
             if (ubulk != null)
             {
@@ -75,62 +83,22 @@ namespace CUE4Parse.UE4.Assets
                         obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here 
 
                         // Serialize
-                        uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
-                        DeserializeObject(obj, uexpAr, export.SerialSize);
+                        var Ar = (FAssetArchive) uexpAr.Clone();
+                        Ar.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
+                        DeserializeObject(obj, Ar, export.SerialSize);
                         // TODO right place ???
                         obj.Flags |= EObjectFlags.RF_LoadCompleted;
                         obj.PostLoad();
                         return obj;
                     });
-                }    
+                }
             }
             else
             {
-                var newObjNames = new List<string>();
-                foreach (var export in ExportMap)
+                _exportLoaders = new ExportLoader[ExportMap.Length];
+                for (var i = 0; i < ExportMap.Length; i++)
                 {
-                    if (export.ExportObject == null)
-                    {
-                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
-                        obj.Name = export.ObjectName.Text;
-                        obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
-                        obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
-                        obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
-                        
-                        export.ExportObject = new Lazy<UObject>(obj);
-                        newObjNames.Add(export.ObjectName.Text);
-                    }
-                }
-
-                foreach (var export in ExportMap)
-                {
-                    if (newObjNames.Contains(export.ObjectName.Text))
-                    {
-                        var obj = export.ExportObject.Value;
-                        
-                        uexpAr.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
-                        DeserializeObject(obj, uexpAr, export.SerialSize);
-                    }
-                }
-                
-                foreach (var export in ExportMap)
-                {
-                    if (newObjNames.Contains(export.ObjectName.Text))
-                    {
-                        var obj = export.ExportObject.Value;
-                        obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
-                    }
-                }
-                
-                foreach (var export in ExportMap)
-                {
-                    if (newObjNames.Contains(export.ObjectName.Text))
-                    {
-                        var obj = export.ExportObject.Value;
-                        
-                        obj.Flags |= EObjectFlags.RF_LoadCompleted;
-                        obj.PostLoad();
-                    }
+                    _exportLoaders[i] = new(this, ExportMap[i], uexpAr);
                 }
             }
 
@@ -247,6 +215,153 @@ namespace CUE4Parse.UE4.Assets
             public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
             public override Lazy<UObject> Object => _export.ExportObject;
+        }
+
+        private class ExportLoader
+        {
+            private Package _package;
+            private FObjectExport _export;
+            private FAssetArchive _archive;
+            private UObject _object;
+            private List<LoadDependency>? _dependencies;
+            private LoadPhase _phase = LoadPhase.Create;
+            public Lazy<UObject> Lazy;
+
+            public ExportLoader(Package package, FObjectExport export, FAssetArchive archive)
+            {
+                _package = package;
+                _export = export;
+                _archive = archive;
+                Lazy = new(() =>
+                {
+                    Fire(LoadPhase.Serialize);
+                    return _object;
+                });
+                export.ExportObject = Lazy;
+            }
+
+            private void EnsureDependencies()
+            {
+                if (_dependencies != null)
+                {
+                    return;
+                }
+
+                _dependencies = new();
+                var runningIndex = _export.FirstExportDependency;
+                if (runningIndex >= 0)
+                {
+                    for (var index = _export.SerializationBeforeSerializationDependencies; index > 0; index--)
+                    {
+                        var dep = _package.PreloadDependencies[runningIndex++];
+                        // don't request IO for this export until these are serialized
+                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Serialize, ResolveNode(dep)));
+                    }
+                    for (var index = _export.CreateBeforeSerializationDependencies; index > 0; index--)
+                    {
+                        var dep = _package.PreloadDependencies[runningIndex++];
+                        // don't request IO for this export until these are done
+                        _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Create, ResolveNode(dep)));
+                    }
+                    for (var index = _export.SerializationBeforeCreateDependencies; index > 0; index--)
+                    {
+                        var dep = _package.PreloadDependencies[runningIndex++];
+                        // can't create this export until these things are serialized
+                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Serialize, ResolveNode(dep)));
+                    }
+                    for (var index = _export.CreateBeforeCreateDependencies; index > 0; index--)
+                    {
+                        var dep = _package.PreloadDependencies[runningIndex++];
+                        // can't create this export until these things are created
+                        _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveNode(dep)));
+                    }
+                }
+            }
+
+            private ExportLoader? ResolveNode(FPackageIndex index)
+            {
+                if (index.IsExport)
+                {
+                    return _package._exportLoaders[index.Index - 1];
+                }
+                return null;
+            }
+
+            private void Fire(LoadPhase untilPhase)
+            {
+                if (untilPhase >= LoadPhase.Create && _phase <= LoadPhase.Create)
+                {
+                    FireDependencies(LoadPhase.Create);
+                    Create();
+                }
+                if (untilPhase >= LoadPhase.Serialize && _phase <= LoadPhase.Serialize)
+                {
+                    FireDependencies(LoadPhase.Serialize);
+                    Serialize();
+                }
+            }
+
+            private void FireDependencies(LoadPhase phase)
+            {
+                EnsureDependencies();
+                foreach (var dependency in _dependencies)
+                {
+                    if (dependency.FromPhase == phase)
+                    {
+                        dependency.Target?.Fire(dependency.ToPhase);
+                    }
+                }
+            }
+
+            private void Create()
+            {
+                Trace.Assert(_phase == LoadPhase.Create);
+                _object = ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct);
+                _object.Name = _export.ObjectName.Text;
+                if (!_export.OuterIndex.IsNull)
+                {
+                    Trace.Assert(_export.OuterIndex.IsExport, "Outer imports are not yet supported");
+                    _object.Outer = _package._exportLoaders[_export.OuterIndex.Index - 1]._object;
+                }
+                else
+                {
+                    _object.Outer = _package;
+                }
+                _object.Super = _package.ResolvePackageIndex(_export.SuperIndex) as ResolvedExportObject;
+                _object.Template = _package.ResolvePackageIndex(_export.TemplateIndex) as ResolvedExportObject;
+                _object.Flags |= (EObjectFlags) _export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
+                _phase = LoadPhase.Serialize;
+            }
+
+            private void Serialize()
+            {
+                Trace.Assert(_phase == LoadPhase.Serialize);
+                var Ar = (FAssetArchive) _archive.Clone();
+                Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
+                DeserializeObject(_object, Ar, _export.SerialSize);
+                // TODO right place ???
+                _object.Flags |= EObjectFlags.RF_LoadCompleted;
+                _object.PostLoad();
+                _phase = LoadPhase.Complete;
+            }
+        }
+
+        private class LoadDependency
+        {
+            public LoadPhase FromPhase, ToPhase;
+            public ExportLoader? Target;
+
+            public LoadDependency(LoadPhase fromPhase, LoadPhase toPhase, ExportLoader? target)
+            {
+                FromPhase = fromPhase;
+                ToPhase = toPhase;
+                Target = target;
+            }
+        }
+
+        private enum LoadPhase
+        {
+            Create, Serialize, Complete
         }
     }
 }

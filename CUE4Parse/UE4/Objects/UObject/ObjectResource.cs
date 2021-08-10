@@ -197,7 +197,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     public abstract class FObjectResource
     {
         public FName ObjectName;
-        public FPackageIndex? OuterIndex;
+        public FPackageIndex OuterIndex;
 
         public override string ToString()
         {

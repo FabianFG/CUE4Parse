@@ -14,6 +14,9 @@ namespace CUE4Parse.UE4.Objects.Core.Serialization
         /** Custom version */
         public int Version;
 
+        public static bool operator ==(FCustomVersion one, FCustomVersion two) => one.Key == two.Key && one.Version == two.Version;
+        public static bool operator !=(FCustomVersion one, FCustomVersion two) => one.Key != two.Key || one.Version != two.Version;
+        
         public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
     }
 }

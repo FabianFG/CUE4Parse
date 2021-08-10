@@ -62,7 +62,7 @@ namespace CUE4Parse_Conversion.Textures.BC
         private static int GetPixelLoc(int width, int x, int y, int bpp, int off) => (y * width + x) * bpp + off;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte GetZNormal(byte x, byte y)
+        public static byte GetZNormal(byte x, byte y)
         {
             var xf = (x / 127.5f) - 1;
             var yf = (y / 127.5f) - 1;
