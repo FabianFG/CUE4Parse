@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -53,7 +52,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 if (bHasOccluderData)
                 {
                     Ar.ReadArray<FVector>(); // Vertices
-                    Ar.ReadArray<ushort>();  // Indics
+                    Ar.ReadArray<ushort>();  // Indices
                 }
             }
 
@@ -62,10 +61,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 var bHasSpeedTreeWind = Ar.ReadBoolean();
                 if (bHasSpeedTreeWind)
                 {
-                    Ar.Seek(validPos, SeekOrigin.Begin);
+                    Ar.Position = validPos;
                     return;
                 }
-                
+
                 if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
                 {
                     // UE4.14+ - "Materials" are deprecated, added StaticMaterials
@@ -86,13 +85,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-            
+
             writer.WritePropertyName("BodySetup");
             serializer.Serialize(writer, BodySetup);
-            
+
             writer.WritePropertyName("NavCollision");
             serializer.Serialize(writer, NavCollision);
-            
+
             writer.WritePropertyName("LightingGuid");
             serializer.Serialize(writer, LightingGuid);
 

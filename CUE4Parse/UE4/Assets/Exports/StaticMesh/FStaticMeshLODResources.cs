@@ -91,13 +91,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                     }
                 }
-            }
 
-            // FStaticMeshBuffersSize
-            // uint32 SerializedBuffersSize = 0;
-            // uint32 DepthOnlyIBSize       = 0;
-            // uint32 ReversedIBsSize       = 0;
-            Ar.Position += 12;
+                // FStaticMeshBuffersSize
+                // uint32 SerializedBuffersSize = 0;
+                // uint32 DepthOnlyIBSize       = 0;
+                // uint32 ReversedIBsSize       = 0;
+                Ar.Position += 12;
+            }
         }
 
         // Pre-UE4.23 code
@@ -163,10 +163,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
-            
+
             if (Ar.Game == EGame.GAME_ROGUECOMPANY)
                 new FColorVertexBuffer(Ar);
-            
+
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
