@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -14,6 +13,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets
                 {
                     PackageFlags = summary.PackageFlags,
                     TotalHeaderSize = summary.GraphDataOffset + (int) summary.HeaderSize,
-                    ExportCount = (summary.ExportBundleEntriesOffset - summary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
+                    ExportCount = (summary.ExportBundleEntriesOffset - summary.ExportMapOffset) / FExportMapEntry.Size,
                     ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
                 };
 
@@ -66,7 +66,7 @@ namespace CUE4Parse.UE4.Assets
 
                 // Export map
                 uassetAr.Position = summary.ExportMapOffset;
-                ExportMap = uasset.ReadArray<FExportMapEntry>(Summary.ExportCount);
+                ExportMap = uasset.ReadArray(Summary.ExportCount, () => new FExportMapEntry(uassetAr));
                 ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
 
                 // Export bundle entries
@@ -92,7 +92,7 @@ namespace CUE4Parse.UE4.Assets
                     PackageFlags = summary.PackageFlags,
                     TotalHeaderSize = summary.GraphDataOffset + summary.GraphDataSize,
                     NameCount = summary.NameMapHashesSize / sizeof(ulong) - 1,
-                    ExportCount = (summary.ExportBundlesOffset - summary.ExportMapOffset) / Unsafe.SizeOf<FExportMapEntry>(),
+                    ExportCount = (summary.ExportBundlesOffset - summary.ExportMapOffset) / FExportMapEntry.Size,
                     ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
                 };
 
@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Assets
 
                 // Export map
                 uassetAr.Position = summary.ExportMapOffset;
-                ExportMap = uasset.ReadArray<FExportMapEntry>(Summary.ExportCount);
+                ExportMap = uasset.ReadArray(Summary.ExportCount, () => new FExportMapEntry(uassetAr));
                 ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
 
                 // Export bundles
@@ -156,12 +156,13 @@ namespace CUE4Parse.UE4.Assets
                             obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.ExportObject.Value ?? this;
                             obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                             obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
-                            obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
+                            obj.Flags |= export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
 
                             // Serialize
-                            uassetAr.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
-                            uassetAr.Seek(localExportDataOffset, SeekOrigin.Begin);
-                            DeserializeObject(obj, uassetAr, (long) export.CookedSerialSize);
+                            var Ar = (FAssetArchive) uassetAr.Clone();
+                            Ar.AbsoluteOffset = (int) export.CookedSerialOffset - localExportDataOffset;
+                            Ar.Position = localExportDataOffset;
+                            DeserializeObject(obj, Ar, (long) export.CookedSerialSize);
                             // TODO right place ???
                             obj.Flags |= EObjectFlags.RF_LoadCompleted;
                             obj.PostLoad();
@@ -251,6 +252,11 @@ namespace CUE4Parse.UE4.Assets
 
         public ResolvedObject? ResolveObjectIndex(FPackageObjectIndex index)
         {
+            if (index.IsNull)
+            {
+                return null;
+            }
+
             if (index.IsExport)
             {
                 return new ResolvedExportObject((int) index.AsExport, this);
@@ -259,20 +265,31 @@ namespace CUE4Parse.UE4.Assets
             if (index.IsScriptImport)
             {
                 var scriptObjectEntry = GlobalData.FindScriptEntryName(index);
-                return scriptObjectEntry != "None" ? new ResolvedScriptObject(scriptObjectEntry, this) : null;
+                if (scriptObjectEntry != "None")
+                {
+                    return new ResolvedScriptObject(scriptObjectEntry, this);
+                }
             }
 
             if (index.IsPackageImport)
             {
                 foreach (var pkg in ImportedPackages.Value)
                 {
-                    if (pkg == null) continue;
-                    for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
-                        if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
-                            return new ResolvedExportObject(exportIndex, pkg);
+                    if (pkg != null)
+                    {
+                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        {
+                            var export = pkg.ExportMap[exportIndex];
+                            if (export.GlobalImportIndex == index || export.ExportHash == index.Value)
+                            {
+                                return new ResolvedExportObject(exportIndex, pkg);
+                            }
+                        }
+                    }
                 }
             }
 
+            Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
             return null;
         }
 

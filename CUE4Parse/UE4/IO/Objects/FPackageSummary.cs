@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.IO.Objects
     {
         public readonly uint HeaderSize;
         public readonly FMappedName Name;
-        // public readonly FMappedName SourceName; // Removed after CL 15151250 of UE5
+        // public readonly FMappedName SourceName; // Removed after CL 17014898 of ue5-main
         public readonly EPackageFlags PackageFlags;
         public readonly uint CookedHeaderSize;
         public readonly int ImportMapOffset;
