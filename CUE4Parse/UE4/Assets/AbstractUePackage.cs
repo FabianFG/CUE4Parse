@@ -8,6 +8,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 using Serilog;
@@ -39,10 +40,12 @@ namespace CUE4Parse.UE4.Assets
             var current = struc;
             while (current != null) // Traverse up until a known one is found
             {
-                if (current is UScriptClass scriptClass)
+                if (current is UClass scriptClass)
                 {
+                    // We know this is a class defined in code at this point
                     obj = scriptClass.ConstructObject();
-                    break;
+                    if (obj != null)
+                        break;
                 }
 
                 current = current.SuperStruct?.Load<UStruct>();

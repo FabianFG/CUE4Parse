@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -70,6 +73,51 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
+        
+        public Assets.Exports.UObject? ConstructObject()
+        {
+            var type = ObjectTypeRegistry.Get(Name);
+            if (type != null)
+            {
+                try
+                {
+                    var instance = Activator.CreateInstance(type);
+                    if (instance is Assets.Exports.UObject obj)
+                    {
+                        return obj;
+                    }
+                    else
+                    {
+                        Log.Warning("Class {Type} did have a valid constructor but does not inherit UObject", type);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e, "Class {Type} could not be constructed", type);
+                }
+            }
+
+            return null;
+        }
+        /*
+        public Assets.Exports.UObject ConstructObject() => Name switch
+        {
+            "AkMediaAssetData" => new UAkMediaAssetData(),
+            "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(),
+            "CurveTable" => new UCurveTable(),
+            "DataTable" => new UDataTable(),
+            "Material" => new UMaterial(),
+            "MaterialInstanceConstant" => new UMaterialInstanceConstant(),
+            "Skeleton" => new USkeleton(),
+            "SoundWave" => new USoundWave(),
+            "StringTable" => new UStringTable(),
+            "Texture2D" => new UTexture2D(),
+            "UserDefinedStruct" => new UUserDefinedStruct(),
+            "VirtualTexture2D" => new UTexture2D(),
+            "WidgetBlueprintGeneratedClass" => new UWidgetBlueprintGeneratedClass(),
+            _ => new Assets.Exports.UObject()
+        };
+        */
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {

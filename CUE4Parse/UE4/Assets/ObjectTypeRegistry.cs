@@ -107,7 +107,11 @@ namespace CUE4Parse.UE4.Assets
         {
             lock (_classes)
             {
-                return _classes.TryGetValue(serializedName, out var type) ? type : null;
+                if (!_classes.TryGetValue(serializedName, out var type) && serializedName.EndsWith("_C"))
+                {
+                    _classes.TryGetValue(serializedName[..^2], out type);
+                }
+                return type;
             }
         }
         
