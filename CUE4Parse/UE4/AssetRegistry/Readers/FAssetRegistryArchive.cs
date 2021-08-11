@@ -17,15 +17,15 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         {
             baseArchive = Ar;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
             => baseArchive.Read(buffer, offset, count);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin)
             => baseArchive.Seek(offset, origin);
-        
+
         public override bool CanSeek => baseArchive.CanSeek;
         public override long Length => baseArchive.Length;
         public override long Position
@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         }
 
         public override string Name => baseArchive.Name;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
             => baseArchive.Read<T>();

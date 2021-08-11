@@ -111,7 +111,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             uint bitfield = *(uint*) data;
             data += sizeof(uint);
 
-            uint compressionBlockSize = 0;
+            uint compressionBlockSize;
             if ((bitfield & 0x3f) == 0x3f) // flag value to load a field
             {
                 compressionBlockSize = *(uint*) data;
@@ -192,7 +192,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (compressionBlocksCount > 0)
             {
                 CompressionBlockSize = compressionBlockSize;
-                // Per the comment in Encode, if CompressionBlocksCount == 1, we use UncompressedSize for CompressionBlockSize
+                // Per the comment in Encode, if compressionBlocksCount == 1, we use UncompressedSize for CompressionBlockSize
                 if (compressionBlocksCount == 1)
                 {
                     CompressionBlockSize = (uint) UncompressedSize;
