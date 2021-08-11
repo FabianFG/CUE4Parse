@@ -13,7 +13,6 @@ namespace CUE4Parse.UE4.IO.Objects
         public const int TypeShift = IndexBits;
         public const ulong Invalid = ~0UL;
 
-        
         public readonly ulong TypeAndId;
         public EType Type => (EType) (TypeAndId >> TypeShift);
         public ulong Value => TypeAndId & IndexMask;
@@ -24,6 +23,12 @@ namespace CUE4Parse.UE4.IO.Objects
         public bool IsScriptImport => Type == EType.ScriptImport;
         public bool IsPackageImport => Type == EType.PackageImport;
         public uint AsExport => (uint) TypeAndId;
+
+        public FPackageImportReference AsPackageImportRef => new()
+        {
+            ImportedPackageIndex = (uint) ((TypeAndId & IndexMask) >> 32),
+            ExportHash = (uint) TypeAndId
+        };
 
         public FPackageObjectIndex(ulong typeAndId)
         {
@@ -63,5 +68,5 @@ namespace CUE4Parse.UE4.IO.Objects
         PackageImport,
         Null,
         TypeCount = Null
-    };
+    }
 }

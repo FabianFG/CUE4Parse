@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.IO.Objects
             else
             {
                 GlobalImportIndex = Ar.Read<FPackageObjectIndex>();
-                ExportHash = uint.MaxValue;
+                ExportHash = 0;
             }
 
             ObjectFlags = Ar.Read<EObjectFlags>();

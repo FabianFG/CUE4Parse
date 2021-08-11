@@ -271,18 +271,39 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
 
-            if (index.IsPackageImport)
+            if (index.IsPackageImport && Provider != null)
             {
-                foreach (var pkg in ImportedPackages.Value)
+                if (Provider.Versions.Game >= EGame.GAME_UE5_0)
                 {
-                    if (pkg != null)
+                    var packageImportRef = index.AsPackageImportRef;
+                    var importedPackages = ImportedPackages.Value;
+                    if (packageImportRef.ImportedPackageIndex < importedPackages.Length)
                     {
-                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
+                        if (pkg != null)
                         {
-                            var export = pkg.ExportMap[exportIndex];
-                            if (export.GlobalImportIndex == index || export.ExportHash == index.Value)
+                            for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                             {
-                                return new ResolvedExportObject(exportIndex, pkg);
+                                if (pkg.ExportMap[exportIndex].ExportHash == packageImportRef.ExportHash)
+                                {
+                                    return new ResolvedExportObject(exportIndex, pkg);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var pkg in ImportedPackages.Value)
+                    {
+                        if (pkg != null)
+                        {
+                            for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                            {
+                                if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
+                                {
+                                    return new ResolvedExportObject(exportIndex, pkg);
+                                }
                             }
                         }
                     }
