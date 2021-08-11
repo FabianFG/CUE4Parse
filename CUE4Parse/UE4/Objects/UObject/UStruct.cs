@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             SuperStruct = new FPackageIndex(Ar);
-            if (Ar.Game == EGame.GAME_SOD2)
+            if (Ar.Game == EGame.GAME_StateOfDecay2)
             {
                 Ar.Position += 4; //var someScriptImport = new FPackageIndex(Ar);
             }

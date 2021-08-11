@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             bCastShadow = Ar.ReadBoolean();
             bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
             bVisibleInRayTracing = Ar.Versions["StaticMesh.HasVisibleInRayTracing"] && Ar.ReadBoolean();
-            if (Ar.Game == EGame.GAME_ROGUECOMPANY) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_RogueCompany) Ar.Position += 4;
         }
     }
 

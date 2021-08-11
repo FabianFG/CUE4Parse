@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
         public FIntPoint ImportedSize { get; private set; }
         public bool bRenderNearestNeighbor { get; private set; }
-        public bool isNormalMap { get; private set; } = false;
+        public bool isNormalMap { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 #endif
                         var data = new FTexturePlatformData(Ar);
 
-                        if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+                        if (Ar.Game == EGame.GAME_SeaOfThieves)
                         {
                             Ar.Position += 4;
                         }

@@ -166,7 +166,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 Ar.SkipFixedArray(8);
             }
             bDisabled = Ar.ReadBoolean();
-            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+            if (Ar.Game == EGame.GAME_RogueCompany)
                 Ar.Position += 4;
         }
     }

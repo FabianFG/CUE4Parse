@@ -101,7 +101,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 ScreenSize[i] = Ar.Read<float>();
             }
 
-            if (Ar.Game == EGame.GAME_BORDERLANDS3)
+            if (Ar.Game == EGame.GAME_Borderlands3)
             {
                 var count = Ar.Read<int>();
                 for (var i = 0; i < count; i++)

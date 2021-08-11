@@ -46,10 +46,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         
         public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors) : this()
         {
-            if (Ar.Game == EGame.GAME_SEAOFTHIEVES) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
-            if (Ar.Game == EGame.GAME_SEAOFTHIEVES) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
 
             Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar));
 
@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (!stripDataFlags.IsEditorDataStripped())
                 RawPointIndices = new FIntBulkData(Ar);
 
-            if (Ar.Game != EGame.GAME_SOD2 && Ar.Ver >= UE4Version.VER_UE4_ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
+            if (Ar.Game != EGame.GAME_StateOfDecay2 && Ar.Ver >= UE4Version.VER_UE4_ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
             {
                 MeshToImportVertexMap = Ar.ReadArray<int>();
                 MaxImportVertex = Ar.Read<int>();
@@ -130,13 +130,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         throw new ParserException("Unsupported: extra SkelMesh vertex influences (old mesh format)");
 
                     // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1415
-                    if (Ar.Game == EGame.GAME_SOD2)
+                    if (Ar.Game == EGame.GAME_StateOfDecay2)
                     {
                         Ar.Position += 8;
                         return;
                     }
 
-                    if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+                    if (Ar.Game == EGame.GAME_SeaOfThieves)
                     {
                         var arraySize = Ar.Read<int>();
                         Ar.Position += arraySize * 44;
@@ -157,7 +157,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+            if (Ar.Game == EGame.GAME_SeaOfThieves)
             {
                 var _ = new FMultisizeIndexContainer(Ar);
             }
@@ -191,7 +191,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 if (bInlined)
                 {
                     SerializeStreamedData(Ar, bHasVertexColors);
-                    if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                    if (Ar.Game == EGame.GAME_RogueCompany)
                     {
                         Ar.Position += 10; // FStripDataFlags, ElementSize, ElementCount
                         Ar.SkipBulkArrayData();
@@ -250,7 +250,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
                 var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
-                if (!bHasVertexColors && Ar.Game == EGame.GAME_BORDERLANDS3)
+                if (!bHasVertexColors && Ar.Game == EGame.GAME_Borderlands3)
                 {
                     for (var i = 0; i < numVertexColorChannels; i++)
                     {

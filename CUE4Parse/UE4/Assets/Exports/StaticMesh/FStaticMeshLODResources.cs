@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             var bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
-            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+            if (Ar.Game == EGame.GAME_RogueCompany)
                 bInlined = true;
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 if (bInlined)
                 {
                     SerializeBuffers(Ar);
-                    if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+                    if (Ar.Game == EGame.GAME_RogueCompany)
                         Ar.Position += 10;
                 }
                 else
@@ -106,7 +106,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
 
-            if (Ar.Game == EGame.GAME_BORDERLANDS3)
+            if (Ar.Game == EGame.GAME_Borderlands3)
             {
                 var numColorStreams = Ar.Read<int>();
                 ColorVertexBuffer = new FColorVertexBuffer(Ar);
@@ -163,8 +163,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
-
-            if (Ar.Game == EGame.GAME_ROGUECOMPANY)
+            
+            if (Ar.Game == EGame.GAME_RogueCompany)
                 new FColorVertexBuffer(Ar);
 
             IndexBuffer = new FRawStaticIndexBuffer(Ar);

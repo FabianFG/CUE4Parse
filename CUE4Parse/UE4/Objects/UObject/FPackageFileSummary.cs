@@ -91,7 +91,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Tag == PACKAGE_FILE_TAG_ONE) // SOD2, "one"
             {
-                Ar.Game = EGame.GAME_SOD2;
+                Ar.Game = EGame.GAME_StateOfDecay2;
                 Ar.Ver = Ar.Game.GetVersion();
                 var legacyFileVersion = Ar.Read<int>(); // seems to be always int.MinValue
                 bUnversioned = true;
@@ -237,7 +237,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             SearchableNamesOffset = FileVersionUE4 >= VER_UE4_ADDED_SEARCHABLE_NAMES ? Ar.Read<int>() : 0;
             ThumbnailTableOffset = Ar.Read<int>();
 
-            if (Ar.Game == EGame.GAME_VALORANT) Ar.Position += 8;
+            if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 8;
 
             Guid = Ar.Read<FGuid>();
 
@@ -306,7 +306,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 AssetRegistryDataOffset = Ar.Read<int>();
             }
 
-            if (Ar.Game == EGame.GAME_SEAOFTHIEVES)
+            if (Ar.Game == EGame.GAME_SeaOfThieves)
             {
                 Ar.Position += 6; // no idea what's going on here.
             }

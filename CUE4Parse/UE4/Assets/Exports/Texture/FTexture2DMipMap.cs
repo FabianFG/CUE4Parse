@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             
             Data = new FByteBulkData(Ar);
 
-            if (Ar.Game == EGame.GAME_BORDERLANDS3)
+            if (Ar.Game == EGame.GAME_Borderlands3)
             {
                 SizeX = Ar.Read<ushort>();
                 SizeY = Ar.Read<ushort>();
