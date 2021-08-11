@@ -1,7 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -23,6 +22,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FExportMapEntry(FArchive Ar)
         {
+            var start = Ar.Position;
             CookedSerialOffset = Ar.Read<ulong>();
             CookedSerialSize = Ar.Read<ulong>();
             ObjectName = Ar.Read<FMappedName>();
@@ -43,12 +43,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
             ObjectFlags = Ar.Read<EObjectFlags>();
             FilterFlags = Ar.Read<byte>();
-            Ar.Position = Ar.Position.Align(4);
-        }
-
-        public static int GetStructSize(FArchive Ar)
-        {
-            return (2 * 8 + 2 * 4 + 4 * 8 + (Ar.Game >= EGame.GAME_UE5_0 ? 4 : 8) + 4 + 1).Align(4);
+            Ar.Position = start + Size;
         }
     }
 }
