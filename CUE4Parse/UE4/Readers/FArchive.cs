@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Readers
 
         protected FArchive(VersionContainer? versions = null)
         {
-            Versions = versions;
+            Versions = versions ?? new VersionContainer();
         }
 
         public override void Flush() { }

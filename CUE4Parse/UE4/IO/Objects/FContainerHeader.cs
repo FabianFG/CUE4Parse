@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -26,10 +25,6 @@ namespace CUE4Parse.UE4.IO.Objects
                 Ar.Position = namesPos;
                 ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar, nameHashesSize / sizeof(ulong) - 1);
                 Ar.Position = continuePos;
-            }
-            else
-            {
-                ContainerNameMap = Array.Empty<FNameEntrySerialized>();
             }
 
             PackageIds = Ar.ReadArray<FPackageId>();

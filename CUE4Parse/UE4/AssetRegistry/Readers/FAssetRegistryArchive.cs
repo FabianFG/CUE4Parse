@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
 
         public abstract void SerializeTagsAndBundles(FAssetData assetData);
 
-        public FAssetRegistryArchive(FArchive Ar)
+        public FAssetRegistryArchive(FArchive Ar) : base(Ar.Versions)
         {
             baseArchive = Ar;
         }

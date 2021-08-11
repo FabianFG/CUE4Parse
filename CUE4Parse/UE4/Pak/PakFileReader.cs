@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-
-using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Exceptions;
@@ -16,6 +14,8 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
 using Serilog;
+using static CUE4Parse.Compression.Compression;
+using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
 
 namespace CUE4Parse.UE4.Pak
 {
@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Pak
             this.Ar = Ar;
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
-            if (Info.Version > EPakFileVersion.PakFile_Version_Latest)
+            if (Info.Version > PakFile_Version_Latest)
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
@@ -53,52 +53,47 @@ namespace CUE4Parse.UE4.Pak
 
         public override byte[] Extract(VfsEntry entry)
         {
-            if (!(entry is FPakEntry pakEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
+            if (entry is not FPakEntry pakEntry || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
             // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
-            // Pak Entry is written before the file data,
-            // but its the same as the one from the index, just without a name
-            // We don't need to serialize that again so + file.StructSize
-            reader.Position = pakEntry.Offset + pakEntry.StructSize; // doesnt seem to be the case with older pak versions
-
             if (pakEntry.IsCompressed)
             {
 #if DEBUG
                 Log.Debug($"{pakEntry.Name} is compressed with {pakEntry.CompressionMethod}");
 #endif
-                var data = new MemoryStream((int) pakEntry.UncompressedSize) {Position = 0};
+                var uncompressed = new byte[(int) pakEntry.UncompressedSize];
+                var uncompressedOff = 0;
                 foreach (var block in pakEntry.CompressionBlocks)
                 {
                     reader.Position = block.CompressedStart;
-
                     var srcSize = (int) block.Size.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
                     // Read the compressed block
-                    byte[] src = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
+                    byte[] compressed = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,
                     // its either just the compression block size
                     // or if its the last block its the remaining data size
-                    var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - data.Length);
-                    data.Write(Compression.Compression.Decompress(src, uncompressedSize, pakEntry.CompressionMethod, reader), 0, uncompressedSize);
+                    var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - uncompressedOff);
+                    Decompress(compressed, 0, compressed.Length, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
+                    uncompressedOff += (int) pakEntry.CompressionBlockSize;
                 }
 
-                if (data.Length == pakEntry.UncompressedSize) return data.GetBuffer();
-                if (data.Length > pakEntry.UncompressedSize) return data.GetBuffer().SubByteArray((int) pakEntry.UncompressedSize);
-                throw new ParserException(reader, $"Decompression of {pakEntry.Name} failed, {data.Length} < {pakEntry.UncompressedSize}");
+                return uncompressed;
             }
-            else
-            {
-                // File might be encrypted or just stored normally
-                var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
-                var data = ReadAndDecrypt(size, reader, pakEntry.IsEncrypted);
-                return size != pakEntry.UncompressedSize ? data.SubByteArray((int) pakEntry.UncompressedSize) : data;
-            }
+
+            // Pak Entry is written before the file data,
+            // but its the same as the one from the index, just without a name
+            // We don't need to serialize that again so + file.StructSize
+            reader.Position = pakEntry.Offset + pakEntry.StructSize; // doesnt seem to be the case with older pak versions
+            var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
+            var data = ReadAndDecrypt(size, reader, pakEntry.IsEncrypted);
+            return size != pakEntry.UncompressedSize ? data.SubByteArray((int) pakEntry.UncompressedSize) : data;
         }
 
         public override IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false)
         {
             var watch = new Stopwatch();
             watch.Start();
-            if (Info.Version >= EPakFileVersion.PakFile_Version_PathHashIndex)
+            if (Info.Version >= PakFile_Version_PathHashIndex)
                 ReadIndexUpdated(caseInsensitive);
             else
                 ReadIndexLegacy(caseInsensitive);
