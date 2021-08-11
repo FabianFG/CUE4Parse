@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     public class FStaticMeshLODResources
     {
         public FStaticMeshSection[] Sections { get; }
-        public FCardRepresentationData CardRepresentationData;
+        public FCardRepresentationData CardRepresentationData { get; set; }
         public float MaxDeviation { get; }
         public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
         public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
@@ -32,7 +32,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             CDSF_AdjacencyData = 1,
             CDSF_MinLodData = 2,
             CDSF_ReversedIndexBuffer = 4,
-            CDSF_RayTracingResources = 8
+            CDSF_RayTracingResources = 8,
+
+            // PUBG all 3 bits set, no idea what indicates what, they're just always set.
+            CDSF_StripIndexBuffers = 128 | 64 | 32
         }
 
         public FStaticMeshLODResources(FAssetArchive Ar)
@@ -53,9 +56,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
 
             var bIsLODCookedOut = Ar.ReadBoolean();
-            var bInlined = Ar.ReadBoolean();
-            if (Ar.Game == EGame.GAME_RogueCompany)
-                bInlined = true;
+            var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
@@ -122,37 +123,40 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+            if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
             {
-                ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
-                DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
-                ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
-            }
-            else
-            {
-                // UE4.8 or older, or when has CDSF_ReversedIndexBuffer
-                DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
-            }
+                if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+                {
+                    ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                    DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                    ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                }
+                else
+                {
+                    // UE4.8 or older, or when has CDSF_ReversedIndexBuffer
+                    DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+                }
 
-            if (Ar.Ver is >= UE4Version.VER_UE4_FTEXT_HISTORY and < UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
-            {
-                new FDistanceFieldVolumeData(Ar); // distanceFieldData
+                if (Ar.Ver is >= UE4Version.VER_UE4_FTEXT_HISTORY and < UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
+                {
+                    var _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
+                }
+
+                if (!stripDataFlags.IsEditorDataStripped())
+                    WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                    AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
-
-            if (!stripDataFlags.IsEditorDataStripped())
-                WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
-
-            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
-                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Game > EGame.GAME_UE4_16)
             {
                 for (var i = 0; i < Sections.Length; i++)
                 {
-                    new FWeightedRandomSampler(Ar);
+                    var _ = new FWeightedRandomSampler(Ar);
                 }
 
-                new FWeightedRandomSampler(Ar);
+                _ = new FWeightedRandomSampler(Ar);
             }
         }
 
@@ -163,9 +167,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             ColorVertexBuffer = new FColorVertexBuffer(Ar);
-            
+
             if (Ar.Game == EGame.GAME_RogueCompany)
-                new FColorVertexBuffer(Ar);
+            {
+                var _ = new FColorVertexBuffer(Ar);
+            }
 
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
@@ -187,7 +193,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
             {
-                var rayTracingGeometry = Ar.ReadBulkArray<byte>();
+                var _ = Ar.ReadBulkArray<byte>(); // rayTracingGeometry
             }
 
             // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
@@ -197,7 +203,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 areaWeightedSectionSamplers[i] = new FWeightedRandomSampler(Ar);
             }
 
-            var areaWeightedSampler = new FWeightedRandomSampler(Ar);
+            _ = new FWeightedRandomSampler(Ar); // areaWeightedSampler
         }
     }
 
@@ -222,6 +228,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("ColorVertexBuffer");
             serializer.Serialize(writer, value.ColorVertexBuffer);
 
+            writer.WritePropertyName("CardRepresentationData");
+            serializer.Serialize(writer, value.CardRepresentationData);
+            
             writer.WriteEndObject();
         }
 
