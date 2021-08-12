@@ -13,16 +13,16 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads = new(); // FYI cloning will clear this dictionary
+        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads;
         private readonly FArchive _baseArchive;
 
         public bool HasUnversionedProperties => Owner.HasFlags(EPackageFlags.PKG_UnversionedProperties);
         public readonly IPackage Owner;
         public int AbsoluteOffset;
 
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0) : base(baseArchive.Versions)
+        public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0, Dictionary<PayloadType, Lazy<FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
         {
+            _payloads = payloads ?? new();
             _baseArchive = baseArchive;
             Owner = owner;
             AbsoluteOffset = absoluteOffset;
@@ -165,6 +165,8 @@ namespace CUE4Parse.UE4.Assets.Readers
         public override T[] ReadArray<T>(int length)
             => _baseArchive.ReadArray<T>(length);
 
-        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset);
+        // For performance reasons we carry over the payloads dict to the cloned instance
+        // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization 
+        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads);
     }
 }
