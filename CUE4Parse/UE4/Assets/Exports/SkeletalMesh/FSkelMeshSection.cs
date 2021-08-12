@@ -92,7 +92,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 MaxBoneInfluences = Ar.Read<int>();
 
                 FVector[] physicalMeshVertices, physicalMeshNormals;
-                var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
+                var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
                 {
                     physicalMeshVertices = Ar.ReadArray<FVector>();
@@ -150,7 +150,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bCastShadow = Ar.ReadBoolean();
             BaseVertexIndex = Ar.Read<uint>();
 
-            var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
+            var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
             HasClothData = clothMappingData.Length > 0;
 
             BoneMap = Ar.ReadArray<ushort>();
@@ -162,10 +162,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
             {
-                Ar.SkipFixedArray(4);
-                Ar.SkipFixedArray(8);
+                Ar.SkipFixedArray(4); // DupVertData
+                Ar.SkipFixedArray(8); // DupVertIndexData
             }
-            bDisabled = Ar.ReadBoolean();
+            if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
+            {
+                bDisabled = Ar.ReadBoolean();
+            }
             if (Ar.Game == EGame.GAME_RogueCompany)
                 Ar.Position += 4;
         }

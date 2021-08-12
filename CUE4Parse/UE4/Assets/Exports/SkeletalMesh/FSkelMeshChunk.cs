@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (Ar.Ver >= UE4Version.VER_UE4_APEX_CLOTH)
             {
                 // Physics data, drop
-                var clothMappingData = Ar.ReadArray(() => new FApexClothPhysToRenderVertData(Ar));
+                var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
                 Ar.ReadArray<FVector>(); // PhysicalMeshVertices
                 Ar.ReadArray<FVector>(); // PhysicalMeshNormals
                 Ar.Position += 4; // CorrespondClothAssetIndex, ClothAssetSubmeshIndex

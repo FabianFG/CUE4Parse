@@ -165,12 +165,6 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
         {
-            if (!Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
-            {
-                SerializeRenderItem_Legacy(Ar, bHasVertexColors, numVertexColorChannels);
-                return;
-            }
-
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
@@ -227,7 +221,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
 
-        private void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
+        public void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 

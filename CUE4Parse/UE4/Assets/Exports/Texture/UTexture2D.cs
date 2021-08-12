@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 var pixelFormatEnum = Ar.ReadFName();
                 while (!pixelFormatEnum.IsNone)
                 {
-                    var skipOffset = Ar.Versions["Texture.64BitSkipOffsets"] ? Ar.Read<long>() : Ar.Read<int>();
+                    var skipOffset = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<long>() : Ar.Read<int>();
 
                     var pixelFormat = EPixelFormat.PF_Unknown;
                     Enum.TryParse(pixelFormatEnum.Text, out pixelFormat);

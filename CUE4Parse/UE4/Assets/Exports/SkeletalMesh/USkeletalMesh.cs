@@ -47,14 +47,22 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
                 if (bCooked && LODModels == null)
                 {
+                    var useNewCookedFormat = Ar.Versions["SkeletalMesh.UseNewCookedFormat"];
                     LODModels = new FStaticLODModel[Ar.Read<int>()];
                     for (var i = 0; i < LODModels.Length; i++)
                     {
                         LODModels[i] = new FStaticLODModel();
-                        LODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
+                        if (useNewCookedFormat)
+                        {
+                            LODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
+                        }
+                        else
+                        {
+                            LODModels[i].SerializeRenderItem_Legacy(Ar, bHasVertexColors, NumVertexColorChannels);
+                        }
                     }
 
-                    if (Ar.Versions["SkeletalMesh.UseNewCookedFormat"])
+                    if (useNewCookedFormat)
                     {
                         var numInlinedLODs = Ar.Read<byte>();
                         var numNonOptionalLODs = Ar.Read<byte>();
