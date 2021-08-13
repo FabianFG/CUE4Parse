@@ -14,19 +14,19 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FName MaterialSlotName;
         public FName? ImportedMaterialSlotName;
         public FMeshUVChannelInfo? UVChannelData;
-        
+
         public FSkeletalMaterial(FAssetArchive Ar)
         {
             Material = new FPackageIndex(Ar);
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
                 MaterialSlotName = Ar.ReadFName();
-                var bSerializeImportedMaterialSlotName = false;
+                var bSerializeImportedMaterialSlotName = !Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly);
                 if (FCoreObjectVersion.Get(Ar) >= FCoreObjectVersion.Type.SkeletalMaterialEditorDataStripping)
                 {
                     bSerializeImportedMaterialSlotName = Ar.ReadBoolean();
                 }
-                
+
                 if (bSerializeImportedMaterialSlotName)
                 {
                     ImportedMaterialSlotName = Ar.ReadFName();
@@ -36,15 +36,17 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 if (Ar.Ver >= UE4Version.VER_UE4_MOVE_SKELETALMESH_SHADOWCASTING)
                     Ar.Position += 4;
-                
+
                 if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
-                    Ar.Position += 4;
+                {
+                    var bRecomputeTangent = Ar.ReadBoolean();
+                }
             }
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
         }
     }
-    
+
     public class FSkeletalMaterialConverter : JsonConverter<FSkeletalMaterial>
     {
         public override void WriteJson(JsonWriter writer, FSkeletalMaterial value, JsonSerializer serializer)
@@ -56,7 +58,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             writer.WritePropertyName("ImportedMaterialSlotName");
             serializer.Serialize(writer, value.ImportedMaterialSlotName);
-            
+
             writer.WritePropertyName("UVChannelData");
             serializer.Serialize(writer, value.UVChannelData);
 

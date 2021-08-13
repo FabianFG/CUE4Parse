@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             Pos = Ar.Read<FVector>();
         }
-        
+
         public void SerializeForEditor(FAssetArchive Ar)
         {
             Normal = new FPackedNormal[3];
@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
     }
-    
+
     public class FSkelMeshVertexBaseConverter : JsonConverter<FSkelMeshVertexBase>
     {
         public override void WriteJson(JsonWriter writer, FSkelMeshVertexBase value, JsonSerializer serializer)
@@ -63,19 +63,19 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 writer.WritePropertyName("Pos");
                 serializer.Serialize(writer, value.Pos);
             }
-            
+
             if (value.Normal.Length > 0)
             {
                 writer.WritePropertyName("Normal");
                 serializer.Serialize(writer, value.Normal);
             }
-            
+
             if (value.Infs != null)
             {
-                writer.WritePropertyName("Pos");
+                writer.WritePropertyName("Infs");
                 serializer.Serialize(writer, value.Infs);
             }
-            
+
             writer.WriteEndObject();
         }
 

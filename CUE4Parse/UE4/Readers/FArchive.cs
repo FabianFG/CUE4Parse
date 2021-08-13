@@ -75,29 +75,26 @@ namespace CUE4Parse.UE4.Readers
         public T[] ReadArray<T>() where T : struct
         {
             var length = Read<int>();
-
-            if (length == 0)
-                return new T[0];
-
-            return ReadArray<T>(length);
+            return length != 0 ? ReadArray<T>(length) : Array.Empty<T>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(int elementSize, int elementCount, Func<T> getter)
         {
             var pos = Position;
-            T[] array = ReadArray<T>(elementCount, getter);
+            T[] array = ReadArray(elementCount, getter);
             if (Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
             return array;
         }
+
         public T[] ReadBulkArray<T>() where T : struct
         {
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
-                return new T[0];
-            
+                return Array.Empty<T>();
+
             var pos = Position;
             T[] array = ReadArray<T>(elementCount);
             if (Position != pos + array.Length * elementSize)
@@ -110,22 +107,22 @@ namespace CUE4Parse.UE4.Readers
         {
             var elementSize = Read<int>();
             var elementCount = Read<int>();
-            return ReadBulkArray<T>(elementSize, elementCount, getter);
+            return ReadBulkArray(elementSize, elementCount, getter);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SkipBulkArrayData(int size = -1)
+        public void SkipBulkArrayData()
         {
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             Position += elementSize * elementCount;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SkipFixedArray(int size = -1)
         {
-            var elementSize = Read<int>();
-            Position += elementSize * size;
+            var num = Read<int>();
+            Position += num * size;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

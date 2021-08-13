@@ -119,7 +119,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     var overlappingVertices = new Dictionary<int, int[]>();
                     for (var i = 0; i < size; i++)
                     {
-                        overlappingVertices[i] = Ar.ReadArray<int>();
+                        overlappingVertices[Ar.Read<int>()] = Ar.ReadArray<int>();
                     }
                 }
                 if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
