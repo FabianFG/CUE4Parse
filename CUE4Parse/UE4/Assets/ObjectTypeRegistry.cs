@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Objects.RigVM;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets
@@ -47,8 +48,10 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UUserDefinedEnum));
             RegisterClass(typeof(UUserDefinedStruct));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
+            RegisterClass(typeof(UControlRigBlueprintGeneratedClass));
             RegisterClass(typeof(UBodySetup));
             RegisterClass(typeof(UModel));
+            RegisterClass(typeof(URigVM));
 
             // Pre-4.25 property types
             RegisterClass(typeof(UField));
