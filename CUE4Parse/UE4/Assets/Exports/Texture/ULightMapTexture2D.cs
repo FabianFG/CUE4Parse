@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     public enum ELightMapFlags
     {
         LMF_None = 0, // No flags
-        LMF_Streamed = 0x00000001 // Lightmap should be placed in a streaming texture
+        LMF_Streamed = 0x00000001, // Lightmap should be placed in a streaming texture
         LMF_LQLightmap = 0x00000002  // Whether this is a low quality lightmap or not
     }
 }

@@ -11,6 +11,7 @@ using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Objects.NavigationSystem;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.RigVM;
 using CUE4Parse.UE4.Objects.UObject;
@@ -40,6 +41,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(USkeleton));
             RegisterClass(typeof(UStaticMesh));
             RegisterClass(typeof(USkeletalMesh));
+            RegisterClass(typeof(UNavCollision));
             RegisterClass(typeof(USoundWave));
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
