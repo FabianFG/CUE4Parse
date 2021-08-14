@@ -10,6 +10,7 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public FRigVMRegisterOffset[] RegisterOffsets;
         public string[] ScriptStructPaths;
         public ulong TotalBytes;
+        public object View; // View can have dynamically different data, so it's just object here
 
         public FRigVMMemoryContainer(FAssetArchive Ar)
         {
@@ -22,25 +23,53 @@ namespace CUE4Parse.UE4.Objects.RigVM
 
             foreach (var register in Registers)
             {
-                if (register.ElementCount == 0 && !register.bIsDynamic) continue;
+                if (register.ElementCount == 0 && !register.IsDynamic()) continue;
 
-                switch (register.Type)
+                if (!register.IsDynamic() || !register.IsNestedDynamic())
                 {
-                    case ERigVMRegisterType.Plain:
+                    switch (register.Type)
                     {
-                        var _ = Ar.ReadArray<byte>();
-                        break;
+                        case ERigVMRegisterType.Plain:
+                        {
+                            View = Ar.ReadArray<byte>();
+                            break;
+                        }
+                        case ERigVMRegisterType.Name:
+                        {
+                            View = Ar.ReadArray(Ar.ReadFName);
+                            break;
+                        }
+                        case ERigVMRegisterType.Struct:
+                        case ERigVMRegisterType.String:
+                        {
+                            View = Ar.ReadArray(Ar.ReadFString);
+                            break;
+                        }
                     }
-                    case ERigVMRegisterType.Name:
+                }
+                else
+                {
+                    for (var sliceIndex = 0; sliceIndex < register.SliceCount; sliceIndex++)
                     {
-                        var _ = Ar.ReadArray(Ar.ReadFName);
-                        break;
-                    }
-                    case ERigVMRegisterType.Struct:
-                    case ERigVMRegisterType.String:
-                    {
-                        var _ = Ar.ReadArray(Ar.ReadFString);
-                        break;
+                        switch (register.Type)
+                        {
+                            case ERigVMRegisterType.Plain:
+                            {
+                                View = Ar.ReadArray<byte>();
+                                break;
+                            }
+                            case ERigVMRegisterType.Name:
+                            {
+                                View = Ar.ReadArray(Ar.ReadFName);
+                                break;
+                            }
+                            case ERigVMRegisterType.Struct:
+                            case ERigVMRegisterType.String:
+                            {
+                                View = Ar.ReadArray(Ar.ReadFString);
+                                break;
+                            }
+                        }
                     }
                 }
             }

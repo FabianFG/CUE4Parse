@@ -13,8 +13,6 @@ namespace CUE4Parse.UE4.Objects.RigVM
         
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            // base.Deserialize(Ar, validPos); // Causes serialization issues
-
             if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
             WorkMemoryStorage = new FRigVMMemoryContainer(Ar);
             LiteralMemoryStorage = new FRigVMMemoryContainer(Ar);

@@ -34,6 +34,10 @@ namespace CUE4Parse.UE4.Objects.RigVM
             bIsArray = Ar.ReadBoolean();
             bIsDynamic = Ar.ReadBoolean();
         }
+
+        public bool IsDynamic() => bIsDynamic;
+        public bool IsNestedDynamic() => bIsDynamic && bIsArray;
+        public ulong GetWorkByteIndex(int sliceIndex = 0) => (ulong) (ByteIndex + sliceIndex * ElementCount * ElementSize);
     }
     
     public enum ERigVMRegisterType : byte
