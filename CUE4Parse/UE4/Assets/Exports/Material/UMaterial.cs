@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             if (Ar.Ver >= UE4Version.VER_UE4_25)
             {
                 CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
-                if (CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
+                if (CachedExpressionData != null && CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
                     ReferencedTextures.AddRange(referencedTextures);
 
                 if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
