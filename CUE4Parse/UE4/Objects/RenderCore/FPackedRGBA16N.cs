@@ -21,37 +21,38 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Z = Ar.Read<ushort>();
             W = Ar.Read<ushort>();
 
-            if (Ar.Game >= EGame.GAME_UE4_20) {
-                X = X ^ 0x8000;
-                Y = Y ^ 0x8000;
-                Z = Z ^ 0x8000;
-                W = W ^ 0x8000;
+            if (Ar.Game >= EGame.GAME_UE4_20)
+            {
+                X ^= 0x8000;
+                Y ^= 0x8000;
+                Z ^= 0x8000;
+                W ^= 0x8000;
             }
         }
 
         public static explicit operator FVector(FPackedRGBA16N packedRGBA16N)
         {
-            float X = (packedRGBA16N.X - (float)32767.5) / (float)32767.5;
-            float Y = (packedRGBA16N.Y - (float)32767.5) / (float)32767.5;
-            float Z = (packedRGBA16N.Z - (float)32767.5) / (float)32767.5;
+            var X = (packedRGBA16N.X - (float) 32767.5) / (float) 32767.5;
+            var Y = (packedRGBA16N.Y - (float) 32767.5) / (float) 32767.5;
+            var Z = (packedRGBA16N.Z - (float) 32767.5) / (float) 32767.5;
 
             return new FVector(X, Y, Z);
         }
 
         public static explicit operator FVector4(FPackedRGBA16N packedRGBA16N)
         {
-            float X = (packedRGBA16N.X - (float)32767.5) / (float)32767.5;
-            float Y = (packedRGBA16N.Y - (float)32767.5) / (float)32767.5;
-            float Z = (packedRGBA16N.Z - (float)32767.5) / (float)32767.5;
-            float W = (packedRGBA16N.W - (float)32767.5) / (float)32767.5;
+            var X = (packedRGBA16N.X - (float) 32767.5) / (float) 32767.5;
+            var Y = (packedRGBA16N.Y - (float) 32767.5) / (float) 32767.5;
+            var Z = (packedRGBA16N.Z - (float) 32767.5) / (float) 32767.5;
+            var W = (packedRGBA16N.W - (float) 32767.5) / (float) 32767.5;
 
             return new FVector4(X, Y, Z, W);
         }
 
-       public static explicit operator FPackedNormal(FPackedRGBA16N packedRGBA16N)
-       {
-            return new ((FVector)packedRGBA16N);
-       }
+        public static explicit operator FPackedNormal(FPackedRGBA16N packedRGBA16N)
+        {
+            return new((FVector) packedRGBA16N);
+        }
     }
 
     public class FPackedRGBA16NConverter : JsonConverter<FPackedRGBA16N>
@@ -62,13 +63,13 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
             writer.WritePropertyName("X");
             writer.WriteValue(value.X);
-            
+
             writer.WritePropertyName("Y");
             writer.WriteValue(value.Y);
-            
+
             writer.WritePropertyName("Z");
             writer.WriteValue(value.Z);
-            
+
             writer.WritePropertyName("W");
             writer.WriteValue(value.X);
 

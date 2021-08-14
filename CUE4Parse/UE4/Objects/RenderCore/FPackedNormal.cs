@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Objects.RenderCore
         {
             Data = Ar.Read<uint>();
             if (Ar.Game >= EGame.GAME_UE4_20)
-                Data ^= 0x80808080; 
+                Data ^= 0x80808080;
         }
 
         public FPackedNormal(uint data)
@@ -29,34 +29,34 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public FPackedNormal(FVector Vector)
         {
-            Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5) << 16);
+            Data = (uint) ((int) (Vector.X + 1 * 127.5) + (int) (Vector.Y + 1 * 127.5) << 8 + (int) (Vector.Z + 1 * 127.5) << 16);
         }
-        
+
         public FPackedNormal(FVector4 Vector)
         {
-            Data = (uint) ((int)(Vector.X + 1 * 127.5) + (int)(Vector.Y + 1 * 127.5) << 8 + (int)(Vector.Z + 1 * 127.5) << 16 +  (int)(Vector.W + 1 * 127.5) << 24);
+            Data = (uint) ((int) (Vector.X + 1 * 127.5) + (int) (Vector.Y + 1 * 127.5) << 8 + (int) (Vector.Z + 1 * 127.5) << 16 + (int) (Vector.W + 1 * 127.5) << 24);
         }
 
         public void SetW(float value)
         {
-            Data = (Data & 0xFFFFFF) | (uint)((int)Math.Round(value * 127.0f) << 24);
+            Data = (Data & 0xFFFFFF) | (uint) ((int) Math.Round(value * 127.0f) << 24);
         }
-        
+
         public float GetW()
         {
-            return (byte)(Data >> 24) / 127.0f;
+            return (byte) (Data >> 24) / 127.0f;
         }
 
         public static explicit operator FVector(FPackedNormal packedNormal)
         {
-            return new (packedNormal.X, packedNormal.Y, packedNormal.Z);
+            return new(packedNormal.X, packedNormal.Y, packedNormal.Z);
         }
 
         public static explicit operator FVector4(FPackedNormal packedNormal)
         {
-            return new (packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
+            return new(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
         }
-        
+
         public static bool operator ==(FPackedNormal a, FPackedNormal b) => a.Data == b.Data && a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
         public static bool operator !=(FPackedNormal a, FPackedNormal b) => a.Data != b.Data || a.X != b.X || a.Y != b.Y || a.Z != b.Z || a.W != b.W;
     }

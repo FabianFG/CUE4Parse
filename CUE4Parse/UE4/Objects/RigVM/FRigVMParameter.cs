@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public int RegisterIndex;
         public string CPPType;
         public FPackageIndex ScriptStruct; // UScriptStruct
-        
+
         public FRigVMParameter(FAssetArchive Ar)
         {
             Type = Ar.Read<ERigVMParameterType>();

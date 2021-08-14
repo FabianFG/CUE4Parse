@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public FRigVMMemoryContainer LiteralMemoryStorage;
         public FRigVMByteCode ByteCodeStorage;
         public FRigVMParameter[] Parameters;
-        
+
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
@@ -23,16 +23,16 @@ namespace CUE4Parse.UE4.Objects.RigVM
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-            
+
             writer.WritePropertyName("WorkMemoryStorage");
             serializer.Serialize(writer, WorkMemoryStorage);
-            
+
             writer.WritePropertyName("LiteralMemoryStorage");
             serializer.Serialize(writer, LiteralMemoryStorage);
-            
+
             writer.WritePropertyName("ByteCodeStorage");
             serializer.Serialize(writer, ByteCodeStorage);
-            
+
             writer.WritePropertyName("Parameters");
             serializer.Serialize(writer, Parameters);
         }

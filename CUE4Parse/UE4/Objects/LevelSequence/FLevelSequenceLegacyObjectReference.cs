@@ -1,6 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Misc;
+﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.LevelSequence
 {
@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Objects.LevelSequence
         /** Secondary method of resolution - path to the object within the context */
         public readonly string ObjectPath;
 
-        public FLevelSequenceLegacyObjectReference(FAssetArchive Ar)
+        public FLevelSequenceLegacyObjectReference(FArchive Ar)
         {
             ObjectId = Ar.Read<FGuid>();
             ObjectPath = Ar.ReadFString();

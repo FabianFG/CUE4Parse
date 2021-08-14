@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public FColorVertexBuffer(FArchive Ar)
         {
-            var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
+            var stripDataFlags = new FStripDataFlags(Ar, (int) UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 
             Stride = Ar.Read<int>();
             NumVertices = Ar.Read<int>();
@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
             }
         }
     }
-    
+
     public class FColorVertexBufferConverter : JsonConverter<FColorVertexBuffer>
     {
         public override void WriteJson(JsonWriter writer, FColorVertexBuffer value, JsonSerializer serializer)
@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
             writer.WritePropertyName("Stride");
             writer.WriteValue(value.Stride);
-            
+
             writer.WritePropertyName("NumVertices");
             writer.WriteValue(value.NumVertices);
 

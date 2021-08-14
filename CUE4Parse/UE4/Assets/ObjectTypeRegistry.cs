@@ -44,6 +44,8 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UStringTable));
             RegisterClass(typeof(UTexture2D));
             RegisterClass(typeof(UTextureCube));
+            RegisterClass(typeof(ULightMapTexture2D));
+            RegisterClass(typeof(UShadowMapTexture2D));
             RegisterClass(typeof(UVolumeTexture));
             RegisterClass(typeof(UUserDefinedEnum));
             RegisterClass(typeof(UUserDefinedStruct));

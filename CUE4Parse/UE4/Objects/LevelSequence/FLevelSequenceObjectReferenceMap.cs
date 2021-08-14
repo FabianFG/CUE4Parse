@@ -1,9 +1,9 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Misc;
+﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.LevelSequence
 {
@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Objects.LevelSequence
     {
         public readonly IDictionary<FGuid, FLevelSequenceLegacyObjectReference> Map;
 
-        public FLevelSequenceObjectReferenceMap(FAssetArchive Ar)
+        public FLevelSequenceObjectReferenceMap(FArchive Ar)
         {
             Map = new Dictionary<FGuid, FLevelSequenceLegacyObjectReference>(Ar.Read<int>());
             for (int i = 0; i < Map.Count; i++)
@@ -35,6 +35,6 @@ namespace CUE4Parse.UE4.Objects.LevelSequence
         public bool TryGetValue(FGuid key, out FLevelSequenceLegacyObjectReference value) => Map.TryGetValue(key, out value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Map).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Map).GetEnumerator();
     }
 }

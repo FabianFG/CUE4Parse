@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Meshes
 {
@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
         public float[] LocalUVDensities;
         const int TEXSTREAM_MAX_NUM_UVCHANNELS = 4;
 
-        public FMeshUVChannelInfo(FAssetArchive Ar)
+        public FMeshUVChannelInfo(FArchive Ar)
         {
             bInitialized = Ar.ReadBoolean();
             bOverrideDensities = Ar.ReadBoolean();

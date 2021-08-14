@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
             Verts = Ar.ReadBulkArray<FVector>();
         }
     }
-    
+
     public class FPositionVertexBufferConverter : JsonConverter<FPositionVertexBuffer>
     {
         public override void WriteJson(JsonWriter writer, FPositionVertexBuffer value, JsonSerializer serializer)
