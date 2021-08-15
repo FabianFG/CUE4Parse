@@ -155,44 +155,41 @@ namespace CUE4Parse.UE4.Assets
         public virtual ResolvedObject? Super => null;
         public virtual Lazy<UObject>? Object => null;
 
-        public string GetFullName(ResolvedObject? stopOuter = null, bool includeClassPackage = false)
+        public string GetFullName(bool includeOuterMostName = true, bool includeClassPackage = false)
         {
             var result = new StringBuilder(128);
-            GetFullName(stopOuter, result, includeClassPackage);
+            GetFullName(includeOuterMostName, result, includeClassPackage);
             return result.ToString();
         }
 
-        public void GetFullName(ResolvedObject? stopOuter, StringBuilder resultString, bool includeClassPackage = false)
+        public void GetFullName(bool includeOuterMostName, StringBuilder resultString, bool includeClassPackage = false)
         {
             resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name);
             resultString.Append(' ');
-            GetPathName(stopOuter, resultString);
+            GetPathName(includeOuterMostName, resultString);
         }
 
-        public string GetPathName(ResolvedObject? stopOuter = null)
+        public string GetPathName(bool includeOuterMostName = true)
         {
             var result = new StringBuilder();
-            GetPathName(stopOuter, result);
+            GetPathName(includeOuterMostName, result);
             return result.ToString();
         }
 
-        public void GetPathName(ResolvedObject? stopOuter, StringBuilder resultString)
+        public void GetPathName(bool includeOuterMostName, StringBuilder resultString)
         {
-            if (this != stopOuter)
+            var objOuter = Outer;
+            if (objOuter != null)
             {
-                var objOuter = Outer;
-                if (objOuter != null && objOuter != stopOuter)
+                var objOuterOuter = objOuter.Outer;
+                if (objOuterOuter != null || includeOuterMostName)
                 {
-                    objOuter.GetPathName(stopOuter, resultString);
-                    resultString.Append(objOuter.Outer?.Outer == null ? ':' : '.');
+                    objOuter.GetPathName(includeOuterMostName, resultString);
+                    resultString.Append(objOuterOuter is { Outer: null } ? ':' : '.');
                 }
+            }
 
-                resultString.Append(Name);
-            }
-            else
-            {
-                resultString.Append("None");
-            }
+            resultString.Append(Name);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,26 +233,28 @@ namespace CUE4Parse.UE4.Assets
     {
         public override void WriteJson(JsonWriter writer, ResolvedObject value, JsonSerializer serializer)
         {
-            var outerChain = new List<string>();
-            for (var current = value.Outer; current != null; current = current.Outer)
+            var top = value;
+            ResolvedObject outerMost;
+            while (true)
             {
-                outerChain.Add(current.Name.Text);
+                var outer = top.Outer;
+                if (outer == null)
+                {
+                    outerMost = top;
+                    break;
+                }
+
+                top = outer;
             }
 
             writer.WriteStartObject();
 
             writer.WritePropertyName("ObjectName"); // 1:2:3 if we are talking about an export in the current asset
-            writer.WriteValue($"{(outerChain.Count > 1 ? $"{outerChain[0]}:" : "")}{value.Name.Text}:{value.Class?.Name}");
+            writer.WriteValue(value.GetFullName(false));
 
             writer.WritePropertyName("ObjectPath"); // package path . export index
-            if (outerChain.Count > 0)
-            {
-                writer.WriteValue(value.ExportIndex != -1 ? $"{outerChain[^1]}.{value.ExportIndex}" : outerChain[^1]);
-            }
-            else
-            {
-                writer.WriteValue(value.ExportIndex);
-            }
+            var outerMostName = outerMost.Name.Text;
+            writer.WriteValue(value.ExportIndex != -1 ? $"{outerMostName}.{value.ExportIndex}" : outerMostName);
 
             writer.WriteEndObject();
         }
