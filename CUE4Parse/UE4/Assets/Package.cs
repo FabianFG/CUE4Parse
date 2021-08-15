@@ -144,10 +144,6 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
-            if (import.ClassName.Text == "Class")
-            {
-                return new ResolvedLoadedObject(-importIndex.Index - 1, new UScriptClass(import.ObjectName.Text));
-            }
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -159,9 +155,10 @@ namespace CUE4Parse.UE4.Assets
             }
 
             outerMostImport = ImportMap[-outerMostIndex.Index - 1];
+            // We don't support loading script packages, so just return a fallback
             if (outerMostImport.ObjectName.Text.StartsWith("/Script/"))
             {
-                return null; // TODO handle script CDO references
+                return new ResolvedImportObject(import, this);
             }
 
             if (Provider == null)
@@ -172,7 +169,7 @@ namespace CUE4Parse.UE4.Assets
             if (importPackage == null)
             {
                 Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
-                return null;
+                return new ResolvedImportObject(import, this);
             }
 
             string? outer = null;
@@ -183,7 +180,7 @@ namespace CUE4Parse.UE4.Assets
                 if (outer == null)
                 {
                     Log.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
-                    return null;
+                    return new ResolvedImportObject(import, this);
                 }
             }
 
@@ -198,23 +195,39 @@ namespace CUE4Parse.UE4.Assets
             }
 
             Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
-            return null;
+            return new ResolvedImportObject(import, this);
         }
 
         private class ResolvedExportObject : ResolvedObject
         {
             private readonly FObjectExport _export;
 
-            public ResolvedExportObject(int index, Package package) : base(package, index)
+            public ResolvedExportObject(int exportIndex, Package package) : base(package, exportIndex)
             {
-                _export = package.ExportMap[index];
+                _export = package.ExportMap[exportIndex];
             }
 
             public override FName Name => _export.ObjectName;
-            public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject(Index, (UObject) Package);
+            public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
             public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
             public override Lazy<UObject> Object => _export.ExportObject;
+        }
+
+        /** Fallback if we cannot resolve the export in another package */
+        private class ResolvedImportObject : ResolvedObject
+        {
+            private readonly FObjectImport _import;
+
+            public ResolvedImportObject(FObjectImport import, Package package) : base(package)
+            {
+                _import = import;
+            }
+
+            public override FName Name => _import.ObjectName;
+            public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
+            public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass(_import.ClassName.Text));
+            public override Lazy<UObject>? Object => _import.ClassName.Text == "Class" ? new(() => new UScriptClass(Name.Text)) : null;
         }
 
         private class ExportLoader

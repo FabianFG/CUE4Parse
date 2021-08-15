@@ -264,8 +264,7 @@ namespace CUE4Parse.UE4.Assets
 
             if (index.IsScriptImport)
             {
-                var scriptObjectEntry = GlobalData.FindScriptEntryName(index);
-                if (scriptObjectEntry != "None")
+                if (GlobalData.ScriptObjectEntriesMap.TryGetValue(index, out var scriptObjectEntry))
                 {
                     return new ResolvedScriptObject(scriptObjectEntry, this);
                 }
@@ -327,7 +326,7 @@ namespace CUE4Parse.UE4.Assets
             }
 
             public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
-            public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject(Index, (UObject) Package);
+            public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
             public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
             public override ResolvedObject? Super => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.SuperIndex);
             public override Lazy<UObject> Object => ExportObject;
@@ -335,17 +334,18 @@ namespace CUE4Parse.UE4.Assets
 
         private class ResolvedScriptObject : ResolvedObject
         {
-            // public FScriptObjectEntry ScriptImport;
-            public string ScriptImportName;
+            public FScriptObjectEntry ScriptImport;
 
-            public ResolvedScriptObject(string scriptImportName, IoPackage package) : base(package, 0)
+            public ResolvedScriptObject(FScriptObjectEntry scriptImport, IoPackage package) : base(package)
             {
-                ScriptImportName = scriptImportName;
+                ScriptImport = scriptImport;
             }
 
-            public override FName Name => new(ScriptImportName);
-            public override ResolvedObject? Outer => null; //((IoPackage) Package).ResolveObjectIndex(ScriptImport.OuterIndex);
-            public override ResolvedObject Class => new ResolvedLoadedObject(Index, new UScriptClass("Class"));
+            public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ScriptImport.ObjectName);
+            public override ResolvedObject? Outer => ((IoPackage) Package).ResolveObjectIndex(ScriptImport.OuterIndex);
+            // This means we'll have UScriptStruct's shown as UClass which is wrong.
+            // Unfortunately because the mappings format does not distinguish between classes and structs, there's no other way around :(
+            public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass("Class"));
             public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
         }
     }
