@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -14,9 +15,11 @@ using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Pak.Objects;
+using CUE4Parse.UE4.Plugins;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.FileProvider
@@ -29,6 +32,7 @@ namespace CUE4Parse.FileProvider
         public ITypeMappingsProvider? MappingsContainer { get; set; }
         public TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
+        public Dictionary<string, string> VirtualPaths { get; } = new();
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public bool IsCaseInsensitive { get; } // fabian? is this reversed?
@@ -183,6 +187,42 @@ namespace CUE4Parse.FileProvider
             };
         }
 
+        public int LoadVirtualPaths(CancellationToken cancellationToken = default)
+        {
+            var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            VirtualPaths.Clear();
+
+            var i = 0;
+            foreach (var file in Files.Where(x => regex.IsMatch(x.Key)))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!TrySaveAsset(file.Value.Path, out var data)) continue;
+                using var stream = new MemoryStream(data) {Position = 0};
+                using var reader = new StreamReader(stream);
+                var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
+
+                foreach (var content in manifest.Contents)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (!content.Descriptor.CanContainContent) continue;
+                    var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
+                    var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
+                    if (!VirtualPaths.ContainsKey(virtPath))
+                    {
+                        VirtualPaths.Add(virtPath, path);
+                        i++; // Only increment if we don't have the path already
+                    }
+                    else
+                    {
+                        VirtualPaths[virtPath] = path;
+                    }
+                }
+            }
+            
+            return i;
+        }
+        
         public GameFile this[string path] => Files[FixPath(path)];
 
         public bool TryFindGameFile(string path, out GameFile file)
@@ -245,40 +285,9 @@ namespace CUE4Parse.FileProvider
                 }
             }
 
-            if (trigger.Equals("RegionCN", comparisonType))
+            if (VirtualPaths.FirstOrDefault(x => string.Equals(x.Key, trigger, comparisonType)).Value is {Length: > 0} use)
             {
-                var ret = string.Concat(GameName, "/Plugins/RegionCN/Content/", path.SubstringAfter("/", comparisonType));
-                return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
-            }
-
-            if (trigger.Equals("Melt", comparisonType) ||
-                trigger.Equals("Argon", comparisonType) ||
-                trigger.Equals("Goose", comparisonType) ||
-                trigger.Equals("Score", comparisonType) ||
-                trigger.Equals("Nickel", comparisonType) ||
-                trigger.Equals("Rebirth", comparisonType) ||
-                trigger.Equals("Builder", comparisonType) ||
-                trigger.Equals("Hydrogen", comparisonType) ||
-                trigger.Equals("Nitrogen", comparisonType) ||
-                trigger.Equals("Vendetta", comparisonType) ||
-                trigger.Equals("Daybreak", comparisonType) ||
-                trigger.Equals("Titanium", comparisonType) ||
-                trigger.Equals("Bodyguard", comparisonType) ||
-                trigger.Equals("LeadAlloy", comparisonType) ||
-                trigger.Equals("Phosphorus", comparisonType) ||
-                trigger.Equals("ArsenicCore", comparisonType) ||
-                trigger.Equals("PhosphorusWipeout", comparisonType))
-            {
-                var ret = string.Concat(GameName, $"/Plugins/GameFeatures/LTM/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
-                return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
-            }
-
-            if (trigger.Equals("SrirachaRanch", comparisonType) ||
-                trigger.Equals("SrirachaRanchValet", comparisonType) ||
-                trigger.Equals("SrirachaRanchHoagie", comparisonType))
-            {
-                if (trigger.Equals("SrirachaRanch", comparisonType)) trigger = string.Concat(trigger, "Core");
-                var ret = string.Concat(GameName, $"/Plugins/GameFeatures/SrirachaRanch/{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                var ret = string.Concat(use, "/Content/", path.SubstringAfter("/", comparisonType));
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
             }
             else
