@@ -110,10 +110,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game == EGame.GAME_Borderlands3)
             {
                 var numColorStreams = Ar.Read<int>();
-                ColorVertexBuffer = new FColorVertexBuffer(Ar);
-                for (var i = 0; i < numColorStreams - 1; i++)
+                if (numColorStreams != 0)
                 {
-                    var _ = new FColorVertexBuffer(Ar);
+                    ColorVertexBuffer = new FColorVertexBuffer(Ar);
+                    for (var i = 0; i < numColorStreams - 1; i++)
+                    {
+                        var _ = new FColorVertexBuffer(Ar);
+                    }
                 }
             }
             else
