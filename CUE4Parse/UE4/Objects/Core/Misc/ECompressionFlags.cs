@@ -2,7 +2,6 @@
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
-    // #define DEFAULT_ZLIB_BIT_WINDOW		15
     [Flags]
     public enum ECompressionFlags
     {
@@ -27,6 +26,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         /** Prefer compression that compresses smaller (ONLY VALID FOR COMPRESSION)		*/
         COMPRESS_BiasMemory = 0x10,
+        COMPRESS_BiasSize = COMPRESS_BiasMemory,
 
         /** Prefer compression that compresses faster (ONLY VALID FOR COMPRESSION)		*/
         COMPRESS_BiasSpeed = 0x20,
@@ -37,6 +37,8 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         /** Set of flags that are options are still allowed								*/
         COMPRESS_OptionsFlagsMask = 0xF0,
 
-        COMPRESS_LZ4 = 259 // SOD2
+        /** Indicate this compress call is for Packaging (pak/iostore) */
+        COMPRESS_ForPackaging = 0x100,
+        COMPRESS_ForPurposeMask = 0x100,
     }
 }

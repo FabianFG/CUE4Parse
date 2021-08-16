@@ -1,10 +1,10 @@
-﻿using CUE4Parse.UE4.Exceptions;
+﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using Ionic.Zlib;
 using K4os.Compression.LZ4;
-using System;
-using System.IO;
-using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.Compression
 {
@@ -45,7 +45,7 @@ namespace CUE4Parse.Compression
                     Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
                 case CompressionMethod.LZ4:
-                    var uncompressedBuffer = new byte[uncompressedSize + 4];
+                    var uncompressedBuffer = new byte[uncompressedSize];
                     var result = LZ4Codec.Decode(compressed, compressedOffset, compressedSize, uncompressedBuffer, 0, uncompressedBuffer.Length);
                     Buffer.BlockCopy(uncompressedBuffer, 0, uncompressed, uncompressedOffset, uncompressedSize);
                     if (result != uncompressedSize) throw new FileLoadException($"Failed to decompress LZ4 data (Expected: {uncompressedSize}, Result: {result})");
