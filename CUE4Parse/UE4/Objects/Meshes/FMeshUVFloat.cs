@@ -1,7 +1,7 @@
-﻿using System;
+﻿using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
-using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
+using static CUE4Parse.Utils.TypeConversionUtils;
 
 namespace CUE4Parse.UE4.Objects.Meshes
 {
@@ -31,17 +31,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
         {
-            return new(Half2Float(uvHalf.U), Half2Float(uvHalf.V));
-        }
-
-        private static float Half2Float(ushort h)
-        {
-            var sign = (h >> 15) & 0x00000001;
-            var exp  = (h >> 10) & 0x0000001F;
-            var mant =  h        & 0x000003FF;
-
-            exp += 127 - 15;
-            return BitConverter.ToSingle(BitConverter.GetBytes((sign << 31) | (exp << 23) | (mant << 13)));
+            return new(HalfToFloat(uvHalf.U), HalfToFloat(uvHalf.V));
         }
     }
 }

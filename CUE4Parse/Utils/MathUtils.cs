@@ -64,6 +64,6 @@ namespace CUE4Parse.Utils
         public static int Clamp(this int i, int min, int max) => i < min ? min : i < max ? i : max;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Clamp(this float f, float min, float max) => f < min ? min : f < max ? f : max
+        public static float Clamp(this float f, float min, float max) => f < min ? min : f < max ? f : max;
     }
 }
