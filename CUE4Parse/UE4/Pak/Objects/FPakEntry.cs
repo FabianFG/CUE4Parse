@@ -211,7 +211,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
             // Take into account CompressionBlocks
             if (CompressionMethod != CompressionMethod.None)
-                StructSize += (ushort) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
+                StructSize += (int) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
 
             // Handle building of the CompressionBlocks array.
             if (compressionBlocksCount == 1 && !IsEncrypted)
