@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
@@ -28,5 +29,21 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         public override string ToString() => Hex;
+
+        public static byte Requantize16to8(int value16)
+        {
+            if (value16 is < 0 or > 65535)
+            {
+                throw new ArgumentException(nameof(value16));
+            }
+
+            // Dequantize x from 16 bit (Value16/65535.f)
+            // then requantize to 8 bit with rounding (GPU convention UNorm)
+
+            // matches exactly with :
+            //  (int)( (Value16/65535.f) * 255.f + 0.5f );
+            var value8 = (value16 * 255 + 32895) >> 16;
+            return (byte) value8;
+        }
     }
 }

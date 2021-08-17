@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
@@ -115,6 +116,17 @@ namespace CUE4Parse_Conversion.Textures
                         outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
+                case EPixelFormat.PF_R16F:
+                case EPixelFormat.PF_R16F_FILTER:
+                    unsafe
+                    {
+                        fixed (byte* d = mip.Data.Data)
+                        {
+                            data = ConvertRawR16DataToRGB888X(mip.SizeX, mip.SizeY, d, mip.SizeX * 2); // 2 BPP
+                        }
+                    }
+                    colorType = SKColorType.Rgb888x;
+                    break;
                 case EPixelFormat.PF_B8G8R8A8:
                     data = mip.Data.Data;
                     colorType = SKColorType.Bgra8888;
@@ -129,6 +141,31 @@ namespace CUE4Parse_Conversion.Textures
                     break;
                 default: throw new NotImplementedException($"Unknown pixel format: {format}");
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static unsafe byte[] ConvertRawR16DataToRGB888X(int width, int height, byte* inp, int srcPitch)
+        {
+            // e.g. shadow maps
+            var ret = new byte[width * height * 4];
+            for (int y = 0; y < height; y++)
+            {
+                var srcPtr = (ushort*) (inp + y * srcPitch);
+                var destPtr = y * width * 4;
+                for (int x = 0; x < width; x++)
+                {
+                    var value16 = *srcPtr;
+                    var value = FColor.Requantize16to8(value16);
+
+                    ret[destPtr++] = value;
+                    ret[destPtr++] = value;
+                    ret[destPtr++] = value;
+                    ret[destPtr++] = 255;
+                    ++srcPtr;
+                }
+            }
+
+            return ret;
         }
     }
 }
