@@ -21,8 +21,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public List<FDependsNode> NameDependencies;
         public List<FDependsNode> ManageDependencies;
         public List<FDependsNode> Referencers;
-        public BitArray PackageFlags = new(0);
-        public BitArray ManageFlags = new(0);
+        public BitArray? PackageFlags;
+        public BitArray? ManageFlags;
 
         internal int _index;
 
@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         {
             Identifier = new FAssetIdentifier(Ar);
 
-            void ReadDependencies(ref List<FDependsNode> outDependencies, ref BitArray outFlagBits, int flagSetWidth)
+            void ReadDependencies(ref List<FDependsNode> outDependencies, ref BitArray? outFlagBits, int flagSetWidth)
             {
                 var sortIndexes = new List<int>();
                 var pointerDependencies = new List<FDependsNode>();

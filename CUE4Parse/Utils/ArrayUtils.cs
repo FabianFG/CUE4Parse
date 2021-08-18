@@ -14,7 +14,7 @@ namespace CUE4Parse.Utils
 
             return tmp;
         }
-        
+
         public static bool Contains(this BitArray array, bool search)
         {
             for (var i = 0; i < array.Count; i++)
