@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.AssetRegistry
         public FAssetData[] PreallocatedAssetDataBuffers;
         public FDependsNode[] PreallocatedDependsNodeDataBuffers;
         public FAssetPackageData[] PreallocatedPackageDataBuffers;
-        
+
         public FAssetRegistryState(FArchive Ar)
         {
             FAssetRegistryVersion.TrySerializeVersion(Ar, out var version);
@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.AssetRegistry
         private void Load(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
         {
             PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
-            
+
             if (version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
                 var localNumDependsNodes = Ar.Read<int>();
@@ -84,32 +84,25 @@ namespace CUE4Parse.UE4.AssetRegistry
 
         private void LoadDependencies(FAssetRegistryArchive Ar)
         {
-            FDependsNode? GetNodeFromSerializeIndex(int index)
-            {
-                if (index < 0 || PreallocatedDependsNodeDataBuffers.Length <= index)
-                    return null;
-                return PreallocatedDependsNodeDataBuffers[index];
-            }
-            
             foreach (var dependsNode in PreallocatedDependsNodeDataBuffers)
             {
-                dependsNode.SerializeLoad(Ar, GetNodeFromSerializeIndex);
+                dependsNode.SerializeLoad(Ar, PreallocatedDependsNodeDataBuffers);
             }
         }
     }
-    
+
     public class FAssetRegistryStateConverter : JsonConverter<FAssetRegistryState>
     {
         public override void WriteJson(JsonWriter writer, FAssetRegistryState value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("PreallocatedAssetDataBuffers");
             serializer.Serialize(writer, value.PreallocatedAssetDataBuffers);
-            
+
             writer.WritePropertyName("PreallocatedDependsNodeDataBuffers");
             serializer.Serialize(writer, value.PreallocatedDependsNodeDataBuffers);
-            
+
             writer.WritePropertyName("PreallocatedPackageDataBuffers");
             serializer.Serialize(writer, value.PreallocatedPackageDataBuffers);
 
