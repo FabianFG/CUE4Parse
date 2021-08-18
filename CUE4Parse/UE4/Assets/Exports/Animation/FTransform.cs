@@ -23,6 +23,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             Translation = new FVector(0f);
             Scale3D = FVector.OneVector;
         }
+        
+        public FTransform(FRotator inRotation)
+        {
+            Rotation = new FQuat(inRotation);
+            Translation = FVector.ZeroVector;
+            Scale3D = FVector.OneVector;
+        }
 
         public FTransform(FQuat rotation, FVector translation, FVector scale3D)
         {
@@ -37,6 +44,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             Translation = translation;
             Scale3D = scale3D;
         }
+
+        public FRotator Rotator() => Rotation.Rotator();
 
         public bool Equals(FTransform other, float tolerance = FVector.KindaSmallNumber)
         {
@@ -280,6 +289,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // but for translation, we still need scale
             ConstructTransformFromMatrixWithDesiredScale(a.ToMatrixWithScale(), b.ToMatrixWithScale(), a.Scale3D * b.Scale3D, ref outTransform);
         }
-        
+
+        public FVector TransformPosition(FVector v)
+        {
+            return Rotation.RotateVector(Scale3D * v) + Translation;
+        }
     }
 }
