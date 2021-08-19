@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 }
             }
 
-            void ReadDependenciesNoFlags(ref List<FDependsNode> dependencies)
+            void ReadDependenciesNoFlags(ref List<FDependsNode> outDependencies)
             {
                 var sortIndexes = new List<int>();
                 var pointerDependencies = new List<FDependsNode>();
@@ -98,10 +98,10 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
                 sortIndexes.Sort((a, b) => pointerDependencies[a]._index - pointerDependencies[b]._index);
 
-                dependencies = new List<FDependsNode>(numDependencies);
+                outDependencies = new List<FDependsNode>(numDependencies);
                 foreach (var index in sortIndexes)
                 {
-                    dependencies.Add(pointerDependencies[index]);
+                    outDependencies.Add(pointerDependencies[index]);
                 }
             }
 

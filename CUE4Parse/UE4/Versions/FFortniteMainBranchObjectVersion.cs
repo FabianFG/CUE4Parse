@@ -169,6 +169,15 @@ namespace CUE4Parse.UE4.Versions
             // Added bShowCurve for movie scene float channel serialization
             SerializeFloatChannelShowCurve,
 
+            // Minimize slack waste by using a single array for grass data
+            LandscapeGrassSingleArray,
+
+            // Add loop counters to sequencer's compiled sub-sequence data
+            AddedSubSequenceEntryWarpCounter,
+
+            // Water plugin is now component-based rather than actor based
+            WaterBodyComponentRefactor,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
