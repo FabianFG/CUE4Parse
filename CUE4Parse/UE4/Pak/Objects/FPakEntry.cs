@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Vfs;
 using CUE4Parse.Utils;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
+using static CUE4Parse.UE4.Versions.EGame;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
@@ -37,36 +38,43 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             if (reader.Info.Version < PakFile_Version_FNameBasedCompressionMethod)
             {
-                var LegacyCompressionMethod = Ar.Read<ECompressionFlags>();
-                int CompressionMethodIndex;
+                var legacyCompressionMethod = Ar.Read<ECompressionFlags>();
+                int compressionMethodIndex;
 
-                if (LegacyCompressionMethod == COMPRESS_None)
+                if (legacyCompressionMethod == COMPRESS_None)
                 {
-                    CompressionMethodIndex = 0;
+                    compressionMethodIndex = 0;
                 }
-                else if (LegacyCompressionMethod == COMPRESS_LZ4)
+                else if (legacyCompressionMethod == (ECompressionFlags) 259) // SOD2
                 {
-                    CompressionMethodIndex = 4;
+                    compressionMethodIndex = 4;
                 }
-                else if (LegacyCompressionMethod.HasFlag(COMPRESS_ZLIB))
+                else if (legacyCompressionMethod.HasFlag(COMPRESS_ZLIB))
                 {
-                    CompressionMethodIndex = 1;
+                    compressionMethodIndex = 1;
                 }
-                else if (LegacyCompressionMethod.HasFlag(COMPRESS_GZIP))
+                else if (legacyCompressionMethod.HasFlag(COMPRESS_GZIP))
                 {
-                    CompressionMethodIndex = 2;
+                    compressionMethodIndex = 2;
                 }
-                else if (LegacyCompressionMethod.HasFlag(COMPRESS_Custom))
+                else if (legacyCompressionMethod.HasFlag(COMPRESS_Custom))
                 {
-                    CompressionMethodIndex = 3;
+                    if (reader.Game == GAME_SeaOfThieves)
+                    {
+                        compressionMethodIndex = 4; // LZ4
+                    }
+                    else
+                    {
+                        compressionMethodIndex = 3; // Oodle, used by Fortnite Mobile until early 2019
+                    }
                 }
                 else
                 {
-                    CompressionMethodIndex = -1;
+                    compressionMethodIndex = -1;
                     //throw new ParserException("Found an unknown compression type in pak file, will need to be supported for legacy files");
                 }
 
-                CompressionMethod = CompressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[CompressionMethodIndex];
+                CompressionMethod = compressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[compressionMethodIndex];
             }
             else if (reader.Info.Version == PakFile_Version_FNameBasedCompressionMethod && !reader.Info.IsSubVersion)
             {
@@ -203,7 +211,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
             // Take into account CompressionBlocks
             if (CompressionMethod != CompressionMethod.None)
-                StructSize += (ushort) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
+                StructSize += (int) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
 
             // Handle building of the CompressionBlocks array.
             if (compressionBlocksCount == 1 && !IsEncrypted)

@@ -263,5 +263,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                                                         (System.Math.Abs(X + q.X) <= tolerance && System.Math.Abs(Y + q.Y) <= tolerance && System.Math.Abs(Z + q.Z) <= tolerance && System.Math.Abs(W + q.W) <= tolerance);
 
         public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}, {nameof(W)}: {W}";
+
+        public bool IsIdentity(float tolerance = FVector.SmallNumber) => Equals(FQuat.Identity, tolerance);
     }
 }

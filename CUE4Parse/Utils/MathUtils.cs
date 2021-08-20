@@ -5,7 +5,6 @@ namespace CUE4Parse.Utils
 {
     public static class MathUtils
     {
-        
         public static bool IsNumericType(this object o)
         {   
             switch (Type.GetTypeCode(o.GetType()))
@@ -26,7 +25,7 @@ namespace CUE4Parse.Utils
                     return false;
             }
         }
-        
+
         public static float InvSqrt(this float x)
         {
             float xhalf = 0.5f * x;
@@ -36,10 +35,11 @@ namespace CUE4Parse.Utils
             x = x * (1.5f - xhalf * x * x);
             return x;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ToRadians(this float val)
         {
             return ((float) Math.PI / 180f) * val;
@@ -56,6 +56,14 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FloorToInt(this float f) => Math.Floor(f).TruncToInt();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int RoundToInt(this float f) => FloorToInt(f + 0.5f);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Clamp(this int i, int min, int max) => i < min ? min : i < max ? i : max;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp(this float f, float min, float max) => f < min ? min : f < max ? f : max;
     }
 }

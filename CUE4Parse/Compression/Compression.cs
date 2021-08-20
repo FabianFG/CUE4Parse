@@ -1,10 +1,10 @@
-﻿using CUE4Parse.UE4.Exceptions;
+﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using Ionic.Zlib;
 using K4os.Compression.LZ4;
-using System;
-using System.IO;
-using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.Compression
 {
@@ -45,13 +45,21 @@ namespace CUE4Parse.Compression
                     Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
                 case CompressionMethod.LZ4:
-                    var uncompressedBuffer = new byte[uncompressedSize + 4];
-                    var result = LZ4Codec.Decode(compressed, compressedOffset, compressedSize, uncompressedBuffer, 0, uncompressedBuffer.Length);
+                    var uncompressedBuffer = new byte[uncompressedSize + uncompressedSize / 255 + 16]; // LZ4_compressBound(uncompressedSize)
+                    int result;
+#if USE_LZ4_NATIVE_LIB
+                    unsafe
+                    {
+                        fixed (byte* compressedPtr = compressed, uncompressedBufferPtr = uncompressedBuffer)
+                        {
+                            result = LZ4.LZ4_decompress_safe(compressedPtr + compressedOffset, uncompressedBufferPtr, compressedSize, uncompressedBuffer.Length);
+                        }
+                    }
+#else
+                    result = LZ4Codec.Decode(compressed, compressedOffset, compressedSize, uncompressedBuffer, 0, uncompressedBuffer.Length);
+#endif
                     Buffer.BlockCopy(uncompressedBuffer, 0, uncompressed, uncompressedOffset, uncompressedSize);
                     if (result != uncompressedSize) throw new FileLoadException($"Failed to decompress LZ4 data (Expected: {uncompressedSize}, Result: {result})");
-                    //var lz4 = LZ4Stream.Decode(srcStream);
-                    //lz4.Read(uncompressed, uncompressedOffset, uncompressedSize);
-                    //lz4.Dispose();
                     return;
                 default:
                     if (reader != null) throw new UnknownCompressionMethodException(reader, $"Compression method \"{method}\" is unknown");
