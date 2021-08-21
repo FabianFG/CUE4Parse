@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    public class UStruct : Assets.Exports.UObject
+    public class UStruct : UField
     {
         public FPackageIndex SuperStruct;
         public FPackageIndex[] Children;
