@@ -19,9 +19,22 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            Buffer.BlockCopy(_data, (int) Position, buffer, offset, count);
-            Position += count;
-            return count;
+            int n = (int) (Length - Position);
+            if (n > count) n = count;
+            if (n <= 0)
+                return 0;
+
+            if (n <= 8)
+            {
+                int byteCount = n;
+                while (--byteCount >= 0)
+                    buffer[offset + byteCount] = _data[Position + byteCount];
+            }
+            else
+                Buffer.BlockCopy(_data, (int) Position, buffer, offset, n);
+            Position += n;
+
+            return n;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

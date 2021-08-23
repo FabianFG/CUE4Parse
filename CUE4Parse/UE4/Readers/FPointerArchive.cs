@@ -21,9 +21,22 @@ namespace CUE4Parse.UE4.Readers
         {
             unsafe
             {
-                Unsafe.CopyBlockUnaligned(ref buffer[offset], ref _ptr[Position], (uint) count);
-                Position += count;
-                return count;
+                int n = (int) (Length - Position);
+                if (n > count) n = count;
+                if (n <= 0)
+                    return 0;
+
+                if (n <= 8)
+                {
+                    int byteCount = n;
+                    while (--byteCount >= 0)
+                        buffer[offset + byteCount] = _ptr[Position + byteCount];
+                }
+                else
+                    Unsafe.CopyBlockUnaligned(ref buffer[offset], ref _ptr[Position], (uint) n);
+                Position += n;
+
+                return n;
             }
         }
 

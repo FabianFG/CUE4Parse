@@ -193,11 +193,11 @@ namespace CUE4Parse.FileProvider
             VirtualPaths.Clear();
 
             var i = 0;
-            foreach (var file in Files.Where(x => regex.IsMatch(x.Key)))
+            foreach (var file in Files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!TrySaveAsset(file.Value.Path, out var data)) continue;
-                using var stream = new MemoryStream(data) {Position = 0};
+                if (!regex.IsMatch(file.Key)) continue;
+                if (!TryCreateReader(file.Value.Path, out var stream)) continue;
                 using var reader = new StreamReader(stream);
                 var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
 
@@ -207,7 +207,17 @@ namespace CUE4Parse.FileProvider
 
                     if (!content.Descriptor.CanContainContent) continue;
                     var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
+                    if (IsCaseInsensitive)
+                    {
+                        virtPath = virtPath.ToLowerInvariant();
+                    }
+
                     var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
+                    if (IsCaseInsensitive)
+                    {
+                        path = path.ToLowerInvariant();
+                    }
+
                     if (!VirtualPaths.ContainsKey(virtPath))
                     {
                         VirtualPaths.Add(virtPath, path);
@@ -219,7 +229,7 @@ namespace CUE4Parse.FileProvider
                     }
                 }
             }
-            
+
             return i;
         }
         
@@ -255,19 +265,19 @@ namespace CUE4Parse.FileProvider
             if (path[^1] != '/' && !lastPart.Contains('.'))
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
-            var trigger = path.SubstringBefore("/", comparisonType);
-            if (trigger.Equals(GameName, StringComparison.OrdinalIgnoreCase))
+            var root = path.SubstringBefore('/');
+            if (root.Equals(GameName, StringComparison.OrdinalIgnoreCase))
             {
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
 
-            if (trigger.Equals("Game", comparisonType) || trigger.Equals("Engine", comparisonType))
+            if (root.Equals("Game", comparisonType) || root.Equals("Engine", comparisonType))
             {
-                var gameName = trigger == "Engine" ? "Engine" : GameName;
-                var p = path.SubstringAfter("/", comparisonType).SubstringBefore("/", comparisonType);
+                var gameName = root == "Engine" ? "Engine" : GameName;
+                var p = path.SubstringAfter('/').SubstringBefore('/');
                 if (p.Contains('.'))
                 {
-                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter('/'));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
 
@@ -275,24 +285,24 @@ namespace CUE4Parse.FileProvider
                     p.Equals("Content", comparisonType) ||
                     p.Equals("Plugins", comparisonType))
                 {
-                    var ret = string.Concat(gameName, '/', path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(gameName, '/', path.SubstringAfter('/'));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
                 else
                 {
-                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter("/", comparisonType));
+                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter('/'));
                     return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
                 }
             }
 
-            if (VirtualPaths.FirstOrDefault(x => string.Equals(x.Key, trigger, comparisonType)).Value is {Length: > 0} use)
+            if (VirtualPaths.TryGetValue(comparisonType == StringComparison.OrdinalIgnoreCase ? root.ToLowerInvariant() : root, out var use))
             {
-                var ret = string.Concat(use, "/Content/", path.SubstringAfter("/", comparisonType));
+                var ret = string.Concat(use, "/Content/", path.SubstringAfter('/'));
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
             }
             else
             {
-                var ret = string.Concat(GameName, $"/Plugins/{(GameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{trigger}/Content/", path.SubstringAfter("/", comparisonType));
+                var ret = string.Concat(GameName, $"/Plugins/{(GameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{root}/Content/", path.SubstringAfter('/'));
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
             }
         }
