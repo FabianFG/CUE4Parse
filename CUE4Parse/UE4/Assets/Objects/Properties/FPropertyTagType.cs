@@ -103,6 +103,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "LazyObjectProperty" => new LazyObjectProperty(Ar, type),
                 "MapProperty" => new MapProperty(Ar, tagData, type),
                 "MulticastDelegateProperty" => new MulticastDelegateProperty(Ar, type),
+                "MulticastInlineDelegateProperty" => new MulticastInlineDelegateProperty(Ar, type),
+                "MulticastSparseDelegateProperty" => new MulticastSparseDelegateProperty(Ar, type),
                 "NameProperty" => new NameProperty(Ar, type),
                 "ObjectProperty" => new ObjectProperty(Ar, type),
                 "SetProperty" => new SetProperty(Ar, tagData, type),
