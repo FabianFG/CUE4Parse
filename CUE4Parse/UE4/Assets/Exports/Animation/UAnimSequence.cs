@@ -39,6 +39,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+
+            SequenceLength = GetOrDefault<float>(nameof(SequenceLength));
+            RateScale = GetOrDefault<float>(nameof(RateScale));
+            AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
+            RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
+            RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
+
+            NumFrames = GetOrDefault<int>(nameof(NumFrames));
+
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
             {
@@ -284,16 +293,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             CompressedTrackToSkeletonMapTable.Length :
             TrackToSkeletonMapTable.Length;
 
-        public int GetTrackBoneIndex(int TrackIndex) => CompressedTrackToSkeletonMapTable.Length > 0 ?
-            CompressedTrackToSkeletonMapTable[TrackIndex].BoneTreeIndex :
-            TrackToSkeletonMapTable[TrackIndex].BoneTreeIndex;
+        public int GetTrackBoneIndex(int trackIndex) => CompressedTrackToSkeletonMapTable.Length > 0 ?
+            CompressedTrackToSkeletonMapTable[trackIndex].BoneTreeIndex :
+            TrackToSkeletonMapTable[trackIndex].BoneTreeIndex;
 
-        public int FindTrackForBoneIndex(int BoneIndex) {
-            var TrackMap = CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable;
-            for (int TrackIndex = 0; TrackIndex < TrackMap.Length; TrackIndex++)
+        public int FindTrackForBoneIndex(int boneIndex) {
+            var trackMap = CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable;
+            for (int trackIndex = 0; trackIndex < trackMap.Length; trackIndex++)
             {
-                if (TrackMap[TrackIndex].BoneTreeIndex == BoneIndex)
-                    return TrackIndex;
+                if (trackMap[trackIndex].BoneTreeIndex == boneIndex)
+                    return trackIndex;
             }
             return -1;
         }

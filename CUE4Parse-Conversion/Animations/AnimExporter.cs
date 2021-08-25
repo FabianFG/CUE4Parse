@@ -15,42 +15,40 @@ namespace CUE4Parse_Conversion.Animations
     {
         private const int PSA_VERSION = 20100422;
 
-        public readonly string AnimName;
         public readonly List<Anim> AnimSequences;
 
-        public AnimExporter(UAnimSequence originalSeq)
+        public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null)
         {
             AnimSequences = new List<Anim>();
-            AnimName = originalSeq.Name;
 
-            var Anim = AnimConverter.ConvertAnims(null, originalSeq); // TODO IMPORTANT where's the skeleton?
-            if (Anim.Sequences.Count == 0)
+            var anim = skeleton.ConvertAnims(animSequence);
+            if (anim.Sequences.Count == 0)
             {
                 // empty CAnimSet
                 return;
             }
 
             // Determine if CAnimSet will save animations as separate psa files, or all at once
-            var OriginalAnim = Anim.GetPrimaryAnimObject();
+            var originalAnim = anim.GetPrimaryAnimObject();
 
-            if (OriginalAnim == Anim.OriginalAnim || Anim.Sequences.Count == 1)
+            if (originalAnim == anim.OriginalAnim || anim.Sequences.Count == 1)
             {
                 // Export all animations in a single file
-                DoExportPsa(Anim, OriginalAnim);
+                DoExportPsa(anim, originalAnim);
             }
             else
             {
-                var Skeleton = (USkeleton) Anim.OriginalAnim;
+                //var skeleton = (USkeleton) anim.OriginalAnim;
 
                 // Export animations separately, this will happen only when CAnimSet has
                 // a few sequences (but more than one)
                 var TempAnimSet = new CAnimSet();
-                TempAnimSet.CopyAllButSequences(Anim);
+                TempAnimSet.CopyAllButSequences(anim);
                 // Now we have a copy of AnimSet, let's set up Sequences array to a single
                 // item and export one-by-one
-                for (int AnimIndex = 0; AnimIndex < Anim.Sequences.Count; AnimIndex++)
+                for (int AnimIndex = 0; AnimIndex < anim.Sequences.Count; AnimIndex++)
                 {
-                    var seq = Anim.Sequences[AnimIndex];
+                    var seq = anim.Sequences[AnimIndex];
                     TempAnimSet.Sequences.Clear();
                     TempAnimSet.Sequences.Add(seq);
                     // Do the export, pass UAnimSequence as the "main" object, so it will be
@@ -61,6 +59,8 @@ namespace CUE4Parse_Conversion.Animations
                 TempAnimSet.Sequences.Clear();
             }
         }
+
+        public AnimExporter(UAnimSequence animSequence) : this(animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
 
         private void DoExportPsa(CAnimSet anim, UObject originalAnim)
         {

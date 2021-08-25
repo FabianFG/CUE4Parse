@@ -283,7 +283,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             CompressedChunks = Ar.ReadArray<FCompressedChunk>();
 
-            if (CompressedChunks.Length != 0)
+            if (CompressedChunks.Length > 0)
             {
                 throw new ParserException("Package level compression is enabled");
             }

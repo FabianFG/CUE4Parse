@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.ActorX
 {
-    public class VJointPosPsk
+    public struct VJointPosPsk
     {
         public const int SIZE = 4*4 + 3*4 + 4 + 3*4; 
 
