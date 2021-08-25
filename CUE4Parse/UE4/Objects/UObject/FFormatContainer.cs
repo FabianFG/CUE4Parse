@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.Sound
+namespace CUE4Parse.UE4.Objects.UObject
 {
     [JsonConverter(typeof(FFormatContainerConverter))]
     public class FFormatContainer
@@ -22,19 +21,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             }
         }
     }
-    
+
     public class FFormatContainerConverter : JsonConverter<FFormatContainer>
     {
         public override void WriteJson(JsonWriter writer, FFormatContainer value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             foreach (var kvp in value.Formats)
             {
                 writer.WritePropertyName(kvp.Key.Text);
                 serializer.Serialize(writer, kvp.Value);
             }
-            
+
             writer.WriteEndObject();
         }
 

@@ -17,14 +17,14 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             SmoothingGroups = smoothingGroups;
         }
 
-        public void Serialize(FArchiveWriter writer)
+        public void Serialize(FArchiveWriter Ar)
         {
-            writer.Write(WedgeIndex[0]);
-            writer.Write(WedgeIndex[1]);
-            writer.Write(WedgeIndex[2]);
-            writer.Write(MatIndex);
-            writer.Write(AuxMatIndex);
-            writer.Write(SmoothingGroups);
+            Ar.Write(WedgeIndex[0]);
+            Ar.Write(WedgeIndex[1]);
+            Ar.Write(WedgeIndex[2]);
+            Ar.Write(MatIndex);
+            Ar.Write(AuxMatIndex);
+            Ar.Write(SmoothingGroups);
         }
     }
 }

@@ -17,5 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             OffsetData = Ar.ReadArray<int>();
             StripSize = Ar.Read<int>();
         }
+
+        public bool IsValid() => StripSize > 0 && OffsetData.Length > 0;
     }
 }

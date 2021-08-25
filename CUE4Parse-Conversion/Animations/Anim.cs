@@ -1,32 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using CUE4Parse_Conversion.Materials;
 
-namespace CUE4Parse_Conversion.Meshes
+namespace CUE4Parse_Conversion.Animations
 {
-    public class Mesh : ExporterBase
+    public class Anim : ExporterBase
     {
         public readonly string FileName;
         public readonly byte[] FileData;
-        public readonly List<MaterialExporter> Materials;
 
-        public Mesh(string fileName, byte[] fileData, List<MaterialExporter> materials)
+        public Anim(string fileName, byte[] fileData)
         {
             FileName = fileName;
             FileData = fileData;
-            Materials = materials;
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
             savedFileName = string.Empty;
             if (!baseDirectory.Exists || FileData.Length <= 0) return false;
-
-            foreach (var material in Materials)
-            {
-                material.TryWriteToDir(baseDirectory, out _);
-            }
 
             var filePath = FixAndCreatePath(baseDirectory, FileName);
             File.WriteAllBytes(filePath, FileData);

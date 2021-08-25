@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Serilog;
@@ -11,6 +12,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimationAsset
     {
+        public int NumFrames;
+
+        // UAnimSequenceBase
+        public float SequenceLength;
+        public float RateScale;
+        public EAdditiveAnimationType AdditiveAnimType;
+        public FName RetargetSource;
+        public FTransform[] RetargetSourceAssetReferencePose; 
+
         public FRawAnimSequenceTrack[] RawAnimationData;
         public byte[] CompressedByteStream;
         public FCompressedSegment[] CompressedSegments;
@@ -264,6 +274,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
                 }
             }
+        }
+
+        // WARNING: the following functions uses some logic to use either CompressedTrackToSkeletonMapTable or TrackToSkeletonMapTable.
+        // This logic should be the same everywhere. Note: CompressedTrackToSkeletonMapTable appeared in UE4.12, so it will always be
+        // empty when loading animations from older engines.
+
+        public int GetNumTracks() => CompressedTrackToSkeletonMapTable.Length > 0 ?
+            CompressedTrackToSkeletonMapTable.Length :
+            TrackToSkeletonMapTable.Length;
+
+        public int GetTrackBoneIndex(int TrackIndex) => CompressedTrackToSkeletonMapTable.Length > 0 ?
+            CompressedTrackToSkeletonMapTable[TrackIndex].BoneTreeIndex :
+            TrackToSkeletonMapTable[TrackIndex].BoneTreeIndex;
+
+        public int FindTrackForBoneIndex(int BoneIndex) {
+            var TrackMap = CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable;
+            for (int TrackIndex = 0; TrackIndex < TrackMap.Length; TrackIndex++)
+            {
+                if (TrackMap[TrackIndex].BoneTreeIndex == BoneIndex)
+                    return TrackIndex;
+            }
+            return -1;
         }
     }
 }
