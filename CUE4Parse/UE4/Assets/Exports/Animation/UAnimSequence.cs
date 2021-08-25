@@ -41,7 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             base.Deserialize(Ar, validPos);
 
             SequenceLength = GetOrDefault<float>(nameof(SequenceLength));
-            RateScale = GetOrDefault<float>(nameof(RateScale));
+            RateScale = GetOrDefault(nameof(RateScale), 1.0f);
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));

@@ -42,21 +42,21 @@ namespace CUE4Parse_Conversion.Animations
 
                 // Export animations separately, this will happen only when CAnimSet has
                 // a few sequences (but more than one)
-                var TempAnimSet = new CAnimSet();
-                TempAnimSet.CopyAllButSequences(anim);
+                var tempAnimSet = new CAnimSet();
+                tempAnimSet.CopyAllButSequences(anim);
                 // Now we have a copy of AnimSet, let's set up Sequences array to a single
                 // item and export one-by-one
-                for (int AnimIndex = 0; AnimIndex < anim.Sequences.Count; AnimIndex++)
+                for (int animIndex = 0; animIndex < anim.Sequences.Count; animIndex++)
                 {
-                    var seq = anim.Sequences[AnimIndex];
-                    TempAnimSet.Sequences.Clear();
-                    TempAnimSet.Sequences.Add(seq);
+                    var seq = anim.Sequences[animIndex];
+                    tempAnimSet.Sequences.Clear();
+                    tempAnimSet.Sequences.Add(seq);
                     // Do the export, pass UAnimSequence as the "main" object, so it will be
                     // used as psa file name.
-                    DoExportPsa(TempAnimSet, seq.OriginalSequence!);
+                    DoExportPsa(tempAnimSet, seq.OriginalSequence!);
                 }
                 // Ensure TempAnimSet destructor will not release Sequences as they are owned by Anim object
-                TempAnimSet.Sequences.Clear();
+                tempAnimSet.Sequences.Clear();
             }
         }
 
@@ -85,7 +85,7 @@ namespace CUE4Parse_Conversion.Animations
             for (i = 0; i < numBones; i++)
             {
                 Trace.Assert(anim.TrackBoneNames[i].Text.Length < 64);
-                var b = new FNamedBoneBinary
+                var bone = new FNamedBoneBinary
                 {
                     Name = anim.TrackBoneNames[i].Text,
                     Flags = 0, // reserved
@@ -96,10 +96,10 @@ namespace CUE4Parse_Conversion.Animations
                 if (i < anim.BonePositions.Length)
                 {
                     // The AnimSet has bone transform information, store it in psa file (UE4+)
-                    b.BonePos.Position = anim.BonePositions[i].Position;
-                    b.BonePos.Orientation = anim.BonePositions[i].Orientation;
+                    bone.BonePos.Position = anim.BonePositions[i].Position;
+                    bone.BonePos.Orientation = anim.BonePositions[i].Orientation;
                 }
-                b.Serialize(Ar);
+                bone.Serialize(Ar);
             }
 
             int framesCount = 0;
@@ -109,25 +109,25 @@ namespace CUE4Parse_Conversion.Animations
             Ar.SerializeChunkHeader(animHdr, "ANIMINFO");
             for (i = 0; i < numAnims; i++)
             {
-                var s = anim.Sequences[i];
-                var a = new AnimInfoBinary
+                var sequence = anim.Sequences[i];
+                var animInfo = new AnimInfoBinary
                 {
-                    Name = s.Name,
+                    Name = sequence.Name,
                     Group = /*??S.Groups.Length > 0 ? S.Groups[0] :*/ "None",
                     TotalBones = numBones,
                     RootInclude = 0, // unused
                     KeyCompressionStyle = 0, // reserved
-                    KeyQuotum = s.NumFrames * numBones, // reserved, but fill with keys count
+                    KeyQuotum = sequence.NumFrames * numBones, // reserved, but fill with keys count
                     KeyReduction = 0, // reserved
-                    TrackTime = s.NumFrames,
-                    AnimRate = s.Rate,
+                    TrackTime = sequence.NumFrames,
+                    AnimRate = sequence.Rate,
                     StartBone = 0, // reserved
                     FirstRawFrame = framesCount, // useless, but used in UnrealEd when importing
-                    NumRawFrames = s.NumFrames
+                    NumRawFrames = sequence.NumFrames
                 };
-                a.Serialize(Ar);
+                animInfo.Serialize(Ar);
 
-                framesCount += s.NumFrames;
+                framesCount += sequence.NumFrames;
             }
 
             var requireConfig = false;
@@ -138,30 +138,30 @@ namespace CUE4Parse_Conversion.Animations
             Ar.SerializeChunkHeader(keyHdr, "ANIMKEYS");
             for (i = 0; i < numAnims; i++)
             {
-                var s = anim.Sequences[i];
-                for (int t = 0; t < s.NumFrames; t++)
+                var sequence = anim.Sequences[i];
+                for (int frame = 0; frame < sequence.NumFrames; frame++)
                 {
-                    for (int b = 0; b < numBones; b++)
+                    for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
                     {
-                        var bP = new FVector(0, 0, 0); // GetBonePosition() will not alter bP and bO when animation tracks are not exists
-                        var bO = new FQuat(0, 0, 0, 1);
-                        s.Tracks[b].GetBonePosition(t, s.NumFrames, false, ref bP, ref bO);
+                        var bonePosition = new FVector(0, 0, 0); // GetBonePosition() will not alter bP and bO when animation tracks are not exists
+                        var boneOrientation = new FQuat(0, 0, 0, 1);
+                        sequence.Tracks[boneIndex].GetBonePosition(frame, sequence.NumFrames, false, ref bonePosition, ref boneOrientation, boneIndex);
 
-                        var k = new VQuatAnimKey
+                        var key = new VQuatAnimKey
                         {
-                            Position = bP,
-                            Orientation = bO,
+                            Position = bonePosition,
+                            Orientation = boneOrientation,
                             Time = 1
                         };
                         // MIRROR_MESH
-                        k.Orientation.Y *= -1;
-                        k.Orientation.W *= -1;
-                        k.Position.Y *= -1;
-                        k.Serialize(Ar);
+                        key.Orientation.Y *= -1;
+                        key.Orientation.W *= -1;
+                        key.Position.Y *= -1;
+                        key.Serialize(Ar);
                         keysCount--;
 
                         // check for user error
-                        if (s.Tracks[b].KeyPos.Length == 0 || s.Tracks[b].KeyQuat.Length == 0)
+                        if (sequence.Tracks[boneIndex].KeyPos.Length == 0 || sequence.Tracks[boneIndex].KeyQuat.Length == 0)
                             requireConfig = true;
                     }
                 }

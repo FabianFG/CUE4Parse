@@ -33,7 +33,7 @@ namespace CUE4Parse_Conversion
         public float[] KeyScaleTime = Array.Empty<float>();
 
         // DstPos and/or DstQuat will not be changed when KeyPos and/or KeyQuat are empty.
-        public void GetBonePosition(float frame, float numFrames, bool loop, ref FVector dstPos, ref FQuat dstQuat)
+        public void GetBonePosition(float frame, float numFrames, bool loop, ref FVector dstPos, ref FQuat dstQuat, int boneIndex)
         {
             // fast case: 1 frame only
             if (KeyTime.Length == 1 || numFrames == 1 || frame == 0)
@@ -84,9 +84,9 @@ namespace CUE4Parse_Conversion
                 }
                 else if (numPosKeys > 1)
                 {
-                    var Position = frame / numFrames * numPosKeys;
-                    posX = Position.FloorToInt();
-                    posF = Position - posX;
+                    var position = frame / numFrames * numPosKeys;
+                    posX = position.FloorToInt();
+                    posF = position - posX;
                     posY = posX + 1;
                     if (posY >= numPosKeys)
                     {
@@ -468,9 +468,9 @@ namespace CUE4Parse_Conversion
             {
                 if (trackIndex == 0) continue; // don't fix root track
                 var track = anim.Tracks[trackIndex];
-                foreach (var key in track.KeyQuat)
+                for (var keyQuatIndex = 0; keyQuatIndex < track.KeyQuat.Length; keyQuatIndex++)
                 {
-                    key.Conjugate();
+                    track.KeyQuat[keyQuatIndex].Conjugate();
                 }
             }
         }

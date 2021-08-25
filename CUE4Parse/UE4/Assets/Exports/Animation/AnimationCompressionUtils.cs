@@ -13,23 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public const float Quant11BitDiv = 1023.0f;
         public const int Quant11BitOffs = 1023;
 
-        private const int XShift = 21;
-        private const int YShift = 10;
-        private const uint ZMask = 0x000003ff;
-        private const uint YMask = 0x001ffc00;
-        private const uint XMask = 0xffe00000;
-
-        public static FQuat ReadQuatFloat96NoW(this FArchive Ar)
-        {
-            var x = Ar.Read<float>();
-            var y = Ar.Read<float>();
-            var z = Ar.Read<float>();
-            var wSquared = 1.0f - x*x - y*y - z*z;
-
-            return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
-        }
-
-        // normalized quaternion with 3 16-bit fixed point fields
+        /** normalized quaternion with 3 16-bit fixed point fields */
         public static FQuat ReadQuatFixed48NoW(this FArchive Ar, int componentMask = 7)
         {
             // 32767 corresponds to 0
@@ -45,9 +29,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             return new FQuat(fX, fY, fZ, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
         }
 
-        // normalized quaternion with 11/11/10-bit fixed point fields
+        /** normalized quaternion with 11/11/10-bit fixed point fields */
         public static FQuat ReadQuatFixed32NoW(this FArchive Ar)
         {
+            const int XShift = 21;
+            const int YShift = 10;
+            const uint ZMask = 0x000003ff;
+            const uint YMask = 0x001ffc00;
+            const uint XMask = 0xffe00000;
+
             var packed = Ar.Read<uint>();
             var unpackedX = packed >> XShift;
             var unpackedY = (packed & YMask) >> YShift;
@@ -61,31 +51,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
         }
 
-        public static FQuat ReadQuatIntervalFixed32NoW(this FArchive Ar, FVector mins, FVector ranges)
+        public static FQuat ReadQuatFloat96NoW(this FArchive Ar)
         {
-            var packed = Ar.Read<uint>();
-            var unpackedX = packed >> XShift;
-            var unpackedY = (packed & YMask) >> YShift;
-            var unpackedZ = (packed & ZMask);
-
-            var x = (((int) unpackedX - Quant11BitOffs) / Quant11BitDiv) * ranges.X + mins.X;
-            var y = (((int) unpackedY - Quant11BitOffs) / Quant11BitDiv) * ranges.Y + mins.Y;
-            var z = (((int) unpackedZ - Quant10BitOffs) / Quant10BitDiv) * ranges.Z + mins.Z;
-            var wSquared = 1.0f - x*x - y*y - z*z;
-
-            return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
-        }
-
-        public static FQuat ReadQuatFloat32NoW(this FArchive Ar)
-        {
-            var packed = Ar.Read<uint>();
-            var unpackedX = packed >> XShift;
-            var unpackedY = (packed & YMask) >> YShift;
-            var unpackedZ = (packed & ZMask);
-
-            var x = BitConverter.Int32BitsToSingle((int) (((((unpackedX >> 7) & 7) + 123) << 23) | ((unpackedX & 0x7F | 32 * (unpackedX & 0xFFFFFC00)) << 16)));
-            var y = BitConverter.Int32BitsToSingle((int) (((((unpackedY >> 7) & 7) + 123) << 23) | ((unpackedY & 0x7F | 32 * (unpackedY & 0xFFFFFC00)) << 16)));
-            var z = BitConverter.Int32BitsToSingle((int) (((((unpackedZ >> 6) & 7) + 123) << 23) | ((unpackedZ & 0x3F | 32 * (unpackedZ & 0xFFFFFE00)) << 17)));
+            var x = Ar.Read<float>();
+            var y = Ar.Read<float>();
+            var z = Ar.Read<float>();
             var wSquared = 1.0f - x*x - y*y - z*z;
 
             return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
@@ -106,6 +76,32 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public static FVector ReadVectorIntervalFixed32(this FArchive Ar, FVector mins, FVector ranges)
         {
+            const int ZShift = 21;
+            const int YShift = 10;
+            const uint XMask = 0x000003ff;
+            const uint YMask = 0x001ffc00;
+            const uint ZMask = 0xffe00000;
+
+            var packed = Ar.Read<uint>();
+            var unpackedZ = packed >> ZShift;
+            var unpackedY = (packed & YMask) >> YShift;
+            var unpackedX = (packed & XMask);
+
+            var x = (((int) unpackedX - Quant10BitOffs) / Quant10BitDiv) * ranges.X + mins.X;
+            var y = (((int) unpackedY - Quant11BitOffs) / Quant11BitDiv) * ranges.Y + mins.Y;
+            var z = (((int) unpackedZ - Quant11BitOffs) / Quant11BitDiv) * ranges.Z + mins.Z;
+
+            return new FVector(x, y, z);
+        }
+
+        public static FQuat ReadQuatIntervalFixed32NoW(this FArchive Ar, FVector mins, FVector ranges)
+        {
+            const int XShift = 21;
+            const int YShift = 10;
+            const uint ZMask = 0x000003ff;
+            const uint YMask = 0x001ffc00;
+            const uint XMask = 0xffe00000;
+
             var packed = Ar.Read<uint>();
             var unpackedX = packed >> XShift;
             var unpackedY = (packed & YMask) >> YShift;
@@ -114,8 +110,30 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             var x = (((int) unpackedX - Quant11BitOffs) / Quant11BitDiv) * ranges.X + mins.X;
             var y = (((int) unpackedY - Quant11BitOffs) / Quant11BitDiv) * ranges.Y + mins.Y;
             var z = (((int) unpackedZ - Quant10BitOffs) / Quant10BitDiv) * ranges.Z + mins.Z;
+            var wSquared = 1.0f - x*x - y*y - z*z;
 
-            return new FVector(x, y, z);
+            return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
+        }
+
+        public static FQuat ReadQuatFloat32NoW(this FArchive Ar)
+        {
+            const int XShift = 21;
+            const int YShift = 10;
+            const uint ZMask = 0x000003ff;
+            const uint YMask = 0x001ffc00;
+            const uint XMask = 0xffe00000;
+
+            var packed = Ar.Read<uint>();
+            var unpackedX = packed >> XShift;
+            var unpackedY = (packed & YMask) >> YShift;
+            var unpackedZ = (packed & ZMask);
+
+            var x = BitConverter.Int32BitsToSingle((int) (((((unpackedX >> 7) & 7) + 123) << 23) | ((unpackedX & 0x7F | 32 * (unpackedX & 0xFFFFFC00)) << 16)));
+            var y = BitConverter.Int32BitsToSingle((int) (((((unpackedY >> 7) & 7) + 123) << 23) | ((unpackedY & 0x7F | 32 * (unpackedY & 0xFFFFFC00)) << 16)));
+            var z = BitConverter.Int32BitsToSingle((int) (((((unpackedZ >> 6) & 7) + 123) << 23) | ((unpackedZ & 0x3F | 32 * (unpackedZ & 0xFFFFFE00)) << 17)));
+            var wSquared = 1.0f - x*x - y*y - z*z;
+
+            return new FQuat(x, y, z, wSquared > 0.0f ? MathF.Sqrt(wSquared) : 0.0f);
         }
 
         public static float DecodeFixed48_PerTrackComponent(ushort value, int log2)
