@@ -1,4 +1,5 @@
-﻿using CUE4Parse.ACL;
+﻿using System;
+using CUE4Parse.ACL;
 using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
@@ -19,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 
         public void SerializeCompressedData(FAssetArchive Ar)
         {
-            FCompressedAnimDataBase.BaseSerializeCompressedData(this, Ar);
+            ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
 
             SequenceNameHash = Ar.Read<uint>();
 
@@ -32,6 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
         public void Bind(byte[] bulkData)
         {
             var compressedClipData = new CompressedTracks(bulkData);
+            throw new NotImplementedException();
         }
     }
 }

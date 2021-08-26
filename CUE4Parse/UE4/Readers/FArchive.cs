@@ -27,6 +27,7 @@ namespace CUE4Parse.UE4.Readers
         public abstract unsafe void Serialize(byte* ptr, int length);
         public abstract byte[] ReadBytes(int length);
         public abstract T[] ReadArray<T>(int length) where T : struct;
+        public abstract void ReadArray<T>(T[] array) where T : struct;
 
         protected FArchive(VersionContainer? versions = null)
         {

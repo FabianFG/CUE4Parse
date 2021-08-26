@@ -1,5 +1,6 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
+using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
@@ -260,7 +261,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 animData.SerializeCompressedData(Ar);
                 animData.Bind(serializedByteStream);
-                new UAnimBoneCompressionCodec_ACL().DecompressBone(new(SequenceLength, EAnimInterpolationType.Linear, new FName(), animData) { Time = 3f }, 0, out var bruh);
+                // TODO make this correct when you're done with UE's way of decompressing anims
+                var codec = new UAnimBoneCompressionCodec_ACL();
+                var ctx = new FAnimSequenceDecompressionContext(SequenceLength, EAnimInterpolationType.Linear, new FName(), animData) { Time = 3f };
+                codec.DecompressBone(ctx, 3, out var bruh);
+                codec.DecompressPose(ctx, new BoneTrackPair[0], new BoneTrackPair[0], new BoneTrackPair[0], new FTransform[0]);
             }
         }
 

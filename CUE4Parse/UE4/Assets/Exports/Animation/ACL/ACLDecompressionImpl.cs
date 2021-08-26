@@ -1,8 +1,18 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.ACL;
+using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 {
+    /** These 3 indices map into the output Atom array. */
+    public struct FAtomIndices
+    {
+        public ushort Rotation;
+        public ushort Translation;
+        public ushort Scale;
+    }
+
     public static class ACLDecompressionImpl
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -12,6 +22,42 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
         {
             aclContext.Seek(decompContext.Time, GetRoundingPolicy(decompContext.Interpolation));
             aclContext.DecompressTrack(trackIndex, out outAtom);
+        }
+
+        public static void DecompressPose(FAnimSequenceDecompressionContext decompContext, DecompressionContext aclContext, BoneTrackPair[] rotationPairs, BoneTrackPair[] translationPairs, BoneTrackPair[] scalePairs, FTransform[] outAtoms)
+        {
+            aclContext.Seek(decompContext.Time, GetRoundingPolicy(decompContext.Interpolation));
+
+            var compressedClipData = aclContext.GetCompressedTracks()!;
+            var tracksHeader = compressedClipData.GetTracksHeader();
+            var aclBoneCount = tracksHeader.NumTracks;
+            var trackToAtomsMap = new FAtomIndices[aclBoneCount];
+            for (int i = 0; i < aclBoneCount; i++)
+            {
+                trackToAtomsMap[i] = new FAtomIndices { Rotation = 0xFF, Translation = 0xFF, Scale = 0xFF };
+            }
+
+            foreach (ref readonly var pair in rotationPairs.AsSpan())
+            {
+                trackToAtomsMap[pair.TrackIndex].Rotation = (ushort) pair.AtomIndex;
+            }
+
+            foreach (ref readonly var pair in translationPairs.AsSpan())
+            {
+                trackToAtomsMap[pair.TrackIndex].Translation = (ushort) pair.AtomIndex;
+            }
+
+            if (tracksHeader.GetHasScale())
+            {
+                foreach (ref readonly var pair in scalePairs.AsSpan())
+                {
+                    trackToAtomsMap[pair.TrackIndex].Scale = (ushort) pair.AtomIndex;
+                }
+            }
+
+            // We will decompress the whole pose even if we only care about a smaller subset of bone tracks.
+            // This ensures we read the compressed pose data once, linearly.
+            aclContext.DecompressTracks(outAtoms, trackToAtomsMap);
         }
     }
 }

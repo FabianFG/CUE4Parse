@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
-    using CUE4Parse.UE4.Objects.Core.Math;
-    using CUE4Parse.UE4.Readers;
-    using CUE4Parse.Utils;
+    internal class AEFConstantKeyLerp : AnimEncodingLegacyBase
+    {
+        private readonly AnimationCompressionFormat _format;
 
     class AEFConstantKeyLerp : AEFConstantKeyLerpShared
     {
@@ -65,17 +63,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
             var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
 
             var trackData = animData.CompressedTrackOffsets;
-            int trackDataStartIndex = trackIndex * 4;
-            int transKeysOffset = trackData[trackDataStartIndex];
-            int numTransKeys = trackData[trackDataStartIndex + 1];
+            var trackDataStartIndex = trackIndex * 4;
+            var transKeysOffset = trackData[trackDataStartIndex];
+            var numTransKeys = trackData[trackDataStartIndex + 1];
 
             float alpha = AnimEncodingUtil.TimeToIndex(
                 decompContext.SequenceLength,
                 decompContext.RelativePos,
                 numTransKeys,
                 decompContext.Interpolation,
-                out int index0,
-                out int index1);
+                out var index0,
+                out var index1);
 
             ar.Position = transKeysOffset;
             int transStreamOffset = ((_format == AnimationCompressionFormat.ACF_IntervalFixed32NoW) && numTransKeys > 1) ? sizeof(float) * 6 : 0; // offset past Min and Range data
