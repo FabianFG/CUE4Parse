@@ -1,5 +1,6 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
+using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;

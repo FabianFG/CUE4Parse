@@ -1,11 +1,7 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Animation
-{
-    public struct BoneTrackPair // TODO move to AnimEncoding.cs
-    {
-        public int AtomIndex;
-        public int TrackIndex;
-    }
+﻿using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 
+namespace CUE4Parse.UE4.Assets.Exports.Animation
+{
     /**
      * Base class for all bone compression codecs.
      */

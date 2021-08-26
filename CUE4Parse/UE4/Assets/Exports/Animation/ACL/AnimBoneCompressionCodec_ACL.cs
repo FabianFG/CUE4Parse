@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using CUE4Parse.ACL;
+using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 {
