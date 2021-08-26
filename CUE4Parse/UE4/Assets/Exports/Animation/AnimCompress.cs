@@ -7,7 +7,7 @@
             // Initialize to identity to set the scale and in case of a missing rotation or translation codec
             outAtom = FTransform.Identity; // .SetIdentity()
 
-            var AnimData = (FUECompressedAnimData)decompContext.CompressedAnimData;
+            var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
 
             // decompress the translation component using the proper method
             /*((AnimEncodingLegacyBase*)AnimData.TranslationCodec)->GetBoneAtomTranslation(outAtom, DecompContext, TrackIndex);

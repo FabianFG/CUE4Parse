@@ -57,6 +57,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public byte[] CompressedByteStream;
         protected int CompressedByteStreamNum;
 
+        public IAnimEncoding TranslationCodec;
+
+        public IAnimEncoding RotationCodec;
+
+        public IAnimEncoding ScaleCodec;
+
         public AnimationKeyFormat KeyEncodingFormat;
 
         // The compression format that was used to compress tracks parts.
