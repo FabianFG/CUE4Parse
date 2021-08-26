@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Assets.Exports.Animation
+namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
     abstract class AnimEncodingLegacyBase : IAnimEncoding
     {
-        public abstract void GetBoneAtomRotation(
+        public virtual void GetBoneAtomRotation(
+            FArchive ar,
             FAnimSequenceDecompressionContext decompContext,
             int trackIndex,
-            ref FTransform outAtom);
+            ref FTransform outAtom){}
 
-        public abstract void GetBoneAtomTranslation(
+        public virtual void GetBoneAtomTranslation(
+            FArchive ar,
             FAnimSequenceDecompressionContext decompContext,
             int trackIndex,
-            ref FTransform outAtom);
+            ref FTransform outAtom){}
 
-        public abstract void GetBoneAtomScale(
+        public virtual void GetBoneAtomScale(
+            FArchive ar,
             FAnimSequenceDecompressionContext decompContext,
             int trackIndex,
-            ref FTransform outAtom);
+            ref FTransform outAtom){}
     }
 }

@@ -258,6 +258,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Ar.Write(W);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FQuat FastLerp(FQuat q1, FQuat q2, float alpha)
+        {
+            float doResult = q1 | q2;
+            float bias = MathUtils.FloatSelect(doResult, 1.0f, -1.0f);
+            return (q2 * alpha) + (q1 * (bias * (1f - alpha)));
+        }
+
         public static FQuat Slerp_NotNormalized(FQuat quat1, FQuat quat2, float Slerp)
         {
             // Get cosine of angle between quats.
@@ -300,5 +308,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FQuat Slerp(FQuat quat1, FQuat quat2, float slerp) => Slerp_NotNormalized(quat1, quat2, slerp).GetNormalized();
+
+        public static float operator |(FQuat a, FQuat b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
+        public static FQuat operator *(FQuat a, float scale) => new FQuat(scale * a.X, scale * a.Y, scale * a.Z, scale * a.W);
+        public static FQuat operator +(FQuat a, FQuat b) => new FQuat(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
     }
 }

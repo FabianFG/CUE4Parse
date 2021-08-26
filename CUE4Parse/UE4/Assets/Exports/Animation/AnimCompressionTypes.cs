@@ -7,6 +7,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     using System;
     using System.Diagnostics;
 
+    using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
+
     public class FCompressedOffsetDataBase<T> where T : struct
     {
         public T[] OffsetData;
@@ -22,6 +24,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             OffsetData = Ar.ReadArray<T>();
             StripSize = Ar.Read<int>();
+        }
+
+        public T GetOffsetData(int stripIndex, int offset)
+        {
+            return OffsetData[stripIndex * StripSize + offset];
         }
 
         public bool IsValid() => StripSize > 0 && OffsetData.Length > 0;
@@ -72,17 +79,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         
 
-        internal static void BaseSerializeCompressedData(ICompressedAnimData self, FAssetArchive Ar)
-        {
-            self.CompressedNumberOfFrames = Ar.Read<int>();
-            /*if (!Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly))
-            {
-                self.BoneCompressionErrorStats = new FAnimationErrorStats(Ar);
-            }*/
-        }
 
-        
-    }
+}
 
     public interface ICompressedAnimData
     {
