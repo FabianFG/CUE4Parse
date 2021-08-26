@@ -1,8 +1,12 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
+using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
+    using System;
+    using System.Diagnostics;
+
     public class FCompressedOffsetDataBase<T> where T : struct
     {
         public T[] OffsetData;
@@ -41,26 +45,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
          *   . . .
          */
         public int[] CompressedTrackOffsets;
-        protected int CompressedTrackOffsetsNum;
 
         /**
-         * An array of 2*NumTrack ints, arranged as follows:
-         *  if identity, it is offset
-         *  if not, it is num of keys
-         *   [0] Scale0.Offset or NumKeys
-         *   [1] Scale1.Offset or NumKeys
-         * @TODO NOTE: first implementation is offset is [0], numkeys [1]
-         *   . . .
-         */
+        * An array of 2*NumTrack ints, arranged as follows:
+        *  if identity, it is offset
+        *  if not, it is num of keys
+        *   [0] Scale0.Offset or NumKeys
+        *   [1] Scale1.Offset or NumKeys
+        * @TODO NOTE: first implementation is offset is [0], numkeys [1]
+        *   . . .
+        */
         public FCompressedOffsetData CompressedScaleOffsets = new();
 
         public byte[] CompressedByteStream;
-        protected int CompressedByteStreamNum;
 
         public IAnimEncoding TranslationCodec;
-
         public IAnimEncoding RotationCodec;
-
         public IAnimEncoding ScaleCodec;
 
         public AnimationKeyFormat KeyEncodingFormat;
@@ -70,6 +70,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public AnimationCompressionFormat RotationCompressionFormat;
         public AnimationCompressionFormat ScaleCompressionFormat;
 
+        
+
         internal static void BaseSerializeCompressedData(ICompressedAnimData self, FAssetArchive Ar)
         {
             self.CompressedNumberOfFrames = Ar.Read<int>();
@@ -78,21 +80,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 self.BoneCompressionErrorStats = new FAnimationErrorStats(Ar);
             }*/
         }
+
+        
     }
 
     public interface ICompressedAnimData
     {
         /* Common data */
-        public int CompressedNumberOfFrames { get; set; } // CompressedNumberOfKeys in UE5
-        //public FAnimationErrorStats BoneCompressionErrorStats;
+        int CompressedNumberOfFrames { get; set; } // CompressedNumberOfKeys in UE5
 
-        public void SerializeCompressedData(FAssetArchive Ar)
+        //public FAnimationErrorStats BoneCompressionErrorStats; //editor
+
+        void SerializeCompressedDataBase(FAssetArchive Ar)
         {
             FCompressedAnimDataBase.BaseSerializeCompressedData(this, Ar);
         }
 
-        public void Bind(byte[] bulkData);
-        public virtual string GetDebugString() => string.Empty;
+        void Bind(byte[] bulkData);
+
+        string GetDebugString();
     }
 
     public class FUECompressedAnimData : FCompressedAnimDataBase, ICompressedAnimData
@@ -102,25 +108,66 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public void InitViewsFromBuffer(byte[] bulkData)
         {
             using var tempAr = new FByteArchive("SerializedByteStream", bulkData);
-            CompressedTrackOffsets = tempAr.ReadArray<int>(CompressedTrackOffsetsNum);
+            CompressedTrackOffsets = tempAr.ReadArray<int>(CompressedTrackOffsets.Length);
             CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(CompressedScaleOffsets.OffsetDataNum);
-            CompressedByteStream = tempAr.ReadBytes(CompressedByteStreamNum);
+            CompressedByteStream = tempAr.ReadBytes(CompressedByteStream.Length);
         }
 
-        public void SerializeCompressedData(FAssetArchive Ar)
+        public void SerializeCompressedData(FAssetArchive ar)
         {
-            BaseSerializeCompressedData(this, Ar);
+            ((ICompressedAnimData)this).SerializeCompressedDataBase(ar);
+            KeyEncodingFormat = ar.Read<AnimationKeyFormat>();
+            TranslationCompressionFormat = ar.Read<AnimationCompressionFormat>();
+            RotationCompressionFormat = ar.Read<AnimationCompressionFormat>();
+            ScaleCompressionFormat = ar.Read<AnimationCompressionFormat>();
+            CompressedByteStream = new byte[ar.Read<int>()];
+            CompressedTrackOffsets = new int[ar.Read<int>()];
+            CompressedScaleOffsets.OffsetData = new int[ar.Read<int>()];
+            SetInterfaceLinks();
+        }
 
-            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
-            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+        private void SetInterfaceLinks()
+        {
+            if (KeyEncodingFormat == AnimationKeyFormat.AKF_ConstantKeyLerp)
+            {
+                // setup translation codec
+                TranslationCodec = TranslationCompressionFormat switch
+                {
+                    ACF_None or ACF_Float96NoW or ACF_IntervalFixed32NoW or ACF_Identity => new AEFConstantKeyLerp(TranslationCompressionFormat),
+                    _ => throw new ArgumentOutOfRangeException(
+                             $"{ TranslationCompressionFormat }: unknown or unsupported translation compression")
+                };
 
-            // SerializeView() just serializes array size
-            CompressedByteStreamNum = Ar.Read<int>();
-            CompressedTrackOffsetsNum = Ar.Read<int>();
-            CompressedScaleOffsets.OffsetDataNum = Ar.Read<int>();
-            CompressedScaleOffsets.StripSize = Ar.Read<int>();
+                // setup rotation codec
+                RotationCodec = RotationCompressionFormat switch
+                {
+                    ACF_None or ACF_Float96NoW or ACF_Fixed48NoW or ACF_IntervalFixed32NoW or ACF_Fixed32NoW or ACF_Float32NoW or ACF_Identity => new AEFConstantKeyLerp(RotationCompressionFormat),
+                    _ => throw new ArgumentOutOfRangeException(
+                             $"{ RotationCompressionFormat }: unknown or unsupported rotation compression")
+                };
+
+                // setup scale codec
+                ScaleCodec = ScaleCompressionFormat switch
+                {
+                    ACF_None or ACF_Float96NoW or ACF_IntervalFixed32NoW or ACF_Identity => new AEFConstantKeyLerp(ScaleCompressionFormat),
+                    _ => throw new ArgumentOutOfRangeException(
+                             $"{ ScaleCompressionFormat }: unknown or unsupported scale compression")
+                };
+            }
+            else if (KeyEncodingFormat == AnimationKeyFormat.AKF_VariableKeyLerp)
+            {
+
+            }
+            else if (KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression)
+            {
+                TranslationCodec = RotationCodec = ScaleCodec = new AEFPerTrackCompressionCodec();
+                Debug.Assert(RotationCompressionFormat == ACF_Identity, "RotationCompressionFormat == ACF_Identity");
+                Debug.Assert(TranslationCompressionFormat == ACF_Identity, "TranslationCompressionFormat == ACF_Identity");
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException($"{KeyEncodingFormat}: unknown or unsupported animation format");
+            }
         }
 
         public void Bind(byte[] bulkData) => InitViewsFromBuffer(bulkData);

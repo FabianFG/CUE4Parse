@@ -10,17 +10,17 @@
             var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
 
             // decompress the translation component using the proper method
-            /*((AnimEncodingLegacyBase*)AnimData.TranslationCodec)->GetBoneAtomTranslation(outAtom, DecompContext, TrackIndex);
-
+             ((AnimEncodingLegacyBase)animData.TranslationCodec).GetBoneAtomTranslation(decompContext, trackIndex, ref outAtom);
+             
             // decompress the rotation component using the proper method
-            ((AnimEncodingLegacyBase*)AnimData.RotationCodec)->GetBoneAtomRotation(outAtom, DecompContext, TrackIndex);
+            ((AnimEncodingLegacyBase)animData.RotationCodec).GetBoneAtomRotation(decompContext, trackIndex, ref outAtom);
 
             // we assume scale keys can be empty, so only extract if we have valid keys
-            if (AnimData.CompressedScaleOffsets.IsValid())
+            if (animData.CompressedScaleOffsets.IsValid())
             {
                 // decompress the rotation component using the proper method
-                ((AnimEncodingLegacyBase*)AnimData.ScaleCodec)->GetBoneAtomScale(outAtom, DecompContext, TrackIndex);
-            }*/
-        }
+                ((AnimEncodingLegacyBase)animData.RotationCodec).GetBoneAtomScale(decompContext, trackIndex, ref outAtom);
+            }
+        } 
     }
 }

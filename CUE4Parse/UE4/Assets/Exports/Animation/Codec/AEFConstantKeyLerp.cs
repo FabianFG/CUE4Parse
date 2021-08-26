@@ -6,12 +6,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     class AEFConstantKeyLerp : AnimEncodingLegacyBase
     {
-        public override void GetBoneAtomRotation(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom)
+        private readonly AnimationCompressionFormat _format;
+
+        public AEFConstantKeyLerp(AnimationCompressionFormat format) => _format = format;
+        public override void GetBoneAtomRotation(FAnimSequenceDecompressionContext decompContext, int trackIndex, ref FTransform outAtom)
         {
             throw new NotImplementedException();
         }
 
-        public override void GetBoneAtomTranslation(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom)
+        public override void GetBoneAtomTranslation(FAnimSequenceDecompressionContext decompContext, int trackIndex, ref FTransform outAtom)
         {
             var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
 
@@ -34,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
         }
 
-        public override void GetBoneAtomScale(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom)
+        public override void GetBoneAtomScale(FAnimSequenceDecompressionContext decompContext, int trackIndex, ref FTransform outAtom)
         {
             throw new NotImplementedException();
         }
