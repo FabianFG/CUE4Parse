@@ -14,6 +14,12 @@ namespace CUE4Parse.ACL
             _handle = nDecompContextDefault_Create();
         }
 
+        public CompressedTracks? GetCompressedTracks()
+        {
+            var compressedTracks = nDecompContextDefault_GetCompressedTracks(_handle);
+            return compressedTracks != IntPtr.Zero ? new CompressedTracks(compressedTracks) : null;
+        }
+
         public bool Initialize(CompressedTracks tracks) => nDecompContextDefault_Initialize(_handle, tracks._handle);
 
         public void Seek(float sampleTime, SampleRoundingPolicy roundingPolicy) => nDecompContextDefault_Seek(_handle, sampleTime, roundingPolicy);
@@ -27,6 +33,9 @@ namespace CUE4Parse.ACL
 
         [DllImport(ACLNative.LIB_NAME)]
         private static extern IntPtr nDecompContextDefault_Create();
+
+        [DllImport(ACLNative.LIB_NAME)]
+        private static extern IntPtr nDecompContextDefault_GetCompressedTracks(IntPtr handle);
 
         [DllImport(ACLNative.LIB_NAME)]
         private static extern bool nDecompContextDefault_Initialize(IntPtr handle, IntPtr tracks);

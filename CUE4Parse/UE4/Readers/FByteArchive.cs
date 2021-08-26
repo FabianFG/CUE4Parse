@@ -88,6 +88,14 @@ namespace CUE4Parse.UE4.Readers
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void ReadArray<T>(T[] array)
+        {
+            var size = array.Length * Unsafe.SizeOf<T>();
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref _data[Position], (uint) size);
+            Position += size;
+        }
+
         public override object Clone() => new FByteArchive(Name, _data, Versions) {Position = Position};
     }
 }

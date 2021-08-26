@@ -10,6 +10,9 @@ namespace CUE4Parse.ACL
         [DllImport(LIB_NAME)]
         public static extern IntPtr nAlignedMalloc(int size, int alignment);
 
+        [DllImport(LIB_NAME)]
+        public static extern void nAlignedFree(IntPtr ptr);
+
         // pure c# way:
         //var rawPtr = Marshal.AllocHGlobal(size + 8);
         //var aligned = new IntPtr(16 * (((long) rawPtr + 15) / 16));
