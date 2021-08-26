@@ -23,4 +23,15 @@
       <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.6" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\CUE4Parse-Natives\CUE4Parse-Natives.vcxproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\CUE4Parse-Natives\bin\Debug\x64\CUE4Parse-Natives.dll">
+        <Link>CUE4Parse-Natives.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

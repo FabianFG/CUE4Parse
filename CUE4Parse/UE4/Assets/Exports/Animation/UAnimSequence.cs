@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
@@ -249,39 +250,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var boneCodecDDCHandle = Ar.ReadFString();
             var curveCodecPath = Ar.ReadFString();
+            Console.WriteLine(boneCodecDDCHandle);
+            var animData = boneCodecDDCHandle.Contains("ACL") ? (ICompressedAnimData) new FACLCompressedAnimData() : new FUECompressedAnimData();
 
             var numCurveBytes = Ar.Read<int>();
             var compressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
 
             if (boneCodecDDCHandle.Length > 0)
             {
-                // The following part is ICompressedAnimData::SerializeCompressedData
-                var compressedNumFrames = Ar.Read<int>();
-                // todo: editor-only data here
-
-                // FUECompressedAnimData::SerializeCompressedData
-                KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
-                TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-                RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-                ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-
-                // SerializeView() just serializes array size
-                var compressedByteStreamNum = Ar.Read<int>();
-                var compressedTrackOffsetsNum = Ar.Read<int>();
-                var compressedScaleOffsetsNum = Ar.Read<int>();
-                CompressedScaleOffsets = new FCompressedOffsetData(Ar.Read<int>());
-
-                // Setup all array views from single array. In UE4 this is done in FUECompressedAnimData::InitViewsFromBuffer.
-                // We'll simply copy array data away from SerializedByteStream, and then SerializedByteStream
-                // will be released from memory as it is a local variable here.
-                // Note: copying is not byte-order wise, so if there will be any problems in the future,
-                // should use byte swap functions.
-                using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Versions))
-                {
-                    CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
-                    CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);
-                    CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
-                }
+                animData.SerializeCompressedData(Ar);
+                animData.Bind(serializedByteStream);
+                new UAnimBoneCompressionCodec_ACL().DecompressBone(new(SequenceLength, EAnimInterpolationType.Linear, new FName(), animData) { Time = 3f }, 0, out var bruh);
             }
         }
 

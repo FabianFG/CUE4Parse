@@ -462,6 +462,137 @@ namespace CUE4Parse_Conversion
                 ReadTimeArray(Ar, numKeys, ref dstTimeKeys, numFrames);
         }
 
+        private static void DecodePerTrackCompression(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int offsetIndex, int trackIndex)
+        {
+            // this format uses different key storage
+            Trace.Assert(animSequence.TranslationCompressionFormat == ACF_Identity);
+            Trace.Assert(animSequence.RotationCompressionFormat == ACF_Identity);
+
+            var transOffset = animSequence.CompressedTrackOffsets[offsetIndex];
+            var rotOffset = animSequence.CompressedTrackOffsets[offsetIndex + 1];
+            var scaleOffset = animSequence.CompressedScaleOffsets.IsValid() ? animSequence.CompressedScaleOffsets.OffsetData[trackIndex] : -1;
+
+            // read translation keys
+            if (transOffset == -1)
+            {
+                track.KeyPos = new[] { FVector.ZeroVector };
+            }
+            else
+            {
+                reader.Position = transOffset;
+                ReadPerTrackVectorData(reader, trackIndex, "translation", ref track.KeyPos, ref track.KeyPosTime, animSequence.NumFrames);
+            }
+
+            // read rotation keys
+            if (rotOffset == -1)
+            {
+                track.KeyQuat = new[] { FQuat.Identity };
+            }
+            else
+            {
+                reader.Position = rotOffset;
+                ReadPerTrackQuatData(reader, trackIndex, "rotation", ref track.KeyQuat, ref track.KeyQuatTime, animSequence.NumFrames);
+            }
+
+#if SUPPORT_SCALE_KEYS
+            // read scale keys
+            if (scaleOffset != -1)
+            {
+                reader.Position = scaleOffset;
+                ReadPerTrackVectorData(reader, TrackIndex, "scale", ref A.KeyScale, A.KeyScaleTime, seq.NumFrames);
+            }
+#endif // SUPPORT_SCALE_KEYS
+        }
+
+        private static void ReadAnimations(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int offsetIndex, bool hasTimeTracks)
+        {
+            var transOffset = animSequence.CompressedTrackOffsets[offsetIndex];
+            var transKeys = animSequence.CompressedTrackOffsets[offsetIndex + 1];
+            var rotOffset = animSequence.CompressedTrackOffsets[offsetIndex + 2];
+            var rotKeys = animSequence.CompressedTrackOffsets[offsetIndex + 3];
+
+            track.KeyPos = new FVector[transKeys];
+            track.KeyQuat = new FQuat[rotKeys];
+
+            var mins = FVector.ZeroVector;
+            var ranges = FVector.ZeroVector;
+
+            // read translation keys
+            if (transKeys > 0)
+            {
+                reader.Position = transOffset;
+                var translationCompressionFormat = animSequence.TranslationCompressionFormat;
+                if (transKeys == 1)
+                    translationCompressionFormat = ACF_None; // single key is stored without compression
+                // read mins/ranges
+                if (translationCompressionFormat == ACF_IntervalFixed32NoW)
+                {
+                    mins = reader.Read<FVector>();
+                    ranges = reader.Read<FVector>();
+                }
+
+                for (var k = 0; k < transKeys; k++)
+                {
+                    track.KeyPos[k] = translationCompressionFormat switch
+                    {
+                        ACF_None => reader.Read<FVector>(),
+                        ACF_Float96NoW => reader.Read<FVector>(),
+                        ACF_IntervalFixed32NoW => reader.ReadVectorIntervalFixed32(mins, ranges),
+                        ACF_Fixed48NoW => reader.ReadVectorFixed48(),
+                        ACF_Identity => FVector.ZeroVector,
+                        _ => throw new ParserException($"Unknown translation compression method: {(int) translationCompressionFormat} ({translationCompressionFormat})")
+                    };
+                }
+
+                // align to 4 bytes
+                reader.Position = reader.Position.Align(4);
+                if (hasTimeTracks)
+                    ReadTimeArray(reader, transKeys, ref track.KeyPosTime, animSequence.NumFrames);
+            }
+            else
+            {
+                // A.KeyPos.Add(FVector.ZeroVector);
+                // appNotify("No translation keys!");
+            }
+
+            // read rotation keys
+            reader.Position = rotOffset;
+            var rotationCompressionFormat = animSequence.RotationCompressionFormat;
+
+            if (rotKeys == 1)
+            {
+                rotationCompressionFormat = ACF_Float96NoW; // single key is stored without compression
+            }
+            else if (rotKeys > 1 && rotationCompressionFormat == ACF_IntervalFixed32NoW)
+            {
+                // Mins/Ranges are read only when needed - i.e. for ACF_IntervalFixed32NoW
+                mins = reader.Read<FVector>();
+                ranges = reader.Read<FVector>();
+            }
+
+            for (var k = 0; k < rotKeys; k++)
+            {
+                track.KeyQuat[k] = rotationCompressionFormat switch
+                {
+                    ACF_None => reader.Read<FQuat>(),
+                    ACF_Float96NoW => reader.ReadQuatFloat96NoW(),
+                    ACF_Fixed48NoW => reader.ReadQuatFixed48NoW(),
+                    ACF_Fixed32NoW => reader.ReadQuatFixed32NoW(),
+                    ACF_IntervalFixed32NoW => reader.ReadQuatIntervalFixed32NoW(mins, ranges),
+                    ACF_Float32NoW => reader.ReadQuatFloat32NoW(),
+                    ACF_Identity => FQuat.Identity,
+                    _ => throw new ParserException($"Unknown rotation compression method: {(int) rotationCompressionFormat} ({rotationCompressionFormat})")
+                };
+            }
+
+            if (hasTimeTracks)
+            {
+                // align to 4 bytes
+                reader.Position = reader.Position.Align(4);
+                ReadTimeArray(reader, rotKeys, ref track.KeyQuatTime, animSequence.NumFrames);
+            }
+        }
+
         private static void FixRotationKeys(CAnimSequence anim)
         {
             for (var trackIndex = 0; trackIndex < anim.Tracks.Count; trackIndex++)
@@ -633,144 +764,10 @@ namespace CUE4Parse_Conversion
 
                 var offsetIndex = trackIndex * offsetsPerBone;
 
-                //----------------------------------------------
-                // decode AKF_PerTrackCompression data
-                //----------------------------------------------
                 if (animSequence.KeyEncodingFormat == AKF_PerTrackCompression)
-                {
-                    // this format uses different key storage
-                    Trace.Assert(animSequence.TranslationCompressionFormat == ACF_Identity);
-                    Trace.Assert(animSequence.RotationCompressionFormat == ACF_Identity);
-
-                    var transOffset_ = animSequence.CompressedTrackOffsets[offsetIndex];
-                    var rotOffset_ = animSequence.CompressedTrackOffsets[offsetIndex + 1];
-                    var scaleOffset = animSequence.CompressedScaleOffsets.IsValid() ? animSequence.CompressedScaleOffsets.OffsetData[trackIndex] : -1;
-
-                    // read translation keys
-                    if (transOffset_ == -1)
-                    {
-                        track.KeyPos = new[] { FVector.ZeroVector };
-                    }
-                    else
-                    {
-                        reader.Position = transOffset_;
-                        ReadPerTrackVectorData(reader, trackIndex, "translation", ref track.KeyPos, ref track.KeyPosTime, animSequence.NumFrames);
-                    }
-
-                    // read rotation keys
-                    if (rotOffset_ == -1)
-                    {
-                        track.KeyQuat = new[] { FQuat.Identity };
-                    }
-                    else
-                    {
-                        reader.Position = rotOffset_;
-                        ReadPerTrackQuatData(reader, trackIndex, "rotation", ref track.KeyQuat, ref track.KeyQuatTime, animSequence.NumFrames);
-                    }
-
-#if SUPPORT_SCALE_KEYS
-                    // read scale keys
-                    if (scaleOffset != -1)
-                    {
-                        reader.Position = scaleOffset;
-                        ReadPerTrackVectorData(reader, TrackIndex, "scale", ref A.KeyScale, A.KeyScaleTime, seq.NumFrames);
-                    }
-#endif // SUPPORT_SCALE_KEYS
-
-                    continue;
-                    // end of AKF_PerTrackCompression block ...
-                }
-
-                //----------------------------------------------
-                // end of AKF_PerTrackCompression decoder
-                //----------------------------------------------
-
-                // read animations
-                var transOffset = animSequence.CompressedTrackOffsets[offsetIndex];
-                var transKeys = animSequence.CompressedTrackOffsets[offsetIndex + 1];
-                var rotOffset = animSequence.CompressedTrackOffsets[offsetIndex + 2];
-                var rotKeys = animSequence.CompressedTrackOffsets[offsetIndex + 3];
-
-                track.KeyPos = new FVector[transKeys];
-                track.KeyQuat = new FQuat[rotKeys];
-
-                var mins = FVector.ZeroVector;
-                var ranges = FVector.ZeroVector;
-
-                // read translation keys
-                if (transKeys > 0)
-                {
-                    reader.Position = transOffset;
-                    var translationCompressionFormat = animSequence.TranslationCompressionFormat;
-                    if (transKeys == 1)
-                        translationCompressionFormat = ACF_None; // single key is stored without compression
-                    // read mins/ranges
-                    if (translationCompressionFormat == ACF_IntervalFixed32NoW)
-                    {
-                        mins = reader.Read<FVector>();
-                        ranges = reader.Read<FVector>();
-                    }
-
-                    for (var k = 0; k < transKeys; k++)
-                    {
-                        track.KeyPos[k] = translationCompressionFormat switch
-                        {
-                            ACF_None => reader.Read<FVector>(),
-                            ACF_Float96NoW => reader.Read<FVector>(),
-                            ACF_IntervalFixed32NoW => reader.ReadVectorIntervalFixed32(mins, ranges),
-                            ACF_Fixed48NoW => reader.ReadVectorFixed48(),
-                            ACF_Identity => FVector.ZeroVector,
-                            _ => throw new ParserException($"Unknown translation compression method: {(int) translationCompressionFormat} ({translationCompressionFormat})")
-                        };
-                    }
-
-                    // align to 4 bytes
-                    reader.Position = reader.Position.Align(4);
-                    if (hasTimeTracks)
-                        ReadTimeArray(reader, transKeys, ref track.KeyPosTime, animSequence.NumFrames);
-                }
+                    DecodePerTrackCompression(reader, animSequence, track, offsetIndex, trackIndex);
                 else
-                {
-                    // A.KeyPos.Add(FVector.ZeroVector);
-                    // appNotify("No translation keys!");
-                }
-
-                // read rotation keys
-                reader.Position = rotOffset;
-                var rotationCompressionFormat = animSequence.RotationCompressionFormat;
-
-                if (rotKeys == 1)
-                {
-                    rotationCompressionFormat = ACF_Float96NoW; // single key is stored without compression
-                }
-                else if (rotKeys > 1 && rotationCompressionFormat == ACF_IntervalFixed32NoW)
-                {
-                    // Mins/Ranges are read only when needed - i.e. for ACF_IntervalFixed32NoW
-                    mins = reader.Read<FVector>();
-                    ranges = reader.Read<FVector>();
-                }
-
-                for (var k = 0; k < rotKeys; k++)
-                {
-                    track.KeyQuat[k] = rotationCompressionFormat switch
-                    {
-                        ACF_None => reader.Read<FQuat>(),
-                        ACF_Float96NoW => reader.ReadQuatFloat96NoW(),
-                        ACF_Fixed48NoW => reader.ReadQuatFixed48NoW(),
-                        ACF_Fixed32NoW => reader.ReadQuatFixed32NoW(),
-                        ACF_IntervalFixed32NoW => reader.ReadQuatIntervalFixed32NoW(mins, ranges),
-                        ACF_Float32NoW => reader.ReadQuatFloat32NoW(),
-                        ACF_Identity => FQuat.Identity,
-                        _ => throw new ParserException($"Unknown rotation compression method: {(int) rotationCompressionFormat} ({rotationCompressionFormat})")
-                    };
-                }
-
-                if (hasTimeTracks)
-                {
-                    // align to 4 bytes
-                    reader.Position = reader.Position.Align(4);
-                    ReadTimeArray(reader, rotKeys, ref track.KeyQuatTime, animSequence.NumFrames);
-                }
+                    ReadAnimations(reader, animSequence, track, offsetIndex, hasTimeTracks);
             }
 
             // Now should invert all imported rotations
