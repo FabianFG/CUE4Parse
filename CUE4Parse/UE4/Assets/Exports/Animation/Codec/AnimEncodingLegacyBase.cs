@@ -1,6 +1,6 @@
 ﻿namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
-    abstract class AnimEncodingLegacyBase : IAnimEncoding
+    internal abstract class AnimEncodingLegacyBase : IAnimEncoding
     {
         public abstract void GetBoneAtomRotation(
             FAnimSequenceDecompressionContext decompContext,

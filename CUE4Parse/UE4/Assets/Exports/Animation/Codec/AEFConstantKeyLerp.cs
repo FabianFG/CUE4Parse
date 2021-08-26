@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
-    class AEFConstantKeyLerp : AnimEncodingLegacyBase
+    internal class AEFConstantKeyLerp : AnimEncodingLegacyBase
     {
         private readonly AnimationCompressionFormat _format;
 
@@ -17,17 +17,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
             var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
 
             var trackData = animData.CompressedTrackOffsets;
-            int trackDataStartIndex = trackIndex * 4;
-            int transKeysOffset = trackData[trackDataStartIndex];
-            int numTransKeys = trackData[trackDataStartIndex + 1];
+            var trackDataStartIndex = trackIndex * 4;
+            var transKeysOffset = trackData[trackDataStartIndex];
+            var numTransKeys = trackData[trackDataStartIndex + 1];
 
             float alpha = AnimEncodingUtil.TimeToIndex(
                 decompContext.SequenceLength,
                 decompContext.RelativePos,
                 numTransKeys,
                 decompContext.Interpolation,
-                out int index0,
-                out int index1);
+                out var index0,
+                out var index1);
 
             if (index0 != index1)
             {

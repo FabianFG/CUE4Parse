@@ -5,16 +5,16 @@ using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 {
+    /** These 3 indices map into the output Atom array. */
+    public struct FAtomIndices
+    {
+        public ushort Rotation;
+        public ushort Translation;
+        public ushort Scale;
+    }
+
     public static class ACLDecompressionImpl
     {
-        /** These 3 indices map into the output Atom array. */
-        public struct FAtomIndices
-        {
-            public ushort Rotation;
-            public ushort Translation;
-            public ushort Scale;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SampleRoundingPolicy GetRoundingPolicy(EAnimInterpolationType interpType) => interpType == EAnimInterpolationType.Step ? SampleRoundingPolicy.Floor : SampleRoundingPolicy.None;
 
@@ -54,6 +54,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
                     trackToAtomsMap[pair.TrackIndex].Scale = (ushort) pair.AtomIndex;
                 }
             }
+
+            // We will decompress the whole pose even if we only care about a smaller subset of bone tracks.
+            // This ensures we read the compressed pose data once, linearly.
+            aclContext.DecompressTracks(outAtoms, trackToAtomsMap);
         }
     }
 }

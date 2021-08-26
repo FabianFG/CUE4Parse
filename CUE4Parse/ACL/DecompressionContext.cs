@@ -24,10 +24,16 @@ namespace CUE4Parse.ACL
 
         public void Seek(float sampleTime, SampleRoundingPolicy roundingPolicy) => nDecompContextDefault_Seek(_handle, sampleTime, roundingPolicy);
 
-        public void DecompressTrack(int trackIndex, out FTransform outAtom)
+        public void DecompressTracks(FTransform[] atoms, FAtomIndices[] trackToAtomsMap)
         {
-            outAtom = default;
-            var writer = nCreateTrackWriter(ref outAtom);
+            var writer = nCreateOutputWriter(atoms, trackToAtomsMap);
+            nDecompContextDefault_DecompressTracks(_handle, writer);
+        }
+
+        public void DecompressTrack(int trackIndex, out FTransform atom)
+        {
+            atom = default;
+            var writer = nCreateOutputTrackWriter(ref atom);
             nDecompContextDefault_DecompressTrack(_handle, trackIndex, writer);
         }
 
@@ -44,7 +50,13 @@ namespace CUE4Parse.ACL
         private static extern void nDecompContextDefault_Seek(IntPtr handle, float sampleTime, SampleRoundingPolicy roundingPolicy);
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern IntPtr nCreateTrackWriter(ref FTransform outAtom);
+        private static extern IntPtr nCreateOutputWriter(FTransform[] atoms, FAtomIndices[] trackToAtomsMap);
+
+        [DllImport(ACLNative.LIB_NAME)]
+        private static extern IntPtr nCreateOutputTrackWriter(ref FTransform atom);
+
+        [DllImport(ACLNative.LIB_NAME)]
+        private static extern void nDecompContextDefault_DecompressTracks(IntPtr handle, IntPtr writer);
 
         [DllImport(ACLNative.LIB_NAME)]
         private static extern void nDecompContextDefault_DecompressTrack(IntPtr handle, int trackIndex, IntPtr writer);

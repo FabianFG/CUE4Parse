@@ -45,9 +45,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
                 default:
                 {
                     numKeys -= 1;
-                    float keyPos = relativePos * numKeys;
+                    var keyPos = relativePos * numKeys;
                     Debug.Assert(keyPos >= 0f, "keypos is smaller than 0");
-                    float keyPosFloor = MathF.Floor(keyPos);
+                    var keyPosFloor = MathF.Floor(keyPos);
                     posIndex0Out = Math.Min((int) keyPosFloor, numKeys);
                     posIndex1Out = Math.Min(posIndex0Out + 1, numKeys);
                     return interpolation == EAnimInterpolationType.Step ? 0f : keyPos - keyPosFloor;

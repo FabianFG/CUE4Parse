@@ -31,7 +31,11 @@ namespace CUE4Parse.ACL
 
         ~CompressedTracks()
         {
-            if (_isOwner && _handle != IntPtr.Zero) Marshal.FreeHGlobal(_handle);
+            if (_isOwner && _handle != IntPtr.Zero)
+            {
+                nAlignedFree(_handle);
+                _handle = IntPtr.Zero;
+            }
         }
 
         public string? IsValid(bool checkHash)
