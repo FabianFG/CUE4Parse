@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -6,7 +7,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     {
         public override void DecompressPose(FAnimSequenceDecompressionContext decompContext, BoneTrackPair[] rotationPairs, BoneTrackPair[] translationPairs, BoneTrackPair[] scalePairs, FTransform[] outAtoms)
         {
-            throw new System.NotImplementedException();
+            var animData = (FUECompressedAnimData)decompContext.CompressedAnimData;
+            using var ar = new FByteArchive("BoneDataReader", animData.CompressedByteStream);
+            animData.TranslationCodec.GetPoseTranslations(ar, outAtoms, translationPairs, decompContext);
+            animData.TranslationCodec.GetPoseRotations(ar, outAtoms, rotationPairs, decompContext);
+            if (animData.CompressedScaleOffsets.IsValid())
+            {
+                animData.TranslationCodec.GetPoseScales(ar, outAtoms, scalePairs, decompContext);
+            }
         }
 
         public override void DecompressBone(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom)

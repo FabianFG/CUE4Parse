@@ -1,6 +1,8 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
+﻿using CUE4Parse.UE4.Readers;
+
+namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
-    internal abstract class AnimEncodingLegacyBase : IAnimEncoding
+    internal abstract class AnimEncodingLegacyBase : AnimEncoding
     {
         public virtual void GetBoneAtomRotation(
             FArchive ar,

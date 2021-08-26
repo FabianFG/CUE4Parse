@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
+using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
@@ -13,8 +19,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
         public int AtomIndex;
         public int TrackIndex;
     }
-
-    public interface IAnimEncoding { }
 
     internal static class AnimEncodingUtil
     {
