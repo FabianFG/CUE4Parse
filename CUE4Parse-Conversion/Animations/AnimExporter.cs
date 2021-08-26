@@ -145,7 +145,7 @@ namespace CUE4Parse_Conversion.Animations
                     {
                         var bonePosition = new FVector(0, 0, 0); // GetBonePosition() will not alter bP and bO when animation tracks are not exists
                         var boneOrientation = new FQuat(0, 0, 0, 1);
-                        sequence.Tracks[boneIndex].GetBonePosition(frame, sequence.NumFrames, false, ref bonePosition, ref boneOrientation, boneIndex);
+                        sequence.Tracks[boneIndex].GetBonePosition(frame, sequence.NumFrames, false, ref bonePosition, ref boneOrientation);
 
                         var key = new VQuatAnimKey
                         {

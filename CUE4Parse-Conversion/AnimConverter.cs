@@ -33,7 +33,7 @@ namespace CUE4Parse_Conversion
         public float[] KeyScaleTime = Array.Empty<float>();
 
         // DstPos and/or DstQuat will not be changed when KeyPos and/or KeyQuat are empty.
-        public void GetBonePosition(float frame, float numFrames, bool loop, ref FVector dstPos, ref FQuat dstQuat, int boneIndex)
+        public void GetBonePosition(float frame, float numFrames, bool loop, ref FVector dstPos, ref FQuat dstQuat)
         {
             // fast case: 1 frame only
             if (KeyTime.Length == 1 || numFrames == 1 || frame == 0)
