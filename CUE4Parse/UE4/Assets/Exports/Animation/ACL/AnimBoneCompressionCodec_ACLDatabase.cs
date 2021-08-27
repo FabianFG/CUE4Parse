@@ -1,5 +1,6 @@
 ﻿using System;
 using CUE4Parse.ACL;
+using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
@@ -10,7 +11,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 
         /** Maps the compressed_tracks instance. Used in cooked build only. */
         public byte[] CompressedByteStream;
-        public int CompressedByteStreamNum;
+
+        /** The codec instance that owns us. */
+        public UAnimBoneCompressionCodec_ACLDatabase? Codec;
 
         /** The sequence name hash that owns this data. */
         public uint SequenceNameHash;
@@ -33,6 +36,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
         public void Bind(byte[] bulkData)
         {
             var compressedClipData = new CompressedTracks(bulkData);
+            throw new NotImplementedException();
+        }
+    }
+
+    public class UAnimBoneCompressionCodec_ACLDatabase : UAnimBoneCompressionCodec_ACLBase
+    {
+        public override ICompressedAnimData AllocateAnimData() => new FACLDatabaseCompressedAnimData { Codec = this };
+
+        public override void DecompressPose(FAnimSequenceDecompressionContext decompContext, BoneTrackPair[] rotationPairs, BoneTrackPair[] translationPairs, BoneTrackPair[] scalePairs, FTransform[] outAtoms)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void DecompressBone(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom)
+        {
             throw new NotImplementedException();
         }
     }

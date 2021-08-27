@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
             var tracksHeader = compressedClipData.GetTracksHeader();
             var aclBoneCount = tracksHeader.NumTracks;
             var trackToAtomsMap = new FAtomIndices[aclBoneCount];
-            for (int i = 0; i < aclBoneCount; i++)
+            for (var i = 0; i < aclBoneCount; i++)
             {
                 trackToAtomsMap[i] = new FAtomIndices { Rotation = 0xFF, Translation = 0xFF, Scale = 0xFF };
             }

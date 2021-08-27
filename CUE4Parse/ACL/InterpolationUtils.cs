@@ -1,4 +1,4 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
+﻿namespace CUE4Parse.ACL
 {
     public enum SampleRoundingPolicy
     {

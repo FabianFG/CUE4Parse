@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class FCompressedOffsetDataBase<T> where T : struct
     {
-        public T[] OffsetData;
+        public T[] OffsetData = Array.Empty<T>();
         public int StripSize;
 
         public FCompressedOffsetDataBase(int stripSize = 2)
@@ -113,17 +113,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public void SerializeCompressedData(FAssetArchive Ar)
         {
             ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
+
             KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
             TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
             RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
             ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
             CompressedByteStream = new byte[Ar.Read<int>()];
             CompressedTrackOffsets = new int[Ar.Read<int>()];
             CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
+            CompressedScaleOffsets.StripSize = Ar.Read<int>();
+
             SetInterfaceLinks();
         }
 
-        private void SetInterfaceLinks()
+        public void SetInterfaceLinks()
         {
             if (KeyEncodingFormat == AnimationKeyFormat.AKF_ConstantKeyLerp)
             {

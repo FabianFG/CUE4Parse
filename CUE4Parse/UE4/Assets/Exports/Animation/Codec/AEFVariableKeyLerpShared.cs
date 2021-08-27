@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
+﻿namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
-    class AEFVariableKeyLerpShared : AEFConstantKeyLerpShared
+    internal class AEFVariableKeyLerpShared : AEFConstantKeyLerpShared
     {
-        protected AEFVariableKeyLerpShared(AnimationCompressionFormat format)
-            : base(format)
-        {
-        }
+        protected AEFVariableKeyLerpShared(AnimationCompressionFormat format) : base(format) { }
     }
 }
