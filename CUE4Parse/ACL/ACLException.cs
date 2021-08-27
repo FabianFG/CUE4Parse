@@ -30,8 +30,9 @@ namespace CUE4Parse.ACL
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CheckError(string? error)
+        public static void CheckErrorUnwrapped(IntPtr errorStr)
         {
+            var error = Marshal.PtrToStringAnsi(errorStr);
             if (error is { Length: > 0 })
             {
                 throw new ACLException(error);

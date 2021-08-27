@@ -151,15 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ACLDecompress.h" />
+    <ClCompile Include="ACL.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ACL.h" />
-    <ClInclude Include="Framework.h" />
-    <ClInclude Include="Structs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -599,21 +599,10 @@ namespace CUE4Parse_Conversion
         }
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern string nConvertTrackList(IntPtr compressedTracks, out IntPtr outTracks);
+        private static extern IntPtr nConvertTrackList(IntPtr compressedTracks, out IntPtr outTracks);
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern unsafe string nConvertTrack(IntPtr tracks, uint trackIndex, FVector* outPosKeys, FQuat* outRotKeys, FVector* outScaleKeys);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe void ConvertACLTrack(IntPtr tracks, CAnimTrack track, int trackIndex)
-        {
-            fixed (FVector* posKeys = track.KeyPos)
-            fixed (FQuat* rotKeys = track.KeyQuat)
-            fixed (FVector* scaleKeys = track.KeyScale)
-            {
-                nConvertTrack(tracks, (uint) trackIndex, posKeys, rotKeys, scaleKeys);
-            }
-        }
+        private static extern unsafe IntPtr nConvertTrack(IntPtr tracks, uint trackIndex, FVector* outPosKeys, FQuat* outRotKeys, FVector* outScaleKeys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void FixRotationKeys(CAnimSequence anim)
@@ -789,7 +778,7 @@ namespace CUE4Parse_Conversion
             }
             else if (animSequence.CompressedDataStructure is FACLCompressedAnimData aclData)
             {
-                ACLException.CheckError(nConvertTrackList(aclData.GetCompressedTracks().Handle, out var aclTracks));
+                ACLException.CheckErrorUnwrapped(nConvertTrackList(aclData.GetCompressedTracks().Handle, out var aclTracks));
                 for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
                     var track = new CAnimTrack();
@@ -797,7 +786,15 @@ namespace CUE4Parse_Conversion
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
-                        ConvertACLTrack(aclTracks, track, trackIndex);
+                        unsafe
+                        {
+                            fixed (FVector* posKeys = track.KeyPos)
+                            fixed (FQuat* rotKeys = track.KeyQuat)
+                            fixed (FVector* scaleKeys = track.KeyScale)
+                            {
+                                nConvertTrack(aclTracks, (uint) trackIndex, posKeys, rotKeys, scaleKeys);
+                            }
+                        }
                     }
                 }
             }

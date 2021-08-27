@@ -40,13 +40,13 @@ namespace CUE4Parse.ACL
 
         public string? IsValid(bool checkHash)
         {
-            var error = nCompressedTracks_IsValid(Handle, checkHash);
+            var error = Marshal.PtrToStringAnsi(nCompressedTracks_IsValid(Handle, checkHash))!;
             return error.Length > 0 ? error : null;
         }
 
         public TracksHeader GetTracksHeader() => Marshal.PtrToStructure<TracksHeader>(Handle + Marshal.SizeOf<RawBufferHeader>());
 
         [DllImport(LIB_NAME)]
-        private static extern string nCompressedTracks_IsValid(IntPtr handle, bool checkHash);
+        private static extern IntPtr nCompressedTracks_IsValid(IntPtr handle, bool checkHash);
     }
 }
