@@ -1,12 +1,9 @@
 ﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
-using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Serilog;
 
@@ -15,28 +12,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     public class UAnimSequence : UAnimationAsset
     {
         public int NumFrames;
+        public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
+        public FRawAnimSequenceTrack[] RawAnimationData;
+        public FPackageIndex BoneCompressionSettings; // UAnimBoneCompressionSettings
+        // begin CompressedData
+        public ICompressedAnimData CompressedDataStructure;
+        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
+        public FStructFallback CompressedCurveData; // FRawCurveTracks
+        // end CompressedData
+        public EAdditiveAnimationType AdditiveAnimType;
+        public FName RetargetSource;
+        public FTransform[] RetargetSourceAssetReferencePose;
+
+        public bool bUseRawDataOnly;
 
         // UAnimSequenceBase
         public float SequenceLength;
         public float RateScale;
-        public EAdditiveAnimationType AdditiveAnimType;
-        public FName RetargetSource;
-        public FTransform[] RetargetSourceAssetReferencePose; 
-
-        public FRawAnimSequenceTrack[] RawAnimationData;
-        public byte[] CompressedByteStream;
-        public FCompressedSegment[] CompressedSegments;
-        public bool bUseRawDataOnly;
-
-        public AnimationKeyFormat KeyEncodingFormat;
-        public AnimationCompressionFormat TranslationCompressionFormat;
-        public AnimationCompressionFormat RotationCompressionFormat;
-        public AnimationCompressionFormat ScaleCompressionFormat;
-        public int[] CompressedTrackOffsets;
-        public FCompressedOffsetData CompressedScaleOffsets;
-        public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
-        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
-        public FStructFallback CompressedCurveData; // FRawCurveTracks
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -44,11 +36,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             SequenceLength = GetOrDefault<float>(nameof(SequenceLength));
             RateScale = GetOrDefault(nameof(RateScale), 1.0f);
+
+            NumFrames = GetOrDefault<int>(nameof(NumFrames));
+            BoneCompressionSettings = GetOrDefault<FPackageIndex>(nameof(BoneCompressionSettings));
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
-
-            NumFrames = GetOrDefault<int>(nameof(NumFrames));
 
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
@@ -65,23 +58,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.MoveCompressedAnimDataToTheDDC)
             {
-                /*// Part of data were serialized as properties
-                CompressedByteStream = Ar.ReadArray<byte>();
-                if (Ar.Game == EGame.GAME_SEAOFTHIEVES && CompressedByteStream.Num() == 1 && Ar.Length - Ar.Position > 0)
+                var compressedData = new FUECompressedAnimData();
+
+                // Part of data were serialized as properties
+                compressedData.CompressedByteStream = Ar.ReadArray<byte>();
+                if (Ar.Game == EGame.GAME_SeaOfThieves && compressedData.CompressedByteStream.Length == 1 && Ar.Length - Ar.Position > 0)
                 {
                     // Sea of Thieves has extra int32 == 1 before the CompressedByteStream
                     Ar.Position -= 1;
-                    CompressedByteStream = Ar.ReadArray<byte>();
+                    compressedData.CompressedByteStream = Ar.ReadArray<byte>();
                 }
 
                 // Fix layout of "byte swapped" data (workaround for UE4 bug)
-                if (KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && CompressedScaleOffsets.OffsetData.Length > 0)
+                if (compressedData.KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && compressedData.CompressedScaleOffsets.OffsetData.Length > 0)
                 {
-                    TArray<uint8> SwappedData;
+                    /*TArray<uint8> SwappedData;
                     TransferPerTrackData(SwappedData, CompressedByteStream);
-                    Exchange(SwappedData, CompressedByteStream);
-                }*/
-                throw new NotImplementedException();
+                    Exchange(SwappedData, CompressedByteStream);*/
+                    throw new NotImplementedException();
+                }
             }
             else
             {
@@ -104,20 +99,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         private void SerializeCompressedData(FAssetArchive Ar)
         {
-            // These fields were serialized as properties in pre-UE4.12 engine version
-            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
-            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            var compressedData = new FUECompressedAnimData();
+            CompressedDataStructure = compressedData;
 
-            CompressedTrackOffsets = Ar.ReadArray<int>();
-            CompressedScaleOffsets = new FCompressedOffsetData(Ar);
+            // These fields were serialized as properties in pre-UE4.12 engine version
+            compressedData.KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
+            compressedData.TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            compressedData.RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            compressedData.ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
+            compressedData.CompressedTrackOffsets = Ar.ReadArray<int>();
+            compressedData.CompressedScaleOffsets = new FCompressedOffsetData(Ar);
+
+            compressedData.SetInterfaceLinks();
 
             if (Ar.Game >= EGame.GAME_UE4_21)
             {
                 // UE4.21+ - added compressed segments; disappeared in 4.23
-                CompressedSegments = Ar.ReadArray<FCompressedSegment>();
-                if (CompressedSegments.Length > 0)
+                var compressedSegments = Ar.ReadArray<FCompressedSegment>();
+                if (compressedSegments.Length > 0)
                 {
                     Log.Information("animation has CompressedSegments!");
                 }
@@ -142,12 +142,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {
-                var compressedNumFrames = Ar.Read<int>();
+                compressedData.CompressedNumberOfFrames = Ar.Read<int>();
             }
 
             // compressed data
             var numBytes = Ar.Read<int>();
-            CompressedByteStream = Ar.ReadBytes(numBytes);
+            compressedData.CompressedByteStream = Ar.ReadBytes(numBytes);
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {
@@ -156,7 +156,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             // Fix layout of "byte swapped" data (workaround for UE4 bug)
-            if (KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && CompressedScaleOffsets.OffsetData.Length > 0 && Ar.Game < EGame.GAME_UE4_23)
+            if (compressedData.KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && compressedData.CompressedScaleOffsets.OffsetData.Length > 0 && Ar.Game < EGame.GAME_UE4_23)
             {
                 throw new NotImplementedException();
             }
@@ -170,19 +170,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
             var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
 
+            var compressedData = new FUECompressedAnimData();
+            CompressedDataStructure = compressedData;
+
             // Since 4.23, this is FUECompressedAnimData::SerializeCompressedData
-            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
-            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            compressedData.KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
+            compressedData.TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            compressedData.RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            compressedData.ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
 
-            var compressedNumFrames = Ar.Read<int>();
+            compressedData.CompressedNumberOfFrames = Ar.Read<int>();
 
-            // SerializeView() just serializes array size
-            var compressedTrackOffsetsNum = Ar.Read<int>();
-            var compressedScaleOffsetsNum = Ar.Read<int>();
-            CompressedScaleOffsets = new FCompressedOffsetData(Ar.Read<int>());
-            var compressedByteStreamNum = Ar.Read<int>();
+            compressedData.CompressedByteStream = new byte[Ar.Read<int>()];
+            compressedData.CompressedTrackOffsets = new int[Ar.Read<int>()];
+            compressedData.CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
+            compressedData.CompressedScaleOffsets.StripSize = Ar.Read<int>();
+
+            compressedData.SetInterfaceLinks();
             // ... end of FUECompressedAnimData::SerializeCompressedData
 
             var numBytes = Ar.Read<int>();
@@ -205,17 +209,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 serializedByteStream = Ar.ReadBytes(numBytes);
             }
 
-            // Setup all array views from single array. In UE4 this is done in FUECompressedAnimData::InitViewsFromBuffer.
-            // We'll simply copy array data away from SerializedByteStream, and then SerializedByteStream
-            // will be released from memory as it is a local variable here.
-            // Note: copying is not byte-order wise, so if there will be any problems in the future,
-            // should use byte swap functions.
-            using (var tempAr = new FByteArchive("SerializedByteStream", serializedByteStream, Ar.Versions))
-            {
-                CompressedTrackOffsets = tempAr.ReadArray<int>(compressedTrackOffsetsNum);
-                CompressedScaleOffsets.OffsetData = tempAr.ReadArray<int>(compressedScaleOffsetsNum);
-                CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
-            }
+            compressedData.Bind(serializedByteStream);
 
             var curveCodecPath = Ar.ReadFString();
             var compressedCurveByteStream = Ar.ReadArray<byte>();
@@ -251,21 +245,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var boneCodecDDCHandle = Ar.ReadFString();
             var curveCodecPath = Ar.ReadFString();
-            Console.WriteLine(boneCodecDDCHandle);
-            var animData = boneCodecDDCHandle.Contains("ACL") ? (ICompressedAnimData) new FACLCompressedAnimData() : new FUECompressedAnimData();
 
             var numCurveBytes = Ar.Read<int>();
             var compressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
 
-            if (boneCodecDDCHandle.Length > 0)
+            // Lookup our codecs in our settings assets
+            var boneCompressionCodec = BoneCompressionSettings.Load<UAnimBoneCompressionSettings>()!.GetCodec(boneCodecDDCHandle);
+
+            if (boneCompressionCodec != null)
             {
-                animData.SerializeCompressedData(Ar);
-                animData.Bind(serializedByteStream);
-                // TODO make this correct when you're done with UE's way of decompressing anims
-                var codec = new UAnimBoneCompressionCodec_ACL();
-                var ctx = new FAnimSequenceDecompressionContext(SequenceLength, EAnimInterpolationType.Linear, new FName(), animData) { Time = 3f };
-                codec.DecompressBone(ctx, 3, out var bruh);
-                codec.DecompressPose(ctx, new BoneTrackPair[0], new BoneTrackPair[0], new BoneTrackPair[0], new FTransform[0]);
+                CompressedDataStructure = boneCompressionCodec.AllocateAnimData();
+                CompressedDataStructure.SerializeCompressedData(Ar);
+                CompressedDataStructure.Bind(serializedByteStream);
             }
         }
 

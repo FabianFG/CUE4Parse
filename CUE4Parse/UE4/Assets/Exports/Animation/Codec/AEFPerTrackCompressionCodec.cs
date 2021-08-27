@@ -1,4 +1,7 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
+﻿using System;
+using CUE4Parse.UE4.Readers;
+
+namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 {
     public class AEFPerTrackCompressionCodec : AnimEncoding
     {

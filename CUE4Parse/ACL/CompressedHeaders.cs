@@ -1,4 +1,6 @@
-﻿namespace CUE4Parse.ACL
+﻿using System.Runtime.CompilerServices;
+
+namespace CUE4Parse.ACL
 {
     public struct RawBufferHeader
     {
@@ -17,6 +19,7 @@
         public float SampleRate;
         public uint MiscPacked;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool GetHasScale() => (MiscPacked & 1) != 0;
     }
 }

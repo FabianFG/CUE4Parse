@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.NavigationSystem;
@@ -29,8 +30,10 @@ namespace CUE4Parse.UE4.Assets
 
         private static void RegisterEngine()
         {
-            RegisterClass(typeof(UAkMediaAssetData)); // todo should this be here??? Yes
             RegisterClass(typeof(UAnimBlueprintGeneratedClass));
+            RegisterClass(typeof(UAnimBoneCompressionSettings));
+            RegisterClass(typeof(UAnimCompress));
+            RegisterClass(typeof(UAnimCompress_PerTrackCompression));
             RegisterClass(typeof(UAnimSequence));
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
@@ -93,6 +96,15 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UMulticastSparseDelegateProperty));
             RegisterClass(typeof(UEnumProperty));
             RegisterClass(typeof(UTextProperty));
+
+            // Wwise
+            RegisterClass(typeof(UAkMediaAssetData));
+
+            // ACLPlugin
+            RegisterClass(typeof(UAnimBoneCompressionCodec_ACL));
+            RegisterClass(typeof(UAnimBoneCompressionCodec_ACLDatabase));
+            //RegisterClass(typeof(UAnimBoneCompressionCodec_ACLSafe)); TODO templated decompressor settings is pain
+            RegisterClass("AnimBoneCompressionCodec_ACLSafe", typeof(UAnimBoneCompressionCodec_ACL));
         }
 
         public static void RegisterClass(Type type)

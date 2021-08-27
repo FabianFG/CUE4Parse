@@ -464,13 +464,15 @@ namespace CUE4Parse_Conversion
 
         private static void DecodePerTrackCompression(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int offsetIndex, int trackIndex)
         {
-            // this format uses different key storage
-            Trace.Assert(animSequence.TranslationCompressionFormat == ACF_Identity);
-            Trace.Assert(animSequence.RotationCompressionFormat == ACF_Identity);
+            var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure;
 
-            var transOffset = animSequence.CompressedTrackOffsets[offsetIndex];
-            var rotOffset = animSequence.CompressedTrackOffsets[offsetIndex + 1];
-            var scaleOffset = animSequence.CompressedScaleOffsets.IsValid() ? animSequence.CompressedScaleOffsets.OffsetData[trackIndex] : -1;
+            // this format uses different key storage
+            Trace.Assert(compressedData.TranslationCompressionFormat == ACF_Identity);
+            Trace.Assert(compressedData.RotationCompressionFormat == ACF_Identity);
+
+            var transOffset = compressedData.CompressedTrackOffsets[offsetIndex];
+            var rotOffset = compressedData.CompressedTrackOffsets[offsetIndex + 1];
+            var scaleOffset = compressedData.CompressedScaleOffsets.IsValid() ? compressedData.CompressedScaleOffsets.OffsetData[trackIndex] : -1;
 
             // read translation keys
             if (transOffset == -1)
@@ -506,10 +508,11 @@ namespace CUE4Parse_Conversion
 
         private static void ReadAnimations(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int offsetIndex, bool hasTimeTracks)
         {
-            var transOffset = animSequence.CompressedTrackOffsets[offsetIndex];
-            var transKeys = animSequence.CompressedTrackOffsets[offsetIndex + 1];
-            var rotOffset = animSequence.CompressedTrackOffsets[offsetIndex + 2];
-            var rotKeys = animSequence.CompressedTrackOffsets[offsetIndex + 3];
+            var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure;
+            var transOffset = compressedData.CompressedTrackOffsets[offsetIndex];
+            var transKeys = compressedData.CompressedTrackOffsets[offsetIndex + 1];
+            var rotOffset = compressedData.CompressedTrackOffsets[offsetIndex + 2];
+            var rotKeys = compressedData.CompressedTrackOffsets[offsetIndex + 3];
 
             track.KeyPos = new FVector[transKeys];
             track.KeyQuat = new FQuat[rotKeys];
@@ -521,7 +524,7 @@ namespace CUE4Parse_Conversion
             if (transKeys > 0)
             {
                 reader.Position = transOffset;
-                var translationCompressionFormat = animSequence.TranslationCompressionFormat;
+                var translationCompressionFormat = compressedData.TranslationCompressionFormat;
                 if (transKeys == 1)
                     translationCompressionFormat = ACF_None; // single key is stored without compression
                 // read mins/ranges
@@ -557,7 +560,7 @@ namespace CUE4Parse_Conversion
 
             // read rotation keys
             reader.Position = rotOffset;
-            var rotationCompressionFormat = animSequence.RotationCompressionFormat;
+            var rotationCompressionFormat = compressedData.RotationCompressionFormat;
 
             if (rotKeys == 1)
             {
@@ -650,15 +653,16 @@ namespace CUE4Parse_Conversion
 
             var numTracks = animSequence.GetNumTracks();
 
+            var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure; // TODO this is the definition of I don't care
             var offsetsPerBone = 4;
-            if (animSequence.KeyEncodingFormat == AKF_PerTrackCompression)
+            if (compressedData.KeyEncodingFormat == AKF_PerTrackCompression)
                 offsetsPerBone = 2;
 
             // Check for valid data to avoid crash if it's something wrong there
-            if (animSequence.CompressedTrackOffsets.Length != numTracks * offsetsPerBone && animSequence.RawAnimationData.Length == 0)
+            if (compressedData.CompressedTrackOffsets.Length != numTracks * offsetsPerBone && animSequence.RawAnimationData.Length == 0)
             {
                 Log.Warning("AnimSequence {0} has wrong CompressedTrackOffsets size (has {1}, expected {2}), removing track",
-                    animSequence.Name, animSequence.CompressedTrackOffsets.Length, numTracks * offsetsPerBone);
+                    animSequence.Name, compressedData.CompressedTrackOffsets.Length, numTracks * offsetsPerBone);
                 return animSet;
             }
 
@@ -726,8 +730,8 @@ namespace CUE4Parse_Conversion
             // use of RefPose. In this case there's no point adding the animation to AnimSet. We'll
             // create FMemReader even for empty CompressedByteStream, otherwise it would be hard to
             // create a valid CAnimSequence which won't crash animation export.
-            var reader = new FByteArchive("CompressedByteStream", animSequence.CompressedByteStream);
-            var hasTimeTracks = animSequence.KeyEncodingFormat == AKF_VariableKeyLerp;
+            var reader = new FByteArchive("CompressedByteStream", compressedData.CompressedByteStream);
+            var hasTimeTracks = compressedData.KeyEncodingFormat == AKF_VariableKeyLerp;
             for (var boneIndex = 0; boneIndex < skeleton.ReferenceSkeleton.FinalRefBoneInfo.Length; boneIndex++)
             {
                 var track = new CAnimTrack();
@@ -743,7 +747,7 @@ namespace CUE4Parse_Conversion
                     continue;
                 }
 
-                if (animSequence.CompressedTrackOffsets.Length == 0) //?? or if RawAnimData.Length > 0
+                if (animSequence.RawAnimationData is { Length: > 0 })
                 {
                     // using RawAnimData array
                     Trace.Assert(animSequence.RawAnimationData.Length == numTracks);
@@ -764,7 +768,7 @@ namespace CUE4Parse_Conversion
 
                 var offsetIndex = trackIndex * offsetsPerBone;
 
-                if (animSequence.KeyEncodingFormat == AKF_PerTrackCompression)
+                if (compressedData.KeyEncodingFormat == AKF_PerTrackCompression)
                     DecodePerTrackCompression(reader, animSequence, track, offsetIndex, trackIndex);
                 else
                     ReadAnimations(reader, animSequence, track, offsetIndex, hasTimeTracks);
