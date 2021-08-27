@@ -42,6 +42,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
                         [ACF_Identity] = MakeComponentData(0, 0, 0, 0, 0, 0),
                 });
 
+        private static readonly byte[] _perTrackNumComponentTable = new byte[]
+                                                                        {
+                                                                            4,4,4,4,4,4,4,4,	// ACF_None
+                                                                            3,1,1,2,1,2,2,3,	// ACF_Float96NoW (0 is special, as uncompressed rotation gets 'mis'encoded with 0 instead of 7, so it's treated as a 3; a genuine 0 would use ACF_Identity)
+                                                                            3,1,1,2,1,2,2,3,	// ACF_Fixed48NoW (ditto)
+                                                                            6,2,2,4,2,4,4,6,	// ACF_IntervalFixed32NoW (special, indicates number of interval pairs stored in the fixed track)
+                                                                            1,1,1,1,1,1,1,1,	// ACF_Fixed32NoW
+                                                                            1,1,1,1,1,1,1,1,	// ACF_Float32NoW
+                                                                            0,0,0,0,0,0,0,0		// ACF_Identity
+                                                                        };
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float TimeToIndex(float sequenceLength, float relativePos, int numKeys, EAnimInterpolationType interpolation, out int posIndex0Out, out int posIndex1Out)
         {
@@ -181,6 +192,50 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
             SetNibble(ref flag, compressedScaleStride, CompressedScaleStrideOffset);
             SetNibble(ref flag, compressedScaleNum, CompressedScaleNumOffset);
             return flag;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void DecomposeHeader(
+            int header,
+            out AnimationCompressionFormat keyFormat,
+            out int numKeys,
+            out int formatFlags,
+            out int bytesPerKey,
+            out int fixedBytes)
+        {
+            numKeys = header & 0x00FFFFFF;
+            formatFlags = (header >> 24) & 0x0F;
+            keyFormat = (AnimationCompressionFormat)((header >> 28) & 0x0F);
+
+            // Figure out the component sizes / counts (they can be changed per-format)
+            GetByteSizesFromFormat(keyFormat, formatFlags, out bytesPerKey, out fixedBytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void GetByteSizesFromFormat(AnimationCompressionFormat keyFormat, int formatFlags, out int bytesPerKey, out int fixedBytes)
+        {
+            GetAllSizesFromFormat(keyFormat, formatFlags, out int keyComponentCount, out int keyComponentSize, out int fixedComponentCount, out int fixedComponentSize);
+            bytesPerKey = keyComponentCount * keyComponentSize;
+            fixedBytes = fixedComponentCount * fixedComponentSize;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void GetAllSizesFromFormat(AnimationCompressionFormat keyFormat, int formatFlags, out int keyComponentCount, out int keyComponentSize, out int fixedComponentCount, out int fixedComponentSize)
+        {
+            keyComponentSize = GetCompressedRotationStride(keyFormat);
+            fixedComponentSize = sizeof(float);
+            int componentLookup = _perTrackNumComponentTable[(formatFlags & 0x7) | ((int)keyFormat << 3)];
+            if (keyFormat != ACF_IntervalFixed32NoW)
+            {
+                fixedComponentCount = 0;
+                keyComponentCount = componentLookup;
+            }
+            else
+            {
+                fixedComponentCount = componentLookup;
+                keyComponentCount = 1;
+            }
+
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
