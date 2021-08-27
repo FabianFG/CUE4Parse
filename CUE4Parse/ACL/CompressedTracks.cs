@@ -6,47 +6,47 @@ namespace CUE4Parse.ACL
 {
     public class CompressedTracks
     {
-        internal IntPtr _handle;
-        private readonly bool _isOwner;
+        public IntPtr Handle { get; private set; }
+        private readonly int _bufferLength;
 
         public CompressedTracks(byte[] buffer)
         {
-            _isOwner = true;
-            _handle = nAlignedMalloc(buffer.Length, 16);
-            Marshal.Copy(buffer, 0, _handle, buffer.Length);
+            _bufferLength = buffer.Length;
+            Handle = nAllocate(_bufferLength);
+            Marshal.Copy(buffer, 0, Handle, buffer.Length);
             var error = IsValid(false);
             if (error != null)
             {
-                nAlignedFree(_handle);
-                _handle = IntPtr.Zero;
+                nDeallocate(Handle, _bufferLength);
+                Handle = IntPtr.Zero;
                 throw new ACLException(error);
             }
         }
 
         public CompressedTracks(IntPtr existing)
         {
-            _isOwner = false;
-            _handle = existing;
+            _bufferLength = -1;
+            Handle = existing;
         }
 
         ~CompressedTracks()
         {
-            if (_isOwner && _handle != IntPtr.Zero)
+            if (_bufferLength >= 0 && Handle != IntPtr.Zero)
             {
-                nAlignedFree(_handle);
-                _handle = IntPtr.Zero;
+                nDeallocate(Handle, _bufferLength);
+                Handle = IntPtr.Zero;
             }
         }
 
         public string? IsValid(bool checkHash)
         {
-            var error = Marshal.PtrToStringAnsi(nCompressedTracks_IsValid(_handle, checkHash))!;
+            var error = nCompressedTracks_IsValid(Handle, checkHash);
             return error.Length > 0 ? error : null;
         }
 
-        public TracksHeader GetTracksHeader() => Marshal.PtrToStructure<TracksHeader>(_handle + Marshal.SizeOf<RawBufferHeader>());
+        public TracksHeader GetTracksHeader() => Marshal.PtrToStructure<TracksHeader>(Handle + Marshal.SizeOf<RawBufferHeader>());
 
         [DllImport(LIB_NAME)]
-        private static extern IntPtr nCompressedTracks_IsValid(IntPtr handle, bool checkHash);
+        private static extern string nCompressedTracks_IsValid(IntPtr handle, bool checkHash);
     }
 }

@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
      */
     public abstract class UAnimBoneCompressionCodec : UObject
     {
-        public UAnimBoneCompressionCodec? GetCodec(string ddcHandle)
+        public virtual UAnimBoneCompressionCodec? GetCodec(string ddcHandle)
         {
             var thisHandle = GetCodecDDCHandle();
             return thisHandle == ddcHandle ? this : null;

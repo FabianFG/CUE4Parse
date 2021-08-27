@@ -20,7 +20,7 @@ namespace CUE4Parse.ACL
             return compressedTracks != IntPtr.Zero ? new CompressedTracks(compressedTracks) : null;
         }
 
-        public bool Initialize(CompressedTracks tracks) => nDecompContextDefault_Initialize(_handle, tracks._handle);
+        public bool Initialize(CompressedTracks tracks) => nDecompContextDefault_Initialize(_handle, tracks.Handle);
 
         public void Seek(float sampleTime, SampleRoundingPolicy roundingPolicy) => nDecompContextDefault_Seek(_handle, sampleTime, roundingPolicy);
 

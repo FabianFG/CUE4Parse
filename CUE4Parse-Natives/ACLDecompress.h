@@ -1,14 +1,5 @@
 #pragma once
-#include <acl/decompression/decompress.h>
-#include "Structs.h"
 #include "Framework.h"
-
-using DecompContextDefault = acl::decompression_context<acl::decompression_settings>;
-
-DLLEXPORT DecompContextDefault* nDecompContextDefault_Create() { return new DecompContextDefault(); }
-DLLEXPORT const acl::compressed_tracks* nDecompContextDefault_GetCompressedTracks(DecompContextDefault* context) { return context->get_compressed_tracks(); }
-DLLEXPORT bool nDecompContextDefault_Initialize(DecompContextDefault* context, acl::compressed_tracks& tracks) { return context->initialize(tracks); }
-DLLEXPORT void nDecompContextDefault_Seek(DecompContextDefault* context, int64_t sampleTime, acl::sample_rounding_policy roundingPolicy) { context->seek(sampleTime, roundingPolicy); }
 
 struct FACLTransform final : public FTransform
 {
@@ -97,9 +88,3 @@ struct UE4OutputTrackWriter final : public acl::track_writer
         Atom->SetScale3DRaw(Scale);
     }
 };
-
-DLLEXPORT FUE4OutputWriter* nCreateOutputWriter(FTransform* atoms, const FAtomIndices* trackToAtomsMap) { return new FUE4OutputWriter(atoms, trackToAtomsMap); }
-DLLEXPORT UE4OutputTrackWriter* nCreateOutputTrackWriter(FTransform& atom) { return new UE4OutputTrackWriter(atom); }
-
-DLLEXPORT void nDecompContextDefault_DecompressTracks(DecompContextDefault* context, FUE4OutputWriter& writer) { context->decompress_tracks(writer); }
-DLLEXPORT void nDecompContextDefault_DecompressTrack(DecompContextDefault* context, uint32_t trackIndex, UE4OutputTrackWriter& writer) { context->decompress_track(trackIndex, writer); }

@@ -11,7 +11,7 @@ namespace CUE4Parse.ACL
         // struct error_result { const char* error; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static IntPtr PrepareErrorResult()
+        public static IntPtr PrepareErrorResult()
         {
             var outErrorResult = Marshal.AllocHGlobal(IntPtr.Size);
             Marshal.WriteIntPtr(outErrorResult, IntPtr.Zero);
@@ -19,11 +19,20 @@ namespace CUE4Parse.ACL
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CheckError(IntPtr errorResult)
+        public static void CheckError(IntPtr errorResult)
         {
             var error = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(errorResult));
             Marshal.FreeHGlobal(errorResult);
             if (error != null)
+            {
+                throw new ACLException(error);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckError(string? error)
+        {
+            if (error is { Length: > 0 })
             {
                 throw new ACLException(error);
             }

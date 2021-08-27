@@ -37,15 +37,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
 
         private static readonly IReadOnlyDictionary<AnimationCompressionFormat, int> _componentsMetadata =
             new ReadOnlyDictionary<AnimationCompressionFormat, int>(
-                new Dictionary<AnimationCompressionFormat, int>()
-                    {
-                        [ACF_None] = MakeComponentData(4, 3, 4, 4, 4, 3),
-                        [ACF_Float96NoW] = MakeComponentData(4, 3, 4, 3, 4, 3),
-                        [ACF_Fixed48NoW] = MakeComponentData(4, 3, 2, 3, 4, 3),
-                        [ACF_IntervalFixed32NoW] = MakeComponentData(4, 1, 4, 1, 4, 1),
-                        [ACF_Fixed32NoW] = MakeComponentData(4, 3, 4, 1, 4, 3),
-                        [ACF_Float32NoW] = MakeComponentData(4, 3, 4, 1, 4, 3),
-                        [ACF_Identity] = MakeComponentData(0, 0, 0, 0, 0, 0),
+                new Dictionary<AnimationCompressionFormat, int>
+                {
+                    [ACF_None] = MakeComponentData(4, 3, 4, 4, 4, 3),
+                    [ACF_Float96NoW] = MakeComponentData(4, 3, 4, 3, 4, 3),
+                    [ACF_Fixed48NoW] = MakeComponentData(4, 3, 2, 3, 4, 3),
+                    [ACF_IntervalFixed32NoW] = MakeComponentData(4, 1, 4, 1, 4, 1),
+                    [ACF_Fixed32NoW] = MakeComponentData(4, 3, 4, 1, 4, 3),
+                    [ACF_Float32NoW] = MakeComponentData(4, 3, 4, 1, 4, 3),
+                    [ACF_Identity] = MakeComponentData(0, 0, 0, 0, 0, 0),
                 });
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,9 +140,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
             out FVector outVector)
         {
             // literally the same code lol
-            DecompressTranslation(format, topOfStream, keyDataOffset , out outVector);
+            DecompressTranslation(format, topOfStream, keyDataOffset, out outVector);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DecompressTranslation(
             AnimationCompressionFormat format,
@@ -157,13 +157,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.Codec
                     outVector = topOfStream.Read<FVector>();
                     break;
                 case ACF_IntervalFixed32NoW:
-                    {
-                        var mins = topOfStream.Read<FVector>();
-                        var ranges = topOfStream.Read<FVector>();
-                        topOfStream.Position = keyDataOffset;
-                        outVector = topOfStream.ReadVectorIntervalFixed32(mins, ranges);
-                        break;
-                    }
+                {
+                    var mins = topOfStream.Read<FVector>();
+                    var ranges = topOfStream.Read<FVector>();
+                    topOfStream.Position = keyDataOffset;
+                    outVector = topOfStream.ReadVectorIntervalFixed32(mins, ranges);
+                    break;
+                }
                 case ACF_Identity:
                     outVector = FVector.ZeroVector;
                     break;

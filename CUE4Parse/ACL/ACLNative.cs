@@ -8,10 +8,10 @@ namespace CUE4Parse.ACL
         public const string LIB_NAME = "CUE4Parse-Natives";
 
         [DllImport(LIB_NAME)]
-        public static extern IntPtr nAlignedMalloc(int size, int alignment);
+        public static extern IntPtr nAllocate(int size, int alignment = 16);
 
         [DllImport(LIB_NAME)]
-        public static extern void nAlignedFree(IntPtr ptr);
+        public static extern void nDeallocate(IntPtr ptr, int size);
 
         // pure c# way:
         //var rawPtr = Marshal.AllocHGlobal(size + 8);
