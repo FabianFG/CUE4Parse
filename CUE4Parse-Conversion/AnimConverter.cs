@@ -595,7 +595,7 @@ namespace CUE4Parse_Conversion
         }
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern unsafe void nReadACLData(IntPtr compressedTracks, FVector* outTranslations, FQuat* outRotations, FVector* outScales);
+        private static extern unsafe void nReadACLData(IntPtr compressedTracks, FVector* outPosKeys, FQuat* outRotKeys, FVector* outScaleKeys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void FixRotationKeys(CAnimSequence anim)
@@ -773,18 +773,18 @@ namespace CUE4Parse_Conversion
                 var numSamples = (int) tracksHeader.NumSamples;
 
                 // Prepare buffers of all samples of each transform property for the native code to populate
-                var translations = new FVector[numTracks * numSamples];
-                var rotations = new FQuat[numTracks * numSamples];
-                var scales = new FVector[numTracks * numSamples];
+                var posKeys = new FVector[numTracks * numSamples];
+                var rotKeys = new FQuat[numTracks * numSamples];
+                var scaleKeys = new FVector[numTracks * numSamples];
 
                 // Let the native code do its job
                 unsafe
                 {
-                    fixed (FVector* translationsPtr = translations)
-                    fixed (FQuat* rotationsPtr = rotations)
-                    fixed (FVector* scalesPtr = scales)
+                    fixed (FVector* posKeysPtr = posKeys)
+                    fixed (FQuat* rotKeysPtr = rotKeys)
+                    fixed (FVector* scaleKeysPtr = scaleKeys)
                     {
-                        nReadACLData(tracks.Handle, translationsPtr, rotationsPtr, scalesPtr);
+                        nReadACLData(tracks.Handle, posKeysPtr, rotKeysPtr, scaleKeysPtr);
                     }
                 }
 
@@ -800,9 +800,9 @@ namespace CUE4Parse_Conversion
                         track.KeyPos = new FVector[numSamples];
                         track.KeyQuat = new FQuat[numSamples];
                         track.KeyScale = new FVector[numSamples];
-                        Array.Copy(translations, offset, track.KeyPos, 0, numSamples);
-                        Array.Copy(rotations, offset, track.KeyQuat, 0, numSamples);
-                        Array.Copy(scales, offset, track.KeyScale, 0, numSamples);
+                        Array.Copy(posKeys, offset, track.KeyPos, 0, numSamples);
+                        Array.Copy(rotKeys, offset, track.KeyQuat, 0, numSamples);
+                        Array.Copy(scaleKeys, offset, track.KeyScale, 0, numSamples);
                     }
                 }
             }
