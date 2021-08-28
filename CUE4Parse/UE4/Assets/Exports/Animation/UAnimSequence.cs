@@ -16,9 +16,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FRawAnimSequenceTrack[] RawAnimationData;
         public FPackageIndex BoneCompressionSettings; // UAnimBoneCompressionSettings
         // begin CompressedData
-        public ICompressedAnimData CompressedDataStructure;
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
         public FStructFallback CompressedCurveData; // FRawCurveTracks
+        public ICompressedAnimData CompressedDataStructure;
+        public UAnimBoneCompressionCodec? BoneCompressionCodec;
         // end CompressedData
         public EAdditiveAnimationType AdditiveAnimType;
         public FName RetargetSource;
@@ -250,11 +251,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             var compressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
 
             // Lookup our codecs in our settings assets
-            var boneCompressionCodec = BoneCompressionSettings.Load<UAnimBoneCompressionSettings>()!.GetCodec(boneCodecDDCHandle);
+            BoneCompressionCodec = BoneCompressionSettings.Load<UAnimBoneCompressionSettings>()!.GetCodec(boneCodecDDCHandle);
 
-            if (boneCompressionCodec != null)
+            if (BoneCompressionCodec != null)
             {
-                CompressedDataStructure = boneCompressionCodec.AllocateAnimData();
+                CompressedDataStructure = BoneCompressionCodec.AllocateAnimData();
                 CompressedDataStructure.SerializeCompressedData(Ar);
                 CompressedDataStructure.Bind(serializedByteStream);
             }

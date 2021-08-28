@@ -298,12 +298,12 @@ namespace CUE4Parse_Conversion
 
     public static class AnimConverter
     {
-        private static void ReadTimeArray(FArchive Ar, int numKeys, ref float[] times, int NumFrames)
+        private static void ReadTimeArray(FArchive Ar, int numKeys, out float[] times, int numFrames)
         {
             times = new float[numKeys];
             if (numKeys <= 1) return;
 
-            if (NumFrames < 256)
+            if (numFrames < 256)
             {
                 for (var k = 0; k < numKeys; k++)
                 {
@@ -373,7 +373,7 @@ namespace CUE4Parse_Conversion
             // align to 4 bytes
             Ar.Position = Ar.Position.Align(4);
             if (hasTimeTracks)
-                ReadTimeArray(Ar, numKeys, ref dstTimeKeys, numFrames);
+                ReadTimeArray(Ar, numKeys, out dstTimeKeys, numFrames);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -459,7 +459,7 @@ namespace CUE4Parse_Conversion
             // align to 4 bytes
             Ar.Position = Ar.Position.Align(4);
             if (hasTimeTracks)
-                ReadTimeArray(Ar, numKeys, ref dstTimeKeys, numFrames);
+                ReadTimeArray(Ar, numKeys, out dstTimeKeys, numFrames);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -497,18 +497,16 @@ namespace CUE4Parse_Conversion
                 ReadPerTrackQuatData(reader, trackIndex, "rotation", ref track.KeyQuat, ref track.KeyQuatTime, animSequence.NumFrames);
             }
 
-#if SUPPORT_SCALE_KEYS
             // read scale keys
             if (scaleOffset != -1)
             {
                 reader.Position = scaleOffset;
-                ReadPerTrackVectorData(reader, TrackIndex, "scale", ref A.KeyScale, A.KeyScaleTime, seq.NumFrames);
+                ReadPerTrackVectorData(reader, trackIndex, "scale", ref track.KeyScale, ref track.KeyScaleTime, animSequence.NumFrames);
             }
-#endif // SUPPORT_SCALE_KEYS
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ReadAnimations(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int trackIndex, bool hasTimeTracks)
+        private static void ReadKeyLerpData(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int trackIndex, bool hasTimeTracks)
         {
             var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure;
             var transOffset = compressedData.CompressedTrackOffsets[trackIndex * 4];
@@ -552,7 +550,7 @@ namespace CUE4Parse_Conversion
                 // align to 4 bytes
                 reader.Position = reader.Position.Align(4);
                 if (hasTimeTracks)
-                    ReadTimeArray(reader, transKeys, ref track.KeyPosTime, animSequence.NumFrames);
+                    ReadTimeArray(reader, transKeys, out track.KeyPosTime, animSequence.NumFrames);
             }
             else
             {
@@ -594,15 +592,12 @@ namespace CUE4Parse_Conversion
             {
                 // align to 4 bytes
                 reader.Position = reader.Position.Align(4);
-                ReadTimeArray(reader, rotKeys, ref track.KeyQuatTime, animSequence.NumFrames);
+                ReadTimeArray(reader, rotKeys, out track.KeyQuatTime, animSequence.NumFrames);
             }
         }
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern IntPtr nConvertTrackList(IntPtr compressedTracks, out IntPtr outTracks);
-
-        [DllImport(ACLNative.LIB_NAME)]
-        private static extern unsafe IntPtr nConvertTrack(IntPtr tracks, uint trackIndex, FVector* outPosKeys, FQuat* outRotKeys, FVector* outScaleKeys);
+        private static extern unsafe void nReadACLData(IntPtr compressedTracks, FVector* outTranslations, FQuat* outRotations, FVector* outScales);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void FixRotationKeys(CAnimSequence anim)
@@ -749,6 +744,11 @@ namespace CUE4Parse_Conversion
                     {
                         CopyArray(out track.KeyPos, animSequence.RawAnimationData[trackIndex].PosKeys);
                         CopyArray(out track.KeyQuat, animSequence.RawAnimationData[trackIndex].RotKeys);
+                        var scaleKeys = animSequence.RawAnimationData[trackIndex].ScaleKeys;
+                        if (scaleKeys != null)
+                        {
+                            CopyArray(out track.KeyScale, scaleKeys);
+                        }
                         /*CopyArray(ref A.KeyTime, seq.RawAnimationData[TrackIndex].KeyTimes); // may be empty
                         for (int k = 0; k < A.KeyTime.Length; k++)
                             A.KeyTime[k] *= Dst.Rate;*/
@@ -772,13 +772,33 @@ namespace CUE4Parse_Conversion
                         if (ueData.KeyEncodingFormat == AKF_PerTrackCompression)
                             ReadPerTrackData(reader, animSequence, track, trackIndex);
                         else
-                            ReadAnimations(reader, animSequence, track, trackIndex, ueData.KeyEncodingFormat == AKF_VariableKeyLerp);
+                            ReadKeyLerpData(reader, animSequence, track, trackIndex, ueData.KeyEncodingFormat == AKF_VariableKeyLerp);
                     }
                 }
             }
             else if (animSequence.CompressedDataStructure is FACLCompressedAnimData aclData)
             {
-                ACLException.CheckErrorUnwrapped(nConvertTrackList(aclData.GetCompressedTracks().Handle, out var aclTracks));
+                var tracks = aclData.GetCompressedTracks();
+                var tracksHeader = tracks.GetTracksHeader();
+                var numSamples = (int) tracksHeader.NumSamples;
+
+                // Prepare buffers of all samples of each transform property for the native code to populate
+                var translations = new FVector[numTracks * numSamples];
+                var rotations = new FQuat[numTracks * numSamples];
+                var scales = new FVector[numTracks * numSamples];
+
+                // Let the native code do its job
+                unsafe
+                {
+                    fixed (FVector* translationsPtr = translations)
+                    fixed (FQuat* rotationsPtr = rotations)
+                    fixed (FVector* scalesPtr = scales)
+                    {
+                        nReadACLData(tracks.Handle, translationsPtr, rotationsPtr, scalesPtr);
+                    }
+                }
+
+                // Now create CAnimTracks with the data from those big buffers
                 for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
                     var track = new CAnimTrack();
@@ -786,15 +806,13 @@ namespace CUE4Parse_Conversion
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
-                        unsafe
-                        {
-                            fixed (FVector* posKeys = track.KeyPos)
-                            fixed (FQuat* rotKeys = track.KeyQuat)
-                            fixed (FVector* scaleKeys = track.KeyScale)
-                            {
-                                nConvertTrack(aclTracks, (uint) trackIndex, posKeys, rotKeys, scaleKeys);
-                            }
-                        }
+                        var offset = trackIndex * numSamples;
+                        track.KeyPos = new FVector[numSamples];
+                        track.KeyQuat = new FQuat[numSamples];
+                        track.KeyScale = new FVector[numSamples];
+                        Array.Copy(translations, offset, track.KeyPos, 0, numSamples);
+                        Array.Copy(rotations, offset, track.KeyQuat, 0, numSamples);
+                        Array.Copy(scales, offset, track.KeyScale, 0, numSamples);
                     }
                 }
             }
