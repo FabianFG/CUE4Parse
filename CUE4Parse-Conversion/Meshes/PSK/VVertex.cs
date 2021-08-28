@@ -20,14 +20,14 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             Pad = pad;
         }
 
-        public void Serialize(FArchiveWriter writer)
+        public void Serialize(FArchiveWriter Ar)
         {
-            writer.Write(PointIndex);
-            writer.Write(UV.U);
-            writer.Write(UV.V);
-            writer.Write(MatIndex);
-            writer.Write(Reserved);
-            writer.Write(Pad);
+            Ar.Write(PointIndex);
+            Ar.Write(UV.U);
+            Ar.Write(UV.V);
+            Ar.Write(MatIndex);
+            Ar.Write(Reserved);
+            Ar.Write(Pad);
         }
     }
 }

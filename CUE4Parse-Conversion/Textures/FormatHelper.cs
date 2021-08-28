@@ -1,6 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Texture;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 
 namespace CUE4Parse_Conversion.Textures
 {

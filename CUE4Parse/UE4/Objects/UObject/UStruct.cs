@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    public class UStruct : Assets.Exports.UObject
+    public class UStruct : UField
     {
         public FPackageIndex SuperStruct;
         public FPackageIndex[] Children;
@@ -15,11 +15,6 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             SuperStruct = new FPackageIndex(Ar);
-            if (Ar.Game == EGame.GAME_StateOfDecay2)
-            {
-                Ar.Position += 4; //var someScriptImport = new FPackageIndex(Ar);
-            }
-
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveUField_Next)
             {
                 var firstChild = new FPackageIndex(Ar);

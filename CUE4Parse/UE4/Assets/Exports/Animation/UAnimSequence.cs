@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Serilog;
@@ -11,6 +12,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimationAsset
     {
+        public int NumFrames;
+
+        // UAnimSequenceBase
+        public float SequenceLength;
+        public float RateScale;
+        public EAdditiveAnimationType AdditiveAnimType;
+        public FName RetargetSource;
+        public FTransform[] RetargetSourceAssetReferencePose; 
+
         public FRawAnimSequenceTrack[] RawAnimationData;
         public byte[] CompressedByteStream;
         public FCompressedSegment[] CompressedSegments;
@@ -29,6 +39,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+
+            SequenceLength = GetOrDefault<float>(nameof(SequenceLength));
+            RateScale = GetOrDefault(nameof(RateScale), 1.0f);
+            AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
+            RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
+            RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
+
+            NumFrames = GetOrDefault<int>(nameof(NumFrames));
+
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
             {
@@ -264,6 +283,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     CompressedByteStream = tempAr.ReadBytes(compressedByteStreamNum);
                 }
             }
+        }
+
+        // WARNING: the following functions uses some logic to use either CompressedTrackToSkeletonMapTable or TrackToSkeletonMapTable.
+        // This logic should be the same everywhere. Note: CompressedTrackToSkeletonMapTable appeared in UE4.12, so it will always be
+        // empty when loading animations from older engines.
+
+        public int GetNumTracks() => CompressedTrackToSkeletonMapTable.Length > 0 ?
+            CompressedTrackToSkeletonMapTable.Length :
+            TrackToSkeletonMapTable.Length;
+
+        public int GetTrackBoneIndex(int trackIndex) => CompressedTrackToSkeletonMapTable.Length > 0 ?
+            CompressedTrackToSkeletonMapTable[trackIndex].BoneTreeIndex :
+            TrackToSkeletonMapTable[trackIndex].BoneTreeIndex;
+
+        public int FindTrackForBoneIndex(int boneIndex) {
+            var trackMap = CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable;
+            for (int trackIndex = 0; trackIndex < trackMap.Length; trackIndex++)
+            {
+                if (trackMap[trackIndex].BoneTreeIndex == boneIndex)
+                    return trackIndex;
+            }
+            return -1;
         }
     }
 }

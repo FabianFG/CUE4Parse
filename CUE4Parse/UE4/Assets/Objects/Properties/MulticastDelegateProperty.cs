@@ -31,4 +31,14 @@ namespace CUE4Parse.UE4.Assets.Objects
             throw new NotImplementedException();
         }
     }
+
+    public class MulticastInlineDelegateProperty : MulticastDelegateProperty
+    {
+        public MulticastInlineDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
+    }
+
+    public class MulticastSparseDelegateProperty : MulticastDelegateProperty
+    {
+        public MulticastSparseDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
+    }
 }

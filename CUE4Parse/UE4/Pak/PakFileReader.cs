@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.Pak
                 ReadIndexLegacy(caseInsensitive);
             var elapsed = watch.Elapsed;
             var sb = new StringBuilder($"Pak \"{Name}\": {FileCount} files");
-            if (EncryptedFileCount != 0)
+            if (EncryptedFileCount > 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
             if (MountPoint.Contains("/"))
                 sb.Append($", mount point: \"{MountPoint}\"");

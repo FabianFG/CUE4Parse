@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.Utils
 {
     public static class MathUtils
     {
         public static bool IsNumericType(this object o)
-        {   
+        {
             switch (Type.GetTypeCode(o.GetType()))
             {
                 case TypeCode.Byte:
@@ -65,5 +66,12 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Clamp(this float f, float min, float max) => f < min ? min : f < max ? f : max;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float FloatSelect(float comparand, float valueGEZero, float valueLTZero) =>
+            comparand >= 0.0f ? valueGEZero : valueLTZero;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector Lerp(FVector a, FVector b, float alpha) => a + (b - a) * alpha;
     }
 }

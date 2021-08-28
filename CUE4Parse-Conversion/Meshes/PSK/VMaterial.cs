@@ -1,6 +1,5 @@
-﻿using System;
-using System.Text;
-using CUE4Parse.UE4.Writers;
+﻿using CUE4Parse.UE4.Writers;
+using CUE4Parse_Conversion.ActorX;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -26,19 +25,15 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             LodStyle = lodStyle;
         }
 
-        public void Serialize(FArchiveWriter writer)
+        public void Serialize(FArchiveWriter Ar)
         {
-            var materialName = new byte[64];
-            var material = Encoding.UTF8.GetBytes(MaterialName);
-            Buffer.BlockCopy(material, 0, materialName, 0, material.Length);
-            
-            writer.Write(materialName);
-            writer.Write(TextureIndex);
-            writer.Write(PolyFlags);
-            writer.Write(AuxMaterial);
-            writer.Write(AuxFlags);
-            writer.Write(LodBias);
-            writer.Write(LodStyle);
+            Ar.Write(MaterialName, 64);
+            Ar.Write(TextureIndex);
+            Ar.Write(PolyFlags);
+            Ar.Write(AuxMaterial);
+            Ar.Write(AuxFlags);
+            Ar.Write(LodBias);
+            Ar.Write(LodStyle);
         }
     }
 }

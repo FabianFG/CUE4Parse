@@ -53,6 +53,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UUserDefinedStruct));
             RegisterClass(typeof(UWidgetBlueprintGeneratedClass));
             RegisterClass(typeof(UControlRigBlueprintGeneratedClass));
+            RegisterClass(typeof(UGameplayAbilityBlueprintGeneratedClass));
             RegisterClass(typeof(UBodySetup));
             RegisterClass(typeof(UModel));
             RegisterClass(typeof(URigVM));
