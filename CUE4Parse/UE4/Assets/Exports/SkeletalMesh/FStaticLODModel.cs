@@ -187,9 +187,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     SerializeStreamedData(Ar, bHasVertexColors);
                     if (Ar.Game == EGame.GAME_RogueCompany)
                     {
-                        Ar.Position += 10; // FStripDataFlags, ElementSize, ElementCount
-                        Ar.SkipBulkArrayData();
-                        Ar.Position += 10;
+                        Ar.Position += 12; // 1 (Long) + 2^16 (Int)
+                        var elementSize = Ar.Read<int>();
+                        var elementCount = Ar.Read<int>();
+                        if (elementSize > 0 && elementCount > 0)
+                            Ar.SkipBulkArrayData();
                     }
                 }
                 else
