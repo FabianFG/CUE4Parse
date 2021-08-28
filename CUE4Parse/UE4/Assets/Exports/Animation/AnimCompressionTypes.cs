@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
-using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -63,10 +60,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public byte[] CompressedByteStream;
 
-        public AnimEncoding TranslationCodec;
-        public AnimEncoding RotationCodec;
-        public AnimEncoding ScaleCodec;
-
         public AnimationKeyFormat KeyEncodingFormat;
 
         // The compression format that was used to compress tracks parts.
@@ -123,49 +116,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             CompressedTrackOffsets = new int[Ar.Read<int>()];
             CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
             CompressedScaleOffsets.StripSize = Ar.Read<int>();
-
-            SetInterfaceLinks();
-        }
-
-        public void SetInterfaceLinks()
-        {
-            if (KeyEncodingFormat == AnimationKeyFormat.AKF_ConstantKeyLerp)
-            {
-                // setup translation codec
-                TranslationCodec = TranslationCompressionFormat switch
-                {
-                    ACF_None or ACF_Float96NoW or ACF_IntervalFixed32NoW or ACF_Identity => new AEFConstantKeyLerp(TranslationCompressionFormat),
-                    _ => throw new ArgumentOutOfRangeException($"{TranslationCompressionFormat}: unknown or unsupported translation compression")
-                };
-
-                // setup rotation codec
-                RotationCodec = RotationCompressionFormat switch
-                {
-                    ACF_None or ACF_Float96NoW or ACF_Fixed48NoW or ACF_IntervalFixed32NoW or ACF_Fixed32NoW or ACF_Float32NoW or ACF_Identity => new AEFConstantKeyLerp(RotationCompressionFormat),
-                    _ => throw new ArgumentOutOfRangeException($"{RotationCompressionFormat}: unknown or unsupported rotation compression")
-                };
-
-                // setup scale codec
-                ScaleCodec = ScaleCompressionFormat switch
-                {
-                    ACF_None or ACF_Float96NoW or ACF_IntervalFixed32NoW or ACF_Identity => new AEFConstantKeyLerp(ScaleCompressionFormat),
-                    _ => throw new ArgumentOutOfRangeException($"{ScaleCompressionFormat}: unknown or unsupported scale compression")
-                };
-            }
-            else if (KeyEncodingFormat == AnimationKeyFormat.AKF_VariableKeyLerp)
-            {
-
-            }
-            else if (KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression)
-            {
-                TranslationCodec = RotationCodec = ScaleCodec = new AEFPerTrackCompressionCodec();
-                Debug.Assert(RotationCompressionFormat == ACF_Identity, "RotationCompressionFormat == ACF_Identity");
-                Debug.Assert(TranslationCompressionFormat == ACF_Identity, "TranslationCompressionFormat == ACF_Identity");
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException($"{KeyEncodingFormat}: unknown or unsupported animation format");
-            }
         }
 
         public void Bind(byte[] bulkData) => InitViewsFromBuffer(bulkData);

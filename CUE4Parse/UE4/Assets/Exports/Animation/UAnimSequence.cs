@@ -112,8 +112,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             compressedData.CompressedTrackOffsets = Ar.ReadArray<int>();
             compressedData.CompressedScaleOffsets = new FCompressedOffsetData(Ar);
 
-            compressedData.SetInterfaceLinks();
-
             if (Ar.Game >= EGame.GAME_UE4_21)
             {
                 // UE4.21+ - added compressed segments; disappeared in 4.23
@@ -186,8 +184,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             compressedData.CompressedTrackOffsets = new int[Ar.Read<int>()];
             compressedData.CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
             compressedData.CompressedScaleOffsets.StripSize = Ar.Read<int>();
-
-            compressedData.SetInterfaceLinks();
             // ... end of FUECompressedAnimData::SerializeCompressedData
 
             var numBytes = Ar.Read<int>();
@@ -258,6 +254,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedDataStructure = BoneCompressionCodec.AllocateAnimData();
                 CompressedDataStructure.SerializeCompressedData(Ar);
                 CompressedDataStructure.Bind(serializedByteStream);
+            }
+            else
+            {
+                Log.Warning("Unsupported bone compression codec {0}", boneCodecDDCHandle);
             }
         }
 

@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Writers;
-using Serilog;
 
 namespace CUE4Parse_Conversion.ActorX
 {
@@ -13,9 +12,6 @@ namespace CUE4Parse_Conversion.ActorX
         {
             header.ChunkId = name;
             header.Serialize(Ar);
-#if DEBUG
-            Log.Information("BEGIN CHUNK {0} DATA @ {1}", name, Ar.Position);
-#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

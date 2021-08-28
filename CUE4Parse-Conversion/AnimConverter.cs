@@ -305,18 +305,18 @@ namespace CUE4Parse_Conversion
 
             if (numFrames < 256)
             {
-                for (var k = 0; k < numKeys; k++)
+                for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
                 {
                     var v = Ar.Read<byte>();
-                    times[k] = v;
+                    times[keyIndex] = v;
                 }
             }
             else
             {
                 for (var k = 0; k < numKeys; k++)
                 {
-                    var v = Ar.Read<ushort>();
-                    times[k] = v;
+                    var keyIndex = Ar.Read<ushort>();
+                    times[k] = keyIndex;
                 }
             }
 
@@ -325,8 +325,7 @@ namespace CUE4Parse_Conversion
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ReadPerTrackQuatData(FArchive Ar, int trackIndex, string trackKind,
-            ref FQuat[] dstKeys, ref float[] dstTimeKeys, int numFrames)
+        private static void ReadPerTrackQuatData(FArchive Ar, string trackKind, ref FQuat[] dstKeys, ref float[] dstTimeKeys, int numFrames)
         {
             var packedInfo = Ar.Read<uint>();
             var keyFormat = (AnimationCompressionFormat) (packedInfo >> 28);
@@ -357,9 +356,9 @@ namespace CUE4Parse_Conversion
                     ranges.Z = Ar.Read<float>();
                 }
             }
-            for (var k = 0; k < numKeys; k++)
+            for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
             {
-                dstKeys[k] = keyFormat switch
+                dstKeys[keyIndex] = keyFormat switch
                 {
                     ACF_None or ACF_Float96NoW => Ar.ReadQuatFloat96NoW(),
                     ACF_Fixed48NoW => Ar.ReadQuatFixed48NoW(componentMask),
@@ -377,8 +376,7 @@ namespace CUE4Parse_Conversion
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ReadPerTrackVectorData(FArchive Ar, int trackIndex, string trackKind,
-            ref FVector[] dstKeys, ref float[] dstTimeKeys, int numFrames)
+        private static void ReadPerTrackVectorData(FArchive Ar, string trackKind, ref FVector[] dstKeys, ref float[] dstTimeKeys, int numFrames)
         {
             var packedInfo = Ar.Read<uint>();
             var keyFormat = (AnimationCompressionFormat) (packedInfo >> 28);
@@ -409,7 +407,7 @@ namespace CUE4Parse_Conversion
                     ranges.Z = Ar.Read<float>();
                 }
             }
-            for (var k = 0; k < numKeys; k++)
+            for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
             {
                 switch (keyFormat)
                 {
@@ -430,13 +428,13 @@ namespace CUE4Parse_Conversion
                             // ACF_Float96NoW has a special case for ((ComponentMask & 7) == 0)
                             v = Ar.Read<FVector>();
                         }
-                        dstKeys[k] = v;
+                        dstKeys[keyIndex] = v;
                         break;
                     }
                     case ACF_IntervalFixed32NoW:
                     {
                         var v = Ar.ReadVectorIntervalFixed32(mins, ranges);
-                        dstKeys[k] = v;
+                        dstKeys[keyIndex] = v;
                         break;
                     }
                     case ACF_Fixed48NoW:
@@ -446,11 +444,11 @@ namespace CUE4Parse_Conversion
                             (componentMask & 2) != 0 ? DecodeFixed48_PerTrackComponent(Ar.Read<ushort>(), 7) : 0,
                             (componentMask & 4) != 0 ? DecodeFixed48_PerTrackComponent(Ar.Read<ushort>(), 7) : 0
                         );
-                        dstKeys[k] = v;
+                        dstKeys[keyIndex] = v;
                         break;
                     }
                     case ACF_Identity:
-                        dstKeys[k] = FVector.ZeroVector;
+                        dstKeys[keyIndex] = FVector.ZeroVector;
                         break;
                     default:
                         throw new ParserException(Ar, $"Unknown {trackKind} compression method: {(int) keyFormat} ({keyFormat})");
@@ -483,7 +481,7 @@ namespace CUE4Parse_Conversion
             else
             {
                 reader.Position = transOffset;
-                ReadPerTrackVectorData(reader, trackIndex, "translation", ref track.KeyPos, ref track.KeyPosTime, animSequence.NumFrames);
+                ReadPerTrackVectorData(reader, "translation", ref track.KeyPos, ref track.KeyPosTime, animSequence.NumFrames);
             }
 
             // read rotation keys
@@ -494,14 +492,14 @@ namespace CUE4Parse_Conversion
             else
             {
                 reader.Position = rotOffset;
-                ReadPerTrackQuatData(reader, trackIndex, "rotation", ref track.KeyQuat, ref track.KeyQuatTime, animSequence.NumFrames);
+                ReadPerTrackQuatData(reader, "rotation", ref track.KeyQuat, ref track.KeyQuatTime, animSequence.NumFrames);
             }
 
             // read scale keys
             if (scaleOffset != -1)
             {
                 reader.Position = scaleOffset;
-                ReadPerTrackVectorData(reader, trackIndex, "scale", ref track.KeyScale, ref track.KeyScaleTime, animSequence.NumFrames);
+                ReadPerTrackVectorData(reader, "scale", ref track.KeyScale, ref track.KeyScaleTime, animSequence.NumFrames);
             }
         }
 
@@ -534,9 +532,9 @@ namespace CUE4Parse_Conversion
                     ranges = reader.Read<FVector>();
                 }
 
-                for (var k = 0; k < transKeys; k++)
+                for (var keyIndex = 0; keyIndex < transKeys; keyIndex++)
                 {
-                    track.KeyPos[k] = translationCompressionFormat switch
+                    track.KeyPos[keyIndex] = translationCompressionFormat switch
                     {
                         ACF_None => reader.Read<FVector>(),
                         ACF_Float96NoW => reader.Read<FVector>(),
@@ -625,18 +623,18 @@ namespace CUE4Parse_Conversion
             animSet.BonePositions = new CSkeletonBonePosition[numBones];
             animSet.BoneModes = new EBoneRetargetingMode[numBones];
 
-            for (var i = 0; i < numBones; i++)
+            for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
             {
                 // Store bone name
-                animSet.TrackBoneNames[i] = skeleton.ReferenceSkeleton.FinalRefBoneInfo[i].Name;
+                animSet.TrackBoneNames[boneIndex] = skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex].Name;
                 // Store skeleton's bone transform
                 CSkeletonBonePosition bonePosition;
-                var transform = skeleton.ReferenceSkeleton.FinalRefBonePose[i];
+                var transform = skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
                 bonePosition.Position = transform.Translation;
                 bonePosition.Orientation = transform.Rotation;
-                animSet.BonePositions[i] = bonePosition;
+                animSet.BonePositions[boneIndex] = bonePosition;
                 // Process bone retargeting mode
-                var boneMode = skeleton.BoneTree[i].TranslationRetargetingMode switch
+                var boneMode = skeleton.BoneTree[boneIndex].TranslationRetargetingMode switch
                 {
                     EBoneTranslationRetargetingMode.Skeleton => EBoneRetargetingMode.Mesh,
                     EBoneTranslationRetargetingMode.Animation => EBoneRetargetingMode.Animation,
@@ -646,10 +644,10 @@ namespace CUE4Parse_Conversion
                     _ => EBoneRetargetingMode.OrientAndScale //todo: other modes?
                 };
 
-                animSet.BoneModes[i] = boneMode;
+                animSet.BoneModes[boneIndex] = boneMode;
             }
 
-            // Check for NULL 'seq' only after CAnimSet is created: we're doing ConvertAnims(NULL) to create an empty AnimSet
+            // Check for NULL 'animSequence' only after CAnimSet is created: we're doing ConvertAnims(null) to create an empty AnimSet
             if (animSequence == null)
             {
                 return animSet;
@@ -657,16 +655,8 @@ namespace CUE4Parse_Conversion
 
             var numTracks = animSequence.GetNumTracks();
 
-            // Check for valid data to avoid crash if it's something wrong there
-            /*if (compressedData.CompressedTrackOffsets.Length != numTracks * offsetsPerBone && animSequence.RawAnimationData.Length == 0)
-            {
-                Log.Warning("AnimSequence {0} has wrong CompressedTrackOffsets size (has {1}, expected {2}), removing track",
-                    animSequence.Name, compressedData.CompressedTrackOffsets.Length, numTracks * offsetsPerBone);
-                return animSet;
-            }*/
-
             // Store UAnimSequence in 'OriginalAnims' array, we just need it from time to time
-            //OriginalAnims.Add(seq);
+            //OriginalAnims.Add(animSequence);
 
             // Create CAnimSequence
             var dst = new CAnimSequence(animSequence);
@@ -701,7 +691,7 @@ namespace CUE4Parse_Conversion
                 if (retargetTransforms == null)
                 {
                     // Animation will use ReferenceSkeleton for retargeting, we've already copied the
-                    // information into CAnimSet::BonePositions array/
+                    // information into CAnimSet::BonePositions array
                 }
             }
 
@@ -749,7 +739,7 @@ namespace CUE4Parse_Conversion
                         {
                             CopyArray(out track.KeyScale, scaleKeys);
                         }
-                        /*CopyArray(ref A.KeyTime, seq.RawAnimationData[TrackIndex].KeyTimes); // may be empty
+                        /*CopyArray(ref A.KeyTime, animSequence.RawAnimationData[TrackIndex].KeyTimes); // may be empty
                         for (int k = 0; k < A.KeyTime.Length; k++)
                             A.KeyTime[k] *= Dst.Rate;*/
                     }

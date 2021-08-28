@@ -103,8 +103,7 @@ namespace CUE4Parse.UE4.Assets
             // ACLPlugin
             RegisterClass(typeof(UAnimBoneCompressionCodec_ACL));
             RegisterClass(typeof(UAnimBoneCompressionCodec_ACLDatabase));
-            //RegisterClass(typeof(UAnimBoneCompressionCodec_ACLSafe)); TODO templated decompressor settings is pain
-            RegisterClass("AnimBoneCompressionCodec_ACLSafe", typeof(UAnimBoneCompressionCodec_ACL));
+            RegisterClass(typeof(UAnimBoneCompressionCodec_ACLSafe));
         }
 
         public static void RegisterClass(Type type)

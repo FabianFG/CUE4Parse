@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using CUE4Parse.UE4.Assets.Exports.Animation.Codec;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -31,11 +30,5 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         }
 
         public abstract ICompressedAnimData AllocateAnimData();
-
-        /** Decompresses all the specified bone tracks. */
-        public abstract void DecompressPose(FAnimSequenceDecompressionContext decompContext, BoneTrackPair[] rotationPairs, BoneTrackPair[] translationPairs, BoneTrackPair[] scalePairs, FTransform[] outAtoms);
-
-        /** Decompress a single bone. */
-        public abstract void DecompressBone(FAnimSequenceDecompressionContext decompContext, int trackIndex, out FTransform outAtom);
     }
 }
