@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "ACLDecompress.h"
+﻿#include "includes/ACLDecompress.h"
 
 // ACL allocator
 DLLEXPORT void* nAllocate(size_t size, size_t alignment) { return ACLAllocatorImpl.allocate(size, alignment); }
