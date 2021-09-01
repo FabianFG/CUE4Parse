@@ -14,9 +14,11 @@ if (WIN32)
     add_compile_definitions(WIN_EXPORT)
 endif()
 
+set_target_properties(CUE4Parse-Natives PROPERTIES PREFIX "")
+
 install(TARGETS CUE4Parse-Natives
-        CONFIGURATIONS Debug
-        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/Debug/x64/")
+         CONFIGURATIONS Debug
+         RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/")
 install(TARGETS CUE4Parse-Natives
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/Release/x64/")
+         CONFIGURATIONS Release
+         RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/")

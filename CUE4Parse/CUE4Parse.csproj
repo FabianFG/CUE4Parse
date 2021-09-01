@@ -1,37 +1,39 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <LangVersion>default</LangVersion>
-        <Nullable>enable</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
-        <IsPublishable>false</IsPublishable>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DefineConstants>TRACE</DefineConstants>
-    </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.15.0" />
+    <PackageReference Include="LZMA-SDK" Version="19.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.6" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="DotNetZip" Version="1.15.0" />
-      <PackageReference Include="LZMA-SDK" Version="19.0.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
-      <PackageReference Include="System.Memory" Version="4.5.4" />
-      <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
-      <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.6" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\CUE4Parse-Natives\CUE4Parse-Natives.vcxproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Include="..\CUE4Parse-Natives\bin\Debug\x64\CUE4Parse-Natives.dll">
-        <Link>CUE4Parse-Natives.dll</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
+  <ItemGroup>
+    <Content Include="..\CUE4Parse-Natives\builddir\$(Configuration)\x64\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
+      <Link>CUE4Parse-Natives.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\CUE4Parse-Natives\builddir\$(Configuration)\any\CUE4Parse-Natives.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+      <Link>CUE4Parse-Natives.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- <Content Include="..\CUE4Parse-Natives\builddir\$(Configuration)\any\CUE4Parse-Natives.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+      <Link>CUE4Parse-Natives.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content> -->
+  </ItemGroup>
 </Project>

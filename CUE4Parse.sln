@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30428.66
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse", "CUE4Parse\CUE4Parse.csproj", "{AA16738F-6082-4410-868B-FC59A0363E8F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2} = {317B7BF6-3C93-4593-AC5F-45CAB56B31B2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Fortnite", "CUE4Parse-Fortnite\CUE4Parse-Fortnite.csproj", "{A38EFDF9-6F67-4FF2-8039-DDC946C8A40D}"
 EndProject
@@ -11,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-UnitTests", "CUE4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Conversion", "CUE4Parse-Conversion\CUE4Parse-Conversion.csproj", "{EB602A68-2268-4D51-AC75-41E8EDEC95E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CUE4Parse-Natives", "CUE4Parse-Natives\CUE4Parse-Natives.vcxproj", "{B3376848-0D1A-425D-8666-EFCABFF98222}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CUE4Parse-Natives", "CUE4Parse-Natives\CUE4Parse-Natives.vcxproj", "{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,16 +74,14 @@ Global
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x64.Build.0 = Release|Any CPU
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x86.ActiveCfg = Release|Any CPU
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x86.Build.0 = Release|Any CPU
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x64.ActiveCfg = Debug|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x64.Build.0 = Debug|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x86.ActiveCfg = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x86.Build.0 = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|Any CPU.ActiveCfg = Release|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x64.ActiveCfg = Release|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x64.Build.0 = Release|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x86.ActiveCfg = Release|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x86.Build.0 = Release|Win32
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Debug|x64.ActiveCfg = Debug|x64
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Debug|x64.Build.0 = Debug|x64
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Debug|x86.ActiveCfg = Debug|x64
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Release|Any CPU.ActiveCfg = Release|x86
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Release|x64.ActiveCfg = Release|x64
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Release|x64.Build.0 = Release|x64
+		{317B7BF6-3C93-4593-AC5F-45CAB56B31B2}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
