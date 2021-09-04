@@ -6,3 +6,6 @@ riderModule.iml
 /_ReSharper.Caches/
 /CUE4Parse-UnitTests/
 build/
+.idea/
+.vscode/
+.omnisharp/
