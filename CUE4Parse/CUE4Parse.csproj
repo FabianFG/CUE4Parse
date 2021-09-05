@@ -28,7 +28,7 @@
     <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
   </PropertyGroup>
 
-  <Target Name="BeforeBuild" BeforeTargets="Build">
+  <Target Name="Build-Natives" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
     <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
@@ -39,10 +39,10 @@
   </Target>
 
   <ItemGroup>
-    <Content Include="..\CUE4Parse-Natives\bin\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
+    <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\CUE4Parse-Natives\bin\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' "> <!--TODO: check condition-->
+    <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
 
@@ -57,7 +57,7 @@
   </ItemGroup>
 
   <!-- remove everything?? -->
-  <Target Name="BeforeClean" BeforeTargets="Clean">
+  <Target Name="CleanCMakeProj" BeforeTargets="BeforeClean">
     <RemoveDir Directories="$(CMakeBuildDir);$(CMakeProject)/bin/">
       <Output TaskParameter="RemovedDirectories" ItemName="DeletedList"/>
     </RemoveDir>

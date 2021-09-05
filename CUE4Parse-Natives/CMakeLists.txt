@@ -18,12 +18,12 @@ set_target_properties(CUE4Parse-Natives PROPERTIES PREFIX "")
 
 if (MSVC)
 install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
-        DESTINATION "${PROJECT_SOURCE_DIR}/bin/" OPTIONAL) 
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/Debug/" OPTIONAL) 
 endif()
 
 install(TARGETS CUE4Parse-Natives
         CONFIGURATIONS Debug
-        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/")
+        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/Debug/")
 install(TARGETS CUE4Parse-Natives
         CONFIGURATIONS Release
-        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/")
+        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin/Release/")
