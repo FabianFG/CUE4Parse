@@ -1,9 +1,4 @@
-#pragma once
-#include <acl/core/ansi_allocator.h>
-#include <acl/core/compressed_tracks.h>
-#include <acl/decompression/decompress.h>
-#include "Structs.h"
-
+﻿#pragma once
 
 #if defined _WIN32 || defined __CYGWIN__
   #ifdef WIN_EXPORT
@@ -29,5 +24,3 @@
     #define NOEXPORT
   #endif
 #endif
-acl::ansi_allocator ACLAllocatorImpl;
-using DecompContextDefault = acl::decompression_context<acl::decompression_settings>;
