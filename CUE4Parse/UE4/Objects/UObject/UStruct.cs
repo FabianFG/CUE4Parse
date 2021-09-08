@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageIndex[] Children;
         public FField[] ChildProperties;
 
-        public byte[] Script;
+        public byte[]? Script;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
