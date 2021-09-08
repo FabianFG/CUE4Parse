@@ -60,6 +60,11 @@ namespace CUE4Parse.FileProvider
         public bool IsCaseInsensitive { get; }
         
         /// <summary>
+        /// Whether UStructs serialized by this file provider should read the script data
+        /// </summary>
+        public bool ReadScriptData { get; set; }
+        
+        /// <summary>
         /// The name of the game represented by this provider. 
         /// This is fetched from the prefix before "Game/". 
         /// If there was no file with "Game/" the root folder name is returned

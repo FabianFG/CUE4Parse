@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageIndex[] Children;
         public FField[] ChildProperties;
 
+        public byte[] Script;
+
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
@@ -32,7 +34,14 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             var bytecodeBufferSize = Ar.Read<int>();
             var serializedScriptSize = Ar.Read<int>();
-            Ar.Position += serializedScriptSize; // should we read the bytecode some day?
+            if (Ar.Owner.Provider?.ReadScriptData == true)
+            {
+                Script = Ar.ReadBytes(serializedScriptSize);
+            }
+            else
+            {
+                Ar.Position += serializedScriptSize;
+            }
         }
 
         protected void DeserializeProperties(FAssetArchive Ar)
