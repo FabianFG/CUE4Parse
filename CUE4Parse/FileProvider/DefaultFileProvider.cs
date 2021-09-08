@@ -97,7 +97,7 @@ namespace CUE4Parse.FileProvider
                 else
                 {
                     // Register local file only if it has a known extension, we don't need every file
-                    if (!GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
+                    if (!GameFile.Ue4PackageExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
                     var osFile = new OsGameFile(_workingDirectory, file, Versions);
                     if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
