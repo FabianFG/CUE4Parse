@@ -188,29 +188,29 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="v">The vector to check against.</param>
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
-        public bool Equals(FVector v, float tolerance = KindaSmallNumber) => System.Math.Abs(X - v.X) <= tolerance &&
-                                                                             System.Math.Abs(Y - v.Y) <= tolerance &&
-                                                                             System.Math.Abs(Z - v.Z) <= tolerance;
+        public bool Equals(FVector v, float tolerance = KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance &&
+                                                                             MathF.Abs(Y - v.Y) <= tolerance &&
+                                                                             MathF.Abs(Z - v.Z) <= tolerance;
         
         /// <summary>
         /// Checks whether all components of this vector are the same, within a tolerance.
         /// </summary>
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
-        public bool AllComponentsEqual(float tolerance = KindaSmallNumber) => System.Math.Abs(X - Y) <= tolerance &&
-                                                                             System.Math.Abs(X - Z) <= tolerance &&
-                                                                             System.Math.Abs(Y - Z) <= tolerance;        
+        public bool AllComponentsEqual(float tolerance = KindaSmallNumber) => MathF.Abs(X - Y) <= tolerance &&
+                                                                             MathF.Abs(X - Z) <= tolerance &&
+                                                                             MathF.Abs(Y - Z) <= tolerance;        
 
-        public float Max() => System.Math.Max(System.Math.Max(X, Y), Z);
-        public float AbsMax() => System.Math.Max(System.Math.Max(System.Math.Abs(X), System.Math.Abs(Y)), System.Math.Abs(Z));
-        public float Min() => System.Math.Min(System.Math.Min(X, Y), Z);
-        public float AbsMin() => System.Math.Min(System.Math.Min(System.Math.Abs(X), System.Math.Abs(Y)), System.Math.Abs(Z));
-        public FVector ComponentMax(FVector other) => new FVector(System.Math.Max(X, other.X), System.Math.Max(Y, other.Y), System.Math.Max(Z, other.Z));
-        public FVector ComponentMin(FVector other) => new FVector(System.Math.Min(X, other.X), System.Math.Min(Y, other.Y), System.Math.Min(Z, other.Z));
-        public FVector Abs() => new FVector(System.Math.Abs(X), System.Math.Abs(Y), System.Math.Abs(Z));
-        public double Size() => System.Math.Sqrt(X * X + Y * Y + Z * Z);
+        public float Max() => MathF.Max(MathF.Max(X, Y), Z);
+        public float AbsMax() => MathF.Max(MathF.Max(MathF.Abs(X), MathF.Abs(Y)), MathF.Abs(Z));
+        public float Min() => MathF.Min(MathF.Min(X, Y), Z);
+        public float AbsMin() => MathF.Min(MathF.Min(MathF.Abs(X), MathF.Abs(Y)), MathF.Abs(Z));
+        public FVector ComponentMax(FVector other) => new FVector(MathF.Max(X, other.X), MathF.Max(Y, other.Y), MathF.Max(Z, other.Z));
+        public FVector ComponentMin(FVector other) => new FVector(MathF.Min(X, other.X), MathF.Min(Y, other.Y), MathF.Min(Z, other.Z));
+        public FVector Abs() => new FVector(MathF.Abs(X), MathF.Abs(Y), MathF.Abs(Z));
+        public float Size() => MathF.Sqrt(X * X + Y * Y + Z * Z);
         public float SizeSquared() => X * X + Y * Y + Z * Z;
-        public double Size2D() => System.Math.Sqrt(X * X + Y * Y);
+        public float Size2D() => MathF.Sqrt(X * X + Y * Y);
         public float SizeSquared2D() => X * X + Y * Y;
 
         public bool ContainsNaN() => !float.IsFinite(X) || !float.IsFinite(Y) || !float.IsFinite(Z);
@@ -220,9 +220,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// </summary>
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vector is near to zero, false otherwise.</returns>
-        public bool IsNearlyZero(float tolerance = KindaSmallNumber) => System.Math.Abs(X) <= tolerance &&
-                                                                        System.Math.Abs(Y) <= tolerance &&
-                                                                        System.Math.Abs(Z) <= tolerance;
+        public bool IsNearlyZero(float tolerance = KindaSmallNumber) => MathF.Abs(X) <= tolerance &&
+                                                                        MathF.Abs(Y) <= tolerance &&
+                                                                        MathF.Abs(Z) <= tolerance;
 
         public bool IsZero() => X == 0 && Y == 0 && Z == 0;
 
@@ -232,13 +232,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="lengthSquaredTolerance">Tolerance against squared length.</param>
         /// <returns>true if the vector is a unit vector within the specified tolerance.</returns>
         public bool IsUnit(float lengthSquaredTolerance = KindaSmallNumber) =>
-            System.Math.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
+            MathF.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
 
         /// <summary>
         /// Checks whether vector is normalized.
         /// </summary>
         /// <returns>true if normalized, false otherwise.</returns>
-        public bool IsNormalized() => System.Math.Abs(1f - SizeSquared()) < ThreshVectorNormalized;
+        public bool IsNormalized() => MathF.Abs(1f - SizeSquared()) < ThreshVectorNormalized;
 
         /// <summary>
         /// Create a copy of this vector, with its maximum magnitude clamped to MaxSize.
@@ -256,10 +256,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                 var scale = maxSize * vSq.InvSqrt();
                 return new(X * scale, Y * scale, Z * scale);
             }
-            else
-            {
-                return new(X, Y, Z);
-            }
+            return new(X, Y, Z);
         }
 
         public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3}";

@@ -41,10 +41,10 @@ namespace CUE4Parse.Utils
         public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ToRadians(this float val)
-        {
-            return ((float) Math.PI / 180f) * val;
-        }
+        public static float ToDegrees(this float radVal) => radVal * (180.0f / MathF.PI);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ToRadians(this float degVal) => degVal * (MathF.PI / 180.0f);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Square(this float val) => val * val;

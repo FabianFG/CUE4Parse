@@ -191,6 +191,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return v + (t * W) + FVector.CrossProduct(q, t);
         }
 
+        public FVector UnrotateVector(FVector v)
+        {
+            var q = new FVector(-X, -Y, -Z); // Inverse
+            var t = FVector.CrossProduct(q, v) * 2.0f;
+            return v + (t * W) + FVector.CrossProduct(q, t);
+        }
+
         public FQuat Inverse() => IsNormalized
             ? new FQuat(-X, -Y, -Z, W)
             : throw new ArgumentException("Quat must be normalized in order to be inversed");
