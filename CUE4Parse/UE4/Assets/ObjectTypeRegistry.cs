@@ -34,7 +34,9 @@ namespace CUE4Parse.UE4.Assets
             RegisterClass(typeof(UAnimSequence));
             RegisterClass(typeof(UBlueprintGeneratedClass));
             RegisterClass(typeof(UCurveTable));
+            RegisterClass(typeof(UCompositeCurveTable));
             RegisterClass(typeof(UDataTable));
+            RegisterClass(typeof(UCompositeDataTable));
             RegisterClass(typeof(UFunction));
             RegisterClass(typeof(UMaterial));
             RegisterClass(typeof(UMaterialInstanceConstant));
