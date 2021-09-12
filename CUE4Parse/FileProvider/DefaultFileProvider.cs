@@ -121,28 +121,42 @@ namespace CUE4Parse.FileProvider
                         var streams = new Stream[2];
                         if (fileentry.FileName.EndsWith(".pak"))
                         {
-                            streams[0] = new MemoryStream();
-                            fileentry.Extract(streams[0]);
-                            streams[0].Seek(0, SeekOrigin.Begin);
+                            try
+                            {
+                                streams[0] = new MemoryStream();
+                                fileentry.Extract(streams[0]);
+                                streams[0].Seek(0, SeekOrigin.Begin);
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Warning(e.ToString());
+                            }
                         }
                         else if (fileentry.FileName.EndsWith(".utoc"))
-                        {
-                            streams[0] = new MemoryStream();
-                            fileentry.Extract(streams[0]);
-                            streams[0].Seek(0, SeekOrigin.Begin);
-
-                            foreach (var ucas in container.Entries) // look for ucas file
+                        {   
+                            try
                             {
-                                if(ucas.FileName.Equals(fileentry.FileName.SubstringBeforeLast('.') + ".ucas"))
+                                streams[0] = new MemoryStream();
+                                fileentry.Extract(streams[0]);
+                                streams[0].Seek(0, SeekOrigin.Begin);
+
+                                foreach (var ucas in container.Entries) // look for ucas file
                                 {
-                                    streams[1] = new MemoryStream();
-                                    ucas.Extract(streams[1]);
-                                    streams[1].Seek(0, SeekOrigin.Begin);
-                                    break;
+                                    if(ucas.FileName.Equals(fileentry.FileName.SubstringBeforeLast('.') + ".ucas"))
+                                    {
+                                        streams[1] = new MemoryStream();
+                                        ucas.Extract(streams[1]);
+                                        streams[1].Seek(0, SeekOrigin.Begin);
+                                        break;
+                                    }
                                 }
+                                if (streams[1] == null)
+                                    continue; // ucas file not found
                             }
-                            if (streams[1] == null)
-                                continue; // ucas file not found
+                            catch (Exception e)
+                            {
+                                Log.Warning(e.ToString());
+                            }
                         }
                         else
                         {
