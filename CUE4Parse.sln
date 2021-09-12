@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-UnitTests", "CUE4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Conversion", "CUE4Parse-Conversion\CUE4Parse-Conversion.csproj", "{EB602A68-2268-4D51-AC75-41E8EDEC95E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CUE4Parse-Natives", "CUE4Parse-Natives\CUE4Parse-Natives.vcxproj", "{B3376848-0D1A-425D-8666-EFCABFF98222}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,16 +69,6 @@ Global
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x64.Build.0 = Release|Any CPU
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x86.ActiveCfg = Release|Any CPU
 		{EB602A68-2268-4D51-AC75-41E8EDEC95E5}.Release|x86.Build.0 = Release|Any CPU
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x64.ActiveCfg = Debug|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x64.Build.0 = Debug|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x86.ActiveCfg = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Debug|x86.Build.0 = Debug|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|Any CPU.ActiveCfg = Release|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x64.ActiveCfg = Release|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x64.Build.0 = Release|x64
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x86.ActiveCfg = Release|Win32
-		{B3376848-0D1A-425D-8666-EFCABFF98222}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
