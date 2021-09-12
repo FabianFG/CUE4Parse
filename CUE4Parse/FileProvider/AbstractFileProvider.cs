@@ -621,7 +621,7 @@ namespace CUE4Parse.FileProvider
 
         public virtual async Task<UObject?> TryLoadObjectAsync(string? objectPath)
         {
-            if (objectPath == null) return null;
+            if (objectPath == null || objectPath.Equals("None", IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) return null;
             var packagePath = objectPath;
             string objectName;
             var dotIndex = packagePath.IndexOf('.');
