@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Objects.Core.Math;
 using System.Runtime.InteropServices;
 
-namespace CUE4Parse.UE4.Assets.Exports.Animation
+namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct FTransform : IUStruct
     {
-
         public static FTransform Identity = new() {Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1)};
-        
+
         public FQuat Rotation;
         public FVector Translation;
         public FVector Scale3D;
@@ -228,17 +226,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FVector.SmallNumber)
         {
             var safeReciprocalScale = new FVector();
-            if (Math.Abs(scale.X) <= tolerance)
+            if (System.Math.Abs(scale.X) <= tolerance)
                 safeReciprocalScale.X = 0;
             else
                 safeReciprocalScale.X = 1 / scale.X;
             
-            if (Math.Abs(scale.Y) <= tolerance)
+            if (System.Math.Abs(scale.Y) <= tolerance)
                 safeReciprocalScale.Y = 0;
             else
                 safeReciprocalScale.Y = 1 / scale.Y;
             
-            if (Math.Abs(scale.Z) <= tolerance)
+            if (System.Math.Abs(scale.Z) <= tolerance)
                 safeReciprocalScale.Z = 0;
             else
                 safeReciprocalScale.Z = 1 / scale.Z;
@@ -290,9 +288,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             ConstructTransformFromMatrixWithDesiredScale(a.ToMatrixWithScale(), b.ToMatrixWithScale(), a.Scale3D * b.Scale3D, ref outTransform);
         }
 
-        public FVector TransformPosition(FVector v)
-        {
-            return Rotation.RotateVector(Scale3D * v) + Translation;
-        }
+        public FVector TransformPosition(FVector v) => Rotation.RotateVector(Scale3D * v) + Translation;
+
+        public FVector InverseTransformPosition(FVector v) => Rotation.UnrotateVector(v - Translation) * GetSafeScaleReciprocal(Scale3D);
     }
 }

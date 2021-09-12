@@ -43,15 +43,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FRotator operator *(FRotator r, float scale) => new(r.Pitch * scale, r.Yaw * scale, r.Roll * scale);
 
-        public FVector RotateVector(FVector v)
-        {
-            return new(new FRotationMatrix(this).TransformFVector(v));
-        }
+        public FVector RotateVector(FVector v) => new(new FRotationMatrix(this).TransformVector(v));
 
-        public FVector UnrotateVector(FVector v)
-        {
-            return new(new FRotationMatrix(this).GetTransposed().TransformFVector(v));
-        }
+        public FVector UnrotateVector(FVector v) => new(new FRotationMatrix(this).GetTransposed().TransformVector(v));
 
         public FVector Vector()
         {

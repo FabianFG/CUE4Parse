@@ -36,6 +36,7 @@ namespace CUE4Parse.FileProvider
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public virtual bool IsCaseInsensitive { get; } // fabian? is this reversed?
+        public bool ReadScriptData { get; set; } = false;
         public virtual bool UseLazySerialization { get; set; } = true;
 
         protected AbstractFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null)
@@ -207,16 +208,7 @@ namespace CUE4Parse.FileProvider
 
                     if (!content.Descriptor.CanContainContent) continue;
                     var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
-                    if (IsCaseInsensitive)
-                    {
-                        virtPath = virtPath.ToLowerInvariant();
-                    }
-
                     var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
-                    if (IsCaseInsensitive)
-                    {
-                        path = path.ToLowerInvariant();
-                    }
 
                     if (!VirtualPaths.ContainsKey(virtPath))
                     {

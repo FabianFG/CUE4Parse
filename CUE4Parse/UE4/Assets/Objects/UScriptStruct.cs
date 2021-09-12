@@ -13,6 +13,7 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.TSW.Objects;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -83,6 +84,12 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
+                
+                // Train Sim World
+                "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
+                "SpeedQuantity" => Ar.Read<FSpeedQuantity>(),
+                "MassQuantity" => Ar.Read<FMassQuantity>(),
+                
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };
         }

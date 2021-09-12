@@ -1,15 +1,19 @@
 ﻿using System;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    [SkipObjectRegistration]
     public class UStruct : UField
     {
         public FPackageIndex SuperStruct;
         public FPackageIndex[] Children;
         public FField[] ChildProperties;
+
+        public byte[]? Script;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -32,7 +36,14 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             var bytecodeBufferSize = Ar.Read<int>();
             var serializedScriptSize = Ar.Read<int>();
-            Ar.Position += serializedScriptSize; // should we read the bytecode some day?
+            if (Ar.Owner.Provider?.ReadScriptData == true)
+            {
+                Script = Ar.ReadBytes(serializedScriptSize);
+            }
+            else
+            {
+                Ar.Position += serializedScriptSize;
+            }
         }
 
         protected void DeserializeProperties(FAssetArchive Ar)
