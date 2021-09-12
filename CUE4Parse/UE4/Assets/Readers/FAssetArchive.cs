@@ -166,6 +166,10 @@ namespace CUE4Parse.UE4.Assets.Readers
         public override T[] ReadArray<T>(int length)
             => _baseArchive.ReadArray<T>(length);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void ReadArray<T>(T[] array)
+            => _baseArchive.ReadArray(array);
+
         // For performance reasons we carry over the payloads dict to the cloned instance
         // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization 
         public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads);

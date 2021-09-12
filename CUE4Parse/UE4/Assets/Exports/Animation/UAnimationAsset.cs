@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
+    [SkipObjectRegistration]
     public class UAnimationAsset : UObject
     {
         public FPackageIndex Skeleton; // USkeleton

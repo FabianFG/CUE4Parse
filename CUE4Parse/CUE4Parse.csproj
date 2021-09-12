@@ -1,16 +1,27 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BeforeBuild">
+  <PropertyGroup>
+    <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
+    <IsPublishable>false</IsPublishable>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <LangVersion>default</LangVersion>
-        <Nullable>enable</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
-        <IsPublishable>false</IsPublishable>
-    </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DefineConstants>TRACE</DefineConstants>
-    </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.15.0" />
+    <PackageReference Include="LZMA-SDK" Version="19.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.12" />
+  </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="DotNetZip" Version="1.15.0" />
@@ -23,5 +34,44 @@
       <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.6" />
       <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
     </ItemGroup>
+   <PropertyGroup>
+    <CMakeProject>../CUE4Parse-Natives/</CMakeProject>
+    <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
+  </PropertyGroup>
 
+  <Target Name="Build-Natives" BeforeTargets="BeforeBuild">
+    <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
+    <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    </Exec>
+    <Exec Command="cmake --build . --config $(Configuration) --target install" ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    </Exec>
+  </Target>
+
+  <ItemGroup>
+    <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
+    <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- OSX-->
+    <!-- <Content Include="..\CUE4Parse-Natives\builddir\$(Configuration)\any\CUE4Parse-Natives.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+      <Link>CUE4Parse-Natives.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content> -->
+  </ItemGroup>
+
+  <!-- remove everything?? -->
+  <Target Name="CleanCMakeProj" BeforeTargets="BeforeClean">
+    <RemoveDir Directories="$(CMakeBuildDir);$(CMakeProject)/bin/">
+      <Output TaskParameter="RemovedDirectories" ItemName="DeletedList"/>
+    </RemoveDir>
+    <Message Text="Deleted directories: '@(DeletedList)'"/>
+  </Target>
 </Project>
