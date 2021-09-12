@@ -17,6 +17,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         private readonly FArchive _baseArchive;
 
         public bool HasUnversionedProperties => Owner.HasFlags(EPackageFlags.PKG_UnversionedProperties);
+        public bool IsFilterEditorOnly => Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly);
         public readonly IPackage Owner;
         public int AbsoluteOffset;
 
