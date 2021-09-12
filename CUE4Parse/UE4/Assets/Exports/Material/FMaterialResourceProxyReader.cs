@@ -83,6 +83,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public override T[] ReadArray<T>(int length)
             => baseArchive.ReadArray<T>(length);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void ReadArray<T>(T[] array)
+            => baseArchive.ReadArray(array);
+
         public override object Clone() => new FMaterialResourceProxyReader((FArchive) baseArchive.Clone());
     }
 }

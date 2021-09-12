@@ -68,6 +68,14 @@ namespace CUE4Parse.UE4.Readers
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void ReadArray<T>(T[] array)
+        {
+            var size = Unsafe.SizeOf<T>();
+            var buffer = ReadBytes(size * array.Length);
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));
+        }
+
         public override object Clone()
         {
             return _baseStream switch

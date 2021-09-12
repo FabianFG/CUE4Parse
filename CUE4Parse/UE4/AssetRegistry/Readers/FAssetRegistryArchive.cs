@@ -53,5 +53,9 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)
             => baseArchive.ReadArray<T>(length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void ReadArray<T>(T[] array)
+            => baseArchive.ReadArray(array);
     }
 }
