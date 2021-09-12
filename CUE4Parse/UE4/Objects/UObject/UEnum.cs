@@ -1,8 +1,10 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    [SkipObjectRegistration]
     public class UEnum : Assets.Exports.UObject
     {
         /** List of pairs of all enum names and values. */

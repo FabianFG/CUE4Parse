@@ -16,6 +16,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
+    [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
         public override FPackageFileSummary Summary { get; }

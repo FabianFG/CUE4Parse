@@ -9,6 +9,7 @@ using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
+    [SkipObjectRegistration]
     public class UClass : UStruct
     {
         /** Used to check if the class was cooked or not */

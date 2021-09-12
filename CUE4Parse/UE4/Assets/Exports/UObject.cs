@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     }
 
     [JsonConverter(typeof(UObjectConverter))]
+    [SkipObjectRegistration]
     public class UObject : IPropertyHolder
     {
         public string Name { get; set; }

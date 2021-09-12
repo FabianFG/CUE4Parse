@@ -17,6 +17,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
+    [SkipObjectRegistration]
     public sealed class IoPackage : AbstractUePackage
     {
         public readonly IoGlobalData GlobalData;

@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FStructFallbackConverter))]
+    [SkipObjectRegistration]
     public class FStructFallback : IUStruct, IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; }
