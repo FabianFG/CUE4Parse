@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
+using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Animations.PSA;
 
@@ -15,11 +16,13 @@ namespace CUE4Parse_Conversion.Animations
     {
         private const int PSA_VERSION = 20100422;
 
+        public readonly string AnimName;
         public readonly List<Anim> AnimSequences;
 
         public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null)
         {
             AnimSequences = new List<Anim>();
+            AnimName = animSequence.Owner?.Name ?? animSequence.Name;
 
             var anim = skeleton.ConvertAnims(animSequence);
             if (anim.Sequences.Count == 0)
@@ -34,7 +37,7 @@ namespace CUE4Parse_Conversion.Animations
             if (originalAnim == anim.OriginalAnim || anim.Sequences.Count == 1)
             {
                 // Export all animations in a single file
-                DoExportPsa(anim, originalAnim);
+                DoExportPsa(anim, 0);
             }
             else
             {
@@ -53,7 +56,7 @@ namespace CUE4Parse_Conversion.Animations
                     tempAnimSet.Sequences.Add(seq);
                     // Do the export, pass UAnimSequence as the "main" object, so it will be
                     // used as psa file name.
-                    DoExportPsa(tempAnimSet, seq.OriginalSequence!);
+                    DoExportPsa(tempAnimSet, animIndex);
                 }
                 // Ensure TempAnimSet destructor will not release Sequences as they are owned by Anim object
                 tempAnimSet.Sequences.Clear();
@@ -62,7 +65,7 @@ namespace CUE4Parse_Conversion.Animations
 
         public AnimExporter(UAnimSequence animSequence) : this(animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
 
-        private void DoExportPsa(CAnimSet anim, UObject originalAnim)
+        private void DoExportPsa(CAnimSet anim, int seqIdx)
         {
             var Ar = new FArchiveWriter();
 
@@ -180,7 +183,7 @@ namespace CUE4Parse_Conversion.Animations
             }
 
             // psa file is done
-            AnimSequences.Add(new Anim(originalAnim.Name + ".psa", Ar.GetBuffer()));
+            AnimSequences.Add(new Anim($"{AnimName}_SEQ{seqIdx}.psa", Ar.GetBuffer()));
             Ar.Dispose();
 
             // generate configuration file with extended attributes
@@ -195,7 +198,19 @@ namespace CUE4Parse_Conversion.Animations
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
         {
-            throw new NotImplementedException();
+            var b = false;
+            savedFileName = AnimName.SubstringAfterLast('/');
+            if (AnimSequences.Count == 0) return b;
+
+            var outText = "SEQ ";
+            for (var i = 0; i < AnimSequences.Count; i++)
+            {
+                b |= AnimSequences[i].TryWriteToDir(baseDirectory, out savedFileName);
+                outText += $"{i} ";
+            }
+
+            savedFileName = outText + $"as '{savedFileName.SubstringAfterWithLast('.')}' for '{AnimName.SubstringAfterLast('/')}'";
+            return b;
         }
 
         public override bool TryWriteToZip(out byte[] zipFile)
