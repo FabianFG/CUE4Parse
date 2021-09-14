@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Model
     children can only have iPlane children themselves, not fronts or backs.
     */
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FBspNode : IUStruct
+    public readonly struct FBspNode : IUStruct
     {
         // Persistent information.
         public readonly FPlane Plane;  // 16 Plane the node falls into (X, Y, Z, W).
@@ -47,16 +47,18 @@ namespace CUE4Parse.UE4.Objects.Engine.Model
         public readonly int iCollisionBound;
 
         /** 2 Visibility zone in 1=front, 0=back. */
-        public fixed byte iZone[2];
+        public readonly byte iZone0;
+        public readonly byte iZone1;
         
         /**1  Number of vertices in node.*/
         public readonly byte NumVertices;
         
         /** 1  Node flags. */
-        public EBspNodeFlags NodeFlags;
+        public readonly EBspNodeFlags NodeFlags;
 
         /**4  Leaf in back and front, INDEX_NONE=not a leaf.*/
-        public fixed int iLeaf[2];
+        public readonly int iLeaf0;
+        public readonly int iLeaf1;
 
         // idk how to do it like unreal
         public int GetMaxZones()

@@ -2,32 +2,30 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine.Model;
-using CUE4Parse.UE4.Versions;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
     public class UModel : Assets.Exports.UObject
     {
-        private FBoxSphereBounds Bounds;
-        private FVector[] Vectors;
-        private FVector[] Points;
-        private FBspNode[] Nodes;
-        private FBspSurf[] Surfs;
-        private FVert[] Verts;
-        private int NumSharedSides;
-        private bool RootOutside;
-        private bool Linked;
-        private uint NumUniqueVertices;
-        private FModelVertexBuffer VertexBuffer;
-        private FGuid LightingGuid;
-        
+        public FBoxSphereBounds Bounds;
+        public FVector[] Vectors;
+        public FVector[] Points;
+        public FBspNode[] Nodes;
+        public FBspSurf[] Surfs;
+        public FVert[] Verts;
+        public int NumSharedSides;
+        public bool RootOutside;
+        public bool Linked;
+        public uint NumUniqueVertices;
+        public FModelVertexBuffer VertexBuffer;
+        public FGuid LightingGuid;
+        public FLightmassPrimitiveSettings[] LightmassSettings;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            const int stripVertexBufferFlag = 1;
-            var stripData = new FStripDataFlags(Ar, 0); // GetOuter() && GetOuter()->IsA(ABrush::StaticClass()) ? StripVertexBufferFlag : FStripDataFlags::None
+            var stripData = Ar.Read<FStripDataFlags>();
 
             Bounds = Ar.Read<FBoxSphereBounds>();
 
@@ -35,32 +33,55 @@ namespace CUE4Parse.UE4.Objects.Engine
             Points = Ar.ReadBulkArray<FVector>();
             Nodes = Ar.ReadBulkArray<FBspNode>();
 
-            Surfs = Ar.ReadBulkArray<FBspSurf>();
+            Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
             Verts = Ar.ReadBulkArray<FVert>();
-            
+
             NumSharedSides = Ar.Read<int>();
 
             RootOutside = Ar.ReadBoolean();
-            Linked = Ar.ReadBoolean();  // crashes here for some reason
-            //Ar.Position += 4;
-
-            if (Ar.Ver < (UE4Version) VER_UE4_REMOVE_ZONES_FROM_MODEL)
-            {
-                Ar.SkipBulkArrayData(); // TArray<int32> DummyPortalNodes
-            }
+            Linked = Ar.ReadBoolean();
 
             NumUniqueVertices = Ar.Read<uint>();
 
-            if(!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped( stripVertexBufferFlag ))
+            if(!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped( 1))
             {
                 VertexBuffer = new FModelVertexBuffer(Ar);
             }
-
             LightingGuid = Ar.Read<FGuid>();
 
-            //Ar << LightmassSettings;
+            LightmassSettings = Ar.ReadArray<FLightmassPrimitiveSettings>();
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("Bounds");
+            serializer.Serialize(writer, Bounds);
+
+            writer.WritePropertyName("Vectors");
+            serializer.Serialize(writer, Vectors);
+
+            writer.WritePropertyName("Points");
+            serializer.Serialize(writer, Points);
+
+            writer.WritePropertyName("Nodes");
+            serializer.Serialize(writer, Nodes);
             
-            Ar.Position = validPos; // TODO read it's contents, this is just to suppress warnings
+            writer.WritePropertyName("Surfs");
+            serializer.Serialize(writer, Surfs);
+            
+            writer.WritePropertyName("NumSharedSides");
+            serializer.Serialize(writer, NumSharedSides);
+            
+            writer.WritePropertyName("VertexBuffer");
+            serializer.Serialize(writer, VertexBuffer);
+
+            writer.WritePropertyName("LightingGuid");
+            serializer.Serialize(writer, LightingGuid);
+            
+            writer.WritePropertyName("LightmassSettings");
+            serializer.Serialize(writer, LightmassSettings);
         }
     }
 }
