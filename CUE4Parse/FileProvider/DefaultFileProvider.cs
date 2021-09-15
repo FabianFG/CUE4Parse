@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Ionic.Zip;
 
 namespace CUE4Parse.FileProvider
 {
@@ -52,6 +54,120 @@ namespace CUE4Parse.FileProvider
             }
         }
 
+        private void RegisterFile(string file, Stream[] stream = null!)
+        {
+            var ext = file.SubstringAfterLast('.');
+            if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var reader = new PakFileReader(file, stream[0], Versions) { IsConcurrent = true };
+                    if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
+                    {
+                        _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
+                    }
+                    _unloadedVfs[reader] = null;
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e.ToString());
+                }
+            }
+            else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) { IsConcurrent = true };
+                    if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
+                    {
+                        _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
+                    }
+                    _unloadedVfs[reader] = null;
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e.ToString());
+                }
+            }
+        }
+
+        private void RegisterFile(FileInfo file)
+        {
+            var ext = file.FullName.SubstringAfterLast('.');
+            if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
+            {
+                RegisterFile(file.FullName, new Stream[1] { file.OpenRead() });
+            }
+            else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
+            {
+                RegisterFile(file.FullName, new Stream[2] { file.OpenRead(), File.OpenRead(file.FullName.SubstringBeforeLast('.') + ".ucas") });
+            }
+            else if (ext.Equals("apk", StringComparison.OrdinalIgnoreCase))
+            {
+                var zipfile = new ZipFile(file.FullName);
+                MemoryStream pngstream = new();
+                foreach (var entry in zipfile.Entries)
+                {
+                    if (!entry.FileName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    entry.Extract(pngstream);
+                    pngstream.Seek(0, SeekOrigin.Begin);
+
+                    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    var container = ZipFile.Read(pngstream);
+
+                    foreach (var fileentry in container.Entries)
+                    {
+                        var streams = new Stream[2];
+                        if (fileentry.FileName.EndsWith(".pak"))
+                        {
+                            try
+                            {
+                                streams[0] = new MemoryStream();
+                                fileentry.Extract(streams[0]);
+                                streams[0].Seek(0, SeekOrigin.Begin);
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Warning(e.ToString());
+                            }
+                        }
+                        else if (fileentry.FileName.EndsWith(".utoc"))
+                        {   
+                            try
+                            {
+                                streams[0] = new MemoryStream();
+                                fileentry.Extract(streams[0]);
+                                streams[0].Seek(0, SeekOrigin.Begin);
+
+                                foreach (var ucas in container.Entries) // look for ucas file
+                                {
+                                    if(ucas.FileName.Equals(fileentry.FileName.SubstringBeforeLast('.') + ".ucas"))
+                                    {
+                                        streams[1] = new MemoryStream();
+                                        ucas.Extract(streams[1]);
+                                        streams[1].Seek(0, SeekOrigin.Begin);
+                                        break;
+                                    }
+                                }
+                                if (streams[1] == null)
+                                    continue; // ucas file not found
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Warning(e.ToString());
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        RegisterFile(fileentry.FileName, streams);
+                    }
+                }
+            }
+        }
+
         private Dictionary<string, GameFile> IterateFiles(DirectoryInfo directory, SearchOption option)
         {
             var osFiles = new Dictionary<string, GameFile>();
@@ -60,49 +176,15 @@ namespace CUE4Parse.FileProvider
             {
                 var ext = file.Extension.SubstringAfter('.');
                 if (!file.Exists || string.IsNullOrEmpty(ext)) continue;
-                if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        var reader = new PakFileReader(file, Versions) {IsConcurrent = true};
-                        if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
-                        {
-                            _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
-                        }
 
-                        _unloadedVfs[reader] = null;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warning(e.ToString());
-                    }
-                }
-                else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        var reader = new IoStoreReader(file, EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) {IsConcurrent = true};
-                        if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
-                        {
-                            _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
-                        }
+                RegisterFile(file);
 
-                        _unloadedVfs[reader] = null;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warning(e.ToString());
-                    }
-                }
-                else
-                {
-                    // Register local file only if it has a known extension, we don't need every file
-                    if (!GameFile.Ue4PackageExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
+                // Register local file only if it has a known extension, we don't need every file
+                if (!GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
-                    var osFile = new OsGameFile(_workingDirectory, file, Versions);
-                    if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
-                    else osFiles[osFile.Path] = osFile;
-                }
+                var osFile = new OsGameFile(_workingDirectory, file, Versions);
+                if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
+                else osFiles[osFile.Path] = osFile;
             }
 
             return osFiles;

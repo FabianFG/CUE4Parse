@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BeforeBuild">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
@@ -23,7 +23,20 @@
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.12" />
   </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="DotNetZip" Version="1.15.0" />
+      <PackageReference Include="LZMA-SDK" Version="19.0.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+      <PackageReference Include="System.Memory" Version="4.5.4" />
+      <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+      <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.6" />
+      <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
+    </ItemGroup>
+  
    <PropertyGroup>
+    <BuildInParallel>false</BuildInParallel> <!-- we can't run 2 cmake build at same time -->
     <CMakeProject>../CUE4Parse-Natives/</CMakeProject>
     <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
   </PropertyGroup>
@@ -58,9 +71,9 @@
 
   <!-- remove everything?? -->
   <Target Name="CleanCMakeProj" BeforeTargets="BeforeClean">
-    <RemoveDir Directories="$(CMakeBuildDir);$(CMakeProject)/bin/">
-      <Output TaskParameter="RemovedDirectories" ItemName="DeletedList"/>
+    <RemoveDir Directories="$(CMakeBuildDir);$(CMakeProject)bin/">
+      <Output TaskParameter="RemovedDirectories" ItemName="DeletedList" />
     </RemoveDir>
-    <Message Text="Deleted directories: '@(DeletedList)'"/>
+    <Message Text="Deleted directories: '@(DeletedList)'" />
   </Target>
 </Project>
