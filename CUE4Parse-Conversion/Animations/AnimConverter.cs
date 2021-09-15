@@ -19,7 +19,7 @@ using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionUtils;
 
 // ReSharper disable SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
 
-namespace CUE4Parse_Conversion
+namespace CUE4Parse_Conversion.Animations
 {
     public class CAnimTrack
     {
