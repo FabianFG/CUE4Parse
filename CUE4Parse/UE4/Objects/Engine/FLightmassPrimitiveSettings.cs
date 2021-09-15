@@ -1,5 +1,8 @@
-﻿namespace CUE4Parse.UE4.Objects.Engine
+﻿using System.Runtime.InteropServices;
+
+namespace CUE4Parse.UE4.Objects.Engine
 {
+    [StructLayout(LayoutKind.Sequential)]
     public readonly struct FLightmassPrimitiveSettings : IUStruct
     {
         public readonly bool bUseTwoSidedLighting;
