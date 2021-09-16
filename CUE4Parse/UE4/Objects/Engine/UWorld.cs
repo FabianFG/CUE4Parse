@@ -1,7 +1,8 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Objects.UObject
+namespace CUE4Parse.UE4.Objects.Engine
 {
     public class UWorld : Assets.Exports.UObject
     {

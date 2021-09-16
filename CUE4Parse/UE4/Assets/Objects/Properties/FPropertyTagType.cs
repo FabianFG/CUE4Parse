@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -45,6 +47,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType is FStructFallback fallback && type.GetCustomAttribute<StructFallback>() != null:
                     return fallback.MapToClass(type);
                 case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
+                {
                     var array = arrayProp.Value.Properties;
                     var contentType = type.GetElementType()!;
                     var result = Array.CreateInstance(contentType, array.Count);
@@ -53,6 +56,19 @@ namespace CUE4Parse.UE4.Assets.Objects
                         result.SetValue(array[i].GetValue(contentType), i);
                     }
                     return result;
+                }
+                case FPropertyTagType<UScriptArray> arrayProp when typeof(IList).IsAssignableFrom(type):
+                {
+                    var array = arrayProp.Value.Properties;
+                    var contentType = type.GenericTypeArguments[0];
+                    var listType = typeof(List<>).MakeGenericType(contentType);
+                    var result = (IList) Activator.CreateInstance(listType, array.Count)!;
+                    foreach (var element in array)
+                    {
+                        result.Add(element.GetValue(contentType));
+                    }
+                    return result;
+                }
                 case FPropertyTagType<FPackageIndex> objProp when typeof(UObject).IsAssignableFrom(type):
                     if (objProp.Value.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
                         return objExport;
