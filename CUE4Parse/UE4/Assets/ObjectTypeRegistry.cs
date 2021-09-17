@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets
             RegisterEngine(_propertyHolderType.Assembly);
         }
 
-        private static void RegisterEngine(Assembly assembly)
+        public static void RegisterEngine(Assembly assembly)
         {
             var skipAttributeType = typeof(SkipObjectRegistrationAttribute);
 
