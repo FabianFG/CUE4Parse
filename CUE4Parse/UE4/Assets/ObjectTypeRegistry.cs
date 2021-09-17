@@ -1,31 +1,31 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using CUE4Parse.UE4.Assets.Exports;
 
 namespace CUE4Parse.UE4.Assets
 {
-    internal sealed class SkipObjectRegistrationAttribute : Attribute { }
+    public sealed class SkipObjectRegistrationAttribute : Attribute { }
 
     public static class ObjectTypeRegistry
     {
+        private static readonly Type _propertyHolderType = typeof(IPropertyHolder);
         private static readonly Dictionary<string, Type> _classes = new();
 
         static ObjectTypeRegistry()
         {
-            RegisterEngine();
+            RegisterEngine(_propertyHolderType.Assembly);
         }
 
-        private static void RegisterEngine()
+        private static void RegisterEngine(Assembly assembly)
         {
             var skipAttributeType = typeof(SkipObjectRegistrationAttribute);
-            var propertyHolderType = typeof(IPropertyHolder);
-            var assembly = propertyHolderType.Assembly;
 
             foreach (var definedType in assembly.DefinedTypes)
             {
                 if (definedType.IsAbstract ||
                     definedType.IsInterface ||
-                    !propertyHolderType.IsAssignableFrom(definedType))
+                    !_propertyHolderType.IsAssignableFrom(definedType))
                 {
                     continue;
                 }
