@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         // end CompressedData
         public EAdditiveAnimationType AdditiveAnimType;
         public FName RetargetSource;
-        public FTransform[] RetargetSourceAssetReferencePose;
+        public FTransform[]? RetargetSourceAssetReferencePose;
 
         public bool bUseRawDataOnly;
 
