@@ -26,8 +26,18 @@ namespace CUE4Parse.UE4.Objects.Engine.Model
             else
             {
                 Position = Ar.Read<FVector>();
-                TangentX = Ar.Read<FVector>();
-                TangentZ = Ar.Read<FVector4>();
+
+                if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
+                {
+                    TangentX = (FVector)new FDeprecatedSerializedPackedNormal(Ar);
+                    TangentZ = (FVector4)new FDeprecatedSerializedPackedNormal(Ar);;
+                }
+                else
+                {
+                    TangentX = Ar.Read<FVector>();
+                    TangentZ = Ar.Read<FVector4>();
+                }
+
                 TexCoord = Ar.Read<FVector2D>();
                 ShadowTexCoord = Ar.Read<FVector2D>();
             }

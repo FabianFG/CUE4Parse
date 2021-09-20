@@ -22,7 +22,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Z = z;
             W = w;
         }
-        
+
+        public FVector4(float x) : this(x, x, x, x) { }
+
         /// <summary>
         /// Constructor from 3D Vector and W
         /// </summary>
