@@ -88,13 +88,6 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Data = Ar.Read<uint>();
         }
 
-        /**
-        * Multiplies two vectors (component-wise), adds in the third vector and returns the result.
-        *
-        * @param vec1	1st vector
-        * @param vec2	2nd vector
-        * @param vec3	3rd vector
-        */
         public static FVector4 VectorMultiplyAdd(FVector4 vec1, FVector4 vec2, FVector4 vec3)
         {
             return new FVector4(vec1.X * vec2.X + vec3.X, vec1.Y * vec2.Y + vec3.Y, vec1.Z * vec2.Z + vec3.Z, vec1.W * vec2.W + vec3.W);
