@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Objects.Core.i18N;
 
 namespace CUE4Parse_Fortnite.Enums
 {
-    public enum EFortRarity
+    public enum EFortRarity : byte
     {
         [Description("Uncommon")]
         Uncommon = 1, // Default

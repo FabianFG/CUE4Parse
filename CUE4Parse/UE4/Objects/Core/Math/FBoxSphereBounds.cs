@@ -4,7 +4,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 {
     /// <summary>
     /// Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
-    /// <summary>
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct FBoxSphereBounds : IUStruct
     {
