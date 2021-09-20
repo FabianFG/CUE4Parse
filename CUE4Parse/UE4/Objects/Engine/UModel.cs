@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            var stripData = Ar.Read<FStripDataFlags>();
+            var stripData = new FStripDataFlags(Ar);
 
             Bounds = Ar.Read<FBoxSphereBounds>();
 
@@ -43,12 +43,12 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             NumUniqueVertices = Ar.Read<uint>();
 
-            if(!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped( 1))
+            if (!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped(1))
             {
                 VertexBuffer = new FModelVertexBuffer(Ar);
             }
-            LightingGuid = Ar.Read<FGuid>();
 
+            LightingGuid = Ar.Read<FGuid>();
             LightmassSettings = Ar.ReadArray<FLightmassPrimitiveSettings>();
         }
 
@@ -67,19 +67,19 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             writer.WritePropertyName("Nodes");
             serializer.Serialize(writer, Nodes);
-            
+
             writer.WritePropertyName("Surfs");
             serializer.Serialize(writer, Surfs);
-            
+
             writer.WritePropertyName("NumSharedSides");
             serializer.Serialize(writer, NumSharedSides);
-            
+
             writer.WritePropertyName("VertexBuffer");
             serializer.Serialize(writer, VertexBuffer);
 
             writer.WritePropertyName("LightingGuid");
             serializer.Serialize(writer, LightingGuid);
-            
+
             writer.WritePropertyName("LightmassSettings");
             serializer.Serialize(writer, LightmassSettings);
         }
