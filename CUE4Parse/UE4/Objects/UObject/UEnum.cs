@@ -1,6 +1,8 @@
 ﻿using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -16,8 +18,38 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            Names = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<long>()));
-            CppForm = (ECppForm) Ar.Read<byte>();
+            if (Ar.Ver < (UE4Version) VER_UE4_TIGHTLY_PACKED_ENUMS)
+            {
+                var tempNames = Ar.ReadArray(Ar.ReadFName);
+                Names = new (FName, long)[tempNames.Length];
+                for (var value = 0; value < tempNames.Length; value++)
+                {
+                    Names[value] = (tempNames[value], value);
+                }
+            }
+            else if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.EnumProperties)
+            {
+                var oldNames = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<byte>()));
+                Names = new (FName, long)[oldNames.Length];
+                for (var value = 0; value < oldNames.Length; value++)
+                {
+                    Names[value] = oldNames[value];
+                }
+            }
+            else
+            {
+                Names = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<long>()));
+            }
+
+            if (Ar.Ver < UE4Version.VER_UE4_ENUM_CLASS_SUPPORT)
+            {
+                var bIsNamespace = Ar.ReadBoolean();
+                CppForm = bIsNamespace ? ECppForm.Namespaced : ECppForm.Regular;
+            }
+            else
+            {
+                CppForm = Ar.Read<ECppForm>();
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -39,7 +71,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             writer.WriteValue(CppForm.ToString());
         }
 
-        public enum ECppForm
+        public enum ECppForm : byte
         {
             Regular,
             Namespaced,
