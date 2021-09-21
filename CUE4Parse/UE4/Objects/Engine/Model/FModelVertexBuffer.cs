@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Model
 
         public FModelVertexBuffer(FArchive Ar)
         {
-            Vertices = Ar.ReadArray<FModelVertex>();
+            Vertices = Ar.ReadArray(() => new FModelVertex(Ar));
         }
     }    
 }
