@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -21,7 +22,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             BoxExtent = boxExtent;
             SphereRadius = sphereRadius;
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FBox GetBox() => new(Origin - BoxExtent, Origin + BoxExtent);
+
         public override string ToString() => $"Origin=({Origin}), BoxExtent=({BoxExtent}), SphereRadius={SphereRadius}";
     }
 }
