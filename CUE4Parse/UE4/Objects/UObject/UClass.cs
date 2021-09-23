@@ -100,53 +100,58 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             return null;
         }
-        /*
-        public Assets.Exports.UObject ConstructObject() => Name switch
-        {
-            "AkMediaAssetData" => new UAkMediaAssetData(),
-            "BlueprintGeneratedClass" => new UBlueprintGeneratedClass(),
-            "CurveTable" => new UCurveTable(),
-            "DataTable" => new UDataTable(),
-            "Material" => new UMaterial(),
-            "MaterialInstanceConstant" => new UMaterialInstanceConstant(),
-            "Skeleton" => new USkeleton(),
-            "SoundWave" => new USoundWave(),
-            "StringTable" => new UStringTable(),
-            "Texture2D" => new UTexture2D(),
-            "UserDefinedStruct" => new UUserDefinedStruct(),
-            "VirtualTexture2D" => new UTexture2D(),
-            "WidgetBlueprintGeneratedClass" => new UWidgetBlueprintGeneratedClass(),
-            _ => new Assets.Exports.UObject()
-        };
-        */
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
 
-            writer.WritePropertyName("FuncMap");
-            serializer.Serialize(writer, FuncMap);
+            if (FuncMap is { Count: > 0 })
+            {
+                writer.WritePropertyName("FuncMap");
+                serializer.Serialize(writer, FuncMap);
+            }
 
-            writer.WritePropertyName("ClassFlags");
-            serializer.Serialize(writer, ClassFlags);
+            if (ClassFlags != 0)
+            {
+                writer.WritePropertyName("ClassFlags");
+                serializer.Serialize(writer, ClassFlags);
+            }
 
-            writer.WritePropertyName("ClassWithin");
-            serializer.Serialize(writer, ClassWithin);
+            if (ClassWithin is { IsNull: false })
+            {
+                writer.WritePropertyName("ClassWithin");
+                serializer.Serialize(writer, ClassWithin);
+            }
 
-            writer.WritePropertyName("ClassConfigName");
-            serializer.Serialize(writer, ClassConfigName);
+            if (!ClassConfigName.IsNone)
+            {
+                writer.WritePropertyName("ClassConfigName");
+                serializer.Serialize(writer, ClassConfigName);
+            }
 
-            writer.WritePropertyName("ClassGeneratedBy");
-            serializer.Serialize(writer, ClassGeneratedBy);
+            if (ClassGeneratedBy is { IsNull: false })
+            {
+                writer.WritePropertyName("ClassGeneratedBy");
+                serializer.Serialize(writer, ClassGeneratedBy);
+            }
 
-            writer.WritePropertyName("Interfaces");
-            serializer.Serialize(writer, Interfaces);
+            if (Interfaces is { Length: > 0 })
+            {
+                writer.WritePropertyName("Interfaces");
+                serializer.Serialize(writer, Interfaces);
+            }
 
-            writer.WritePropertyName("bCooked");
-            serializer.Serialize(writer, bCooked);
+            if (bCooked)
+            {
+                writer.WritePropertyName("bCooked");
+                serializer.Serialize(writer, bCooked);
+            }
 
-            writer.WritePropertyName("ClassDefaultObject");
-            serializer.Serialize(writer, ClassDefaultObject);
+            if (ClassDefaultObject is { IsNull: false })
+            {
+                writer.WritePropertyName("ClassDefaultObject");
+                serializer.Serialize(writer, ClassDefaultObject);
+            }
         }
 
         public class FImplementedInterface
