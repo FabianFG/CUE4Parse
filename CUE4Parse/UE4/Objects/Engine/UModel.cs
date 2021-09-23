@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -56,7 +55,6 @@ namespace CUE4Parse.UE4.Objects.Engine
      * is an index to a coplanar polygon in the Bsp.  All polygons that are iPlane
      * children can only have iPlane children themselves, not fronts or backs.
      */
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct FBspNode : IUStruct
     {
         public const int MAX_NODE_VERTICES = 255;
