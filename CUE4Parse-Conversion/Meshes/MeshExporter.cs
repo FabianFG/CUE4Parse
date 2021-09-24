@@ -315,10 +315,13 @@ namespace CUE4Parse_Conversion.Meshes
             Ar.SerializeChunkHeader(normHdr, "VTXNORMS");
             for (var i = 0; i < numNormals; i++)
             {
-                var n = Vector3.Normalize(new(share.Normals[i].X, share.Normals[i].Y, share.Normals[i].Z));
-                Ar.Write(n.X);
-                Ar.Write(-n.Y); // MIRROR_MESH
-                Ar.Write(n.Z);
+                var normal = (FVector)share.Normals[i];
+
+                // Normalize
+                normal /= MathF.Sqrt(normal | normal);
+
+                normal.Y = -normal.Y; // MIRROR_MESH
+                normal.Serialize(Ar);
             }
         }
 
