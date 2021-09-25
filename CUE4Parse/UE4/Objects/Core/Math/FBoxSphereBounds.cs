@@ -1,10 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     /// <summary>
     /// Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
-    /// <summary>
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct FBoxSphereBounds : IUStruct
     {
@@ -21,7 +22,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             BoxExtent = boxExtent;
             SphereRadius = sphereRadius;
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FBox GetBox() => new(Origin - BoxExtent, Origin + BoxExtent);
+
         public override string ToString() => $"Origin=({Origin}), BoxExtent=({BoxExtent}), SphereRadius={SphereRadius}";
     }
 }

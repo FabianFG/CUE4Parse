@@ -111,10 +111,9 @@ namespace CUE4Parse.Compression
                 Lzma.Decompress(dllLzmaStream, dllStream);
                 dllStream.Position = 0;
                 var dllPath = path ?? OODLE_DLL_NAME;
-                {
-                    await using var dllFs = File.Create(dllPath);
-                    await dllStream.CopyToAsync(dllFs).ConfigureAwait(false);
-                }
+                var dllFs = File.Create(dllPath);
+                await dllStream.CopyToAsync(dllFs).ConfigureAwait(false);
+                await dllFs.DisposeAsync().ConfigureAwait(false);
                 Log.Information($"Successfully downloaded oodle dll at \"{dllPath}\"");
                 return true;
             }

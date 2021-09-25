@@ -259,6 +259,23 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return new(X, Y, Z);
         }
 
+        public FVector GetSafeNormal(float tolerance = SmallNumber)
+        {
+            var squareSum = X*X + Y*Y + Z*Z;
+
+            // Not sure if it's safe to add tolerance in there. Might introduce too many errors
+            if (squareSum == 1.0f)
+            {
+                return this;
+            }
+            else if (squareSum < tolerance)
+            {
+                return ZeroVector;
+            }
+            var scale = squareSum.InvSqrt();
+            return new(X*scale, Y*scale, Z*scale);
+        }
+
         public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3}";
 
         /// <summary>
