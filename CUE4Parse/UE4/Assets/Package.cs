@@ -330,6 +330,7 @@ namespace CUE4Parse.UE4.Assets
             private void Create()
             {
                 Trace.Assert(_phase == LoadPhase.Create);
+                _phase = LoadPhase.Serialize;
                 _object = ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct);
                 _object.Name = _export.ObjectName.Text;
                 if (!_export.OuterIndex.IsNull)
@@ -344,19 +345,18 @@ namespace CUE4Parse.UE4.Assets
                 _object.Super = _package.ResolvePackageIndex(_export.SuperIndex) as ResolvedExportObject;
                 _object.Template = _package.ResolvePackageIndex(_export.TemplateIndex) as ResolvedExportObject;
                 _object.Flags |= (EObjectFlags) _export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
-                _phase = LoadPhase.Serialize;
             }
 
             private void Serialize()
             {
                 Trace.Assert(_phase == LoadPhase.Serialize);
+                _phase = LoadPhase.Complete;
                 var Ar = (FAssetArchive) _archive.Clone();
                 Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
                 DeserializeObject(_object, Ar, _export.SerialSize);
                 // TODO right place ???
                 _object.Flags |= EObjectFlags.RF_LoadCompleted;
                 _object.PostLoad();
-                _phase = LoadPhase.Complete;
             }
         }
 

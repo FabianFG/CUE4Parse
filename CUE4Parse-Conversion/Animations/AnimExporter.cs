@@ -21,7 +21,7 @@ namespace CUE4Parse_Conversion.Animations
         public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null)
         {
             AnimSequences = new List<Anim>();
-            AnimName = animSequence.Owner?.Name ?? animSequence.Name;
+            AnimName = animSequence?.Owner?.Name ?? animSequence?.Name ?? skeleton.Owner?.Name ?? skeleton.Name;
 
             var anim = skeleton.ConvertAnims(animSequence);
             if (anim.Sequences.Count == 0)

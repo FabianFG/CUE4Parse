@@ -669,7 +669,7 @@ namespace CUE4Parse_Conversion.Animations
             // Store information for animation retargeting.
             // Reference: UAnimSequence::GetRetargetTransforms()
             FTransform[]? retargetTransforms = null;
-            if (animSequence.RetargetSource.IsNone && animSequence.RetargetSourceAssetReferencePose.Length > 0)
+            if (animSequence.RetargetSource.IsNone && animSequence.RetargetSourceAssetReferencePose is { Length: > 0 })
             {
                 // We'll use RetargetSourceAssetReferencePose as a retarget base
                 retargetTransforms = animSequence.RetargetSourceAssetReferencePose;
