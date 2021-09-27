@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -17,7 +18,7 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
-        private const int _PSK_VERSION = 20100422;
+        private const int _PSK_VERSION = 20210917;
 
         public readonly string MeshName;
         public readonly List<Mesh> MeshLods;
@@ -201,6 +202,7 @@ namespace CUE4Parse_Conversion.Meshes
             var wedgHdr = new VChunkHeader();
             var facesHdr = new VChunkHeader();
             var matrHdr = new VChunkHeader();
+            var normHdr = new VChunkHeader();
 
             mainHdr.TypeFlag = _PSK_VERSION;
             Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
@@ -305,6 +307,21 @@ namespace CUE4Parse_Conversion.Meshes
                 else materialName = $"material_{i}";
 
                 new VMaterial(materialName, i, 0u, 0, 0u, 0, 0).Serialize(Ar);
+            }
+
+            var numNormals = share.Normals.Count;
+            normHdr.DataCount = numNormals;
+            normHdr.DataSize = 12;
+            Ar.SerializeChunkHeader(normHdr, "VTXNORMS");
+            for (var i = 0; i < numNormals; i++)
+            {
+                var normal = (FVector)share.Normals[i];
+
+                // Normalize
+                normal /= MathF.Sqrt(normal | normal);
+
+                normal.Y = -normal.Y; // MIRROR_MESH
+                normal.Serialize(Ar);
             }
         }
 
