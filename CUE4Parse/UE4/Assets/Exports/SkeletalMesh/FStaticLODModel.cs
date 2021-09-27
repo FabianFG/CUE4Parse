@@ -180,6 +180,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
 
                 ActiveBoneIndices = Ar.ReadArray<short>();
+
+                if (Ar.Game == EGame.GAME_KenaBridgeofSpirits)
+                    Ar.ReadArray<byte>(); // EAssetType_array1
+
                 Ar.Position += 4; //var buffersSize = Ar.Read<uint>();
 
                 if (bInlined)

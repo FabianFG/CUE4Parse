@@ -208,6 +208,8 @@ namespace CUE4Parse.FileProvider
 
                     if (!content.Descriptor.CanContainContent) continue;
                     var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
+                    if (IsCaseInsensitive)
+                        virtPath = virtPath.ToLowerInvariant();
                     var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
 
                     if (!VirtualPaths.ContainsKey(virtPath))
