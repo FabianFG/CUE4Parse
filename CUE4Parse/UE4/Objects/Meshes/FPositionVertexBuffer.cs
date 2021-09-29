@@ -26,8 +26,8 @@ namespace CUE4Parse.UE4.Objects.Meshes
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("Verts");
-            serializer.Serialize(writer, value.Verts);
+            // writer.WritePropertyName("Verts");
+            // serializer.Serialize(writer, value.Verts);
 
             writer.WritePropertyName("Stride");
             writer.WriteValue(value.Stride);

@@ -233,7 +233,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("CardRepresentationData");
             serializer.Serialize(writer, value.CardRepresentationData);
-            
+
             writer.WriteEndObject();
         }
 
