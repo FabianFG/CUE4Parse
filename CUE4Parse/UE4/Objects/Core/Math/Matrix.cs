@@ -201,6 +201,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float GetMaximumAxisScale()
+        {
+            var maxRowScaleSquared = MathF.Max(
+                GetScaledAxis(EAxis.X).SizeSquared(),
+                MathF.Max(
+                    GetScaledAxis(EAxis.Y).SizeSquared(),
+                    GetScaledAxis(EAxis.Z).SizeSquared()
+                )
+            );
+            return MathF.Sqrt(maxRowScaleSquared);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector GetOrigin() => new(M30, M31, M32);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -240,9 +253,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public override string ToString() =>
-            $"[{M00:F1} {M01:F1} {M02:F1} {M03:F1}] [{M10:F1} {M11:F1} {M12:F1} {M13:F1}] [{M20:F1} {M21:F1} {M22:F1} {M23:F1}] [{M30:F1} {M31:F1} {M32:F1} {M33:F1}]";
-
         public FRotator Rotator()
         {
             var xAxis = GetScaledAxis(EAxis.X);
@@ -263,5 +273,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FQuat ToQuat() => new(this);
+
+        public override string ToString() => $"[{M00:F1} {M01:F1} {M02:F1} {M03:F1}] [{M10:F1} {M11:F1} {M12:F1} {M13:F1}] [{M20:F1} {M21:F1} {M22:F1} {M23:F1}] [{M30:F1} {M31:F1} {M32:F1} {M33:F1}]";
     }
 }

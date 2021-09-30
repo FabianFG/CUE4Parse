@@ -59,6 +59,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             otherScale3D.X < 0 || otherScale3D.Y < 0 || otherScale3D.Z < 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float GetMaximumAxisScale() => Scale3D.AbsMax();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float GetMinimumAxisScale() => Scale3D.AbsMin();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTranslation(ref FTransform other)
         {
             Translation = other.Translation;
@@ -288,8 +294,28 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             ConstructTransformFromMatrixWithDesiredScale(a.ToMatrixWithScale(), b.ToMatrixWithScale(), a.Scale3D * b.Scale3D, ref outTransform);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector TransformPosition(FVector v) => Rotation.RotateVector(Scale3D * v) + Translation;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector TransformPositionNoScale(FVector v) => Rotation.RotateVector(v) + Translation;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector InverseTransformPosition(FVector v) => Rotation.UnrotateVector(v - Translation) * GetSafeScaleReciprocal(Scale3D);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector InverseTransformPositionNoScale(FVector v) => Rotation.UnrotateVector(v - Translation);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector TransformVector(FVector v) => Rotation.RotateVector(Scale3D * v);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector TransformVectorNoScale(FVector v) => Rotation.RotateVector(v);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FQuat TransformRotation(FQuat q) => Rotation * q;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FQuat InverseTransformRotation(FQuat q) => Rotation.Inverse() * q;
     }
 }
