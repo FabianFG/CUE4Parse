@@ -32,7 +32,7 @@ namespace CUE4Parse.FileProvider
         public virtual ITypeMappingsProvider? MappingsContainer { get; set; }
         public virtual TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
         public virtual IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
-        public Dictionary<string, string> VirtualPaths { get; } = new();
+        public Dictionary<string, string> VirtualPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public virtual bool IsCaseInsensitive { get; } // fabian? is this reversed?
@@ -208,8 +208,7 @@ namespace CUE4Parse.FileProvider
 
                     if (!content.Descriptor.CanContainContent) continue;
                     var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
-                    if (IsCaseInsensitive)
-                        virtPath = virtPath.ToLowerInvariant();
+
                     var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
 
                     if (!VirtualPaths.ContainsKey(virtPath))
@@ -289,7 +288,7 @@ namespace CUE4Parse.FileProvider
                 }
             }
 
-            if (VirtualPaths.TryGetValue(comparisonType == StringComparison.OrdinalIgnoreCase ? root.ToLowerInvariant() : root, out var use))
+            if (VirtualPaths.TryGetValue(root, out var use))
             {
                 var ret = string.Concat(use, "/Content/", path.SubstringAfter('/'));
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
