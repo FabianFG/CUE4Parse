@@ -16,12 +16,32 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
     public class FMatrix : IUStruct
     {
+        public static FMatrix Identity => new(
+            1f, 0f, 0f, 0f,
+            0f, 1f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f
+        );
+
         public float M00, M01, M02, M03;
         public float M10, M11, M12, M13;
         public float M20, M21, M22, M23;
         public float M30, M31, M32, M33;
 
         public FMatrix() {}
+
+        public FMatrix(
+            float m00, float m01, float m02, float m03,
+            float m10, float m11, float m12, float m13,
+            float m20, float m21, float m22, float m23,
+            float m30, float m31, float m32, float m33)
+        {
+            M00 = m00; M01 = m01; M02 = m02; M03 = m03;
+            M10 = m10; M11 = m11; M12 = m12; M13 = m13;
+            M20 = m20; M21 = m21; M22 = m22; M23 = m23;
+            M30 = m30; M31 = m31; M32 = m32; M33 = m33;
+        }
+
         public FMatrix(FArchive Ar)
         {
             M00 = Ar.Read<float>();
@@ -43,25 +63,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FMatrix operator *(FMatrix a, FMatrix b) => new()
-        {
-            M00 = a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
-            M01 = a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
-            M02 = a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
-            M03 = a.M00 * b.M03 + a.M01 * b.M13 + a.M02 * b.M23 + a.M03 * b.M33,
-            M10 = a.M10 * b.M00 + a.M11 * b.M10 + a.M12 * b.M20 + a.M13 * b.M30,
-            M11 = a.M10 * b.M01 + a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31,
-            M12 = a.M10 * b.M02 + a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32,
-            M13 = a.M10 * b.M03 + a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
-            M20 = a.M20 * b.M00 + a.M21 * b.M10 + a.M22 * b.M20 + a.M23 * b.M30,
-            M21 = a.M20 * b.M01 + a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31,
-            M22 = a.M20 * b.M02 + a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32,
-            M23 = a.M20 * b.M03 + a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
-            M30 = a.M30 * b.M00 + a.M31 * b.M10 + a.M32 * b.M20 + a.M33 * b.M30,
-            M31 = a.M30 * b.M01 + a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31,
-            M32 = a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
-            M33 = a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
-        };
+        public static FMatrix operator *(FMatrix a, FMatrix b) => new(
+            a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
+            a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
+            a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
+            a.M00 * b.M03 + a.M01 * b.M13 + a.M02 * b.M23 + a.M03 * b.M33,
+            a.M10 * b.M00 + a.M11 * b.M10 + a.M12 * b.M20 + a.M13 * b.M30,
+            a.M10 * b.M01 + a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31,
+            a.M10 * b.M02 + a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32,
+            a.M10 * b.M03 + a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
+            a.M20 * b.M00 + a.M21 * b.M10 + a.M22 * b.M20 + a.M23 * b.M30,
+            a.M20 * b.M01 + a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31,
+            a.M20 * b.M02 + a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32,
+            a.M20 * b.M03 + a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
+            a.M30 * b.M00 + a.M31 * b.M10 + a.M32 * b.M20 + a.M33 * b.M30,
+            a.M30 * b.M01 + a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31,
+            a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
+            a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
+        );
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector4 TransformFVector4(FVector4 p) => new(
@@ -85,13 +104,41 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector4 TransformVector(FVector v) => TransformFVector4(new FVector4(v.X, v.Y, v.Z, 0.0f));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FMatrix GetTransposed() => new()
-        {
-            M00 = M00, M01 = M10, M02 = M20, M03 = M30,
-            M10 = M01, M11 = M11, M12 = M21, M13 = M31,
-            M20 = M02, M21 = M12, M22 = M22, M23 = M32,
-            M30 = M03, M31 = M13, M32 = M23, M33 = M33
-        };
+        public FMatrix GetTransposed() => new(
+            M00, M10, M20, M30,
+            M01, M11, M21, M31,
+            M02, M12, M22, M32,
+            M03, M13, M23, M33
+        );
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float Determinant() =>
+            M00 * (
+                M11 * (M22 * M33 - M23 * M32) -
+                M21 * (M12 * M33 - M13 * M32) +
+                M31 * (M12 * M23 - M13 * M22)
+            ) -
+            M10 * (
+                M01 * (M22 * M33 - M23 * M32) -
+                M21 * (M02 * M33 - M03 * M32) +
+                M31 * (M02 * M23 - M03 * M22)
+            ) +
+            M20 * (
+                M01 * (M12 * M33 - M13 * M32) -
+                M11 * (M02 * M33 - M03 * M32) +
+                M31 * (M02 * M13 - M03 * M12)
+            ) -
+            M30 * (
+                M01 * (M12 * M23 - M13 * M22) -
+                M11 * (M02 * M23 - M03 * M22) +
+                M21 * (M02 * M13 - M03 * M12)
+            );
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float RotDeterminant() =>
+            M00 * (M11 * M22 - M12 * M21) -
+            M10 * (M01 * M22 - M02 * M21) +
+            M20 * (M01 * M12 - M02 * M11);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FMatrix InverseFast()
@@ -177,17 +224,33 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FMatrix Inverse()
+        {
+            // Check for zero scale matrix to invert
+            if (GetScaledAxis(EAxis.X).IsNearlyZero(FVector.SmallNumber) &&
+                GetScaledAxis(EAxis.Y).IsNearlyZero(FVector.SmallNumber) &&
+                GetScaledAxis(EAxis.Z).IsNearlyZero(FVector.SmallNumber))
+            {
+                // just set to zero - avoids unsafe inverse of zero and duplicates what QNANs were resulting in before (scaling away all children)
+                return Identity;
+            }
+
+            var det = Determinant();
+            return det == 0.0f ? Identity : InverseFast();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveScaling(float tolerance = FVector.SmallNumber)
         {
             // For each row, find magnitude, and if its non-zero re-scale so its unit length.
-            var squareSum0 = (M00 * M00) + (M01 * M01) + (M02 * M02);
-            var squareSum1 = (M10 * M10) + (M11 * M11) + (M12 * M12);
-            var squareSum2 = (M20 * M20) + (M21 * M21) + (M22 * M22);
+            var squareSum0 = M00*M00 + M01*M01 + M02*M02;
+            var squareSum1 = M10*M10 + M11*M11 + M12*M12;
+            var squareSum2 = M20*M20 + M21*M21 + M22*M22;
 
             //FloatSelect: return Comparand >= 0.f ? ValueGEZero : ValueLTZero;
-            var scale0 = (squareSum0 - tolerance) >= 0 ? squareSum0.InvSqrt() : 1;
-            var scale1 = (squareSum1 - tolerance) >= 0 ? squareSum1.InvSqrt() : 1;
-            var scale2 = (squareSum2 - tolerance) >= 0 ? squareSum2.InvSqrt() : 1;
+            var scale0 = squareSum0 - tolerance >= 0 ? squareSum0.InvSqrt() : 1;
+            var scale1 = squareSum1 - tolerance >= 0 ? squareSum1.InvSqrt() : 1;
+            var scale2 = squareSum2 - tolerance >= 0 ? squareSum2.InvSqrt() : 1;
 
             M00 *= scale0; 
             M01 *= scale0; 

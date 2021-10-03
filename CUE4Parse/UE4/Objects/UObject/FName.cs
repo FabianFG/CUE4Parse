@@ -7,28 +7,28 @@ namespace CUE4Parse.UE4.Objects.UObject
 {
     public enum FNameComparisonMethod : byte
     {
-        Index,
-        Text
+        Text,
+        Index
     }
-    
+
     [JsonConverter(typeof(FNameConverter))]
-    public readonly struct FName
+    public readonly struct FName : IComparable<FName>
     {
-        private readonly FNameEntrySerialized Name;
+        private readonly FNameEntrySerialized _name;
         /** Index into the Names array (used to find String portion of the string/number pair used for display) */
         public readonly int Index;
         /** Number portion of the string/number pair (stored internally as 1 more than actual, so zero'd memory will be the default, no-instance case) */
         public readonly int Number;
 
-        public string Text => Number == 0 ? Name.Name : $"{Name.Name}_{Number - 1}";
-        public string PlainText => Name.Name;
-        public bool IsNone => Text == null || Text == "None";
-        
+        public string Text => Number == 0 ? _name.Name : $"{_name.Name}_{Number - 1}";
+        public string PlainText => _name.Name;
+        public bool IsNone => Text is null or "None";
+
         public readonly FNameComparisonMethod ComparisonMethod;
-        
+
         public FName(string name, int index = 0, int number = 0, FNameComparisonMethod compare = FNameComparisonMethod.Text)
         {
-            Name = new FNameEntrySerialized(name);
+            _name = new FNameEntrySerialized(name);
             Index = index;
             Number = number;
             ComparisonMethod = compare;
@@ -36,20 +36,16 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FName(FNameEntrySerialized name, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index)
         {
-            Name = name;
+            _name = name;
             Index = index;
             Number = number;
             ComparisonMethod = compare;
         }
 
-        public FName(FNameEntrySerialized[] nameMap, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap[index], index, number, compare)
-        {
-        }
+        public FName(FNameEntrySerialized[] nameMap, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap[index], index, number, compare) { }
 
-        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare)
-        {
-        }
-        
+        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare) { }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(FName a, FName b)
         {
@@ -62,41 +58,29 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(FName a, FName b)
-        {
-            return !(a == b);
-        }
+        public static bool operator !=(FName a, FName b) => !(a == b);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(FName a, int b)
-        {
-            return a.Index == b;
-        }
+        public static bool operator ==(FName a, int b) => a.Index == b;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(FName a, int b)
-        {
-            return a.Index != b;
-        }
+        public static bool operator !=(FName a, int b) => a.Index != b;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(FName a, uint b)
-        {
-            return a.Index == b;
-        }
+        public static bool operator ==(FName a, uint b) => a.Index == b;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(FName a, uint b)
-        {
-            return a.Index != b;
-        }
+        public static bool operator !=(FName a, uint b) => a.Index != b;
 
-        public override string ToString()
-        {
-            return Text;
-        }
+        public override bool Equals(object? obj) => obj is FName other && this == other;
+
+        public override int GetHashCode() => ComparisonMethod == FNameComparisonMethod.Text ? Text.GetHashCode() : HashCode.Combine(Index, Number);
+
+        public int CompareTo(FName other) => string.CompareOrdinal(Text, other.Text);
+
+        public override string ToString() => Text;
     }
-    
+
     public class FNameConverter : JsonConverter<FName>
     {
         public override void WriteJson(JsonWriter writer, FName value, JsonSerializer serializer)
