@@ -1,9 +1,8 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.Utils;
-using static System.Math;
+using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -56,10 +55,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
             var maxRadius = m0 * m0 + m1 * m1 + m2 * m2;
             maxRadius = Vector3.Max(Vector3.Max(maxRadius, new Vector3(maxRadius.Y)), new Vector3(maxRadius.Z));
-            result.SphereRadius = MathF.Sqrt(maxRadius.X) * SphereRadius;
+            result.SphereRadius = Sqrt(maxRadius.X) * SphereRadius;
 
             // For non-uniform scaling, computing sphere radius from a box results in a smaller sphere.
-            var boxExtentMagnitude = MathF.Sqrt(Vector3.Dot(newExtent, newExtent));
+            var boxExtentMagnitude = Sqrt(Vector3.Dot(newExtent, newExtent));
             result.SphereRadius = Min(result.SphereRadius, boxExtentMagnitude);
 
             return result;

@@ -102,5 +102,15 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector4 ToFVector4(this Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+        
+        // FQuat -> System.Numerics.Quaternion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Quaternion ToQuaternion(this FQuat q) => new(q.X, q.Y, q.Z, q.W);
+        
+        // System.Numerics.Quaternion -> FQuat
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FQuat ToFQuat(this Quaternion q) => new(q.X, q.Y, q.Z, q.W);
     }
 }

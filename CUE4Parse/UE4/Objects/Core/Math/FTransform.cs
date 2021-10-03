@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct FTransform : IUStruct
     {
-        public static FTransform Identity = new() {Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1)};
+        public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1) };
 
         public FQuat Rotation;
         public FVector Translation;
@@ -21,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Translation = new FVector(0f);
             Scale3D = FVector.OneVector;
         }
-        
+
         public FTransform(FRotator inRotation)
         {
             Rotation = new FQuat(inRotation);
@@ -35,7 +36,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Translation = translation;
             Scale3D = scale3D;
         }
-        
+
         public FTransform(FRotator rotation, FVector translation, FVector scale3D)
         {
             Rotation = new FQuat(rotation);
@@ -43,19 +44,21 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Scale3D = scale3D;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FRotator Rotator() => Rotation.Rotator();
 
-        public bool Equals(FTransform other, float tolerance = FVector.KindaSmallNumber)
-        {
-            return Rotation.Equals(other.Rotation, tolerance) && Translation.Equals(other.Translation, tolerance) && Scale3D.Equals(other.Scale3D, tolerance);
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float GetDeterminant() => Scale3D.X * Scale3D.Y * Scale3D.Z;
 
-        public bool ContainsNan()
-        {
-            return Translation.ContainsNaN() || Rotation.ContainsNaN() || Scale3D.ContainsNaN();
-        }
+        public bool Equals(FTransform other, float tolerance = FVector.KindaSmallNumber) =>
+            Rotation.Equals(other.Rotation, tolerance) &&
+            Translation.Equals(other.Translation, tolerance) &&
+            Scale3D.Equals(other.Scale3D, tolerance);
 
-        public static bool AnyHasNegativeScale(FVector scale3D, FVector otherScale3D) => scale3D.X < 0 || scale3D.Y < 0 || scale3D.Z < 0 || 
+        public bool ContainsNaN() => Translation.ContainsNaN() || Rotation.ContainsNaN() || Scale3D.ContainsNaN();
+
+        public static bool AnyHasNegativeScale(FVector scale3D, FVector otherScale3D) =>
+            scale3D.X < 0 || scale3D.Y < 0 || scale3D.Z < 0 ||
             otherScale3D.X < 0 || otherScale3D.Y < 0 || otherScale3D.Z < 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,13 +72,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             Translation = other.Translation;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyRotation(ref FTransform other)
         {
             Rotation = other.Rotation;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyScale3D(ref FTransform other)
         {
@@ -126,43 +129,41 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static FVector SubstractTranslations(FTransform a, FTransform b) => a.Translation - b.Translation;
 
-        public static void GetRelativeTransformUsingMatrixWithScale(ref FTransform outTransform, ref FTransform Base,
-            ref FTransform Relative)
+        public static void GetRelativeTransformUsingMatrixWithScale(ref FTransform outTransform, ref FTransform @base, ref FTransform relative)
         {
             // the goal of using M is to get the correct orientation
             // but for translation, we still need scale
-            var am = Base.ToMatrixWithScale();
-            var bm = Base.ToMatrixWithScale();
+            var am = @base.ToMatrixWithScale();
+            var bm = @base.ToMatrixWithScale();
             // get combined scale
-            var safeRecipScale3D = GetSafeScaleReciprocal(Relative.Scale3D, FVector.SmallNumber);
-            var desiredScale3D = Base.Scale3D * safeRecipScale3D;
-            
+            var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, FVector.SmallNumber);
+            var desiredScale3D = @base.Scale3D * safeRecipScale3D;
+            ConstructTransformFromMatrixWithDesiredScale(am, bm.InverseFast(), desiredScale3D, ref outTransform);
         }
 
-        public static void ConstructTransformFromMatrixWithDesiredScale(FMatrix aMatrix, FMatrix bMatrix,
-            FVector desiredScale, ref FTransform outTransform)
+        public static void ConstructTransformFromMatrixWithDesiredScale(FMatrix aMatrix, FMatrix bMatrix, FVector desiredScale, ref FTransform outTransform)
         {
             // the goal of using M is to get the correct orientation
             // but for translation, we still need scale
             var m = aMatrix * bMatrix;
             m.RemoveScaling();
-            
+
             // apply negative scale back to axes
             var signedScale = desiredScale.GetSignVector();
-            
+
             m.SetAxis(0, m.GetScaledAxis(EAxis.X) * signedScale.X);
             m.SetAxis(1, m.GetScaledAxis(EAxis.Y) * signedScale.Y);
             m.SetAxis(2, m.GetScaledAxis(EAxis.Z) * signedScale.Z);
-            
+
             // @note: if you have negative with 0 scale, this will return rotation that is identity
             // since matrix loses that axes
             var rotation = new FQuat(m);
             rotation.Normalize();
-            
+
             // set values back to output
             outTransform.Scale3D = desiredScale;
             outTransform.Rotation = rotation;
-            
+
             // technically I could calculate this using FTransform but then it does more quat multiplication 
             // instead of using Scale in matrix multiplication
             // it's a question of between RemoveScaling vs using FTransform to move translation
@@ -232,17 +233,17 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FVector.SmallNumber)
         {
             var safeReciprocalScale = new FVector();
-            if (System.Math.Abs(scale.X) <= tolerance)
+            if (Abs(scale.X) <= tolerance)
                 safeReciprocalScale.X = 0;
             else
                 safeReciprocalScale.X = 1 / scale.X;
-            
-            if (System.Math.Abs(scale.Y) <= tolerance)
+
+            if (Abs(scale.Y) <= tolerance)
                 safeReciprocalScale.Y = 0;
             else
                 safeReciprocalScale.Y = 1 / scale.Y;
-            
-            if (System.Math.Abs(scale.Z) <= tolerance)
+
+            if (Abs(scale.Z) <= tolerance)
                 safeReciprocalScale.Z = 0;
             else
                 safeReciprocalScale.Z = 1 / scale.Z;
@@ -255,7 +256,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             if (!a.IsRotationNormalized) throw new ArgumentException("Rotation a must be normalized for multiplication");
             if (!b.IsRotationNormalized) throw new ArgumentException("Rotation b must be normalized for multiplication");
-            
+
             //	When Q = quaternion, S = single scalar scale, and T = translation
             //	QST(A) = Q(A), S(A), T(A), and QST(B) = Q(B), S(B), T(B)
 
