@@ -62,6 +62,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             otherScale3D.X < 0 || otherScale3D.Y < 0 || otherScale3D.Z < 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ScaleTranslation(FVector scale3D)
+        {
+            Translation *= scale3D;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ScaleTranslation(float scale)
+        {
+            Translation *= scale;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveScaling(float tolerance = FVector.SmallNumber)
+        {
+            Rotation.Normalize();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetMaximumAxisScale() => Scale3D.AbsMax();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,8 +189,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         /**
-	    * Convert this Transform to a transformation matrix with scaling.
-	    */
+	     * Convert this Transform to a transformation matrix with scaling.
+	     */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FMatrix ToMatrixWithScale()
         {
