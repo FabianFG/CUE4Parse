@@ -14,6 +14,7 @@ using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.TSW.Objects;
+using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -70,6 +71,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MovieSceneSequenceID" => type == ReadType.ZERO ? new FMovieSceneSequenceID() : Ar.Read<FMovieSceneSequenceID>(),
                 "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : Ar.Read<FMovieSceneTrackIdentifier>(),
                 "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
+                "FontData" => new FFontData(Ar),
+                "FontCharacter" => new FFontCharacter(Ar),
                 "Plane" => type == ReadType.ZERO ? new FPlane() : Ar.Read<FPlane>(),
                 "Quat" => type == ReadType.ZERO ? new FQuat() : Ar.Read<FQuat>(),
                 "Rotator" => type == ReadType.ZERO ? new FRotator() : Ar.Read<FRotator>(),
@@ -85,19 +88,19 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
-                
+
                 // Train Sim World
                 "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
                 "SpeedQuantity" => Ar.Read<FSpeedQuantity>(),
                 "MassQuantity" => Ar.Read<FMassQuantity>(),
-                
+
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };
         }
 
         public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
     }
-    
+
     public class UScriptStructConverter : JsonConverter<UScriptStruct>
     {
         public override void WriteJson(JsonWriter writer, UScriptStruct value, JsonSerializer serializer)
