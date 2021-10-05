@@ -1,25 +1,26 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public readonly struct FBox : IUStruct
+    public struct FBox : IUStruct
     {
         /// <summary>
         /// Holds the box's minimum point.
         /// </summary>
-        public readonly FVector Min;
-        
+        public FVector Min;
+
         /// <summary>
         /// Holds the box's maximum point.
         /// </summary>
-        public readonly FVector Max;
-        
+        public FVector Max;
+
         /// <summary>
         /// Holds a flag indicating whether this box is valid.
         /// </summary>
-        public readonly byte IsValid; // It's a bool
+        public byte IsValid; // It's a bool
 
         /// <summary>
         /// Creates and initializes a new box from the specified extents.
@@ -286,7 +287,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                                              (@in.Z > Min.Z) && (@in.Z < Max.Z);
         
         /// <summary>
-        /// Checks whether the given location is inside or onthis box.
+        /// Checks whether the given location is inside or on this box.
         /// </summary>
         /// <param name="in">The location to test for inside the bounding volume.</param>
         /// <returns>true if location is inside or on this volume.</returns>
@@ -314,8 +315,48 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <returns>true if box is inside this box in the XY plane.</returns>
         public bool IsInsideXY(FBox other) => IsInsideXY(other.Min) && IsInsideXY(other.Max);
 
+        public FBox TransformBy(FMatrix m)
+        {
+            // if we are not valid, return another invalid box.
+            if (IsValid == 0)
+            {
+                return new FBox();
+            }
+
+            var vecMin = Min;
+            var vecMax = Max;
+
+            var m0 = new FVector(m.M00, m.M01, m.M02);
+            var m1 = new FVector(m.M10, m.M11, m.M12);
+            var m2 = new FVector(m.M20, m.M21, m.M22);
+            var m3 = new FVector(m.M30, m.M31, m.M32);
+
+            var half = new FVector(0.5f, 0.5f, 0.5f);
+            var origin = (vecMax + vecMin) * half;
+            var extent = (vecMax - vecMin) * half;
+
+            var newOrigin = new FVector(origin.X) * m0 +
+                            new FVector(origin.Y) * m1 +
+                            new FVector(origin.Z) * m2 +
+                            m3;
+
+            var newExtent = (new FVector(extent.X) * m0).Abs() +
+                            (new FVector(extent.Y) * m1).Abs() +
+                            (new FVector(extent.Z) * m2).Abs();
+
+            return new FBox
+            {
+                Min = newOrigin - newExtent,
+                Max = newOrigin + newExtent,
+                IsValid = 1
+            };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FBox TransformBy(FTransform m) => TransformBy(m.ToMatrixWithScale());
+
         public override string ToString() => $"IsValid={IsValid != 0}, Min={Min}, Max={Max}";
-        
+
         /// <summary>
         /// Utility function to build an AABB from Origin and Extent
         /// </summary>
