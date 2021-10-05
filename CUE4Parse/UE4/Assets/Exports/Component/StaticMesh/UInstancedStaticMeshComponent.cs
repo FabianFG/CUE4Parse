@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 
                 if (renderDataSizeBytes > 0)
                 {
-                    // idk what to do here... But it fixes the warnings 🤷‍♂️
+                    // idk what to do here... But it fixes the warnings 🤷‍
                     Ar.Position = validPos;
                 }
             }

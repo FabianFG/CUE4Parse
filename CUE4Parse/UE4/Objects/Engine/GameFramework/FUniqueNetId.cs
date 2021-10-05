@@ -1,4 +1,4 @@
-namespace CUE4Parse.UE4.Objects.UObject
+namespace CUE4Parse.UE4.Objects.Engine.GameFramework
 {
     public class FUniqueNetId
     {

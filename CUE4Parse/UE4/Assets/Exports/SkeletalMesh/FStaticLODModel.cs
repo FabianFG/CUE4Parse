@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MeshToImportVertexMap = Array.Empty<int>();
             ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
         }
-        
+
         public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors) : this()
         {
             if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
@@ -362,11 +362,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             writer.WritePropertyName("Sections");
             serializer.Serialize(writer, value.Sections);
 
-            writer.WritePropertyName("Indices");
-            serializer.Serialize(writer, value.Indices);
+            // writer.WritePropertyName("Indices");
+            // serializer.Serialize(writer, value.Indices);
 
-            writer.WritePropertyName("ActiveBoneIndices");
-            serializer.Serialize(writer, value.ActiveBoneIndices);
+            // writer.WritePropertyName("ActiveBoneIndices");
+            // serializer.Serialize(writer, value.ActiveBoneIndices);
 
             writer.WritePropertyName("NumVertices");
             writer.WriteValue(value.NumVertices);
@@ -374,31 +374,31 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             writer.WritePropertyName("NumTexCoords");
             writer.WriteValue(value.NumTexCoords);
 
-            writer.WritePropertyName("RequiredBones");
-            serializer.Serialize(writer, value.RequiredBones);
+            // writer.WritePropertyName("RequiredBones");
+            // serializer.Serialize(writer, value.RequiredBones);
 
             writer.WritePropertyName("VertexBufferGPUSkin");
             serializer.Serialize(writer, value.VertexBufferGPUSkin);
 
-            writer.WritePropertyName("ColorVertexBuffer");
-            serializer.Serialize(writer, value.ColorVertexBuffer);
+            // writer.WritePropertyName("ColorVertexBuffer");
+            // serializer.Serialize(writer, value.ColorVertexBuffer);
 
-            writer.WritePropertyName("AdjacencyIndexBuffer");
-            serializer.Serialize(writer, value.AdjacencyIndexBuffer);
+            // writer.WritePropertyName("AdjacencyIndexBuffer");
+            // serializer.Serialize(writer, value.AdjacencyIndexBuffer);
 
             if (value.Chunks.Length > 0)
             {
                 writer.WritePropertyName("Chunks");
                 serializer.Serialize(writer, value.Chunks);
 
-                writer.WritePropertyName("ClothVertexBuffer");
-                serializer.Serialize(writer, value.ClothVertexBuffer);
+                // writer.WritePropertyName("ClothVertexBuffer");
+                // serializer.Serialize(writer, value.ClothVertexBuffer);
             }
 
             if (value.MeshToImportVertexMap.Length > 0)
             {
-                writer.WritePropertyName("MeshToImportVertexMap");
-                serializer.Serialize(writer, value.MeshToImportVertexMap);
+                // writer.WritePropertyName("MeshToImportVertexMap");
+                // serializer.Serialize(writer, value.MeshToImportVertexMap);
 
                 writer.WritePropertyName("MaxImportVertex");
                 serializer.Serialize(writer, value.MaxImportVertex);

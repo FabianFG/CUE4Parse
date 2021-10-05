@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -25,7 +24,7 @@ namespace CUE4Parse.UE4.Objects.Engine.GameFramework
             }
         }
     }
-    
+
     public class FUniqueNetIdReplConverter : JsonConverter<FUniqueNetIdRepl>
     {
         public override void WriteJson(JsonWriter writer, FUniqueNetIdRepl value, JsonSerializer serializer)

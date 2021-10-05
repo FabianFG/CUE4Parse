@@ -4,9 +4,11 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
+    [JsonConverter(typeof(FSkelMeshSectionConverter))]
     public class FSkelMeshSection
     {
         public short MaterialIndex;
@@ -171,6 +173,55 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             if (Ar.Game == EGame.GAME_RogueCompany)
                 Ar.Position += 4;
+        }
+    }
+
+    public class FSkelMeshSectionConverter : JsonConverter<FSkelMeshSection>
+    {
+        public override void WriteJson(JsonWriter writer, FSkelMeshSection value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("MaterialIndex");
+            writer.WriteValue(value.MaterialIndex);
+
+            writer.WritePropertyName("BaseIndex");
+            writer.WriteValue(value.BaseIndex);
+
+            writer.WritePropertyName("NumTriangles");
+            writer.WriteValue(value.NumTriangles);
+
+            writer.WritePropertyName("bDisabled");
+            writer.WriteValue(value.bDisabled);
+
+            writer.WritePropertyName("CorrespondClothSectionIndex");
+            writer.WriteValue(value.CorrespondClothSectionIndex);
+
+            writer.WritePropertyName("GenerateUpToLodIndex");
+            writer.WriteValue(value.GenerateUpToLodIndex);
+
+            writer.WritePropertyName("NumVertices");
+            writer.WriteValue(value.NumVertices);
+
+            writer.WritePropertyName("BaseVertexIndex");
+            writer.WriteValue(value.BaseVertexIndex);
+
+            writer.WritePropertyName("MaxBoneInfluences");
+            writer.WriteValue(value.MaxBoneInfluences);
+
+            writer.WritePropertyName("HasClothData");
+            writer.WriteValue(value.HasClothData);
+
+            writer.WritePropertyName("bCastShadow");
+            writer.WriteValue(value.bCastShadow);
+
+            writer.WriteEndObject();
+        }
+
+        public override FSkelMeshSection ReadJson(JsonReader reader, Type objectType, FSkelMeshSection existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

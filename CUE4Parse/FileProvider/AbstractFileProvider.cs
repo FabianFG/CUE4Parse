@@ -97,7 +97,7 @@ namespace CUE4Parse.FileProvider
             return defaultValue ?? string.Empty;
         }
 
-        private string GetLanguageCode(ELanguage language)
+        public string GetLanguageCode(ELanguage language)
         {
             return GameName.ToLowerInvariant() switch
             {
@@ -208,7 +208,6 @@ namespace CUE4Parse.FileProvider
 
                     if (!content.Descriptor.CanContainContent) continue;
                     var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
-
                     var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
 
                     if (!VirtualPaths.ContainsKey(virtPath))
@@ -225,7 +224,7 @@ namespace CUE4Parse.FileProvider
 
             return i;
         }
-        
+
         public virtual GameFile this[string path] => Files[FixPath(path)];
 
         public virtual bool TryFindGameFile(string path, out GameFile file)

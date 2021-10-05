@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Math;
 
@@ -73,5 +74,43 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector Lerp(FVector a, FVector b, float alpha) => a + (b - a) * alpha;
+
+        // FVector -> System.Numerics.Vector
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 ToVector2(this FVector2D v) => new(v.X, v.Y);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 ToVector3(this FVector v) => new(v.X, v.Y, v.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector4 ToVector4(this FVector v) => new(v.X, v.Y, v.Z, 0.0f);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector4 ToVector4(this FVector4 v) => new(v.X, v.Y, v.Z, v.W);
+
+        // System.Numerics.Vector -> FVector
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector2D ToFVector2D(this Vector2 v) => new(v.X, v.Y);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector ToFVector(this Vector3 v) => new(v.X, v.Y, v.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector4 ToFVector4(this Vector3 v) => new(v.X, v.Y, v.Z, 0.0f);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector4 ToFVector4(this Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+        
+        // FQuat -> System.Numerics.Quaternion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Quaternion ToQuaternion(this FQuat q) => new(q.X, q.Y, q.Z, q.W);
+        
+        // System.Numerics.Quaternion -> FQuat
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FQuat ToFQuat(this Quaternion q) => new(q.X, q.Y, q.Z, q.W);
     }
 }

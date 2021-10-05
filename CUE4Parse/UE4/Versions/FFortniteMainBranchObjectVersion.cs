@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Versions
             // Serialize the type of blending used for landscape layer weight static params
             StaticParameterTerrainLayerWeightBlendType,
 
-            // Fix up None Named animation curve names, 
+            // Fix up None Named animation curve names,
             FixUpNoneNameAnimationCurves,
 
             // Ensure ActiveBoneIndices to have parents even not skinned for old assets
@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Versions
             // FFieldPath will serialize the owner struct reference and only a short path to its property
             FFieldPathOwnerSerialization,
 
-            // Simplified WaterBody post process material handling 
+            // Simplified WaterBody post process material handling
             FixUpUnderwaterPostProcessMaterial,
 
             // A single water exclusion volume can now exclude N water bodies
@@ -136,7 +136,7 @@ namespace CUE4Parse.UE4.Versions
 
             // Moving Chaos solver properties to allow them to exist in the project physics settings
             ChaosSolverPropertiesMoved,
-            
+
             // Moving some UFortGameFeatureData properties and behaviors into the UGameFeatureAction pattern
             GameFeatureData_MovedComponentListAndCheats,
 
@@ -148,7 +148,7 @@ namespace CUE4Parse.UE4.Versions
             // (Merged from //UE4/Main)
             ChaosConvexVariableStructureDataAndVerticesArray,
 
-            // Remove the WaterVelocityHeightTexture dependency on MPC_Landscape and LandscapeWaterIndo 
+            // Remove the WaterVelocityHeightTexture dependency on MPC_Landscape and LandscapeWaterIndo
             RemoveLandscapeWaterInfo,
 
             // Added the weighted value property type to store the cloths weight maps' low/high ranges
@@ -178,13 +178,16 @@ namespace CUE4Parse.UE4.Versions
             // Water plugin is now component-based rather than actor based
             WaterBodyComponentRefactor,
 
+            // Cooked BPGC storing editor-only asset tags
+            BPGCCookedEditorTags,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
         }
-        
+
         public static readonly FGuid GUID = new(0x601D1886, 0xAC644F84, 0xAA16D3DE, 0x0DEAC7D6);
-        
+
         public static Type Get(FArchive Ar)
         {
             var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
@@ -200,6 +203,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_24 => Type.SupportVirtualBoneInRetargeting,
                 < EGame.GAME_UE4_26 => Type.AnimLayerGuidConformation,
                 < EGame.GAME_UE4_27 => Type.ChaosSolverPropertiesMoved,
+                < EGame.GAME_UE5_0 => Type.WaterBodyComponentRefactor,
                 _ => Type.LatestVersion
             };
         }

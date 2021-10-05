@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
             }
             else
             {
-                Data = new FColor[0];
+                Data = Array.Empty<FColor>();
             }
         }
     }
@@ -38,8 +38,8 @@ namespace CUE4Parse.UE4.Objects.Meshes
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("Data");
-            serializer.Serialize(writer, value.Data);
+            // writer.WritePropertyName("Data");
+            // serializer.Serialize(writer, value.Data);
 
             writer.WritePropertyName("Stride");
             writer.WriteValue(value.Stride);
