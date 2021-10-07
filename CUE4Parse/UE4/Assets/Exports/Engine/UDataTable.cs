@@ -10,19 +10,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
     public class UDataTable : UObject
     {
         public Dictionary<FName, FStructFallback> RowMap { get; private set; }
+        protected string? RowStructName { get; set; } // Only used if set from inheritor
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             // UObject Properties
-            var rowStruct = GetOrDefault<FPackageIndex>("RowStruct").Load<UStruct>(); // type of the RowMap values
+
+            UStruct? rowStruct = null;
+            if (string.IsNullOrEmpty(RowStructName)) rowStruct = GetOrDefault<FPackageIndex>("RowStruct").Load<UStruct>(); // type of the RowMap values
 
             var numRows = Ar.Read<int>();
             RowMap = new Dictionary<FName, FStructFallback>(numRows);
             for (var i = 0; i < numRows; i++)
             {
                 var rowName = Ar.ReadFName();
-                RowMap[rowName] = new FStructFallback(Ar, rowStruct);
+                RowMap[rowName] = rowStruct != null ? new FStructFallback(Ar, rowStruct) : new FStructFallback(Ar, RowStructName);
             }
         }
 
@@ -46,7 +49,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 rowValue = kvp.Value;
                 return true;
             }
-            
+
             rowValue = default;
             return false;
         }
