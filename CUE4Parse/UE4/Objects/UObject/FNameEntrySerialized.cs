@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 {
     public readonly struct FNameEntrySerialized
     {
-        public readonly string Name;
+        public readonly string? Name;
 #if NAME_HASHES
         public readonly ushort NonCasePreservingHash;
         public readonly ushort CasePreservingHash;
@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FNameEntrySerialized(FArchive Ar)
         {
             var bHasNameHashes = Ar.Ver >= UE4Version.VER_UE4_NAME_HASHES_SERIALIZED;
-            
+
             Name = Ar.ReadFString();
             if (bHasNameHashes)
             {
@@ -26,7 +26,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Position += 4;
 #endif
             }
-            
         }
 
         public FNameEntrySerialized(string name)
@@ -34,10 +33,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             Name = name;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name ?? "None";
 
         public static FNameEntrySerialized[] LoadNameBatch(FArchive nameAr, int nameCount)
         {
