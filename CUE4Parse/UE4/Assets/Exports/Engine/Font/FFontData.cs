@@ -40,6 +40,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine.Font
     {
         public override void WriteJson(JsonWriter writer, FFontData value, JsonSerializer serializer)
         {
+            writer.WriteStartObject();
+
             if (value.LocalFontFaceAsset != null)
             {
                 writer.WritePropertyName("LocalFontFaceAsset");
@@ -62,6 +64,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine.Font
 
             writer.WritePropertyName("SubFaceIndex");
             writer.WriteValue(value.SubFaceIndex);
+
+            writer.WriteEndObject();
         }
 
         public override FFontData ReadJson(JsonReader reader, Type objectType, FFontData existingValue, bool hasExistingValue,

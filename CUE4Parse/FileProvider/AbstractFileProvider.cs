@@ -188,27 +188,24 @@ namespace CUE4Parse.FileProvider
             };
         }
 
-        public virtual int LoadVirtualPaths(CancellationToken cancellationToken = default)
+        public virtual int LoadVirtualPaths(UE4Version version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
 
             var i = 0;
-            foreach (var file in Files)
+            foreach (var (filePath, gameFile) in Files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!regex.IsMatch(file.Key)) continue;
-                if (!TryCreateReader(file.Value.Path, out var stream)) continue;
-                using var reader = new StreamReader(stream);
-                var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
-
-                foreach (var content in manifest.Contents)
+                if (version < UE4Version.VER_UE4_18)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (!content.Descriptor.CanContainContent) continue;
-                    var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
-                    var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
+                    if (!filePath.EndsWith(".uplugin")) continue;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
+                    using var reader = new StreamReader(stream);
+                    var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
+                    if (!pluginFile!.CanContainContent) continue;
+                    var virtPath = gameFile.Path.SubstringAfterLast('/').SubstringBeforeLast('.');
+                    var path = gameFile.Path.SubstringBeforeLast('/');
 
                     if (!VirtualPaths.ContainsKey(virtPath))
                     {
@@ -218,6 +215,32 @@ namespace CUE4Parse.FileProvider
                     else
                     {
                         VirtualPaths[virtPath] = path;
+                    }
+                }
+                else
+                {
+                    if (!regex.IsMatch(filePath)) continue;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
+                    using var reader = new StreamReader(stream);
+                    var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
+
+                    foreach (var content in manifest!.Contents)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (!content.Descriptor.CanContainContent) continue;
+                        var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
+                        var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
+
+                        if (!VirtualPaths.ContainsKey(virtPath))
+                        {
+                            VirtualPaths.Add(virtPath, path);
+                            i++; // Only increment if we don't have the path already
+                        }
+                        else
+                        {
+                            VirtualPaths[virtPath] = path;
+                        }
                     }
                 }
             }

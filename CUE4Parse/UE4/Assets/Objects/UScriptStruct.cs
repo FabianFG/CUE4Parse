@@ -77,6 +77,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Quat" => type == ReadType.ZERO ? new FQuat() : Ar.Read<FQuat>(),
                 "Rotator" => type == ReadType.ZERO ? new FRotator() : Ar.Read<FRotator>(),
                 "SectionEvaluationDataTree" => type == ReadType.ZERO ? new FSectionEvaluationDataTree() : new FSectionEvaluationDataTree(Ar), // Deprecated in UE4.26? can't find it anymore. Replaced by FMovieSceneEvaluationTrack
+                "StringClassReference" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
                 "SoftClassPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
                 "SoftObjectPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
                 "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
