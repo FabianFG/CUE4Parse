@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -101,6 +101,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 "ArrayProperty" => new ArrayProperty(Ar, tagData, type),
                 "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
+                "AssetClassProperty" => new AssetObjectProperty(Ar, type),
                 "BoolProperty" => new BoolProperty(Ar, tagData, type),
                 "ByteProperty" => tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)
                     ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)

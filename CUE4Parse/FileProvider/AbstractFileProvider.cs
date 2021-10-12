@@ -288,7 +288,7 @@ namespace CUE4Parse.FileProvider
 
             if (root.Equals("Game", comparisonType) || root.Equals("Engine", comparisonType))
             {
-                var gameName = root == "Engine" ? "Engine" : GameName;
+                var gameName = root.Equals("Engine", comparisonType) ? "Engine" : GameName;
                 var p = path.SubstringAfter('/').SubstringBefore('/');
                 if (p.Contains('.'))
                 {
