@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Exceptions;
@@ -12,6 +14,27 @@ namespace CUE4Parse_Conversion.Meshes
     public static class MeshConverter
     {
         private const int _MAX_MESH_UV_SETS = 8;
+
+        public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones)
+        {
+            bones = new List<CSkelMeshBone>();
+            for (var i = 0; i < originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo.Length; i++)
+            {
+                var skeletalMeshBone = new CSkelMeshBone
+                {
+                    Name = originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
+                    ParentIndex = originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
+                    Position = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Translation,
+                    Orientation = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
+                };
+
+                if (i >= 1) // fix skeleton; all bones but 0
+                    skeletalMeshBone.Orientation.Conjugate();
+
+                bones.Add(skeletalMeshBone);
+            }
+            return true;
+        }
 
         public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh)
         {
