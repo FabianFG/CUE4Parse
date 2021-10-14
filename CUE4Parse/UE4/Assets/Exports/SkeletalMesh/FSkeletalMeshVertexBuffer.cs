@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             VertsFloat = Array.Empty<FGPUVertFloat>();
         }
 
-        public FSkeletalMeshVertexBuffer(FAssetArchive Ar)
+        public FSkeletalMeshVertexBuffer(FAssetArchive Ar) : this()
         {
             var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 

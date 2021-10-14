@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -22,6 +22,26 @@ namespace CUE4Parse_Conversion.Meshes
 
         public readonly string MeshName;
         public readonly List<Mesh> MeshLods;
+
+        public MeshExporter(USkeleton originalSkeleton)
+        {
+            MeshLods = new List<Mesh>();
+            MeshName = originalSkeleton.Owner?.Name ?? originalSkeleton.Name;
+
+            if (!originalSkeleton.TryConvert(out var bones) || bones.Count == 0)
+            {
+                Log.Logger.Warning($"Skeleton '{MeshName}' has no bone");
+                return;
+            }
+
+            using var Ar = new FArchiveWriter();
+
+            var mainHdr = new VChunkHeader { TypeFlag = _PSK_VERSION };
+            Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
+            ExportSkeletonData(Ar, bones);
+
+            MeshLods.Add(new Mesh($"{MeshName}.psk", Ar.GetBuffer(), new List<MaterialExporter>()));
+        }
 
         public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
         {
@@ -113,7 +133,6 @@ namespace CUE4Parse_Conversion.Meshes
         private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
         {
             var share = new CVertexShare();
-            var boneHdr = new VChunkHeader();
             var infHdr = new VChunkHeader();
 
             share.Prepare(lod.Verts);
@@ -129,37 +148,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
 
             ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
-
-            var numBones = bones.Count;
-            boneHdr.DataCount = numBones;
-            boneHdr.DataSize = 120;
-            Ar.SerializeChunkHeader(boneHdr, "REFSKELT");
-            for (var i = 0; i < numBones; i++)
-            {
-                var numChildren = 0;
-                for (var j = 0; j < numBones; j++)
-                    if (j != i && bones[j].ParentIndex == i)
-                        numChildren++;
-
-                var bone = new VBone
-                {
-                    Name = bones[i].Name.Text,
-                    NumChildren = numChildren,
-                    ParentIndex = bones[i].ParentIndex,
-                    BonePos = new VJointPosPsk
-                    {
-                        Position = bones[i].Position,
-                        Orientation = bones[i].Orientation
-                    }
-                };
-
-                // MIRROR_MESH
-                bone.BonePos.Orientation.Y *= -1;
-                bone.BonePos.Orientation.W *= -1;
-                bone.BonePos.Position.Y *= -1;
-
-                bone.Serialize(Ar);
-            }
+            ExportSkeletonData(Ar, bones);
 
             var numInfluences = 0;
             for (var i = 0; i < share.Points.Count; i++)
@@ -322,6 +311,42 @@ namespace CUE4Parse_Conversion.Meshes
 
                 normal.Y = -normal.Y; // MIRROR_MESH
                 normal.Serialize(Ar);
+            }
+        }
+
+        private void ExportSkeletonData(FArchiveWriter Ar, List<CSkelMeshBone> bones)
+        {
+            var boneHdr = new VChunkHeader();
+
+            var numBones = bones.Count;
+            boneHdr.DataCount = numBones;
+            boneHdr.DataSize = 120;
+            Ar.SerializeChunkHeader(boneHdr, "REFSKELT");
+            for (var i = 0; i < numBones; i++)
+            {
+                var numChildren = 0;
+                for (var j = 0; j < numBones; j++)
+                    if (j != i && bones[j].ParentIndex == i)
+                        numChildren++;
+
+                var bone = new VBone
+                {
+                    Name = bones[i].Name.Text,
+                    NumChildren = numChildren,
+                    ParentIndex = bones[i].ParentIndex,
+                    BonePos = new VJointPosPsk
+                    {
+                        Position = bones[i].Position,
+                        Orientation = bones[i].Orientation
+                    }
+                };
+
+                // MIRROR_MESH
+                bone.BonePos.Orientation.Y *= -1;
+                bone.BonePos.Orientation.W *= -1;
+                bone.BonePos.Position.Y *= -1;
+
+                bone.Serialize(Ar);
             }
         }
 

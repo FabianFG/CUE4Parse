@@ -1,21 +1,36 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     [StructFallback]
     public class FMaterialParameterInfo
     {
-        public readonly FName Name;
-        public readonly EMaterialParameterAssociation Association;
-        public readonly int Index;
+        public FName Name;
+        public EMaterialParameterAssociation Association;
+        public int Index;
 
         public FMaterialParameterInfo(FStructFallback fallback)
         {
             Name = fallback.GetOrDefault<FName>(nameof(Name));
             Association = fallback.GetOrDefault<EMaterialParameterAssociation>(nameof(Association));
             Index = fallback.GetOrDefault<int>(nameof(Index));
+        }
+
+        public FMaterialParameterInfo(FArchive Ar)
+        {
+            Name = Ar.ReadFName();
+            Association = Ar.Read<EMaterialParameterAssociation>();
+            Index = Ar.Read<int>();
+        }
+
+        public FMaterialParameterInfo()
+        {
+            Name = new FName();
+            Association = EMaterialParameterAssociation.LayerParameter;
+            Index = 0;
         }
     }
 

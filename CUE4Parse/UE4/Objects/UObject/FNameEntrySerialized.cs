@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 {
     public readonly struct FNameEntrySerialized
     {
-        public readonly string Name;
+        public readonly string? Name;
 #if NAME_HASHES
         public readonly ushort NonCasePreservingHash;
         public readonly ushort CasePreservingHash;
@@ -15,18 +15,17 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FNameEntrySerialized(FArchive Ar)
         {
             var bHasNameHashes = Ar.Ver >= UE4Version.VER_UE4_NAME_HASHES_SERIALIZED;
-            
+
             Name = Ar.ReadFString();
             if (bHasNameHashes)
             {
 #if NAME_HASHES
-            NonCasePreservingHash = Ar.Read<ushort>();
-            CasePreservingHash = Ar.Read<ushort>();
+                NonCasePreservingHash = Ar.Read<ushort>();
+                CasePreservingHash = Ar.Read<ushort>();
 #else
                 Ar.Position += 4;
 #endif
             }
-            
         }
 
         public FNameEntrySerialized(string name)
@@ -34,10 +33,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             Name = name;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name ?? "None";
 
         public static FNameEntrySerialized[] LoadNameBatch(FArchive nameAr, int nameCount)
         {
@@ -58,10 +54,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return Array.Empty<FNameEntrySerialized>();
             }
 
-            Ar.Position += sizeof(uint); //var numStringBytes = Ar.Read<uint>();
-            Ar.Position += sizeof(ulong); //var hashVersion = Ar.Read<ulong>();
+            Ar.Position += sizeof(uint); // var numStringBytes = Ar.Read<uint>();
+            Ar.Position += sizeof(ulong); // var hashVersion = Ar.Read<ulong>();
 
-            Ar.Position += num * sizeof(ulong); //var hashes = Ar.ReadArray<ulong>(num);
+            Ar.Position += num * sizeof(ulong); // var hashes = Ar.ReadArray<ulong>(num);
             var headers = Ar.ReadArray<FSerializedNameHeader>(num);
             var entries = new FNameEntrySerialized[num];
             for (var i = 0; i < num; i++)

@@ -24,8 +24,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine.Font
             base.WriteJson(writer, serializer);
 
             if (FontFaceData == null) return;
-            writer.WritePropertyName("FontFaceData");
-            serializer.Serialize(writer, FontFaceData);
+            // writer.WritePropertyName("FontFaceData");
+            // serializer.Serialize(writer, FontFaceData);
         }
     }
 

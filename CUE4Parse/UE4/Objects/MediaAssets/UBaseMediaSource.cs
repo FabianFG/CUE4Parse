@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.MediaAssets
 {
-    public class UBaseMediaSource : Assets.Exports.UObject
+    public class UBaseMediaSource : UMediaSource
     {
         public FName PlayerName;
 

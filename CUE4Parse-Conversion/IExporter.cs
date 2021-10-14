@@ -46,7 +46,7 @@ namespace CUE4Parse_Conversion
                 UAnimSequence animSequence => new AnimExporter(animSequence),
                 UMaterialInterface material => new MaterialExporter(material, false),
                 USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat),
-                USkeleton skeleton => new AnimExporter(skeleton),
+                USkeleton skeleton => new MeshExporter(skeleton),
                 UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };

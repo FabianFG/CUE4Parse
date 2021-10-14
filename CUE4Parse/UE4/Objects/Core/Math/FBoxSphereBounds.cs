@@ -26,6 +26,25 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             SphereRadius = sphereRadius;
         }
 
+        public FBoxSphereBounds(FBox box, FSphere sphere)
+        {
+            box.GetCenterAndExtents(out Origin, out BoxExtent);
+            SphereRadius = Min(BoxExtent.Size(), (sphere.Center - Origin).Size() + sphere.W);
+        }
+
+        public FBoxSphereBounds(FBox box)
+        {
+            box.GetCenterAndExtents(out Origin, out BoxExtent);
+            SphereRadius = BoxExtent.Size();
+        }
+
+        public FBoxSphereBounds(FSphere sphere)
+        {
+            Origin = sphere.Center;
+            BoxExtent = new FVector(sphere.W);
+            SphereRadius = sphere.W;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FBox GetBox() => new(Origin - BoxExtent, Origin + BoxExtent);
 
@@ -65,12 +84,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FBoxSphereBounds TransformBy(FTransform m)
-        {
-            var mat = m.ToMatrixWithScale();
-            var result = TransformBy(mat);
-            return result;
-        }
+        public FBoxSphereBounds TransformBy(FTransform m) => TransformBy(m.ToMatrixWithScale());
 
         public override string ToString() => $"Origin=({Origin}), BoxExtent=({BoxExtent}), SphereRadius={SphereRadius}";
     }

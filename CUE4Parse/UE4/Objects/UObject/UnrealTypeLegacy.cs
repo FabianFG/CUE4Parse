@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -142,6 +142,27 @@ namespace CUE4Parse.UE4.Objects.UObject
     public class ULazyObjectProperty : UObjectPropertyBase { }
 
     public class USoftObjectProperty : UObjectPropertyBase { }
+
+    public class UAssetObjectProperty : UObjectPropertyBase { }
+
+    public class UAssetClassProperty : UObjectPropertyBase
+    {
+        public FPackageIndex MetaClass; // UClass
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+            MetaClass = new FPackageIndex(Ar);
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            writer.WritePropertyName("MetaClass");
+            serializer.Serialize(writer, MetaClass);
+        }
+    }
 
     public class UClassProperty : UObjectProperty
     {

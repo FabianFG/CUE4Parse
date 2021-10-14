@@ -20,9 +20,13 @@ namespace CUE4Parse.UE4.Objects.UObject
         /** Number portion of the string/number pair (stored internally as 1 more than actual, so zero'd memory will be the default, no-instance case) */
         public readonly int Number;
 
-        public string Text => Number == 0 ? _name.Name : $"{_name.Name}_{Number - 1}";
-        public string PlainText => _name.Name;
-        public bool IsNone => Text is null or "None";
+        public string Text => Number == 0 ? PlainText : $"{PlainText}_{Number - 1}";
+        public string PlainText
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _name.Name ?? "None";
+        }
+        public bool IsNone => Text == "None";
 
         public readonly FNameComparisonMethod ComparisonMethod;
 
@@ -47,15 +51,15 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(FName a, FName b)
+        public static implicit operator FName(string s) => new(s);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(FName a, FName b) => a.ComparisonMethod switch
         {
-            return a.ComparisonMethod switch
-            {
-                FNameComparisonMethod.Index => a.Index == b.Index && a.Number == b.Number,
-                FNameComparisonMethod.Text => a.Text == b.Text,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
+            FNameComparisonMethod.Index => a.Index == b.Index && a.Number == b.Number,
+            FNameComparisonMethod.Text => a.Text == b.Text,
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(FName a, FName b) => !(a == b);

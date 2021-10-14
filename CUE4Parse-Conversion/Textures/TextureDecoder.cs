@@ -87,7 +87,7 @@ namespace CUE4Parse_Conversion.Textures
                 case EPixelFormat.PF_BC6H:
                     // BC6H doesn't work no matter the pixel format, the closest we can get is either
                     // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
-                    
+
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, true,
                         inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
                         outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
@@ -97,7 +97,7 @@ namespace CUE4Parse_Conversion.Textures
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
                         inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
                         outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
-                    colorType = SKColorType.Rgb888x;
+                    colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC1:
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,

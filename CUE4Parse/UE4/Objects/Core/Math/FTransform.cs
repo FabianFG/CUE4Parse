@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Utils;
 using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential), StructFallback]
     public struct FTransform : IUStruct
     {
         public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1) };
@@ -23,9 +25,23 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Scale3D = FVector.OneVector;
         }
 
-        public FTransform(FRotator inRotation)
+        public FTransform(FVector translation)
         {
-            Rotation = new FQuat(inRotation);
+            Rotation = FQuat.Identity;
+            Translation = translation;
+            Scale3D = FVector.OneVector;
+        }
+
+        public FTransform(FQuat rotation)
+        {
+            Rotation = rotation;
+            Translation = FVector.ZeroVector;
+            Scale3D = FVector.OneVector;
+        }
+
+        public FTransform(FRotator rotation)
+        {
+            Rotation = new FQuat(rotation);
             Translation = FVector.ZeroVector;
             Scale3D = FVector.OneVector;
         }
@@ -42,6 +58,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Rotation = new FQuat(rotation);
             Translation = translation;
             Scale3D = scale3D;
+        }
+
+        public FTransform(FStructFallback data)
+        {
+            Rotation = data.GetOrDefault<FQuat>(nameof(Rotation));
+            Translation = data.GetOrDefault<FVector>(nameof(Translation));
+            Scale3D = data.GetOrDefault<FVector>(nameof(Scale3D));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,6 +99,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveScaling(float tolerance = FVector.SmallNumber)
         {
+            Scale3D = new FVector(1.0f, 1.0f, 1.0f);
             Rotation.Normalize();
         }
 
@@ -336,5 +360,37 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FQuat InverseTransformRotation(FQuat q) => Rotation.Inverse() * q;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FTransform GetScaled(float scale)
+        {
+            var a = this;
+            a.Scale3D *= scale;
+            return a;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FTransform GetScaled(FVector scale)
+        {
+            var a = this;
+            a.Scale3D *= scale;
+            return a;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector GetScaledAxis(EAxis axis) => axis switch
+        {
+            EAxis.X => TransformVector(new FVector(1.0f, 0.0f, 0.0f)),
+            EAxis.Y => TransformVector(new FVector(0.0f, 1.0f, 0.0f)),
+            _ => TransformVector(new FVector(0.0f, 0.0f, 1.0f))
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector GetUnitAxis(EAxis axis) => axis switch
+        {
+            EAxis.X => TransformVectorNoScale(new FVector(1.0f, 0.0f, 0.0f)),
+            EAxis.Y => TransformVectorNoScale(new FVector(0.0f, 1.0f, 0.0f)),
+            _ => TransformVectorNoScale(new FVector(0.0f, 0.0f, 1.0f))
+        };
     }
 }
