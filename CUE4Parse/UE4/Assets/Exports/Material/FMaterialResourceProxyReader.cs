@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Exceptions;
@@ -123,6 +123,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 		 * Tessellation is not considered part of Feature Level SM5 and has a separate capability flag.
 		 */
         SM5,
+
+        /**
+		 * Feature level defined by the capabilities of DirectX 12 hardware feature level 12_2 with Shader Model 6.5
+		 *   Raytracing Tier 1.1
+		 *   Mesh and Amplification shaders
+		 *   Variable rate shading
+		 *   Sampler feedback
+		 *   Resource binding tier 3
+		 */
+        SM6,
         Num
     }
 }

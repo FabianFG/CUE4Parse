@@ -29,7 +29,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                         StaticParameters = new FStaticParameterSet(Ar);
                     }
 
+#if READ_SHADER_MAPS
                     DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+#else
+                    Ar.Position = validPos;
+#endif
                 }
             }
         }
