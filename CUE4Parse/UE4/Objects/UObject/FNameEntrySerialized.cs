@@ -20,8 +20,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (bHasNameHashes)
             {
 #if NAME_HASHES
-            NonCasePreservingHash = Ar.Read<ushort>();
-            CasePreservingHash = Ar.Read<ushort>();
+                NonCasePreservingHash = Ar.Read<ushort>();
+                CasePreservingHash = Ar.Read<ushort>();
 #else
                 Ar.Position += 4;
 #endif
@@ -54,10 +54,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return Array.Empty<FNameEntrySerialized>();
             }
 
-            Ar.Position += sizeof(uint); //var numStringBytes = Ar.Read<uint>();
-            Ar.Position += sizeof(ulong); //var hashVersion = Ar.Read<ulong>();
+            Ar.Position += sizeof(uint); // var numStringBytes = Ar.Read<uint>();
+            Ar.Position += sizeof(ulong); // var hashVersion = Ar.Read<ulong>();
 
-            Ar.Position += num * sizeof(ulong); //var hashes = Ar.ReadArray<ulong>(num);
+            Ar.Position += num * sizeof(ulong); // var hashes = Ar.ReadArray<ulong>(num);
             var headers = Ar.ReadArray<FSerializedNameHeader>(num);
             var entries = new FNameEntrySerialized[num];
             for (var i = 0; i < num; i++)

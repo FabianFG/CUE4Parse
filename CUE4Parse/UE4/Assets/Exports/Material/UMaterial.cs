@@ -13,11 +13,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool TwoSided;
         public bool bDisableDepthTest;
         public bool bIsMasked;
-        public FStructFallback CachedExpressionData;
+        public FStructFallback? CachedExpressionData;
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
-        public List<FMaterialResource> LoadedMaterialResources = new();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -43,7 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             // scan package's imports for UTexture objects instead
             ScanForTextures(Ar);
 
-            if (Ar.Ver >= (UE4Version) 260) // VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS
+            if (Ar.Ver >= (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS)
             {
 #if READ_SHADER_MAPS
                 DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
@@ -180,7 +179,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             // do not allow normal map became a diffuse
             if (parameters.Diffuse == parameters.Normal && diffWeight < normWeight ||
-                parameters.Diffuse != null && parameters.Diffuse.IsTextureCube)
+                parameters.Diffuse is { IsTextureCube: true })
             {
                 parameters.Diffuse = null;
             }
@@ -198,21 +197,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 {
                     if (texture == null) continue;
                     outTextures.Add(texture);
-                }
-            }
-        }
-
-        private static void DeserializeInlineShaderMaps(FAssetArchive Ar, List<FMaterialResource> loadedResources)
-        {
-            var numLoadedResources = Ar.Read<int>();
-            if (numLoadedResources > 0)
-            {
-                var resourceAr = new FMaterialResourceProxyReader(Ar);
-                for (var resourceIndex = 0; resourceIndex < numLoadedResources; ++resourceIndex)
-                {
-                    var loadedResource = new FMaterialResource();
-                    loadedResource.DeserializeInlineShaderMap(resourceAr);
-                    loadedResources.Add(loadedResource);
                 }
             }
         }

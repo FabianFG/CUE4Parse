@@ -9,39 +9,38 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class FMaterialResourceProxyReader : FArchive
     {
-        protected readonly FArchive baseArchive;
-        public FNameEntrySerialized[] NameMap;
+        protected readonly FArchive InnerArchive;
+        public readonly FNameEntrySerialized[] NameMap;
+        public FMaterialResourceLocOnDisk[] Locs;
         private long _offsetToFirstResource;
 
         public FMaterialResourceProxyReader(FArchive Ar) : base(Ar.Versions)
         {
-            baseArchive = Ar;
-            NameMap = Ar.ReadArray(() => new FNameEntrySerialized(Ar));
-            var locs = Ar.ReadArray<FMaterialResourceLocOnDisk>();
-            //check(locs[0].offset == 0)
-            var numBytes = Ar.Read<int>();
-
-            _offsetToFirstResource = Ar.Position;
+            InnerArchive = Ar;
+            NameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
+            Locs = InnerArchive.ReadArray<FMaterialResourceLocOnDisk>();
+            var _ = InnerArchive.Read<int>(); // NumBytes
+            _offsetToFirstResource = InnerArchive.Position;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct FMaterialResourceLocOnDisk
+        public readonly struct FMaterialResourceLocOnDisk
         {
             /** Relative offset to package (uasset/umap + uexp) beginning */
-            public uint Offset;
-            public ERHIFeatureLevel FeatureLevel;
-            public EMaterialQualityLevel QualityLevel;
+            public readonly uint Offset;
+            public readonly ERHIFeatureLevel FeatureLevel;
+            public readonly EMaterialQualityLevel QualityLevel;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override FName ReadFName()
         {
-            var nameIndex = baseArchive.Read<int>();
-            var number = baseArchive.Read<int>();
+            var nameIndex = InnerArchive.Read<int>();
+            var number = InnerArchive.Read<int>();
 #if !NO_FNAME_VALIDATION
             if (nameIndex < 0 || nameIndex >= NameMap.Length)
             {
-                throw new ParserException(baseArchive, $"FName could not be read, requested index {nameIndex}, name map size {NameMap.Length}");
+                throw new ParserException(InnerArchive, $"FName could not be read, requested index {nameIndex}, name map size {NameMap.Length}");
             }
 #endif
             return new FName(NameMap[nameIndex], nameIndex, number);
@@ -49,44 +48,81 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
-            => baseArchive.Read(buffer, offset, count);
+            => InnerArchive.Read(buffer, offset, count);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin)
-            => baseArchive.Seek(offset, origin);
+            => InnerArchive.Seek(offset, origin);
 
-        public override bool CanSeek => baseArchive.CanSeek;
-        public override long Length => baseArchive.Length;
+        public override bool CanSeek => InnerArchive.CanSeek;
+        public override long Length => InnerArchive.Length;
+
         public override long Position
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => baseArchive.Position;
+            get => InnerArchive.Position;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => baseArchive.Position = value;
+            set => InnerArchive.Position = value;
         }
 
-        public override string Name => baseArchive.Name;
+        public override string Name => InnerArchive.Name;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
-            => baseArchive.Read<T>();
+            => InnerArchive.Read<T>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] ReadBytes(int length)
-            => baseArchive.ReadBytes(length);
+            => InnerArchive.ReadBytes(length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override unsafe void Serialize(byte* ptr, int length)
-            => baseArchive.Serialize(ptr, length);
+            => InnerArchive.Serialize(ptr, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)
-            => baseArchive.ReadArray<T>(length);
+            => InnerArchive.ReadArray<T>(length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void ReadArray<T>(T[] array)
-            => baseArchive.ReadArray(array);
+            => InnerArchive.ReadArray(array);
 
-        public override object Clone() => new FMaterialResourceProxyReader((FArchive) baseArchive.Clone());
+        public override object Clone() => new FMaterialResourceProxyReader((FArchive) InnerArchive.Clone());
+    }
+
+    public enum EMaterialQualityLevel : byte
+    {
+        Low,
+        High,
+        Medium,
+        Epic,
+        Num
+    }
+
+    public enum ERHIFeatureLevel : byte
+    {
+        /** Feature level defined by the core capabilities of OpenGL ES2. Deprecated */
+        ES2_REMOVED,
+
+        /** Feature level defined by the core capabilities of OpenGL ES3.1 & Metal/Vulkan. */
+        ES3_1,
+
+        /**
+		 * Feature level defined by the capabilities of DX10 Shader Model 4.
+		 * SUPPORT FOR THIS FEATURE LEVEL HAS BEEN ENTIRELY REMOVED.
+		 */
+        SM4_REMOVED,
+
+        /**
+		 * Feature level defined by the capabilities of DX11 Shader Model 5.
+		 *   Compute shaders with shared memory, group sync, UAV writes, integer atomics
+		 *   Indirect drawing
+		 *   Pixel shaders with UAV writes
+		 *   Cubemap arrays
+		 *   Read-only depth or stencil views (eg read depth buffer as SRV while depth test and stencil write)
+		 * Tessellation is not considered part of Feature Level SM5 and has a separate capability flag.
+		 */
+        SM5,
+        Num
     }
 }

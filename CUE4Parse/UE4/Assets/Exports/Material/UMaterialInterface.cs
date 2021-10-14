@@ -1,5 +1,8 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Texture;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -14,6 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public float MobileSpecularPower = 16.0f;
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
         public UTexture? MobileMaskTexture;
+        public List<FMaterialResource> LoadedMaterialResources = new();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -28,6 +32,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
         }
 
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            if (LoadedMaterialResources.Count <= 0) return;
+            writer.WritePropertyName("LoadedMaterialResources");
+            serializer.Serialize(writer, LoadedMaterialResources);
+        }
+
         public override void GetParams(CMaterialParams parameters)
         {
             if (FlattenedTexture != null) parameters.Diffuse = FlattenedTexture;
@@ -37,6 +50,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             parameters.UseMobileSpecular = bUseMobileSpecular;
             parameters.MobileSpecularPower = MobileSpecularPower;
             parameters.MobileSpecularMask = MobileSpecularMask;
+        }
+
+        public void DeserializeInlineShaderMaps(FArchive Ar, ICollection<FMaterialResource> loadedResources)
+        {
+            var numLoadedResources = Ar.Read<int>();
+
+            if (numLoadedResources > 0)
+            {
+                var resourceAr = new FMaterialResourceProxyReader(Ar);
+                for (var resourceIndex = 0; resourceIndex < numLoadedResources; ++resourceIndex)
+                {
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.DeserializeInlineShaderMap(resourceAr);
+                    loadedResources.Add(loadedResource);
+                }
+            }
         }
     }
 }

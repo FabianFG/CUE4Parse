@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
@@ -15,9 +15,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            ScalarParameterValues = GetOrDefault<FScalarParameterValue[]>(nameof(ScalarParameterValues)) ?? new FScalarParameterValue[0];
-            TextureParameterValues = GetOrDefault<FTextureParameterValue[]>(nameof(TextureParameterValues)) ?? new FTextureParameterValue[0];
-            VectorParameterValues = GetOrDefault<FVectorParameterValue[]>(nameof(VectorParameterValues)) ?? new FVectorParameterValue[0];
+            ScalarParameterValues = GetOrDefault(nameof(ScalarParameterValues), Array.Empty<FScalarParameterValue>());
+            TextureParameterValues = GetOrDefault(nameof(TextureParameterValues), Array.Empty<FTextureParameterValue>());
+            VectorParameterValues = GetOrDefault(nameof(VectorParameterValues), Array.Empty<FVectorParameterValue>());
         }
 
         public override void GetParams(CMaterialParams parameters)
@@ -25,9 +25,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             // get params from linked UMaterial3
             if (Parent != null && Parent != this)
                 Parent.GetParams(parameters);
-            
+
             base.GetParams(parameters);
-            
+
             // get local parameters
             var diffWeight = 0;
             var normWeight = 0;
@@ -41,85 +41,94 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             void Diffuse(bool check, int weight, UTexture tex)
             {
-                if (check && weight > diffWeight) {
+                if (check && weight > diffWeight)
+                {
                     parameters.Diffuse = tex;
                     diffWeight = weight;
                 }
             }
-            
+
             void Normal(bool check, int weight, UTexture tex)
             {
-                if (check && weight > normWeight) {
+                if (check && weight > normWeight)
+                {
                     parameters.Normal = tex;
                     normWeight = weight;
                 }
             }
-            
+
             void Specular(bool check, int weight, UTexture tex)
             {
-                if (check && weight > specWeight) {
+                if (check && weight > specWeight)
+                {
                     parameters.Specular = tex;
                     specWeight = weight;
                 }
             }
-            
+
             void SpecPower(bool check, int weight, UTexture tex)
             {
-                if (check && weight > specPowWeight) {
+                if (check && weight > specPowWeight)
+                {
                     parameters.SpecPower = tex;
                     specPowWeight = weight;
                 }
             }
-            
+
             void Opacity(bool check, int weight, UTexture tex)
             {
-                if (check && weight > opWeight) {
+                if (check && weight > opWeight)
+                {
                     parameters.Opacity = tex;
                     opWeight = weight;
                 }
             }
-            
+
             void Emissive(bool check, int weight, UTexture tex)
             {
-                if (check && weight > emWeight) {
+                if (check && weight > emWeight)
+                {
                     parameters.Emissive = tex;
                     emWeight = weight;
                 }
             }
-            
+
             void CubeMap(bool check, int weight, UTexture tex)
             {
-                if (check && weight > cubeWeight) {
+                if (check && weight > cubeWeight)
+                {
                     parameters.Cube = tex;
                     cubeWeight = weight;
                 }
             }
-            
+
             void BakedMask(bool check, int weight, UTexture tex)
             {
-                if (check && weight > maskWeight) {
+                if (check && weight > maskWeight)
+                {
                     parameters.Mask = tex;
                     maskWeight = weight;
                 }
             }
-            
+
             void EmissiveColor(bool check, int weight, FLinearColor color)
             {
-                if (check && weight > emcWeight) {
+                if (check && weight > emcWeight)
+                {
                     parameters.EmissiveColor = color;
                     emcWeight = weight;
                 }
             }
 
             if (TextureParameterValues.Length > 0)
-                parameters.Opacity = null;     // it's better to disable opacity mask from parent material
-            
+                parameters.Opacity = null; // it's better to disable opacity mask from parent material
+
             foreach (var p in TextureParameterValues)
             {
                 var name = p.Name;
                 var tex = p.ParameterValue.Load<UTexture>();
                 if (tex == null) continue;
-                
+
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
 
                 Diffuse(name.Contains("dif", StringComparison.CurrentCultureIgnoreCase), 100, tex);
@@ -136,7 +145,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Opacity(name.Contains("opacity", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Opacity(name.Contains("alpha", StringComparison.CurrentCultureIgnoreCase), 100, tex);
             }
-            
+
             foreach (var p in VectorParameterValues)
             {
                 var name = p.Name;
@@ -144,7 +153,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (color != null)
                     EmissiveColor(name.Contains("Emissive", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
             }
-            
+
             // try to get diffuse texture when nothing found
             if (parameters.Diffuse == null && TextureParameterValues.Length == 1)
                 parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
