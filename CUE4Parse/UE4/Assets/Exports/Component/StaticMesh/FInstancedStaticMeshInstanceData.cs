@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 {
     public class FInstancedStaticMeshInstanceData
     {
-        private readonly FMatrix Transform; // no need to expose raw matrix anymore
+        private readonly FMatrix Transform; // don't expose the raw matrix for now
 
         // TODO: replicate the way UE handles this data, until then this should work better than a matrix I suppose
         public readonly FVector OffsetLocation;
@@ -18,7 +18,26 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 
             OffsetLocation = Transform.GetOrigin();
             RelativeRotation = Transform.Rotator();
-            RelativeScale3D = Transform.GetScale();
+            RelativeScale3D = Transform.GetScaleVector();
         }
+
+        // TODO: 
+        // public FVector GetLocation()
+        // {
+        //     OffsetLocation = Transform.GetOrigin();
+        //     return OffsetLocation;
+        // }
+
+        // public FRotator GetRotation()
+        // {
+        //     RelativeRotation = Transform.Rotator();
+        //     return RelativeRotation;
+        // }
+
+        // public FVector GetScale3D()
+        // {
+        //     RelativeScale3D = Transform.GetScaleVector();
+        //     return RelativeScale3D;
+        // }
     }
 }

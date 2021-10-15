@@ -280,9 +280,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector GetOrigin() => new(M30, M31, M32);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetScale() => new(M00, M11, M22);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector GetScaledAxis(EAxis axis) => axis switch
         {
             EAxis.X => new FVector(M00, M01, M02),
@@ -335,6 +332,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             rotator.Roll = MathF.Atan2(zAxis | syAxis, yAxis | syAxis) * 180.0f / MathF.PI;
 
             return rotator;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector GetScaleVector(float tolerance = FVector.SmallNumber)
+        {
+            var Scale3D = new FVector(1, 1, 1);
+
+            // For each row, find magnitude, and if its non-zero re-scale so its unit length.
+            var SquareSum0 = (M00 * M00) + (M01 * M01) + (M02 * M02);
+            Scale3D[0] = SquareSum0 > tolerance ? MathF.Sqrt(SquareSum0) : 0.0f;
+
+            var SquareSum1 = (M10 * M10) + (M11 * M11) + (M12 * M12);
+            Scale3D[1] = SquareSum1 > tolerance ? MathF.Sqrt(SquareSum1) : 0.0f;
+
+            var SquareSum2 = (M20 * M20) + (M21 * M21) + (M22 * M22);
+            Scale3D[2] = SquareSum2 > tolerance ? MathF.Sqrt(SquareSum2) : 0.0f;
+
+            return Scale3D;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
