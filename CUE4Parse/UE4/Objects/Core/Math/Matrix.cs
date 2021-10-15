@@ -280,6 +280,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector GetOrigin() => new(M30, M31, M32);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector GetScale() => new(M00, M11, M22);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector GetScaledAxis(EAxis axis) => axis switch
         {
             EAxis.X => new FVector(M00, M01, M02),
