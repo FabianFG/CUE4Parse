@@ -24,20 +24,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
         // TODO: 
         // public FVector GetLocation()
         // {
-        //     OffsetLocation = Transform.GetOrigin();
-        //     return OffsetLocation;
+        //     ...
         // }
 
         // public FRotator GetRotation()
         // {
-        //     RelativeRotation = Transform.Rotator();
-        //     return RelativeRotation;
+        //     ...
         // }
 
         // public FVector GetScale3D()
         // {
-        //     RelativeScale3D = Transform.GetScaleVector();
-        //     return RelativeScale3D;
+        //     ...
         // }
     }
 }
