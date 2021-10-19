@@ -108,6 +108,18 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             this = rotator.Quaternion();
         }
 
+        public FQuat(FVector axis, float angleRad)
+        {
+            var halfA = 0.5f * angleRad;
+            var s = Sin(halfA);
+            var c = Cos(halfA);
+
+            X = s * axis.X;
+            Y = s * axis.Y;
+            Z = s * axis.Z;
+            W = c;
+        }
+
         public bool Equals(FQuat q, float tolerance) => (Abs(X - q.X) <= tolerance && Abs(Y - q.Y) <= tolerance && Abs(Z - q.Z) <= tolerance && Abs(W - q.W) <= tolerance) ||
                                                         (Abs(X + q.X) <= tolerance && Abs(Y + q.Y) <= tolerance && Abs(Z + q.Z) <= tolerance && Abs(W + q.W) <= tolerance);
 
@@ -187,15 +199,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // V' = V + w*(T) + (Q x T)
 
             var q = new FVector(X, Y, Z);
-            var t = FVector.CrossProduct(q, v) * 2.0f;
-            return v + (t * W) + FVector.CrossProduct(q, t);
+            var t = 2.0f * FVector.CrossProduct(q, v);
+            return v + (W * t) + FVector.CrossProduct(q, t);
         }
 
         public FVector UnrotateVector(FVector v)
         {
             var q = new FVector(-X, -Y, -Z); // Inverse
-            var t = FVector.CrossProduct(q, v) * 2.0f;
-            return v + (t * W) + FVector.CrossProduct(q, t);
+            var t = 2.0f * FVector.CrossProduct(q, v);
+            return v + (W * t) + FVector.CrossProduct(q, t);
         }
 
         public FQuat Inverse() => IsNormalized

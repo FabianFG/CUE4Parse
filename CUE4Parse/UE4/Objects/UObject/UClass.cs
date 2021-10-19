@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Load serialized interface classes
             Interfaces = Ar.ReadArray(() => new FImplementedInterface(Ar));
 
-            var bDeprecatedScriptOrder = Ar.ReadBoolean();
+            var bDeprecatedForceScriptOrder = Ar.ReadBoolean();
             var dummy = Ar.ReadFName();
 
             if (Ar.Ver >= (UE4Version) VER_UE4_ADD_COOKED_TO_UCLASS)

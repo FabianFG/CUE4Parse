@@ -73,7 +73,7 @@ namespace CUE4Parse.Utils
             comparand >= 0.0f ? valueGEZero : valueLTZero;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FVector Lerp(FVector a, FVector b, float alpha) => a + (b - a) * alpha;
+        public static FVector Lerp(FVector a, FVector b, float alpha) => a + alpha * (b - a);
 
         // FVector -> System.Numerics.Vector
 
