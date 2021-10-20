@@ -335,6 +335,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector GetScaleVector(float tolerance = FVector.SmallNumber)
+        {
+            var Scale3D = new FVector(1, 1, 1);
+
+            // For each row, find magnitude, and if its non-zero re-scale so its unit length.
+            var SquareSum0 = (M00 * M00) + (M01 * M01) + (M02 * M02);
+            Scale3D[0] = SquareSum0 > tolerance ? MathF.Sqrt(SquareSum0) : 0.0f;
+
+            var SquareSum1 = (M10 * M10) + (M11 * M11) + (M12 * M12);
+            Scale3D[1] = SquareSum1 > tolerance ? MathF.Sqrt(SquareSum1) : 0.0f;
+
+            var SquareSum2 = (M20 * M20) + (M21 * M21) + (M22 * M22);
+            Scale3D[2] = SquareSum2 > tolerance ? MathF.Sqrt(SquareSum2) : 0.0f;
+
+            return Scale3D;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FQuat ToQuat() => new(this);
 
         public override string ToString() => $"[{M00:F1} {M01:F1} {M02:F1} {M03:F1}] [{M10:F1} {M11:F1} {M12:F1} {M13:F1}] [{M20:F1} {M21:F1} {M22:F1} {M23:F1}] [{M30:F1} {M31:F1} {M32:F1} {M33:F1}]";
