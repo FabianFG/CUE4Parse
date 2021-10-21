@@ -83,7 +83,7 @@ namespace CUE4Parse.UE4.Readers
         {
             var size = length * Unsafe.SizeOf<T>();
             var result = new T[length];
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref _data[Position], (uint) size);
+            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref _data[Position], (uint) size);
             Position += size;
             return result;
         }
@@ -91,6 +91,7 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void ReadArray<T>(T[] array)
         {
+            if (array.Length == 0) return;
             var size = array.Length * Unsafe.SizeOf<T>();
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref _data[Position], (uint) size);
             Position += size;
