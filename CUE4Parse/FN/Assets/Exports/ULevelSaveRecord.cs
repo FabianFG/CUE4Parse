@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -10,6 +11,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Ionic.Crc;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.FN.Assets.Exports
@@ -36,8 +38,12 @@ namespace CUE4Parse.FN.Assets.Exports
         UsingSaveActorGUID,
         UsingActorFNameForEditorSpawning,
         AddedPlayerPersistenceUserWipeNumber,
-        VersionPlusOne,
+        Unused,
+        AddedVkPalette,
+        SwitchingToCoreSerialization,
+        AddedNavmeshRequired,
 
+        VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
     }
 
@@ -92,17 +98,15 @@ namespace CUE4Parse.FN.Assets.Exports
 
     public class FActorTemplateRecord
     {
-        public ulong unsigned___int640;
+        public ulong ID;
         public FSoftObjectPath ActorClass;
-        public FActorComponentRecord[] gap30;
+        public FActorComponentRecord[] ActorComponents;
         public byte[]? ActorData;
-        public uint unsigned_int48;
-        public int dword4C;
         public uint DataHash;
 
         public FActorTemplateRecord(FLevelSaveRecordArchive Ar)
         {
-            unsigned___int640 = Ar.Read<ulong>();
+            ID = Ar.Read<ulong>();
 
             if (Ar.Version < ELevelSaveRecordVersion.SoftActorClassReferences)
             {
@@ -126,7 +130,7 @@ namespace CUE4Parse.FN.Assets.Exports
             // var redirects = redirectsObj.LevelSaveRecordActorClassRedirects;
             // ... We don't care about redirects anyways
 
-            gap30 = Ar.ReadArray(() => new FActorComponentRecord(Ar));
+            ActorComponents = Ar.ReadArray(() => new FActorComponentRecord(Ar));
 
             // skip, idk what it's doing
 
@@ -209,57 +213,97 @@ namespace CUE4Parse.FN.Assets.Exports
 
     public class FActorInstanceRecord
     {
-        public ulong unsigned___int640;
-        public ulong unsigned___int648;
-        public FName fname10;
-        public FGuid fguid18;
-        public FTransform transform28;
+        public ulong RecordID;
+        public ulong TemplateRecordID;
+        public FName ActorId;
+        public FGuid ActorGuid;
+        public FTransform Transform;
 
         public FActorInstanceRecord(FLevelSaveRecordArchive Ar)
         {
             if (Ar.Version < ELevelSaveRecordVersion.TimestampConversion)
             {
-                unsigned___int640 = Ar.Read<ulong>();
+                RecordID = Ar.Read<ulong>();
             }
             else
             {
-                unsigned___int640 = Ar.Read<ulong>(); // The same???? What do you mean by timestamp conversion? There's something optimized out in the above block I think
+                RecordID = Ar.Read<ulong>(); // There's something stripped out in the above block, so it's the same
             }
 
-            unsigned___int648 = Ar.Read<ulong>();
+            TemplateRecordID = Ar.Read<ulong>();
 
             if (Ar.Version < ELevelSaveRecordVersion.UsingSaveActorGUID)
             {
-                fname10 = Ar.ReadFName();
+                ActorId = Ar.ReadFName();
                 // TODO hash or something that results in a unique GUID based on the name?
             }
             else
             {
                 if (Ar.Version != ELevelSaveRecordVersion.UsingSaveActorGUID)
                 {
-                    fname10 = Ar.ReadFName();
+                    ActorId = Ar.ReadFName();
                 }
 
-                fguid18 = Ar.Read<FGuid>();
+                ActorGuid = Ar.Read<FGuid>();
             }
 
-            transform28 = Ar.Read<FTransform>();
+            Transform = Ar.Read<FTransform>();
         }
     }
 
     public class FLevelStreamedDeleteActorRecord
     {
-        public FName fname;
-        public FTransform ftransform;
-        public FSoftObjectPath fsoftobjectptr;
-        public FSoftObjectPath fsoftobjectptr1;
+        public FName ActorId;
+        public FTransform Transform;
+        public FSoftObjectPath ActorClass; // UClass
+        public FSoftObjectPath OwningLevel; // UWorld
 
-        public FLevelStreamedDeleteActorRecord(FLevelSaveRecordArchive Ar)
+        public FLevelStreamedDeleteActorRecord(FAssetArchive Ar)
         {
-            fname = Ar.ReadFName();
-            ftransform = Ar.Read<FTransform>();
-            fsoftobjectptr = new FSoftObjectPath(Ar);
-            fsoftobjectptr1 = new FSoftObjectPath(Ar);
+            ActorId = Ar.ReadFName();
+            Transform = Ar.Read<FTransform>();
+            ActorClass = new FSoftObjectPath(Ar);
+            OwningLevel = new FSoftObjectPath(Ar);
+        }
+    }
+
+    // /Script/VkEngineTypes.VkModuleVersionRef
+    public class FVkModuleVersionRef
+    {
+        public string ModuleId;
+        public string Version;
+    }
+
+    public class FFortCreativeVkPalette_ProjectInfo
+    {
+        public int LinkVersion;
+        public int unk;
+        public FVkModuleVersionRef[] PublicModules;
+
+        public FFortCreativeVkPalette_ProjectInfo(FArchive Ar)
+        {
+            LinkVersion = Ar.Read<int>();
+        }
+    }
+
+    public class FFortCreativeVkPalette
+    {
+        public Dictionary<string, FFortCreativeVkPalette_ProjectInfo> LinkCodeMap;
+
+        public FFortCreativeVkPalette(FArchive Ar)
+        {
+            var dummy = Ar.Read<int>();
+
+            var linkCodeMapNum = Ar.Read<int>();
+            if (linkCodeMapNum > 0)
+            {
+                throw new NotImplementedException();
+            }
+            LinkCodeMap = new Dictionary<string, FFortCreativeVkPalette_ProjectInfo>(linkCodeMapNum);
+            for (int i = 0; i < linkCodeMapNum; i++)
+            {
+                LinkCodeMap[Ar.ReadFString()] = new FFortCreativeVkPalette_ProjectInfo(Ar);
+            }
         }
     }
 
@@ -272,22 +316,129 @@ namespace CUE4Parse.FN.Assets.Exports
         public FVector HalfBoundsExtent;
         public FRotator Rotation;
         public FVector Scale;
-        public ulong Unk0; // UnknownData01[0xC]
+        public ulong LastTemplateID; // UnknownData01[0xC]
         public Dictionary<int, FActorTemplateRecord> TemplateRecords;
         public Dictionary<FGuid, FActorInstanceRecord> ActorInstanceRecords;
         public Dictionary<FGuid, FActorInstanceRecord> VolumeInfoActorRecords;
         public Dictionary<FName, FLevelStreamedDeleteActorRecord> LevelStreamedActorsToDelete;
         public int PlayerPersistenceUserWipeNumber;
+        public FFortCreativeVkPalette VkPalette;
         public string IslandTemplateId; // UnknownData03[0x48]
+        public byte NavmeshRequired; // TODO Find out its enum values
         public bool bRequiresGridPlacement;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             DeserializeHeader(Ar);
-            DeserializeInlineLevelSaveRecord(Ar);
+
+            if (SaveVersion < ELevelSaveRecordVersion.SwitchingToCoreSerialization)
+            {
+                DeserializeLevelSaveRecord(Ar);
+            }
+            else
+            {
+                base.Deserialize(Ar, validPos);
+            }
         }
 
-        private bool DeserializeHeader(FArchive Ar)
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            if (!PackageName.IsNone)
+            {
+                writer.WritePropertyName("PackageName");
+                serializer.Serialize(writer, PackageName);
+            }
+
+            writer.WritePropertyName("SaveVersion");
+            writer.WriteValue((short) SaveVersion);
+
+            writer.WritePropertyName("bCompressed");
+            writer.WriteValue(bCompressed);
+
+            if (IslandTemplateId is { Length: > 0 })
+            {
+                writer.WritePropertyName("IslandTemplateId");
+                writer.WriteValue(IslandTemplateId);
+            }
+
+            if (NavmeshRequired != 0)
+            {
+                writer.WritePropertyName("NavmeshRequired");
+                writer.WriteValue(NavmeshRequired);
+            }
+
+            base.WriteJson(writer, serializer);
+
+            if (Center != FVector.ZeroVector)
+            {
+                writer.WritePropertyName("Center");
+                serializer.Serialize(writer, Center);
+            }
+
+            if (HalfBoundsExtent != FVector.ZeroVector)
+            {
+                writer.WritePropertyName("HalfBoundsExtent");
+                serializer.Serialize(writer, HalfBoundsExtent);
+            }
+
+            if (Rotation != FRotator.ZeroRotator)
+            {
+                writer.WritePropertyName("Rotation");
+                serializer.Serialize(writer, Rotation);
+            }
+
+            if (LastTemplateID != 0)
+            {
+                writer.WritePropertyName("LastTemplateID");
+                writer.WriteValue(LastTemplateID);
+            }
+
+            if (TemplateRecords is { Count: > 0 })
+            {
+                writer.WritePropertyName("TemplateRecords");
+                serializer.Serialize(writer, TemplateRecords);
+            }
+
+            if (ActorInstanceRecords is { Count: > 0 })
+            {
+                writer.WritePropertyName("ActorInstanceRecords");
+                serializer.Serialize(writer, ActorInstanceRecords);
+            }
+
+            if (VolumeInfoActorRecords is { Count: > 0 })
+            {
+                writer.WritePropertyName("VolumeInfoActorRecords");
+                serializer.Serialize(writer, VolumeInfoActorRecords);
+            }
+
+            if (bRequiresGridPlacement)
+            {
+                writer.WritePropertyName("bRequiresGridPlacement");
+                writer.WriteValue(bRequiresGridPlacement);
+            }
+
+            if (Scale != FVector.OneVector)
+            {
+                writer.WritePropertyName("Scale");
+                serializer.Serialize(writer, Scale);
+            }
+
+            if (LevelStreamedActorsToDelete is { Count: > 0 })
+            {
+                writer.WritePropertyName("LevelStreamedActorsToDelete");
+                serializer.Serialize(writer, LevelStreamedActorsToDelete);
+            }
+
+            if (PlayerPersistenceUserWipeNumber != 0)
+            {
+                writer.WritePropertyName("PlayerPersistenceUserWipeNumber");
+                writer.WriteValue(PlayerPersistenceUserWipeNumber);
+            }
+
+            // TODO VkPalette
+        }
+
+        private void DeserializeHeader(FArchive Ar)
         {
             PackageName = Ar.ReadFName();
             SaveVersion = Ar.Read<ELevelSaveRecordVersion>();
@@ -296,18 +447,21 @@ namespace CUE4Parse.FN.Assets.Exports
             {
                 throw new ParserException("Unsupported level save record version " + (short) SaveVersion);
             }
-            
+
             bCompressed = Ar.ReadBoolean();
 
-            if (SaveVersion > ELevelSaveRecordVersion.AddedIslandTemplateId)
+            if (SaveVersion >= ELevelSaveRecordVersion.AddedIslandTemplateId)
             {
                 IslandTemplateId = Ar.ReadFString();
             }
 
-            return SaveVersion <= ELevelSaveRecordVersion.AddedPlayerPersistenceUserWipeNumber;
+            if (SaveVersion >= ELevelSaveRecordVersion.AddedNavmeshRequired)
+            {
+                NavmeshRequired = Ar.Read<byte>();
+            }
         }
 
-        private void DeserializeInlineLevelSaveRecord(FAssetArchive Ar)
+        private void DeserializeLevelSaveRecord(FAssetArchive Ar)
         {
             var wrappedAr = new FLevelSaveRecordArchive(Ar, SaveVersion);
             DeserializeLevelSaveRecordData(wrappedAr);
@@ -318,7 +472,7 @@ namespace CUE4Parse.FN.Assets.Exports
             Center = Ar.Read<FVector>();
             HalfBoundsExtent = Ar.Read<FVector>();
             Rotation = Ar.Read<FRotator>();
-            Unk0 = Ar.Read<ulong>();
+            LastTemplateID = Ar.Read<ulong>();
 
             var numTemplateRecords = Ar.Read<int>();
             TemplateRecords = new Dictionary<int, FActorTemplateRecord>(numTemplateRecords);
@@ -342,16 +496,27 @@ namespace CUE4Parse.FN.Assets.Exports
             }
 
             bRequiresGridPlacement = Ar.ReadBoolean();
-            Scale = Ar.Read<FVector>();
+            Scale = Ar.Version >= ELevelSaveRecordVersion.AddingScale ? Ar.Read<FVector>() : FVector.OneVector;
 
-            var numLevelStreamedActorsToDelete = Ar.Read<int>();
-            LevelStreamedActorsToDelete = new Dictionary<FName, FLevelStreamedDeleteActorRecord>();
-            for (int i = 0; i < numLevelStreamedActorsToDelete; i++)
+            if (Ar.Version >= ELevelSaveRecordVersion.AddedLevelStreamedDeleteRecord)
             {
-                LevelStreamedActorsToDelete[Ar.ReadFName()] = new FLevelStreamedDeleteActorRecord(Ar);
+                var numLevelStreamedActorsToDelete = Ar.Read<int>();
+                LevelStreamedActorsToDelete = new Dictionary<FName, FLevelStreamedDeleteActorRecord>();
+                for (int i = 0; i < numLevelStreamedActorsToDelete; i++)
+                {
+                    LevelStreamedActorsToDelete[Ar.ReadFName()] = new FLevelStreamedDeleteActorRecord(Ar);
+                }
             }
 
-            PlayerPersistenceUserWipeNumber = Ar.Read<int>();
+            if (Ar.Version >= ELevelSaveRecordVersion.AddedPlayerPersistenceUserWipeNumber)
+            {
+                PlayerPersistenceUserWipeNumber = Ar.Read<int>();
+            }
+
+            if (Ar.Version >= ELevelSaveRecordVersion.AddedVkPalette)
+            {
+                VkPalette = new FFortCreativeVkPalette(Ar);
+            }
         }
     }
 }
