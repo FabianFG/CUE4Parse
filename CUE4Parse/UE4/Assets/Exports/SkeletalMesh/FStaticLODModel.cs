@@ -167,7 +167,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-            bool bIsLODCookedOut = false;
+            var bIsLODCookedOut = false;
             if (Ar.Game != EGame.GAME_Splitgate)
                 bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
