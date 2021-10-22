@@ -64,13 +64,14 @@ namespace CUE4Parse.UE4.Readers
             var size = Unsafe.SizeOf<T>();
             var buffer = ReadBytes(size * length);
             var result = new T[length];
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
+            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
             return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void ReadArray<T>(T[] array)
         {
+            if (array.Length == 0) return;
             var size = Unsafe.SizeOf<T>();
             var buffer = ReadBytes(size * array.Length);
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));

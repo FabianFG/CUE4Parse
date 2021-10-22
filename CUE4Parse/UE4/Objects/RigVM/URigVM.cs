@@ -13,11 +13,13 @@ namespace CUE4Parse.UE4.Objects.RigVM
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
-            if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
-            WorkMemoryStorage = new FRigVMMemoryContainer(Ar);
-            LiteralMemoryStorage = new FRigVMMemoryContainer(Ar);
-            ByteCodeStorage = new FRigVMByteCode(Ar);
-            Parameters = Ar.ReadArray(() => new FRigVMParameter(Ar));
+            // if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
+            // WorkMemoryStorage = new FRigVMMemoryContainer(Ar);
+            // LiteralMemoryStorage = new FRigVMMemoryContainer(Ar);
+            // ByteCodeStorage = new FRigVMByteCode(Ar);
+            // Parameters = Ar.ReadArray(() => new FRigVMParameter(Ar));
+
+            Ar.Position = validPos;
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

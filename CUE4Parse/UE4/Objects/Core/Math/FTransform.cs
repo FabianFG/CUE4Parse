@@ -193,9 +193,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // apply negative scale back to axes
             var signedScale = desiredScale.GetSignVector();
 
-            m.SetAxis(0, m.GetScaledAxis(EAxis.X) * signedScale.X);
-            m.SetAxis(1, m.GetScaledAxis(EAxis.Y) * signedScale.Y);
-            m.SetAxis(2, m.GetScaledAxis(EAxis.Z) * signedScale.Z);
+            m.SetAxis(0, signedScale.X * m.GetScaledAxis(EAxis.X));
+            m.SetAxis(1, signedScale.Y * m.GetScaledAxis(EAxis.Y));
+            m.SetAxis(2, signedScale.Z * m.GetScaledAxis(EAxis.Z));
 
             // @note: if you have negative with 0 scale, this will return rotation that is identity
             // since matrix loses that axes

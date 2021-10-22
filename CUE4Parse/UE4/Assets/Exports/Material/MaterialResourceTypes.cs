@@ -39,10 +39,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public void Deserialize(FMaterialResourceProxyReader Ar)
         {
+            var bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
+
             ImageResult = new FMemoryImageResult(Ar);
 
             var bShareCode = Ar.ReadBoolean();
-            // var ShaderPlatform = Ar.Read<byte>();
+            if (bUseNewFormat)
+            {
+                var ShaderPlatform = Ar.Read<EShaderPlatform>();
+            }
 
             if (bShareCode)
             {
@@ -85,16 +90,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FMemoryImageResult
     {
-        public FShaderMapPointerTable ShaderMapPointerTable;
-        public FPointerTableBase PointerTable;
+        public FPlatformTypeLayoutParameters? LayoutParameters;
+        public FShaderMapPointerTable? ShaderMapPointerTable;
+        public FPointerTableBase? PointerTable;
 
         public FMemoryImageResult(FArchive Ar) // LoadFromArchive
         {
-            // var LayoutParameters = new FPlatformTypeLayoutParameters(Ar);
+            var bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
+
+            if (bUseNewFormat)
+                LayoutParameters = new FPlatformTypeLayoutParameters(Ar);
+
             var FrozenSize = Ar.Read<uint>();
             var FrozenObject = Ar.ReadBytes((int) FrozenSize);
 
-            // FPointerTableBase.LoadFromArchive(Ar);
+            if (bUseNewFormat)
+                PointerTable = new FPointerTableBase(Ar);
 
             var NumVTables = Ar.Read<uint>();
             var NumScriptNames = Ar.Read<uint>();
@@ -134,8 +145,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 }
             }
 
-            ShaderMapPointerTable = new FShaderMapPointerTable(Ar);
-            PointerTable = new FPointerTableBase(Ar);
+            if (!bUseNewFormat)
+            {
+                ShaderMapPointerTable = new FShaderMapPointerTable(Ar);
+                PointerTable = new FPointerTableBase(Ar);
+            }
         }
     }
 
@@ -248,5 +262,45 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             Flag_WithEditorOnly = 1 << 3,
             Flag_WithRaytracing = 1 << 4,
         }
+    }
+
+    public enum EShaderPlatform
+    {
+        SP_PCD3D_SM5					= 0,
+        SP_METAL						= 11,
+        SP_METAL_MRT					= 12,
+        SP_PCD3D_ES3_1					= 14,
+        SP_OPENGL_PCES3_1				= 15,
+        SP_METAL_SM5					= 16,
+        SP_VULKAN_PCES3_1				= 17,
+        SP_METAL_SM5_NOTESS_REMOVED		= 18,
+        SP_VULKAN_SM5					= 20,
+        SP_VULKAN_ES3_1_ANDROID			= 21,
+        SP_METAL_MACES3_1 				= 22,
+        SP_OPENGL_ES3_1_ANDROID			= 24,
+        SP_METAL_MRT_MAC				= 27,
+        SP_VULKAN_SM5_LUMIN_REMOVED		= 28,
+        SP_VULKAN_ES3_1_LUMIN_REMOVED	= 29,
+        SP_METAL_TVOS					= 30,
+        SP_METAL_MRT_TVOS				= 31,
+        /**********************************************************************************/
+        /* !! Do not add any new platforms here. Add them below SP_StaticPlatform_Last !! */
+        /**********************************************************************************/
+
+        //---------------------------------------------------------------------------------
+        /** Pre-allocated block of shader platform enum values for platform extensions */
+        SP_StaticPlatform_First = 32,
+
+        DDPI_EXTRA_SHADERPLATFORMS,
+
+        SP_StaticPlatform_Last  = SP_StaticPlatform_First + 16 - 1,
+
+        //  Add new platforms below this line, starting from (SP_StaticPlatform_Last + 1)
+        //---------------------------------------------------------------------------------
+        SP_VULKAN_SM5_ANDROID			= SP_StaticPlatform_Last+1,
+        SP_PCD3D_SM6,
+
+        SP_NumPlatforms,
+        SP_NumBits						= 7,
     }
 }

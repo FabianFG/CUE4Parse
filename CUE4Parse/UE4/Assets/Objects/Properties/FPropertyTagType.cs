@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -79,11 +79,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                     return null;
                 case EnumProperty enumProp when type.IsEnum:
                     var storedEnum = enumProp.Value.Text;
-                    if (type.Name != storedEnum.SubstringBefore("::"))
-                        return null;
-                
-                    var search = storedEnum.SubstringAfter("::");
-                    var values = type.GetEnumNames()!;
+                    var search = storedEnum.SubstringAfter("::"); // Strip enum name on namespaced and enum class enums
+                    var values = type.GetEnumNames();
                     var idx = Array.FindIndex(values, it => it == search);
                     return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
                 //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2

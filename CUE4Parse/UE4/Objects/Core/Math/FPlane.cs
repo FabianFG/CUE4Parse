@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -27,11 +29,17 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         
         /** The w-component. */
         public float W;
-        
-        public bool Equals(FPlane v, float tolerance = FVector.KindaSmallNumber) => System.Math.Abs(X - v.X) <= tolerance &&
-                                                                             System.Math.Abs(Y - v.Y) <= tolerance &&
-                                                                             System.Math.Abs(Z - v.Z) <= tolerance &&
-                                                                             System.Math.Abs(W - v.W) <= tolerance;
+
+        public FPlane(FVector @base, FVector normal)
+        {
+            Vector = @base;
+            W = @base | normal;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float PlaneDot(FVector p) => X * p.X + Y * p.Y + Z * p.Z - W;
+
+        public bool Equals(FPlane v, float tolerance = FVector.KindaSmallNumber) => Abs(X - v.X) <= tolerance && Abs(Y - v.Y) <= tolerance && Abs(Z - v.Z) <= tolerance && Abs(W - v.W) <= tolerance;
         
         public override bool Equals(object? obj) => obj is FPlane other && Equals(other, 0f);
     }
