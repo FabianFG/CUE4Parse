@@ -92,7 +92,7 @@ if (Provider.TrySavePackage(fullPath, out var assets))
 
 ## Building CUE4Parse
 
-1. Clone repository and intialize submodules
+1. Clone repository and initialize submodules
 
     ```
     git clone https://github.com/FabianFG/CUE4Parse
