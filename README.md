@@ -74,6 +74,35 @@ if (Provider.TrySavePackage(fullPath, out var assets))
     }
 }
 ```
+## Requirements
+
+* Windows
+    * [.Net SDK](https://dotnet.microsoft.com/download)
+    * C++ Compiler
+    * [CMake](https://cmake.org/)
+    * [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
+* Linux
+    * [.Net SDK](https://dotnet.microsoft.com/download)
+    * C++ Compiler
+    * [CMake](https://cmake.org/)
+* MacOS
+    * [.Net SDK](https://dotnet.microsoft.com/download)
+    * C++ Compiler
+    * [CMake](https://cmake.org/)
+
+## Building CUE4Parse
+
+1. Clone repository and initialize submodules
+
+    ```
+    git clone https://github.com/FabianFG/CUE4Parse
+    cd CUE4Parse
+    git submodule update --init --recursive
+    ```
+2. Build 
+    ``` 
+    dotnet build
+    ```
 
 ## Contributing
 

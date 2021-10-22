@@ -163,10 +163,13 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
         }
 
+        // UE ref https://github.com/EpicGames/UnrealEngine/blob/26450a5a59ef65d212cf9ce525615c8bd673f42a/Engine/Source/Runtime/Engine/Private/SkeletalMeshLODRenderData.cpp#L710
         public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-            var bIsLODCookedOut = Ar.ReadBoolean();
+            var bIsLODCookedOut = false;
+            if (Ar.Game != EGame.GAME_Splitgate)
+                bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
 
             RequiredBones = Ar.ReadArray<short>();
