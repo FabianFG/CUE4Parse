@@ -501,14 +501,14 @@ namespace CUE4Parse.FN.Assets.Exports
             }
 
             var numActorInstanceRecords = Ar.Read<int>();
-            ActorInstanceRecords = new Dictionary<FGuid, FActorInstanceRecord>();
+            ActorInstanceRecords = new Dictionary<FGuid, FActorInstanceRecord>(numActorInstanceRecords);
             for (int i = 0; i < numActorInstanceRecords; i++)
             {
                 ActorInstanceRecords[Ar.Read<FGuid>()] = new FActorInstanceRecord(Ar);
             }
 
             var numVolumeInfoActorRecords = Ar.Read<int>();
-            VolumeInfoActorRecords = new Dictionary<FGuid, FActorInstanceRecord>();
+            VolumeInfoActorRecords = new Dictionary<FGuid, FActorInstanceRecord>(numVolumeInfoActorRecords);
             for (int i = 0; i < numVolumeInfoActorRecords; i++)
             {
                 VolumeInfoActorRecords[Ar.Read<FGuid>()] = new FActorInstanceRecord(Ar);
