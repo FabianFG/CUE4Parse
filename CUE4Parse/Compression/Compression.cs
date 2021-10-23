@@ -10,6 +10,8 @@ namespace CUE4Parse.Compression
 {
     public static class Compression
     {
+        public const int LOADING_COMPRESSION_CHUNK_SIZE = 131072;
+
         public static byte[] Decompress(byte[] compressed, int uncompressedSize, CompressionMethod method, FArchive? reader = null) =>
             Decompress(compressed, 0, compressed.Length, uncompressedSize, method, reader);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

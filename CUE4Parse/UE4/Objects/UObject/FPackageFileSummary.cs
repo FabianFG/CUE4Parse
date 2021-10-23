@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
@@ -31,8 +32,8 @@ namespace CUE4Parse.UE4.Objects.UObject
 
     public class FPackageFileSummary
     {
-        private const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
-        private const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
+        public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
+        public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
 
         public readonly uint Tag;
@@ -85,7 +86,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ChunkIds = Array.Empty<int>();
         }
 
-        internal FPackageFileSummary(FAssetArchive Ar)
+        internal FPackageFileSummary(FArchive Ar)
         {
             Tag = Ar.Read<uint>();
 
@@ -343,9 +344,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 PreloadDependencyOffset = 0;
             }
 
-            if (Tag == PACKAGE_FILE_TAG_ONE)
+            if (Tag == PACKAGE_FILE_TAG_ONE && Ar is FAssetArchive assetAr)
             {
-                Ar.AbsoluteOffset = NameOffset - (int) Ar.Position;
+                assetAr.AbsoluteOffset = NameOffset - (int) Ar.Position;
             }
         }
     }
