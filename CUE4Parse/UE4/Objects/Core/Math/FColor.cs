@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly byte B;
         public readonly byte A;
 
-        public readonly string Hex => A is 1 or 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
+        public string Hex => A is 1 or 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
         public FColor(byte r, byte g, byte b, byte a)
         {

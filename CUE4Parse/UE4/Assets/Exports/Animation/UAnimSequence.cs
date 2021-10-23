@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public int NumFrames;
         public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;
-        public FPackageIndex BoneCompressionSettings; // UAnimBoneCompressionSettings
+        public ResolvedObject? BoneCompressionSettings; // UAnimBoneCompressionSettings
         // begin CompressedData
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
         public FStructFallback CompressedCurveData; // FRawCurveTracks
@@ -40,10 +40,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             RateScale = GetOrDefault(nameof(RateScale), 1.0f);
 
             NumFrames = GetOrDefault<int>(nameof(NumFrames));
-            BoneCompressionSettings = GetOrDefault<FPackageIndex>(nameof(BoneCompressionSettings));
+            BoneCompressionSettings = GetOrDefault<FPackageIndex>(nameof(BoneCompressionSettings))?.ResolvedObject;
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
+
+            if (BoneCompressionSettings == null && Ar.Game == EGame.GAME_RogueCompany)
+            {
+                BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadObject("/Game/Animation/KSAnimBoneCompressionSettings")!);
+            }
 
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
