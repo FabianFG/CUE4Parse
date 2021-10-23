@@ -1,4 +1,7 @@
 ﻿using System;
+using CUE4Parse.FN.Objects;
+using CUE4Parse.TSW.Objects;
+using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -13,8 +16,6 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.TSW.Objects;
-using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -90,6 +91,10 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
                 "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Read<FVector>(),
+
+                // FortniteGame
+                "ConnectivityCube" => new FConnectivityCube(Ar),
+                //"FortActorRecord" => new FFortActorRecord(Ar),
 
                 // Train Sim World
                 "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
