@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -105,12 +106,37 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public void SerializeCompressedData(FAssetArchive Ar)
         {
-            ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
+            var baseFirst = Ar.Game >= EGame.GAME_UE4_25;
+
+            if (baseFirst)
+            {
+                ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
+            }
 
             KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
             TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
             RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
             ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
+            if (!baseFirst)
+            {
+                ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
+            }
+
+            CompressedByteStream = new byte[Ar.Read<int>()];
+            CompressedTrackOffsets = new int[Ar.Read<int>()];
+            CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
+            CompressedScaleOffsets.StripSize = Ar.Read<int>();
+        }
+
+        public void SerializeCompressedData_Pre4_25(FAssetArchive Ar)
+        {
+            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
+            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
+
+            ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
 
             CompressedByteStream = new byte[Ar.Read<int>()];
             CompressedTrackOffsets = new int[Ar.Read<int>()];
