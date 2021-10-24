@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -21,12 +22,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;
         public ResolvedObject? BoneCompressionSettings; // UAnimBoneCompressionSettings
-        // begin CompressedData
+        public ResolvedObject? CurveCompressionSettings; // UAnimCurveCompressionSettings
+
+        #region FCompressedAnimSequence CompressedData
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
-        public FStructFallback CompressedCurveData; // FRawCurveTracks
+        public FSmartName[] CompressedCurveNames;
+        //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
+        public byte[] CompressedCurveByteStream;
+        public FStructFallback CompressedCurveData; // FRawCurveTracks, disappeared in 4.23
         public ICompressedAnimData CompressedDataStructure;
         public UAnimBoneCompressionCodec? BoneCompressionCodec;
-        // end CompressedData
+        public UAnimCurveCompressionCodec? CurveCompressionCodec;
+        public int CompressedRawDataSize;
+        #endregion
+
         public EAdditiveAnimationType AdditiveAnimType;
         public FName RetargetSource;
         public FTransform[]? RetargetSourceAssetReferencePose;
@@ -46,6 +55,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             NumFrames = GetOrDefault<int>(nameof(NumFrames));
             BoneCompressionSettings = GetOrDefault<FPackageIndex>(nameof(BoneCompressionSettings))?.ResolvedObject;
+            CurveCompressionSettings = GetOrDefault<FPackageIndex>(nameof(CurveCompressionSettings))?.ResolvedObject;
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
@@ -61,24 +71,30 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 RawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
                 if (Ar.Ver >= UE4Version.VER_UE4_ANIMATION_ADD_TRACKCURVES)
                 {
-                    //if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovingSourceAnimationData)
-                    //{
-                    var sourceRawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
-                    //}
+                    if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovingSourceAnimationData)
+                    {
+                        var sourceRawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
+                        if (sourceRawAnimationData.Length > 0)
+                        {
+                            // Set RawAnimationData to Source
+                            RawAnimationData = sourceRawAnimationData;
+                        }
+                    }
                 }
             }
 
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.MoveCompressedAnimDataToTheDDC)
             {
                 var compressedData = new FUECompressedAnimData();
+                CompressedDataStructure = compressedData;
 
                 // Part of data were serialized as properties
-                compressedData.CompressedByteStream = Ar.ReadArray<byte>();
+                compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
                 if (Ar.Game == EGame.GAME_SeaOfThieves && compressedData.CompressedByteStream.Length == 1 && Ar.Length - Ar.Position > 0)
                 {
                     // Sea of Thieves has extra int32 == 1 before the CompressedByteStream
                     Ar.Position -= 1;
-                    compressedData.CompressedByteStream = Ar.ReadArray<byte>();
+                    compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
                 }
 
                 // Fix layout of "byte swapped" data (workaround for UE4 bug)
@@ -103,6 +119,94 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
                     bUseRawDataOnly = Ar.ReadBoolean();
                 }
+            }
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+
+            // Follow field order of FCompressedAnimSequence CompressedData
+
+            if (CompressedTrackToSkeletonMapTable is { Length: > 0 })
+            {
+                writer.WritePropertyName("CompressedTrackToSkeletonMapTable");
+                writer.WriteStartArray();
+                foreach (var trackToSkeletonMap in CompressedTrackToSkeletonMapTable)
+                {
+                    writer.WriteValue(trackToSkeletonMap.BoneTreeIndex);
+                }
+                writer.WriteEndArray();
+            }
+
+            if (CompressedCurveNames is { Length: > 0 })
+            {
+                writer.WritePropertyName("CompressedCurveNames");
+                serializer.Serialize(writer, CompressedCurveNames);
+            }
+
+            /*if (CompressedByteStream is { Length: > 0 })
+            {
+                writer.WritePropertyName("CompressedByteStream");
+                writer.WriteValue(CompressedByteStream);
+            }*/
+
+            /*if (CompressedCurveByteStream is { Length: > 0 })
+            {
+                writer.WritePropertyName("CompressedCurveByteStream");
+                writer.WriteValue(CompressedCurveByteStream);
+            }*/
+
+            // BEGIN PROTOTYPE COMPRESSED CURVE JSON REPRESENTATION
+            // TODO Needs rework when you have a better approach!!!
+            if (CurveCompressionCodec is UAnimCurveCompressionCodec_CompressedRichCurve)
+            {
+                var Ar = new FByteArchive("CompressedCurveByteStream", CompressedCurveByteStream);
+                var numCurves = CompressedCurveNames.Length;
+                var curveDescriptions = Ar.ReadArray<FCurveDesc>(numCurves);
+                var compressedKeysOffset = Ar.Position;
+                var compressedKeys = Ar.ReadBytes((int) (Ar.Length - compressedKeysOffset));
+
+                writer.WritePropertyName("CompressedCurve");
+                writer.WriteStartObject();
+
+                writer.WritePropertyName("CurveDescriptions");
+                serializer.Serialize(writer, curveDescriptions);
+
+                writer.WritePropertyName("CompressedKeysOffset");
+                writer.WriteValue(compressedKeysOffset);
+
+                writer.WritePropertyName("CompressedKeys");
+                serializer.Serialize(writer, compressedKeys);
+
+                writer.WriteEndObject();
+            }
+            // END
+
+            if (CompressedDataStructure != null)
+            {
+                writer.WritePropertyName("CompressedDataStructure");
+                serializer.Serialize(writer, CompressedDataStructure);
+            }
+
+            if (BoneCompressionCodec != null)
+            {
+                var asReference = new ResolvedLoadedObject(BoneCompressionCodec);
+                writer.WritePropertyName("BoneCompressionCodec");
+                serializer.Serialize(writer, asReference);
+            }
+
+            if (CurveCompressionCodec != null)
+            {
+                var asReference = new ResolvedLoadedObject(CurveCompressionCodec);
+                writer.WritePropertyName("CurveCompressionCodec");
+                serializer.Serialize(writer, asReference);
+            }
+
+            if (CompressedRawDataSize > 0)
+            {
+                writer.WritePropertyName("CompressedRawDataSize");
+                writer.WriteValue(CompressedRawDataSize);
             }
         }
 
@@ -138,13 +242,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             else
             {
-                var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
+                CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
             }
 
             if (Ar.Game >= EGame.GAME_UE4_17)
             {
                 // UE4.17+
-                var compressedRawDataSize = Ar.Read<int>();
+                CompressedRawDataSize = Ar.Read<int>();
             }
 
             if (Ar.Game >= EGame.GAME_UE4_22)
@@ -153,13 +257,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             // compressed data
-            var numBytes = Ar.Read<int>();
-            compressedData.CompressedByteStream = Ar.ReadBytes(numBytes);
+            compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {
                 var curveCodecPath = Ar.ReadFString();
-                var compressedCurveByteStream = Ar.ReadArray<byte>();
+                CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
+                CompressedCurveByteStream = Ar.ReadBytes(Ar.Read<int>());
             }
 
             // Fix layout of "byte swapped" data (workaround for UE4 bug)
@@ -173,9 +277,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         // serializer function for it.
         private void SerializeCompressedData2(FAssetArchive Ar)
         {
-            var compressedRawDataSize = Ar.Read<int>();
+            CompressedRawDataSize = Ar.Read<int>();
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
-            var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
+            CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
 
             var compressedData = new FUECompressedAnimData();
             CompressedDataStructure = compressedData;
@@ -185,16 +289,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             compressedData.Bind(serializedByteStream);
 
             var curveCodecPath = Ar.ReadFString();
-            var compressedCurveByteStream = Ar.ReadArray<byte>();
+            CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
+            CompressedCurveByteStream = Ar.ReadBytes(Ar.Read<int>());
         }
 
         // UE4.25 has changed data layout, and therefore serialization order has been changed too.
         // In UE4.25 serialization is done in FCompressedAnimSequence::SerializeCompressedData().
         private void SerializeCompressedData3(FAssetArchive Ar)
         {
-            var compressedRawDataSize = Ar.Read<int>();
+            CompressedRawDataSize = Ar.Read<int>();
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
-            var compressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
+            CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
 
             var serializedByteStream = ReadSerializedByteStream(Ar);
 
@@ -202,10 +307,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             var curveCodecPath = Ar.ReadFString();
 
             var numCurveBytes = Ar.Read<int>();
-            var compressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
+            CompressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
 
             // Lookup our codecs in our settings assets
             BoneCompressionCodec = BoneCompressionSettings?.Load<UAnimBoneCompressionSettings>()?.GetCodec(boneCodecDDCHandle);
+            CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
 
             if (BoneCompressionCodec != null)
             {
@@ -215,7 +321,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             else
             {
-                Log.Warning("Unsupported bone compression codec {0}", boneCodecDDCHandle);
+                Log.Warning("Unknown bone compression codec {0}", boneCodecDDCHandle);
             }
         }
 

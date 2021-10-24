@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -92,6 +93,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public void Bind(byte[] bulkData);
     }
 
+    [JsonConverter(typeof(FUECompressedAnimDataConverter))]
     public class FUECompressedAnimData : FCompressedAnimDataBase, ICompressedAnimData
     {
         public int CompressedNumberOfFrames { get; set; }
@@ -129,23 +131,56 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             CompressedScaleOffsets.StripSize = Ar.Read<int>();
         }
 
-        public void SerializeCompressedData_Pre4_25(FAssetArchive Ar)
-        {
-            KeyEncodingFormat = Ar.Read<AnimationKeyFormat>();
-            TranslationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            RotationCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-            ScaleCompressionFormat = Ar.Read<AnimationCompressionFormat>();
-
-            ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
-
-            CompressedByteStream = new byte[Ar.Read<int>()];
-            CompressedTrackOffsets = new int[Ar.Read<int>()];
-            CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
-            CompressedScaleOffsets.StripSize = Ar.Read<int>();
-        }
-
         public void Bind(byte[] bulkData) => InitViewsFromBuffer(bulkData);
 
         public override string ToString() => $"[{TranslationCompressionFormat}, {RotationCompressionFormat}, {ScaleCompressionFormat}]";
+    }
+
+    public class FUECompressedAnimDataConverter : JsonConverter<FUECompressedAnimData>
+    {
+        public override void WriteJson(JsonWriter writer, FUECompressedAnimData value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("CompressedNumberOfFrames");
+            writer.WriteValue(value.CompressedNumberOfFrames);
+
+            writer.WritePropertyName("KeyEncodingFormat");
+            writer.WriteValue(value.KeyEncodingFormat.ToString());
+
+            writer.WritePropertyName("TranslationCompressionFormat");
+            writer.WriteValue(value.TranslationCompressionFormat.ToString());
+
+            writer.WritePropertyName("RotationCompressionFormat");
+            writer.WriteValue(value.RotationCompressionFormat.ToString());
+
+            writer.WritePropertyName("ScaleCompressionFormat");
+            writer.WriteValue(value.ScaleCompressionFormat.ToString());
+
+            /*writer.WritePropertyName("CompressedByteStream");
+            writer.WriteValue(value.CompressedByteStream);
+
+            writer.WritePropertyName("CompressedTrackOffsets");
+            serializer.Serialize(writer, value.CompressedTrackOffsets);
+
+            writer.WritePropertyName("CompressedScaleOffsets");
+            writer.WriteStartObject();
+            {
+                writer.WritePropertyName("OffsetData");
+                serializer.Serialize(writer, value.CompressedScaleOffsets.OffsetData);
+
+                writer.WritePropertyName("StripSize");
+                writer.WriteValue(value.CompressedScaleOffsets.StripSize);
+            }
+            writer.WriteEndObject();*/
+
+            writer.WriteEndObject();
+        }
+
+        public override FUECompressedAnimData ReadJson(JsonReader reader, Type objectType, FUECompressedAnimData existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
