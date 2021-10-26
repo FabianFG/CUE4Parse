@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.Engine.Curves
 {
@@ -33,11 +34,12 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
     }
 
     /** A rich, editable float curve */
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FRealCurve : IUStruct
+    public class FRealCurve : IUStruct
     {
-        public readonly float DefaultValue;
-        public readonly ERichCurveExtrapolation PreInfinityExtrap;
-        public readonly ERichCurveExtrapolation PostInfinityExtrap;
+        public float DefaultValue;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ERichCurveExtrapolation PreInfinityExtrap;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ERichCurveExtrapolation PostInfinityExtrap;
     }
 }

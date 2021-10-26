@@ -142,8 +142,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("CompressedNumberOfFrames");
-            writer.WriteValue(value.CompressedNumberOfFrames);
+            if (value.CompressedNumberOfFrames > 0)
+            {
+                writer.WritePropertyName("CompressedNumberOfFrames");
+                writer.WriteValue(value.CompressedNumberOfFrames);
+            }
 
             writer.WritePropertyName("KeyEncodingFormat");
             writer.WriteValue(value.KeyEncodingFormat.ToString());

@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -7,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine.Animation
 {
-    [JsonConverter(typeof(FSmartNameConverter))]
+    //[JsonConverter(typeof(FSmartNameConverter))] For consistency with the property serialization structure
     public readonly struct FSmartName : IUStruct
     {
         public readonly FName DisplayName;
@@ -25,6 +26,11 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
             {
                 var tempGUID = Ar.Read<FGuid>();
             }
+        }
+
+        public FSmartName(FStructFallback data)
+        {
+            DisplayName = data.GetOrDefault<FName>(nameof(DisplayName));
         }
     }
 

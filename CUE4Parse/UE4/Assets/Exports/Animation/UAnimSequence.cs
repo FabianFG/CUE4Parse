@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -16,7 +15,7 @@ using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
-    public class UAnimSequence : UAnimationAsset
+    public class UAnimSequence : UAnimSequenceBase
     {
         public int NumFrames;
         public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
@@ -29,7 +28,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FSmartName[] CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
         public byte[] CompressedCurveByteStream;
-        public FStructFallback CompressedCurveData; // FRawCurveTracks, disappeared in 4.23
+        public FRawCurveTracks CompressedCurveData; // disappeared in 4.23
         public ICompressedAnimData CompressedDataStructure;
         public UAnimBoneCompressionCodec? BoneCompressionCodec;
         public UAnimCurveCompressionCodec? CurveCompressionCodec;
@@ -42,20 +41,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public bool bUseRawDataOnly;
 
-        // UAnimSequenceBase
-        public float SequenceLength;
-        public float RateScale;
-
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
 
-            SequenceLength = GetOrDefault<float>(nameof(SequenceLength));
-            RateScale = GetOrDefault(nameof(RateScale), 1.0f);
-
             NumFrames = GetOrDefault<int>(nameof(NumFrames));
-            BoneCompressionSettings = GetOrDefault<FPackageIndex>(nameof(BoneCompressionSettings))?.ResolvedObject;
-            CurveCompressionSettings = GetOrDefault<FPackageIndex>(nameof(CurveCompressionSettings))?.ResolvedObject;
+            BoneCompressionSettings = GetOrDefault<ResolvedObject>(nameof(BoneCompressionSettings));
+            CurveCompressionSettings = GetOrDefault<ResolvedObject>(nameof(CurveCompressionSettings));
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
@@ -157,31 +149,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 writer.WriteValue(CompressedCurveByteStream);
             }*/
 
-            // BEGIN PROTOTYPE COMPRESSED CURVE JSON REPRESENTATION
-            // TODO Needs rework when you have a better approach!!!
-            if (CurveCompressionCodec is UAnimCurveCompressionCodec_CompressedRichCurve)
-            {
-                var Ar = new FByteArchive("CompressedCurveByteStream", CompressedCurveByteStream);
-                var numCurves = CompressedCurveNames.Length;
-                var curveDescriptions = Ar.ReadArray<FCurveDesc>(numCurves);
-                var compressedKeysOffset = Ar.Position;
-                var compressedKeys = Ar.ReadBytes((int) (Ar.Length - compressedKeysOffset));
-
-                writer.WritePropertyName("CompressedCurve");
-                writer.WriteStartObject();
-
-                writer.WritePropertyName("CurveDescriptions");
-                serializer.Serialize(writer, curveDescriptions);
-
-                writer.WritePropertyName("CompressedKeysOffset");
-                writer.WriteValue(compressedKeysOffset);
-
-                writer.WritePropertyName("CompressedKeys");
-                serializer.Serialize(writer, compressedKeys);
-
-                writer.WriteEndObject();
-            }
-            // END
+            EnsureCurveData();
+            writer.WritePropertyName("CompressedCurveData");
+            serializer.Serialize(writer, CompressedCurveData);
 
             if (CompressedDataStructure != null)
             {
@@ -238,7 +208,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Game < EGame.GAME_UE4_22)
             {
-                CompressedCurveData = new FStructFallback(Ar, "RawCurveTracks");
+                CompressedCurveData = new FRawCurveTracks(new FStructFallback(Ar, "RawCurveTracks"));
             }
             else
             {
@@ -485,6 +455,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             return dst;
+        }
+
+        public void EnsureCurveData()
+        {
+            if (CompressedCurveData.FloatCurves == null && CurveCompressionCodec != null)
+            {
+                CompressedCurveData.FloatCurves = CurveCompressionCodec.ConvertCurves(this);
+            }
         }
     }
 }
