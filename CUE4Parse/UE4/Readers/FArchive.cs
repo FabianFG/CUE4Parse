@@ -1,11 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Serilog;
+using static CUE4Parse.Compression.Compression;
+using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
+using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
 
 namespace CUE4Parse.UE4.Readers
 {
@@ -23,11 +30,43 @@ namespace CUE4Parse.UE4.Readers
             set => Versions.Ver = value;
         }
         public abstract string Name { get; }
-        public abstract T Read<T>() where T : struct;
-        public abstract unsafe void Serialize(byte* ptr, int length);
-        public abstract byte[] ReadBytes(int length);
-        public abstract T[] ReadArray<T>(int length) where T : struct;
-        public abstract void ReadArray<T>(T[] array) where T : struct;
+
+        public virtual byte[] ReadBytes(int length)
+        {
+            var result = new byte[length];
+            Read(result, 0, length);
+            return result;
+        }
+
+        public virtual unsafe void Serialize(byte* ptr, int length)
+        {
+            var bytes = ReadBytes(length);
+            Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
+        }
+        
+        public virtual T Read<T>()
+        {
+            var size = Unsafe.SizeOf<T>();
+            var buffer = ReadBytes(size);
+            return Unsafe.ReadUnaligned<T>(ref buffer[0]);
+        }
+        
+        public virtual T[] ReadArray<T>(int length)
+        {
+            var size = Unsafe.SizeOf<T>();
+            var buffer = ReadBytes(size * length);
+            var result = new T[length];
+            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
+            return result;
+        }
+
+        public virtual void ReadArray<T>(T[] array)
+        {
+            if (array.Length == 0) return;
+            var size = Unsafe.SizeOf<T>();
+            var buffer = ReadBytes(size * array.Length);
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));
+        }
 
         protected FArchive(VersionContainer? versions = null)
         {
@@ -284,6 +323,167 @@ namespace CUE4Parse.UE4.Readers
             throw new InvalidOperationException("Generic FArchive can't read UObject's");
         }
 
+        public void SerializeCompressedNew(byte[] dest, int length, string compressionFormatToDecodeOldV1Files, ECompressionFlags flags, bool bTreatBufferAsFileReader, out long outPartialReadLength)
+        {
+            // CompressionFormatToEncode can be changed freely without breaking loading of old files
+            // CompressionFormatToDecodeOldV1Files must match what was used to encode old files, cannot change
+
+            // Serialize package file tag used to determine endianess.
+            var packageFileTag = Read<FCompressedChunkInfo>();
+
+            // v1 header did not store CompressionFormatToDecode
+            //	assume it was CompressionFormatToDecodeOldV1Files (usually Zlib)
+            var compressionFormatToDecode = compressionFormatToDecodeOldV1Files;
+
+            var bHeaderWasValid = false;
+            var bWasByteSwapped = false;
+            var bReadCompressionFormat = false;
+
+            // FPackageFileSummary has int32 Tag == PACKAGE_FILE_TAG
+            // this header does not otherwise match FPackageFileSummary in any way
+
+            // low 32 bits of ARCHIVE_V2_HEADER_TAG are == PACKAGE_FILE_TAG
+            const ulong ARCHIVE_V2_HEADER_TAG = PACKAGE_FILE_TAG | ((ulong) 0x22222222 << 32);
+
+            if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG)
+            {
+                // v1 header, not swapped
+                bHeaderWasValid = true;
+            }
+            else if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG_SWAPPED ||
+                     packageFileTag.CompressedSize == (long) BYTESWAP_ORDER64(PACKAGE_FILE_TAG))
+            {
+                // v1 header, swapped
+                bHeaderWasValid = true;
+                bWasByteSwapped = true;
+            }
+            else if (packageFileTag.CompressedSize == (long) ARCHIVE_V2_HEADER_TAG ||
+                     packageFileTag.CompressedSize == (long) BYTESWAP_ORDER64(ARCHIVE_V2_HEADER_TAG))
+            {
+                // v2 header
+                bHeaderWasValid = true;
+                bWasByteSwapped = (packageFileTag.CompressedSize != (long) ARCHIVE_V2_HEADER_TAG);
+                bReadCompressionFormat = true;
+
+                // read CompressionFormatToDecode
+                //FCompressionUtil.SerializeCompressorName(this, ref compressionFormatToDecode);
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new ParserException(this, "BulkData compressed header read error. This package may be corrupt!");
+            }
+
+            if (!bReadCompressionFormat)
+            {
+                // upgrade old flag method
+                if (flags.HasFlag(COMPRESS_DeprecatedFormatFlagsMask))
+                {
+                    Log.Warning("Old style compression flags are being used with FAsyncCompressionChunk, please update any code using this!");
+                    //compressionFormatToDecode = FCompression.GetCompressionFormatFromDeprecatedFlags(flags);
+                    throw new NotImplementedException();
+                }
+            }
+
+            // CompressionFormatToDecode came from disk, need to validate it :
+            if (!Enum.TryParse(compressionFormatToDecode, out CompressionMethod compressionFormat))
+            {
+                throw new ParserException(this, "BulkData compressed header read error. This package may be corrupt!\nCompressionFormatToDecode not found : " + compressionFormatToDecode);
+            }
+
+            // Read in base summary, contains total sizes :
+            var summary = Read<FCompressedChunkInfo>();
+
+            if (bWasByteSwapped)
+            {
+                summary.CompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.CompressedSize);
+                summary.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.UncompressedSize);
+                packageFileTag.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) packageFileTag.UncompressedSize);
+            }
+
+
+            // Handle change in compression chunk size in backward compatible way.
+            var loadingCompressionChunkSize = packageFileTag.UncompressedSize;
+            if (loadingCompressionChunkSize == PACKAGE_FILE_TAG)
+            {
+                loadingCompressionChunkSize = LOADING_COMPRESSION_CHUNK_SIZE;
+            }
+
+            Trace.Assert(loadingCompressionChunkSize > 0);
+
+            // check Summary.UncompressedSize vs [V,Length] passed in
+            // UncompressedSize smaller than length is okay
+            Trace.Assert(summary.UncompressedSize <= length);
+            Trace.Assert(summary.UncompressedSize >= 0);
+            if (summary.UncompressedSize > length) throw new ParserException(this, $"Archive SerializedCompressed UncompressedSize ({summary.UncompressedSize}) > Length ({length})");
+            outPartialReadLength = summary.UncompressedSize;
+
+            // Figure out how many chunks there are going to be based on uncompressed size and compression chunk size.
+            var totalChunkCount = (summary.UncompressedSize + loadingCompressionChunkSize - 1) / loadingCompressionChunkSize;
+
+            // Allocate compression chunk infos and serialize them, keeping track of max size of compression chunks used.
+            var compressionChunks = new FCompressedChunkInfo[totalChunkCount];
+            long maxCompressedSize = 0;
+            long totalChunkCompressedSize = 0;
+            long totalChunkUncompressedSize = 0;
+            for (var chunkIndex = 0; chunkIndex < totalChunkCount; chunkIndex++)
+            {
+                compressionChunks[chunkIndex] = Read<FCompressedChunkInfo>();
+                if (bWasByteSwapped)
+                {
+                    compressionChunks[chunkIndex].CompressedSize = (long) BYTESWAP_ORDER64((ulong) compressionChunks[chunkIndex].CompressedSize);
+                    compressionChunks[chunkIndex].UncompressedSize = (long) BYTESWAP_ORDER64((ulong) compressionChunks[chunkIndex].UncompressedSize);
+                }
+                maxCompressedSize = Math.Max(compressionChunks[chunkIndex].CompressedSize, maxCompressedSize);
+
+                totalChunkCompressedSize += compressionChunks[chunkIndex].CompressedSize;
+                totalChunkUncompressedSize += compressionChunks[chunkIndex].UncompressedSize;
+            }
+
+            // verify the CompressionChunks[] sizes we read add up to the total we read
+            if (totalChunkCompressedSize != summary.CompressedSize) throw new ParserException(this, $"Archive SerializedCompressed TotalChunkCompressedSize ({totalChunkCompressedSize}) != Summary.CompressedSize ({summary.CompressedSize})");
+            if (totalChunkUncompressedSize != summary.UncompressedSize) throw new ParserException(this, $"Archive SerializedCompressed TotalChunkUncompressedSize ({totalChunkUncompressedSize}) != Summary.UnompressedSize ({summary.UncompressedSize})");
+
+            // Set up destination pointer and allocate memory for compressed chunk[s] (one at a time).
+            Trace.Assert(!bTreatBufferAsFileReader);
+            var destPos = 0;
+            var compressedBuffer = new byte[maxCompressedSize];
+
+            // Iterate over all chunks, serialize them into memory and decompress them directly into the destination pointer
+            for (var chunkIndex = 0; chunkIndex < totalChunkCount; chunkIndex++)
+            {
+                ref var chunk = ref compressionChunks[chunkIndex];
+                // Read compressed data.
+                Read(compressedBuffer, 0, (int) chunk.CompressedSize);
+
+                // Decompress into dest pointer directly.
+                try
+                {
+                    Decompress(compressedBuffer, 0, (int) chunk.CompressedSize, dest, destPos, (int) chunk.UncompressedSize, compressionFormat);
+                }
+                catch (Exception e)
+                {
+                    throw new ParserException(this, $"Failed to uncompress data in {Name}, CompressionFormatToDecode={compressionFormatToDecode}", e);
+                }
+
+                // And advance it by read amount.
+                destPos += (int) chunk.UncompressedSize;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ulong BYTESWAP_ORDER64(ulong value)
+        {
+            value = ((value << 8) & 0xFF00FF00FF00FF00UL) | ((value >> 8) & 0x00FF00FF00FF00FFUL);
+            value = ((value << 16) & 0xFFFF0000FFFF0000UL) | ((value >> 16) & 0x0000FFFF0000FFFFUL);
+            return (value << 32) | (value >> 32);
+        }
+
         public abstract object Clone();
+
+        private struct FCompressedChunkInfo
+        {
+            public long CompressedSize, UncompressedSize;
+        }
     }
 }

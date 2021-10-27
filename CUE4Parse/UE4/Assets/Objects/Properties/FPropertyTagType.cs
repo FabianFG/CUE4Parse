@@ -73,6 +73,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                     if (objProp.Value.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
                         return objExport;
                     return null;
+                case FPropertyTagType<FPackageIndex> objProp when typeof(ResolvedObject).IsAssignableFrom(type):
+                    return objProp.Value.ResolvedObject;
                 case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UObject).IsAssignableFrom(type):
                     if (softObjProp.Value.TryLoad(out var softExport) && type.IsInstanceOfType(softExport))
                         return softExport;

@@ -49,49 +49,55 @@ namespace CUE4Parse.FN.Assets.Exports
 
     public class FLevelSaveRecordArchive : FAssetArchive
     {
-        protected readonly FAssetArchive baseArchive;
-        public ELevelSaveRecordVersion Version;
+        protected readonly FArchive InnerArchive;
+        public readonly ELevelSaveRecordVersion Version;
 
         public FLevelSaveRecordArchive(FAssetArchive Ar, ELevelSaveRecordVersion version) : base(Ar, Ar.Owner, Ar.AbsoluteOffset)
         {
-            baseArchive = Ar;
+            InnerArchive = Ar;
+            Version = version;
+        }
+
+        public FLevelSaveRecordArchive(FArchive Ar, ELevelSaveRecordVersion version) : base(Ar, null)
+        {
+            InnerArchive = Ar;
             Version = version;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count) => baseArchive.Read(buffer, offset, count);
+        public override int Read(byte[] buffer, int offset, int count) => InnerArchive.Read(buffer, offset, count);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) => baseArchive.Seek(offset, origin);
+        public override long Seek(long offset, SeekOrigin origin) => InnerArchive.Seek(offset, origin);
 
-        public override bool CanSeek => baseArchive.CanSeek;
-        public override long Length => baseArchive.Length;
+        public override bool CanSeek => InnerArchive.CanSeek;
+        public override long Length => InnerArchive.Length;
         public override long Position
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => baseArchive.Position;
+            get => InnerArchive.Position;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => baseArchive.Position = value;
+            set => InnerArchive.Position = value;
         }
 
-        public override string Name => baseArchive.Name;
+        public override string Name => InnerArchive.Name;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override T Read<T>() => baseArchive.Read<T>();
+        public override T Read<T>() => InnerArchive.Read<T>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] ReadBytes(int length) => baseArchive.ReadBytes(length);
+        public override byte[] ReadBytes(int length) => InnerArchive.ReadBytes(length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override unsafe void Serialize(byte* ptr, int length) => baseArchive.Serialize(ptr, length);
+        public override unsafe void Serialize(byte* ptr, int length) => InnerArchive.Serialize(ptr, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override T[] ReadArray<T>(int length) => baseArchive.ReadArray<T>(length);
+        public override T[] ReadArray<T>(int length) => InnerArchive.ReadArray<T>(length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void ReadArray<T>(T[] array) => baseArchive.ReadArray(array);
+        public override void ReadArray<T>(T[] array) => InnerArchive.ReadArray(array);
 
-        public override object Clone() => new FLevelSaveRecordArchive((FAssetArchive) baseArchive.Clone(), Version);
+        public override object Clone() => new FLevelSaveRecordArchive((FArchive) InnerArchive.Clone(), Version);
 
         public override FName ReadFName() => ReadFString();
     }
@@ -333,7 +339,8 @@ namespace CUE4Parse.FN.Assets.Exports
 
             if (SaveVersion < ELevelSaveRecordVersion.SwitchingToCoreSerialization)
             {
-                DeserializeLevelSaveRecord(Ar);
+                var wrappedAr = new FLevelSaveRecordArchive(Ar, SaveVersion);
+                DeserializeLevelSaveRecordData(wrappedAr);
             }
             else
             {
@@ -438,6 +445,24 @@ namespace CUE4Parse.FN.Assets.Exports
             // TODO VkPalette
         }
 
+        public void ReadFromArchive(FArchive Ar)
+        {
+            DeserializeHeader(Ar);
+            var data = Ar.ReadArray<byte>();
+            FArchive dataAr = bCompressed ? new FArchiveLoadCompressedProxy(Ar.Name, data, "Zlib", versions: Ar.Versions) : new FByteArchive(Ar.Name, data, Ar.Versions);
+            var decompressedData = dataAr.ReadArray<byte>();
+            var wrappedAr = new FLevelSaveRecordArchive(new FByteArchive(Ar.Name, decompressedData, Ar.Versions), SaveVersion);
+
+            if (SaveVersion >= ELevelSaveRecordVersion.SwitchingToCoreSerialization)
+            {
+                throw new NotImplementedException();  //base.Deserialize(wrappedAr, -1);
+            }
+            else
+            {
+                DeserializeLevelSaveRecordData(wrappedAr);
+            }
+        }
+
         private void DeserializeHeader(FArchive Ar)
         {
             PackageName = Ar.ReadFName();
@@ -461,12 +486,6 @@ namespace CUE4Parse.FN.Assets.Exports
             }
         }
 
-        private void DeserializeLevelSaveRecord(FAssetArchive Ar)
-        {
-            var wrappedAr = new FLevelSaveRecordArchive(Ar, SaveVersion);
-            DeserializeLevelSaveRecordData(wrappedAr);
-        }
-
         private void DeserializeLevelSaveRecordData(FLevelSaveRecordArchive Ar)
         {
             Center = Ar.Read<FVector>();
@@ -482,14 +501,14 @@ namespace CUE4Parse.FN.Assets.Exports
             }
 
             var numActorInstanceRecords = Ar.Read<int>();
-            ActorInstanceRecords = new Dictionary<FGuid, FActorInstanceRecord>();
+            ActorInstanceRecords = new Dictionary<FGuid, FActorInstanceRecord>(numActorInstanceRecords);
             for (int i = 0; i < numActorInstanceRecords; i++)
             {
                 ActorInstanceRecords[Ar.Read<FGuid>()] = new FActorInstanceRecord(Ar);
             }
 
             var numVolumeInfoActorRecords = Ar.Read<int>();
-            VolumeInfoActorRecords = new Dictionary<FGuid, FActorInstanceRecord>();
+            VolumeInfoActorRecords = new Dictionary<FGuid, FActorInstanceRecord>(numVolumeInfoActorRecords);
             for (int i = 0; i < numVolumeInfoActorRecords; i++)
             {
                 VolumeInfoActorRecords[Ar.Read<FGuid>()] = new FActorInstanceRecord(Ar);

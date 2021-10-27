@@ -389,13 +389,14 @@ namespace CUE4Parse.UE4.Assets.Exports
         // TODO Little Problem here: Can't use T? since this would need a constraint to struct or class, which again wouldn't work fine with primitives
         public static T GetOrDefault<T>(IPropertyHolder holder, string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            foreach (var value in from it 
-                in holder.Properties 
-                where it.Name.Text.Equals(name, comparisonType)
-                select it.Tag?.GetValue(typeof(T)))
+            foreach (var prop in holder.Properties)
             {
-                if (value is T cast)
-                    return cast;
+                if (prop.Name.Text.Equals(name, comparisonType))
+                {
+                    var value = prop.Tag?.GetValue(typeof(T));
+                    if (value is T cast)
+                        return cast;
+                }
             }
 
             return defaultValue;

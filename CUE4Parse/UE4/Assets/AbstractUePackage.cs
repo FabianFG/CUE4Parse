@@ -193,15 +193,18 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UObject Load() => Object.Value;
+        public T? Load<T>() where T : UObject => Object?.Value as T;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public UObject? Load() => Object?.Value;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad(out UObject export)
         {
             try
             {
-                export = Object.Value;
-                return true;
+                export = Object?.Value;
+                return export != null;
             }
             catch
             {
@@ -211,14 +214,14 @@ namespace CUE4Parse.UE4.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UObject> LoadAsync() => await Task.FromResult(Object.Value);
+        public async Task<UObject?> LoadAsync() => await Task.FromResult(Object?.Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UObject?> TryLoadAsync()
         {
             try
             {
-                return await Task.FromResult(Object.Value);
+                return await Task.FromResult(Object?.Value);
             }
             catch
             {

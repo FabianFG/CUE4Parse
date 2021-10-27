@@ -42,40 +42,6 @@ namespace CUE4Parse.UE4.Readers
             _baseStream.Read(result, 0, length);
             return result;
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override unsafe void Serialize(byte* ptr, int length)
-        {
-            var bytes = ReadBytes(length);
-            Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override T Read<T>()
-        {
-            var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size);
-            return Unsafe.ReadUnaligned<T>(ref buffer[0]);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override T[] ReadArray<T>(int length)
-        {
-            var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * length);
-            var result = new T[length];
-            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
-            return result;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void ReadArray<T>(T[] array)
-        {
-            if (array.Length == 0) return;
-            var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * array.Length);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));
-        }
 
         public override object Clone()
         {

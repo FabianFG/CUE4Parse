@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using CUE4Parse.Utils;
+using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -14,9 +15,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly float B;
         public readonly float A;
 
-        public readonly string Hex => A == 1 || A == 0
-            ? UnsafePrint.BytesToHex((byte) System.Math.Round(R * 255), (byte) System.Math.Round(G * 255), (byte) System.Math.Round(B * 255))
-            : UnsafePrint.BytesToHex((byte) System.Math.Round(A * 255), (byte) System.Math.Round(R * 255), (byte) System.Math.Round(G * 255), (byte) System.Math.Round(B * 255));
+        public string Hex => ToFColor(true).Hex;
 
         public FColor ToFColor(bool sRGB)
         {
@@ -27,17 +26,17 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
             if (sRGB)
             {
-                floatR = floatR <= 0.0031308f ? floatR * 12.92f : (float)System.Math.Pow(floatR, 1.0f / 2.4f) * 1.055f - 0.055f;
-                floatG = floatG <= 0.0031308f ? floatG * 12.92f : (float)System.Math.Pow(floatG, 1.0f / 2.4f) * 1.055f - 0.055f;
-                floatB = floatB <= 0.0031308f ? floatB * 12.92f : (float)System.Math.Pow(floatB, 1.0f / 2.4f) * 1.055f - 0.055f;
+                floatR = floatR <= 0.0031308f ? floatR * 12.92f : Pow(floatR, 1.0f / 2.4f) * 1.055f - 0.055f;
+                floatG = floatG <= 0.0031308f ? floatG * 12.92f : Pow(floatG, 1.0f / 2.4f) * 1.055f - 0.055f;
+                floatB = floatB <= 0.0031308f ? floatB * 12.92f : Pow(floatB, 1.0f / 2.4f) * 1.055f - 0.055f;
             }
 
-            var intA = MathUtils.FloorToInt(floatA * 255.999f);
-            var intR = MathUtils.FloorToInt(floatR * 255.999f);
-            var intG = MathUtils.FloorToInt(floatG * 255.999f);
-            var intB = MathUtils.FloorToInt(floatB * 255.999f);
+            var intA = (floatA * 255.999f).FloorToInt();
+            var intR = (floatR * 255.999f).FloorToInt();
+            var intG = (floatG * 255.999f).FloorToInt();
+            var intB = (floatB * 255.999f).FloorToInt();
 
-            return new FColor((byte)intR, (byte)intG, (byte)intB, (byte)intA);
+            return new FColor((byte) intR, (byte) intG, (byte) intB, (byte) intA);
         }
 
         public FLinearColor(float r, float g, float b, float a)
@@ -47,7 +46,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             B = b;
             A = a;
         }
-        
+
         public override string ToString() => Hex;
     }
 }
