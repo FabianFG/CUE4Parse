@@ -188,6 +188,8 @@ namespace CUE4Parse.FileProvider
             };
         }
 
+        public virtual int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
+
         public virtual int LoadVirtualPaths(UE4Version version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);

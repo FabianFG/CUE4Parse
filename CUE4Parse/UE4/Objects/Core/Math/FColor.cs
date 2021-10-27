@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
@@ -35,6 +36,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Ar.Write(B);
             Ar.Write(A);
         }
+
+        public static implicit operator Vector4(FColor color) => new Vector4(color.R, color.G, color.B, color.A);
 
         public override string ToString() => Hex;
 

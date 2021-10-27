@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -27,14 +28,14 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Data = data;
         }
 
-        public FPackedNormal(FVector Vector)
+        public FPackedNormal(FVector vector)
         {
-            Data = (uint) ((int) (Vector.X + 1 * 127.5) + (int) (Vector.Y + 1 * 127.5) << 8 + (int) (Vector.Z + 1 * 127.5) << 16);
+            Data = (uint) ((int) (vector.X + 1 * 127.5) + (int) (vector.Y + 1 * 127.5) << 8 + (int) (vector.Z + 1 * 127.5) << 16);
         }
 
-        public FPackedNormal(FVector4 Vector)
+        public FPackedNormal(FVector4 vector)// is this broken?
         {
-            Data = (uint) ((int) (Vector.X + 1 * 127.5) + (int) (Vector.Y + 1 * 127.5) << 8 + (int) (Vector.Z + 1 * 127.5) << 16 + (int) (Vector.W + 1 * 127.5) << 24);
+            Data = (uint) ((int) (vector.X + 1 * 127.5) + (int) (vector.Y + 1 * 127.5) << 8 + (int) (vector.Z + 1 * 127.5) << 16 + (int) (vector.W + 1 * 127.5) << 24);
         }
 
         public void SetW(float value)
@@ -47,15 +48,10 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             return (byte) (Data >> 24) / 127.0f;
         }
 
-        public static explicit operator FVector(FPackedNormal packedNormal)
-        {
-            return new(packedNormal.X, packedNormal.Y, packedNormal.Z);
-        }
-
-        public static explicit operator FVector4(FPackedNormal packedNormal)
-        {
-            return new(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
-        }
+        public static explicit operator FVector(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z);
+        public static implicit operator FVector4(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
+        public static explicit operator Vector3(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z);
+        public static implicit operator Vector4(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);
 
         public static bool operator ==(FPackedNormal a, FPackedNormal b) => a.Data == b.Data && a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
         public static bool operator !=(FPackedNormal a, FPackedNormal b) => a.Data != b.Data || a.X != b.X || a.Y != b.Y || a.Z != b.Z || a.W != b.W;

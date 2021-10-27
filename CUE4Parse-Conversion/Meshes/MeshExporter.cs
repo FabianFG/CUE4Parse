@@ -43,7 +43,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{MeshName}.psk", Ar.GetBuffer(), new List<MaterialExporter>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
+        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -54,23 +54,52 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
-            var i = 0;
-            foreach (var lod in convertedMesh.LODs)
+            switch (meshFormat)
             {
-                if (lod.SkipLod)
+                case EMeshFormat.ActorX:
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
-                    continue;
+                    var i = 0;
+                    foreach (var lod in convertedMesh.LODs)
+                    {
+                        if (lod.SkipLod)
+                        {
+                            Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
+                            continue;
+                        }
+
+                        using var Ar = new FArchiveWriter();
+                        var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
+                        ExportStaticMeshLods(lod, Ar, materialExports);
+
+                        MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.pskx", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                        if (lodFormat == ELodFormat.FirstLod) break;
+                        i++;
+                    }
+                    break;
                 }
+                case EMeshFormat.Gltf2:
+                {
+                    var i = 0;
+                    foreach (var lod in convertedMesh.LODs)
+                    {
+                        if (lod.SkipLod)
+                        {
+                            Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
+                            continue;
+                        }
 
-                using var Ar = new FArchiveWriter();
-                var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportStaticMeshLods(lod, Ar, materialExports);
+                        using var Ar = new FArchiveWriter();
+                        var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports);
 
-                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.pskx", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
-                if (lodFormat == ELodFormat.FirstLod) break;
-                i++;
+                        MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.glb", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                        if (lodFormat == ELodFormat.FirstLod) break;
+                        i++;
+                    }
+                    break;
+                }
             }
+
         }
 
         public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
@@ -103,6 +132,7 @@ namespace CUE4Parse_Conversion.Meshes
                 i++;
             }
         }
+
 
         private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
         {

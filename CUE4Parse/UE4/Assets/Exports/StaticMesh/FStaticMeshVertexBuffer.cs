@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                     if (itemCount != NumVertices)
                         throw new ParserException($"NumVertices={itemCount} != NumVertices={NumVertices}");
-                    
+
                     var tempTangents = Ar.ReadArray(NumVertices, () => FStaticMeshUVItem.SerializeTangents(Ar, UseHighPrecisionTangentBasis));
                     if (Ar.Position - position != itemCount * itemSize)
                         throw new ParserException($"Read incorrect amount of tangent bytes, at {Ar.Position}, should be: {position + itemSize * itemCount} behind: {position + (itemSize * itemCount) - Ar.Position}");
@@ -68,7 +68,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
             else
             {
-                UV = new FStaticMeshUVItem[0];
+                UV = Array.Empty<FStaticMeshUVItem>();
             }
         }
     }
@@ -84,7 +84,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("NumVertices");
             writer.WriteValue(value.NumVertices);
-            
+
             writer.WritePropertyName("Strides");
             writer.WriteValue(value.Strides);
 

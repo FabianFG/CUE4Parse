@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets
         public abstract bool IsFullyLoaded { get; }
 
         public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
-        
+
         public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
         {
             Name = name;
