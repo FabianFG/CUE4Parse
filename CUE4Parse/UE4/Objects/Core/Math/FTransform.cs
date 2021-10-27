@@ -73,7 +73,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetDeterminant() => Scale3D.X * Scale3D.Y * Scale3D.Z;
 
-        public bool Equals(FTransform other, float tolerance = FVector.KindaSmallNumber) =>
+        public bool Equals(FTransform other, float tolerance = FMath.KindaSmallNumber) =>
             Rotation.Equals(other.Rotation, tolerance) &&
             Translation.Equals(other.Translation, tolerance) &&
             Scale3D.Equals(other.Scale3D, tolerance);
@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveScaling(float tolerance = FVector.SmallNumber)
+        public void RemoveScaling(float tolerance = FMath.SmallNumber)
         {
             Scale3D = new FVector(1.0f, 1.0f, 1.0f);
             Rotation.Normalize();
@@ -130,7 +130,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FTransform Inverse()
         {
             var invRotation = Rotation.Inverse();
-            // this used to cause NaN if Scale contained 0 
+            // this used to cause NaN if Scale contained 0
             var invScale3D = GetSafeScaleReciprocal(Scale3D);
             var invTranslation = invRotation * (invScale3D * -Translation);
 
@@ -140,7 +140,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FTransform GetRelativeTransform(FTransform other)
         {
             // A * B(-1) = VQS(B)(-1) (VQS (A))
-            // 
+            //
             // Scale = S(A)/S(B)
             // Rotation = Q(B)(-1) * Q(A)
             // Translation = 1/S(B) *[Q(B)(-1)*(T(A)-T(B))*Q(B)]
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
             else
             {
-                var safeRecipScale3D = GetSafeScaleReciprocal(other.Scale3D, FVector.SmallNumber);
+                var safeRecipScale3D = GetSafeScaleReciprocal(other.Scale3D, FMath.SmallNumber);
                 result.Scale3D = Scale3D * safeRecipScale3D;
 
                 if (!other.Rotation.IsNormalized)
@@ -178,7 +178,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var am = @base.ToMatrixWithScale();
             var bm = @base.ToMatrixWithScale();
             // get combined scale
-            var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, FVector.SmallNumber);
+            var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, FMath.SmallNumber);
             var desiredScale3D = @base.Scale3D * safeRecipScale3D;
             ConstructTransformFromMatrixWithDesiredScale(am, bm.InverseFast(), desiredScale3D, ref outTransform);
         }
@@ -206,7 +206,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             outTransform.Scale3D = desiredScale;
             outTransform.Rotation = rotation;
 
-            // technically I could calculate this using FTransform but then it does more quat multiplication 
+            // technically I could calculate this using FTransform but then it does more quat multiplication
             // instead of using Scale in matrix multiplication
             // it's a question of between RemoveScaling vs using FTransform to move translation
             outTransform.Translation = m.GetOrigin();
@@ -266,13 +266,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return outMatrix;
         }
 
-        // mathematically if you have 0 scale, it should be infinite, 
-        // however, in practice if you have 0 scale, and relative transform doesn't make much sense 
+        // mathematically if you have 0 scale, it should be infinite,
+        // however, in practice if you have 0 scale, and relative transform doesn't make much sense
         // anymore because you should be instead of showing gigantic infinite mesh
-        // also returning BIG_NUMBER causes sequential NaN issues by multiplying 
+        // also returning BIG_NUMBER causes sequential NaN issues by multiplying
         // so we hardcode as 0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FVector.SmallNumber)
+        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FMath.SmallNumber)
         {
             var safeReciprocalScale = new FVector();
             if (Abs(scale.X) <= tolerance)
@@ -302,7 +302,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             //	When Q = quaternion, S = single scalar scale, and T = translation
             //	QST(A) = Q(A), S(A), T(A), and QST(B) = Q(B), S(B), T(B)
 
-            //	QST (AxB) 
+            //	QST (AxB)
 
             // QST(A) = Q(A)*S(A)*P*-Q(A) + T(A)
             // QST(AxB) = Q(B)*S(B)*QST(A)*-Q(B) + T(B)

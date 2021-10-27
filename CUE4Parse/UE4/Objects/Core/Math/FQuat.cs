@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             // If Matrix is NULL, return Identity quaternion. If any of them is 0, you won't be able to construct rotation
             // if you have two plane at least, we can reconstruct the frame using cross product, but that's a bit expensive op to do here
-            // for now, if you convert to matrix from 0 scale and convert back, you'll lose rotation. Don't do that. 
+            // for now, if you convert to matrix from 0 scale and convert back, you'll lose rotation. Don't do that.
             if (m.GetScaledAxis(EAxis.X).IsNearlyZero() || m.GetScaledAxis(EAxis.Y).IsNearlyZero() || m.GetScaledAxis(EAxis.Z).IsNearlyZero())
             {
                 this = Identity;
@@ -123,7 +123,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public bool Equals(FQuat q, float tolerance) => (Abs(X - q.X) <= tolerance && Abs(Y - q.Y) <= tolerance && Abs(Z - q.Z) <= tolerance && Abs(W - q.W) <= tolerance) ||
                                                         (Abs(X + q.X) <= tolerance && Abs(Y + q.Y) <= tolerance && Abs(Z + q.Z) <= tolerance && Abs(W + q.W) <= tolerance);
 
-        public bool IsIdentity(float tolerance = FVector.SmallNumber) => Equals(Identity, tolerance);
+        public bool IsIdentity(float tolerance = FMath.SmallNumber) => Equals(Identity, tolerance);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FQuat operator *(FQuat a, FQuat b)
@@ -157,7 +157,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static bool operator !=(FQuat a, FQuat b) => !(a == b);
 
-        public void Normalize(float tolerance = FVector.SmallNumber)
+        public void Normalize(float tolerance = FMath.SmallNumber)
         {
             var squareSum = X * X + Y * Y + Z * Z + W * W;
 
@@ -176,7 +176,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public FQuat GetNormalized(float tolerance = FVector.SmallNumber)
+        public FQuat GetNormalized(float tolerance = FMath.SmallNumber)
         {
             var result = this;
             result.Normalize(tolerance);
@@ -228,13 +228,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var yawY = 2.0f * (W * Z + X * Y);
             var yawX = (1.0f - 2.0f * (Y * Y + Z * Z));
 
-            // reference 
+            // reference
             // http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
 
             // this value was found from experience, the above websites recommend different values
-            // but that isn't the case for us, so I went through different testing, and finally found the case 
-            // where both of world lives happily. 
+            // but that isn't the case for us, so I went through different testing, and finally found the case
+            // where both of world lives happily.
             const float SINGULARITY_THRESHOLD = 0.4999995f;
             const float RAD_TO_DEG = 180.0f / PI;
             var rotatorFromQuat = new FRotator();

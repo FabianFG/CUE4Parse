@@ -14,19 +14,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             get => Vector.X;
             set => Vector.X = value;
         }
-        
+
         public float Y
         {
             get => Vector.Y;
             set => Vector.Y = value;
         }
-        
+
         public float Z
         {
             get => Vector.Z;
             set => Vector.Z = value;
         }
-        
+
         /** The w-component. */
         public float W;
 
@@ -39,8 +39,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float PlaneDot(FVector p) => X * p.X + Y * p.Y + Z * p.Z - W;
 
-        public bool Equals(FPlane v, float tolerance = FVector.KindaSmallNumber) => Abs(X - v.X) <= tolerance && Abs(Y - v.Y) <= tolerance && Abs(Z - v.Z) <= tolerance && Abs(W - v.W) <= tolerance;
-        
+        public bool Equals(FPlane v, float tolerance = FMath.KindaSmallNumber) => Abs(X - v.X) <= tolerance && Abs(Y - v.Y) <= tolerance && Abs(Z - v.Z) <= tolerance && Abs(W - v.W) <= tolerance;
+
         public override bool Equals(object? obj) => obj is FPlane other && Equals(other, 0f);
     }
 }

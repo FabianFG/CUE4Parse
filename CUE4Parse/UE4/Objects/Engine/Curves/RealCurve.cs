@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.Engine.Curves
@@ -34,12 +35,38 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
     }
 
     /** A rich, editable float curve */
-    public class FRealCurve : IUStruct
+    public abstract class FRealCurve : IUStruct
     {
         public float DefaultValue;
         [JsonConverter(typeof(StringEnumConverter))]
         public ERichCurveExtrapolation PreInfinityExtrap;
         [JsonConverter(typeof(StringEnumConverter))]
         public ERichCurveExtrapolation PostInfinityExtrap;
+
+        public abstract float Eval(float inTime, float inDefaultTime = 0);
+
+        public void CycleTime(float minTime, float maxTime, ref float inTime, ref int cycleCount)
+        {
+            var initTime = inTime;
+            var duration = maxTime - minTime;
+
+            if (inTime > maxTime)
+            {
+                cycleCount = (int) ((maxTime - inTime) / duration);
+                inTime += duration * cycleCount;
+            }
+            else if (inTime < minTime)
+            {
+                cycleCount = (int) ((inTime - minTime) / duration);
+                inTime -= duration * cycleCount;
+            }
+
+            if (inTime == maxTime && initTime < minTime)
+                inTime = minTime;
+            if (inTime == minTime && initTime > maxTime)
+                inTime = maxTime;
+
+            cycleCount = Math.Abs(cycleCount);
+        }
     }
 }

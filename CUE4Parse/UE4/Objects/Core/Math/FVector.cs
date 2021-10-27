@@ -10,12 +10,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     public struct FVector : IUStruct
     {
         /// <summary>
-        /// Allowed error for a normalized vector (against squared magnitude) 
+        /// Allowed error for a normalized vector (against squared magnitude)
         /// </summary>
         public const float ThreshVectorNormalized = 0.01f;
-
-        public const float SmallNumber = 1e-8f;
-        public const float KindaSmallNumber = 1e-4f;
 
         public static readonly FVector ZeroVector = new(0, 0, 0);
         public static readonly FVector OneVector = new(1, 1, 1);
@@ -85,6 +82,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Z = other.Z;
             return this;
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector Set(float x, float y, float z)
         {
@@ -98,9 +96,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector GetSignVector() => new()
         {
             //FloatSelect: return Comparand >= 0.f ? ValueGEZero : ValueLTZero;
-            X = X >= 0 ? 1 : -1,
-            Y = Y >= 0 ? 1 : -1,
-            Z = Z >= 0 ? 1 : -1
+            X = X >= 0 ? 1 : -1, Y = Y >= 0 ? 1 : -1, Z = Z >= 0 ? 1 : -1
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -219,7 +215,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(FVector v, float tolerance = KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
+        public bool Equals(FVector v, float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
 
         /// <summary>
         /// Checks whether all components of this vector are the same, within a tolerance.
@@ -227,7 +223,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AllComponentsEqual(float tolerance = KindaSmallNumber) => MathF.Abs(X - Y) <= tolerance && MathF.Abs(X - Z) <= tolerance && MathF.Abs(Y - Z) <= tolerance;
+        public bool AllComponentsEqual(float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X - Y) <= tolerance && MathF.Abs(X - Z) <= tolerance && MathF.Abs(Y - Z) <= tolerance;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float Max() => MathF.Max(MathF.Max(X, Y), Z);
@@ -271,7 +267,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vector is near to zero, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsNearlyZero(float tolerance = KindaSmallNumber) => MathF.Abs(X) <= tolerance && MathF.Abs(Y) <= tolerance && MathF.Abs(Z) <= tolerance;
+        public bool IsNearlyZero(float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X) <= tolerance && MathF.Abs(Y) <= tolerance && MathF.Abs(Z) <= tolerance;
 
         /// <summary>
         /// Checks whether all components of the vector are exactly zero.
@@ -286,7 +282,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="lengthSquaredTolerance">Tolerance against squared length.</param>
         /// <returns>true if the vector is a unit vector within the specified tolerance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsUnit(float lengthSquaredTolerance = KindaSmallNumber) => MathF.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
+        public bool IsUnit(float lengthSquaredTolerance = FMath.KindaSmallNumber) => MathF.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
 
         /// <summary>
         /// Checks whether vector is normalized.
@@ -300,15 +296,18 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// </summary>
         /// <param name="tolerance">Minimum squared length of vector for normalization.</param>
         /// <returns>if the vector was normalized correctly, false otherwise.</returns>
-        public bool Normalize(float tolerance = SmallNumber)
+        public bool Normalize(float tolerance = FMath.SmallNumber)
         {
-            var squareSum = X*X + Y*Y + Z*Z;
+            var squareSum = X * X + Y * Y + Z * Z;
             if (squareSum > tolerance)
             {
                 var scale = squareSum.InvSqrt();
-                X *= scale; Y *= scale; Z *= scale;
+                X *= scale;
+                Y *= scale;
+                Z *= scale;
                 return true;
             }
+
             return false;
         }
 
@@ -318,55 +317,59 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector GetClampedToMaxSize(float maxSize)
         {
-            if (maxSize < KindaSmallNumber)
+            if (maxSize < FMath.KindaSmallNumber)
             {
-                return new(0, 0, 0); // ZeroVector
+                return new FVector(0, 0, 0); // ZeroVector
             }
 
             var vSq = SizeSquared();
             if (vSq > maxSize * maxSize)
             {
                 var scale = maxSize * vSq.InvSqrt();
-                return new(X*scale, Y*scale, Z*scale);
+                return new FVector(X * scale, Y * scale, Z * scale);
             }
-            return new(X, Y, Z);
+
+            return new FVector(X, Y, Z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetSafeNormal(float tolerance = SmallNumber)
+        public FVector GetSafeNormal(float tolerance = FMath.SmallNumber)
         {
-            var squareSum = X*X + Y*Y + Z*Z;
+            var squareSum = X * X + Y * Y + Z * Z;
 
             // Not sure if it's safe to add tolerance in there. Might introduce too many errors
             if (squareSum == 1.0f)
             {
                 return this;
             }
-            else if (squareSum < tolerance)
+
+            if (squareSum < tolerance)
             {
                 return ZeroVector;
             }
+
             var scale = squareSum.InvSqrt();
-            return new(X*scale, Y*scale, Z*scale);
+            return new FVector(X * scale, Y * scale, Z * scale);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetSafeNormal2D(float tolerance = SmallNumber)
+        public FVector GetSafeNormal2D(float tolerance = FMath.SmallNumber)
         {
-            var squareSum = X*X + Y*Y;
+            var squareSum = X * X + Y * Y;
 
             // Not sure if it's safe to add tolerance in there. Might introduce too many errors
             if (squareSum == 1.0f)
             {
-                return Z == 0.0f ? this : new(X, Y, 0.0f);
+                return Z == 0.0f ? this : new FVector(X, Y, 0.0f);
             }
-            else if(squareSum < tolerance)
+
+            if (squareSum < tolerance)
             {
                 return ZeroVector;
             }
 
             var scale = squareSum.InvSqrt();
-            return new(X*scale, Y*scale, 0.0f);
+            return new FVector(X * scale, Y * scale, 0.0f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -409,17 +412,17 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // Essentially an optimized Vector->Rotator->Quat made possible by knowing Roll == 0, and avoiding radians->degrees->radians.
             // This is done to avoid adding any roll (which our API states as a constraint).
             var YawRad = MathF.Atan2(Y, X);
-            var PitchRad = MathF.Atan2(Z, MathF.Sqrt(X*X + Y*Y));
+            var PitchRad = MathF.Atan2(Z, MathF.Sqrt(X * X + Y * Y));
 
             const float DIVIDE_BY_2 = 0.5f;
             float SP = MathF.Sin(PitchRad * DIVIDE_BY_2), SY = MathF.Sin(YawRad * DIVIDE_BY_2);
             float CP = MathF.Cos(PitchRad * DIVIDE_BY_2), CY = MathF.Cos(YawRad * DIVIDE_BY_2);
 
             FQuat rotationQuat;
-            rotationQuat.X =  SP*SY;
-            rotationQuat.Y = -SP*CY;
-            rotationQuat.Z =  CP*SY;
-            rotationQuat.W =  CP*CY;
+            rotationQuat.X = SP * SY;
+            rotationQuat.Y = -SP * CY;
+            rotationQuat.Z = CP * SY;
+            rotationQuat.W = CP * CY;
             return rotationQuat;
         }
 

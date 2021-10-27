@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -10,13 +12,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     {
         public UUnrealMaterial? Parent;
         public FMaterialInstanceBasePropertyOverrides BasePropertyOverrides;
-        public FStaticParameterSet StaticParameters;
+        public FStaticParameterSet? StaticParameters;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             Parent = GetOrDefault<UUnrealMaterial>(nameof(Parent));
             BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
+            StaticParameters = GetOrDefault<FStaticParameterSet>(nameof(StaticParameters));
 
             var bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
 
@@ -39,6 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
     }
 
+    [StructFallback]
     public class FStaticParameterSet
     {
         public FStaticSwitchParameter[] StaticSwitchParameters;
@@ -56,6 +60,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 MaterialLayersParameters = Ar.ReadArray(() => new FStaticMaterialLayersParameter(Ar));
             }
+        }
+
+        public FStaticParameterSet(FStructFallback fallback)
+        {
+            StaticSwitchParameters = fallback.GetOrDefault<FStaticSwitchParameter[]>(nameof(StaticSwitchParameters));
         }
     }
 }

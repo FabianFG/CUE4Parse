@@ -53,5 +53,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var value8 = (value16 * 255 + 32895) >> 16;
             return (byte) value8;
         }
+
+        public int ToPackedARGB() => A << 24 + R << 16 + G << 8 + B;
     }
 }
