@@ -1,8 +1,10 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 {
+    [JsonConverter(typeof(FACLDatabaseCompressedAnimDataConverter))]
     public class FACLDatabaseCompressedAnimData : ICompressedAnimData
     {
         public int CompressedNumberOfFrames { get; set; }
@@ -34,6 +36,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
         public void Bind(byte[] bulkData)
         {
             //var compressedClipData = new CompressedTracks(bulkData);
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FACLDatabaseCompressedAnimDataConverter : JsonConverter<FACLDatabaseCompressedAnimData>
+    {
+        public override void WriteJson(JsonWriter writer, FACLDatabaseCompressedAnimData value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("CompressedNumberOfFrames");
+            writer.WriteValue(value.CompressedNumberOfFrames);
+
+            writer.WritePropertyName("SequenceNameHash");
+            writer.WriteValue(value.SequenceNameHash);
+
+            writer.WriteEndObject();
+        }
+
+        public override FACLDatabaseCompressedAnimData ReadJson(JsonReader reader, Type objectType, FACLDatabaseCompressedAnimData existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
             throw new NotImplementedException();
         }
     }

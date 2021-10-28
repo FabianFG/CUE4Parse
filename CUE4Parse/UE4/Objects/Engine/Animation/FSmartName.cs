@@ -1,15 +1,50 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine.Animation
 {
+    //[JsonConverter(typeof(FSmartNameConverter))] For consistency with the property serialization structure
     public readonly struct FSmartName : IUStruct
     {
         public readonly FName DisplayName;
 
-        public FSmartName(FAssetArchive Ar)
+        public FSmartName(FArchive Ar)
         {
-			DisplayName = Ar.ReadFName();
-		}
+            DisplayName = Ar.ReadFName();
+            if (FAnimPhysObjectVersion.Get(Ar) < FAnimPhysObjectVersion.Type.RemoveUIDFromSmartNameSerialize)
+            {
+                var tempUID = Ar.Read<ushort>();
+            }
+
+            // only save if it's editor build and not cooking
+            if (FAnimPhysObjectVersion.Get(Ar) < FAnimPhysObjectVersion.Type.SmartNameRefactorForDeterministicCooking)
+            {
+                var tempGUID = Ar.Read<FGuid>();
+            }
+        }
+
+        public FSmartName(FStructFallback data)
+        {
+            DisplayName = data.GetOrDefault<FName>(nameof(DisplayName));
+        }
+    }
+
+    public class FSmartNameConverter : JsonConverter<FSmartName>
+    {
+        public override void WriteJson(JsonWriter writer, FSmartName value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value.DisplayName);
+        }
+
+        public override FSmartName ReadJson(JsonReader reader, Type objectType, FSmartName existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
