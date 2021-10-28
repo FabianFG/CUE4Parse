@@ -128,14 +128,17 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
     {
         public FRichCurveKey[] Keys;
 
-        public FRichCurve() { }
+        public FRichCurve()
+        {
+            Keys = Array.Empty<FRichCurveKey>();
+        }
 
-        public FRichCurve(FStructFallback data)
+        public FRichCurve(FStructFallback data) : base(data)
         {
             Keys = data.GetOrDefault(nameof(Keys), Array.Empty<FRichCurveKey>());
         }
 
-        public void RemapTimeValue(ref float inTime, ref float cycleValueOffset)
+        public override void RemapTimeValue(ref float inTime, ref float cycleValueOffset)
         {
             var numKeys = Keys.Length;
             if (numKeys < 2) return;
