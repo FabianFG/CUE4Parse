@@ -54,55 +54,39 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
-            switch (meshFormat)
+            var i = 0;
+            foreach (var lod in convertedMesh.LODs)
             {
-                case EMeshFormat.ActorX:
+                if (lod.SkipLod)
                 {
-                    var i = 0;
-                    foreach (var lod in convertedMesh.LODs)
-                    {
-                        if (lod.SkipLod)
-                        {
-                            Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
-                            continue;
-                        }
+                    Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
+                    continue;
+                }
 
-                        using var Ar = new FArchiveWriter();
-                        var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
+                using var Ar = new FArchiveWriter();
+                var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
+                var ext = "";
+                switch (meshFormat)
+                {
+                    case EMeshFormat.ActorX:
+                        ext = "pskx";
                         ExportStaticMeshLods(lod, Ar, materialExports);
-
-                        MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.pskx", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
-                        if (lodFormat == ELodFormat.FirstLod) break;
-                        i++;
-                    }
-                    break;
+                        break;
+                    case EMeshFormat.Gltf2:
+                        ext = "glb";
+                        Gltf _ = new(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
                 }
-                case EMeshFormat.Gltf2:
-                {
-                    var i = 0;
-                    foreach (var lod in convertedMesh.LODs)
-                    {
-                        if (lod.SkipLod)
-                        {
-                            Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
-                            continue;
-                        }
 
-                        using var Ar = new FArchiveWriter();
-                        var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports);
-
-                        MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.glb", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
-                        if (lodFormat == ELodFormat.FirstLod) break;
-                        i++;
-                    }
-                    break;
-                }
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                if (lodFormat == ELodFormat.FirstLod) break;
+                i++;
             }
-
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
+        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -125,9 +109,22 @@ namespace CUE4Parse_Conversion.Meshes
                 var usePskx = convertedMesh.LODs[i].NumVerts > 65536;
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                var ext = "";
+                switch (meshFormat)
+                {
+                    case EMeshFormat.ActorX:
+                        ext = usePskx ? "pskx" : "psk";
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                        break;
+                    case EMeshFormat.Gltf2:
+                        ext = "glb";
+                        var _ = new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
+                }
 
-                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
                 if (lodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
