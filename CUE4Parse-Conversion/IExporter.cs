@@ -39,15 +39,15 @@ namespace CUE4Parse_Conversion
     {
         private readonly ExporterBase _exporterBase;
 
-        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod)
+        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod, EMeshFormat meshFormat = EMeshFormat.ActorX)
         {
             _exporterBase = export switch
             {
                 UAnimSequence animSequence => new AnimExporter(animSequence),
                 UMaterialInterface material => new MaterialExporter(material, false),
-                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat),
+                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat, meshFormat: meshFormat),
                 USkeleton skeleton => new MeshExporter(skeleton),
-                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat),
+                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat, meshFormat: meshFormat),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }

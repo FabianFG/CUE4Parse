@@ -90,8 +90,10 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 var root = skeleton[i];
                 if (root.ParentIndex != -1) continue;
-                root.Orientation.Conjugate();
-                result.AddRange(CreateBonesRecursive(root, armatureNode, skeleton, i));
+
+                var rootCopy = (CSkelMeshBone)root.Clone(); // we don't want to modify the original skeleton
+                rootCopy.Orientation = FQuat.Conjugate(root.Orientation);
+                result.AddRange(CreateBonesRecursive(rootCopy, armatureNode, skeleton, i));
             }
 
             return result.ToArray();
