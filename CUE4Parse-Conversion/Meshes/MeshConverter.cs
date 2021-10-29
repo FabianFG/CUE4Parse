@@ -13,7 +13,7 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public static class MeshConverter
     {
-        private const int _MAX_MESH_UV_SETS = 8;
+        public const int _MAX_MESH_UV_SETS = 8;
 
         public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones)
         {

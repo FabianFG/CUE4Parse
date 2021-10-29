@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Writers;
 using static CUE4Parse.Utils.TypeConversionUtils;
@@ -28,6 +29,8 @@ namespace CUE4Parse.UE4.Objects.Meshes
             Ar.Write(U);
             Ar.Write(V);
         }
+
+        public static implicit operator Vector2(FMeshUVFloat uv) => new(uv.U, uv.V);
 
         public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
         {

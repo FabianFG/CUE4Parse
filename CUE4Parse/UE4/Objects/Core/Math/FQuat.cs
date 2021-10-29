@@ -222,6 +222,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Z = -Z;
         }
 
+        public static FQuat Conjugate(FQuat quat)
+        {
+            return new FQuat(-quat.X, -quat.Y, -quat.Z, quat.W);
+        }
+
         public FRotator Rotator()
         {
             var singularityTest = Z * X - W * Y;

@@ -43,7 +43,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{MeshName}.psk", Ar.GetBuffer(), new List<MaterialExporter>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
+        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -65,15 +65,32 @@ namespace CUE4Parse_Conversion.Meshes
 
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportStaticMeshLods(lod, Ar, materialExports);
+                var ext = "";
+                switch (meshFormat)
+                {
+                    case EMeshFormat.ActorX:
+                        ext = "pskx";
+                        ExportStaticMeshLods(lod, Ar, materialExports);
+                        break;
+                    case EMeshFormat.Gltf2:
+                        ext = "glb";
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports, meshFormat);
+                        break;
+                    case EMeshFormat.OBJ:
+                        ext = "obj";
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports, meshFormat);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
+                }
 
-                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.pskx", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
                 if (lodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true)
+        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -93,16 +110,33 @@ namespace CUE4Parse_Conversion.Meshes
                     continue;
                 }
 
-                var usePskx = convertedMesh.LODs[i].NumVerts > 65536;
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                var ext = "";
+                switch (meshFormat)
+                {
+                    case EMeshFormat.ActorX:
+                        ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                        break;
+                    case EMeshFormat.Gltf2:
+                        ext = "glb";
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, Ar, materialExports, meshFormat);
+                        break;
+                    case EMeshFormat.OBJ:
+                        ext = "obj";
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, Ar, materialExports, meshFormat);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
+                }
 
-                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.psk{(usePskx ? 'x' : "")}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
+                MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
                 if (lodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
         }
+
 
         private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
@@ -517,5 +518,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Ar.Write(Y);
             Ar.Write(Z);
         }
+
+        public static implicit operator Vector3(FVector v) => new(v.X, v.Y, v.Z);
     }
 }
