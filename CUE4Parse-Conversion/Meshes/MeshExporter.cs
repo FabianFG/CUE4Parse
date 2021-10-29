@@ -110,14 +110,13 @@ namespace CUE4Parse_Conversion.Meshes
                     continue;
                 }
 
-                var usePskx = convertedMesh.LODs[i].NumVerts > 65536;
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
                 var ext = "";
                 switch (meshFormat)
                 {
                     case EMeshFormat.ActorX:
-                        ext = usePskx ? "pskx" : "psk";
+                        ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
                         ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
                         break;
                     case EMeshFormat.Gltf2:
