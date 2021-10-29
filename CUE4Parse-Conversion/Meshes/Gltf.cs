@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -14,7 +15,7 @@ using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
-using SharpGLTF.Transforms;
+using SharpGLTF.IO;
 
 namespace CUE4Parse_Conversion.Meshes
 {
@@ -22,7 +23,9 @@ namespace CUE4Parse_Conversion.Meshes
     using VERTEX = VertexPositionNormalTangent;
     public class Gltf
     {
-        public Gltf(string name, CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
+        public ModelRoot Model;
+
+        public Gltf(string name, CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports, EMeshFormat meshFormat)
         {
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
 
@@ -30,13 +33,22 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 ExportStaticMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh);
             }
+
             var scene = new SceneBuilder();
             scene.AddRigidMesh(mesh, Matrix4x4.Identity);
-            var model = scene.ToGltf2();
-            Ar.Write(model.WriteGLB());
+            Model = scene.ToGltf2();
+            switch (meshFormat)
+            {
+                case EMeshFormat.Gltf2:
+                    Ar.Write(Model.WriteGLB());
+                    break;
+                case EMeshFormat.OBJ:
+                    Ar.Write(SaveAsWavefront()); // this can be supported after new release of SharpGltf
+                    break;
+            }
         }
 
-        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
+        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, EMeshFormat meshFormat)
         {
             var x = ModelRoot.CreateModel();
 
@@ -53,11 +65,24 @@ namespace CUE4Parse_Conversion.Meshes
             var armature = CreateGltfSkeleton(bones, armatureNodeBuilder);
             sceneBuilder.AddSkinnedMesh(mesh, Matrix4x4.Identity, armature);
 
-            var model = sceneBuilder.ToGltf2();
-            Ar.Write(model.WriteGLB());
+            Model = sceneBuilder.ToGltf2();
+            switch (meshFormat)
+            {
+                case EMeshFormat.Gltf2:
+                    Ar.Write(Model.WriteGLB());
+                    break;
+                case EMeshFormat.OBJ:
+                    Ar.Write(SaveAsWavefront()); // this can be supported after new release of SharpGltf
+                    break;
+            }
         }
 
-        public static NodeBuilder[] CreateGltfSkeleton(List<CSkelMeshBone> skeleton, NodeBuilder armatureNode)
+        public ArraySegment<byte> SaveAsWavefront()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static NodeBuilder[] CreateGltfSkeleton(List<CSkelMeshBone> skeleton, NodeBuilder armatureNode) // TODO optimize
         {
             var result = new List<NodeBuilder>();
 
@@ -65,6 +90,7 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 var root = skeleton[i];
                 if (root.ParentIndex != -1) continue;
+                root.Orientation.Conjugate();
                 result.AddRange(CreateBonesRecursive(root, armatureNode, skeleton, i));
             }
 
@@ -74,11 +100,14 @@ namespace CUE4Parse_Conversion.Meshes
         private static List<NodeBuilder> CreateBonesRecursive(CSkelMeshBone bone, NodeBuilder parent, List<CSkelMeshBone> skeleton, int index)
         {
             var res = new List<NodeBuilder>();
+
+            var bonePos = SwapYZ(bone.Position*0.01f);
+            var boneRot = SwapYZ(bone.Orientation);
             var node = parent.CreateNode(bone.Name.ToString())
-                .WithLocalRotation(bone.Orientation.ToQuaternion())
-                .WithLocalTranslation(bone.Position);
+                .WithLocalRotation(boneRot.ToQuaternion())
+                .WithLocalTranslation(bonePos);
+
             res.Add(node);
-            // .WithLocalTransform(new AffineTransform(Vector3.One, bone.Orientation.ToQuaternion(), bone.Position));
 
             var numBones = skeleton.Count;
             for (int j = 0; j < numBones; j++)
@@ -90,7 +119,6 @@ namespace CUE4Parse_Conversion.Meshes
                     res.AddRange(CreateBonesRecursive(bone2, node, skeleton, j));
                 }
             }
-
             return res;
         }
 
@@ -164,17 +192,17 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public static VertexJoints4 PrepareVertexJoints(CSkelMeshVertex vert)
+        public static VertexJoints4 PrepareVertexJoint(CSkelMeshVertex vert)
         {
-            var wtri = vert.UnpackWeights();
+            var weights = vert.UnpackWeights();
             var j1 = new List<(int, float)>();
 
-            if (wtri.All((v) => v == 0) || vert.Bone == null)
+            if (weights.All((v) => v == 0) || vert.Bone == null)
                 return new VertexJoints4(j1.ToArray());
 
             for (int i = 0; i < vert.Bone.Length; i++)
             {
-                j1.Add((vert.Bone[i], wtri[i]));
+                j1.Add((vert.Bone[i], weights[i]));
             }
 
             return new VertexJoints4(j1.ToArray());
@@ -182,9 +210,9 @@ namespace CUE4Parse_Conversion.Meshes
 
         public static (VertexJoints4, VertexJoints4, VertexJoints4) PrepareVertexJoints(CSkelMeshVertex vert1, CSkelMeshVertex vert2, CSkelMeshVertex vert3)
         {
-            var jv1 = PrepareVertexJoints(vert1);
-            var jv2 = PrepareVertexJoints(vert2);
-            var jv3 = PrepareVertexJoints(vert3);
+            var jv1 = PrepareVertexJoint(vert1);
+            var jv2 = PrepareVertexJoint(vert2);
+            var jv3 = PrepareVertexJoint(vert3);
 
             return (jv1, jv2, jv3);
         }
@@ -242,6 +270,8 @@ namespace CUE4Parse_Conversion.Meshes
             var res = new FVector(vec.X, vec.Z, vec.Y);
             return res;
         }
+
+        public static FQuat SwapYZ(FQuat quat) => new FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
         public static Vector4 SwapYZAndNormalize(Vector4 vec)
         {
