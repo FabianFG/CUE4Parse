@@ -19,13 +19,12 @@ using SharpGLTF.IO;
 
 namespace CUE4Parse_Conversion.Meshes
 {
-    using glTFMesh = SharpGLTF.Schema2.Mesh;
     using VERTEX = VertexPositionNormalTangent;
     public class Gltf
     {
-        public ModelRoot Model;
+        public readonly ModelRoot Model;
 
-        public Gltf(string name, CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports, EMeshFormat meshFormat)
+        public Gltf(string name, CStaticMeshLod lod, List<MaterialExporter>? materialExports)
         {
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
 
@@ -37,21 +36,10 @@ namespace CUE4Parse_Conversion.Meshes
             var scene = new SceneBuilder();
             scene.AddRigidMesh(mesh, Matrix4x4.Identity);
             Model = scene.ToGltf2();
-            switch (meshFormat)
-            {
-                case EMeshFormat.Gltf2:
-                    Ar.Write(Model.WriteGLB());
-                    break;
-                case EMeshFormat.OBJ:
-                    Ar.Write(SaveAsWavefront()); // this can be supported after new release of SharpGltf
-                    break;
-            }
         }
 
-        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, EMeshFormat meshFormat)
+        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter>? materialExports)
         {
-            var x = ModelRoot.CreateModel();
-
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
 
             for (var i = 0; i < lod.Sections.Value.Length; i++)
@@ -66,6 +54,15 @@ namespace CUE4Parse_Conversion.Meshes
             sceneBuilder.AddSkinnedMesh(mesh, Matrix4x4.Identity, armature);
 
             Model = sceneBuilder.ToGltf2();
+        }
+
+        public ArraySegment<byte> SaveAsWavefront()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Save(EMeshFormat meshFormat, FArchiveWriter Ar)
+        {
             switch (meshFormat)
             {
                 case EMeshFormat.Gltf2:
@@ -74,12 +71,9 @@ namespace CUE4Parse_Conversion.Meshes
                 case EMeshFormat.OBJ:
                     Ar.Write(SaveAsWavefront()); // this can be supported after new release of SharpGltf
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
             }
-        }
-
-        public ArraySegment<byte> SaveAsWavefront()
-        {
-            throw new NotImplementedException();
         }
 
         public static NodeBuilder[] CreateGltfSkeleton(List<CSkelMeshBone> skeleton, NodeBuilder armatureNode) // TODO optimize
