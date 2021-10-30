@@ -210,14 +210,18 @@ namespace CUE4Parse.UE4.IO
                 ProcessContainerHeader();
             }
 
-            var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
-            if (EncryptedFileCount > 0)
-                sb.Append($" ({EncryptedFileCount} encrypted)");
-            if (MountPoint.Contains("/"))
-                sb.Append($", mount point: \"{MountPoint}\"");
-            sb.Append($", version {(int) Info.Version} in {elapsed}");
-            log.Information(sb.ToString());
+            if (Globals.LogVfsMounts)
+            {
+                var elapsed = watch.Elapsed;
+                var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
+                if (EncryptedFileCount > 0)
+                    sb.Append($" ({EncryptedFileCount} encrypted)");
+                if (MountPoint.Contains("/"))
+                    sb.Append($", mount point: \"{MountPoint}\"");
+                sb.Append($", version {(int) Info.Version} in {elapsed}");
+                log.Information(sb.ToString());
+            }
+
             return Files;
         }
 

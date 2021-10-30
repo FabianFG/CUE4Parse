@@ -8,6 +8,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 using Serilog;
@@ -73,6 +74,11 @@ namespace CUE4Parse.UE4.Assets
             }
             catch (Exception e)
             {
+                if (Globals.FatalObjectSerializationErrors)
+                {
+                    throw new ParserException(Ar, $"Could not read {obj.ExportType} correctly", e);
+                }
+
                 Log.Error(e, "Could not read {0} correctly", obj.ExportType);
             }
         }
