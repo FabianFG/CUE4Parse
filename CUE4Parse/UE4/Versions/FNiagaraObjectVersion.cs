@@ -1,8 +1,7 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.Objects.UObject
+namespace CUE4Parse.UE4.Versions
 {
     public static class FNiagaraObjectVersion
     {
@@ -16,13 +15,13 @@ namespace CUE4Parse.UE4.Objects.UObject
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
-        };
+        }
 
         public static readonly FGuid GUID = new(0xF2AED0AC, 0x9AFE416F, 0x8664AA7F, 0xFA26D6FC);
 
         public static Type Get(FArchive Ar)
         {
-            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = Ar.CustomVer(GUID);
             if (ver >= 0)
                 return (Type) ver;
 

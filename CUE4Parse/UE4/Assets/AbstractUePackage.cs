@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 if (Globals.FatalObjectSerializationErrors)
                 {
-                    throw new ParserException(Ar, $"Could not read {obj.ExportType} correctly", e);
+                    throw new ParserException($"Could not read {obj.ExportType} correctly", e);
                 }
 
                 Log.Error(e, "Could not read {0} correctly", obj.ExportType);
