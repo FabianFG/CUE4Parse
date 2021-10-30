@@ -6,14 +6,14 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    public class FPackageStoreEntry
+    public class FFilePackageStoreEntry
     {
         public int ExportCount;
         public int ExportBundleCount;
         public FPackageId[] ImportedPackages;
         public FSHAHash[] ShaderMapHashes;
 
-        public FPackageStoreEntry(FArchive Ar)
+        public FFilePackageStoreEntry(FArchive Ar)
         {
             if (Ar.Game >= EGame.GAME_UE5_0)
             {

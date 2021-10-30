@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -52,8 +53,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint TocChunkPerfectHashSeedsCount;
         public ulong PartitionSize;
         public readonly uint TocChunksWithoutPerfectHashCount;
-        private readonly uint _reserved6;
-        private readonly ulong[] _reserved7;
+        private readonly uint _reserved7;
+        private readonly ulong[] _reserved8;
 
         public FIoStoreTocHeader(FArchive Ar)
         {
@@ -80,8 +81,9 @@ namespace CUE4Parse.UE4.IO.Objects
             TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
             PartitionSize = Ar.Read<ulong>();
             TocChunksWithoutPerfectHashCount = Ar.Read<uint>();
-            _reserved6 = Ar.Read<uint>();
-            _reserved7 = Ar.ReadArray<ulong>(5);
+            _reserved7 = Ar.Read<uint>();
+            _reserved8 = Ar.ReadArray<ulong>(5);
+            Ar.Position = Ar.Position.Align(4);
         }
     }
 }
