@@ -33,9 +33,9 @@ namespace CUE4Parse_Conversion.Meshes
                 ExportStaticMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh);
             }
 
-            var scene = new SceneBuilder();
-            scene.AddRigidMesh(mesh, Matrix4x4.Identity);
-            Model = scene.ToGltf2();
+            var sceneBuilder = new SceneBuilder();
+            sceneBuilder.AddRigidMesh(mesh, Matrix4x4.Identity);
+            Model = sceneBuilder.ToGltf2();
         }
 
         public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter>? materialExports)
@@ -129,7 +129,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
             else materialName = $"material_{index}";
 
-            var mat = new MaterialBuilder().WithBaseColor(Vector4.One).WithDoubleSide(true);
+            var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
 
             var prim = mesh.UsePrimitive(mat);
@@ -146,8 +146,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var vert3 = lod.Verts[wedgeIndex[2]];
 
                 var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
-                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, index);
-
+                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
                 var (jv1, jv2, jv3) = PrepareVertexJoints(vert1, vert2, vert3);
 
                 prim.AddTriangle((v1, c1, jv1), (v2, c2, jv2), (v3, c3, jv3));
@@ -165,7 +164,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
             else materialName = $"material_{index}";
 
-            var mat = new MaterialBuilder().WithBaseColor(Vector4.One).WithDoubleSide(true);
+            var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
 
             var prim = mesh.UsePrimitive(mat);
@@ -182,7 +181,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var vert3 = lod.Verts[wedgeIndex[2]];
 
                 var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
-                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, index);
+                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
 
                 prim.AddTriangle((v1, c1), (v2, c2), (v3, c3));
             }
@@ -214,32 +213,32 @@ namespace CUE4Parse_Conversion.Meshes
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            CBaseMeshLod lod, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, int firstIndex)
+            CBaseMeshLod lod, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, int[] indices)
         {
             return PrepareUVsAndTexCoords(lod.VertexColors ?? new FColor[lod.NumVerts], vert1, vert2, vert3,
-                lod.ExtraUV.Value, firstIndex);
+                lod.ExtraUV.Value, indices);
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            FColor[] colors, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, int firstIndex)
+            FColor[] colors, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, int[] indices)
         {
-            var (uvs1, uvs2, uvs3) = PrepareUVs(vert1, vert2, vert3, uvs, firstIndex);
-            var c1 = new VertexColorXTextureX(colors[firstIndex], uvs1);
-            var c2 = new VertexColorXTextureX(colors[firstIndex+1], uvs2);
-            var c3 = new VertexColorXTextureX(colors[firstIndex+2], uvs3);
+            var (uvs1, uvs2, uvs3) = PrepareUVs(vert1, vert2, vert3, uvs, indices);
+            var c1 = new VertexColorXTextureX((Vector4)colors[indices[0]]/255, uvs1);
+            var c2 = new VertexColorXTextureX((Vector4)colors[indices[1]]/255, uvs2);
+            var c3 = new VertexColorXTextureX((Vector4)colors[indices[2]]/255, uvs3);
             return (c1, c2, c3);
         }
 
-        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, int firstIndex)
+        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, int[] indices)
         {
             var uvs1 = new List<Vector2>() { vert1.UV };
             var uvs2 = new List<Vector2>() { vert2.UV };
             var uvs3 = new List<Vector2>() { vert3.UV };
             foreach (var uv in uvs)
             {
-                uvs1.Add(uv[firstIndex]);
-                uvs2.Add(uv[firstIndex+1]);
-                uvs3.Add(uv[firstIndex+2]);
+                uvs1.Add(uv[indices[0]]);
+                uvs2.Add(uv[indices[1]]);
+                uvs3.Add(uv[indices[2]]);
             }
 
             return (uvs1, uvs2, uvs3);
@@ -267,7 +266,7 @@ namespace CUE4Parse_Conversion.Meshes
             return res;
         }
 
-        public static FQuat SwapYZ(FQuat quat) => new FQuat(quat.X, quat.Z, quat.Y, quat.W);
+        public static FQuat SwapYZ(FQuat quat) => new (quat.X, quat.Z, quat.Y, quat.W);
 
         public static Vector4 SwapYZAndNormalize(Vector4 vec)
         {
