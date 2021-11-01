@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Readers;
 namespace CUE4Parse.UE4.Versions
 {
     // Custom serialization version for changes made in //UE5/Main stream
-    public class FUE5MainStreamObjectVersion
+    public static class FUE5MainStreamObjectVersion
     {
         public enum Type
         {
