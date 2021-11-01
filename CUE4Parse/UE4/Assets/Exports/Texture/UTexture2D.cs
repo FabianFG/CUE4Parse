@@ -16,13 +16,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
     public class UTexture2D : UTexture
     {
-        public FTexture2DMipMap[] Mips { get; private set; }
-        public int FirstMip { get; private set; }
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
-        public int NumSlices { get; private set; } // important only while UTextureCube4 is derived from UTexture2D in out implementation
-        public bool IsVirtual { get; private set; }
+        public int PackedData { get; private set; } // important only while UTextureCube4 is derived from UTexture2D in out implementation
         public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
+        public FOptTexturePlatformData OptData { get; private set; }
+        public int FirstMipToSerialize { get; private set; }
+        public FTexture2DMipMap[] Mips { get; private set; }
+        public FVirtualTextureBuiltData? VTData { get; private set; }
+        public bool IsVirtual => VTData != null;
         public FIntPoint ImportedSize { get; private set; }
         public bool bRenderNearestNeighbor { get; private set; }
         public bool isNormalMap { get; private set; }
@@ -62,7 +64,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 var pixelFormatEnum = Ar.ReadFName();
                 while (!pixelFormatEnum.IsNone)
                 {
-                    var skipOffset = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<long>() : Ar.Read<int>();
+                    var skipOffset = Ar.Game switch
+                    {
+                        >= EGame.GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
+                        >= EGame.GAME_UE4_20 => Ar.Read<long>(),
+                        _ => Ar.Read<int>()
+                    };
 
                     var pixelFormat = EPixelFormat.PF_Unknown;
                     Enum.TryParse(pixelFormatEnum.Text, out pixelFormat);
@@ -88,13 +95,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                         }
 
                         // copy data to UTexture2D
-                        Mips = data.Mips;
-                        FirstMip = data.FirstMip;
                         SizeX = data.SizeX;
                         SizeY = data.SizeY;
-                        NumSlices = data.NumSlices;
-                        IsVirtual = data.bIsVirtual;
+                        PackedData = data.PackedData;
                         Format = pixelFormat;
+                        OptData = data.OptData;
+                        FirstMipToSerialize = data.FirstMipToSerialize;
+                        Mips = data.Mips;
+                        VTData = data.VTData;
                     }
                     else
                     {
@@ -121,33 +129,38 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             base.WriteJson(writer, serializer);
 
-            writer.WritePropertyName("Mips");
-            writer.WriteStartArray();
-            {
-                foreach (var mip in Mips)
-                {
-                    serializer.Serialize(writer, mip);
-                }
-            }
-            writer.WriteEndArray();
-
-            writer.WritePropertyName("FirstMip");
-            writer.WriteValue(FirstMip);
-
             writer.WritePropertyName("SizeX");
             writer.WriteValue(SizeX);
 
             writer.WritePropertyName("SizeY");
             writer.WriteValue(SizeY);
 
-            writer.WritePropertyName("NumSlices");
-            writer.WriteValue(NumSlices);
+            writer.WritePropertyName("PackedData");
+            writer.WriteValue(PackedData);
 
-            writer.WritePropertyName("IsVirtual");
-            writer.WriteValue(IsVirtual);
-
-            writer.WritePropertyName("Format");
+            writer.WritePropertyName("PixelFormat");
             writer.WriteValue(Format.ToString());
+
+            if (OptData.ExtData != 0 && OptData.NumMipsInTail != 0)
+            {
+                writer.WritePropertyName("OptData");
+                serializer.Serialize(writer, OptData);
+            }
+
+            writer.WritePropertyName("FirstMipToSerialize");
+            writer.WriteValue(FirstMipToSerialize);
+
+            if (Mips is { Length: > 0 })
+            {
+                writer.WritePropertyName("Mips");
+                serializer.Serialize(writer, Mips);
+            }
+
+            if (VTData != null)
+            {
+                writer.WritePropertyName("VTData");
+                writer.WriteValue(VTData);
+            }
         }
     }
 }
