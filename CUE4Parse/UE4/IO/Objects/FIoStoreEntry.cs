@@ -7,29 +7,38 @@ namespace CUE4Parse.UE4.IO.Objects
 {
     public class FIoStoreEntry : VfsEntry
     {
-        public override bool IsEncrypted { get; }
-        public override CompressionMethod CompressionMethod { get; }
+        public override bool IsEncrypted => IoStoreReader.IsEncrypted;
+        public override CompressionMethod CompressionMethod
+        {
+            get
+            {
+                var tocResource = IoStoreReader.TocResource;
+                var firstBlockIndex = (int) (Offset / tocResource.Header.CompressionBlockSize);
+                return tocResource.CompressionMethods[tocResource.CompressionBlocks[firstBlockIndex].CompressionMethodIndex];
+            }
+        }
 
-        public readonly uint UserData;
-        public readonly FIoChunkId ChunkId;
+        public readonly uint TocEntryIndex;
+        public FIoChunkId ChunkId => IoStoreReader.TocResource.ChunkIds[TocEntryIndex];
 
-        public FIoStoreEntry(IoStoreReader reader, string path, uint userData) : base(reader)
+        public FIoStoreEntry(IoStoreReader reader, string path, uint tocEntryIndex) : base(reader)
         {
             Path = path;
-            UserData = userData;
-            ChunkId = reader.TocResource.ChunkIds[userData];
-            ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[userData];
+            TocEntryIndex = tocEntryIndex;
+            ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];
             Offset = (long) offsetLength.Offset;
             Size = (long) offsetLength.Length;
-            IsEncrypted = reader.IsEncrypted;
-            CompressionMethod =
-                reader.TocResource.CompressionMethods[
-                    reader.TocResource.CompressionBlocks[userData].CompressionMethodIndex];
+        }
+
+        public IoStoreReader IoStoreReader
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (IoStoreReader) Vfs;
         }
 
         public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Versions);
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
     }
 }

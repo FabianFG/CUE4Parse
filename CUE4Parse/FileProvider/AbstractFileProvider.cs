@@ -11,7 +11,6 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Pak.Objects;
@@ -446,7 +445,7 @@ namespace CUE4Parse.FileProvider
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
 
-            var containerHeader = ((IoStoreReader) ((FIoStoreEntry) file).Vfs).ContainerHeader;
+            var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
             return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, ubulk, uptnl, this, MappingsForThisGame);
         }
 
@@ -494,7 +493,7 @@ namespace CUE4Parse.FileProvider
                     return null;
                 }
 
-                var containerHeader = ((IoStoreReader) ((FIoStoreEntry) file).Vfs).ContainerHeader;
+                var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
                 return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
             }
             catch

@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public FSkeletalMeshVertexBuffer(FAssetArchive Ar) : this()
         {
-            var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
+            var stripDataFlags = new FStripDataFlags(Ar, (int) UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
 
             NumTexCoords = Ar.Read<int>();
             bUseFullPrecisionUVs = Ar.ReadBoolean();
@@ -41,9 +41,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MeshOrigin = Ar.Read<FVector>();
 
             if (!bUseFullPrecisionUVs)
-                VertsHalf = Ar.ReadBulkArray(() => new FGPUVertHalf(Ar, NumTexCoords));
+                VertsHalf = Ar.ReadBulkArray(() => new FGPUVertHalf(Ar, bExtraBoneInfluences, NumTexCoords));
             else
-                VertsFloat = Ar.ReadBulkArray(() => new FGPUVertFloat(Ar, NumTexCoords));
+                VertsFloat = Ar.ReadBulkArray(() => new FGPUVertFloat(Ar, bExtraBoneInfluences, NumTexCoords));
         }
 
         public int GetVertexCount()

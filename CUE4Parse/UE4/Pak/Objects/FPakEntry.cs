@@ -113,7 +113,6 @@ namespace CUE4Parse.UE4.Pak.Objects
         public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader)
         {
             Path = path;
-            Versions = reader.Ar.Versions;
 
             // UE4 reference: FPakFile::DecodePakEntry()
             uint bitfield = *(uint*) data;
@@ -242,10 +241,16 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
         }
 
+        public PakFileReader PakFileReader
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (PakFileReader) Vfs;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Versions);
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
     }
 }

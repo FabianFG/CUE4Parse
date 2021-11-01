@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             Normal = Array.Empty<FPackedNormal>();
         }
 
-        public void SerializeForGPU(FAssetArchive Ar)
+        public void SerializeForGPU(FAssetArchive Ar, bool bExtraBoneInfluences)
         {
             Normal = new FPackedNormal[3];
             Normal[0] = new FPackedNormal(Ar);
@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
             {
                 // serialized as separate buffer starting with UE4.15
-                Infs = new FSkinWeightInfo(Ar, Ar.Ver >= UE4Version.VER_UE4_SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES);
+                Infs = new FSkinWeightInfo(Ar, bExtraBoneInfluences);
             }
             Pos = Ar.Read<FVector>();
         }

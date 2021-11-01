@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Writers;
 using static CUE4Parse.Utils.TypeConversionUtils;
 
@@ -11,12 +10,6 @@ namespace CUE4Parse.UE4.Objects.Meshes
     {
         public float U;
         public float V;
-
-        public FMeshUVFloat(FArchive Ar)
-        {
-            U = Ar.Read<float>();
-            V = Ar.Read<float>();
-        }
 
         public FMeshUVFloat(float u, float v)
         {
@@ -31,10 +24,6 @@ namespace CUE4Parse.UE4.Objects.Meshes
         }
 
         public static implicit operator Vector2(FMeshUVFloat uv) => new(uv.U, uv.V);
-
-        public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf)
-        {
-            return new(HalfToFloat(uvHalf.U), HalfToFloat(uvHalf.V));
-        }
+        public static explicit operator FMeshUVFloat(FMeshUVHalf uvHalf) => new(HalfToFloat(uvHalf.U), HalfToFloat(uvHalf.V));
     }
 }

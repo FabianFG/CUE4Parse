@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Serilog;
 
@@ -16,16 +15,14 @@ namespace CUE4Parse.FileProvider
         public static readonly string[] Ue4KnownExtensions = { "uasset", "umap", "uexp", "ubulk", "uptnl" };
 
         protected GameFile() { }
-        protected GameFile(string path, long size, VersionContainer versions)
+        protected GameFile(string path, long size)
         {
             Path = path;
             Size = size;
-            Versions = versions;
         }
 
         public abstract bool IsEncrypted { get; }
         public abstract CompressionMethod CompressionMethod { get; }
-        public virtual VersionContainer Versions { get; protected set; }
         public string Path { get; protected set; }
         public long Size { get; protected set; }
 

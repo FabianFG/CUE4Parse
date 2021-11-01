@@ -5,31 +5,61 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 {
+    public enum ESkinVertexColorChannel : byte
+    {
+        Red = 0,
+        Green = 1,
+        Blue = 2,
+        Alpha = 3,
+        None = Alpha
+    }
+
     [JsonConverter(typeof(FSkelMeshSectionConverter))]
     public class FSkelMeshSection
     {
         public short MaterialIndex;
         public int BaseIndex;
         public int NumTriangles;
-        public bool bDisabled;
+        public bool bRecomputeTangent;
+        public ESkinVertexColorChannel RecomputeTangentsVertexMaskChannel;
+        public bool bCastShadow;
+        public bool bVisibleInRayTracing;
+        [Obsolete]
+        public bool bLegacyClothingSection;
+        [Obsolete]
         public short CorrespondClothSectionIndex;
-        public int GenerateUpToLodIndex;
-        // Data from FSkelMeshChunk, appeared in FSkelMeshSection after UE4.13
-        public int NumVertices;
         public uint BaseVertexIndex;
         public FSoftVertex[] SoftVertices;
+        public FMeshToMeshVertData[] ClothMappingData;
         public ushort[] BoneMap;
+        public int NumVertices;
         public int MaxBoneInfluences;
-        public bool HasClothData;
-        // UE4.14
-        public bool bCastShadow;
+        public bool bUse16BitBoneIndex;
+        public short CorrespondClothAssetIndex;
+        public FClothingSectionData ClothingData;
+        public Dictionary<int, int[]> OverlappingVertices;
+        public bool bDisabled;
+        public int GenerateUpToLodIndex;
+        public int OriginalDataSectionIndex;
+        public int ChunkedParentSectionIndex;
+
+        public bool HasClothData => ClothMappingData is { Length: > 0 };
 
         public FSkelMeshSection()
         {
+            RecomputeTangentsVertexMaskChannel = ESkinVertexColorChannel.None;
+            bCastShadow = true;
+            bVisibleInRayTracing = true;
+            CorrespondClothSectionIndex = -1;
             SoftVertices = Array.Empty<FSoftVertex>();
+            MaxBoneInfluences = 4;
+            GenerateUpToLodIndex = -1;
+            OriginalDataSectionIndex = -1;
+            ChunkedParentSectionIndex = -1;
         }
 
         public FSkelMeshSection(FAssetArchive Ar) : this()
@@ -40,101 +70,151 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MaterialIndex = Ar.Read<short>();
 
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
-                Ar.Position += 2; // ChunkIndex
+            {
+                var dummyChunkIndex = Ar.Read<ushort>();
+            }
 
             if (!stripDataFlags.IsDataStrippedForServer())
             {
                 BaseIndex = Ar.Read<int>();
                 NumTriangles = Ar.Read<int>();
             }
+
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
-                Ar.Position += 1; // TEnumAsByte<ETriangleSortOption>
+            {
+                var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
+            }
 
             if (Ar.Ver >= UE4Version.VER_UE4_APEX_CLOTH)
             {
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.DeprecateSectionDisabledFlag)
-                    bDisabled = Ar.ReadBoolean();
+                {
+                    bLegacyClothingSection = Ar.ReadBoolean();
+                }
+
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
+                {
                     CorrespondClothSectionIndex = Ar.Read<short>();
+                }
             }
 
             if (Ar.Ver >= UE4Version.VER_UE4_APEX_CLOTH_LOD)
-                Ar.Position += 1; // bEnableClothLOD_DEPRECATED
+            {
+                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveEnableClothLOD)
+                {
+                    var dummyEnableClothLOD = Ar.Read<byte>();
+                }
+            }
 
             if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
             {
-                var bRecomputeTangent = Ar.ReadBoolean();
+                bRecomputeTangent = Ar.ReadBoolean();
             }
 
-            if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask)
-                Ar.Position += 1; // RecomputeTangentsVertexMaskChannel
+            RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
+            bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
+            bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
 
-            if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
-                bCastShadow = Ar.ReadBoolean();
-
-            HasClothData = false;
             if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
             {
                 if (!stripDataFlags.IsDataStrippedForServer())
+                {
                     BaseVertexIndex = Ar.Read<uint>();
+                }
 
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
-                        Ar.ReadArray(() => new FRigidVertex(Ar)); // RigidVertices
+                    {
+                        var legacyRigidVertices = Ar.ReadArray(() => new FRigidVertex(Ar));
+                    }
 
                     SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
                 }
 
-                BoneMap = Ar.ReadArray<ushort>();
-                if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.SaveNumVertices)
-                    NumVertices = Ar.Read<int>();
-                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
-                    Ar.Position += 8; // NumRigidVerts, NumSoftVerts
-                MaxBoneInfluences = Ar.Read<int>();
-
-                FVector[] physicalMeshVertices, physicalMeshNormals;
-                var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
-                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
+                if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
                 {
-                    physicalMeshVertices = Ar.ReadArray<FVector>();
-                    physicalMeshNormals = Ar.ReadArray<FVector>();
+                    bUse16BitBoneIndex = Ar.ReadBoolean();
                 }
 
-                short clothAssetSubmeshIndex;
-                var correspondClothAssetIndex = Ar.Read<short>();
+                BoneMap = Ar.ReadArray<ushort>();
+
+                if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.SaveNumVertices)
+                {
+                    NumVertices = Ar.Read<int>();
+                }
+
+                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
+                {
+                    var dummyNumRigidVerts = Ar.Read<int>();
+                    var dummyNumSoftVerts = Ar.Read<int>();
+
+                    if (dummyNumRigidVerts + dummyNumSoftVerts != SoftVertices.Length)
+                    {
+                        Log.Error("Legacy NumSoftVerts + NumRigidVerts != SoftVertices.Num()");
+                    }
+                }
+
+                MaxBoneInfluences = Ar.Read<int>();
+
+                ClothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+
+                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
+                {
+                    var dummyPhysicalMeshVertices = Ar.ReadArray<FVector>();
+                    var dummyPhysicalMeshNormals = Ar.ReadArray<FVector>();
+                }
+
+                CorrespondClothAssetIndex = Ar.Read<short>();
+
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.NewClothingSystemAdded)
                 {
-                    clothAssetSubmeshIndex = Ar.Read<short>();
+                    var dummyClothAssetSubmeshIndex = Ar.Read<short>();
                 }
                 else
                 {
                     // UE4.16+
-                    var clothingData = Ar.Read<FClothingSectionData>();
+                    ClothingData = Ar.Read<FClothingSectionData>();
                 }
-
-                HasClothData = clothMappingData.Length > 0;
 
                 if (FOverlappingVerticesCustomVersion.Get(Ar) >= FOverlappingVerticesCustomVersion.Type.DetectOVerlappingVertices)
                 {
                     var size = Ar.Read<int>();
-                    var overlappingVertices = new Dictionary<int, int[]>();
+                    OverlappingVertices = new Dictionary<int, int[]>(size);
                     for (var i = 0; i < size; i++)
                     {
-                        overlappingVertices[Ar.Read<int>()] = Ar.ReadArray<int>();
+                        OverlappingVertices[Ar.Read<int>()] = Ar.ReadArray<int>();
                     }
                 }
+
                 if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
                 {
                     bDisabled = Ar.ReadBoolean();
                 }
+
                 if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.SectionIgnoreByReduceAdded)
                 {
                     GenerateUpToLodIndex = Ar.Read<int>();
                 }
+                else
+                {
+                    GenerateUpToLodIndex = -1;
+                }
+
+                if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SkeletalMeshBuildRefactor)
+                {
+                    OriginalDataSectionIndex = Ar.Read<int>();
+                    ChunkedParentSectionIndex = Ar.Read<int>();
+                }
+                else
+                {
+                    OriginalDataSectionIndex = -1;
+                    ChunkedParentSectionIndex = -1;
+                }
             }
         }
 
+        // Reference: FArchive& operator<<(FArchive& Ar, FSkelMeshRenderSection& S)
         public void SerializeRenderItem(FAssetArchive Ar)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
@@ -142,37 +222,33 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MaterialIndex = Ar.Read<short>();
             BaseIndex = Ar.Read<int>();
             NumTriangles = Ar.Read<int>();
-
-            var bRecomputeTangent = Ar.ReadBoolean();
-            if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask)
-            {
-                Ar.Position += 1;
-            }
-
-            bCastShadow = Ar.ReadBoolean();
+            bRecomputeTangent = Ar.ReadBoolean();
+            RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
+            bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
+            bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
             BaseVertexIndex = Ar.Read<uint>();
-
-            var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
-            HasClothData = clothMappingData.Length > 0;
-
+            ClothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
             BoneMap = Ar.ReadArray<ushort>();
             NumVertices = Ar.Read<int>();
             MaxBoneInfluences = Ar.Read<int>();
-
-            var correspondClothAssetIndex = Ar.Read<short>();
-            var clothingData = Ar.Read<FClothingSectionData>();
+            CorrespondClothAssetIndex = Ar.Read<short>();
+            ClothingData = Ar.Read<FClothingSectionData>();
 
             if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
             {
                 Ar.SkipFixedArray(4); // DupVertData
                 Ar.SkipFixedArray(8); // DupVertIndexData
             }
+
             if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
             {
                 bDisabled = Ar.ReadBoolean();
             }
+
             if (Ar.Game == EGame.GAME_RogueCompany)
+            {
                 Ar.Position += 4;
+            }
         }
     }
 
@@ -191,29 +267,65 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             writer.WritePropertyName("NumTriangles");
             writer.WriteValue(value.NumTriangles);
 
-            writer.WritePropertyName("bDisabled");
-            writer.WriteValue(value.bDisabled);
+            writer.WritePropertyName("bRecomputeTangent");
+            writer.WriteValue(value.bRecomputeTangent);
+
+            writer.WritePropertyName("RecomputeTangentsVertexMaskChannel");
+            writer.WriteValue(value.RecomputeTangentsVertexMaskChannel.ToString());
+
+            writer.WritePropertyName("bCastShadow");
+            writer.WriteValue(value.bCastShadow);
+
+            writer.WritePropertyName("bVisibleInRayTracing");
+            writer.WriteValue(value.bVisibleInRayTracing);
+
+            writer.WritePropertyName("bLegacyClothingSection");
+            writer.WriteValue(value.bLegacyClothingSection);
 
             writer.WritePropertyName("CorrespondClothSectionIndex");
             writer.WriteValue(value.CorrespondClothSectionIndex);
 
-            writer.WritePropertyName("GenerateUpToLodIndex");
-            writer.WriteValue(value.GenerateUpToLodIndex);
+            writer.WritePropertyName("BaseVertexIndex");
+            writer.WriteValue(value.BaseVertexIndex);
+
+            //writer.WritePropertyName("SoftVertices");
+            //serializer.Serialize(writer, value.SoftVertices);
+
+            //writer.WritePropertyName("ClothMappingData");
+            //serializer.Serialize(writer, value.ClothMappingData);
+
+            //writer.WritePropertyName("BoneMap");
+            //serializer.Serialize(writer, value.BoneMap);
 
             writer.WritePropertyName("NumVertices");
             writer.WriteValue(value.NumVertices);
 
-            writer.WritePropertyName("BaseVertexIndex");
-            writer.WriteValue(value.BaseVertexIndex);
-
             writer.WritePropertyName("MaxBoneInfluences");
             writer.WriteValue(value.MaxBoneInfluences);
 
-            writer.WritePropertyName("HasClothData");
-            writer.WriteValue(value.HasClothData);
+            writer.WritePropertyName("bUse16BitBoneIndex");
+            writer.WriteValue(value.bUse16BitBoneIndex);
 
-            writer.WritePropertyName("bCastShadow");
-            writer.WriteValue(value.bCastShadow);
+            writer.WritePropertyName("CorrespondClothAssetIndex");
+            writer.WriteValue(value.CorrespondClothAssetIndex);
+
+            //writer.WritePropertyName("ClothingData");
+            //serializer.Serialize(writer, value.ClothingData);
+
+            //writer.WritePropertyName("OverlappingVertices");
+            //serializer.Serialize(writer, value.OverlappingVertices);
+
+            writer.WritePropertyName("bDisabled");
+            writer.WriteValue(value.bDisabled);
+
+            writer.WritePropertyName("GenerateUpToLodIndex");
+            writer.WriteValue(value.GenerateUpToLodIndex);
+
+            writer.WritePropertyName("OriginalDataSectionIndex");
+            writer.WriteValue(value.OriginalDataSectionIndex);
+
+            writer.WritePropertyName("ChunkedParentSectionIndex");
+            writer.WriteValue(value.ChunkedParentSectionIndex);
 
             writer.WriteEndObject();
         }

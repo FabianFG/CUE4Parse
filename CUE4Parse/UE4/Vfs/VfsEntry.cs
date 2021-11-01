@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.FileProvider;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Vfs
 {
@@ -9,7 +8,7 @@ namespace CUE4Parse.UE4.Vfs
 
         public long Offset { get; protected set; }
         
-        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size, vfs.Versions)
+        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size)
         {
             Vfs = vfs;
         }
@@ -17,12 +16,6 @@ namespace CUE4Parse.UE4.Vfs
         protected VfsEntry(IVfsReader vfs)
         {
             Vfs = vfs;
-        }
-
-        public override VersionContainer Versions
-        {
-            get => Vfs.Versions;
-            protected set => Vfs.Versions = value;
         }
     }
 }

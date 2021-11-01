@@ -198,6 +198,7 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
                 _ => Type.LatestVersion
             };
         }

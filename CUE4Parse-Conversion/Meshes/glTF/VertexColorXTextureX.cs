@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Schema2;
@@ -10,7 +9,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
     public struct VertexColorXTextureX: IVertexMaterial
     {
         public int MaxColors => 1; // Do we need more?
-        public int MaxTextCoords => MeshConverter._MAX_MESH_UV_SETS;
+        public int MaxTextCoords => MeshConverter.MAX_MESH_UV_SETS;
 
         [VertexAttribute("COLOR_0", EncodingType.UNSIGNED_BYTE, true)]
         public Vector4 Color;
