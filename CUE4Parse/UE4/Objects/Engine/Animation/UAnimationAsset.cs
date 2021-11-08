@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
         {
             base.Deserialize(Ar, validPos);
 
-            if (Ar.Ver >= (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_SKELETON_GUID_SERIALIZATION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)
             {
                 SkeletonGuid = Ar.Read<FGuid>();
             }

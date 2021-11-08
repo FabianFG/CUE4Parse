@@ -113,7 +113,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
                 {
                     var dt = Keys[1].Time - Keys[0].Time;
 
-                    if (Math.Abs(dt) <= FMath.SmallNumber)
+                    if (Math.Abs(dt) <= UnrealMath.SmallNumber)
                     {
                         interpVal = Keys[0].Value;
                     }
@@ -162,7 +162,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
                 {
                     var dt = Keys[numKeys - 2].Time - Keys[numKeys - 1].Time;
 
-                    if (Math.Abs(dt) <= FMath.SmallNumber)
+                    if (Math.Abs(dt) <= UnrealMath.SmallNumber)
                     {
                         interpVal = Keys[numKeys - 1].Value;
                     }

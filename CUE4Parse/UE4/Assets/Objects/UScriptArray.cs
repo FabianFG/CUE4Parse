@@ -1,7 +1,7 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 InnerTagData = tagData.InnerTypeData;
             }
-            else if (Ar.Ver >= UE4Version.VER_UE4_INNER_ARRAY_TAG_INFO && InnerType == "StructProperty")
+            else if (Ar.Ver >= EUnrealEngineObjectUE4Version.INNER_ARRAY_TAG_INFO && InnerType == "StructProperty")
             {
                 InnerTagData = new FPropertyTag(Ar, false).TagData;
                 if (InnerTagData == null)

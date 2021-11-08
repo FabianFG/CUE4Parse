@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public FTexture2DMipMap(FAssetArchive Ar)
         {
-            var cooked = Ar.Ver >= UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.Owner.HasFlags(PKG_FilterEditorOnly);
+            var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.Owner.HasFlags(PKG_FilterEditorOnly);
 
             Data = new FByteBulkData(Ar);
 
@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 SizeZ = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<int>() : 1;
             }
 
-            if (Ar.Ver >= UE4Version.VER_UE4_TEXTURE_DERIVED_DATA2 && !cooked)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_DERIVED_DATA2 && !cooked)
             {
                 var derivedDataKey = Ar.ReadFString();
             }

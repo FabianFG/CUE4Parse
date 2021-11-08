@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (!stripDataFlags.IsEditorDataStripped())
                 RawPointIndices = new FIntBulkData(Ar);
 
-            if (Ar.Game != EGame.GAME_StateOfDecay2 && Ar.Ver >= UE4Version.VER_UE4_ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
+            if (Ar.Game != EGame.GAME_StateOfDecay2 && Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
             {
                 MeshToImportVertexMap = Ar.ReadArray<int>();
                 MaxImportVertex = Ar.Read<int>();
@@ -126,7 +126,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         }
                     }
 
-                    if (Ar.Ver < UE4Version.VER_UE4_REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
+                    if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
                         throw new ParserException("Unsupported: extra SkelMesh vertex influences (old mesh format)");
 
                     // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1415
@@ -152,7 +152,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                         AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
 
-                    if (Ar.Ver >= UE4Version.VER_UE4_APEX_CLOTH && HasClothData())
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH && HasClothData())
                         ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
                 }
             }

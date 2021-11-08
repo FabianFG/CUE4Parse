@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             Size = Ar.Read<int>();
             ArrayIndex = Ar.Read<int>();
             TagData = new FPropertyTagData(Ar, PropertyType.Text);
-            if (Ar.Ver >= UE4Version.VER_UE4_PROPERTY_GUID_IN_PROPERTY_TAG)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PROPERTY_GUID_IN_PROPERTY_TAG)
             {
                 HasPropertyGuid = Ar.ReadFlag();
                 if (HasPropertyGuid)

@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FRawStaticIndexBuffer(FArchive Ar) : this()
         {
-            if (Ar.Ver < UE4Version.VER_UE4_SUPPORT_32BIT_STATIC_MESH_INDICES)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.SUPPORT_32BIT_STATIC_MESH_INDICES)
             {
                 Indices16 = Ar.ReadBulkArray<ushort>();
             }

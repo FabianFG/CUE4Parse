@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
             FinalRefBonePose = Ar.ReadArray<FTransform>();
 
-            if (Ar.Ver >= UE4Version.VER_UE4_REFERENCE_SKELETON_REFACTOR)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
                 var num = Ar.Read<int>();
                 FinalNameToIndexMap = new Dictionary<FName, int>(num);
@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
 
-            if (Ar.Ver < UE4Version.VER_UE4_FIXUP_ROOTBONE_PARENT)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.FIXUP_ROOTBONE_PARENT)
             {
                 if (FinalRefBoneInfo.Length > 0 && FinalRefBoneInfo[0].ParentIndex != -1)
                 {

@@ -41,10 +41,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 SerializeInlineDataRepresentations(Ar);
             }
 
-            if (Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN)
             {
                 var stripped = false;
-                if (Ar.Ver >= UE4Version.VER_UE4_RENAME_WIDGET_VISIBILITY)
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_WIDGET_VISIBILITY)
                 {
                     var stripDataFlags = Ar.Read<FStripDataFlags>();
                     stripped = stripDataFlags.IsDataStrippedForServer();

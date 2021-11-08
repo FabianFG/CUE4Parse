@@ -128,7 +128,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
             {
-                if (Ar.Ver >= UE4Version.VER_UE4_SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
                 {
                     ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
                     DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -140,7 +140,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
                 }
 
-                if (Ar.Ver is >= UE4Version.VER_UE4_FTEXT_HISTORY and < UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN)
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.FTEXT_HISTORY && Ar.Ver < EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN)
                 {
                     var _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
                 }

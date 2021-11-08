@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             Color = Ar.Read<FColor>();
             if (!isRigid)
             {
-                Infs = new FSkinWeightInfo(Ar, Ar.Ver >= UE4Version.VER_UE4_SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES);
+                Infs = new FSkinWeightInfo(Ar, Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES);
             }
             else
             {

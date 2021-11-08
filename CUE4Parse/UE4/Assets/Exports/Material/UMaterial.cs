@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
 
             // 4.25+
-            if (Ar.Ver >= UE4Version.VER_UE4_25)
+            if (Ar.Game >= EGame.GAME_UE4_25)
             {
                 CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
                 if (CachedExpressionData != null && CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             // scan package's imports for UTexture objects instead
             ScanForTextures(Ar);
 
-            if (Ar.Ver >= (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
             {
 #if READ_SHADER_MAPS
                 DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);

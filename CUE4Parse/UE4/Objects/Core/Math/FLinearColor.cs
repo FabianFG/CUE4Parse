@@ -51,12 +51,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FLinearColor LinearRGBToHsv()
         {
-            var rgbMin = FMath.Min3(R, G, B);
-            var rgbMax = FMath.Max3(R, G, B);
+            var rgbMin = UnrealMath.Min3(R, G, B);
+            var rgbMax = UnrealMath.Max3(R, G, B);
             var rgbRange = rgbMax - rgbMin;
 
             var hue = rgbMax == rgbMin ? 0.0f :
-                rgbMax == R ? FMath.Fmod((G - B) / rgbRange * 60.0f + 360.0f, 360.0f) :
+                rgbMax == R ? UnrealMath.Fmod((G - B) / rgbRange * 60.0f + 360.0f, 360.0f) :
                 rgbMax == G ? (B - R) / rgbRange * 60.0f + 120.0f :
                 rgbMax == B ? (R - G) / rgbRange * 60.0f + 240.0f :
                 0.0f;

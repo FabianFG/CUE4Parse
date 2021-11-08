@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
 
             bCooked = Ar.ReadBoolean();
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SOUND_COMPRESSION_TYPE_ADDED && FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveSoundWaveCompressionName)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SOUND_COMPRESSION_TYPE_ADDED && FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveSoundWaveCompressionName)
             {
                 Ar.ReadFName(); // DummyCompressionName
             }

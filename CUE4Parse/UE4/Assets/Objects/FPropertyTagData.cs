@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 case "StructProperty":
                     StructType = Ar.ReadFName().Text;
-                    if (Ar.Ver >= UE4Version.VER_UE4_STRUCT_GUID_IN_PROPERTY_TAG)
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.STRUCT_GUID_IN_PROPERTY_TAG)
                         StructGuid = Ar.Read<FGuid>();
                     break;
                 case "BoolProperty":
@@ -40,16 +40,16 @@ namespace CUE4Parse.UE4.Assets.Objects
                     EnumName = Ar.ReadFName().Text;
                     break;
                 case "ArrayProperty":
-                    if (Ar.Ver >= UE4Version.VAR_UE4_ARRAY_PROPERTY_INNER_TAGS)
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.ARRAY_PROPERTY_INNER_TAGS)
                         InnerType = Ar.ReadFName().Text;
                     break;
-                // Serialize the following if version is past VER_UE4_PROPERTY_TAG_SET_MAP_SUPPORT
+                // Serialize the following if version is past PROPERTY_TAG_SET_MAP_SUPPORT
                 case "SetProperty":
-                    if (Ar.Ver >= UE4Version.VER_UE4_PROPERTY_TAG_SET_MAP_SUPPORT)
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.PROPERTY_TAG_SET_MAP_SUPPORT)
                         InnerType = Ar.ReadFName().Text;
                     break;
                 case "MapProperty":
-                    if (Ar.Ver >= UE4Version.VER_UE4_PROPERTY_TAG_SET_MAP_SUPPORT)
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.PROPERTY_TAG_SET_MAP_SUPPORT)
                     {
                         InnerType = Ar.ReadFName().Text;
                         ValueType = Ar.ReadFName().Text;

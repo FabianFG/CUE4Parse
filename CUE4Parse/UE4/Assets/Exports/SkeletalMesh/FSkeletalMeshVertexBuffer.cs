@@ -26,12 +26,12 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public FSkeletalMeshVertexBuffer(FAssetArchive Ar) : this()
         {
-            var stripDataFlags = new FStripDataFlags(Ar, (int) UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
+            var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
 
             NumTexCoords = Ar.Read<int>();
             bUseFullPrecisionUVs = Ar.ReadBoolean();
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SUPPORT_GPUSKINNING_8_BONE_INFLUENCES &&
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_GPUSKINNING_8_BONE_INFLUENCES &&
                 FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
             {
                 bExtraBoneInfluences = Ar.ReadBoolean();

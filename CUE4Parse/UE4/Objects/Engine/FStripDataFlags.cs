@@ -1,17 +1,22 @@
 ﻿using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct FStripDataFlags
     {
+        private static readonly FPackageFileVersion OldestLoadablePackageFileUEVersion = FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE);
+
         public readonly byte GlobalStripFlags;
         public readonly byte ClassStripFlags;
 
-        public FStripDataFlags(FArchive Ar, int minVersion = 130)
+        public FStripDataFlags(FArchive Ar) : this(Ar, OldestLoadablePackageFileUEVersion) { }
+
+        public FStripDataFlags(FArchive Ar, in FPackageFileVersion minVersion)
         {
-            if ((int)Ar.Ver >= minVersion)
+            if (Ar.Ver.IsCompatible(minVersion))
             {
                 GlobalStripFlags = Ar.Read<byte>();
                 ClassStripFlags = Ar.Read<byte>();

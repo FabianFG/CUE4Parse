@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         
         public FMultisizeIndexContainer(FArchive Ar) : this()
         {
-            if (Ar.Ver < UE4Version.VER_UE4_KEEP_SKEL_MESH_INDEX_DATA)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.KEEP_SKEL_MESH_INDEX_DATA)
             {
                 Ar.Position += 4; //var bOldNeedsCPUAccess = Ar.ReadBoolean();
             }

@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (!stripFlags.IsEditorDataStripped())
             {
                 RawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
-                if (Ar.Ver >= UE4Version.VER_UE4_ANIMATION_ADD_TRACKCURVES)
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.ANIMATION_ADD_TRACKCURVES)
                 {
                     if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovingSourceAnimationData)
                     {

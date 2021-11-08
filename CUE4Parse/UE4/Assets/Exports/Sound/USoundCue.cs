@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
             base.Deserialize(Ar, validPos);
             FirstNode = GetOrDefault<FPackageIndex>(nameof(FirstNode));
 
-            if (Ar.Ver >= (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT)
             {
                 var _ = new FStripDataFlags(Ar);
             }

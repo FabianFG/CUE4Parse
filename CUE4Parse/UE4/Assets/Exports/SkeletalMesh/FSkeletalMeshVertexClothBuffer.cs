@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         
         public FSkeletalMeshVertexClothBuffer(FArchive Ar)
         {
-            var stripDataFlags = new FStripDataFlags(Ar, (int)UE4Version.VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX);
+            var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
             if (stripDataFlags.IsDataStrippedForServer()) return;
             
             Ar.SkipBulkArrayData();

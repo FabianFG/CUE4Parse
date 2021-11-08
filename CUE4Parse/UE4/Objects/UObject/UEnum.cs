@@ -2,7 +2,6 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -18,7 +17,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            if (Ar.Ver < (UE4Version) VER_UE4_TIGHTLY_PACKED_ENUMS)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.TIGHTLY_PACKED_ENUMS)
             {
                 var tempNames = Ar.ReadArray(Ar.ReadFName);
                 Names = new (FName, long)[tempNames.Length];
@@ -41,7 +40,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Names = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<long>()));
             }
 
-            if (Ar.Ver < UE4Version.VER_UE4_ENUM_CLASS_SUPPORT)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.ENUM_CLASS_SUPPORT)
             {
                 var bIsNamespace = Ar.ReadBoolean();
                 CppForm = bIsNamespace ? ECppForm.Namespaced : ECppForm.Regular;

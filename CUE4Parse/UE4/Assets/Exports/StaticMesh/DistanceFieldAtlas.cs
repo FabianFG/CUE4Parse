@@ -53,8 +53,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 Size = Ar.Read<FIntVector>();
                 LocalBoundingBox = Ar.Read<FBox>();
                 bMeshWasClosed = Ar.ReadBoolean();
-                bBuiltAsIfTwoSided = Ar.Ver >= UE4Version.VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN && Ar.ReadBoolean();
-                bMeshWasPlane = Ar.Ver >= UE4Version.VER_UE4_DEPRECATE_UMG_STYLE_ASSETS && Ar.ReadBoolean();
+                bBuiltAsIfTwoSided = Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN && Ar.ReadBoolean();
+                bMeshWasPlane = Ar.Ver >= EUnrealEngineObjectUE4Version.DEPRECATE_UMG_STYLE_ASSETS && Ar.ReadBoolean();
                 CompressedDistanceFieldVolume = new byte[0];
                 DistanceMinMax = new FVector2D(0f, 0f);
             }

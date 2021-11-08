@@ -73,7 +73,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetDeterminant() => Scale3D.X * Scale3D.Y * Scale3D.Z;
 
-        public bool Equals(FTransform other, float tolerance = FMath.KindaSmallNumber) =>
+        public bool Equals(FTransform other, float tolerance = UnrealMath.KindaSmallNumber) =>
             Rotation.Equals(other.Rotation, tolerance) &&
             Translation.Equals(other.Translation, tolerance) &&
             Scale3D.Equals(other.Scale3D, tolerance);
@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveScaling(float tolerance = FMath.SmallNumber)
+        public void RemoveScaling(float tolerance = UnrealMath.SmallNumber)
         {
             Scale3D = new FVector(1.0f, 1.0f, 1.0f);
             Rotation.Normalize();
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
             else
             {
-                var safeRecipScale3D = GetSafeScaleReciprocal(other.Scale3D, FMath.SmallNumber);
+                var safeRecipScale3D = GetSafeScaleReciprocal(other.Scale3D, UnrealMath.SmallNumber);
                 result.Scale3D = Scale3D * safeRecipScale3D;
 
                 if (!other.Rotation.IsNormalized)
@@ -178,7 +178,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var am = @base.ToMatrixWithScale();
             var bm = @base.ToMatrixWithScale();
             // get combined scale
-            var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, FMath.SmallNumber);
+            var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, UnrealMath.SmallNumber);
             var desiredScale3D = @base.Scale3D * safeRecipScale3D;
             ConstructTransformFromMatrixWithDesiredScale(am, bm.InverseFast(), desiredScale3D, ref outTransform);
         }
@@ -272,7 +272,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         // also returning BIG_NUMBER causes sequential NaN issues by multiplying
         // so we hardcode as 0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = FMath.SmallNumber)
+        public static FVector GetSafeScaleReciprocal(FVector scale, float tolerance = UnrealMath.SmallNumber)
         {
             var safeReciprocalScale = new FVector();
             if (Abs(scale.X) <= tolerance)

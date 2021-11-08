@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public FRuntimeSkinWeightProfileData(FArchive Ar)
         {
-            if (Ar.Ver < UE4Version.VER_UE4_SKINWEIGHT_PROFILE_DATA_LAYOUT_CHANGES)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.SKINWEIGHT_PROFILE_DATA_LAYOUT_CHANGES)
             {
                 OverridesInfo = Ar.ReadArray<FSkinWeightOverrideInfo>();
                 Weights = Ar.ReadArray<ushort>();

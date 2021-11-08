@@ -40,8 +40,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 isNormalMap = normalTrigger.Text.EndsWith("TC_Normalmap", StringComparison.OrdinalIgnoreCase);
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-            var bCooked = Ar.Ver >= UE4Version.VER_UE4_ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
-            if (Ar.Ver < UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR)
+            var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
             {
                 Log.Warning("Untested code: UTexture2D::LegacySerialize");
                 // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMaterial/UnTexture4.cpp#L166

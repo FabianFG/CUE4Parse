@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Vfs
 
         public VersionContainer Versions { get; set; }
         public EGame Game { get; set; }
-        public UE4Version Ver { get; set; }
+        public FPackageFileVersion Ver { get; set; }
 
         public IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
         public void MountTo(FileProviderDictionary files, bool caseInsensitive);

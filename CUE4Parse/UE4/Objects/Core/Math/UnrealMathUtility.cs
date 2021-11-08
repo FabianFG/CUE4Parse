@@ -4,7 +4,7 @@ using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    public static class FMath
+    public static class UnrealMath
     {
         public const float SmallNumber = 1e-8f;
         public const float KindaSmallNumber = 1e-4f;

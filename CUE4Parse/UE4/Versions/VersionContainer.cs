@@ -20,22 +20,22 @@ namespace CUE4Parse.UE4.Versions
             }
         }
         private EGame _game;
-        public UE4Version Ver
+        public FPackageFileVersion Ver
         {
             get => _ver;
             set
             {
-                bExplicitVer = value != UE4Version.VER_UE4_DETERMINE_BY_GAME;
+                bExplicitVer = value.FileVersionUE4 != 0 || value.FileVersionUE5 != 0;
                 _ver = bExplicitVer ? value : _game.GetVersion();
             }
         }
-        private UE4Version _ver;
+        private FPackageFileVersion _ver;
         public bool bExplicitVer { get; private set; } 
         public List<FCustomVersion>? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
 
-        public VersionContainer(EGame game = GAME_UE4_LATEST, UE4Version ver = UE4Version.VER_UE4_DETERMINE_BY_GAME, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null)
+        public VersionContainer(EGame game = GAME_UE4_LATEST, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null)
         {
             _optionOverrides = optionOverrides;
             Game = game;

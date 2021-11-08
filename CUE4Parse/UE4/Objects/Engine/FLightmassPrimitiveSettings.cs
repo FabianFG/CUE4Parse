@@ -1,6 +1,5 @@
 ﻿using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -22,7 +21,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             bShadowIndirectOnly = Ar.ReadBoolean();
             FullyOccludedSamplesFraction = Ar.Read<float>();
             bUseEmissiveForStaticLighting = Ar.ReadBoolean();
-            bUseVertexNormalForHemisphereGather = Ar.Ver >= (UE4Version) VER_UE4_NEW_LIGHTMASS_PRIMITIVE_SETTING && Ar.ReadBoolean();
+            bUseVertexNormalForHemisphereGather = Ar.Ver >= EUnrealEngineObjectUE4Version.NEW_LIGHTMASS_PRIMITIVE_SETTING && Ar.ReadBoolean();
             EmissiveLightFalloffExponent = Ar.Read<float>();
             EmissiveLightExplicitInfluenceRadius = Ar.Read<float>();
             EmissiveBoost = Ar.Read<float>();

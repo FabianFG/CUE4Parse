@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MaxBoneInfluences = Ar.Read<int>();
             HasClothData = false;
 
-            if (Ar.Ver >= UE4Version.VER_UE4_APEX_CLOTH)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)
             {
                 // Physics data, drop
                 var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));

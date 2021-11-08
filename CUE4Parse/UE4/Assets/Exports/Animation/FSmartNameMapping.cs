@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     }
 				}
 			}
-			else if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_ADD_SMARTNAMES)
+			else if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_ADD_SMARTNAMES)
 			{
 				Ar.Read<ushort>();
 				var mapLength = Ar.Read<int>();

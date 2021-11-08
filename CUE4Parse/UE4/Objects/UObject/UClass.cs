@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -66,7 +65,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             var bDeprecatedForceScriptOrder = Ar.ReadBoolean();
             var dummy = Ar.ReadFName();
 
-            if (Ar.Ver >= (UE4Version) VER_UE4_ADD_COOKED_TO_UCLASS)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_UCLASS)
             {
                 bCooked = Ar.ReadBoolean();
             }

@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             else
             {
-                if (Ar.Ver >= UE4Version.VER_UE4_MOVE_SKELETALMESH_SHADOWCASTING)
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.MOVE_SKELETALMESH_SHADOWCASTING)
                     Ar.Position += 4;
 
                 if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)

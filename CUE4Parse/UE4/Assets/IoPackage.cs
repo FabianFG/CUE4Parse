@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Assets
                     var versioningInfo = new FZenPackageVersioningInfo(uassetAr);
                     if (!uassetAr.Versions.bExplicitVer)
                     {
-                        uassetAr.Versions.Ver = (UE4Version) versioningInfo.PackageVersion.Value;
+                        uassetAr.Versions.Ver = versioningInfo.PackageVersion;
                         uassetAr.Versions.CustomVersions = versioningInfo.CustomVersions.ToList();
                     }
                 }

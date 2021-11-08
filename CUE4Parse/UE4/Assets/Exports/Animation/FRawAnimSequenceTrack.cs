@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             PosKeys = Ar.ReadBulkArray<FVector>();
             RotKeys = Ar.ReadBulkArray<FQuat>();
 
-            if (Ar.Ver >= UE4Version.VER_UE4_ANIM_SUPPORT_NONUNIFORM_SCALE_ANIMATION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ANIM_SUPPORT_NONUNIFORM_SCALE_ANIMATION)
             {
                 ScaleKeys = Ar.ReadBulkArray<FVector>();
             }

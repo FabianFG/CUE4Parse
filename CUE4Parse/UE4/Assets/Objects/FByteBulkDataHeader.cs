@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 throw new ParserException(Ar, "Must not have Size64Bit flag");
             ElementCount = Ar.Read<int>();
             SizeOnDisk = Ar.Read<uint>();
-            OffsetInFile = Ar.Ver >= UE4Version.VER_UE4_BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
+            OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
             if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
             {
                 OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;

@@ -70,7 +70,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Ver < UE4Version.VER_UE4_REFERENCE_SKELETON_REFACTOR)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
                 var length = Ar.Read<int>();
                 Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap

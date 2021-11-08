@@ -16,8 +16,8 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             var _ = Ar.ReadBoolean(); // bLegacyGeneratedClassIsAuthoritative
 
-            if (Ar.Ver < (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_BLUEPRINT_SKEL_CLASS_TRANSIENT_AGAIN &&
-                Ar.Ver != (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_BLUEPRINT_SKEL_TEMPORARY_TRANSIENT)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.BLUEPRINT_SKEL_CLASS_TRANSIENT_AGAIN &&
+                Ar.Ver != EUnrealEngineObjectUE4Version.BLUEPRINT_SKEL_TEMPORARY_TRANSIENT)
             {
                 SkeletonGeneratedClass = new FPackageIndex(Ar);
                 GeneratedClass = new FPackageIndex(Ar);

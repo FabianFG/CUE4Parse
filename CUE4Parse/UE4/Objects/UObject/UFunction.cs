@@ -1,7 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -23,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 var repOffset = Ar.Read<short>();
             }
 
-            if (Ar.Ver >= (UE4Version) VER_UE4_SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION)
             {
                 EventGraphFunction = new FPackageIndex(Ar);
                 EventGraphCallOffset = Ar.Read<int>();

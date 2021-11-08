@@ -216,7 +216,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(FVector v, float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
+        public bool Equals(FVector v, float tolerance = UnrealMath.KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
 
         /// <summary>
         /// Checks whether all components of this vector are the same, within a tolerance.
@@ -224,7 +224,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AllComponentsEqual(float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X - Y) <= tolerance && MathF.Abs(X - Z) <= tolerance && MathF.Abs(Y - Z) <= tolerance;
+        public bool AllComponentsEqual(float tolerance = UnrealMath.KindaSmallNumber) => MathF.Abs(X - Y) <= tolerance && MathF.Abs(X - Z) <= tolerance && MathF.Abs(Y - Z) <= tolerance;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float Max() => MathF.Max(MathF.Max(X, Y), Z);
@@ -268,7 +268,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vector is near to zero, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsNearlyZero(float tolerance = FMath.KindaSmallNumber) => MathF.Abs(X) <= tolerance && MathF.Abs(Y) <= tolerance && MathF.Abs(Z) <= tolerance;
+        public bool IsNearlyZero(float tolerance = UnrealMath.KindaSmallNumber) => MathF.Abs(X) <= tolerance && MathF.Abs(Y) <= tolerance && MathF.Abs(Z) <= tolerance;
 
         /// <summary>
         /// Checks whether all components of the vector are exactly zero.
@@ -283,7 +283,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="lengthSquaredTolerance">Tolerance against squared length.</param>
         /// <returns>true if the vector is a unit vector within the specified tolerance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsUnit(float lengthSquaredTolerance = FMath.KindaSmallNumber) => MathF.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
+        public bool IsUnit(float lengthSquaredTolerance = UnrealMath.KindaSmallNumber) => MathF.Abs(1f - SizeSquared()) < lengthSquaredTolerance;
 
         /// <summary>
         /// Checks whether vector is normalized.
@@ -297,7 +297,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// </summary>
         /// <param name="tolerance">Minimum squared length of vector for normalization.</param>
         /// <returns>if the vector was normalized correctly, false otherwise.</returns>
-        public bool Normalize(float tolerance = FMath.SmallNumber)
+        public bool Normalize(float tolerance = UnrealMath.SmallNumber)
         {
             var squareSum = X * X + Y * Y + Z * Z;
             if (squareSum > tolerance)
@@ -318,7 +318,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector GetClampedToMaxSize(float maxSize)
         {
-            if (maxSize < FMath.KindaSmallNumber)
+            if (maxSize < UnrealMath.KindaSmallNumber)
             {
                 return new FVector(0, 0, 0); // ZeroVector
             }
@@ -334,7 +334,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetSafeNormal(float tolerance = FMath.SmallNumber)
+        public FVector GetSafeNormal(float tolerance = UnrealMath.SmallNumber)
         {
             var squareSum = X * X + Y * Y + Z * Z;
 
@@ -354,7 +354,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetSafeNormal2D(float tolerance = FMath.SmallNumber)
+        public FVector GetSafeNormal2D(float tolerance = UnrealMath.SmallNumber)
         {
             var squareSum = X * X + Y * Y;
 

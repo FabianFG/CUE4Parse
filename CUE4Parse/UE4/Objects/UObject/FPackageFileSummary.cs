@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -108,7 +107,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Ver = Ar.Game.GetVersion();
                 legacyFileVersion = Ar.Read<int>(); // seems to be always int.MinValue
                 bUnversioned = true;
-                FileVersionUE.Value = (int) Ar.Ver;
+                FileVersionUE = Ar.Ver;
                 CustomVersionContainer = Array.Empty<FCustomVersion>();
                 FolderName = "None";
                 PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
@@ -167,7 +166,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     // this file is unversioned, remember that, then use current versions
                     bUnversioned = true;
-                    FileVersionUE.Value = (int) Ar.Ver;
+                    FileVersionUE = Ar.Ver;
                     FileVersionLicenseeUE = EUnrealEngineObjectLicenseeUEVersion.VER_LIC_AUTOMATIC_VERSION;
                 }
                 else
@@ -176,7 +175,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     // Only apply the version if an explicit version is not set
                     if (!Ar.Versions.bExplicitVer)
                     {
-                        Ar.Ver = (UE4Version) FileVersionUE.Value; // TODO Change type of Ar.Ver to FPackageFileVersion
+                        Ar.Ver = FileVersionUE;
                     }
                 }
             }
@@ -201,13 +200,13 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
             {
-                if (FileVersionUE >= VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID)
+                if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID)
                 {
                     LocalizationId = Ar.ReadFString();
                 }
             }
 
-            if (FileVersionUE >= VER_UE4_SERIALIZE_TEXT_IN_PACKAGES)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.SERIALIZE_TEXT_IN_PACKAGES)
             {
                 GatherableTextDataCount = Ar.Read<int>();
                 GatherableTextDataOffset = Ar.Read<int>();
@@ -219,20 +218,20 @@ namespace CUE4Parse.UE4.Objects.UObject
             ImportOffset = Ar.Read<int>();
             DependsOffset = Ar.Read<int>();
 
-            if (FileVersionUE < VER_UE4_OLDEST_LOADABLE_PACKAGE || FileVersionUE > VER_UE4_AUTOMATIC_VERSION)
+            if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION)
             {
                 Generations = Array.Empty<FGenerationInfo>();
                 ChunkIds = Array.Empty<int>();
                 return; // we can't safely load more than this because the below was different in older files.
             }
 
-            if (FileVersionUE >= VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADD_STRING_ASSET_REFERENCES_MAP)
             {
                 SoftPackageReferencesCount = Ar.Read<int>();
                 SoftPackageReferencesOffset = Ar.Read<int>();
             }
 
-            if (FileVersionUE >= VER_UE4_ADDED_SEARCHABLE_NAMES)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_SEARCHABLE_NAMES)
             {
                 SearchableNamesOffset = Ar.Read<int>();
             }
@@ -245,7 +244,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             Generations = Ar.ReadArray<FGenerationInfo>();
 
-            if (FileVersionUE >= VER_UE4_ENGINE_VERSION_OBJECT)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.ENGINE_VERSION_OBJECT)
             {
                 SavedByEngineVersion = new FEngineVersion(Ar);
                 FixCorruptEngineVersion(FileVersionUE, SavedByEngineVersion);
@@ -260,7 +259,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
             }
 
-            if (FileVersionUE >= VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION)
             {
                 CompatibleWithEngineVersion = new FEngineVersion(Ar);
                 FixCorruptEngineVersion(FileVersionUE, CompatibleWithEngineVersion);
@@ -306,7 +305,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
             }
 
-            if (FileVersionUE >= UE4Version.VER_UE4_ASSET_REGISTRY_TAGS)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.ASSET_REGISTRY_TAGS)
             {
                 AssetRegistryDataOffset = Ar.Read<int>();
             }
@@ -316,21 +315,21 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Position += 6; // no idea what's going on here.
             }
 
-            if (FileVersionUE >= UE4Version.VER_UE4_SUMMARY_HAS_BULKDATA_OFFSET)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.SUMMARY_HAS_BULKDATA_OFFSET)
             {
                 BulkDataStartOffset = (int) Ar.Read<long>();
             }
 
-            if (FileVersionUE >= VER_UE4_WORLD_LEVEL_INFO)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO)
             {
                 WorldTileInfoDataOffset = Ar.Read<int>();
             }
 
-            if (FileVersionUE >= VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS)
             {
                 ChunkIds = Ar.ReadArray<int>();
             }
-            else if (FileVersionUE >= VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE)
+            else if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE)
             {
                 var chunkId = Ar.Read<int>();
                 ChunkIds = chunkId < 0 ? Array.Empty<int>() : new[] { chunkId };
@@ -340,7 +339,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ChunkIds = Array.Empty<int>();
             }
 
-            if (FileVersionUE >= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
+            if (FileVersionUE >= EUnrealEngineObjectUE4Version.PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
             {
                 PreloadDependencyCount = Ar.Read<int>();
                 PreloadDependencyOffset = Ar.Read<int>();
@@ -362,7 +361,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         private static void FixCorruptEngineVersion(FPackageFileVersion objectVersion, FEngineVersion version)
         {
-            if (objectVersion < VER_UE4_CORRECT_LICENSEE_FLAG
+            if (objectVersion < EUnrealEngineObjectUE4Version.CORRECT_LICENSEE_FLAG
                 && version.Major == 4
                 && version.Minor == 26
                 && version.Patch == 0

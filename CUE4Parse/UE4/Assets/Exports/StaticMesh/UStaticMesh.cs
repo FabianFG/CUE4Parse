@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             bCooked = Ar.ReadBoolean();
             BodySetup = new FPackageIndex(Ar);
-            if (Ar.Ver >= UE4Version.VER_UE4_STATIC_MESH_STORE_NAV_COLLISION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_STORE_NAV_COLLISION)
                 NavCollision = new FPackageIndex(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())

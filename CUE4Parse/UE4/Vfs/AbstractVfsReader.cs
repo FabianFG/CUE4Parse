@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Vfs
             get => Versions.Game;
             set => Versions.Game = value;
         }
-        public UE4Version Ver
+        public FPackageFileVersion Ver
         {
             get => Versions.Ver;
             set => Versions.Ver = value;

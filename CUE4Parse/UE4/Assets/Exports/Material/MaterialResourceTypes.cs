@@ -221,7 +221,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public FMaterialShaderMapId(FArchive Ar)
         {
-            var bIsLegacyPackage = Ar.Ver < (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS;
+            var bIsLegacyPackage = Ar.Ver < EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS;
 
             if (!bIsLegacyPackage)
             {

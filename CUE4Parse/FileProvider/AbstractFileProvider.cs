@@ -189,7 +189,7 @@ namespace CUE4Parse.FileProvider
 
         public virtual int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
 
-        public virtual int LoadVirtualPaths(UE4Version version, CancellationToken cancellationToken = default)
+        public virtual int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
@@ -198,7 +198,7 @@ namespace CUE4Parse.FileProvider
             foreach (var (filePath, gameFile) in Files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (version < UE4Version.VER_UE4_18)
+                if (version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH) // < 4.18
                 {
                     if (!filePath.EndsWith(".uplugin")) continue;
                     if (!TryCreateReader(gameFile.Path, out var stream)) continue;

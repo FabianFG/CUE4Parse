@@ -269,12 +269,12 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             ClassIndex = new FPackageIndex(Ar);
             SuperIndex = new FPackageIndex(Ar);
-            TemplateIndex = Ar.Ver >= UE4Version.VER_UE4_TemplateIndex_IN_COOKED_EXPORTS ? new FPackageIndex(Ar) : new FPackageIndex();
+            TemplateIndex = Ar.Ver >= EUnrealEngineObjectUE4Version.TemplateIndex_IN_COOKED_EXPORTS ? new FPackageIndex(Ar) : new FPackageIndex();
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
             ObjectFlags = Ar.Read<uint>();
 
-            if (Ar.Ver < UE4Version.VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES)
             {
                 SerialSize = Ar.Read<int>();
                 SerialOffset = Ar.Read<int>();
@@ -290,10 +290,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             NotForServer = Ar.ReadBoolean();
             PackageGuid = Ar.Read<FGuid>();
             PackageFlags = Ar.Read<uint>();
-            NotAlwaysLoadedForEditorGame = Ar.Ver < UE4Version.VER_UE4_LOAD_FOR_EDITOR_GAME || Ar.ReadBoolean();
-            IsAsset = Ar.Ver >= UE4Version.VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT && Ar.ReadBoolean();
+            NotAlwaysLoadedForEditorGame = Ar.Ver < EUnrealEngineObjectUE4Version.LOAD_FOR_EDITOR_GAME || Ar.ReadBoolean();
+            IsAsset = Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT && Ar.ReadBoolean();
 
-            if (Ar.Ver >= UE4Version.VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
             {
                 FirstExportDependency = Ar.Read<int>();
                 SerializationBeforeSerializationDependencies = Ar.Read<int>();

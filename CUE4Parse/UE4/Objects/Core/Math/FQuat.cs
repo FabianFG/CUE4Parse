@@ -123,7 +123,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public bool Equals(FQuat q, float tolerance) => (Abs(X - q.X) <= tolerance && Abs(Y - q.Y) <= tolerance && Abs(Z - q.Z) <= tolerance && Abs(W - q.W) <= tolerance) ||
                                                         (Abs(X + q.X) <= tolerance && Abs(Y + q.Y) <= tolerance && Abs(Z + q.Z) <= tolerance && Abs(W + q.W) <= tolerance);
 
-        public bool IsIdentity(float tolerance = FMath.SmallNumber) => Equals(Identity, tolerance);
+        public bool IsIdentity(float tolerance = UnrealMath.SmallNumber) => Equals(Identity, tolerance);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FQuat operator *(FQuat a, FQuat b)
@@ -157,7 +157,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static bool operator !=(FQuat a, FQuat b) => !(a == b);
 
-        public void Normalize(float tolerance = FMath.SmallNumber)
+        public void Normalize(float tolerance = UnrealMath.SmallNumber)
         {
             var squareSum = X * X + Y * Y + Z * Z + W * W;
 
@@ -176,7 +176,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public FQuat GetNormalized(float tolerance = FMath.SmallNumber)
+        public FQuat GetNormalized(float tolerance = UnrealMath.SmallNumber)
         {
             var result = this;
             result.Normalize(tolerance);

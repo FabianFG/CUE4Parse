@@ -65,45 +65,50 @@ namespace CUE4Parse.UE4.Versions
             return GameUe4Base + x << 4;
         }
 
-        public static UE4Version GetVersion(this EGame game)
+        public static FPackageFileVersion GetVersion(this EGame game)
         {
             // Custom UE Games
             // If a game needs a even more specific custom version than the major release version you can add it below
             // if (game == EGame.GAME_VALORANT)
             //     return UE4Version.VER_UE4_24;
 
-            return game switch
+            if (game >= EGame.GAME_UE5_0)
+            {
+                return new FPackageFileVersion(0, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION);
+            }
+
+            return FPackageFileVersion.CreateUE4Version(game switch
             {
                 // General UE4 Versions
-                < EGame.GAME_UE4_1 => UE4Version.VER_UE4_0,
-                < EGame.GAME_UE4_2 => UE4Version.VER_UE4_1,
-                < EGame.GAME_UE4_3 => UE4Version.VER_UE4_2,
-                < EGame.GAME_UE4_4 => UE4Version.VER_UE4_3,
-                < EGame.GAME_UE4_5 => UE4Version.VER_UE4_4,
-                < EGame.GAME_UE4_6 => UE4Version.VER_UE4_5,
-                < EGame.GAME_UE4_7 => UE4Version.VER_UE4_6,
-                < EGame.GAME_UE4_8 => UE4Version.VER_UE4_7,
-                < EGame.GAME_UE4_9 => UE4Version.VER_UE4_8,
-                < EGame.GAME_UE4_10 => UE4Version.VER_UE4_9,
-                < EGame.GAME_UE4_11 => UE4Version.VER_UE4_10,
-                < EGame.GAME_UE4_12 => UE4Version.VER_UE4_11,
-                < EGame.GAME_UE4_13 => UE4Version.VER_UE4_12,
-                < EGame.GAME_UE4_14 => UE4Version.VER_UE4_13,
-                < EGame.GAME_UE4_15 => UE4Version.VER_UE4_14,
-                < EGame.GAME_UE4_16 => UE4Version.VER_UE4_15,
-                < EGame.GAME_UE4_17 => UE4Version.VER_UE4_16,
-                < EGame.GAME_UE4_18 => UE4Version.VER_UE4_17,
-                < EGame.GAME_UE4_19 => UE4Version.VER_UE4_18,
-                < EGame.GAME_UE4_20 => UE4Version.VER_UE4_19,
-                < EGame.GAME_UE4_21 => UE4Version.VER_UE4_20,
-                < EGame.GAME_UE4_22 => UE4Version.VER_UE4_21,
-                < EGame.GAME_UE4_23 => UE4Version.VER_UE4_22,
-                < EGame.GAME_UE4_24 => UE4Version.VER_UE4_23,
-                < EGame.GAME_UE4_25 => UE4Version.VER_UE4_24,
-                < EGame.GAME_UE4_26 => UE4Version.VER_UE4_25,
-                < EGame.GAME_UE4_27 => UE4Version.VER_UE4_26,
-                _ => UE4Version.VER_UE4_LATEST
-            };
+                < EGame.GAME_UE4_1 => 342,
+                < EGame.GAME_UE4_2 => 352,
+                < EGame.GAME_UE4_3 => 363,
+                < EGame.GAME_UE4_4 => 382,
+                < EGame.GAME_UE4_5 => 385,
+                < EGame.GAME_UE4_6 => 401,
+                < EGame.GAME_UE4_7 => 413,
+                < EGame.GAME_UE4_8 => 434,
+                < EGame.GAME_UE4_9 => 451,
+                < EGame.GAME_UE4_10 => 482,
+                < EGame.GAME_UE4_11 => 482,
+                < EGame.GAME_UE4_12 => 498,
+                < EGame.GAME_UE4_13 => 504,
+                < EGame.GAME_UE4_14 => 505,
+                < EGame.GAME_UE4_15 => 508,
+                < EGame.GAME_UE4_16 => 510,
+                < EGame.GAME_UE4_17 => 513,
+                < EGame.GAME_UE4_18 => 513,
+                < EGame.GAME_UE4_19 => 514,
+                < EGame.GAME_UE4_20 => 516,
+                < EGame.GAME_UE4_21 => 516,
+                < EGame.GAME_UE4_22 => 517,
+                < EGame.GAME_UE4_23 => 517,
+                < EGame.GAME_UE4_24 => 517,
+                < EGame.GAME_UE4_25 => 518,
+                < EGame.GAME_UE4_26 => 518,
+                < EGame.GAME_UE4_27 => 522,
+                _ => (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION
+            });
         }
     }
 }

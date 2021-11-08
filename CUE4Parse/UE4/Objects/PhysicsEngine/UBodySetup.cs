@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
 
             var bCooked = Ar.ReadBoolean();
             if (!bCooked) return;
-            if (Ar.Ver >= (UE4Version) EUnrealEngineObjectUE4Version.VER_UE4_STORE_HASCOOKEDDATA_FOR_BODYSETUP)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.STORE_HASCOOKEDDATA_FOR_BODYSETUP)
             {
                 var _ = Ar.ReadBoolean(); // bTemp
             }

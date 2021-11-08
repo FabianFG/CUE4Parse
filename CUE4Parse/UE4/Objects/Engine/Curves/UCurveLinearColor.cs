@@ -50,14 +50,14 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 
             pixelValue *= AdjustBrightness;
 
-            if (!FMath.IsNearlyEqual(AdjustBrightnessCurve, 1.0f, FMath.KindaSmallNumber) && AdjustBrightnessCurve != 0.0f)
+            if (!UnrealMath.IsNearlyEqual(AdjustBrightnessCurve, 1.0f, UnrealMath.KindaSmallNumber) && AdjustBrightnessCurve != 0.0f)
             {
                 // Raise HSV.V to the specified power
                 pixelValue = (float) Math.Pow(pixelValue, AdjustBrightnessCurve);
             }
 
             // Apply "vibrancy" adjustment
-            if (!FMath.IsNearlyZero(AdjustBrightness))
+            if (!UnrealMath.IsNearlyZero(AdjustBrightness))
             {
                 var invSatRaised = Math.Pow(1.0f - pixelSaturation, 5.0f);
                 var clampedVibrance = Math.Clamp(AdjustVibrance, 0.0f, 1.0f);
@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 
             // Clamp HSV values
             {
-                pixelHue = FMath.Fmod(pixelHue, 360.0f);
+                pixelHue = UnrealMath.Fmod(pixelHue, 360.0f);
                 if (pixelHue < 0.0f)
                 {
                     // Keep the hue value positive as HSVToLinearRGB prefers that

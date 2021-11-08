@@ -227,9 +227,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FMatrix Inverse()
         {
             // Check for zero scale matrix to invert
-            if (GetScaledAxis(EAxis.X).IsNearlyZero(FMath.SmallNumber) &&
-                GetScaledAxis(EAxis.Y).IsNearlyZero(FMath.SmallNumber) &&
-                GetScaledAxis(EAxis.Z).IsNearlyZero(FMath.SmallNumber))
+            if (GetScaledAxis(EAxis.X).IsNearlyZero(UnrealMath.SmallNumber) &&
+                GetScaledAxis(EAxis.Y).IsNearlyZero(UnrealMath.SmallNumber) &&
+                GetScaledAxis(EAxis.Z).IsNearlyZero(UnrealMath.SmallNumber))
             {
                 // just set to zero - avoids unsafe inverse of zero and duplicates what QNANs were resulting in before (scaling away all children)
                 return Identity;
@@ -240,7 +240,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveScaling(float tolerance = FMath.SmallNumber)
+        public void RemoveScaling(float tolerance = UnrealMath.SmallNumber)
         {
             // For each row, find magnitude, and if its non-zero re-scale so its unit length.
             var squareSum0 = M00*M00 + M01*M01 + M02*M02;
@@ -335,7 +335,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetScaleVector(float tolerance = FMath.SmallNumber)
+        public FVector GetScaleVector(float tolerance = UnrealMath.SmallNumber)
         {
             var Scale3D = new FVector(1, 1, 1);
 

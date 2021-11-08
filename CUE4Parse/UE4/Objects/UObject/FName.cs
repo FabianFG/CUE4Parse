@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public static bool operator ==(FName a, FName b) => a.ComparisonMethod switch
         {
             FNameComparisonMethod.Index => a.Index == b.Index && a.Number == b.Number,
-            FNameComparisonMethod.Text => a.Text == b.Text,
+            FNameComparisonMethod.Text => a.Text.Equals(b.Text, StringComparison.OrdinalIgnoreCase), // Case sensitive in editor, case insensitive in runtime
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -78,9 +78,9 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public override bool Equals(object? obj) => obj is FName other && this == other;
 
-        public override int GetHashCode() => ComparisonMethod == FNameComparisonMethod.Text ? Text.GetHashCode() : HashCode.Combine(Index, Number);
+        public override int GetHashCode() => ComparisonMethod == FNameComparisonMethod.Text ? StringComparer.OrdinalIgnoreCase.GetHashCode(Text.GetHashCode()) : HashCode.Combine(Index, Number);
 
-        public int CompareTo(FName other) => string.CompareOrdinal(Text, other.Text);
+        public int CompareTo(FName other) => string.Compare(Text, other.Text, StringComparison.OrdinalIgnoreCase);
 
         public override string ToString() => Text;
     }

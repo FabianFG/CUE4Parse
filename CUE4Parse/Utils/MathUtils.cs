@@ -136,9 +136,9 @@ namespace CUE4Parse.Utils
             var cubeOfP = p * p * p;
             var d = q * q + cubeOfP;
 
-            if (FMath.IsNearlyZero(d))
+            if (UnrealMath.IsNearlyZero(d))
             {
-                if (FMath.IsNearlyZero(q)) // one triple solution
+                if (UnrealMath.IsNearlyZero(q)) // one triple solution
                 {
                     solution[0] = 0;
                     numSolutions = 1;

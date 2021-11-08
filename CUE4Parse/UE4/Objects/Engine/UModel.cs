@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using static CUE4Parse.UE4.Versions.EUnrealEngineObjectUE4Version;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -259,7 +258,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             Points = Ar.ReadBulkArray<FVector>();
             Nodes = Ar.ReadBulkArray<FBspNode>();
 
-            if (Ar.Ver < (UE4Version) VER_UE4_BSP_UNDO_FIX)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.BSP_UNDO_FIX)
             {
                 var surfsOwner = new FPackageIndex(Ar);
                 Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
@@ -271,7 +270,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             Verts = Ar.ReadBulkArray<FVert>();
 
             NumSharedSides = Ar.Read<int>();
-            if (Ar.Ver < (UE4Version) VER_UE4_REMOVE_ZONES_FROM_MODEL)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             {
                 var zones = Ar.ReadArray<FZoneProperties>();
             }
@@ -279,7 +278,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             RootOutside = Ar.ReadBoolean();
             Linked = Ar.ReadBoolean();
 
-            if (Ar.Ver < (UE4Version) VER_UE4_REMOVE_ZONES_FROM_MODEL)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             {
                 var dummyPortalNodes = Ar.ReadBulkArray<int>();
             }

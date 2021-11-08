@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 #endif
         public FNameEntrySerialized(FArchive Ar)
         {
-            var bHasNameHashes = Ar.Ver >= UE4Version.VER_UE4_NAME_HASHES_SERIALIZED;
+            var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED;
 
             Name = Ar.ReadFString();
             if (bHasNameHashes)

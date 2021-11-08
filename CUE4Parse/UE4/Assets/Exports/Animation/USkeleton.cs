@@ -26,12 +26,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             BoneTree = GetOrDefault<FBoneNode[]>(nameof(BoneTree));
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
 
-            if (Ar.Ver >= UE4Version.VER_UE4_REFERENCE_SKELETON_REFACTOR)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
                 ReferenceSkeleton = new FReferenceSkeleton(Ar);
             }
 
-            if (Ar.Ver >= UE4Version.VER_UE4_FIX_ANIMATIONBASEPOSE_SERIALIZATION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.FIX_ANIMATIONBASEPOSE_SERIALIZATION)
             {
                 var numOfRetargetSources = Ar.Read<int>();
                 AnimRetargetSources = new Dictionary<FName, FReferencePose>(numOfRetargetSources);
@@ -45,12 +45,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 Log.Warning(""); // not sure what to put here
             }
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_GUID_SERIALIZATION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)
             {
                 Guid = Ar.Read<FGuid>();
             }
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_ADD_SMARTNAMES)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_ADD_SMARTNAMES)
             {
                 var mapLength = Ar.Read<int>();
                 NameMappings = new Dictionary<FName, FSmartNameMapping>(mapLength);

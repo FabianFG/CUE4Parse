@@ -266,7 +266,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public FormatNumber(FAssetArchive Ar, ETextHistoryType historyType)
             {
                 if (historyType == ETextHistoryType.AsCurrency &&
-                    Ar.Ver >= UE4Version.VER_UE4_ADDED_CURRENCY_CODE_TO_FTEXT)
+                    Ar.Ver >= EUnrealEngineObjectUE4Version.ADDED_CURRENCY_CODE_TO_FTEXT)
                 {
                     CurrencyCode = Ar.ReadFString();
                 }
@@ -293,7 +293,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             {
                 SourceDateTime = Ar.Read<FDateTime>();
                 DateStyle = Ar.Read<EDateTimeStyle>();
-                if (Ar.Ver >= UE4Version.VER_UE4_FTEXT_HISTORY_DATE_TIMEZONE)
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.FTEXT_HISTORY_DATE_TIMEZONE)
                 {
                     TimeZone = Ar.ReadFString();
                 }

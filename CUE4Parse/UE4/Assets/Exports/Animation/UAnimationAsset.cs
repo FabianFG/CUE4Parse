@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             Skeleton = GetOrDefault<FPackageIndex>(nameof(Skeleton));
 
-            if (Ar.Ver >= UE4Version.VER_UE4_SKELETON_GUID_SERIALIZATION)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)
             {
                 SkeletonGuid = Ar.Read<FGuid>();
             }
