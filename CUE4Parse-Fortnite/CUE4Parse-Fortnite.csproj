@@ -4,7 +4,7 @@
         <RootNamespace>CUE4Parse_Fortnite</RootNamespace>
         <LangVersion>default</LangVersion>
         <Nullable>enable</Nullable>
-        <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
+        <TargetFrameworks>net6.0;netstandard2.1</TargetFrameworks>
         <IsPublishable>false</IsPublishable>
     </PropertyGroup>
 
