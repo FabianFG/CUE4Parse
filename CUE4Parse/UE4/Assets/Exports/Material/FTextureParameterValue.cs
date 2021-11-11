@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ParameterValue = fallback.GetOrDefault<FPackageIndex>(nameof(ParameterValue));
             ParameterInfo = fallback.GetOrDefault<FMaterialParameterInfo>(nameof(ParameterInfo));
         }
-        
+
         public override string ToString() => $"{Name}: {ParameterValue}";
     }
 }
