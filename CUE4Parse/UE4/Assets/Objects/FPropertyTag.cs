@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             Size = (int) (Ar.Position - pos);
         }
-        
+
         public FPropertyTag(FAssetArchive Ar, bool readData)
         {
             Name = Ar.ReadFName();
@@ -86,7 +86,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 finally
                 {
                     // Always seek to calculated position, no need to crash
-                    Ar.Position = finalPos;    
+                    Ar.Position = finalPos;
                 }
             }
         }
