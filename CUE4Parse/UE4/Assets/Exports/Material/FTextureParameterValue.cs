@@ -1,11 +1,12 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     [StructFallback]
-    public class FTextureParameterValue
+    public abstract class FTextureParameterValue
     {
         public string Name => ParameterName?.Text ?? ParameterInfo.Name.Text;
         public readonly FName? ParameterName;
@@ -17,6 +18,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ParameterName = fallback.GetOrDefault<FName>(nameof(ParameterName));
             ParameterValue = fallback.GetOrDefault<FPackageIndex>(nameof(ParameterValue));
             ParameterInfo = fallback.GetOrDefault<FMaterialParameterInfo>(nameof(ParameterInfo));
+        }
+
+        public FTextureParameterValue(FAssetArchive Ar)
+        {
+            ParameterInfo = new FMaterialParameterInfo(Ar);
+            ParameterValue = new FPackageIndex(Ar);
         }
 
         public override string ToString() => $"{Name}: {ParameterValue}";
