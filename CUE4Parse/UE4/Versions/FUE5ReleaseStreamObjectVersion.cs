@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Versions
 
             // Added Lumen reflections to new reflection enum, changed defaults
             ReflectionMethodEnum,
-		
+
             // Serialize HLOD info in WorldPartitionActorDesc
             WorldPartitionActorDescSerializeHLODInfo,
 
@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Versions
 
             // Change hair strands vertex format
             HairStrandsVertexFormatChange,
-		
+
             // Added max linear and angular speed to Chaos bodies
             AddChaosMaxLinearAngularSpeed,
 
@@ -40,6 +40,15 @@ namespace CUE4Parse.UE4.Versions
 
             // PackedLevelInstance bounds fix
             PackedLevelInstanceBoundsFix,
+
+            // Custom property anim graph nodes (linked anim graphs, control rig etc.) now use optional pin manager
+            CustomPropertyAnimGraphNodesUseOptionalPinManager,
+
+            // Add native double and int64 support to FFormatArgumentData
+            TextFormatArgumentData64bitSupport,
+
+            // Material layer stacks are no longer considered 'static parameters'
+            MaterialLayerStacksAreNotParameters,
 
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
@@ -50,7 +59,7 @@ namespace CUE4Parse.UE4.Versions
 
         public static Type Get(FArchive Ar)
         {
-            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = Ar.CustomVer(GUID);
             if (ver >= 0)
                 return (Type) ver;
 

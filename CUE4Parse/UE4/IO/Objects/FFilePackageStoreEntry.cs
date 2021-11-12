@@ -6,27 +6,29 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    public class FPackageStoreEntry
+    public class FFilePackageStoreEntry
     {
-        public ulong ExportBundlesSize;
         public int ExportCount;
         public int ExportBundleCount;
-        public uint LoadOrder;
-        public uint Pad;
         public FPackageId[] ImportedPackages;
         public FSHAHash[] ShaderMapHashes;
 
-        public FPackageStoreEntry(FArchive Ar)
+        public FFilePackageStoreEntry(FArchive Ar)
         {
-            ExportBundlesSize = Ar.Read<ulong>();
-            ExportCount = Ar.Read<int>();
-            ExportBundleCount = Ar.Read<int>();
-            LoadOrder = Ar.Read<uint>();
-            Pad = Ar.Read<uint>();
-            ImportedPackages = ReadCArrayView<FPackageId>(Ar);
             if (Ar.Game >= EGame.GAME_UE5_0)
             {
+                ExportCount = Ar.Read<int>();
+                ExportBundleCount = Ar.Read<int>();
+                ImportedPackages = ReadCArrayView<FPackageId>(Ar);
                 ShaderMapHashes = ReadCArrayView(Ar, () => new FSHAHash(Ar));
+            }
+            else
+            {
+                Ar.Position += 8; // ExportBundlesSize
+                ExportCount = Ar.Read<int>();
+                ExportBundleCount = Ar.Read<int>();
+                Ar.Position += 8; // LoadOrder + Pad
+                ImportedPackages = ReadCArrayView<FPackageId>(Ar);
             }
         }
 

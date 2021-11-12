@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Versions
         
         public static Type Get(FArchive Ar)
         {
-            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = Ar.CustomVer(GUID);
             if (ver >= 0)
                 return (Type) ver;
 

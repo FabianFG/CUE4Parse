@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using Newtonsoft.Json;
 using Serilog;
+using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -11,62 +12,57 @@ namespace CUE4Parse.UE4.Assets.Objects
     public class FByteBulkData
     {
         public readonly FByteBulkDataHeader Header;
-        public readonly EBulkData BulkDataFlag;
+        public readonly EBulkDataFlags BulkDataFlags;
         public readonly byte[] Data;
 
         public FByteBulkData(FAssetArchive Ar)
         {
             Header = new FByteBulkDataHeader(Ar);
-            var bulkDataFlags = Header.BulkDataFlags;
+            BulkDataFlags = Header.BulkDataFlags;
 
             if (Header.ElementCount == 0)
             {
                 // Nothing to do here
             }
-            else if (EBulkData.BULKDATA_Unused.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_Unused))
             {
-                BulkDataFlag = EBulkData.BULKDATA_Unused;
                 Log.Warning("Bulk with no data");
             }
-            else if (EBulkData.BULKDATA_ForceInlinePayload.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
             {
-                BulkDataFlag = EBulkData.BULKDATA_ForceInlinePayload;
 #if DEBUG
-                Log.Debug($"bulk data in .uexp file (Force Inline Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
+                Log.Debug($"bulk data in .uexp file (Force Inline Payload) (flags={BulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");
 #endif
                 Data = new byte[Header.ElementCount];
                 Ar.Read(Data, 0, Header.ElementCount);
             }
-            else if (EBulkData.BULKDATA_OptionalPayload.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
             {
-                BulkDataFlag = EBulkData.BULKDATA_OptionalPayload;
 #if DEBUG
-                Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
+                Log.Debug($"bulk data in .uptnl file (Optional Payload) (flags={BulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");
 #endif
                 if (!Ar.TryGetPayload(PayloadType.UPTNL, out var uptnlAr) || uptnlAr == null) return;
-                
+
                 Data = new byte[Header.ElementCount];
                 uptnlAr.Position = Header.OffsetInFile;
                 uptnlAr.Read(Data, 0, Header.ElementCount);
             }
-            else if (EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
             {
-                BulkDataFlag = EBulkData.BULKDATA_PayloadInSeperateFile;
 #if DEBUG
-                Log.Debug($"bulk data in .ubulk file (Payload In Separate File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
+                Log.Debug($"bulk data in .ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");
 #endif
                 if (!Ar.TryGetPayload(PayloadType.UBULK, out var ubulkAr) || ubulkAr == null) return;
-                
+
                 Data = new byte[Header.ElementCount];
                 ubulkAr.Position = Header.OffsetInFile;
                 ubulkAr.Read(Data, 0, Header.ElementCount);
             }
-            else if (EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
             {
-                BulkDataFlag = EBulkData.BULKDATA_PayloadAtEndOfFile;
 #if DEBUG
-                Log.Debug($"bulk data in .uexp file (Payload At End Of File) (flags={bulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");       
-#endif          
+                Log.Debug($"bulk data in .uexp file (Payload At End Of File) (flags={BulkDataFlags}, pos={Header.OffsetInFile}, size={Header.SizeOnDisk}))");
+#endif
                 //stored in same file, but at different position
                 //save archive position
                 var savePos = Ar.Position;
@@ -75,13 +71,13 @@ namespace CUE4Parse.UE4.Assets.Objects
                     Data = new byte[Header.ElementCount];
                     Ar.Position = Header.OffsetInFile;
                     Ar.Read(Data, 0, Header.ElementCount);
-                } else throw new ParserException(Ar, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
+                }
+                else throw new ParserException(Ar, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
 
                 Ar.Position = savePos;
             }
-            else if (EBulkData.BULKDATA_CompressedZlib.Check(bulkDataFlags))
+            else if (BulkDataFlags.HasFlag(BULKDATA_CompressedZlib))
             {
-                BulkDataFlag = EBulkData.BULKDATA_CompressedZlib;
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
         }
@@ -90,34 +86,24 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             Header = new FByteBulkDataHeader(Ar);
             var bulkDataFlags = Header.BulkDataFlags;
-            
-            if (EBulkData.BULKDATA_Unused.Check(bulkDataFlags) ||
-                EBulkData.BULKDATA_PayloadInSeperateFile.Check(bulkDataFlags) ||
-                EBulkData.BULKDATA_PayloadAtEndOfFile.Check(bulkDataFlags))
+
+            if (bulkDataFlags.HasFlag(BULKDATA_Unused | BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
             {
                 return;
             }
-            
-            if (EBulkData.BULKDATA_ForceInlinePayload.Check(bulkDataFlags) ||
-                Header.OffsetInFile == Ar.Position)
+
+            if (bulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || Header.OffsetInFile == Ar.Position)
             {
                 Ar.Position += Header.SizeOnDisk;
             }
         }
     }
-    
+
     public class FByteBulkDataConverter : JsonConverter<FByteBulkData>
     {
         public override void WriteJson(JsonWriter writer, FByteBulkData value, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
-            
-            writer.WritePropertyName("BulkDataFlag");
-            writer.WriteValue(value.BulkDataFlag.ToString());
-            
             serializer.Serialize(writer, value.Header);
-            
-            writer.WriteEndObject();
         }
 
         public override FByteBulkData ReadJson(JsonReader reader, Type objectType, FByteBulkData existingValue, bool hasExistingValue,

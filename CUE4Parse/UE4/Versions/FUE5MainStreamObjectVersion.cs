@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Readers;
 namespace CUE4Parse.UE4.Versions
 {
     // Custom serialization version for changes made in //UE5/Main stream
-    public class FUE5MainStreamObjectVersion
+    public static class FUE5MainStreamObjectVersion
     {
         public enum Type
         {
@@ -192,12 +192,13 @@ namespace CUE4Parse.UE4.Versions
 
         public static Type Get(FArchive Ar)
         {
-            var ver = VersionUtils.GetUE4CustomVersion(Ar, GUID);
+            var ver = Ar.CustomVer(GUID);
             if (ver >= 0)
                 return (Type) ver;
 
             return Ar.Game switch
             {
+                < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
                 _ => Type.LatestVersion
             };
         }

@@ -109,7 +109,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                         var name = new string((sbyte*) buffer + i * COMPRESSION_METHOD_NAME_LEN, 0, COMPRESSION_METHOD_NAME_LEN).TrimEnd('\0');
                         if (string.IsNullOrEmpty(name))
                             continue;
-                        if (!Enum.TryParse(name, out CompressionMethod method))
+                        if (!Enum.TryParse(name, true, out CompressionMethod method))
                         {
                             Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
                             method = CompressionMethod.Unknown;

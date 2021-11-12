@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Versions
     public static class VersionUtils
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetUE4CustomVersion(FArchive Ar, FGuid key) =>
+        public static int CustomVer(this FArchive Ar, FGuid key) =>
             Ar.Versions.CustomVersions?.GetVersion(key) ?? (Ar as FAssetArchive)?.Owner.Summary.CustomVersionContainer.GetVersion(key) ?? -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -170,15 +170,6 @@ namespace CUE4Parse.UE4.Versions
         //Add new ones here
         VER_UE4_LAST,
         VER_UE4_LATEST = VER_UE4_LAST - 1
-    }
-
-    public enum EUnrealEngineObjectLicenseeUE4Version
-    {
-        VER_LIC_NONE = 0,
-
-        // - this needs to be the last line (see note below)
-        VER_LIC_AUTOMATIC_VERSION_PLUS_ONE,
-        VER_LIC_AUTOMATIC_VERSION = VER_LIC_AUTOMATIC_VERSION_PLUS_ONE - 1
     }
 
     public enum EUnrealEngineObjectUE4Version
@@ -814,11 +805,5 @@ namespace CUE4Parse.UE4.Versions
         // - this needs to be the last line (see note below)
         VER_UE4_AUTOMATIC_VERSION_PLUS_ONE,
         VER_UE4_AUTOMATIC_VERSION = VER_UE4_AUTOMATIC_VERSION_PLUS_ONE - 1
-    }
-
-    public enum LegacyUE3Version
-    {
-        VER_UE3_ZERO = 0,
-        VER_UE3_LAST = 864
     }
 }

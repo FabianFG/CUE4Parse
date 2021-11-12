@@ -10,10 +10,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     [StructLayout(LayoutKind.Sequential)]
     public struct FLinearColor : IUStruct
     {
-        public readonly float R;
-        public readonly float G;
-        public readonly float B;
-        public readonly float A;
+        public float R;
+        public float G;
+        public float B;
+        public float A;
 
         public string Hex => ToFColor(true).Hex;
 
@@ -48,5 +48,55 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         public override string ToString() => Hex;
+
+        public FLinearColor LinearRGBToHsv()
+        {
+            var rgbMin = FMath.Min3(R, G, B);
+            var rgbMax = FMath.Max3(R, G, B);
+            var rgbRange = rgbMax - rgbMin;
+
+            var hue = rgbMax == rgbMin ? 0.0f :
+                rgbMax == R ? FMath.Fmod((G - B) / rgbRange * 60.0f + 360.0f, 360.0f) :
+                rgbMax == G ? (B - R) / rgbRange * 60.0f + 120.0f :
+                rgbMax == B ? (R - G) / rgbRange * 60.0f + 240.0f :
+                0.0f;
+
+            var saturation = rgbMax == 0.0f ? 0.0f : rgbRange / rgbMax;
+            return new FLinearColor(hue, saturation, rgbMax, A);
+        }
+
+        public FLinearColor HSVToLinearRGB()
+        {
+            var hue = R;
+            var saturation = G;
+            var value = B;
+            var hDiv60 = hue / 60.0f;
+            var hDiv60Floor = Floor(hDiv60);
+            var hDiv60Fraction = hDiv60 - hDiv60Floor;
+
+            var rgbValues = new[]
+            {
+                value,
+                value * (1.0f - saturation),
+                value * (1.0f - hDiv60Fraction * saturation),
+                value * (1.0f - (1.0f - hDiv60Fraction) * saturation)
+            };
+            var rgbSwizzle = new[]
+            {
+                new uint[] { 0, 3, 1 },
+                new uint[] { 2, 0, 1 },
+                new uint[] { 1, 0, 3 },
+                new uint[] { 1, 2, 0 },
+                new uint[] { 3, 1, 0 },
+                new uint[] { 0, 1, 2 }
+            };
+
+            var swizzleIndex = (uint) hDiv60Floor % 6;
+
+            return new FLinearColor(rgbValues[rgbSwizzle[swizzleIndex][0]],
+                rgbValues[rgbSwizzle[swizzleIndex][1]],
+                rgbValues[rgbSwizzle[swizzleIndex][2]],
+                A);
+        }
     }
 }

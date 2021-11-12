@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -32,7 +33,7 @@ namespace CUE4Parse.UE4.Assets
         public override bool IsFullyLoaded { get; }
 
         public IoPackage(
-            FArchive uasset, IoGlobalData globalData, FPackageStoreEntry? storeEntry = null,
+            FArchive uasset, IoGlobalData globalData, FIoContainerHeader? containerHeader = null,
             Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null,
             IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
         {
@@ -47,7 +48,7 @@ namespace CUE4Parse.UE4.Assets
             if (uassetAr.Game >= EGame.GAME_UE5_0)
             {
                 // Summary
-                var summary = uassetAr.Read<FPackageSummary5>();
+                var summary = uassetAr.Read<FZenPackageSummary>();
                 Summary = new FPackageFileSummary
                 {
                     PackageFlags = summary.PackageFlags,
@@ -56,10 +57,36 @@ namespace CUE4Parse.UE4.Assets
                     ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
                 };
 
+                // Versioning info
+                if (summary.bHasVersioningInfo != 0)
+                {
+                    var versioningInfo = new FZenPackageVersioningInfo(uassetAr);
+                    if (!uassetAr.Versions.bExplicitVer)
+                    {
+                        uassetAr.Versions.Ver = (UE4Version) versioningInfo.PackageVersion.Value;
+                        uassetAr.Versions.CustomVersions = versioningInfo.CustomVersions.ToList();
+                    }
+                }
+
                 // Name map
                 NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
                 Summary.NameCount = NameMap.Length;
                 Name = CreateFNameFromMappedName(summary.Name).Text;
+
+                // Find store entry by package name
+                FFilePackageStoreEntry? storeEntry = null;
+                if (containerHeader != null)
+                {
+                    var storeEntryIdx = Array.IndexOf(containerHeader.PackageIds, FPackageId.FromName(Name));
+                    if (storeEntryIdx != -1)
+                    {
+                        storeEntry = containerHeader.StoreEntries[storeEntryIdx];
+                    }
+                    else
+                    {
+                        Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                    }
+                }
 
                 // Import map
                 uassetAr.Position = summary.ImportMapOffset;
@@ -179,8 +206,8 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, FPackageStoreEntry? storeEntry = null, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
-            : this(uasset, globalData, storeEntry, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
+        public IoPackage(FArchive uasset, IoGlobalData globalData, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
+            : this(uasset, globalData, containerHeader, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
         { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

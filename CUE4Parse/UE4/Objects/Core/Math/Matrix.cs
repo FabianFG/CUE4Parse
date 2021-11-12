@@ -92,7 +92,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector4 TransformPosition(FVector v) => TransformFVector4(new FVector4(v.X, v.Y, v.Z, 1.0f));
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector InverseTransformPosition(FVector v)
         {
@@ -227,9 +227,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FMatrix Inverse()
         {
             // Check for zero scale matrix to invert
-            if (GetScaledAxis(EAxis.X).IsNearlyZero(FVector.SmallNumber) &&
-                GetScaledAxis(EAxis.Y).IsNearlyZero(FVector.SmallNumber) &&
-                GetScaledAxis(EAxis.Z).IsNearlyZero(FVector.SmallNumber))
+            if (GetScaledAxis(EAxis.X).IsNearlyZero(FMath.SmallNumber) &&
+                GetScaledAxis(EAxis.Y).IsNearlyZero(FMath.SmallNumber) &&
+                GetScaledAxis(EAxis.Z).IsNearlyZero(FMath.SmallNumber))
             {
                 // just set to zero - avoids unsafe inverse of zero and duplicates what QNANs were resulting in before (scaling away all children)
                 return Identity;
@@ -240,7 +240,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveScaling(float tolerance = FVector.SmallNumber)
+        public void RemoveScaling(float tolerance = FMath.SmallNumber)
         {
             // For each row, find magnitude, and if its non-zero re-scale so its unit length.
             var squareSum0 = M00*M00 + M01*M01 + M02*M02;
@@ -252,14 +252,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var scale1 = squareSum1 - tolerance >= 0 ? squareSum1.InvSqrt() : 1;
             var scale2 = squareSum2 - tolerance >= 0 ? squareSum2.InvSqrt() : 1;
 
-            M00 *= scale0; 
-            M01 *= scale0; 
-            M02 *= scale0; 
-            M10 *= scale1; 
-            M11 *= scale1; 
-            M12 *= scale1; 
-            M20 *= scale2; 
-            M21 *= scale2; 
+            M00 *= scale0;
+            M01 *= scale0;
+            M02 *= scale0;
+            M10 *= scale1;
+            M11 *= scale1;
+            M12 *= scale1;
+            M20 *= scale2;
+            M21 *= scale2;
             M22 *= scale2;
         }
 
@@ -335,7 +335,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FVector GetScaleVector(float tolerance = FVector.SmallNumber)
+        public FVector GetScaleVector(float tolerance = FMath.SmallNumber)
         {
             var Scale3D = new FVector(1, 1, 1);
 

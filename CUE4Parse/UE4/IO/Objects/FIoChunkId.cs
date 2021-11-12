@@ -47,19 +47,17 @@ namespace CUE4Parse.UE4.IO.Objects
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-#pragma warning disable 660,661
     public readonly struct FIoChunkId
-#pragma warning restore 660,661
     {
         public readonly ulong ChunkId;
-        public readonly ushort ChunkIndex;
+        private readonly ushort _chunkIndex;
         private readonly byte _padding;
         public readonly byte ChunkType;
 
         public FIoChunkId(ulong chunkId, ushort chunkIndex, byte chunkType)
         {
             ChunkId = chunkId;
-            ChunkIndex = chunkIndex;
+            _chunkIndex = (ushort) ((chunkIndex & 0xFF) << 8 | (chunkIndex & 0xFF00) >> 8); // NETWORK_ORDER16
             ChunkType = chunkType;
             _padding = 0;
         }
@@ -68,9 +66,20 @@ namespace CUE4Parse.UE4.IO.Objects
         public FIoChunkId(ulong chunkId, ushort chunkIndex, EIoChunkType5 chunkType) : this(chunkId, chunkIndex, (byte) chunkType) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPackageId AsPackageId()
+        public FPackageId AsPackageId() => new(ChunkId);
+
+        public unsafe ulong HashWithSeed(int seed)
         {
-            return new FPackageId(ChunkId);
+            fixed (FIoChunkId* ptr = &this)
+            {
+                var dataSize = sizeof(FIoChunkId);
+                var hash = seed != 0 ? (ulong) seed : 0xcbf29ce484222325;
+                for (var index = 0; index < dataSize; ++index)
+                {
+                    hash = (hash * 0x00000100000001B3) ^ ((byte*) ptr)[index];
+                }
+                return hash;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,12 +89,29 @@ namespace CUE4Parse.UE4.IO.Objects
         public static bool operator !=(FIoChunkId a, FIoChunkId b) => !a.Equals(b);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ToString()
+        public override bool Equals(object? obj) => base.Equals(obj);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override unsafe int GetHashCode()
         {
-            unsafe
+            fixed (FIoChunkId* ptr = &this)
             {
-                return UnsafePrint.BytesToHex(
-                    (byte*) Unsafe.AsPointer(ref Unsafe.AsRef(in this)), 12);
+                var dataSize = sizeof(FIoChunkId);
+                var hash = 5381;
+                for (int i = 0; i < dataSize; ++i)
+                {
+                    hash = hash * 33 + ((byte*) ptr)[i];
+                }
+                return hash;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override unsafe string ToString()
+        {
+            fixed (FIoChunkId* ptr = &this)
+            {
+                return UnsafePrint.BytesToHex((byte*) ptr, 12);
             }
         }
     }

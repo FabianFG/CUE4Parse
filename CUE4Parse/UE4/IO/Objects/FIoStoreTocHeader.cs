@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -11,6 +12,8 @@ namespace CUE4Parse.UE4.IO.Objects
         Initial,
         DirectoryIndex,
         PartitionSize,
+        PerfectHash,
+        PerfectHashWithOverflow,
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     }
@@ -27,8 +30,7 @@ namespace CUE4Parse.UE4.IO.Objects
     public class FIoStoreTocHeader
     {
         public const int SIZE = 144;
-        public static byte[] TOC_MAGIC = new byte[]
-            {0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D}; // -==--==--==--==-
+        public static byte[] TOC_MAGIC = {0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D}; // -==--==--==--==-
 
         public readonly byte[] TocMagic;
         public readonly EIoStoreTocVersion Version;
@@ -48,9 +50,11 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly EIoContainerFlags ContainerFlags;
         private readonly byte _reserved3;
         private readonly ushort _reserved4;
-        private readonly uint _reserved5;
+        public readonly uint TocChunkPerfectHashSeedsCount;
         public ulong PartitionSize;
-        private readonly ulong[] _reserved6;
+        public readonly uint TocChunksWithoutPerfectHashCount;
+        private readonly uint _reserved7;
+        private readonly ulong[] _reserved8;
 
         public FIoStoreTocHeader(FArchive Ar)
         {
@@ -74,9 +78,12 @@ namespace CUE4Parse.UE4.IO.Objects
             ContainerFlags = Ar.Read<EIoContainerFlags>();
             _reserved3 = Ar.Read<byte>();
             _reserved4 = Ar.Read<ushort>();
-            _reserved5 = Ar.Read<uint>();
+            TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
             PartitionSize = Ar.Read<ulong>();
-            _reserved6 = Ar.ReadArray<ulong>(6);
+            TocChunksWithoutPerfectHashCount = Ar.Read<uint>();
+            _reserved7 = Ar.Read<uint>();
+            _reserved8 = Ar.ReadArray<ulong>(5);
+            Ar.Position = Ar.Position.Align(4);
         }
     }
 }

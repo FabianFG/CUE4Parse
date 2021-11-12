@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using static CUE4Parse.UE4.Objects.UObject.EPackageFlags;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
@@ -16,9 +17,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public FTexture2DMipMap(FAssetArchive Ar)
         {
-            SizeZ = 1;
-            var cooked = Ar.Ver >= UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR && Ar.ReadBoolean();
-            
+            var cooked = Ar.Ver >= UE4Version.VER_UE4_TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.Owner.HasFlags(PKG_FilterEditorOnly);
+
             Data = new FByteBulkData(Ar);
 
             if (Ar.Game == EGame.GAME_Borderlands3)
@@ -31,10 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             {
                 SizeX = Ar.Read<int>();
                 SizeY = Ar.Read<int>();
-                if (Ar.Game >= EGame.GAME_UE4_20)
-                {
-                    SizeZ = Ar.Read<int>();
-                }
+                SizeZ = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<int>() : 1;
             }
 
             if (Ar.Ver >= UE4Version.VER_UE4_TEXTURE_DERIVED_DATA2 && !cooked)
@@ -43,25 +40,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             }
         }
     }
-    
+
     public class FTexture2DMipMapConverter : JsonConverter<FTexture2DMipMap>
     {
         public override void WriteJson(JsonWriter writer, FTexture2DMipMap value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.Data);
-            
+
             writer.WritePropertyName("SizeX");
             writer.WriteValue(value.SizeX);
-            
+
             writer.WritePropertyName("SizeY");
             writer.WriteValue(value.SizeY);
-            
+
             writer.WritePropertyName("SizeZ");
             writer.WriteValue(value.SizeZ);
-            
+
             writer.WriteEndObject();
         }
 

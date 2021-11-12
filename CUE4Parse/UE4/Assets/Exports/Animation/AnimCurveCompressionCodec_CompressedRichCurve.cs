@@ -231,6 +231,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public override unsafe FFloatCurve[] ConvertCurves(UAnimSequence animSeq)
         {
+            if (animSeq.CompressedCurveByteStream == null || animSeq.CompressedCurveByteStream.Length == 0)
+            {
+                return Array.Empty<FFloatCurve>();
+            }
+
             fixed (byte* buffer = &animSeq.CompressedCurveByteStream[0])
             {
                 var curveDescriptions = (FCurveDesc*) buffer;

@@ -1,4 +1,6 @@
+using System;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
@@ -19,10 +21,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             base.WriteJson(writer, serializer);
 
             writer.WritePropertyName("LightmapFlags");
-            writer.WriteValue(LightmapFlags.ToString());
+            writer.WriteValue(LightmapFlags.ToStringBitfield());
         }
     }
 
+    [Flags]
     public enum ELightMapFlags
     {
         LMF_None = 0, // No flags

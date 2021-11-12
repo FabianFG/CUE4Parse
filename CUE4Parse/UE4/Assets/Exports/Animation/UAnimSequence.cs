@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
         public FSmartName[] CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
-        public byte[] CompressedCurveByteStream;
+        public byte[]? CompressedCurveByteStream;
         public FRawCurveTracks CompressedCurveData; // disappeared in 4.23
         public ICompressedAnimData CompressedDataStructure;
         public UAnimBoneCompressionCodec? BoneCompressionCodec;

@@ -11,7 +11,6 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Pak.Objects;
@@ -446,10 +445,8 @@ namespace CUE4Parse.FileProvider
                 throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
             }
 
-            var ioEntry = (FIoStoreEntry) file;
-            var containerHeader = ((IoStoreReader) ioEntry.Vfs).ContainerHeader;
-            var storeEntry = containerHeader?.StoreEntries[Array.IndexOf(containerHeader.PackageIds, new FPackageId(ioEntry.ChunkId.ChunkId))];
-            return new IoPackage(uasset, vfsFileProvider.GlobalData, storeEntry, ubulk, uptnl, this, MappingsForThisGame);
+            var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
+            return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, ubulk, uptnl, this, MappingsForThisGame);
         }
 
         public virtual async Task<IPackage?> TryLoadPackageAsync(string path)
@@ -496,10 +493,8 @@ namespace CUE4Parse.FileProvider
                     return null;
                 }
 
-                var ioEntry = (FIoStoreEntry) file;
-                var containerHeader = ((IoStoreReader) ioEntry.Vfs).ContainerHeader;
-                var storeEntry = containerHeader?.StoreEntries[Array.IndexOf(containerHeader.PackageIds, new FPackageId(ioEntry.ChunkId.ChunkId))];
-                return new IoPackage(uasset, vfsFileProvider.GlobalData, storeEntry, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
+                var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
+                return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
             }
             catch
             {

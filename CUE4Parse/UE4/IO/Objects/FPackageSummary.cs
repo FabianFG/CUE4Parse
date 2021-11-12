@@ -21,19 +21,4 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly int GraphDataSize;
         private readonly int _pad;
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FPackageSummary5
-    {
-        public readonly uint HeaderSize;
-        public readonly FMappedName Name;
-        // public readonly FMappedName SourceName; // Removed after CL 17014898 of ue5-main
-        public readonly EPackageFlags PackageFlags;
-        public readonly uint CookedHeaderSize;
-        public readonly int ImportMapOffset;
-        public readonly int ExportMapOffset;
-        public readonly int ExportBundleEntriesOffset;
-        public readonly int GraphDataOffset;
-        private readonly int _pad;
-    }
 }

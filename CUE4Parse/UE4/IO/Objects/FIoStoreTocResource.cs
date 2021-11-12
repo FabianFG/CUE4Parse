@@ -6,6 +6,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
+    [Flags]
     public enum EIoStoreTocReadOptions
     {
         Default,
@@ -19,6 +20,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly FIoStoreTocHeader Header;
         public readonly FIoChunkId[] ChunkIds;
         public readonly FIoOffsetAndLength[] ChunkOffsetLengths;
+        public readonly int[]? ChunkPerfectHashSeeds;
+        public readonly int[]? ChunkIndicesWithoutPerfectHash;
         public readonly FIoStoreTocCompressedBlockEntry[] CompressionBlocks;
         public readonly CompressionMethod[] CompressionMethods;
 
@@ -31,6 +34,7 @@ namespace CUE4Parse.UE4.IO.Objects
             Ar.Read(streamBuffer, 0, streamBuffer.Length);
             using var archive = new FByteArchive(Ar.Name, streamBuffer);
 
+            // Header
             Header = new FIoStoreTocHeader(archive);
 
             if (Header.Version < EIoStoreTocVersion.PartitionSize)
@@ -39,20 +43,45 @@ namespace CUE4Parse.UE4.IO.Objects
                 Header.PartitionSize = uint.MaxValue;
             }
 
+            // Chunk IDs
             ChunkIds = archive.ReadArray<FIoChunkId>((int) Header.TocEntryCount);
 
+            // Chunk offsets
             ChunkOffsetLengths = new FIoOffsetAndLength[Header.TocEntryCount];
             for (int i = 0; i < Header.TocEntryCount; i++)
             {
                 ChunkOffsetLengths[i] = new FIoOffsetAndLength(archive);
             }
 
+            // Chunk perfect hash map
+            uint perfectHashSeedsCount = 0;
+            uint chunksWithoutPerfectHashCount = 0;
+            if (Header.Version >= EIoStoreTocVersion.PerfectHashWithOverflow)
+            {
+                perfectHashSeedsCount = Header.TocChunkPerfectHashSeedsCount;
+                chunksWithoutPerfectHashCount = Header.TocChunksWithoutPerfectHashCount;
+            }
+            else if (Header.Version >= EIoStoreTocVersion.PerfectHash)
+            {
+                perfectHashSeedsCount = Header.TocChunkPerfectHashSeedsCount;
+            }
+            if (perfectHashSeedsCount > 0)
+            {
+                ChunkPerfectHashSeeds = archive.ReadArray<int>((int) perfectHashSeedsCount);
+            }
+            if (chunksWithoutPerfectHashCount > 0)
+            {
+                ChunkIndicesWithoutPerfectHash = archive.ReadArray<int>((int) chunksWithoutPerfectHashCount);
+            }
+
+            // Compression blocks
             CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
             for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
             {
                 CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
             }
 
+            // Compression methods
             unsafe
             {
                 var bufferSize = (int) (Header.CompressionMethodNameLength * Header.CompressionMethodNameCount);
@@ -65,7 +94,7 @@ namespace CUE4Parse.UE4.IO.Objects
                     var name = new string((sbyte*) buffer + i * Header.CompressionMethodNameLength, 0, (int) Header.CompressionMethodNameLength).TrimEnd('\0');
                     if (string.IsNullOrEmpty(name))
                         continue;
-                    if (!Enum.TryParse(name, out CompressionMethod method))
+                    if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
                         Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
                         method = CompressionMethod.Unknown;

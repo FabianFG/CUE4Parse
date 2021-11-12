@@ -3,7 +3,7 @@
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;netstandard2.1</TargetFrameworks>
     <IsPublishable>false</IsPublishable>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>

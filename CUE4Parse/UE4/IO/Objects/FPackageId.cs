@@ -1,5 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using static CUE4Parse.Utils.CityHash;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -23,5 +26,14 @@ namespace CUE4Parse.UE4.IO.Objects
         public override int GetHashCode() => id.GetHashCode();
 
         public override string ToString() => id.ToString();
+
+        public static FPackageId FromName(string name)
+        {
+            var nameStr = name.ToLowerInvariant();
+            var nameBuf = Encoding.Unicode.GetBytes(nameStr);
+            var hash = CityHash64(nameBuf);
+            Trace.Assert(hash != ~0uL, $"Package name hash collision \"{nameStr}\" and InvalidId");
+            return new FPackageId(hash);
+        }
     }
 }

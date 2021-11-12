@@ -22,11 +22,9 @@ namespace CUE4Parse.UE4.IO
         public readonly IReadOnlyList<FArchive> ContainerStreams;
 
         public readonly FIoStoreTocResource TocResource;
-#if GENERATE_CHUNK_ID_DICT
-        public readonly Dictionary<FIoChunkId, FIoOffsetAndLength> Toc;
-#endif
+        public readonly Dictionary<FIoChunkId, FIoOffsetAndLength>? TocImperfectHashMapFallback;
         public readonly FIoStoreTocHeader Info;
-        public FContainerHeader? ContainerHeader { get; private set; }
+        public FIoContainerHeader? ContainerHeader { get; private set; }
         public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public sealed override long Length { get; set; }
@@ -80,11 +78,25 @@ namespace CUE4Parse.UE4.IO
 
             Length += containerStreams.Sum(x => x.Length);
             ContainerStreams = containerStreams;
-#if GENERATE_CHUNK_ID_DICT
-            Toc = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
-            for (var i = 0; i < TocResource.ChunkIds.Length; i++)
+            if (TocResource.ChunkPerfectHashSeeds != null)
             {
-                Toc[TocResource.ChunkIds[i]] = TocResource.ChunkOffsetLengths[i];
+                TocImperfectHashMapFallback = new();
+                if (TocResource.ChunkIndicesWithoutPerfectHash != null)
+                {
+                    foreach (var chunkIndexWithoutPerfectHash in TocResource.ChunkIndicesWithoutPerfectHash)
+                    {
+                        TocImperfectHashMapFallback[TocResource.ChunkIds[chunkIndexWithoutPerfectHash]] = TocResource.ChunkOffsetLengths[chunkIndexWithoutPerfectHash];
+                    }
+                }
+            }
+#if GENERATE_CHUNK_ID_DICT
+            else
+            {
+                TocImperfectHashMapFallback = new Dictionary<FIoChunkId, FIoOffsetAndLength>((int) TocResource.Header.TocEntryCount);
+                for (var i = 0; i < TocResource.ChunkIds.Length; i++)
+                {
+                    TocImperfectHashMapFallback[TocResource.ChunkIds[i]] = TocResource.ChunkOffsetLengths[i];
+                }
             }
 #endif
             Info = TocResource.Header;
@@ -97,7 +109,7 @@ namespace CUE4Parse.UE4.IO
         public override byte[] Extract(VfsEntry entry)
         {
             if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-            return Read(ioEntry.ChunkId, ioEntry.Offset, ioEntry.Size);
+            return Read(ioEntry.Offset, ioEntry.Size);
         }
 
         // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
@@ -106,29 +118,86 @@ namespace CUE4Parse.UE4.IO
         // We can save that memory since we rarely use loading by FIoChunkId directly (I'm pretty sure we just do for the global reader)
         // If anyone want to use the map anyway the define GENERATE_CHUNK_ID_DICT exists
 
-        public bool DoesChunkExist(FIoChunkId chunkId)
+        public bool DoesChunkExist(FIoChunkId chunkId) => TryResolve(chunkId, out _);
+
+        public bool TryResolve(FIoChunkId chunkId, out FIoOffsetAndLength outOffsetLength)
         {
-#if GENERATE_CHUNK_ID_DICT
-            return Toc.ContainsKey(chunkId);
-#else
-            return Array.IndexOf(TocResource.ChunkIds, chunkId) >= 0;
-#endif
+            if (TocResource.ChunkPerfectHashSeeds != null)
+            {
+                var chunkCount = TocResource.Header.TocEntryCount;
+                if (chunkCount == 0)
+                {
+                    outOffsetLength = default;
+                    return false;
+                }
+                var seedCount = (uint) TocResource.ChunkPerfectHashSeeds.Length;
+                var seedIndex = (uint) (chunkId.HashWithSeed(0) % seedCount);
+                var seed = TocResource.ChunkPerfectHashSeeds[seedIndex];
+                if (seed == 0)
+                {
+                    outOffsetLength = default;
+                    return false;
+                }
+                uint slot;
+                if (seed < 0)
+                {
+                    var seedAsIndex = (uint) (-seed - 1);
+                    if (seedAsIndex < chunkCount)
+                    {
+                        slot = seedAsIndex;
+                    }
+                    else
+                    {
+                        // Entry without perfect hash
+                        return TryResolveImperfect(chunkId, out outOffsetLength);
+                    }
+                }
+                else
+                {
+                    slot = (uint) (chunkId.HashWithSeed(seed) % chunkCount);
+                }
+                if (TocResource.ChunkIds[slot].GetHashCode() == chunkId.GetHashCode())
+                {
+                    outOffsetLength = TocResource.ChunkOffsetLengths[slot];
+                    return true;
+                }
+                outOffsetLength = default;
+                return false;
+            }
+
+            return TryResolveImperfect(chunkId, out outOffsetLength);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ChunkIndex(FIoChunkId chunkId) => Array.IndexOf(TocResource.ChunkIds, chunkId);
+        private bool TryResolveImperfect(FIoChunkId chunkId, out FIoOffsetAndLength outOffsetLength)
+        {
+            if (TocImperfectHashMapFallback != null)
+            {
+                return TocImperfectHashMapFallback.TryGetValue(chunkId, out outOffsetLength);
+            }
+
+            var chunkIndex = Array.IndexOf(TocResource.ChunkIds, chunkId);
+            if (chunkIndex == -1)
+            {
+                outOffsetLength = default;
+                return false;
+            }
+
+            outOffsetLength = TocResource.ChunkOffsetLengths[chunkIndex];
+            return true;
+        }
 
         public byte[] Read(FIoChunkId chunkId)
         {
-#if GENERATE_CHUNK_ID_DICT
-            var offsetLength = Toc[chunkId];
-#else
-            var offsetLength = TocResource.ChunkOffsetLengths[Array.IndexOf(TocResource.ChunkIds, chunkId)];
-#endif
-            return Read(chunkId, (long) offsetLength.Offset, (long) offsetLength.Length);
+            if (TryResolve(chunkId, out var offsetLength))
+            {
+                return Read((long) offsetLength.Offset, (long) offsetLength.Length);
+            }
+
+            throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
         }
 
-        private byte[] Read(FIoChunkId chunkId, long offset, long length)
+        private byte[] Read(long offset, long length)
         {
             var compressionBlockSize = TocResource.Header.CompressionBlockSize;
             var dst = new byte[length];
@@ -207,17 +276,21 @@ namespace CUE4Parse.UE4.IO
             ProcessIndex(caseInsensitive);
             if (Game >= EGame.GAME_UE5_0) // We can safely skip reading container header on UE4
             {
-                ProcessContainerHeader();
+                ContainerHeader = ReadContainerHeader();
             }
 
-            var elapsed = watch.Elapsed;
-            var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
-            if (EncryptedFileCount > 0)
-                sb.Append($" ({EncryptedFileCount} encrypted)");
-            if (MountPoint.Contains("/"))
-                sb.Append($", mount point: \"{MountPoint}\"");
-            sb.Append($", version {(int) Info.Version} in {elapsed}");
-            log.Information(sb.ToString());
+            if (Globals.LogVfsMounts)
+            {
+                var elapsed = watch.Elapsed;
+                var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
+                if (EncryptedFileCount > 0)
+                    sb.Append($" ({EncryptedFileCount} encrypted)");
+                if (MountPoint.Contains("/"))
+                    sb.Append($", mount point: \"{MountPoint}\"");
+                sb.Append($", version {(int) Info.Version} in {elapsed}");
+                log.Information(sb.ToString());
+            }
+
             return Files;
         }
 
@@ -280,11 +353,11 @@ namespace CUE4Parse.UE4.IO
             return Files = files;
         }
 
-        public FContainerHeader ProcessContainerHeader()
+        public FIoContainerHeader ReadContainerHeader()
         {
             var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
             var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
-            return ContainerHeader = new FContainerHeader(Ar);
+            return new FIoContainerHeader(Ar);
         }
 
         public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
