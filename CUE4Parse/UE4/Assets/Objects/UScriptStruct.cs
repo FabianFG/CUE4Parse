@@ -1,8 +1,8 @@
 ﻿using System;
 using CUE4Parse.FN.Objects;
-using CUE4Parse.GTA;
 using CUE4Parse.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -104,11 +104,10 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MassQuantity" => Ar.Read<FMassQuantity>(),
 
                 // GTA: The Trilogy
-                "ScalarParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new GScalarParameterValue(Ar),
-                // "VectorParameterValues" when Ar.Game == EGame.GAME_GTATheTrilogy => new FStructFallback(),
-                "TextureParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new GTextureParameterValue(Ar),
-                "MaterialTextureInfo" when Ar.Game == EGame.GAME_GTATheTrilogy => new GMaterialTextureInfo(Ar),
-                // "AssetUserData" when Ar.Game == EGame.GAME_GTATheTrilogy => new FStructFallback(),
+                "ScalarParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FScalarParameterValue(Ar),
+                "VectorParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FVectorParameterValue(Ar),
+                "TextureParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FTextureParameterValue(Ar),
+                "MaterialTextureInfo" when Ar.Game == EGame.GAME_GTATheTrilogy => new FMaterialTextureInfo(Ar),
 
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };
