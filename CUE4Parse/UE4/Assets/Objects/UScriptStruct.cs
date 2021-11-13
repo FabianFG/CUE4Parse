@@ -104,10 +104,10 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MassQuantity" => Ar.Read<FMassQuantity>(),
 
                 // GTA: The Trilogy
-                "ScalarParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FScalarParameterValue(Ar),
-                "VectorParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FVectorParameterValue(Ar),
-                "TextureParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogy => new FTextureParameterValue(Ar),
-                "MaterialTextureInfo" when Ar.Game == EGame.GAME_GTATheTrilogy => new FMaterialTextureInfo(Ar),
+                "ScalarParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FScalarParameterValue(Ar),
+                "VectorParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FVectorParameterValue(Ar),
+                "TextureParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FTextureParameterValue(Ar),
+                "MaterialTextureInfo" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FMaterialTextureInfo(Ar),
 
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };

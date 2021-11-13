@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            bStreaming = Ar.Game >= EGame.GAME_UE4_25;
+            bStreaming = Ar.Game >= EGame.GAME_UE4_25 && Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition;
             if (TryGetValue(out bool s, nameof(bStreaming))) // will return false if not found
                 bStreaming = s;
             else if (TryGetValue(out FName loadingBehavior, "LoadingBehavior"))
