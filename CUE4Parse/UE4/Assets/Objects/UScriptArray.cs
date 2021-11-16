@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Objects
     [JsonConverter(typeof(UScriptArrayConverter))]
     public class UScriptArray
     {
-        public readonly string InnerType; 
+        public readonly string InnerType;
         public readonly FPropertyTagData? InnerTagData;
         public readonly List<FPropertyTagType> Properties;
 
@@ -50,18 +50,18 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public override string ToString() => $"{InnerType}[{Properties.Count}]";
     }
-    
+
     public class UScriptArrayConverter : JsonConverter<UScriptArray>
     {
         public override void WriteJson(JsonWriter writer, UScriptArray value, JsonSerializer serializer)
         {
             writer.WriteStartArray();
-            
+
             foreach (var property in value.Properties)
             {
                 serializer.Serialize(writer, property);
             }
-            
+
             writer.WriteEndArray();
         }
 

@@ -2,6 +2,7 @@
 using CUE4Parse.FN.Objects;
 using CUE4Parse.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -16,6 +17,7 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects
@@ -100,6 +102,12 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
                 "SpeedQuantity" => Ar.Read<FSpeedQuantity>(),
                 "MassQuantity" => Ar.Read<FMassQuantity>(),
+
+                // GTA: The Trilogy
+                "ScalarParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FScalarParameterValue(Ar),
+                "VectorParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FVectorParameterValue(Ar),
+                "TextureParameterValue" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FTextureParameterValue(Ar),
+                "MaterialTextureInfo" when Ar.Game == EGame.GAME_GTATheTrilogyDefinitiveEdition => new FMaterialTextureInfo(Ar),
 
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };

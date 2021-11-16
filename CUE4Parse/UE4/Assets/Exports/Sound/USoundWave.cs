@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            bStreaming = Ar.Game >= EGame.GAME_UE4_25;
+            bStreaming = Ar.Game >= EGame.GAME_UE4_25 && Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition;
             if (TryGetValue(out bool s, nameof(bStreaming))) // will return false if not found
                 bStreaming = s;
             else if (TryGetValue(out FName loadingBehavior, "LoadingBehavior"))
@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
 
             if (Ar.Ver >= UE4Version.VER_UE4_SOUND_COMPRESSION_TYPE_ADDED && FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveSoundWaveCompressionName)
             {
-                Ar.Read<FName>(); // DummyCompressionName
+                Ar.ReadFName(); // DummyCompressionName
             }
 
             if (!bStreaming)
@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 {
                     RawData = new FByteBulkData(Ar);
                 }
-                
+
                 CompressedDataGuid = Ar.Read<FGuid>();
             }
             else
