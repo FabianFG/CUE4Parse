@@ -36,7 +36,7 @@ namespace CUE4Parse_Conversion.Textures
             return null;
         }
 
-        private static void DecodeTexture(FTexture2DMipMap mip, EPixelFormat format, bool isNormalMap, out byte[] data, out SKColorType colorType)
+        public static void DecodeTexture(FTexture2DMipMap mip, EPixelFormat format, bool isNormalMap, out byte[] data, out SKColorType colorType)
         {
             switch (format)
             {
