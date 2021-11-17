@@ -6,7 +6,7 @@ using SharpGLTF.Schema2;
 
 namespace CUE4Parse_Conversion.Meshes.glTF
 {
-    public struct VertexColorXTextureX: IVertexMaterial
+    public struct VertexColorXTextureX: IVertexMaterial, IEquatable<VertexColorXTextureX>
     {
         public int MaxColors => 1; // Do we need more?
         public int MaxTextCoords => MeshConverter.MAX_MESH_UV_SETS;
@@ -26,10 +26,10 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         public VertexColorXTextureX(Vector4 color, List<Vector2> texCoords)
         {
-            Color = color / 255; // 0..255 to 0..1
+            Color = color;
 
             texCoords.Capacity = Math.Max(texCoords.Count, /*MaxTextCoords*/ 8);
-            Resize(texCoords, texCoords.Capacity, new Vector2(float.NaN, float.NaN));
+            Resize(texCoords, texCoords.Capacity, new Vector2(0, 0));
             TexCoord0 = texCoords[0];
             TexCoord1 = texCoords[1];
             TexCoord2 = texCoords[2];
@@ -91,6 +91,19 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             else if (size < list.Count)
                 while (list.Count - size > 0)
                     list.RemoveAt(list.Count-1);
+        }
+
+        public bool Equals(VertexColorXTextureX other)
+        {
+            return other.Color == Color &&
+                other.TexCoord0 == TexCoord0 &&
+                other.TexCoord1 == TexCoord1 &&
+                other.TexCoord2 == TexCoord2 &&
+                other.TexCoord3 == TexCoord3 &&
+                other.TexCoord4 == TexCoord4 &&
+                other.TexCoord5 == TexCoord5 &&
+                other.TexCoord6 == TexCoord6 &&
+                other.TexCoord7 == TexCoord7;
         }
     }
 }

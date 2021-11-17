@@ -74,11 +74,11 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports, meshFormat);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(meshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, Ar, materialExports, meshFormat);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(meshFormat, Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
@@ -121,11 +121,11 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, Ar, materialExports, meshFormat);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, materialExports).Save(meshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, Ar, materialExports, meshFormat);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, materialExports).Save(meshFormat, Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
