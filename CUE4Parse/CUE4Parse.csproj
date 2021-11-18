@@ -19,8 +19,8 @@
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
-    <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.12" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.15" />
   </ItemGroup>
   
    <PropertyGroup>
