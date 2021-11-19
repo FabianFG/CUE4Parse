@@ -15,6 +15,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public UUnrealMaterial? Cube = null;
         public UUnrealMaterial? Mask = null; // multiple mask textures baked into a single one
 
+        public bool IsTransparent = false;
+        public float RoughnessValue = 1f;
+        public float MetallicValue = 0f;
+        public float SpecularValue = 0f;
+
         // channels (used with Mask texture)
         public ETextureChannel EmissiveChannel = ETextureChannel.TC_NONE;
         public ETextureChannel SpecularMaskChannel = ETextureChannel.TC_NONE;

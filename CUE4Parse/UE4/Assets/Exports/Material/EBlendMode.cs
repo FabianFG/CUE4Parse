@@ -1,6 +1,6 @@
 ﻿namespace CUE4Parse.UE4.Assets.Exports.Material
 {
-    public enum EBlendMode
+    public enum EBlendMode : byte
     {
         BLEND_Opaque,
         BLEND_Masked,

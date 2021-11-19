@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FScalarParameterValue[] ScalarParameterValues;
         public FTextureParameterValue[] TextureParameterValues;
         public FVectorParameterValue[] VectorParameterValues;
+        public FMaterialInstanceBasePropertyOverrides BasePropertyOverrides;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -18,6 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ScalarParameterValues = GetOrDefault(nameof(ScalarParameterValues), Array.Empty<FScalarParameterValue>());
             TextureParameterValues = GetOrDefault(nameof(TextureParameterValues), Array.Empty<FTextureParameterValue>());
             VectorParameterValues = GetOrDefault(nameof(VectorParameterValues), Array.Empty<FVectorParameterValue>());
+            BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
         }
 
         public override void GetParams(CMaterialParams parameters)
@@ -38,6 +40,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var emcWeight = 0;
             var cubeWeight = 0;
             var maskWeight = 0;
+            var metalWeight = 0;
+            var roughWeight = 0;
+            var specuWeight = 0;
 
             void Diffuse(bool check, int weight, UTexture tex)
             {
@@ -120,6 +125,33 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 }
             }
 
+            void MetallicValue(bool check, int weight, float value)
+            {
+                if (check && weight > metalWeight)
+                {
+                    parameters.MetallicValue = value;
+                    metalWeight = weight;
+                }
+            }
+
+            void RoughnessValue(bool check, int weight, float value)
+            {
+                if (check && weight > roughWeight)
+                {
+                    parameters.RoughnessValue = value;
+                    roughWeight = weight;
+                }
+            }
+
+            void SpecularValue(bool check, int weight, float value)
+            {
+                if (check && weight > specuWeight)
+                {
+                    parameters.SpecularValue = value;
+                    specuWeight = weight;
+                }
+            }
+
             if (TextureParameterValues.Length > 0)
                 parameters.Opacity = null; // it's better to disable opacity mask from parent material
 
@@ -137,6 +169,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Normal(name.Contains("norm", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("fx", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 SpecPower(name.Contains("specpow", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Specular(name.Contains("spec", StringComparison.CurrentCultureIgnoreCase), 100, tex);
+                Specular(name.Contains("packed", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Emissive(name.Contains("emiss", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("cube", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("refl", StringComparison.CurrentCultureIgnoreCase), 90, tex);
@@ -153,6 +186,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (color != null)
                     EmissiveColor(name.Contains("Emissive", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
             }
+
+            foreach (var p in ScalarParameterValues)
+            {
+                var name = p.Name;
+                var v = p.ParameterValue;
+                MetallicValue(name.Contains("metallic", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("overwrite", StringComparison.CurrentCultureIgnoreCase), 100, v);
+                MetallicValue(name.Contains("metal", StringComparison.CurrentCultureIgnoreCase), 80, v);
+                RoughnessValue(name.Contains("roughness", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("min", StringComparison.CurrentCultureIgnoreCase), 100, v);
+                SpecularValue(name.Contains("specular", StringComparison.CurrentCultureIgnoreCase), 100, v);
+            }
+
+            parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
 
             // try to get diffuse texture when nothing found
             if (parameters.Diffuse == null && TextureParameterValues.Length == 1)
