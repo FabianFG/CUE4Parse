@@ -171,6 +171,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Specular(name.Contains("spec", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Specular(name.Contains("packed", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Specular(name.Contains("mrae", StringComparison.CurrentCultureIgnoreCase), 80, tex);
+                Specular(name.Contains("mrs", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Emissive(name.Contains("emiss", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("cube", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("refl", StringComparison.CurrentCultureIgnoreCase), 90, tex);
