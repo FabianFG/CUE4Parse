@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -43,14 +43,14 @@ namespace CUE4Parse.UE4.Readers
             var bytes = ReadBytes(length);
             Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
         }
-        
+
         public virtual T Read<T>()
         {
             var size = Unsafe.SizeOf<T>();
             var buffer = ReadBytes(size);
             return Unsafe.ReadUnaligned<T>(ref buffer[0]);
         }
-        
+
         public virtual T[] ReadArray<T>(int length)
         {
             var size = Unsafe.SizeOf<T>();
@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Readers
         public override bool CanWrite { get; } = false;
         public override void SetLength(long value) { throw new InvalidOperationException(); }
         public override void Write(byte[] buffer, int offset, int count) { throw new InvalidOperationException(); }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadArray<T>(T[] array, Func<T> getter)
         {
@@ -100,10 +100,10 @@ namespace CUE4Parse.UE4.Readers
             }
 
             ReadArray(result, getter);
-            
+
             return result;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadArray<T>(Func<T> getter)
         {
@@ -196,7 +196,7 @@ namespace CUE4Parse.UE4.Readers
                 _ => throw new ParserException(this, $"Invalid bool value ({i})")
             };
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadFlag()
         {
@@ -234,7 +234,7 @@ namespace CUE4Parse.UE4.Readers
                 ((byte*)v)[lengthBits / 8] &= (byte) ((1 << (int)(lengthBits & 7)) - 1);
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read7BitEncodedInt()
         {
@@ -251,14 +251,14 @@ namespace CUE4Parse.UE4.Readers
             } while ((b & 0x80) != 0);
             return count;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ReadString()
         {
             var length = Read7BitEncodedInt();
             if (length <= 0)
                 return string.Empty;
-            
+
             unsafe
             {
                 var ansiBytes = stackalloc byte[length];
@@ -266,7 +266,7 @@ namespace CUE4Parse.UE4.Readers
                 return new string((sbyte*) ansiBytes, 0, length);
             }
         }
-        
+
         public string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
@@ -275,7 +275,7 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            if (length is < -65536 or > 65536)
+            if (length is < -131072 or > 131072)
                 throw new ParserException($"Invalid FString length '{length}'");
 
             if (length == 0)
