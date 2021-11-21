@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
@@ -13,12 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetZip" Version="1.15.0" />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.2.15" />
   </ItemGroup>
