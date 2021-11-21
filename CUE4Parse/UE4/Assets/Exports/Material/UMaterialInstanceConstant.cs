@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             void Diffuse(bool check, int weight, UTexture tex)
             {
-                if (check && weight > diffWeight)
+                if (check && weight >= diffWeight)
                 {
                     parameters.Diffuse = tex;
                     diffWeight = weight;
