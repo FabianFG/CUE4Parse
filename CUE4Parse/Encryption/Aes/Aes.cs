@@ -1,6 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
+using AesProvider = System.Security.Cryptography.Aes;
+
 namespace CUE4Parse.Encryption.Aes
 {
     public static class Aes
@@ -8,7 +10,7 @@ namespace CUE4Parse.Encryption.Aes
         public const int ALIGN = 16;
         public const int BLOCK_SIZE = 16 * 8;
 
-        private static readonly AesCryptoServiceProvider Provider;
+        private static readonly AesProvider Provider;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Decrypt(this byte[] encrypted, FAesKey key)
@@ -24,7 +26,7 @@ namespace CUE4Parse.Encryption.Aes
 
         static Aes()
         {
-            Provider = new AesCryptoServiceProvider();
+            Provider = AesProvider.Create();
             Provider.Mode = CipherMode.ECB;
             Provider.Padding = PaddingMode.None;
             Provider.BlockSize = BLOCK_SIZE;
