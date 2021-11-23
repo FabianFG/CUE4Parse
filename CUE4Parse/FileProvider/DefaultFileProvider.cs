@@ -9,6 +9,7 @@ using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Ionic.Zip;
 
 namespace CUE4Parse.FileProvider
 {
