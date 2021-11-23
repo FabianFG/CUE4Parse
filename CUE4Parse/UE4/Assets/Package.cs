@@ -12,7 +12,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
@@ -23,7 +22,8 @@ namespace CUE4Parse.UE4.Assets
         public override FNameEntrySerialized[] NameMap { get; }
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
-        public FPackageIndex[] PreloadDependencies { get; }
+        public FPackageIndex[][]? DependsMap { get; }
+        public FPackageIndex[]? PreloadDependencies { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
         public override bool IsFullyLoaded { get; } = false;
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
@@ -47,6 +47,12 @@ namespace CUE4Parse.UE4.Assets
             uassetAr.SeekAbsolute(Summary.ExportOffset, SeekOrigin.Begin);
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
+
+            if (!useLazySerialization && Summary.DependsOffset > 0 && Summary.ExportCount > 0)
+            {
+                uassetAr.SeekAbsolute(Summary.DependsOffset, SeekOrigin.Begin);
+                DependsMap = uassetAr.ReadArray(Summary.ExportCount, () => uassetAr.ReadArray(() => new FPackageIndex(uassetAr)));
+            }
 
             if (!useLazySerialization && Summary.PreloadDependencyCount > 0 && Summary.PreloadDependencyOffset > 0)
             {
@@ -289,6 +295,11 @@ namespace CUE4Parse.UE4.Assets
                         // can't create this export until these things are created
                         _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveLoader(dep)));
                     }
+                }
+                else
+                {
+                    // We only need the outer to be created first
+                    _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveLoader(_export.OuterIndex)));
                 }
             }
 

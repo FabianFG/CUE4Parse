@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -272,7 +271,15 @@ namespace CUE4Parse.UE4.Objects.Engine
             NumSharedSides = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             {
-                var zones = Ar.ReadArray<FZoneProperties>();
+                var dummyZones = Ar.ReadArray<FZoneProperties>();
+            }
+
+            var bHasEditorOnlyData = !Ar.IsFilterEditorOnly || Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_UNUSED_UPOLYS_FROM_UMODEL;
+            if (bHasEditorOnlyData)
+            {
+                var dummyPolys = new FPackageIndex(Ar);
+                Ar.SkipBulkArrayData(); // DummyLeafHulls
+                Ar.SkipBulkArrayData(); // DummyLeaves
             }
 
             RootOutside = Ar.ReadBoolean();

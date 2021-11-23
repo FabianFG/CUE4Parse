@@ -57,6 +57,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int SearchableNamesOffset;
         public readonly int ThumbnailTableOffset;
         public readonly FGuid Guid;
+        public readonly FGuid PersistentGuid;
         public readonly FGenerationInfo[] Generations;
         public readonly FEngineVersion? SavedByEngineVersion;
         public readonly FEngineVersion? CompatibleWithEngineVersion;
@@ -241,6 +242,25 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 8;
 
             Guid = Ar.Read<FGuid>();
+
+            if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
+            {
+                if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_PACKAGE_OWNER)
+                {
+                    PersistentGuid = Ar.Read<FGuid>();
+                }
+                else
+                {
+                    // By assigning the current package guid, we maintain a stable persistent guid, so we can reference this package even if it wasn't resaved.
+                    PersistentGuid = Guid;
+                }
+
+                // The owner persistent guid was added in VER_UE4_ADDED_PACKAGE_OWNER but removed in the next version VER_UE4_NON_OUTER_PACKAGE_IMPORT
+                if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_PACKAGE_OWNER && FileVersionUE < EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT)
+                {
+                    var ownerPersistentGuid = Ar.Read<FGuid>();
+                }
+            }
 
             Generations = Ar.ReadArray<FGenerationInfo>();
 

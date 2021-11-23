@@ -18,8 +18,6 @@ using CUE4Parse.UE4.Plugins;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.FileProvider
 {
@@ -468,14 +466,8 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
             var uassetTask = file.TryCreateReaderAsync().ConfigureAwait(false);
             var uexpTask = uexpFile?.TryCreateReaderAsync().ConfigureAwait(false);
-            var lazyUbulk = ubulkFile != null
-                ? new Lazy<FArchive?>(() => ubulkFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
-                : null;
-
-            var lazyUptnl = uptnlFile != null
-                ? new Lazy<FArchive?>(() => uptnlFile.TryCreateReader(out var reader) ? reader : null, LazyThreadSafetyMode.ExecutionAndPublication)
-                : null;
-
+            var lazyUbulk = ubulkFile != null ? new Lazy<FArchive?>(() => ubulkFile.TryCreateReader(out var reader) ? reader : null) : null;
+            var lazyUptnl = uptnlFile != null ? new Lazy<FArchive?>(() => uptnlFile.TryCreateReader(out var reader) ? reader : null) : null;
             var uasset = await uassetTask;
             if (uasset == null)
                 return null;
@@ -483,28 +475,29 @@ namespace CUE4Parse.FileProvider
 
             try
             {
-                if (file is FPakEntry)
+                if (file is FPakEntry or OsGameFile)
                 {
                     return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame, UseLazySerialization);
                 }
 
-                if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
+                if (file is FIoStoreEntry ioStoreEntry)
                 {
-                    return null;
+                    var globalData = ((IVfsFileProvider) this).GlobalData;
+                    return globalData != null ? new IoPackage(uasset, globalData, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, this, MappingsForThisGame) : null;
                 }
 
-                var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
-                return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, lazyUbulk, lazyUptnl, this, MappingsForThisGame);
+                return null;
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error(e, "Failed to load package " + file);
                 return null;
             }
         }
 
         #endregion
 
-        #region SavePackageMethods
+        #region SavePackage Methods
 
         public virtual IReadOnlyDictionary<string, byte[]> SavePackage(string path) => SavePackage(this[path]);
 

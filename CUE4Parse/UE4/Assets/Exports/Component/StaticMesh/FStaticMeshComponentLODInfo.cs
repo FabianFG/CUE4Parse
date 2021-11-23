@@ -1,17 +1,44 @@
 using System;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;
-using Newtonsoft.Json;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 {
+    public struct FPaintedVertex
+    {
+        public FVector Position;
+        public FVector4 Normal;
+        public FColor Color;
+
+        public FPaintedVertex(FArchive Ar)
+        {
+            Position = Ar.Read<FVector>();
+
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
+            {
+                var temp = new FPackedNormal(Ar);
+                Normal = temp;
+            }
+            else
+            {
+                Normal = Ar.Read<FVector4>();
+            }
+
+            Color = Ar.Read<FColor>();
+        }
+    }
+
     [JsonConverter(typeof(FStaticMeshComponentLODInfoConverter))]
     public class FStaticMeshComponentLODInfo
     {
         private const byte OverrideColorsStripFlag = 1;
         public readonly FGuid MapBuildDataId;
+        public readonly FPaintedVertex[] PaintedVertices;
         public readonly FColorVertexBuffer? OverrideVertexColors;
 
         public FStaticMeshComponentLODInfo(FArchive Ar)
@@ -31,6 +58,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
                 {
                     OverrideVertexColors = new FColorVertexBuffer(Ar);
                 }
+            }
+
+            if (!stripFlags.IsEditorDataStripped())
+            {
+                PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
             }
         }
     }

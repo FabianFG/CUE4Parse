@@ -9,10 +9,13 @@ namespace CUE4Parse.FileProvider
     public class OsGameFile : GameFile
     {
         public readonly FileInfo ActualFile;
-        public OsGameFile(DirectoryInfo baseDir, FileInfo info, VersionContainer versions)
-            : base(info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length)
+        public readonly VersionContainer Versions;
+
+        public OsGameFile(DirectoryInfo baseDir, FileInfo info, string mountPoint, VersionContainer versions)
+            : base(mountPoint + info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length)
         {
             ActualFile = info;
+            Versions = versions;
         }
         
         public override bool IsEncrypted => false;
@@ -22,6 +25,6 @@ namespace CUE4Parse.FileProvider
         public override byte[] Read() => File.ReadAllBytes(ActualFile.FullName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read());
+        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Versions);
     }
 }

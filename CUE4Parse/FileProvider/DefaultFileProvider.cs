@@ -9,7 +9,6 @@ using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Ionic.Zip;
 
 namespace CUE4Parse.FileProvider
 {
@@ -170,19 +169,39 @@ namespace CUE4Parse.FileProvider
 
         private Dictionary<string, GameFile> IterateFiles(DirectoryInfo directory, SearchOption option)
         {
+            // Look for .uproject file to get the correct mount point
+            var uproject = directory.GetFiles("*.uproject", SearchOption.TopDirectoryOnly).FirstOrDefault();
+            string mountPoint;
+            if (uproject != null)
+            {
+                mountPoint = uproject.Name.SubstringBeforeLast('.') + '/';
+            }
+            else
+            {
+                // Or use the directory name
+                mountPoint = directory.Name + '/';
+            }
+
             var osFiles = new Dictionary<string, GameFile>();
+
+            // In .uproject mode, we must recursively look for files
+            option = uproject != null ? SearchOption.AllDirectories : option;
 
             foreach (var file in directory.EnumerateFiles("*.*", option))
             {
                 var ext = file.Extension.SubstringAfter('.');
                 if (!file.Exists || string.IsNullOrEmpty(ext)) continue;
 
-                RegisterFile(file);
+                // Only load containers if .uproject file is not found
+                if (uproject == null)
+                {
+                    RegisterFile(file);
+                }
 
                 // Register local file only if it has a known extension, we don't need every file
                 if (!GameFile.Ue4KnownExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
-                var osFile = new OsGameFile(_workingDirectory, file, Versions);
+                var osFile = new OsGameFile(_workingDirectory, file, mountPoint, Versions);
                 if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
                 else osFiles[osFile.Path] = osFile;
             }

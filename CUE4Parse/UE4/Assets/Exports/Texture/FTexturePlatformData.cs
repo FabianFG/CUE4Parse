@@ -1,6 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
-using static CUE4Parse.UE4.Objects.UObject.EPackageFlags;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
@@ -27,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public FTexturePlatformData(FAssetArchive Ar)
         {
-            if (Ar.Game >= EGame.GAME_UE5_0 && Ar.Owner.HasFlags(PKG_FilterEditorOnly))
+            if (Ar.Game >= EGame.GAME_UE5_0 && Ar.IsFilterEditorOnly)
             {
                 const long PlaceholderDerivedDataSize = 16;
                 Ar.Position += PlaceholderDerivedDataSize;

@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     public class FEngineVersion : FEngineVersionBase
     {
         /** Branch name. */
-        public string Branch => Branch.Replace('+', '/');
+        public string Branch => _branch.Replace('+', '/');
         private string _branch;
 
         public FEngineVersion(FArchive Ar) : base(Ar)
