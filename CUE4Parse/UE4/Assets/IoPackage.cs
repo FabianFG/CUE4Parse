@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.Assets
 
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
+        public readonly ulong[]? ImportedPublicExportHashes;
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
 
@@ -87,6 +88,10 @@ namespace CUE4Parse.UE4.Assets
                         Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
                     }
                 }
+
+                // Imported public export hashes
+                uassetAr.Position = summary.ImportedPublicExportHashesOffset;
+                ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
 
                 // Import map
                 uassetAr.Position = summary.ImportMapOffset;
@@ -300,7 +305,7 @@ namespace CUE4Parse.UE4.Assets
 
             if (index.IsPackageImport && Provider != null)
             {
-                if (Provider.Versions.Game >= EGame.GAME_UE5_0)
+                if (ImportedPublicExportHashes != null)
                 {
                     var packageImportRef = index.AsPackageImportRef;
                     var importedPackages = ImportedPackages.Value;
@@ -311,7 +316,7 @@ namespace CUE4Parse.UE4.Assets
                         {
                             for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                             {
-                                if (pkg.ExportMap[exportIndex].ExportHash == packageImportRef.ExportHash)
+                                if (pkg.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
                                 {
                                     return new ResolvedExportObject(exportIndex, pkg);
                                 }

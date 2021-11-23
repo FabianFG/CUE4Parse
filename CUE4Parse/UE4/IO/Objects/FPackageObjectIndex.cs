@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public FPackageImportReference AsPackageImportRef => new()
         {
             ImportedPackageIndex = (uint) ((TypeAndId & IndexMask) >> 32),
-            ExportHash = (uint) TypeAndId
+            ImportedPublicExportHashIndex = (uint) TypeAndId
         };
 
         public FPackageObjectIndex(ulong typeAndId)

@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public static bool operator ==(FName a, FName b) => a.ComparisonMethod switch
         {
             FNameComparisonMethod.Index => a.Index == b.Index && a.Number == b.Number,
-            FNameComparisonMethod.Text => a.Text.Equals(b.Text, StringComparison.OrdinalIgnoreCase), // Case sensitive in editor, case insensitive in runtime
+            FNameComparisonMethod.Text => string.Equals(a.Text, b.Text, StringComparison.OrdinalIgnoreCase), // Case sensitive in editor, case insensitive in runtime
             _ => throw new ArgumentOutOfRangeException()
         };
 

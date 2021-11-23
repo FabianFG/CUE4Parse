@@ -3,6 +3,6 @@
     public struct FPackageImportReference
     {
         public uint ImportedPackageIndex;
-        public uint ExportHash;
+        public uint ImportedPublicExportHashIndex;
     }
 }

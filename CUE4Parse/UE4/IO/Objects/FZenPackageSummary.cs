@@ -34,9 +34,9 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint bHasVersioningInfo;
         public readonly uint HeaderSize;
         public readonly FMappedName Name;
-        // public readonly FMappedName SourceName; // Removed after CL 17014898 of ue5-main
         public readonly EPackageFlags PackageFlags;
         public readonly uint CookedHeaderSize;
+        public readonly int ImportedPublicExportHashesOffset;
         public readonly int ImportMapOffset;
         public readonly int ExportMapOffset;
         public readonly int ExportBundleEntriesOffset;

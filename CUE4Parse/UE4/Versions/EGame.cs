@@ -74,7 +74,11 @@ namespace CUE4Parse.UE4.Versions
 
             if (game >= EGame.GAME_UE5_0)
             {
-                return new FPackageFileVersion(0, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION);
+                return game switch
+                {
+                    EGame.GAME_UE5_0 => new(522, 1002),
+                    _ => new((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                };
             }
 
             return FPackageFileVersion.CreateUE4Version(game switch

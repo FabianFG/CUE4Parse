@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly FPackageObjectIndex SuperIndex;
         public readonly FPackageObjectIndex TemplateIndex;
         public readonly FPackageObjectIndex GlobalImportIndex;
-        public readonly uint ExportHash;
+        public readonly ulong PublicExportHash;
         public readonly EObjectFlags ObjectFlags;
         public readonly byte FilterFlags; // EExportFilterFlags: client/server flags
 
@@ -30,15 +30,15 @@ namespace CUE4Parse.UE4.IO.Objects
             ClassIndex = Ar.Read<FPackageObjectIndex>();
             SuperIndex = Ar.Read<FPackageObjectIndex>();
             TemplateIndex = Ar.Read<FPackageObjectIndex>();
-            if (Ar.Game >= EGame.GAME_UE5_0) // CL 17014898
+            if (Ar.Game >= EGame.GAME_UE5_0)
             {
                 GlobalImportIndex = new FPackageObjectIndex(FPackageObjectIndex.Invalid);
-                ExportHash = Ar.Read<uint>();
+                PublicExportHash = Ar.Read<ulong>();
             }
             else
             {
                 GlobalImportIndex = Ar.Read<FPackageObjectIndex>();
-                ExportHash = 0;
+                PublicExportHash = 0;
             }
 
             ObjectFlags = Ar.Read<EObjectFlags>();
