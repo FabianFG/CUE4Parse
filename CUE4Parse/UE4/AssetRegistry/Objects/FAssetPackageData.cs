@@ -3,6 +3,7 @@ using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
@@ -15,7 +16,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly FMD5Hash? CookedHash;
         public readonly FName[]? ImportedClasses;
         public readonly long DiskSize;
-        public readonly int FileVersionUE = -1;
+        public readonly FPackageFileVersion FileVersionUE;
         public readonly int FileVersionLicenseeUE = -1;
         public readonly FCustomVersion[]? CustomVersions;
         public readonly uint Flags;
@@ -31,7 +32,16 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             }
             if (version >= FAssetRegistryVersionType.WorkspaceDomain)
             {
-                FileVersionUE = Ar.Read<int>();
+                if (version >= FAssetRegistryVersionType.PackageFileSummaryVersionChange)
+                {
+                    FileVersionUE = Ar.Read<FPackageFileVersion>();
+                }
+                else
+                {
+                    var ue4Version = Ar.Read<int>();
+                    FileVersionUE = FPackageFileVersion.CreateUE4Version(ue4Version);
+                }
+
                 FileVersionLicenseeUE = Ar.Read<int>();
                 Flags = Ar.Read<uint>();
                 CustomVersions = Ar.ReadArray<FCustomVersion>();
@@ -64,7 +74,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 serializer.Serialize(writer, value.CookedHash);
             }
 
-            if (value.FileVersionUE != -1)
+            if (value.FileVersionUE.FileVersionUE4 != 0 || value.FileVersionUE.FileVersionUE5 != 0)
             {
                 writer.WritePropertyName("FileVersionUE");
                 serializer.Serialize(writer, value.FileVersionUE);
