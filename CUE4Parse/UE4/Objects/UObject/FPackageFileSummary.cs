@@ -36,9 +36,9 @@ namespace CUE4Parse.UE4.Objects.UObject
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
 
         public readonly uint Tag;
-        public readonly FPackageFileVersion FileVersionUE;
-        public readonly EUnrealEngineObjectLicenseeUEVersion FileVersionLicenseeUE;
-        public readonly FCustomVersion[] CustomVersionContainer;
+        public FPackageFileVersion FileVersionUE;
+        public EUnrealEngineObjectLicenseeUEVersion FileVersionLicenseeUE;
+        public FCustomVersion[] CustomVersionContainer;
         public EPackageFlags PackageFlags;
         public int TotalHeaderSize;
         public readonly string FolderName;
@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly FEngineVersion? CompatibleWithEngineVersion;
         public readonly ECompressionFlags CompressionFlags;
         public readonly int PackageSource;
-        public readonly bool bUnversioned;
+        public bool bUnversioned;
         public readonly int AssetRegistryDataOffset;
         public int BulkDataStartOffset; // serialized as long
         public readonly int WorldTileInfoDataOffset;

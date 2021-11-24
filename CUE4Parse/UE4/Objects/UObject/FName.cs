@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public string PlainText
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _name.Name/* ?? "None"*/; // keep it null for FTextureParameterValue::Name or check if it's not null + not none instead of just "??"
+            get => _name.Name ?? "None";
         }
         public bool IsNone => Text == "None";
 

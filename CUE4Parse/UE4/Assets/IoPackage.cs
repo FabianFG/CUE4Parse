@@ -62,11 +62,18 @@ namespace CUE4Parse.UE4.Assets
                 if (summary.bHasVersioningInfo != 0)
                 {
                     var versioningInfo = new FZenPackageVersioningInfo(uassetAr);
+                    Summary.FileVersionUE = versioningInfo.PackageVersion;
+                    Summary.FileVersionLicenseeUE = (EUnrealEngineObjectLicenseeUEVersion) versioningInfo.LicenseeVersion;
+                    Summary.CustomVersionContainer = versioningInfo.CustomVersions;
                     if (!uassetAr.Versions.bExplicitVer)
                     {
                         uassetAr.Versions.Ver = versioningInfo.PackageVersion;
                         uassetAr.Versions.CustomVersions = versioningInfo.CustomVersions.ToList();
                     }
+                }
+                else
+                {
+                    Summary.bUnversioned = true;
                 }
 
                 // Name map
@@ -126,7 +133,8 @@ namespace CUE4Parse.UE4.Assets
                     TotalHeaderSize = summary.GraphDataOffset + summary.GraphDataSize,
                     NameCount = summary.NameMapHashesSize / sizeof(ulong) - 1,
                     ExportCount = (summary.ExportBundlesOffset - summary.ExportMapOffset) / FExportMapEntry.Size,
-                    ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size
+                    ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size,
+                    bUnversioned = true
                 };
 
                 // Name map

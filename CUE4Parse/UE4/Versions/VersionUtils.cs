@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Versions
         public static int CustomVer(this FArchive Ar, FGuid key)
         {
             var packageSummary = (Ar as FAssetArchive)?.Owner.Summary;
-            if (packageSummary?.CustomVersionContainer != null && !packageSummary.bUnversioned)
+            if (packageSummary is { bUnversioned: false })
             {
                 var packageCustomVersion = packageSummary.CustomVersionContainer.GetVersion(key);
                 return packageCustomVersion != -1 ? packageCustomVersion : 0; // Explicitly set to BeforeCustomVersionWasAdded if not found
