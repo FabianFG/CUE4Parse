@@ -211,7 +211,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_24 => Type.SupportVirtualBoneInRetargeting,
                 < EGame.GAME_UE4_26 => Type.AnimLayerGuidConformation,
                 < EGame.GAME_UE4_27 => Type.ChaosSolverPropertiesMoved,
-                < EGame.GAME_UE5_0 => Type.GravityOverrideDefinedInWorldSpace,
+                < EGame.GAME_UE5_0 => Type.BPGCCookedEditorTags,
                 _ => Type.LatestVersion
             };
         }
