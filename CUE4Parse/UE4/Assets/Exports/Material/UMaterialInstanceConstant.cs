@@ -37,6 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var specPowWeight = 0;
             var opWeight = 0;
             var emWeight = 0;
+            var dcWeight = 0;
             var emcWeight = 0;
             var cubeWeight = 0;
             var maskWeight = 0;
@@ -48,6 +49,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 if (check && weight >= diffWeight)
                 {
+                    parameters.HasNoTopDiffuseTexture = false;
                     parameters.Diffuse = tex;
                     diffWeight = weight;
                 }
@@ -116,11 +118,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 }
             }
 
+            void DiffuseColor(bool check, int weight, FLinearColor color)
+            {
+                if (check && weight > dcWeight)
+                {
+                    parameters.DiffuseColor = color.ToSRGB();
+                    dcWeight = weight;
+                }
+            }
+
             void EmissiveColor(bool check, int weight, FLinearColor color)
             {
                 if (check && weight > emcWeight)
                 {
-                    parameters.EmissiveColor = color;
+                    parameters.EmissiveColor = color.ToSRGB();
                     emcWeight = weight;
                 }
             }
@@ -185,8 +196,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 var name = p.Name;
                 var color = p.ParameterValue;
-                if (color != null)
-                    EmissiveColor(name.Contains("Emissive", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                if (color == null) continue;
+
+                DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
             }
 
             foreach (var p in ScalarParameterValues)

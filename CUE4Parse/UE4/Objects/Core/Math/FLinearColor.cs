@@ -39,6 +39,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return new FColor((byte) intR, (byte) intG, (byte) intB, (byte) intA);
         }
 
+        public FLinearColor ToSRGB()
+        {
+            var floatR = R.Clamp(0.0f, 1.0f);
+            var floatG = G.Clamp(0.0f, 1.0f);
+            var floatB = B.Clamp(0.0f, 1.0f);
+
+            floatR = floatR <= 0.0031308f ? floatR * 12.92f : Pow(floatR, 1.0f / 2.4f) * 1.055f - 0.055f;
+            floatG = floatG <= 0.0031308f ? floatG * 12.92f : Pow(floatG, 1.0f / 2.4f) * 1.055f - 0.055f;
+            floatB = floatB <= 0.0031308f ? floatB * 12.92f : Pow(floatB, 1.0f / 2.4f) * 1.055f - 0.055f;
+
+            return new FLinearColor(floatR, floatG, floatB, A);
+        }
+
         public FLinearColor(float r, float g, float b, float a)
         {
             R = r;

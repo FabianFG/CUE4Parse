@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
     }
-    
+
     public class SoftObjectPropertyConverter : JsonConverter<SoftObjectProperty>
     {
         public override void WriteJson(JsonWriter writer, SoftObjectProperty value, JsonSerializer serializer)

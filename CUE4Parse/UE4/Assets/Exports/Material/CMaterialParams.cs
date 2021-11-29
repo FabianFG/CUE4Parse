@@ -16,6 +16,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public UUnrealMaterial? Mask = null; // multiple mask textures baked into a single one
 
         public bool IsTransparent = false;
+        public bool HasNoTopDiffuseTexture = true;
+
         public float RoughnessValue = 1f;
         public float MetallicValue = 0f;
         public float SpecularValue = 0f;
@@ -27,7 +29,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public ETextureChannel CubemapMaskChannel = ETextureChannel.TC_NONE;
 
         // colors
-        public FLinearColor EmissiveColor = new(0.5f, 0.5f, 1.0f, 1f); // light-blue color
+        public FLinearColor? DiffuseColor = null;
+        public FLinearColor? EmissiveColor = null; // light-blue color
 
         // mobile
         public bool UseMobileSpecular = false;

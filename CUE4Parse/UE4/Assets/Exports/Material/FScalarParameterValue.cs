@@ -11,8 +11,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     public class FScalarParameterValue : IUStruct
     {
         [JsonIgnore]
-        public string Name => ParameterName?.Text ?? ParameterInfo.Name.Text;
-        public readonly FName? ParameterName;
+        public string Name => (!ParameterName.IsNone ? ParameterName : ParameterInfo.Name).Text;
+        public readonly FName ParameterName;
         public readonly float ParameterValue;
         public readonly FMaterialParameterInfo ParameterInfo;
         public readonly FGuid ExpressionGUID;
