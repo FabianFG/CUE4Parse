@@ -181,6 +181,14 @@ namespace CUE4Parse.UE4.Versions
             // Cooked BPGC storing editor-only asset tags
             BPGCCookedEditorTags,
 
+            // Terrain layer weights are no longer considered material parameters
+            TerrainLayerWeightsAreNotParameters,
+
+            // Anim Dynamics Node Gravity Override vector is now defined in world space, not simulation space.
+            // Legacy behavior can be maintained with a flag, which is set false by default for new nodes,
+            // true for nodes predating this change.
+            GravityOverrideDefinedInWorldSpace,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -203,7 +211,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_24 => Type.SupportVirtualBoneInRetargeting,
                 < EGame.GAME_UE4_26 => Type.AnimLayerGuidConformation,
                 < EGame.GAME_UE4_27 => Type.ChaosSolverPropertiesMoved,
-                < EGame.GAME_UE5_0 => Type.BPGCCookedEditorTags,
+                < EGame.GAME_UE5_0 => Type.GravityOverrideDefinedInWorldSpace,
                 _ => Type.LatestVersion
             };
         }
