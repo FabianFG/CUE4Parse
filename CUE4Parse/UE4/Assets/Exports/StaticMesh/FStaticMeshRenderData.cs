@@ -93,7 +93,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
             for (var i = 0; i < ScreenSize.Length; i++)
             {
-                if (Ar.Game >= EGame.GAME_UE4_20)
+                if (Ar.Game >= EGame.GAME_UE4_20) // FPerPlatformProperty
                 {
                     var bFloatCooked = Ar.ReadBoolean();
                 }
