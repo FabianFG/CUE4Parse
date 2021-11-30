@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FScalarParameterValue[] ScalarParameterValues;
         public FTextureParameterValue[] TextureParameterValues;
         public FVectorParameterValue[] VectorParameterValues;
-        public FMaterialInstanceBasePropertyOverrides BasePropertyOverrides;
+        public new FMaterialInstanceBasePropertyOverrides? BasePropertyOverrides;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -212,7 +212,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 SpecularValue(name.Contains("specular", StringComparison.CurrentCultureIgnoreCase), 100, v);
             }
 
-            parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
+            if (BasePropertyOverrides != null)
+            {
+                parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
+            }
 
             // try to get diffuse texture when nothing found
             if (parameters.Diffuse == null && TextureParameterValues.Length == 1)

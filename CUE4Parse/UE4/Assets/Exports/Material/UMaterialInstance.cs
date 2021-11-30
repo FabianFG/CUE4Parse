@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
+using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -47,6 +47,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 #endif
                 }
             }
+
+#if !READ_SHADER_MAPS
+            Ar.Position = validPos;
+#endif
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
