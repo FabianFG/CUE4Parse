@@ -98,12 +98,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH_LOD)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH_LOD && skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveEnableClothLOD)
             {
-                if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveEnableClothLOD)
-                {
-                    var dummyEnableClothLOD = Ar.Read<byte>();
-                }
+                var dummyEnableClothLOD = Ar.Read<byte>();
             }
 
             if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
@@ -122,7 +119,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     BaseVertexIndex = Ar.Read<uint>();
                 }
 
-                if (!stripDataFlags.IsEditorDataStripped())
+                if (!stripDataFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
                     {
@@ -156,8 +153,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
 
                 MaxBoneInfluences = Ar.Read<int>();
-
-                ClothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+                ClothMappingData = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
 
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
                 {
@@ -227,7 +223,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
             bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
             BaseVertexIndex = Ar.Read<uint>();
-            ClothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+            ClothMappingData = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
             BoneMap = Ar.ReadArray<ushort>();
             NumVertices = Ar.Read<int>();
             MaxBoneInfluences = Ar.Read<int>();

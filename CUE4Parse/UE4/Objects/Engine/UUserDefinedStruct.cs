@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         {
             base.WriteJson(writer, serializer);
 
-            if (DefaultProperties?.Count <= 0) return;
+            if (DefaultProperties is not { Count: > 0 }) return;
             writer.WritePropertyName("DefaultProperties");
             serializer.Serialize(writer, DefaultProperties);
         }

@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     public class FStaticMeshLODResources
     {
         public FStaticMeshSection[] Sections { get; }
-        public FCardRepresentationData CardRepresentationData { get; set; }
+        public FCardRepresentationData? CardRepresentationData { get; set; }
         public float MaxDeviation { get; }
         public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
         public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
@@ -231,8 +231,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             writer.WritePropertyName("ColorVertexBuffer");
             serializer.Serialize(writer, value.ColorVertexBuffer);
 
-            writer.WritePropertyName("CardRepresentationData");
-            serializer.Serialize(writer, value.CardRepresentationData);
+            if (value.CardRepresentationData != null)
+            {
+                writer.WritePropertyName("CardRepresentationData");
+                serializer.Serialize(writer, value.CardRepresentationData);
+            }
 
             writer.WriteEndObject();
         }

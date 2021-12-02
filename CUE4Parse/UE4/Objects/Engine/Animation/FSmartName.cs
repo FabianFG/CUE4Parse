@@ -18,13 +18,13 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
             DisplayName = Ar.ReadFName();
             if (FAnimPhysObjectVersion.Get(Ar) < FAnimPhysObjectVersion.Type.RemoveUIDFromSmartNameSerialize)
             {
-                var tempUID = Ar.Read<ushort>();
+                Ar.Read<ushort>(); // TempUID
             }
 
             // only save if it's editor build and not cooking
             if (FAnimPhysObjectVersion.Get(Ar) < FAnimPhysObjectVersion.Type.SmartNameRefactorForDeterministicCooking)
             {
-                var tempGUID = Ar.Read<FGuid>();
+                Ar.Read<FGuid>(); // TempGUID
             }
         }
 
