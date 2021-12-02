@@ -153,7 +153,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
 
                 MaxBoneInfluences = Ar.Read<int>();
-                ClothMappingData = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+                ClothMappingData = Ar.Game >= EGame.GAME_UE5_0 && FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
 
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
                 {
@@ -223,7 +223,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
             bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
             BaseVertexIndex = Ar.Read<uint>();
-            ClothMappingData = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+            ClothMappingData = Ar.Game >= EGame.GAME_UE5_0 && FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { new FMeshToMeshVertData(Ar) } : Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
             BoneMap = Ar.ReadArray<ushort>();
             NumVertices = Ar.Read<int>();
             MaxBoneInfluences = Ar.Read<int>();
