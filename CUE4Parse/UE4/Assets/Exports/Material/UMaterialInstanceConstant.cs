@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 if (check && weight >= diffWeight)
                 {
-                    parameters.HasNoTopDiffuseTexture = false;
+                    parameters.HasTopDiffuseTexture = true;
                     parameters.Diffuse = tex;
                     diffWeight = weight;
                 }
@@ -95,6 +95,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 if (check && weight > emWeight)
                 {
+                    parameters.HasTopEmissiveTexture = true;
                     parameters.Emissive = tex;
                     emWeight = weight;
                 }
@@ -183,7 +184,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Specular(name.Contains("packed", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Specular(name.Contains("mrae", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Specular(name.Contains("mrs", StringComparison.CurrentCultureIgnoreCase), 80, tex);
-                Emissive(name.Contains("emiss", StringComparison.CurrentCultureIgnoreCase), 100, tex);
+                Emissive(name.Contains("emiss", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("gradient", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("cube", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("refl", StringComparison.CurrentCultureIgnoreCase), 90, tex);
                 Opacity(name.Contains("opac", StringComparison.CurrentCultureIgnoreCase), 90, tex);
@@ -199,7 +200,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (color == null) continue;
 
                 DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
-                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                EmissiveColor(name.Contains("emis", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
                 EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
             }
 
