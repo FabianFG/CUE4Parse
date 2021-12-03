@@ -199,7 +199,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (color == null) continue;
 
                 DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
-                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
             }
 
             foreach (var p in ScalarParameterValues)
