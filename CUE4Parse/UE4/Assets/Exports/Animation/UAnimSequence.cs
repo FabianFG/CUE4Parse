@@ -257,6 +257,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var serializedByteStream = ReadSerializedByteStream(Ar);
             compressedData.Bind(serializedByteStream);
+            NumFrames = CompressedDataStructure.CompressedNumberOfFrames;
 
             var curveCodecPath = Ar.ReadFString();
             CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
@@ -288,6 +289,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedDataStructure = BoneCompressionCodec.AllocateAnimData();
                 CompressedDataStructure.SerializeCompressedData(Ar);
                 CompressedDataStructure.Bind(serializedByteStream);
+                NumFrames = CompressedDataStructure.CompressedNumberOfFrames;
             }
             else
             {
