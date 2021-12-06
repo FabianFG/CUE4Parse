@@ -23,15 +23,15 @@ namespace CUE4Parse_Conversion.Materials
             _textures = new Dictionary<string, SKImage?>();
             _parentData = null;
         }
-        
+
         public MaterialExporter(UUnrealMaterial? unrealMaterial, bool bNoOtherTextures) : this()
         {
             if (unrealMaterial == null) return;
             _internalFilePath = unrealMaterial.Owner?.Name ?? unrealMaterial.Name;
-            
+
             var allTextures = new List<UUnrealMaterial>();
             unrealMaterial.AppendReferencedTextures(allTextures, false);
-            
+
             var parameters = new CMaterialParams();
             unrealMaterial.GetParams(parameters);
             if ((parameters.IsNull || parameters.Diffuse == unrealMaterial) && allTextures.Count == 0)
@@ -51,7 +51,7 @@ namespace CUE4Parse_Conversion.Materials
                         break;
                 }
             }
-            
+
             Proc("Diffuse", parameters.Diffuse);
             Proc("Normal", parameters.Normal);
             Proc("Specular", parameters.Specular);
@@ -60,7 +60,8 @@ namespace CUE4Parse_Conversion.Materials
             Proc("Emissive", parameters.Emissive);
             Proc("Cube", parameters.Cube);
             Proc("Mask", parameters.Mask);
-            
+            Proc("Misc", parameters.Misc);
+
             // Export other textures
             var numOtherTextures = 0;
             foreach (var texture in allTextures)
@@ -93,7 +94,7 @@ namespace CUE4Parse_Conversion.Materials
             foreach (var kvp in _textures)
             {
                 if (kvp.Value == null) continue;
-                
+
                 var texturePath = FixAndCreatePath(baseDirectory, kvp.Key, "png");
                 using var stream = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                 kvp.Value.Encode().AsStream().CopyTo(stream);

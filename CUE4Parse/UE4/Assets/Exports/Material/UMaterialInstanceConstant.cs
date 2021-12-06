@@ -41,6 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var emcWeight = 0;
             var cubeWeight = 0;
             var maskWeight = 0;
+            var miscWeight = 0;
             var metalWeight = 0;
             var roughWeight = 0;
             var specuWeight = 0;
@@ -119,6 +120,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 }
             }
 
+            void Misc(bool check, int weight, UTexture tex)
+            {
+                if (check && weight > miscWeight)
+                {
+                    parameters.Misc = tex;
+                    miscWeight = weight;
+                }
+            }
+
             void DiffuseColor(bool check, int weight, FLinearColor color)
             {
                 if (check && weight > dcWeight)
@@ -191,6 +201,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Opacity(name.Contains("trans", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("transm", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Opacity(name.Contains("opacity", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Opacity(name.Contains("alpha", StringComparison.CurrentCultureIgnoreCase), 100, tex);
+                Misc(name.Equals("m", StringComparison.CurrentCultureIgnoreCase), 100, tex);
             }
 
             foreach (var p in VectorParameterValues)

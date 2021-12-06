@@ -14,6 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public UUnrealMaterial? Emissive = null;
         public UUnrealMaterial? Cube = null;
         public UUnrealMaterial? Mask = null; // multiple mask textures baked into a single one
+        public UUnrealMaterial? Misc = null; // M
 
         public bool IsTransparent = false;
         public bool HasTopDiffuseTexture = false;
@@ -44,7 +45,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool OpacityFromAlpha = false;
 
         public bool IsNull => Diffuse == null && Normal == null && Specular == null && SpecPower == null &&
-                              Opacity == null && Emissive == null && Cube == null && Mask == null;
+                              Opacity == null && Emissive == null && Cube == null && Mask == null && Misc == null;
 
         public void AppendAllTextures(IList<UUnrealMaterial> outTextures)
         {
@@ -56,6 +57,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             if (Emissive != null) outTextures.Add(Emissive);
             if (Cube != null) outTextures.Add(Cube);
             if (Mask != null) outTextures.Add(Mask);
+            if (Misc != null) outTextures.Add(Misc);
         }
     }
 }
