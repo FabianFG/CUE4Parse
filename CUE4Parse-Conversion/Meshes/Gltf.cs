@@ -118,7 +118,7 @@ namespace CUE4Parse_Conversion.Meshes
             return res;
         }
 
-        private static void ExportSkelMeshSections(int index, CSkelMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4> mesh)
+        public static void ExportSkelMeshSections(int index, CSkelMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4> mesh)
         {
             string materialName;
             if (sect.Material?.Load<UMaterialInterface>() is { } tex)
@@ -153,7 +153,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        private static void ExportStaticMeshSections(int index, CStaticMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty> mesh)
+        public static void ExportStaticMeshSections(int index, CStaticMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty> mesh)
         {
             string materialName;
             if (sect.Material?.Load<UMaterialInterface>() is { } tex)
