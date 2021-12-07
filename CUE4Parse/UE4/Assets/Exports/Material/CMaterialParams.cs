@@ -45,8 +45,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool OpacityFromAlpha = false;
 
         public bool IsNull => Diffuse == null && Normal == null && Specular == null && SpecPower == null &&
-                              Opacity == null && Emissive == null && Cube == null && Mask == null && Misc == null &&
-                              DiffuseColor == null;
+                              Opacity == null && Emissive == null && Cube == null && Mask == null && Misc == null;
 
         public void AppendAllTextures(IList<UUnrealMaterial> outTextures)
         {
