@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -210,7 +210,7 @@ namespace CUE4Parse.UE4.IO
             var compressedBuffer = Array.Empty<byte>();
             var uncompressedBuffer = Array.Empty<byte>();
 
-            var clonedReaders = new FArchive[ContainerStreams.Count];
+            var clonedReaders = new FArchive?[ContainerStreams.Count];
 
             for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
             {
@@ -263,6 +263,8 @@ namespace CUE4Parse.UE4.IO
                 offsetInBlock = 0;
                 remainingSize -= sizeInBlock;
                 dstOffset += sizeInBlock;
+
+                reader.Position = 0;
             }
 
             return dst;
