@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Vfs
     {
         public abstract FGuid EncryptionKeyGuid { get; }
         public abstract long Length { get; set; }
+        public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public FAesKey? AesKey { get; set; }
 
         public abstract bool IsEncrypted { get; }
@@ -37,7 +38,11 @@ namespace CUE4Parse.UE4.Vfs
         protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted)
         {
             if (!isEncrypted) return bytes;
-            if (AesKey != null && TestAesKey(AesKey))
+            else if (CustomEncryption != null)
+            {
+                return CustomEncryption(bytes, 0, bytes.Length, this);
+            }
+            else if (AesKey != null && TestAesKey(AesKey))
             {
                 return bytes.Decrypt(AesKey);
             }
@@ -46,6 +51,10 @@ namespace CUE4Parse.UE4.Vfs
         protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted)
         {
             if (!isEncrypted) return bytes;
+            else if (CustomEncryption != null)
+            {
+                return CustomEncryption(bytes, beginOffset, count, this);
+            }
             if (AesKey != null)
             {
                 return bytes.Decrypt(beginOffset, count, AesKey);

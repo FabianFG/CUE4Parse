@@ -36,6 +36,8 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
         
         public IoGlobalData? GlobalData { get; private set; }
+        
+        public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
         {
@@ -75,13 +77,15 @@ namespace CUE4Parse.FileProvider.Vfs
                     GlobalData = new IoGlobalData(ioReader);
                 }
 
-                if (reader.IsEncrypted || !reader.HasDirectoryIndex)
+                if ((reader.IsEncrypted && CustomEncryption == null) || !reader.HasDirectoryIndex)
                     continue;
                 
                 tasks.AddLast(Task.Run(() =>
                 {
                     try
                     {
+                        // Ensure that the custom encryption delegate specified for the provider is also used for the reader
+                        reader.CustomEncryption = CustomEncryption;
                         reader.MountTo(_files, IsCaseInsensitive);
                         _unloadedVfs.TryRemove(reader, out _);
                         _mountedVfs[reader] = null;

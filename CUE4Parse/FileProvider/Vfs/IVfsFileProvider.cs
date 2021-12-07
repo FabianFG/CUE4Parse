@@ -19,6 +19,8 @@ namespace CUE4Parse.FileProvider.Vfs
         /// </summary>
         public IoGlobalData? GlobalData { get; }
         
+        public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
+        
         //Aes-Key Management
         public IReadOnlyDictionary<FGuid, FAesKey> Keys { get; }
         public IReadOnlyCollection<FGuid> RequiredKeys { get; }

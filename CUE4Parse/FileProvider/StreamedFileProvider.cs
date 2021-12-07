@@ -27,7 +27,7 @@ namespace CUE4Parse.FileProvider
             {
                 try
                 {
-                    var reader = new PakFileReader(file, stream[0], Versions) {IsConcurrent = true};
+                    var reader = new PakFileReader(file, stream[0], Versions) {IsConcurrent = true, CustomEncryption = CustomEncryption};
                     if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -43,7 +43,7 @@ namespace CUE4Parse.FileProvider
             {
                 try
                 {
-                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) {IsConcurrent = true};
+                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) {IsConcurrent = true, CustomEncryption = CustomEncryption};
                     if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
