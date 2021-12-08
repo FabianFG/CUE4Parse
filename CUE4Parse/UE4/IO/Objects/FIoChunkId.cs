@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.Utils;
 
@@ -47,7 +48,7 @@ namespace CUE4Parse.UE4.IO.Objects
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public readonly struct FIoChunkId
+    public readonly struct FIoChunkId : IEquatable<FIoChunkId>
     {
         public readonly ulong ChunkId;
         private readonly ushort _chunkIndex;
@@ -82,16 +83,14 @@ namespace CUE4Parse.UE4.IO.Objects
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(FIoChunkId a, FIoChunkId b) => a.Equals(b);
+        public static bool operator ==(FIoChunkId left, FIoChunkId right) => left.Equals(right);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(FIoChunkId a, FIoChunkId b) => !a.Equals(b);
+        public static bool operator !=(FIoChunkId left, FIoChunkId right) => !left.Equals(right);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? obj) => base.Equals(obj);
+        public bool Equals(FIoChunkId other) => ChunkId == other.ChunkId && ChunkType == other.ChunkType;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object? obj) => obj is FIoChunkId other && Equals(other);
+
         public override unsafe int GetHashCode()
         {
             fixed (FIoChunkId* ptr = &this)
@@ -106,13 +105,6 @@ namespace CUE4Parse.UE4.IO.Objects
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override unsafe string ToString()
-        {
-            fixed (FIoChunkId* ptr = &this)
-            {
-                return UnsafePrint.BytesToHex((byte*) ptr, 12);
-            }
-        }
+        public override string ToString() => $"0x{ChunkId:X8} | {ChunkType}";
     }
 }

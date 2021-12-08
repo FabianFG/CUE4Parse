@@ -1,4 +1,6 @@
-﻿using CUE4Parse.UE4.Objects.Core.Serialization;
+using System.Runtime.InteropServices;
+
+using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -29,6 +31,7 @@ namespace CUE4Parse.UE4.IO.Objects
         }
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FZenPackageSummary
     {
         public readonly uint bHasVersioningInfo;

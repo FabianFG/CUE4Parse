@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.IO.Objects
@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.IO.Objects
             return TypeAndId == other.TypeAndId;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is FPackageObjectIndex other && Equals(other);
         }
