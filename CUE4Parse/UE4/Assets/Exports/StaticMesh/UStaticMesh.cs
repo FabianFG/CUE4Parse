@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
 
-            if (StaticMaterials != null && StaticMaterials.Length > 0)
+            if (StaticMaterials is { Length: > 0 })
             {
                 Materials = new FPackageIndex[StaticMaterials.Length];
                 for (var i = 0; i < Materials.Length; i++)

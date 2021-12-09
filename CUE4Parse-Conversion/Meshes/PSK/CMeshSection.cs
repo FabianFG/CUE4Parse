@@ -4,12 +4,14 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CMeshSection
     {
+        public string? MaterialName;
         public FPackageIndex? Material; // UMaterialInterface
         public int FirstIndex;
         public int NumFaces;
 
-        public CMeshSection(FPackageIndex? material, int firstIndex, int numFaces)
+        public CMeshSection(string? materialName, FPackageIndex? material, int firstIndex, int numFaces)
         {
+            MaterialName = materialName;
             Material = material;
             FirstIndex = firstIndex;
             NumFaces = numFaces;

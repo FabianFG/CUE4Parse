@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public List<UTexture> ReferencedTextures = new();
 
         private List<IObject> _displayedReferencedTextures = new();
-        private bool bDisplayReferencedTextures;
+        private bool _shouldDisplay;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -40,15 +40,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     ReferencedTextures.AddRange(referencedTextures);
 
                 if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
-                {
-                    bDisplayReferencedTextures = true;
                     ReferencedTextures.AddRange(referencedTextures);
-                }
             }
 
             // UE4 has complex FMaterialResource format, so avoid reading anything here, but
             // scan package's imports for UTexture objects instead
-            ScanForTextures(Ar);
+            if (Ar.Game >= EGame.GAME_UE5_0) // triggers a lot of "missing import" for .pak games and it's not needed for ue4 iostore
+                ScanForTextures(Ar);
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
             {
@@ -94,7 +92,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     break;
                 }
             }
-            bDisplayReferencedTextures = ReferencedTextures.Count > 0;
+            _shouldDisplay = _displayedReferencedTextures.Count > 0;
         }
 
         public override void GetParams(CMaterialParams parameters)
@@ -238,7 +236,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-            if (!bDisplayReferencedTextures) return;
+            if (!_shouldDisplay) return;
 
             writer.WritePropertyName("ReferencedTextures");
             serializer.Serialize(writer, _displayedReferencedTextures);

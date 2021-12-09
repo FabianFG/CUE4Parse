@@ -72,8 +72,11 @@ namespace CUE4Parse_Conversion.Meshes
                         var sections = new CMeshSection[srcLod.Sections.Length];
                         for (var j = 0; j < sections.Length; j++)
                         {
-                            sections[j] = new CMeshSection(originalMesh.Materials?[srcLod.Sections[j].MaterialIndex],
-                                srcLod.Sections[j].FirstIndex, srcLod.Sections[j].NumTriangles);
+                            sections[j] = new CMeshSection(
+                                originalMesh.StaticMaterials?[srcLod.Sections[j].MaterialIndex].MaterialSlotName.Text, // materialName
+                                originalMesh.Materials?[srcLod.Sections[j].MaterialIndex], // material
+                                srcLod.Sections[j].FirstIndex, // firstIndex
+                                srcLod.Sections[j].NumTriangles); // numFaces
                         }
 
                         return sections;
@@ -148,10 +151,11 @@ namespace CUE4Parse_Conversion.Meshes
                             if (materialIndex < 0) // UE4 using Clamp(0, Materials.Num()), not Materials.Num()-1
                                 materialIndex = 0;
 
-                            var m = materialIndex < originalMesh.Materials?.Length
-                                ? originalMesh.Materials[materialIndex].Material
-                                : null;
-                            sections[j] = new CMeshSection(m, srcLod.Sections[j].BaseIndex,
+                            var materialName = materialIndex < originalMesh.Materials?.Length
+                                ? originalMesh.Materials[materialIndex].MaterialSlotName.Text : null;
+                            var material = materialIndex < originalMesh.Materials?.Length
+                                ? originalMesh.Materials[materialIndex].Material : null;
+                            sections[j] = new CMeshSection(materialName, material, srcLod.Sections[j].BaseIndex,
                                 srcLod.Sections[j].NumTriangles);
                         }
 
