@@ -132,7 +132,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             #region V3
             serializer.Serialize(writer, value.ResolvedObject);
             #endregion
-            
+
             #region V2
             // var resolved = value.Owner?.ResolvePackageIndex(value);
             // if (resolved != null)
@@ -194,7 +194,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// contained within the same package)
     /// </summary>
     [JsonConverter(typeof(FObjectResourceConverter))]
-    public abstract class FObjectResource
+    public abstract class FObjectResource : IObject
     {
         public FName ObjectName;
         public FPackageIndex OuterIndex;

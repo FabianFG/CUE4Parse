@@ -55,7 +55,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public void DeserializeInlineShaderMaps(FArchive Ar, ICollection<FMaterialResource> loadedResources)
         {
             var numLoadedResources = Ar.Read<int>();
-
             if (numLoadedResources > 0)
             {
                 var resourceAr = new FMaterialResourceProxyReader(Ar);

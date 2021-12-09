@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -16,17 +17,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)
         {
             var bCooked = Ar.ReadBoolean();
+            if (!bCooked) return;
 
-            if (bCooked)
+            var bValid = Ar.ReadBoolean();
+            if (bValid)
             {
-                var bValid = Ar.ReadBoolean();
-
-                if (bValid)
-                {
-                    var shaderMap = new FMaterialShaderMap();
-                    shaderMap.Deserialize(Ar);
-                    LoadedShaderMap = shaderMap;
-                }
+                LoadedShaderMap = new FMaterialShaderMap();
+                LoadedShaderMap.Deserialize(Ar);
+            }
+            else
+            {
+                Log.Warning("Loading a material resource '{0}' with an invalid ShaderMap!", Ar.Name);
             }
         }
     }
@@ -191,10 +192,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FPointerTableBase(FArchive Ar) // LoadFromArchive
         {
             NumDependencies = Ar.Read<int>();
-
             for (var i = 0; i < NumDependencies; ++i)
             {
-                var NameHash = Ar.Read<ulong>();
+                var Name = Ar.ReadFName();
                 var SavedLayoutSize = Ar.Read<uint>();
                 var SavedLayoutHash = new FSHAHash(Ar);
             }

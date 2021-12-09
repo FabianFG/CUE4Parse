@@ -4,7 +4,9 @@ using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -17,6 +19,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
+
+        private List<IObject> _displayedReferencedTextures = new();
+        private bool bDisplayReferencedTextures;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -35,7 +40,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     ReferencedTextures.AddRange(referencedTextures);
 
                 if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
+                {
+                    bDisplayReferencedTextures = true;
                     ReferencedTextures.AddRange(referencedTextures);
+                }
             }
 
             // UE4 has complex FMaterialResource format, so avoid reading anything here, but
@@ -54,13 +62,39 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         private void ScanForTextures(FAssetArchive Ar)
         {
-            //!! NOTE: this code will not work when textures are located in the same package - they don't present in import table
-            //!! but could be found in export table. That's true for Simplygon-generated materials.
-            /*foreach (var import in Ar.Owner.ImportMap)
+            // !! NOTE: this code will not work when textures are located in the same package - they don't present in import table
+            // !! but could be found in export table. That's true for Simplygon-generated materials.
+            switch (Ar.Owner)
             {
-                if (import.ClassName.Text.StartsWith("Texture", StringComparison.OrdinalIgnoreCase) && import.TryLoad<UTexture>(out var tex))
-                    ReferencedTextures.Add(tex);
-            }*/
+                case IoPackage io:
+                {
+                    foreach (var import in io.ImportMap)
+                    {
+                        var resolved = io.ResolveObjectIndex(import);
+                        if (resolved?.Class == null) continue;
+
+                        if (!resolved.Class.Name.Text.StartsWith("Texture", StringComparison.OrdinalIgnoreCase) ||
+                            !resolved.TryLoad(out var tex) || tex is not UTexture texture) continue;
+
+                        _displayedReferencedTextures.Add(resolved);
+                        ReferencedTextures.Add(texture);
+                    }
+                    break;
+                }
+                case Package pak:
+                {
+                    foreach (var import in pak.ImportMap)
+                    {
+                        if (!import.ClassName.Text.StartsWith("Texture", StringComparison.OrdinalIgnoreCase) ||
+                            !import.OuterIndex.TryLoad(out UTexture tex)) continue;
+
+                        _displayedReferencedTextures.Add(import);
+                        ReferencedTextures.Add(tex);
+                    }
+                    break;
+                }
+            }
+            bDisplayReferencedTextures = ReferencedTextures.Count > 0;
         }
 
         public override void GetParams(CMaterialParams parameters)
@@ -199,6 +233,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     outTextures.Add(texture);
                 }
             }
+        }
+
+        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            base.WriteJson(writer, serializer);
+            if (!bDisplayReferencedTextures) return;
+
+            writer.WritePropertyName("ReferencedTextures");
+            serializer.Serialize(writer, _displayedReferencedTextures);
         }
     }
 }

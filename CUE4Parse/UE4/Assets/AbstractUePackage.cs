@@ -144,7 +144,7 @@ namespace CUE4Parse.UE4.Assets
     }
 
     [JsonConverter(typeof(ResolvedObjectConverter))]
-    public abstract class ResolvedObject
+    public abstract class ResolvedObject : IObject
     {
         public readonly IPackage Package;
 
