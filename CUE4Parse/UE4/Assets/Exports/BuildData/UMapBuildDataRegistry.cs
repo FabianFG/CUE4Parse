@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
 
             var stripFlags = new FStripDataFlags(Ar);
 
-            if (!stripFlags.IsDataStrippedForServer())
+            if (!stripFlags.IsDataStrippedForServer() && Ar.Game != EGame.GAME_Valorant)
             {
                 var numEntries = Ar.Read<int>();
                 MeshBuildData = new Dictionary<FGuid, FMeshMapBuildData>(numEntries);
