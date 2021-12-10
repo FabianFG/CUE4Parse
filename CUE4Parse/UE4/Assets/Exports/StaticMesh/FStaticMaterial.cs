@@ -7,14 +7,14 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
     public class FStaticMaterial
     {
-        public FPackageIndex MaterialInterface; // UMaterialInterface
+        public ResolvedObject? MaterialInterface; // UMaterialInterface
         public FName MaterialSlotName;
         public FName ImportedMaterialSlotName;
         public FMeshUVChannelInfo? UVChannelData;
 
         public FStaticMaterial(FAssetArchive Ar)
         {
-            MaterialInterface = new FPackageIndex(Ar);
+            MaterialInterface = Ar.Owner.ResolvePackageIndex(new FPackageIndex(Ar));
             MaterialSlotName = Ar.ReadFName();
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);

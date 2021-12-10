@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FPackageIndex[] Sockets { get; private set; } // UStaticMeshSocket[]
         public FStaticMeshRenderData? RenderData { get; private set; }
         public FStaticMaterial[]? StaticMaterials { get; private set; }
-        public FPackageIndex[]? Materials { get; private set; } // UMaterialInterface[]
+        public ResolvedObject[]? Materials { get; private set; } // UMaterialInterface[]
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (StaticMaterials is { Length: > 0 })
             {
-                Materials = new FPackageIndex[StaticMaterials.Length];
+                Materials = new ResolvedObject[StaticMaterials.Length];
                 for (var i = 0; i < Materials.Length; i++)
                 {
                     Materials[i] = StaticMaterials[i].MaterialInterface;
