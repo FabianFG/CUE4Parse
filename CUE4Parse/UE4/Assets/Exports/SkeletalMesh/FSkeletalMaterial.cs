@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
         public FSkeletalMaterial(FAssetArchive Ar)
         {
-            Material = Ar.Owner.ResolvePackageIndex(new FPackageIndex(Ar));
+            Material = new FPackageIndex(Ar).ResolvedObject;
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
                 MaterialSlotName = Ar.ReadFName();

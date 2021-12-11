@@ -72,7 +72,7 @@ namespace CUE4Parse_Conversion.Meshes
                         var sections = new CMeshSection[srcLod.Sections.Length];
                         for (var j = 0; j < sections.Length; j++)
                         {
-                            sections[j] = new CMeshSection(
+                            sections[j] = new CMeshSection(srcLod.Sections[j].MaterialIndex,
                                 originalMesh.StaticMaterials?[srcLod.Sections[j].MaterialIndex].MaterialSlotName.Text, // materialName
                                 originalMesh.Materials?[srcLod.Sections[j].MaterialIndex], // material
                                 srcLod.Sections[j].FirstIndex, // firstIndex
@@ -155,7 +155,7 @@ namespace CUE4Parse_Conversion.Meshes
                                 ? originalMesh.Materials[materialIndex].MaterialSlotName.Text : null;
                             var material = materialIndex < originalMesh.Materials?.Length
                                 ? originalMesh.Materials[materialIndex].Material : null;
-                            sections[j] = new CMeshSection(materialName, material, srcLod.Sections[j].BaseIndex,
+                            sections[j] = new CMeshSection(materialIndex, materialName, material, srcLod.Sections[j].BaseIndex,
                                 srcLod.Sections[j].NumTriangles);
                         }
 
