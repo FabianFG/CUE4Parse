@@ -19,6 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
+        public List<UTexture> UE5ReferencedTextures = new();
 
         private List<IObject> _displayedReferencedTextures = new();
         private bool _shouldDisplay;
@@ -58,6 +59,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             }
         }
 
+        public UTexture? GetFirstTexture() =>
+            UE5ReferencedTextures.Count > 0 ? UE5ReferencedTextures[0] :
+            ReferencedTextures.Count > 0 ? ReferencedTextures[0] :
+            null;
+
         private void ScanForTextures(FAssetArchive Ar)
         {
             // !! NOTE: this code will not work when textures are located in the same package - they don't present in import table
@@ -75,11 +81,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                             !resolved.TryLoad(out var tex) || tex is not UTexture texture) continue;
 
                         _displayedReferencedTextures.Add(resolved);
-                        ReferencedTextures.Add(texture);
+                        UE5ReferencedTextures.Add(texture);
                     }
                     break;
                 }
-                case Package pak:
+                case Package pak: // ue5?
                 {
                     foreach (var import in pak.ImportMap)
                     {
@@ -87,7 +93,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                             !import.OuterIndex.TryLoad(out UTexture tex)) continue;
 
                         _displayedReferencedTextures.Add(import);
-                        ReferencedTextures.Add(tex);
+                        UE5ReferencedTextures.Add(tex);
                     }
                     break;
                 }
