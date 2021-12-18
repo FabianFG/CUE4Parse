@@ -5,8 +5,6 @@ namespace CUE4Parse_Conversion.ActorX
 {
     public struct VJointPosPsk
     {
-        public const int SIZE = 4*4 + 3*4 + 4 + 3*4; 
-
         public FQuat Orientation;
         public FVector Position;
         public float Length;

@@ -5,8 +5,6 @@ namespace CUE4Parse_Conversion.Animations.PSA
 {
     public class VQuatAnimKey
     {
-        public const int SIZE = 3*4 + 4*4 + 4;
-
         /** Relative to parent */
         public FVector Position;
         /** Relative to parent */

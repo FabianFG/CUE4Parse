@@ -18,8 +18,6 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
-        private const int _PSK_VERSION = 20210917;
-
         public readonly string MeshName;
         public readonly List<Mesh> MeshLods;
 
@@ -36,7 +34,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             using var Ar = new FArchiveWriter();
 
-            var mainHdr = new VChunkHeader { TypeFlag = _PSK_VERSION };
+            var mainHdr = new VChunkHeader { TypeFlag = Constants.PSK_VERSION };
             Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
             ExportSkeletonData(Ar, bones);
 
@@ -187,7 +185,7 @@ namespace CUE4Parse_Conversion.Meshes
             var numInfluences = 0;
             for (var i = 0; i < share.Points.Count; i++)
             {
-                for (var j = 0; j < 4; j++)
+                for (var j = 0; j < Constants.NUM_INFLUENCES_UE4; j++)
                 {
                     if (lod.Verts[share.VertToWedge.Value[i]].Bone[j] < 0)
                         break;
@@ -202,7 +200,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var v = lod.Verts[share.VertToWedge.Value[i]];
                 var unpackedWeights = v.UnpackWeights();
 
-                for (var j = 0; j < 4; j++)
+                for (var j = 0; j < Constants.NUM_INFLUENCES_UE4; j++)
                 {
                     if (v.Bone[j] < 0)
                         break;
@@ -227,7 +225,7 @@ namespace CUE4Parse_Conversion.Meshes
             var matrHdr = new VChunkHeader();
             var normHdr = new VChunkHeader();
 
-            mainHdr.TypeFlag = _PSK_VERSION;
+            mainHdr.TypeFlag = Constants.PSK_VERSION;
             Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
 
             var numPoints = share.Points.Count;

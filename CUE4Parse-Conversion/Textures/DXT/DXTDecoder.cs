@@ -5,11 +5,9 @@
     /// </summary>
     public static class DXTDecoder
     {
-        private const int _BITS_PER_PIXEL = 4;
-
         public static byte[] DXT1(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            int bitsPerSecond = sizeX * _BITS_PER_PIXEL;
+            int bitsPerSecond = sizeX * Constants.DXT_BITS_PER_PIXEL;
             int sizeOfPlane = bitsPerSecond * sizeY;
             byte[] rawData = new byte[sizeZ * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
             Colour8888[] colours = new Colour8888[4];
@@ -57,8 +55,8 @@
                                     // Three-color block: derive the other color.
                                     // 00 = color_0,  01 = color_1,  10 = color_2,
                                     // 11 = transparent.
-                                    // These 2-bit codes correspond to the 2-bit fields 
-                                    // stored in the 64-bit block. 
+                                    // These 2-bit codes correspond to the 2-bit fields
+                                    // stored in the 64-bit block.
                                     colours[2].Blue = (byte)((colours[0].Blue + colours[1].Blue) / 2);
                                     colours[2].Green = (byte)((colours[0].Green + colours[1].Green) / 2);
                                     colours[2].Red = (byte)((colours[0].Red + colours[1].Red) / 2);
@@ -78,7 +76,7 @@
                                         Colour8888 col = colours[select];
                                         if (((x + i) < sizeX) && ((y + j) < sizeY))
                                         {
-                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * _BITS_PER_PIXEL);
+                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL);
                                             rawData[offset + 0] = col.Red;
                                             rawData[offset + 1] = col.Green;
                                             rawData[offset + 2] = col.Blue;
@@ -97,7 +95,7 @@
 
         public static byte[] DXT5(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            int bitsPerSecond = sizeX * _BITS_PER_PIXEL;
+            int bitsPerSecond = sizeX * Constants.DXT_BITS_PER_PIXEL;
             int sizeOfPlane = bitsPerSecond * sizeY;
             byte[] rawData = new byte[sizeZ * sizeOfPlane + sizeY * bitsPerSecond + bitsPerSecond];
             Colour8888[] colours = new Colour8888[4];
@@ -150,7 +148,7 @@
                                         // only put pixels out < width or height
                                         if (((x + i) < sizeX) && ((y + j) < sizeY))
                                         {
-                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * _BITS_PER_PIXEL);
+                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL);
                                             rawData[offset] = col.Red;
                                             rawData[offset + 1] = col.Green;
                                             rawData[offset + 2] = col.Blue;
@@ -195,7 +193,7 @@
                                         // only put pixels out < width or height
                                         if (((x + i) < sizeX) && ((y + j) < sizeY))
                                         {
-                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * _BITS_PER_PIXEL + 3);
+                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL + 3);
                                             rawData[offset] = (byte)alphas[bits & 0x07];
                                         }
                                         bits >>= 3;
@@ -212,7 +210,7 @@
                                         // only put pixels out < width or height
                                         if (((x + i) < sizeX) && ((y + j) < sizeY))
                                         {
-                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * _BITS_PER_PIXEL + 3);
+                                            uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL + 3);
                                             rawData[offset] = (byte)alphas[bits & 0x07];
                                         }
                                         bits >>= 3;

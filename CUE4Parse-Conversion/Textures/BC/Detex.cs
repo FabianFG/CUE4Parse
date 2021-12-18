@@ -10,8 +10,6 @@ namespace CUE4Parse_Conversion.Textures.BC
 {
     public static class Detex
     {
-        private const string DETEX_DLL_NAME = "Detex.dll";
-
         static Detex()
         {
             PrepareDllFile();
@@ -51,12 +49,12 @@ namespace CUE4Parse_Conversion.Textures.BC
                     tex.width_in_blocks = width / 4;
                     tex.height_in_blocks = height / 4;
                     return detexDecompressTextureLinear(&tex, dstPtr,
-                        (uint)outputPixelFormat);   
+                        (uint)outputPixelFormat);
                 }
             }
         }
 
-        [DllImport(DETEX_DLL_NAME)]
+        [DllImport(Constants.DETEX_DLL_NAME)]
         private static extern unsafe bool detexDecompressTextureLinear(detexTexture* texture, byte* pixelBuffer,
             uint pixelFormat);
 
@@ -69,7 +67,7 @@ namespace CUE4Parse_Conversion.Textures.BC
             stream.Read(ba, 0, (int)stream.Length);
 
             bool fileOk;
-            var dllFile = DETEX_DLL_NAME;
+            var dllFile = Constants.DETEX_DLL_NAME;
 
             using (var sha1 = new SHA1CryptoServiceProvider())
             {

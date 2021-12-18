@@ -7,8 +7,6 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CVertexShare
     {
-        private const int _HASH_SIZE = 16384;
-        
         public List<FVector> Points;
         public List<FPackedNormal> Normals;
         public List<uint> ExtraInfos;
@@ -24,7 +22,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public void Prepare(CMeshVertex[] verts)
         {
             var numVerts = verts.Length;
-            
+
             WedgeIndex = 0;
             Points = new List<FVector>();
             Normals = new List<FPackedNormal>();
@@ -40,12 +38,12 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             extents[2] += 1f;
             Extents = new Lazy<FVector>(extents);
 
-            Hash = new int[_HASH_SIZE];
+            Hash = new int[Constants.MESH_HASH_SIZE];
             for (var i = 0; i < Hash.Length; i++)
             {
                 Hash[i] = -1;
             }
-            
+
             HashNext = new Lazy<int[]>(() =>
             {
                 var ret = new int[numVerts];
@@ -62,7 +60,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             var pointIndex = -1;
             normal.Data &= 0xFFFFFFu;
 
-            var h = (int)Math.Floor(((position[0] - Mins[0]) / Extents.Value[0] + (position[1] - Mins[1]) / Extents.Value[1] + (position[2] - Mins[2]) / Extents.Value[2]) * (_HASH_SIZE / 3.0f * 16)) % _HASH_SIZE;
+            var h = (int)Math.Floor(((position[0] - Mins[0]) / Extents.Value[0] + (position[1] - Mins[1]) / Extents.Value[1] + (position[2] - Mins[2]) / Extents.Value[2]) * (Constants.MESH_HASH_SIZE / 3.0f * 16)) % Constants.MESH_HASH_SIZE;
             pointIndex = Hash[h];
             while (pointIndex >= 0)
             {
@@ -70,7 +68,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
                     break;
                 pointIndex = HashNext.Value[pointIndex];
             }
-            
+
             if (pointIndex == -1)
             {
                 Points.Add(position);
@@ -85,7 +83,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             VertToWedge.Value[pointIndex] = WedgeIndex++;
             return pointIndex;
         }
-        
+
         private void ComputeBounds(CMeshVertex[] verts, bool updateBounds = false)
         {
             var numVerts = verts.Length;
@@ -103,7 +101,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
                 Mins.Set(Maxs.Set(verts[i++].Position));
                 numVerts--;
             }
-            
+
             while (numVerts-- != 0)
             {
                 var v = verts[i++].Position;
@@ -115,7 +113,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
                 if (v[2] > Maxs[2]) Maxs[2] = v[2];
             }
         }
-        
+
         private FVector VectorSubtract(FVector a, FVector b)
         {
             return new FVector

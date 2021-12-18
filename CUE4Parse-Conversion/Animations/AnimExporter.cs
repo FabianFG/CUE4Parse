@@ -13,8 +13,6 @@ namespace CUE4Parse_Conversion.Animations
 {
     public class AnimExporter : ExporterBase
     {
-        private const int PSA_VERSION = 20100422;
-
         public readonly string AnimName;
         public readonly List<Anim> AnimSequences;
 
@@ -75,14 +73,14 @@ namespace CUE4Parse_Conversion.Animations
             var scaleKeysHdr = new VChunkHeader();
             int i;
 
-            mainHdr.TypeFlag = PSA_VERSION;
+            mainHdr.TypeFlag = Constants.PSA_VERSION;
             Ar.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
             int numBones = anim.TrackBoneNames.Length;
             int numAnims = anim.Sequences.Count;
 
             boneHdr.DataCount = numBones;
-            boneHdr.DataSize = FNamedBoneBinary.SIZE;
+            boneHdr.DataSize = Constants.FNamedBoneBinary_SIZE;
             Ar.SerializeChunkHeader(boneHdr, "BONENAMES");
             for (i = 0; i < numBones; i++)
             {
@@ -107,7 +105,7 @@ namespace CUE4Parse_Conversion.Animations
             int framesCount = 0;
 
             animHdr.DataCount = numAnims;
-            animHdr.DataSize = AnimInfoBinary.SIZE;
+            animHdr.DataSize = Constants.ANIM_INFO_SIZE;
             Ar.SerializeChunkHeader(animHdr, "ANIMINFO");
             for (i = 0; i < numAnims; i++)
             {
@@ -136,7 +134,7 @@ namespace CUE4Parse_Conversion.Animations
 
             int keysCount = framesCount * numBones;
             keyHdr.DataCount = keysCount;
-            keyHdr.DataSize = VQuatAnimKey.SIZE;
+            keyHdr.DataSize = Constants.VQuatAnimKey_SIZE;
             Ar.SerializeChunkHeader(keyHdr, "ANIMKEYS");
             for (i = 0; i < numAnims; i++)
             {
@@ -174,7 +172,7 @@ namespace CUE4Parse_Conversion.Animations
             // The function doesn't perform any checks for chunk names etc, so we're very restricted in
             // using very strict order of chunks. If main chunk has version (TypeFlag) at least 20090127,
             // importer will always read "SCALEKEYS" chunk.
-            if (PSA_VERSION >= 20090127)
+            if (Constants.PSA_VERSION >= 20090127)
             {
                 scaleKeysHdr.DataCount = 0;
                 scaleKeysHdr.DataSize = 16; // sizeof(VScaleAnimKey) = FVector + float

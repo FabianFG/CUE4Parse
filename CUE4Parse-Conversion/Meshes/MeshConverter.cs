@@ -13,8 +13,6 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public static class MeshConverter
     {
-        public const int MAX_MESH_UV_SETS = 8;
-
         public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones)
         {
             bones = new List<CSkelMeshBone>();
@@ -58,7 +56,7 @@ namespace CUE4Parse_Conversion.Meshes
                     continue;
                 }
 
-                if (numTexCoords > MAX_MESH_UV_SETS)
+                if (numTexCoords > Constants.MAX_MESH_UV_SETS)
                     throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
 
                 var staticMeshLod = new CStaticMeshLod
@@ -130,7 +128,7 @@ namespace CUE4Parse_Conversion.Meshes
                 if (srcLod.SkipLod) continue;
 
                 var numTexCoords = srcLod.NumTexCoords;
-                if (numTexCoords > MAX_MESH_UV_SETS)
+                if (numTexCoords > Constants.MAX_MESH_UV_SETS)
                     throw new ParserException($"Skeletal mesh has too many UV sets ({numTexCoords})");
 
                 var skeletalMeshLod = new CSkelMeshLod
@@ -275,7 +273,7 @@ namespace CUE4Parse_Conversion.Meshes
                     Name = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
                     ParentIndex = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
                     Position = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Translation,
-                    Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
+                    Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation
                 };
 
                 if (i >= 1) // fix skeleton; all bones but 0

@@ -9,8 +9,6 @@ namespace CUE4Parse_Conversion.Animations.PSA
      */
     public class AnimInfoBinary
     {
-        public const int SIZE = 2*64 + 10*4;
-
         /** Animation's name */
         public string Name;
         /** Animation's group name */

@@ -9,7 +9,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
     public struct VertexColorXTextureX: IVertexMaterial, IEquatable<VertexColorXTextureX>
     {
         public int MaxColors => 1; // Do we need more?
-        public int MaxTextCoords => MeshConverter.MAX_MESH_UV_SETS;
+        public int MaxTextCoords => Constants.MAX_MESH_UV_SETS;
 
         [VertexAttribute("COLOR_0", EncodingType.UNSIGNED_BYTE, true)]
         public Vector4 Color;

@@ -100,6 +100,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             X = X >= 0 ? 1 : -1, Y = Y >= 0 ? 1 : -1, Z = Z >= 0 ? 1 : -1
         };
 
+        public void Scale(FVector scale)
+        {
+            X *= scale.X;
+            Y *= scale.Y;
+            Z *= scale.Z;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator +(FVector a) => a;
 

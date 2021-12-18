@@ -150,15 +150,13 @@ namespace CUE4Parse_Conversion.Animations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasKeys() => KeyQuat.Length + KeyPos.Length + KeyScale.Length > 0;
 
-        private const int MAX_LINEAR_KEYS = 4;
-
         private static int FindTimeKey(float[] keyTime, float frame)
         {
             // find index in time key array
             var numKeys = keyTime.Length;
             // *** binary search ***
             int low = 0, high = numKeys-1;
-            while (low + MAX_LINEAR_KEYS < high)
+            while (low + Constants.MAX_ANIM_LINEAR_KEYS < high)
             {
                 var mid = (low + high) / 2;
                 if (frame < keyTime[mid])

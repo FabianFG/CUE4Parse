@@ -34,18 +34,50 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 if (FinalRefBoneInfo.Length > 0 && FinalRefBoneInfo[0].ParentIndex != -1)
                 {
-                    FinalRefBoneInfo[0] = new FMeshBoneInfo(FinalRefBoneInfo[0].Name, - 1);
+                    FinalRefBoneInfo[0] = new FMeshBoneInfo(FinalRefBoneInfo[0].Name, -1);
                 }
             }
+
+            AdjustBoneScales();
+        }
+
+        private void AdjustBoneScales()
+        {
+            if (FinalRefBoneInfo.Length != FinalRefBonePose.Length)
+                return;
+
+            for (int boneIndex = 0; boneIndex < FinalRefBonePose.Length; boneIndex++)
+            {
+                var scale = GetBoneScale(boneIndex);
+                FinalRefBonePose[boneIndex].Translation.Scale(scale);
+            }
+        }
+
+        private FVector GetBoneScale(int boneIndex)
+        {
+            var scale = new FVector(1);
+
+            // Get the parent bone, ignore scale of the current one
+            boneIndex = FinalRefBoneInfo[boneIndex].ParentIndex;
+            while (boneIndex >= 0)
+            {
+                var boneScale = FinalRefBonePose[boneIndex].Scale3D;
+                // Accumulate the scale
+                scale.Scale(boneScale);
+                // Get the bone's parent
+                boneIndex = FinalRefBoneInfo[boneIndex].ParentIndex;
+            }
+
+            return scale;
         }
     }
-    
+
     public class FReferenceSkeletonConverter : JsonConverter<FReferenceSkeleton>
     {
         public override void WriteJson(JsonWriter writer, FReferenceSkeleton value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("FinalRefBoneInfo");
             writer.WriteStartArray();
             {
@@ -65,7 +97,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
             writer.WriteEndArray();
-            
+
             writer.WritePropertyName("FinalNameToIndexMap");
             serializer.Serialize(writer, value.FinalNameToIndexMap);
 
