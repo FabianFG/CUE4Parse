@@ -38,22 +38,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
 
-            AdjustBoneScales();
+            AdjustBoneScales(FinalRefBonePose);
         }
 
-        private void AdjustBoneScales()
+        public void AdjustBoneScales(FTransform[] transforms)
         {
-            if (FinalRefBoneInfo.Length != FinalRefBonePose.Length)
+            if (FinalRefBoneInfo.Length != transforms.Length)
                 return;
 
-            for (int boneIndex = 0; boneIndex < FinalRefBonePose.Length; boneIndex++)
+            for (int boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
             {
-                var scale = GetBoneScale(boneIndex);
-                FinalRefBonePose[boneIndex].Translation.Scale(scale);
+                var scale = GetBoneScale(transforms, boneIndex);
+                transforms[boneIndex].Translation.Scale(scale);
             }
         }
 
-        private FVector GetBoneScale(int boneIndex)
+        public FVector GetBoneScale(FTransform[] transforms, int boneIndex)
         {
             var scale = new FVector(1);
 
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             boneIndex = FinalRefBoneInfo[boneIndex].ParentIndex;
             while (boneIndex >= 0)
             {
-                var boneScale = FinalRefBonePose[boneIndex].Scale3D;
+                var boneScale = transforms[boneIndex].Scale3D;
                 // Accumulate the scale
                 scale.Scale(boneScale);
                 // Get the bone's parent

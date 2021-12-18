@@ -37,7 +37,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 AnimRetargetSources = new Dictionary<FName, FReferencePose>(numOfRetargetSources);
                 for (var i = 0; i < numOfRetargetSources; i++)
                 {
-                    AnimRetargetSources[Ar.ReadFName()] = new FReferencePose(Ar);
+                    var name = Ar.ReadFName();
+                    var pose = new FReferencePose(Ar);
+                    ReferenceSkeleton.AdjustBoneScales(pose.ReferencePose);
+                    AnimRetargetSources[name] = pose;
                 }
             }
             else
