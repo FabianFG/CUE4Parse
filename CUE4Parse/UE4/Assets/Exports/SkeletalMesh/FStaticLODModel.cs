@@ -228,6 +228,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     }
                 }
             }
+
+            if (Ar.Game == EGame.GAME_ReadyOrNot)
+                Ar.Position += 4;
         }
 
         public void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
