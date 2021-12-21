@@ -40,9 +40,9 @@ namespace CUE4Parse.UE4.Versions
             GAME_KenaBridgeofSpirits = GAME_UE4_25 + 3,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
+            GAME_ReadyOrNot = GAME_UE4_26 + 2,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
-            GAME_ReadyOrNot = GAME_UE4_27 + 2,
 
         GAME_UE4_LATEST = GAME_UE4_27,
 

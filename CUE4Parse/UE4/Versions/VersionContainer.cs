@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Versions
             }
         }
         private FPackageFileVersion _ver;
-        public bool bExplicitVer { get; private set; } 
+        public bool bExplicitVer { get; private set; }
         public List<FCustomVersion>? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
