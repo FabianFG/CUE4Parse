@@ -149,9 +149,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 writer.WriteValue(CompressedCurveByteStream);
             }*/
 
-            EnsureCurveData();
-            writer.WritePropertyName("CompressedCurveData");
-            serializer.Serialize(writer, CompressedCurveData);
+            if (!EnsureCurveData())
+            {
+                writer.WritePropertyName("CompressedCurveData");
+                serializer.Serialize(writer, CompressedCurveData);
+            }
 
             if (CompressedDataStructure != null)
             {
@@ -459,12 +461,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             return dst;
         }
 
-        public void EnsureCurveData()
+        private bool EnsureCurveData()
         {
             if (CompressedCurveData.FloatCurves == null && CurveCompressionCodec != null)
             {
                 CompressedCurveData.FloatCurves = CurveCompressionCodec.ConvertCurves(this);
+                return true;
             }
+            return false;
         }
     }
 }

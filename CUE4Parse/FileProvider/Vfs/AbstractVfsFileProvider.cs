@@ -31,19 +31,19 @@ namespace CUE4Parse.FileProvider.Vfs
 
         private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
-        
+
         protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
-        
+
         public IoGlobalData? GlobalData { get; private set; }
-        
+
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
 
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
         {
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }
-        
+
         public void LoadMappings()
         {
             if (GameName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase))
@@ -77,9 +77,9 @@ namespace CUE4Parse.FileProvider.Vfs
                     GlobalData = new IoGlobalData(ioReader);
                 }
 
-                if ((reader.IsEncrypted && CustomEncryption == null) || !reader.HasDirectoryIndex)
+                if (reader.IsEncrypted && CustomEncryption == null || !reader.HasDirectoryIndex)
                     continue;
-                
+
                 tasks.AddLast(Task.Run(() =>
                 {
                     try
@@ -94,7 +94,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     }
                     catch (InvalidAesKeyException)
                     {
-                        // Ignore this 
+                        // Ignore this
                     }
                     catch (Exception e)
                     {
@@ -110,7 +110,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {{ guid, key }});
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys) => SubmitKeysAsync(keys).Result;
 
@@ -132,10 +132,10 @@ namespace CUE4Parse.FileProvider.Vfs
                     {
                         GlobalData = new IoGlobalData(ioReader);
                     }
-                    
+
                     if (!reader.HasDirectoryIndex)
                         continue;
-                    
+
                     tasks.AddLast(Task.Run(() =>
                     {
                         try
@@ -148,7 +148,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (InvalidAesKeyException)
                         {
-                            // Ignore this 
+                            // Ignore this
                         }
                         catch (Exception e)
                         {
