@@ -54,6 +54,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassFlags = Ar.Read<uint>();
 
             // Variables.
+            if (Ar.Game == EGame.GAME_StarWarsJediFallenOrder) Ar.Position += 4;
             ClassWithin = new FPackageIndex(Ar);
             ClassConfigName = Ar.ReadFName();
 
@@ -73,7 +74,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
-        
+
         public Assets.Exports.UObject? ConstructObject()
         {
             var type = ObjectTypeRegistry.Get(Name);

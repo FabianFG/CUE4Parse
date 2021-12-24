@@ -24,12 +24,19 @@ namespace CUE4Parse.UE4.Objects.MovieScene
 
         public FMovieSceneFloatChannel(FAssetArchive Ar)
         {
-            // if (FSequencerObjectVersion.Get(Ar) < FSequencerObjectVersion.Type.SerializeFloatChannelCompletely &&
-            //     FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve)
-            // {
-            //     return;
-            // }
-            
+            if (FSequencerObjectVersion.Get(Ar) < FSequencerObjectVersion.Type.SerializeFloatChannelCompletely) // && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve
+            {
+                PreInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
+                PostInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
+                Times = Array.Empty<FFrameNumber>();
+                Values = Array.Empty<FMovieSceneFloatValue>();
+                DefaultValue = 0;
+                bHasDefaultValue = false;
+                TickResolution = default;
+                bShowCurve = false;
+                return;
+            }
+
             PreInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
             PostInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
 
