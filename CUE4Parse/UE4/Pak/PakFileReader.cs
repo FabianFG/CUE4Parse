@@ -137,6 +137,8 @@ namespace CUE4Parse.UE4.Pak
             {
                 var path = string.Concat(mountPoint, index.ReadFString());
                 var entry = new FPakEntry(this, path, index);
+                if (entry.IsDeleted && entry.Size == 0)
+                    continue;
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
                 if (caseInsensitive)

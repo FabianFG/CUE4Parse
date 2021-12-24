@@ -14,11 +14,17 @@ namespace CUE4Parse.UE4.Pak.Objects
 {
     public class FPakEntry : VfsEntry
     {
+        private const byte Flag_None = 0x00;
+        private const byte Flag_Encrypted = 0x01;
+        private const byte Flag_Deleted = 0x02;
+
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = Array.Empty<FPakCompressedBlock>();
-        public override bool IsEncrypted { get; }
+        public readonly uint Flags;
+        public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
+        public bool IsDeleted => (Flags & Flag_Deleted) == Flag_Deleted;
         public readonly uint CompressionBlockSize;
 
         public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
@@ -92,7 +98,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 if (CompressionMethod != CompressionMethod.None)
                     CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
-                IsEncrypted = Ar.ReadFlag();
+                Flags = (uint)Ar.ReadByte();
                 CompressionBlockSize = Ar.Read<uint>();
             }
 
@@ -188,7 +194,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             // Filter the encrypted flag.
-            IsEncrypted = (bitfield & (1 << 22)) != 0;
+            Flags |= (bitfield & (1 << 22)) != 0 ? 1u : 0u;
 
             // This should clear out any excess CompressionBlocks that may be valid in the user's
             // passed in entry.
