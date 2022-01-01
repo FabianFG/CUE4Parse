@@ -42,6 +42,7 @@ namespace CUE4Parse.FN.Assets.Exports
         AddedVkPalette,
         SwitchingToCoreSerialization,
         AddedNavmeshRequired,
+        InitialUEFiveChange,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -166,7 +167,7 @@ namespace CUE4Parse.FN.Assets.Exports
     public class FActorComponentRecord
     {
         public FName ComponentName;
-        public FSoftObjectPath ComponentClass; // UClass 
+        public FSoftObjectPath ComponentClass; // UClass
         public byte[]? ComponentData;
         public uint DataHash;
 
