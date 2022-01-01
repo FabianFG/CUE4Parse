@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -103,6 +105,7 @@ namespace CUE4Parse.FN.Assets.Exports
         public override FName ReadFName() => ReadFString();
     }
 
+    [StructFallback]
     public class FActorTemplateRecord
     {
         public ulong ID;
@@ -161,6 +164,15 @@ namespace CUE4Parse.FN.Assets.Exports
                     DataHash = 0;
                 }
             }
+        }
+
+        public FActorTemplateRecord(FStructFallback fallback)
+        {
+            ActorClass = fallback.GetOrDefault<FSoftObjectPath>(nameof(ActorClass));
+            ID = fallback.GetOrDefault<ulong>(nameof(ID));
+            ActorComponents = fallback.GetOrDefault<FActorComponentRecord[]>(nameof(ActorComponents));
+            ActorData = fallback.GetOrDefault<byte[]>(nameof(ActorData));
+            DataHash = fallback.GetOrDefault<uint>(nameof(DataHash));
         }
     }
 
