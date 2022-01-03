@@ -44,6 +44,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         // When new fields are added to FPakInfo, they're serialized before 'Magic' to keep compatibility
         // with older pak file versions. At the same time, structure size grows.
         public readonly bool EncryptedIndex;
+        public readonly bool IndexIsFrozen;
         public readonly FGuid EncryptionKeyGuid;
         public readonly List<CompressionMethod> CompressionMethods;
 
@@ -70,10 +71,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
             {
-                var bIndexIsFrozen = Ar.ReadFlag();
-                // used just for 4.25, so don't do any support unless it's really needed
-                if (bIndexIsFrozen)
-                    throw new ParserException(Ar, "Pak index is frozen");
+                IndexIsFrozen = Ar.Read<byte>() != 0;
             }
 
             if (Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)

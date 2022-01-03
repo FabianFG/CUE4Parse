@@ -105,14 +105,14 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T[] ReadArray<T>(Func<T> getter)
+        public virtual T[] ReadArray<T>(Func<T> getter)
         {
             var length = Read<int>();
             return ReadArray(length, getter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T[] ReadArray<T>() where T : struct
+        public virtual T[] ReadArray<T>() where T : struct
         {
             var length = Read<int>();
             return length > 0 ? ReadArray<T>(length) : Array.Empty<T>();
@@ -267,7 +267,7 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
-        public string ReadFString()
+        public virtual string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
             var length = Read<int>();

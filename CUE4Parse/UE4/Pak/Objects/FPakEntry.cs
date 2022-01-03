@@ -247,6 +247,18 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
         }
 
+        public FPakEntry(PakFileReader reader, FMemoryImageArchive Ar) : base(reader)
+        {
+            Offset = Ar.Read<long>();
+            Size = Ar.Read<long>();
+            UncompressedSize = Ar.Read<long>();
+            Ar.Position += FSHAHash.SIZE + 4 /*align to 8 bytes*/; //Hash = new FSHAHash(Ar);
+            CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
+            CompressionBlockSize = Ar.Read<uint>();
+            CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
+            Flags = Ar.Read<byte>();
+        }
+
         public PakFileReader PakFileReader
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

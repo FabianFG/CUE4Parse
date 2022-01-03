@@ -96,6 +96,8 @@ namespace CUE4Parse.UE4.Pak
             watch.Start();
             if (Info.Version >= PakFile_Version_PathHashIndex)
                 ReadIndexUpdated(caseInsensitive);
+            else if (Info.IndexIsFrozen)
+                ReadFrozenIndex(caseInsensitive);
             else
                 ReadIndexLegacy(caseInsensitive);
             if (Globals.LogVfsMounts)
@@ -224,6 +226,56 @@ namespace CUE4Parse.UE4.Pak
                                 files[path] = entry;
                         }
                     }
+                }
+            }
+
+            return Files = files;
+        }
+
+        private IReadOnlyDictionary<string, GameFile> ReadFrozenIndex(bool caseInsensitive)
+        {
+            this.Ar.Position = Info.IndexOffset;
+            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)));
+
+            var mountPoint = Ar.ReadFString();
+            ValidateMountPoint(ref mountPoint);
+            MountPoint = mountPoint;
+
+            var entries = Ar.ReadArray(() => new FPakEntry(this, Ar));
+            var fileCount = entries.Length;
+            var files = new Dictionary<string, GameFile>(fileCount);
+
+            // read TMap<FString, TMap<FString, int32>>
+            var index = Ar.ReadTMap(
+                () => Ar.ReadFString(),
+                () => Ar.ReadTMap(
+                    () => Ar.ReadFString(),
+                    () => Ar.Read<int>(),
+                    16, 4
+                ),
+                16, 56
+            );
+
+            foreach (var (dir, dirContents) in index)
+            {
+                foreach (var (name, fileIndex) in dirContents)
+                {
+                    string path;
+                    if (mountPoint.EndsWith('/') && dir.StartsWith('/'))
+                        path = dir.Length == 1 ? string.Concat(mountPoint, name) : string.Concat(mountPoint, dir[1..], name);
+                    else
+                        path = string.Concat(mountPoint, dir, name);
+
+                    var entry = entries[fileIndex];
+                    entry.Path = path;
+                    if (entry.IsDeleted && entry.Size == 0)
+                        continue;
+                    if (entry.IsEncrypted)
+                        EncryptedFileCount++;
+                    if (caseInsensitive)
+                        files[path.ToLowerInvariant()] = entry;
+                    else
+                        files[path] = entry;
                 }
             }
 
