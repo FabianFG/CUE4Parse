@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -14,13 +14,13 @@ namespace CUE4Parse_Conversion.Materials
         private readonly string _internalFilePath;
         private readonly string _fileData;
         private readonly MaterialExporter? _parentData;
-        private readonly IDictionary<string, SKImage?> _textures;
+        private readonly IDictionary<string, SKBitmap?> _textures;
 
         public MaterialExporter()
         {
             _internalFilePath = string.Empty;
             _fileData = string.Empty;
-            _textures = new Dictionary<string, SKImage?>();
+            _textures = new Dictionary<string, SKBitmap?>();
             _parentData = null;
         }
 
@@ -91,13 +91,15 @@ namespace CUE4Parse_Conversion.Materials
             File.WriteAllText(filePath, _fileData);
             savedFileName = Path.GetFileName(filePath);
 
-            foreach (var kvp in _textures)
+            foreach ((string? name, SKBitmap? bitmap) in _textures)
             {
-                if (kvp.Value == null) continue;
+                if (bitmap == null) continue;
 
-                var texturePath = FixAndCreatePath(baseDirectory, kvp.Key, "png");
-                using var stream = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
-                kvp.Value.Encode().AsStream().CopyTo(stream);
+                var texturePath = FixAndCreatePath(baseDirectory, name, "png");
+                using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
+                using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+                using var stream = data.AsStream();
+                stream.CopyTo(fs);
             }
 
             if (_parentData != null)

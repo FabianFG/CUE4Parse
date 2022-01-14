@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Textures.ASTC;
@@ -10,11 +12,11 @@ using static CUE4Parse.Utils.TypeConversionUtils;
 
 namespace CUE4Parse_Conversion.Textures
 {
-    public static class TextureDecoder {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SKImage? Decode(this UTexture2D texture) => texture.Decode(texture.GetFirstMip());
+    public static class TextureDecoder
+    {
+        public static SKBitmap? Decode(this UTexture2D texture) => texture.Decode(texture.GetFirstMip());
 
-        public static SKImage? Decode(this UTexture2D texture, FTexture2DMipMap? mip)
+        public static SKBitmap? Decode(this UTexture2D texture, FTexture2DMipMap? mip)
         {
             if (!texture.IsVirtual && mip != null)
             {
@@ -22,16 +24,27 @@ namespace CUE4Parse_Conversion.Textures
 
                 var width = mip.SizeX;
                 var height = mip.SizeY;
-                using var bitmap = new SKBitmap(new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul));
+                var info = new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul);
+                var bitmap = new SKBitmap();
+
                 unsafe
                 {
+                    var pixelsPtr = NativeMemory.Alloc((nuint)data.Length);
                     fixed (byte* p = data)
                     {
-                        bitmap.SetPixels(new IntPtr(p));
+                        Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint)data.Length);
                     }
+                    bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
                 }
 
-                return SKImage.FromBitmap(!texture.bRenderNearestNeighbor ? bitmap : bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None));
+                if (!texture.bRenderNearestNeighbor)
+                {
+                    return bitmap;
+                }
+
+                var resized = bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None);
+                bitmap.Dispose();
+                return resized;
             }
             return null;
         }
@@ -68,11 +81,13 @@ namespace CUE4Parse_Conversion.Textures
                         {
                             var offset = 0;
                             fixed (byte* d = data)
+                            {
                                 for (var i = 0; i < mip.SizeX * mip.SizeY; i++)
                                 {
                                     d[offset+2] = BCDecoder.GetZNormal(d[offset], d[offset+1]);
                                     offset += 4;
                                 }
+                            }
                         }
                     }
                     break;
