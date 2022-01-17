@@ -650,7 +650,7 @@ namespace CUE4Parse.FileProvider
                 packagePath = packagePath.Substring(0, dotIndex);
             }
 
-            var pkg = await TryLoadPackageAsync(packagePath);
+            var pkg = await TryLoadPackageAsync(packagePath).ConfigureAwait(false);
             return pkg?.GetExportOrNull(objectName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
