@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Textures.ASTC;
@@ -14,13 +13,27 @@ namespace CUE4Parse_Conversion.Textures
 {
     public static class TextureDecoder
     {
-        public static SKBitmap? Decode(this UTexture2D texture) => texture.Decode(texture.GetFirstMip());
+        public static SKBitmap? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
 
-        public static SKBitmap? Decode(this UTexture2D texture, FTexture2DMipMap? mip)
+        public static SKBitmap? Decode(this UTexture2D texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             if (!texture.IsVirtual && mip != null)
             {
-                DecodeTexture(mip, texture.Format, texture.isNormalMap, out byte[] data, out var colorType);
+                byte[] data;
+                SKColorType colorType;
+
+                switch (platform)
+                {
+                    case ETexturePlatform.Playstation:
+                        PlaystationDecoder.DecodeTexturePlaystation(mip, texture.Format, texture.isNormalMap, out data, out colorType);
+                        break;
+                    case ETexturePlatform.NintendoSwitch:
+                        NintendoSwitchDecoder.DecodeTextureNSW(mip, texture.Format, texture.isNormalMap, out data, out colorType);
+                        break;
+                    default:
+                        DecodeTexture(mip, texture.Format, texture.isNormalMap, out data, out colorType);
+                        break;
+                }
 
                 var width = mip.SizeX;
                 var height = mip.SizeY;
@@ -29,11 +42,12 @@ namespace CUE4Parse_Conversion.Textures
 
                 unsafe
                 {
-                    var pixelsPtr = NativeMemory.Alloc((nuint)data.Length);
+                    var pixelsPtr = NativeMemory.Alloc((nuint) data.Length);
                     fixed (byte* p = data)
                     {
-                        Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint)data.Length);
+                        Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint) data.Length);
                     }
+
                     bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
                 }
 
@@ -46,6 +60,7 @@ namespace CUE4Parse_Conversion.Textures
                 bitmap.Dispose();
                 return resized;
             }
+
             return null;
         }
 
@@ -84,12 +99,13 @@ namespace CUE4Parse_Conversion.Textures
                             {
                                 for (var i = 0; i < mip.SizeX * mip.SizeY; i++)
                                 {
-                                    d[offset+2] = BCDecoder.GetZNormal(d[offset], d[offset+1]);
+                                    d[offset + 2] = BCDecoder.GetZNormal(d[offset], d[offset + 1]);
                                     offset += 4;
                                 }
                             }
                         }
                     }
+
                     break;
                 case EPixelFormat.PF_BC4:
                     data = BCDecoder.BC4(mip.Data.Data, mip.SizeX, mip.SizeY);
@@ -104,32 +120,32 @@ namespace CUE4Parse_Conversion.Textures
                     // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
 
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, true,
-                        inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
-                        outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
+                        DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
+                        DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
                     colorType = SKColorType.Rgb565;
                     break;
                 case EPixelFormat.PF_BC7:
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
-                        inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
-                        outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
+                        DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
+                        DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC1:
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
-                        inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1,
-                        outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
+                        DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1,
+                        DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC2_RGB:
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
-                        inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2,
-                        outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
+                        DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2,
+                        DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC2_RGBA:
                     data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
-                        inputFormat: DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC,
-                        outputPixelFormat: DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
+                        DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC,
+                        DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_R16F:
@@ -141,6 +157,7 @@ namespace CUE4Parse_Conversion.Textures
                             data = ConvertRawR16DataToRGB888X(mip.SizeX, mip.SizeY, d, mip.SizeX * 2); // 2 BPP
                         }
                     }
+
                     colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_B8G8R8A8:
@@ -159,6 +176,7 @@ namespace CUE4Parse_Conversion.Textures
                             data = ConvertRawR16G16B16A16FDataToRGBA8888(mip.SizeX, mip.SizeY, d, mip.SizeX * 8, false); // 8 BPP
                         }
                     }
+
                     colorType = SKColorType.Rgba8888;
                     break;
                 default: throw new NotImplementedException($"Unknown pixel format: {format}");

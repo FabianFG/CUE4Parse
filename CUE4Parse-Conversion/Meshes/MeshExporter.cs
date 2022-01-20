@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Writers;
@@ -41,7 +42,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{MeshName}.psk", Ar.GetBuffer(), new List<MaterialExporter>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
+        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -63,7 +64,7 @@ namespace CUE4Parse_Conversion.Meshes
 
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
-                var ext = "";
+                string ext;
                 switch (meshFormat)
                 {
                     case EMeshFormat.ActorX:
@@ -88,7 +89,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX)
+        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -115,7 +116,7 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     case EMeshFormat.ActorX:
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
-                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports);
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, platform);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -135,8 +136,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-
-        private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
+        private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter>? materialExports, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             var share = new CVertexShare();
             var boneHdr = new VChunkHeader();
@@ -148,7 +148,7 @@ namespace CUE4Parse_Conversion.Meshes
                 share.AddVertex(vert.Position, vert.Normal);
             }
 
-            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
+            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports, platform);
 
             boneHdr.DataCount = 0;
             boneHdr.DataSize = 120;
@@ -162,7 +162,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             var share = new CVertexShare();
             var infHdr = new VChunkHeader();
@@ -179,7 +179,7 @@ namespace CUE4Parse_Conversion.Meshes
                 share.AddVertex(vert.Position, vert.Normal, weightsHash);
             }
 
-            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
+            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports, platform);
             ExportSkeletonData(Ar, bones);
 
             var numInfluences = 0;
@@ -216,7 +216,7 @@ namespace CUE4Parse_Conversion.Meshes
         }
 
         private void ExportCommonMeshData(FArchiveWriter Ar, CMeshSection[] sections, CMeshVertex[] verts,
-            FRawStaticIndexBuffer indices, CVertexShare share, List<MaterialExporter>? materialExports)
+            FRawStaticIndexBuffer indices, CVertexShare share, List<MaterialExporter>? materialExports, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             var mainHdr = new VChunkHeader();
             var ptsHdr = new VChunkHeader();
@@ -323,7 +323,7 @@ namespace CUE4Parse_Conversion.Meshes
                 if (sections[i].Material?.Load<UMaterialInterface>() is { } tex)
                 {
                     materialName = tex.Name;
-                    materialExports?.Add(new MaterialExporter(tex, true));
+                    materialExports?.Add(new MaterialExporter(tex, true, platform));
                 }
                 else materialName = $"material_{i}";
 

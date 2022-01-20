@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Materials;
@@ -39,15 +40,15 @@ namespace CUE4Parse_Conversion
     {
         private readonly ExporterBase _exporterBase;
 
-        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod, EMeshFormat meshFormat = EMeshFormat.ActorX)
+        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             _exporterBase = export switch
             {
                 UAnimSequence animSequence => new AnimExporter(animSequence),
-                UMaterialInterface material => new MaterialExporter(material, false),
-                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat, meshFormat: meshFormat),
+                UMaterialInterface material => new MaterialExporter(material, false, platform),
+                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat, meshFormat: meshFormat, platform: platform),
                 USkeleton skeleton => new MeshExporter(skeleton),
-                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat, meshFormat: meshFormat),
+                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat, meshFormat: meshFormat, platform: platform),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }

@@ -11,4 +11,6 @@ namespace CUE4Parse.FN.Assets.Exports.Sound
     public class UPickaxeReady : USoundCue { }
 
     public class UPickaxeSwing : USoundCue { }
+
+    public class UEmoteMusic : USoundCue { }
 }

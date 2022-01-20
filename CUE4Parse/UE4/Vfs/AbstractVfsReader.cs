@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Vfs
         public abstract IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
 
         public abstract byte[] Extract(VfsEntry entry);
-        
+
         protected void ValidateMountPoint(ref string mountPoint)
         {
             var badMountPoint = !mountPoint.StartsWith("../../..");
@@ -66,9 +66,9 @@ namespace CUE4Parse.UE4.Vfs
 
             mountPoint = mountPoint.Substring(1);
         }
-        
+
         protected const int MAX_MOUNTPOINT_TEST_LENGTH = 128;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsValidIndex(byte[] testBytes) => IsValidIndex(new FByteArchive(string.Empty, testBytes));
         public static bool IsValidIndex(FArchive reader)
@@ -85,7 +85,7 @@ namespace CUE4Parse.UE4.Vfs
                 reader.Seek(-(mountPointLength - 1) * 2, SeekOrigin.Current);
                 return reader.Read<short>() == 0;
             }
-            
+
             // UTF8
             reader.Seek(mountPointLength - 1, SeekOrigin.Current);
             return reader.Read<byte>() == 0;
