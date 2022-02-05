@@ -82,6 +82,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     Materials[i] = StaticMaterials[i].MaterialInterface;
                 }
             }
+
+            if (Materials is null && TryGetValue(out FPackageIndex[] mats, "Materials"))
+            {
+                Materials = new ResolvedObject[mats.Length];
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    Materials[i] = mats[i].ResolvedObject!;
+                }
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
