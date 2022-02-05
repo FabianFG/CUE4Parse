@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
@@ -19,10 +19,8 @@ namespace CUE4Parse.UE4.Assets.Objects
         public FByteBulkDataHeader(FAssetArchive Ar)
         {
             BulkDataFlags = Ar.Read<EBulkDataFlags>();
-            if (BulkDataFlags.HasFlag(BULKDATA_Size64Bit))
-                throw new ParserException(Ar, "Must not have Size64Bit flag");
-            ElementCount = Ar.Read<int>();
-            SizeOnDisk = Ar.Read<uint>();
+            ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
+            SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
             OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
             if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
             {

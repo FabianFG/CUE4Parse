@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -28,6 +29,11 @@ namespace CUE4Parse.UE4.Readers
         {
             get => Versions.Ver;
             set => Versions.Ver = value;
+        }
+        public ETexturePlatform Platform
+        {
+            get => Versions.Platform;
+            set => Versions.Platform = value;
         }
         public abstract string Name { get; }
 

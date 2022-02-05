@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using static CUE4Parse.UE4.Versions.EGame;
 
@@ -29,17 +30,29 @@ namespace CUE4Parse.UE4.Versions
                 _ver = bExplicitVer ? value : _game.GetVersion();
             }
         }
+
+        private ETexturePlatform _platform;
+        public ETexturePlatform Platform
+        {
+            get => _platform;
+            set
+            {
+                _platform = value;
+                InitOptions();
+            }
+        }
         private FPackageFileVersion _ver;
         public bool bExplicitVer { get; private set; }
         public List<FCustomVersion>? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
 
-        public VersionContainer(EGame game = GAME_UE4_LATEST, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null)
+        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null)
         {
             _optionOverrides = optionOverrides;
             Game = game;
             Ver = ver;
+            Platform = platform;
             CustomVersions = customVersions;
         }
 
@@ -72,6 +85,6 @@ namespace CUE4Parse.UE4.Versions
             get => Options[optionKey];
         }
 
-        public object Clone() => new VersionContainer(Game, Ver, CustomVersions, _optionOverrides) { bExplicitVer = bExplicitVer };
+        public object Clone() => new VersionContainer(Game, Platform, Ver, CustomVersions, _optionOverrides) { bExplicitVer = bExplicitVer };
     }
 }

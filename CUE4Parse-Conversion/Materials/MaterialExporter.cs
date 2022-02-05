@@ -24,7 +24,7 @@ namespace CUE4Parse_Conversion.Materials
             _parentData = null;
         }
 
-        public MaterialExporter(UUnrealMaterial? unrealMaterial, bool bNoOtherTextures) : this()
+        public MaterialExporter(UUnrealMaterial? unrealMaterial, bool bNoOtherTextures, ETexturePlatform platform = ETexturePlatform.DesktopMobile) : this()
         {
             if (unrealMaterial == null) return;
             _internalFilePath = unrealMaterial.Owner?.Name ?? unrealMaterial.Name;
@@ -75,7 +75,7 @@ namespace CUE4Parse_Conversion.Materials
             foreach (var texture in toExport)
             {
                 if (texture == unrealMaterial || texture is not UTexture2D t) continue;
-                _textures[t.Owner?.Name ?? t.Name] = t.Decode();
+                _textures[t.Owner?.Name ?? t.Name] = t.Decode(platform);
             }
 
             if (!bNoOtherTextures && unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
