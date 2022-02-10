@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse", "CUE4Parse\CUE4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Fortnite", "CUE4Parse-Fortnite\CUE4Parse-Fortnite.csproj", "{A38EFDF9-6F67-4FF2-8039-DDC946C8A40D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-UnitTests", "CUE4Parse-UnitTests\CUE4Parse-UnitTests.csproj", "{F77A7A3F-D2D6-44FC-B837-C794016B36A7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Conversion", "CUE4Parse-Conversion\CUE4Parse-Conversion.csproj", "{EB602A68-2268-4D51-AC75-41E8EDEC95E5}"
 EndProject
 Global
