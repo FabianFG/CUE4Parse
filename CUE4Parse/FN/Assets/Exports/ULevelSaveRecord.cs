@@ -45,6 +45,8 @@ namespace CUE4Parse.FN.Assets.Exports
         SwitchingToCoreSerialization,
         AddedNavmeshRequired,
         InitialUEFiveChange,
+        AddedPersistenceRequired,
+        AddedLevelInstance,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -357,6 +359,9 @@ namespace CUE4Parse.FN.Assets.Exports
             }
             else
             {
+                if (SaveVersion <= ELevelSaveRecordVersion.AddedLevelInstance)
+                    Ar.Position += 1; //var _ = Ar.ReadByte(); // 2 almost? every time
+
                 base.Deserialize(Ar, validPos);
             }
         }
@@ -483,7 +488,7 @@ namespace CUE4Parse.FN.Assets.Exports
 
             if (SaveVersion > ELevelSaveRecordVersion.LatestVersion)
             {
-                throw new ParserException("Unsupported level save record version " + (short) SaveVersion);
+                Log.Warning("Unsupported level save record version " + (short) SaveVersion);
             }
 
             bCompressed = Ar.ReadBoolean();
