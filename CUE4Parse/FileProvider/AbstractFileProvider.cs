@@ -51,7 +51,7 @@ namespace CUE4Parse.FileProvider
             {
                 if (string.IsNullOrEmpty(_gameName))
                 {
-                    string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                    string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase) && !it.StartsWith('/')) ?? string.Empty;
                     _gameName = t.SubstringBefore('/');
                 }
                 return _gameName;
