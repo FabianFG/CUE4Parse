@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.UE4.Versions
@@ -15,8 +15,14 @@ namespace CUE4Parse.UE4.Versions
         // Support stripping names that are not referenced from export data
         NAMES_REFERENCED_FROM_EXPORT_DATA,
 
-        // Added a payload table of contents to the package summary 
+        // Added a payload table of contents to the package summary
         PAYLOAD_TOC,
+
+        // Added data to identify references from and to optional package
+        OPTIONAL_RESOURCES,
+
+        // Large world coordinates converts a number of core types to double components by default.
+        LARGE_WORLD_COORDINATES,
 
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)
@@ -277,7 +283,7 @@ namespace CUE4Parse.UE4.Versions
         WORLD_LAYER_ENABLE_DISTANCE_STREAMING,
         // Remove visibility/zone information from UModel
         REMOVE_ZONES_FROM_MODEL,
-        // Fix base pose serialization 
+        // Fix base pose serialization
         FIX_ANIMATIONBASEPOSE_SERIALIZATION,
         // Support for up to 8 skinning influences per vertex on skeletal meshes (on non-gpu vertices)
         SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES,
@@ -451,7 +457,7 @@ namespace CUE4Parse.UE4.Versions
         MOVEMENTCOMPONENT_AXIS_SETTINGS,
         // Switch to new interactive comments, requires boundry conversion to preserve previous states
         GRAPH_INTERACTIVE_COMMENTBUBBLES,
-        // Landscape serializes physical materials for collision objects 
+        // Landscape serializes physical materials for collision objects
         LANDSCAPE_SERIALIZE_PHYSICS_MATERIALS,
         // Rename Visiblity on widgets to Visibility
         RENAME_WIDGET_VISIBILITY,

@@ -251,6 +251,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public uint PackageFlags;
         public bool NotAlwaysLoadedForEditorGame;
         public bool IsAsset;
+        public bool GeneratePublicHash;
         public int FirstExportDependency;
         public int SerializationBeforeSerializationDependencies;
         public int CreateBeforeSerializationDependencies;
@@ -292,6 +293,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             PackageFlags = Ar.Read<uint>();
             NotAlwaysLoadedForEditorGame = Ar.Ver < EUnrealEngineObjectUE4Version.LOAD_FOR_EDITOR_GAME || Ar.ReadBoolean();
             IsAsset = Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT && Ar.ReadBoolean();
+            GeneratePublicHash = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)
             {
@@ -327,6 +329,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public readonly FName ClassPackage;
         public FName ClassName;
+        public bool ImportOptional;
 
 #pragma warning disable 8618
         public FObjectImport()
@@ -339,6 +342,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassName = Ar.ReadFName();
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
+            ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }
     }
 }
