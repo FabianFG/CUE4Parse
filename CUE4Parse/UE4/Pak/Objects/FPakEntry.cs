@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -76,8 +76,15 @@ namespace CUE4Parse.UE4.Pak.Objects
                 }
                 else
                 {
-                    compressionMethodIndex = -1;
-                    //throw new ParserException("Found an unknown compression type in pak file, will need to be supported for legacy files");
+                    if (reader.Game == GAME_PlayerUnknownsBattlegrounds)
+                    {
+                        compressionMethodIndex = 3; // TODO: Investigate what a proper detection is.
+                    }
+                    else
+                    {
+                        compressionMethodIndex = -1;
+                        // throw new ParserException("Found an unknown compression type in pak file, will need to be supported for legacy files");
+                    }
                 }
 
                 CompressionMethod = compressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[compressionMethodIndex];
