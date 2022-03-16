@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Pak.Objects
     {
         public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
-        
+
         public readonly uint Magic;
         public readonly EPakFileVersion Version;
         public readonly short SubVersion;
@@ -53,7 +53,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
             EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
-            
+
             // Old FPakInfo fields
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC)
@@ -116,7 +116,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     }
                 }
             }
-            
+
             // Reset new fields to their default states when seralizing older pak format.
             if (Version < EPakFileVersion.PakFile_Version_IndexEncryption)
             {
@@ -141,14 +141,14 @@ namespace CUE4Parse.UE4.Pak.Objects
             Size9 = Size8a + 1, // UE4.25
 
             //Size10 = Size8a
-            
+
             SizeLast,
             SizeMax = SizeLast - 1
         }
 
         private static OffsetsToTry[] _offsetsToTry =
         {
-            OffsetsToTry.Size8a, 
+            OffsetsToTry.Size8a,
             OffsetsToTry.Size8,
             OffsetsToTry.Size,
             OffsetsToTry.Size9,
@@ -171,7 +171,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 Ar.Seek(-maxOffset, SeekOrigin.End);
                 var buffer = stackalloc byte[(int) maxOffset];
                 Ar.Serialize(buffer, (int) maxOffset);
-                
+
                 var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
                 foreach (var offset in _offsetsToTry)
