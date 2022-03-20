@@ -23,7 +23,7 @@ namespace CUE4Parse.FileProvider
         {
             var ext = file.SubstringAfter('.');
             if (string.IsNullOrEmpty(ext)) return;
-            
+
             if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -42,10 +42,7 @@ namespace CUE4Parse.FileProvider
             }
             else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
             {
-                if (openContainerStreamFunc == null)
-                {
-                    openContainerStreamFunc = it => new FStreamArchive(it, stream[1], Versions);
-                }
+                openContainerStreamFunc ??= it => new FStreamArchive(it, stream[1], Versions);
 
                 try
                 {
@@ -54,7 +51,7 @@ namespace CUE4Parse.FileProvider
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
                     }
-                    _unloadedVfs[reader] = null; 
+                    _unloadedVfs[reader] = null;
                 }
                 catch (Exception e)
                 {

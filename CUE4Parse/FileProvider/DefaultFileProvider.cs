@@ -7,6 +7,7 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Ionic.Zip;
@@ -54,7 +55,7 @@ namespace CUE4Parse.FileProvider
             }
         }
 
-        private void RegisterFile(string file, Stream[] stream = null!)
+        private void RegisterFile(string file, Stream[] stream = null!, Func<string, FArchive>? openContainerStreamFunc = null)
         {
             var ext = file.SubstringAfterLast('.');
             if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
@@ -75,9 +76,11 @@ namespace CUE4Parse.FileProvider
             }
             else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
             {
+                openContainerStreamFunc ??= it => new FStreamArchive(it, stream[1], Versions);
+
                 try
                 {
-                    var reader = new IoStoreReader(file, stream[0], stream[1], EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) { IsConcurrent = true, CustomEncryption = CustomEncryption };
+                    var reader = new IoStoreReader(file, stream[0], openContainerStreamFunc, EIoStoreTocReadOptions.ReadDirectoryIndex, Versions) { IsConcurrent = true, CustomEncryption = CustomEncryption };
                     if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.Info.EncryptionKeyGuid))
                     {
                         _requiredKeys[reader.Info.EncryptionKeyGuid] = null;
@@ -96,11 +99,12 @@ namespace CUE4Parse.FileProvider
             var ext = file.FullName.SubstringAfterLast('.');
             if (ext.Equals("pak", StringComparison.OrdinalIgnoreCase))
             {
-                RegisterFile(file.FullName, new Stream[1] { file.OpenRead() });
+                RegisterFile(file.FullName, new Stream[] { file.OpenRead() });
             }
             else if (ext.Equals("utoc", StringComparison.OrdinalIgnoreCase))
             {
-                RegisterFile(file.FullName, new Stream[2] { file.OpenRead(), File.OpenRead(file.FullName.SubstringBeforeLast('.') + ".ucas") });
+                RegisterFile(file.FullName, new Stream[] { file.OpenRead() },
+                    it => new FStreamArchive(it, File.OpenRead(it), Versions));
             }
             else if (ext.Equals("apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -133,7 +137,7 @@ namespace CUE4Parse.FileProvider
                             }
                         }
                         else if (fileentry.FileName.EndsWith(".utoc"))
-                        {   
+                        {
                             try
                             {
                                 streams[0] = new MemoryStream();
