@@ -31,6 +31,7 @@ namespace CUE4Parse.UE4.IO
         public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
 
+
         public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FileInfo(tocPath), readOptions, versions) { }
         public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
@@ -39,6 +40,9 @@ namespace CUE4Parse.UE4.IO
         public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FStreamArchive(tocPath, tocStream, versions),
                 it => new FStreamArchive(it, casStream, versions), readOptions) { }
+        public IoStoreReader(string tocPath, Stream tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
+
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex)
             : base(tocStream.Name, tocStream.Versions)
         {
@@ -46,7 +50,7 @@ namespace CUE4Parse.UE4.IO
             TocResource = new FIoStoreTocResource(tocStream, readOptions);
 
             List<FArchive> containerStreams;
-            if (TocResource.Header.PartitionCount <= 0)
+            if (TocResource.Header.PartitionCount <= 1)
             {
                 containerStreams = new List<FArchive>(1);
                 try
