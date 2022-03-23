@@ -222,6 +222,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         {
                             var clothIndexMapping = Ar.ReadArray<long>();
                             Ar.Position += 2 * 4;
+                            if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
+                            {
+                                Ar.Position += 4 * clothIndexMapping.Length;
+                            }
                         }
 
                         var profileNames = Ar.ReadArray(Ar.ReadFName);

@@ -59,6 +59,57 @@ namespace CUE4Parse.UE4.Versions
             // Add support for different external actor packaging schemes
             AddLevelActorPackagingScheme,
 
+            // Add support for linking to the attached parent actor in WorldPartitionActorDesc
+		    WorldPartitionActorDescSerializeAttachParent,
+
+		    // Converted AActor GridPlacement to bIsSpatiallyLoaded flag
+		    ConvertedActorGridPlacementToSpatiallyLoadedFlag,
+
+		    // Fixup for bad default value for GridPlacement_DEPRECATED
+		    ActorGridPlacementDeprecateDefaultValueFixup,
+
+		    // PackedLevelActor started using FWorldPartitionActorDesc (not currently checked against but added as a security)
+		    PackedLevelActorUseWorldPartitionActorDesc,
+
+		    // Add support for actor folder objects
+		    AddLevelActorFolders,
+
+		    // Remove FSkeletalMeshLODModel bulk datas
+		    RemoveSkeletalMeshLODModelBulkDatas,
+
+		    // Exclude brightness from the EncodedHDRCubemap,
+		    ExcludeBrightnessFromEncodedHDRCubemap,
+
+		    // Unified volumetric cloud component quality sample count slider between main and reflection views for consistency
+		    VolumetricCloudSampleCountUnification,
+
+		    // Pose asset GUID generated from source AnimationSequence
+		    PoseAssetRawDataGUID,
+
+		    // Convolution bloom now take into account FPostProcessSettings::BloomIntensity for scatter dispersion.
+		    ConvolutionBloomIntensity,
+
+		    // Serialize FHLODSubActors instead of FGuids in WorldPartition HLODActorDesc
+		    WorldPartitionHLODActorDescSerializeHLODSubActors,
+
+		    // Large Worlds - serialize double types as doubles
+		    LargeWorldCoordinates,
+
+		    // Deserialize old BP float&double types as real numbers for pins
+		    BlueprintPinsUseRealNumbers,
+
+		    // Changed shadow defaults for directional light components, version needed to not affect old things
+		    UpdatedDirectionalLightShadowDefaults,
+
+		    // Refresh geometry collections that had not already generated convex bodies.
+		    GeometryCollectionConvexDefaults,
+
+		    // Add faster damping calculations to the cloth simulation and rename previous Damping parameter to LocalDamping.
+		    ChaosClothFasterDamping,
+
+		    // Serialize LandscapeActorGuid in FLandscapeActorDesc sub class.
+		    WorldPartitionLandscapeActorDescSerializeLandscapeActorGuid,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
