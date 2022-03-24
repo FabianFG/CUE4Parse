@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Pak
 
         public readonly FPakInfo Info;
 
-        public override int ReadOrder { get; }
+        public override int ReadOrder { get; } = 0;
         public override string MountPoint { get; protected set; }
         public sealed override long Length { get; set; }
 

@@ -20,7 +20,6 @@ namespace CUE4Parse.FileProvider
         
         public override bool IsEncrypted => false;
         public override CompressionMethod CompressionMethod => CompressionMethod.None;
-        public override int ReadOrder => -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] Read() => File.ReadAllBytes(ActualFile.FullName);

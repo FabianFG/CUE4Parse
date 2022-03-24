@@ -16,9 +16,9 @@ namespace CUE4Parse.UE4.Vfs
         public string Name { get; }
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
         public virtual int FileCount => Files.Count;
+        public virtual int ReadOrder { get; } = -1;
 
 
-        public abstract int ReadOrder { get; }
         public abstract bool HasDirectoryIndex { get; }
         public abstract string MountPoint { get; protected set; }
         public bool IsConcurrent { get; set; } = false;
