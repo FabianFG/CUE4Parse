@@ -23,6 +23,7 @@ namespace CUE4Parse.FileProvider
 
         public abstract bool IsEncrypted { get; }
         public abstract CompressionMethod CompressionMethod { get; }
+        public abstract int ReadOrder { get; }
         public string Path { get; protected internal set; }
         public long Size { get; protected set; }
 

@@ -18,6 +18,7 @@ namespace CUE4Parse.UE4.Vfs
         public virtual int FileCount => Files.Count;
 
 
+        public abstract int ReadOrder { get; }
         public abstract bool HasDirectoryIndex { get; }
         public abstract string MountPoint { get; protected set; }
         public bool IsConcurrent { get; set; } = false;

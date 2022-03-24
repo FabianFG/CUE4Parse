@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.Pak
 
         public readonly FPakInfo Info;
 
+        public override int ReadOrder { get; }
         public override string MountPoint { get; protected set; }
         public sealed override long Length { get; set; }
 
@@ -41,6 +42,20 @@ namespace CUE4Parse.UE4.Pak
             if (Info.Version > PakFile_Version_Latest)
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            }
+
+            if (Path.EndsWith("_P.pak"))
+            {
+                // Prioritize based on the chunk version number
+                // Default to version 1 for single patch system
+                var chunkVersionNumber = 1;
+                var versionString = Path.SubstringBeforeLast("_").SubstringAfterLast("_");
+                if (int.TryParse(versionString, out int chunkVersionSigned) && chunkVersionSigned >= 1)
+                {
+                    // Increment by one so that the first patch file still gets more priority than the base pak file
+                    chunkVersionNumber = chunkVersionSigned + 1;
+                }
+                ReadOrder += 100 * chunkVersionNumber;
             }
         }
 

@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.IO
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength>? TocImperfectHashMapFallback;
         public readonly FIoStoreTocHeader Info;
         public FIoContainerHeader? ContainerHeader { get; private set; }
+        public override int ReadOrder => -1;
         public override string MountPoint { get; protected set; }
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public sealed override long Length { get; set; }
