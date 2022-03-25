@@ -7,8 +7,6 @@ namespace CUE4Parse.UE4.Vfs
         public readonly IVfsReader Vfs;
 
         public long Offset { get; protected set; }
-
-        public override int ReadOrder => Vfs.ReadOrder;
         
         protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size)
         {

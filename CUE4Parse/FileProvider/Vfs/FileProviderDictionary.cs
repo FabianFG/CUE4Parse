@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Vfs
@@ -40,10 +41,15 @@ namespace CUE4Parse.FileProvider.Vfs
                 }
                 _byPath.AddOrUpdate(path, file, (_, existingFile) =>
                 {
-                    if (file.ReadOrder == -1 || file.ReadOrder > existingFile.ReadOrder)
-                        return file;
+                    if (file is FPakEntry entry && existingFile is FPakEntry existingEntry)
+                    {
+                        if (entry.PakFileReader.ReadOrder < existingEntry.PakFileReader.ReadOrder)
+                        {
+                            return existingFile;
+                        }
+                    }
 
-                    return existingFile;
+                    return file;
                 });
             }
             _indicesBag.Add(newFiles);
