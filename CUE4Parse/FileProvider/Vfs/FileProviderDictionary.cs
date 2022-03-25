@@ -35,22 +35,26 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             foreach (var (path, file) in newFiles)
             {
-                if (file is FIoStoreEntry {IsUE4Package: true} ioEntry)
+                if (file is FPakEntry pakEntry)
                 {
-                    _byId[ioEntry.ChunkId.AsPackageId()] = file;
-                }
-                _byPath.AddOrUpdate(path, file, (_, existingFile) =>
-                {
-                    if (file is FPakEntry entry && existingFile is FPakEntry existingEntry)
+                    _byPath.AddOrUpdate(path, file, (_, existingFile) =>
                     {
-                        if (entry.PakFileReader.ReadOrder < existingEntry.PakFileReader.ReadOrder)
+                        if (existingFile is FPakEntry existingPakEntry &&
+                            existingPakEntry.PakFileReader.ReadOrder > pakEntry.PakFileReader.ReadOrder)
                         {
                             return existingFile;
                         }
+                        return file;
+                    });
+                }
+                else
+                {
+                    _byPath[path] = file;
+                    if (file is FIoStoreEntry { IsUE4Package: true } ioEntry)
+                    {
+                        _byId[ioEntry.ChunkId.AsPackageId()] = file;
                     }
-
-                    return file;
-                });
+                }
             }
             _indicesBag.Add(newFiles);
         }
