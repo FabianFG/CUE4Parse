@@ -149,7 +149,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 writer.WriteValue(CompressedCurveByteStream);
             }*/
 
-            if (!EnsureCurveData())
+            if (EnsureCurveData())
             {
                 writer.WritePropertyName("CompressedCurveData");
                 serializer.Serialize(writer, CompressedCurveData);

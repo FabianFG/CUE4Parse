@@ -64,6 +64,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ReferencedTextures.Count > 0 ? ReferencedTextures[0] :
             null;
 
+        public UTexture? GetTextureAtIndex(int index) =>
+            UE5ReferencedTextures.Count >= index ? UE5ReferencedTextures[index] :
+            ReferencedTextures.Count >= index ? ReferencedTextures[index] :
+            null;
+
         private void ScanForTextures(FAssetArchive Ar)
         {
             // !! NOTE: this code will not work when textures are located in the same package - they don't present in import table
