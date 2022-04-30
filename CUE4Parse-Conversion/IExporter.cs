@@ -14,6 +14,24 @@ using CUE4Parse_Conversion.Textures;
 
 namespace CUE4Parse_Conversion
 {
+    public struct ExporterOptions
+    {
+        public ETextureFormat TextureFormat;
+        public ELodFormat LodFormat;
+        public EMeshFormat MeshFormat;
+        public ETexturePlatform Platform;
+        public bool ExportMorphTargets;
+
+        public ExporterOptions()
+        {
+            TextureFormat = ETextureFormat.Png;
+            LodFormat = ELodFormat.FirstLod;
+            MeshFormat = EMeshFormat.ActorX;
+            Platform = ETexturePlatform.DesktopMobile;
+            ExportMorphTargets = true;
+        }
+    }
+
     public interface IExporter
     {
         public bool TryWriteToDir(DirectoryInfo directoryInfo, out string savedFileName);
@@ -40,15 +58,15 @@ namespace CUE4Parse_Conversion
     {
         private readonly ExporterBase _exporterBase;
 
-        public Exporter(UObject export, ETextureFormat textureFormat = ETextureFormat.Png, ELodFormat lodFormat = ELodFormat.FirstLod, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        public Exporter(UObject export, ExporterOptions options)
         {
             _exporterBase = export switch
             {
                 UAnimSequence animSequence => new AnimExporter(animSequence),
-                UMaterialInterface material => new MaterialExporter(material, false, platform),
-                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, lodFormat, meshFormat: meshFormat, platform: platform),
+                UMaterialInterface material => new MaterialExporter(material, false, options.Platform),
+                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, options),
                 USkeleton skeleton => new MeshExporter(skeleton),
-                UStaticMesh staticMesh => new MeshExporter(staticMesh, lodFormat, meshFormat: meshFormat, platform: platform),
+                UStaticMesh staticMesh => new MeshExporter(staticMesh, options),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }

@@ -16,12 +16,14 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FStaticLODModel[]? LODModels { get; private set; }
         public bool bHasVertexColors { get; private set; }
         public byte NumVertexColorChannels { get; private set; }
+        public FPackageIndex[] MorphTargets { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
             NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
+            MorphTargets = GetOrDefault<FPackageIndex[]>(nameof(MorphTargets));
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = Ar.Read<FBoxSphereBounds>();

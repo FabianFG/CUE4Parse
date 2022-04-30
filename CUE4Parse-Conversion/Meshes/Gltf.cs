@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Materials;
@@ -38,13 +40,44 @@ namespace CUE4Parse_Conversion.Meshes
             Model = sceneBuilder.ToGltf2();
         }
 
-        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter>? materialExports)
+        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, int lodIndex = -1)
         {
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
 
             for (var i = 0; i < lod.Sections.Value.Length; i++)
             {
                 ExportSkelMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh);
+            }
+
+            if (morphTargets != null)
+            {
+                var targetNames = "{\"targetNames\": [";
+                for (var i = 0; i < morphTargets.Length; i++)
+                {
+                    var morphTarget = morphTargets[i].Load<UMorphTarget>();
+                    if (morphTarget == null || morphTarget.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1)
+                        continue;
+                    var morphBuilder = mesh.UseMorphTarget(i);
+                    var morphModel = morphTarget.MorphLODModels[lodIndex];
+
+                    targetNames += $"\"{morphTarget.Name}\"";
+                    targetNames += i != morphTargets.Length-1 ? "," : "";
+
+                    var verts = morphBuilder.Vertices.ToArray();
+                    for (int j = 0; j < morphModel.Vertices.Length; j++) // morphModel.NumBaseMeshVerts can be different from verts.Length
+                    {
+                        var delta = morphModel.Vertices[j];
+                        var vert = lod.Verts[delta.SourceIdx];
+                        var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position*0.01f),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
+                        var index = FindVert(srcVert, verts);
+                        if (index == -1)  continue;
+
+                        morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta*0.01f), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
+                    }
+                }
+
+                targetNames += "]}";
+                mesh.Extras = JsonContent.Parse(targetNames);
             }
 
             var sceneBuilder = new SceneBuilder();
@@ -54,6 +87,16 @@ namespace CUE4Parse_Conversion.Meshes
             sceneBuilder.AddSkinnedMesh(mesh, Matrix4x4.Identity, armature);
 
             Model = sceneBuilder.ToGltf2();
+        }
+
+        private static int FindVert(VertexPositionNormalTangent a, VertexPositionNormalTangent[] b)
+        {
+            for (int i = 0; i < b.Length; i++)
+            {
+                if (b[i].GetPosition() == a.GetPosition()) // not a good idea but i don't see any other way
+                    return i;
+            }
+            return -1;
         }
 
         public ArraySegment<byte> SaveAsWavefront()

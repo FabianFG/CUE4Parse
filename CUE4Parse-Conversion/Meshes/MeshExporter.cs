@@ -42,7 +42,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{MeshName}.psk", Ar.GetBuffer(), new List<MaterialExporter>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        public MeshExporter(UStaticMesh originalMesh,  ExporterOptions options, bool exportMaterials = true)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -65,7 +65,7 @@ namespace CUE4Parse_Conversion.Meshes
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
                 string ext;
-                switch (meshFormat)
+                switch (options.MeshFormat)
                 {
                     case EMeshFormat.ActorX:
                         ext = "pskx";
@@ -73,23 +73,23 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(meshFormat, Ar);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(options.MeshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(meshFormat, Ar);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, materialExports).Save(options.MeshFormat, Ar);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
+                        throw new ArgumentOutOfRangeException(nameof(options.MeshFormat), options.MeshFormat, null);
                 }
 
                 MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
-                if (lodFormat == ELodFormat.FirstLod) break;
+                if (options.LodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, ELodFormat lodFormat = ELodFormat.FirstLod, bool exportMaterials = true, EMeshFormat meshFormat = EMeshFormat.ActorX, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        public MeshExporter(USkeletalMesh originalMesh, ExporterOptions options, bool exportMaterials = true)
         {
             MeshLods = new List<Mesh>();
             MeshName = originalMesh.Owner?.Name ?? originalMesh.Name;
@@ -101,8 +101,9 @@ namespace CUE4Parse_Conversion.Meshes
             }
 
             var i = 0;
-            foreach (var lod in convertedMesh.LODs)
+            for (var lodIndex = 0; lodIndex < convertedMesh.LODs.Count; lodIndex++)
             {
+                var lod = convertedMesh.LODs[lodIndex];
                 if (lod.SkipLod)
                 {
                     Log.Logger.Warning($"LOD {i} in mesh '{MeshName}' should be skipped");
@@ -112,26 +113,27 @@ namespace CUE4Parse_Conversion.Meshes
                 using var Ar = new FArchiveWriter();
                 var materialExports = exportMaterials ? new List<MaterialExporter>() : null;
                 var ext = "";
-                switch (meshFormat)
+                switch (options.MeshFormat)
                 {
                     case EMeshFormat.ActorX:
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
-                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, platform);
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, options.Platform);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, materialExports).Save(meshFormat, Ar);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton,
+                            materialExports, options.ExportMorphTargets ? originalMesh.MorphTargets : null, lodIndex).Save(options.MeshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
-                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, materialExports).Save(meshFormat, Ar);
+                        new Gltf(MeshName.SubstringAfterLast("/"), lod, convertedMesh.RefSkeleton, materialExports, null).Save(options.MeshFormat, Ar);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
+                        throw new ArgumentOutOfRangeException(nameof(options.MeshFormat), options.MeshFormat, null);
                 }
 
                 MeshLods.Add(new Mesh($"{MeshName}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter>()));
-                if (lodFormat == ELodFormat.FirstLod) break;
+                if (options.LodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
         }
