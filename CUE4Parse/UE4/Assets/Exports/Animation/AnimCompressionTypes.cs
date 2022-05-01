@@ -125,10 +125,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 ((ICompressedAnimData) this).BaseSerializeCompressedData(Ar);
             }
 
-            CompressedByteStream = new byte[Ar.Read<int>()];
+            if (baseFirst)
+            {
+                CompressedByteStream = new byte[Ar.Read<int>()];
+            }
+
             CompressedTrackOffsets = new int[Ar.Read<int>()];
             CompressedScaleOffsets.OffsetData = new int[Ar.Read<int>()];
             CompressedScaleOffsets.StripSize = Ar.Read<int>();
+
+            if (!baseFirst)
+            {
+                CompressedByteStream = new byte[Ar.Read<int>()];
+            }
         }
 
         public void Bind(byte[] bulkData) => InitViewsFromBuffer(bulkData);
