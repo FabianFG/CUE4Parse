@@ -16,6 +16,7 @@ public class Constants
     public const int VJointPosPsk_SIZE = 4 * 4 + 3 * 4 + 4 + 3 * 4;
     public const int FNamedBoneBinary_SIZE = 64 + 3 * 4 + VJointPosPsk_SIZE;
     public const int VQuatAnimKey_SIZE = 3 * 4 + 4 * 4 + 4;
+    public const int VScaleAnimKey_SIZE = 3 * 4 + 4;
 
     public const int DXT_BITS_PER_PIXEL = 4;
 

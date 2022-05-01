@@ -130,7 +130,7 @@ namespace CUE4Parse_Conversion.Animations
                 framesCount += sequence.NumFrames;
             }
 
-            var requireConfig = false;
+            var requireConfig = false; // TODO
 
             int keysCount = framesCount * numBones;
             keyHdr.DataCount = keysCount;
@@ -174,9 +174,37 @@ namespace CUE4Parse_Conversion.Animations
             // importer will always read "SCALEKEYS" chunk.
             if (Constants.PSA_VERSION >= 20090127)
             {
-                scaleKeysHdr.DataCount = 0;
-                scaleKeysHdr.DataSize = 16; // sizeof(VScaleAnimKey) = FVector + float
+                keysCount = framesCount * numBones;
+                scaleKeysHdr.DataCount = keysCount;
+                scaleKeysHdr.DataSize = Constants.VScaleAnimKey_SIZE;
                 Ar.SerializeChunkHeader(scaleKeysHdr, "SCALEKEYS");
+                for (i = 0; i < numAnims; i++)
+                {
+                    var sequence = anim.Sequences[i];
+                    for (int frame = 0; frame < sequence.NumFrames; frame++)
+                    {
+                        for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
+                        {
+                            var boneScale = FVector.OneVector;
+
+                            if (frame < sequence.Tracks[boneIndex].KeyScale.Length)
+                                boneScale = sequence.Tracks[boneIndex].KeyScale[frame];
+
+                            var key = new VScaleAnimKey
+                            {
+                                ScaleVector = boneScale,
+                                Time = 1
+                            };
+                            key.Serialize(Ar);
+                            keysCount--;
+
+                            // check for user error
+                            if (sequence.Tracks[boneIndex].KeyScale.Length == 0)
+                                requireConfig = true;
+                        }
+                    }
+                }
+                Trace.Assert(keysCount == 0);
             }
 
             // psa file is done
