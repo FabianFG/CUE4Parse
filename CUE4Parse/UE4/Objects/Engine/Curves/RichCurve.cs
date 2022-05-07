@@ -557,7 +557,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             _keyData = (float*) (basePtr + keyTimeAdapter.KeyDataOffset);
         }
 
-        public int GetKeyDataHandle(int keyIndexToQuery) => keyIndexToQuery * 3;
+        public int GetKeyDataHandle(int keyIndexToQuery) => keyIndexToQuery * 5;
         public float GetKeyValue(int handle) => _keyData[handle];
         public float GetKeyArriveTangent(int handle) => _keyData[handle + 1];
         public float GetKeyLeaveTangent(int handle) => _keyData[handle + 2];

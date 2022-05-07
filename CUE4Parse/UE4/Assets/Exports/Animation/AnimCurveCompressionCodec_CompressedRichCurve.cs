@@ -207,6 +207,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             curve.Keys = new FRichCurveKey[numKeys];
             for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
             {
+                var handle = keyDataAdapter.GetKeyDataHandle(keyIndex);
                 var interpMode = keyDataAdapter.GetKeyInterpMode(keyIndex);
                 var key = new FRichCurveKey();
                 key.InterpMode = interpMode switch
@@ -219,11 +220,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 key.TangentMode = RCTM_Auto; // How to convert? interpMode == RCCF_Weighted && keyDataAdapter.GetKeyTangentWeightMode(keyIndex) != RCTWM_WeightedNone ? RCTM_User : RCTM_Auto;
                 key.TangentWeightMode = keyDataAdapter.GetKeyTangentWeightMode(keyIndex);
                 key.Time = keyTimeAdapter.GetTime(keyIndex);
-                key.Value = keyDataAdapter.GetKeyValue(keyIndex);
-                key.ArriveTangent = keyDataAdapter.GetKeyArriveTangent(keyIndex);
-                key.ArriveTangentWeight = keyDataAdapter.GetKeyArriveTangentWeight(keyIndex);
-                key.LeaveTangent = keyDataAdapter.GetKeyLeaveTangent(keyIndex);
-                key.LeaveTangentWeight = keyDataAdapter.GetKeyLeaveTangentWeight(keyIndex);
+                key.Value = keyDataAdapter.GetKeyValue(handle);
+                key.ArriveTangent = keyDataAdapter.GetKeyArriveTangent(handle);
+                key.ArriveTangentWeight = keyDataAdapter.GetKeyArriveTangentWeight(handle);
+                key.LeaveTangent = keyDataAdapter.GetKeyLeaveTangent(handle);
+                key.LeaveTangentWeight = keyDataAdapter.GetKeyLeaveTangentWeight(handle);
                 curve.Keys[keyIndex] = key;
             }
             return curve;

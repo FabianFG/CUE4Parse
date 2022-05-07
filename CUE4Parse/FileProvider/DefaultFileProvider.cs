@@ -174,6 +174,9 @@ namespace CUE4Parse.FileProvider
 
         private Dictionary<string, GameFile> IterateFiles(DirectoryInfo directory, SearchOption option)
         {
+            var osFiles = new Dictionary<string, GameFile>();
+            if (!directory.Exists) return osFiles;
+
             // Look for .uproject file to get the correct mount point
             var uproject = directory.GetFiles("*.uproject", SearchOption.TopDirectoryOnly).FirstOrDefault();
             string mountPoint;
@@ -186,8 +189,6 @@ namespace CUE4Parse.FileProvider
                 // Or use the directory name
                 mountPoint = directory.Name + '/';
             }
-
-            var osFiles = new Dictionary<string, GameFile>();
 
             // In .uproject mode, we must recursively look for files
             option = uproject != null ? SearchOption.AllDirectories : option;
