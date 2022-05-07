@@ -217,7 +217,10 @@ namespace CUE4Parse.UE4.Pak
                             else
                                 path = string.Concat(mountPoint, dir, name);
 
-                            var entry = new FPakEntry(this, path, ptr + directoryIndex.Read<int>());
+                            var offset = directoryIndex.Read<int>();
+                            if (offset == int.MinValue) continue;
+
+                            var entry = new FPakEntry(this, path, ptr + offset);
                             if (entry.IsEncrypted)
                                 EncryptedFileCount++;
                             if (caseInsensitive)
