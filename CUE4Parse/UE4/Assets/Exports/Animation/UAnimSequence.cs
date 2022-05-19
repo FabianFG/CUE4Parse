@@ -36,6 +36,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         #endregion
 
         public EAdditiveAnimationType AdditiveAnimType;
+        public EAdditiveBasePoseType RefPoseType;
+        public ResolvedObject? RefPoseSeq;
+        public int RefFrameIndex;
         public FName RetargetSource;
         public FTransform[]? RetargetSourceAssetReferencePose;
 
@@ -49,6 +52,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             BoneCompressionSettings = GetOrDefault<ResolvedObject>(nameof(BoneCompressionSettings));
             CurveCompressionSettings = GetOrDefault<ResolvedObject>(nameof(CurveCompressionSettings));
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
+            RefPoseType = GetOrDefault<EAdditiveBasePoseType>(nameof(RefPoseType));
+            RefPoseSeq = GetOrDefault<ResolvedObject>(nameof(RefPoseSeq));
+            RefFrameIndex = GetOrDefault(nameof(RefFrameIndex), -1);
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
 
@@ -322,6 +328,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 serializedByteStream = Ar.ReadBytes(numBytes);
             }
             return serializedByteStream;
+        }
+
+        public bool IsValidAdditive()
+        {
+            if (AdditiveAnimType == EAdditiveAnimationType.AAT_None) return false;
+            return RefPoseType switch
+            {
+                EAdditiveBasePoseType.ABPT_RefPose => true,
+                EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null,
+                EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefFrameIndex >= 0,
+                EAdditiveBasePoseType.ABPT_LocalAnimFrame => RefFrameIndex >= 0,
+                _ => false
+            };
         }
 
         // WARNING: the following functions uses some logic to use either CompressedTrackToSkeletonMapTable or TrackToSkeletonMapTable.
