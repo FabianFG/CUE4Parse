@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Writers;
+﻿using System;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.ActorX;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
@@ -27,7 +28,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 
         public void Serialize(FArchiveWriter Ar)
         {
-            Ar.Write(MaterialName, 64);
+            Ar.Write(MaterialName.Substring(0, Math.Min(MaterialName.Length, 64)), 64);
             Ar.Write(TextureIndex);
             Ar.Write(PolyFlags);
             Ar.Write(AuxMaterial);
