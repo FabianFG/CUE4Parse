@@ -41,6 +41,11 @@ namespace CUE4Parse.UE4.IO.Objects
             }
 
             ContainerId = Ar.Read<FIoContainerId>();
+            if (version < EIoContainerHeaderVersion.OptionalSegmentPackages)
+            {
+                var packageCount = Ar.Read<uint>();
+            }
+
             if (version == EIoContainerHeaderVersion.BeforeVersionWasAdded)
             {
                 var namesSize = Ar.Read<int>();
