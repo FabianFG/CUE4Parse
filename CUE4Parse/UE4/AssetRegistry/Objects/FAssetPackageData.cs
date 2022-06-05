@@ -30,6 +30,11 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             {
                 CookedHash = new FMD5Hash(Ar);
             }
+            if (version >= FAssetRegistryVersionType.AddedChunkHashes)
+            {
+                // TMap<FIoChunkId, FIoHash> ChunkHashes;
+                Ar.Position += Ar.Read<int>() * (12 + 20);
+            }
             if (version >= FAssetRegistryVersionType.WorkspaceDomain)
             {
                 if (version >= FAssetRegistryVersionType.PackageFileSummaryVersionChange)

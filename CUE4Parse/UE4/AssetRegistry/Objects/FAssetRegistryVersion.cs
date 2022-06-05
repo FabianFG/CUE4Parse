@@ -22,19 +22,21 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         									//		- [Numberless] export path
         									//		- Localized string
         									// * All value types are deduplicated
-        									// * All key-value maps are cooked into a single contiguous range 
+        									// * All key-value maps are cooked into a single contiguous range
         									// * Switched from FName table to seek-free and more optimized FName batch loading
         									// * Removed global tag storage, a tag map reference-counts one store per asset registry
-        									// * All configs can mix fixed and loose tag maps 
+        									// * All configs can mix fixed and loose tag maps
         WorkspaceDomain,					// Added Version information to AssetPackageData
         PackageImportedClasses,				// Added ImportedClasses to AssetPackageData
         PackageFileSummaryVersionChange,	// A new version number of UE5 was added to FPackageFileSummary
+        ObjectResourceOptionalVersionChange,// Change to linker export/import resource serialization
+        AddedChunkHashes,                   // Added FIoHash for each FIoChunkId in the package to the AssetPackageData.
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
     }
-    
+
     public static class FAssetRegistryVersion
     {
         private static readonly FGuid _GUID = new(0x717F9EE7, 0xE9B0493A, 0x88B39132, 0x1B388107);

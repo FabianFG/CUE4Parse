@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.IO.Objects
     /// Addressable chunk types.
     /// <br/><br/>
     /// The enumerators have explicitly defined values here to encourage backward/forward
-    /// compatible updates. 
+    /// compatible updates.
     /// <br/><br/>
     /// Also note that for certain discriminators, Zen Store will assume certain things
     /// about the structure of the chunk ID so changes must be made carefully.
@@ -44,7 +44,9 @@ namespace CUE4Parse.UE4.IO.Objects
         ExternalFile = 7,
         ShaderCodeLibrary = 8,
         ShaderCode = 9,
-        PackageStoreEntry = 10
+        PackageStoreEntry = 10,
+        DerivedData = 11,
+        EditorDerivedData = 12
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
