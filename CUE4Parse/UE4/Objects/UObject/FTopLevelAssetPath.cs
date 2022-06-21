@@ -32,7 +32,6 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public override void WriteJson(JsonWriter writer, FTopLevelAssetPath value, JsonSerializer serializer)
         {
-            writer.WritePropertyName("AssetClass");
             writer.WriteValue(value.ToString());
         }
 

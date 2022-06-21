@@ -61,13 +61,15 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
             writer.WritePropertyName("AssetName");
             serializer.Serialize(writer, value.AssetName);
-
+            
             if (value.AssetClass != default(FName))
             {
+                writer.WritePropertyName("AssetClass");
                 serializer.Serialize(writer, value.AssetClass);
             }
             else
             {
+                writer.WritePropertyName("AssetClassPath");
                 serializer.Serialize(writer, value.AssetClassPath);
             }
 
