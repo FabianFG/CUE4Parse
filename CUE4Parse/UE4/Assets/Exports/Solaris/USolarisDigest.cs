@@ -19,13 +19,5 @@ namespace CUE4Parse.UE4.Assets.Exports.Solaris
 
             ReadableCode = Encoding.UTF8.GetString(GetOrDefault<byte[]>("DigestCode"));
         }
-
-        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
-        {
-            base.WriteJson(writer, serializer);
-
-            writer.WritePropertyName("ReadableCode");
-            writer.WriteValue(ReadableCode);
-        }
     }
 }

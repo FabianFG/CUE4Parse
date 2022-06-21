@@ -110,6 +110,6 @@ Contributions are always welcome in order to maintain the project!
 ## Authors
 
 - [@Fabian](https://github.com/FabianFG)
-- [@Asval](https://github.com/iAmAsval)
+- [@Asval](https://github.com/4sval)
 - [@amr](https://github.com/Amrsatrio)
 - [@GMatrix](https://github.com/GMatrixGames)
