@@ -31,6 +31,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         PackageFileSummaryVersionChange,	// A new version number of UE5 was added to FPackageFileSummary
         ObjectResourceOptionalVersionChange,// Change to linker export/import resource serialization
         AddedChunkHashes,                   // Added FIoHash for each FIoChunkId in the package to the AssetPackageData.
+        ClassPaths,							// Classes are serialized as path names rather than short object names, e.g. /Script/Engine.StaticMesh
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

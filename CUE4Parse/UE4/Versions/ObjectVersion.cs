@@ -24,6 +24,13 @@ namespace CUE4Parse.UE4.Versions
         // Large world coordinates converts a number of core types to double components by default.
         LARGE_WORLD_COORDINATES,
 
+        // Remove package GUID from FObjectExport
+        REMOVE_OBJECT_EXPORT_PACKAGE_GUID,
+
+        // Add IsInherited to the FObjectExport entry
+        TRACK_OBJECT_EXPORT_IS_INHERITED,
+
+
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)
         AUTOMATIC_VERSION_PLUS_ONE,

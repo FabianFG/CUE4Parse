@@ -39,7 +39,7 @@ namespace CUE4Parse.UE4.AssetRegistry
 
         private void Load(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
         {
-            PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
+            PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar, version));
 
             if (version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
