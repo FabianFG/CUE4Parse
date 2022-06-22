@@ -47,6 +47,11 @@ namespace CUE4Parse.FN.Assets.Exports
         InitialUEFiveChange,
         AddedPersistenceRequired,
         AddedLevelInstance,
+        AddedInnerArchiverSerialization,
+        AddedHardReferenceTracking,
+        AddedDataHeaderSize,
+        AddedCrossReferenceSaving,
+        SpawningActorsWithConsistentName,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -359,8 +364,8 @@ namespace CUE4Parse.FN.Assets.Exports
             }
             else
             {
-                if (SaveVersion <= ELevelSaveRecordVersion.AddedLevelInstance)
-                    Ar.Position += 1; //var _ = Ar.ReadByte(); // 2 almost? every time
+                if (SaveVersion >= ELevelSaveRecordVersion.AddedLevelInstance)
+                    Ar.Position += 1; // var _ = Ar.ReadByte(); // 2 almost? every time
 
                 base.Deserialize(Ar, validPos);
             }
