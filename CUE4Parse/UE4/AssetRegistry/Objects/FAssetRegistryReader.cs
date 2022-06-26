@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         private const uint AssetRegistryNumberedNameBit = 0x80000000u; // int32 max
         public readonly FStore Tags;
 
-        public FAssetRegistryReader(FArchive Ar) : base(Ar)
+        public FAssetRegistryReader(FArchive Ar, FAssetRegistryVersionType version) : base(Ar, version)
         {
             NameMap = FNameEntrySerialized.LoadNameBatch(Ar);
             Tags = new FStore(this);
@@ -50,6 +50,6 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             assetData.TaggedAssetBundles = new FAssetBundleData(this);
         }
 
-        public override object Clone() => new FAssetRegistryReader((FArchive) baseArchive.Clone());
+        public override object Clone() => new FAssetRegistryReader((FArchive) baseArchive.Clone(), Version);
     }
 }

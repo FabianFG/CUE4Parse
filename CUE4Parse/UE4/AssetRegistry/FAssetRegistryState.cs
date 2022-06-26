@@ -24,34 +24,34 @@ namespace CUE4Parse.UE4.AssetRegistry
                     break;
                 case < FAssetRegistryVersionType.FixedTags:
                 {
-                    var nameTableReader = new FNameTableArchiveReader(Ar);
-                    Load(nameTableReader, version);
+                    var nameTableReader = new FNameTableArchiveReader(Ar, version);
+                    Load(nameTableReader);
                     break;
                 }
                 default:
                 {
-                    var reader = new FAssetRegistryReader(Ar);
-                    Load(reader, version);
+                    var reader = new FAssetRegistryReader(Ar, version);
+                    Load(reader);
                     break;
                 }
             }
         }
 
-        private void Load(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
+        private void Load(FAssetRegistryArchive Ar)
         {
-            PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar, version));
+            PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
 
-            if (version < FAssetRegistryVersionType.AddedDependencyFlags)
+            if (Ar.Version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
                 var localNumDependsNodes = Ar.Read<int>();
                 PreallocatedDependsNodeDataBuffers = new FDependsNode[localNumDependsNodes];
-                for (int i = 0; i < localNumDependsNodes; i++)
+                for (var i = 0; i < localNumDependsNodes; i++)
                 {
                     PreallocatedDependsNodeDataBuffers[i] = new FDependsNode(i);
                 }
                 if (localNumDependsNodes > 0)
                 {
-                    LoadDependencies_BeforeFlags(Ar, version);
+                    LoadDependencies_BeforeFlags(Ar);
                 }
             }
             else
@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.AssetRegistry
                 var dependencySectionEnd = Ar.Position + dependencySectionSize;
                 var localNumDependsNodes = Ar.Read<int>();
                 PreallocatedDependsNodeDataBuffers = new FDependsNode[localNumDependsNodes];
-                for (int i = 0; i < localNumDependsNodes; i++)
+                for (var i = 0; i < localNumDependsNodes; i++)
                 {
                     PreallocatedDependsNodeDataBuffers[i] = new FDependsNode(i);
                 }
@@ -71,14 +71,14 @@ namespace CUE4Parse.UE4.AssetRegistry
                 Ar.Position = dependencySectionEnd;
             }
 
-            PreallocatedPackageDataBuffers = Ar.ReadArray(() => new FAssetPackageData(Ar, version));
+            PreallocatedPackageDataBuffers = Ar.ReadArray(() => new FAssetPackageData(Ar));
         }
 
-        private void LoadDependencies_BeforeFlags(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
+        private void LoadDependencies_BeforeFlags(FAssetRegistryArchive Ar)
         {
             foreach (var dependsNode in PreallocatedDependsNodeDataBuffers)
             {
-                dependsNode.SerializeLoad_BeforeFlags(Ar, version, PreallocatedDependsNodeDataBuffers);
+                dependsNode.SerializeLoad_BeforeFlags(Ar, PreallocatedDependsNodeDataBuffers);
             }
         }
 

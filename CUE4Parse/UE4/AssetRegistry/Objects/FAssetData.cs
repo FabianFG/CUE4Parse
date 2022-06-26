@@ -14,26 +14,16 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly FName PackagePath;
         public readonly FName AssetName;
         public readonly FName AssetClass;
-        public readonly FTopLevelAssetPath AssetClassPath;
         public IDictionary<FName, string> TagsAndValues;
         public FAssetBundleData TaggedAssetBundles;
         public readonly int[] ChunkIDs;
         public readonly uint PackageFlags;
 
-        public FAssetData(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
+        public FAssetData(FAssetRegistryArchive Ar)
         {
             ObjectPath = Ar.ReadFName();
             PackagePath = Ar.ReadFName();
-            
-            if (version < FAssetRegistryVersionType.ClassPaths)
-            {
-                AssetClass = Ar.ReadFName();
-            }
-            else
-            {
-                AssetClassPath = new FTopLevelAssetPath(Ar);
-            }
-
+            AssetClass = Ar.Version >= FAssetRegistryVersionType.ClassPaths ? new FTopLevelAssetPath(Ar).AssetName : Ar.ReadFName();
             PackageName = Ar.ReadFName();
             AssetName = Ar.ReadFName();
 
@@ -62,16 +52,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             writer.WritePropertyName("AssetName");
             serializer.Serialize(writer, value.AssetName);
             
-            if (value.AssetClass != default(FName))
-            {
-                writer.WritePropertyName("AssetClass");
-                serializer.Serialize(writer, value.AssetClass);
-            }
-            else
-            {
-                writer.WritePropertyName("AssetClassPath");
-                serializer.Serialize(writer, value.AssetClassPath);
-            }
+            writer.WritePropertyName("AssetClass");
+            serializer.Serialize(writer, value.AssetClass);
 
             if (value.TagsAndValues.Count > 0)
             {

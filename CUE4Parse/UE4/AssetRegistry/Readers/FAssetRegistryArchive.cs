@@ -9,13 +9,15 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
     public abstract class FAssetRegistryArchive : FArchive
     {
         protected readonly FArchive baseArchive;
+        public FAssetRegistryVersionType Version;
         public FNameEntrySerialized[] NameMap;
 
         public abstract void SerializeTagsAndBundles(FAssetData assetData);
 
-        public FAssetRegistryArchive(FArchive Ar) : base(Ar.Versions)
+        public FAssetRegistryArchive(FArchive Ar, FAssetRegistryVersionType version) : base(Ar.Versions)
         {
             baseArchive = Ar;
+            Version = version;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

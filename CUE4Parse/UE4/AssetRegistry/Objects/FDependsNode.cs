@@ -111,7 +111,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             ReadDependenciesNoFlags(ref Referencers);
         }
 
-        public void SerializeLoad_BeforeFlags(FAssetRegistryArchive Ar, FAssetRegistryVersionType version, FDependsNode[] preallocatedDependsNodeDataBuffer)
+        public void SerializeLoad_BeforeFlags(FAssetRegistryArchive Ar, FDependsNode[] preallocatedDependsNodeDataBuffer)
         {
             Identifier = new FAssetIdentifier(Ar);
 
@@ -119,7 +119,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             var numSoft = Ar.Read<int>();
             var numName = Ar.Read<int>();
             var numSoftManage = Ar.Read<int>();
-            var numHardManage = version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
+            var numHardManage = Ar.Version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
             var numReferencers = Ar.Read<int>();
 
             PackageDependencies = new List<FDependsNode>(numHard + numSoft);

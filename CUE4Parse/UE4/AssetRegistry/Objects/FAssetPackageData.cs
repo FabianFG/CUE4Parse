@@ -21,23 +21,23 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly FCustomVersion[]? CustomVersions;
         public readonly uint Flags;
 
-        public FAssetPackageData(FAssetRegistryArchive Ar, FAssetRegistryVersionType version)
+        public FAssetPackageData(FAssetRegistryArchive Ar)
         {
             PackageName = Ar.ReadFName();
             DiskSize = Ar.Read<long>();
             PackageGuid = Ar.Read<FGuid>();
-            if (version >= FAssetRegistryVersionType.AddedCookedMD5Hash)
+            if (Ar.Version >= FAssetRegistryVersionType.AddedCookedMD5Hash)
             {
                 CookedHash = new FMD5Hash(Ar);
             }
-            if (version >= FAssetRegistryVersionType.AddedChunkHashes)
+            if (Ar.Version >= FAssetRegistryVersionType.AddedChunkHashes)
             {
                 // TMap<FIoChunkId, FIoHash> ChunkHashes;
                 Ar.Position += Ar.Read<int>() * (12 + 20);
             }
-            if (version >= FAssetRegistryVersionType.WorkspaceDomain)
+            if (Ar.Version >= FAssetRegistryVersionType.WorkspaceDomain)
             {
-                if (version >= FAssetRegistryVersionType.PackageFileSummaryVersionChange)
+                if (Ar.Version >= FAssetRegistryVersionType.PackageFileSummaryVersionChange)
                 {
                     FileVersionUE = Ar.Read<FPackageFileVersion>();
                 }
@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 Flags = Ar.Read<uint>();
                 CustomVersions = Ar.ReadArray<FCustomVersion>();
             }
-            if (version >= FAssetRegistryVersionType.PackageImportedClasses)
+            if (Ar.Version >= FAssetRegistryVersionType.PackageImportedClasses)
             {
                 ImportedClasses = Ar.ReadArray(Ar.ReadFName);
             }

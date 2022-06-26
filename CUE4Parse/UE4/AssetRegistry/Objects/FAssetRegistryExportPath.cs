@@ -1,27 +1,18 @@
 ﻿using System.Text;
+using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
     public class FAssetRegistryExportPath
     {
-        public readonly FTopLevelAssetPath ClassPath;
         public readonly FName Class;
         public readonly FName Object;
         public readonly FName Package;
 
-        public FAssetRegistryExportPath(FAssetRegistryReader Ar)
+        public FAssetRegistryExportPath(FAssetRegistryArchive Ar)
         {
-            if (Ar.Game < EGame.GAME_UE5_1)
-            {
-                Class = Ar.ReadFName();
-            }
-            else
-            {
-                ClassPath = new FTopLevelAssetPath(Ar);
-            }
-            
+            Class = Ar.Version >= FAssetRegistryVersionType.ClassPaths ? new FTopLevelAssetPath(Ar).AssetName : Ar.ReadFName();
             Object = Ar.ReadFName();
             Package = Ar.ReadFName();
         }
