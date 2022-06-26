@@ -16,10 +16,10 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             if (Ar.Version >= FAssetRegistryVersionType.ClassPaths)
             {
                 ClassPackage = Ar.Read<uint>();
+                ClassObject = Ar.Read<uint>();
             }
             else
             {
-                ClassPackage = Ar.Read<uint>();
                 ClassObject = Ar.Read<uint>();
             }
 
