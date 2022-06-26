@@ -248,6 +248,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool NotForClient;
         public bool NotForServer;
         public FGuid PackageGuid;
+        public bool IsInheritedInstance;
         public uint PackageFlags;
         public bool NotAlwaysLoadedForEditorGame;
         public bool IsAsset;
@@ -289,9 +290,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             ForcedExport = Ar.ReadBoolean();
             NotForClient = Ar.ReadBoolean();
             NotForServer = Ar.ReadBoolean();
-            PackageGuid = Ar.Read<FGuid>();
+            PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
+            IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
             PackageFlags = Ar.Read<uint>();
-            NotAlwaysLoadedForEditorGame = Ar.Ver < EUnrealEngineObjectUE4Version.LOAD_FOR_EDITOR_GAME || Ar.ReadBoolean();
+            NotAlwaysLoadedForEditorGame = Ar.Ver >= EUnrealEngineObjectUE4Version.LOAD_FOR_EDITOR_GAME && Ar.ReadBoolean();
             IsAsset = Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT && Ar.ReadBoolean();
             GeneratePublicHash = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
 
