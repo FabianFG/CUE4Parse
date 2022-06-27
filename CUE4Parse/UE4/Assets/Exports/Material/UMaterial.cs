@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -15,12 +15,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool TwoSided;
         public bool bDisableDepthTest;
         public bool bIsMasked;
-        public FStructFallback? CachedExpressionData;
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
         public List<UTexture> UE5ReferencedTextures = new();
-
         private List<IObject> _displayedReferencedTextures = new();
         private bool _shouldDisplay;
 
@@ -247,8 +245,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-            if (!_shouldDisplay) return;
 
+            if (!_shouldDisplay) return;
             writer.WritePropertyName("ReferencedTextures");
             serializer.Serialize(writer, _displayedReferencedTextures);
         }

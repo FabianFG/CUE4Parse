@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
@@ -18,6 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
         public UTexture? MobileMaskTexture;
         public List<FMaterialResource> LoadedMaterialResources = new();
+        public FStructFallback? CachedExpressionData;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -30,6 +33,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
             MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
             MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
+
+            var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
+
+            if (bSavedCachedExpressionData)
+            {
+                CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
