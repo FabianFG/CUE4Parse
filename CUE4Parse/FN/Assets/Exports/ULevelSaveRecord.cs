@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -18,6 +17,41 @@ using Serilog;
 
 namespace CUE4Parse.FN.Assets.Exports
 {
+    public abstract class FActorDataType
+    {
+        public string Name;
+        [JsonIgnore]
+        public abstract object? GenericValue { get; }
+    }
+
+    [JsonConverter(typeof(FActorDataTypeConverter))]
+    public abstract class FActorDataType<T> : FActorDataType
+    {
+        public T Value;
+        public override object? GenericValue => Value;
+    }
+
+    public class FActorDataTypeConverter : JsonConverter<FActorDataType>
+    {
+        public override void WriteJson(JsonWriter writer, FActorDataType value, JsonSerializer serializer)
+        {
+            writer.WritePropertyName(value.Name);
+            serializer.Serialize(writer, value.GenericValue);
+        }
+
+        public override FActorDataType ReadJson(JsonReader reader, Type objectType, FActorDataType existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FActorObjectProperty : FActorDataType<(int index, string value)> { }
+    public class FActorBoolProperty : FActorDataType<bool> { }
+    public class FActorByteProperty : FActorDataType<string> { }
+    public class FActorIntProperty : FActorDataType<int> { }
+
+
     // GUID: new(0xA76CBC6B, 0x51634CEE, 0x887E17DE, 0x463D4395)
     public enum ELevelSaveRecordVersion : short
     {
@@ -120,6 +154,8 @@ namespace CUE4Parse.FN.Assets.Exports
         public FActorComponentRecord[] ActorComponents;
         public byte[]? ActorData;
         public uint DataHash;
+        public short LevelRecordSaveVersion;
+        public bool bUsingRecordDataReferenceTable;
 
         public FActorTemplateRecord(FLevelSaveRecordArchive Ar)
         {
@@ -180,6 +216,60 @@ namespace CUE4Parse.FN.Assets.Exports
             ActorComponents = fallback.GetOrDefault<FActorComponentRecord[]>(nameof(ActorComponents));
             ActorData = fallback.GetOrDefault<byte[]>(nameof(ActorData));
             DataHash = fallback.GetOrDefault<uint>(nameof(DataHash));
+            LevelRecordSaveVersion = fallback.GetOrDefault<short>(nameof(LevelRecordSaveVersion));
+            bUsingRecordDataReferenceTable = fallback.GetOrDefault<bool>(nameof(bUsingRecordDataReferenceTable));
+        }
+
+        public List<FActorDataType> ReadActorData()
+        {
+            var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), null);
+            var props = new List<FActorDataType>();
+            while (true)
+            {
+                if (bUsingRecordDataReferenceTable)
+                    break; // something else
+                var key = Ar.ReadFString();
+                if (key == "None") break;
+                var propertyType = Ar.ReadFString();
+                if (propertyType == "ObjectProperty")
+                {
+                    // var dataSize = Ar.Read<int>(); ?
+                    Ar.Position += 4; // don't know what this is
+                    var matIndex = Ar.ReadByte();
+                    Ar.Position += 4; // don't know what this is
+                    var value = Ar.ReadFString();
+                    props.Add(new FActorObjectProperty(){ Value= (matIndex, value) , Name = key});
+                }
+                else if (propertyType == "BoolProperty")
+                {
+                    Ar.Position += 8;
+                    var value = Ar.ReadFlag();
+                    Ar.Position += 1;
+                    props.Add(new FActorBoolProperty() { Value = value, Name = key });
+                }
+                else if (propertyType == "ByteProperty")
+                {
+                    Ar.Position += 8;
+                    var enumName = Ar.ReadFString();
+                    Ar.Position += 1;
+                    var enumVal = Ar.ReadFString();
+                    props.Add(new FActorByteProperty() { Value = enumVal, Name = key });
+                }
+                else if (propertyType == "IntProperty")
+                {   // TODO
+                    // Ar.Position += 4 + 4;
+                    // var value = Ar.Read<int>(); // probably wrong
+                    // props.Add(new FActorIntProperty() { Value = value, Name = key });
+                    Ar.Position += 21+4+4;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            // leave the rest
+            Ar.Dispose();
+            return props;
         }
     }
 
@@ -373,6 +463,23 @@ namespace CUE4Parse.FN.Assets.Exports
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
+            // writer.WritePropertyName("ActorData");
+            // foreach (var kv in GetOrDefault<UScriptMap>("TemplateRecords").Properties) {
+            //     var val = kv.Value.GetValue(typeof(FActorTemplateRecord));
+            //     var templeteRecords = val is FActorTemplateRecord rec ? rec : null;
+            //     if (templeteRecords is null) continue;
+
+            //     var data = templeteRecords.ReadActorData();
+
+            //     writer.WriteStartObject();
+            //     foreach (var ad in data)
+            //     {
+            //         serializer.Serialize(writer, ad);
+            //     }
+            //     writer.WriteEndObject();
+            //     //serializer.Serialize(writer, templeteRecords.ReadActorData());
+            // }
+
             if (!PackageName.IsNone)
             {
                 writer.WritePropertyName("PackageName");
