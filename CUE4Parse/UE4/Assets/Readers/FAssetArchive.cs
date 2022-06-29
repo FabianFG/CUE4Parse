@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         }
 
         // TODO not really optimal, there should be TryReadObject functions etc
-        public Lazy<T?> ReadObject<T>() where T : UObject
+        public virtual Lazy<T?> ReadObject<T>() where T : UObject
         {
             var index = new FPackageIndex(this);
             var resolved = index.ResolvedObject;
@@ -171,7 +171,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             => _baseArchive.ReadArray(array);
 
         // For performance reasons we carry over the payloads dict to the cloned instance
-        // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization 
+        // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization
         public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads);
     }
 }

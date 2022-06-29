@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using CUE4Parse.FN.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -122,7 +123,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "MulticastInlineDelegateProperty" => new MulticastInlineDelegateProperty(Ar, type),
                 "MulticastSparseDelegateProperty" => new MulticastSparseDelegateProperty(Ar, type),
                 "NameProperty" => new NameProperty(Ar, type),
-                "ObjectProperty" => new ObjectProperty(Ar, type),
+                "ObjectProperty" => Ar is FLevelSaveRecordArchive ? new AssetObjectProperty(Ar, type) : new ObjectProperty(Ar, type), // ObjectProperty but serialized as string
                 "SetProperty" => new SetProperty(Ar, tagData, type),
                 "SoftClassProperty" => new SoftObjectProperty(Ar, type),
                 "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
@@ -144,7 +145,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             return tagType;
         }
     }
-    
+
     public class FPropertyTagTypeConverter : JsonConverter<FPropertyTagType>
     {
         public override void WriteJson(JsonWriter writer, FPropertyTagType value, JsonSerializer serializer)

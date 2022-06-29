@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             };
         }
     }
-    
+
     public class ObjectPropertyConverter : JsonConverter<ObjectProperty>
     {
         public override void WriteJson(JsonWriter writer, ObjectProperty value, JsonSerializer serializer)

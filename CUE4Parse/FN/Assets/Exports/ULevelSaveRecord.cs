@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -17,41 +19,6 @@ using Serilog;
 
 namespace CUE4Parse.FN.Assets.Exports
 {
-    public abstract class FActorDataType
-    {
-        public string Name;
-        [JsonIgnore]
-        public abstract object? GenericValue { get; }
-    }
-
-    [JsonConverter(typeof(FActorDataTypeConverter))]
-    public abstract class FActorDataType<T> : FActorDataType
-    {
-        public T Value;
-        public override object? GenericValue => Value;
-    }
-
-    public class FActorDataTypeConverter : JsonConverter<FActorDataType>
-    {
-        public override void WriteJson(JsonWriter writer, FActorDataType value, JsonSerializer serializer)
-        {
-            writer.WritePropertyName(value.Name);
-            serializer.Serialize(writer, value.GenericValue);
-        }
-
-        public override FActorDataType ReadJson(JsonReader reader, Type objectType, FActorDataType existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class FActorObjectProperty : FActorDataType<(int index, string value)> { }
-    public class FActorBoolProperty : FActorDataType<bool> { }
-    public class FActorByteProperty : FActorDataType<string> { }
-    public class FActorIntProperty : FActorDataType<int> { }
-
-
     // GUID: new(0xA76CBC6B, 0x51634CEE, 0x887E17DE, 0x463D4395)
     public enum ELevelSaveRecordVersion : short
     {
@@ -91,7 +58,7 @@ namespace CUE4Parse.FN.Assets.Exports
         LatestVersion = VersionPlusOne - 1
     }
 
-    public class FLevelSaveRecordArchive : FAssetArchive
+    public class FLevelSaveRecordArchive : FAssetArchive // FObjectAndNameAsStringProxyArchive?
     {
         protected readonly FArchive InnerArchive;
         public readonly ELevelSaveRecordVersion Version;
@@ -144,6 +111,18 @@ namespace CUE4Parse.FN.Assets.Exports
         public override object Clone() => new FLevelSaveRecordArchive((FArchive) InnerArchive.Clone(), Version);
 
         public override FName ReadFName() => ReadFString();
+
+        public override Lazy<T?> ReadObject<T>() where T : class
+        {
+            var path = ReadFString();
+            return new Lazy<T?>(() =>
+            {
+                Debug.Assert(Owner.Provider != null, "Owner.Provider != null");
+                if (Owner.Provider.TryLoadObject<T>(path, out var obj))
+                    return obj;
+                return null;
+            });
+        }
     }
 
     [StructFallback]
@@ -220,56 +199,17 @@ namespace CUE4Parse.FN.Assets.Exports
             bUsingRecordDataReferenceTable = fallback.GetOrDefault<bool>(nameof(bUsingRecordDataReferenceTable));
         }
 
-        public List<FActorDataType> ReadActorData()
+        public FStructFallback ReadActorData(IPackage owner, ELevelSaveRecordVersion SaveVersion)
         {
-            var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), null);
-            var props = new List<FActorDataType>();
-            while (true)
+            if (ActorData != null)
             {
-                if (bUsingRecordDataReferenceTable)
-                    break; // something else
-                var key = Ar.ReadFString();
-                if (key == "None") break;
-                var propertyType = Ar.ReadFString();
-                if (propertyType == "ObjectProperty")
-                {
-                    // var dataSize = Ar.Read<int>(); ?
-                    Ar.Position += 4; // don't know what this is
-                    var matIndex = Ar.ReadByte();
-                    Ar.Position += 4; // don't know what this is
-                    var value = Ar.ReadFString();
-                    props.Add(new FActorObjectProperty(){ Value= (matIndex, value) , Name = key});
-                }
-                else if (propertyType == "BoolProperty")
-                {
-                    Ar.Position += 8;
-                    var value = Ar.ReadFlag();
-                    Ar.Position += 1;
-                    props.Add(new FActorBoolProperty() { Value = value, Name = key });
-                }
-                else if (propertyType == "ByteProperty")
-                {
-                    Ar.Position += 8;
-                    var enumName = Ar.ReadFString();
-                    Ar.Position += 1;
-                    var enumVal = Ar.ReadFString();
-                    props.Add(new FActorByteProperty() { Value = enumVal, Name = key });
-                }
-                else if (propertyType == "IntProperty")
-                {   // TODO
-                    // Ar.Position += 4 + 4;
-                    // var value = Ar.Read<int>(); // probably wrong
-                    // props.Add(new FActorIntProperty() { Value = value, Name = key });
-                    Ar.Position += 21+4+4;
-                }
-                else
-                {
-                    break;
-                }
+                var Ar = new FLevelSaveRecordArchive(new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner), SaveVersion);
+                var flags = owner.Summary.PackageFlags; owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
+                var props = new FStructFallback(Ar);
+                owner.Summary.PackageFlags = flags; // restore flags
+                return props;
             }
-            // leave the rest
-            Ar.Dispose();
-            return props;
+            return new FStructFallback();
         }
     }
 
@@ -442,6 +382,7 @@ namespace CUE4Parse.FN.Assets.Exports
         public string IslandTemplateId; // UnknownData03[0x48]
         public byte NavmeshRequired; // TODO Find out its enum values
         public bool bRequiresGridPlacement;
+        public List<FStructFallback> ActorData;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -458,28 +399,20 @@ namespace CUE4Parse.FN.Assets.Exports
                     Ar.Position += 1; // var _ = Ar.ReadByte(); // 2 almost? every time
 
                 base.Deserialize(Ar, validPos);
+
+                ActorData = new List<FStructFallback>();
+                foreach (var kv in GetOrDefault<UScriptMap>("TemplateRecords").Properties)
+                {
+                    var val = kv.Value.GetValue(typeof(FActorTemplateRecord));
+                    var templeteRecords = val is FActorTemplateRecord rec ? rec : null;
+                    if (templeteRecords is null) continue;
+                    ActorData.Add( templeteRecords.ReadActorData(Owner, SaveVersion));
+                }
             }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            // writer.WritePropertyName("ActorData");
-            // foreach (var kv in GetOrDefault<UScriptMap>("TemplateRecords").Properties) {
-            //     var val = kv.Value.GetValue(typeof(FActorTemplateRecord));
-            //     var templeteRecords = val is FActorTemplateRecord rec ? rec : null;
-            //     if (templeteRecords is null) continue;
-
-            //     var data = templeteRecords.ReadActorData();
-
-            //     writer.WriteStartObject();
-            //     foreach (var ad in data)
-            //     {
-            //         serializer.Serialize(writer, ad);
-            //     }
-            //     writer.WriteEndObject();
-            //     //serializer.Serialize(writer, templeteRecords.ReadActorData());
-            // }
-
             if (!PackageName.IsNone)
             {
                 writer.WritePropertyName("PackageName");
@@ -534,6 +467,12 @@ namespace CUE4Parse.FN.Assets.Exports
             {
                 writer.WritePropertyName("TemplateRecords");
                 serializer.Serialize(writer, TemplateRecords);
+            }
+
+            if (ActorData is { Count: > 0 })
+            {
+                writer.WritePropertyName("ActorData");
+                serializer.Serialize(writer, ActorData);
             }
 
             if (ActorInstanceRecords is { Count: > 0 })
