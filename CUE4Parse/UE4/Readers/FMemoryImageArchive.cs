@@ -58,10 +58,10 @@ namespace CUE4Parse.UE4.Readers
 
         private const int bIsFrozenMask = 1 << bIsFrozenShift;
         private const int OffsetMask = unchecked((1 << OffsetBits) - 1) << OffsetShift;
-        
+
         private int _offsetFromThis;
         public int TypeIndex;
-        
+
         public bool IsFrozen
         {
             get => (_offsetFromThis & bIsFrozenMask) != 0;
@@ -302,7 +302,7 @@ namespace CUE4Parse.UE4.Readers
             Position = continuePos;
             return new BitArray(data) { Length = numBits };
         }
-        
+
         public override FName ReadFName()
         {
             Position += 4 + 4 + 4;
@@ -310,7 +310,7 @@ namespace CUE4Parse.UE4.Readers
             {
                 return name;
             }
-            throw new ParserException(this, string.Format("FName at position {0} not found", Position));
+            return default;
         }
     }
 }
