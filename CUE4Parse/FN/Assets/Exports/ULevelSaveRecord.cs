@@ -201,7 +201,7 @@ namespace CUE4Parse.FN.Assets.Exports
 
         public FStructFallback ReadActorData(IPackage owner, ELevelSaveRecordVersion SaveVersion)
         {
-            if (ActorData != null)
+            if (ActorData != null && !bUsingRecordDataReferenceTable)
             {
                 var Ar = new FLevelSaveRecordArchive(new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner), SaveVersion);
                 var flags = owner.Summary.PackageFlags; owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
