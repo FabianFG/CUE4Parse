@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             var numElementsToRemove = Ar.Read<int>();
             for (var i = 0; i < numElementsToRemove; i++)
             {
-                FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData, ReadType.ARRAY);
+                FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
             }
 
             var num = Ar.Read<int>();
