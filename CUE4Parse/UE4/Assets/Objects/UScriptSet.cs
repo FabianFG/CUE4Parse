@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             Properties = new List<FPropertyTagType>(num);
             for (var i = 0; i < num; i++)
             {
-                var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData, ReadType.ARRAY);
+                var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
                 if (property != null)
                     Properties.Add(property);
                 else
