@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -428,18 +429,22 @@ namespace CUE4Parse_Conversion.Meshes
 
                 var morphModel = morphTarget.MorphLODModels[lodIndex];
                 var morphVertCount = 0;
+                var localMorphDeltas = new List<VMorphData>();
                 for (var j = 0; j < morphModel.Vertices.Length; j++)
                 {
                     var delta = morphModel.Vertices[j];
                     var vertex = lod.Verts[delta.SourceIdx];
 
-                    var index = FindVertex(vertex.Position, lod.Verts);
+                    var index = FindVertex(vertex.Position, share.Points);
                     if (index == -1) continue;
+                    if (localMorphDeltas.Any(x => x.PointIdx == index)) continue;
                     
                     var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
-                    morphDeltas.Add(morphData);
+                    localMorphDeltas.Add(morphData);
                     morphVertCount++;
                 }
+
+                morphDeltas.AddRange(localMorphDeltas);
 
                 var morphInfo = new VMorphInfo(morphTarget.Name, morphVertCount);
                 morphInfo.Serialize(Ar);
@@ -447,18 +452,17 @@ namespace CUE4Parse_Conversion.Meshes
             
             var morphDataHdr = new VChunkHeader { DataCount = morphDeltas.Count, DataSize = Constants.VMorphData_SIZE };
             Ar.SerializeChunkHeader(morphDataHdr, "MRPHDATA");
-
             foreach (var delta in morphDeltas)
             {
                 delta.Serialize(Ar);
             }
         }
 
-        private int FindVertex(FVector a, CSkelMeshVertex[] vertices)
+        private int FindVertex(FVector a, IReadOnlyList<FVector> vertices)
         {
-            for (var i = 0; i < vertices.Length; i++)
+            for (var i = 0; i < vertices.Count; i++)
             {
-                if (vertices[i].Position == a)
+                if (vertices[i].Equals(a))
                     return i;
             }
 
