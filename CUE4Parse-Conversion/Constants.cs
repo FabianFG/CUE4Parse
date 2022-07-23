@@ -5,7 +5,7 @@ public class Constants
     public const int MAX_MESHBONES = 1024 * 3;
     public const int NUM_INFLUENCES_UE4 = 4;
 
-    public const int PSK_VERSION = 20210917;
+    public const int PSK_VERSION = 20220723;
     public const int PSA_VERSION = 20100422;
 
     public const int MAX_MESH_UV_SETS = 8;
@@ -17,6 +17,7 @@ public class Constants
     public const int FNamedBoneBinary_SIZE = 64 + 3 * 4 + VJointPosPsk_SIZE;
     public const int VQuatAnimKey_SIZE = 3 * 4 + 4 * 4 + 4;
     public const int VScaleAnimKey_SIZE = 3 * 4 + 4;
+    public const int VMorphData_SIZE = 3 * 4 + 3 * 4 + 4; 
 
     public const int DXT_BITS_PER_PIXEL = 4;
 

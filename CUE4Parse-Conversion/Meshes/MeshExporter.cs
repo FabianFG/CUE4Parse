@@ -13,6 +13,7 @@ using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes
@@ -117,7 +118,7 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     case EMeshFormat.ActorX:
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
-                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, options.Platform);
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, options.ExportMorphTargets ? originalMesh.MorphTargets : null, lodIndex, options.Platform);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -164,7 +165,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, int lodIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             var share = new CVertexShare();
             var infHdr = new VChunkHeader();
@@ -215,6 +216,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             ExportVertexColors(Ar, lod.VertexColors, lod.NumVerts);
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
+            ExportMorphTargets(Ar, lod, share, morphTargets, lodIndex);
         }
 
         private void ExportCommonMeshData(FArchiveWriter Ar, CMeshSection[] sections, CMeshVertex[] verts,
@@ -408,6 +410,59 @@ namespace CUE4Parse_Conversion.Meshes
                     extraUV[i - 1][j].Serialize(Ar);
                 }
             }
+        }
+
+        public void ExportMorphTargets(FArchiveWriter Ar, CSkelMeshLod lod, CVertexShare share, FPackageIndex[]? morphTargets, int lodIndex)
+        {
+            if (morphTargets == null) return;
+            
+            var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
+            Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
+
+            var morphDeltas = new List<VMorphData>();
+            for (var i = 0; i < morphTargets.Length; i++)
+            {
+                var morphTarget = morphTargets[i].Load<UMorphTarget>();
+                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex)
+                    continue;
+
+                var morphModel = morphTarget.MorphLODModels[lodIndex];
+                var morphVertCount = 0;
+                for (var j = 0; j < morphModel.Vertices.Length; j++)
+                {
+                    var delta = morphModel.Vertices[j];
+                    var vertex = lod.Verts[delta.SourceIdx];
+
+                    var index = FindVertex(vertex.Position, lod.Verts);
+                    if (index == -1) continue;
+                    
+                    var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
+                    morphDeltas.Add(morphData);
+                    morphVertCount++;
+                }
+
+                var morphInfo = new VMorphInfo(morphTarget.Name, morphVertCount);
+                morphInfo.Serialize(Ar);
+            }
+            
+            var morphDataHdr = new VChunkHeader { DataCount = morphDeltas.Count, DataSize = Constants.VMorphData_SIZE };
+            Ar.SerializeChunkHeader(morphDataHdr, "MRPHDATA");
+
+            foreach (var delta in morphDeltas)
+            {
+                delta.Serialize(Ar);
+            }
+        }
+
+        private int FindVertex(FVector a, CSkelMeshVertex[] vertices)
+        {
+            for (var i = 0; i < vertices.Length; i++)
+            {
+                if (vertices[i].Position == a)
+                    return i;
+            }
+
+            return -1;
         }
 
         /// <param name="baseDirectory"></param>
