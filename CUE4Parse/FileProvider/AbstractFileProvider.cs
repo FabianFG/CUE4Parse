@@ -183,6 +183,20 @@ namespace CUE4Parse.FileProvider
                     ELanguage.TraditionalChinese => "zh-Hant-TW",
                     _ => "en"
                 },
+                "multiversus" => language switch
+                {
+                    ELanguage.English => "en",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.SpanishLatin => "es-419",
+                    ELanguage.Polish => "pl",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Chinese => "zh-Hans",
+                    _ => "en"
+                },
                 _ => "en"
             };
         }
