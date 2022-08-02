@@ -30,12 +30,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FMatrix() {}
 
-        public FMatrix(FMatrix M)
+        public FMatrix(FMatrix m)
         {
-            M00 = M.M00; M01 = M.M01; M02 = M.M02; M03 = M.M03;
-            M10 = M.M10; M11 = M.M11; M12 = M.M12; M13 = M.M13;
-            M20 = M.M20; M21 = M.M21; M22 = M.M22; M23 = M.M23;
-            M30 = M.M30; M31 = M.M31; M32 = M.M32; M33 = M.M33;
+            M00 = m.M00; M01 = m.M01; M02 = m.M02; M03 = m.M03;
+            M10 = m.M10; M11 = m.M11; M12 = m.M12; M13 = m.M13;
+            M20 = m.M20; M21 = m.M21; M22 = m.M22; M23 = m.M23;
+            M30 = m.M30; M31 = m.M31; M32 = m.M32; M33 = m.M33;
         }
 
         public FMatrix(
@@ -326,51 +326,51 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             var squareSum1 = M10*M10 + M11*M11 + M12*M12;
             var squareSum2 = M20*M20 + M21*M21 + M22*M22;
 
-            FVector Scale3D = new();
+            FVector scale3D = new();
 
             if (squareSum0 > tolerance)
             {
-                float Scale0 = MathF.Sqrt(squareSum0);
-                Scale3D.X = Scale0;
-                float InvScale0 = 1.0f / Scale0;
-                M00 *= InvScale0;
-                M01 *= InvScale0;
-                M02 *= InvScale0;
+                float scale0 = MathF.Sqrt(squareSum0);
+                scale3D.X = scale0;
+                float invScale0 = 1.0f / scale0;
+                M00 *= invScale0;
+                M01 *= invScale0;
+                M02 *= invScale0;
             }
             else
             {
-                Scale3D.X = 0.0f;
+                scale3D.X = 0.0f;
             }
 
             if (squareSum1 > tolerance)
             {
-                float Scale1 = MathF.Sqrt(squareSum1);
-                Scale3D.Y = Scale1;
-                float InvScale1 = 1.0f / Scale1;
-                M10 *= InvScale1;
-                M11 *= InvScale1;
-                M12 *= InvScale1;
+                float scale1 = MathF.Sqrt(squareSum1);
+                scale3D.Y = scale1;
+                float invScale1 = 1.0f / scale1;
+                M10 *= invScale1;
+                M11 *= invScale1;
+                M12 *= invScale1;
             }
             else
             {
-                Scale3D.Y = 0.0f;
+                scale3D.Y = 0.0f;
             }
 
             if (squareSum2 > tolerance)
             {
-                float Scale2 = MathF.Sqrt(squareSum2);
-                Scale3D.Z = Scale2;
-                float InvScale2 = 1.0f / Scale2;
-                M20 *= InvScale2;
-                M21 *= InvScale2;
-                M22 *= InvScale2;
+                float scale2 = MathF.Sqrt(squareSum2);
+                scale3D.Z = scale2;
+                float invScale2 = 1.0f / scale2;
+                M20 *= invScale2;
+                M21 *= invScale2;
+                M22 *= invScale2;
             }
             else
             {
-                Scale3D.Z = 0.0f;
+                scale3D.Z = 0.0f;
             }
 
-            return Scale3D;
+            return scale3D;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
