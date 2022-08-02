@@ -67,6 +67,29 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Scale3D = data.GetOrDefault<FVector>(nameof(Scale3D));
         }
 
+        public void SetFromMatrix(FMatrix InMatrix)
+        {
+            FMatrix M = new(InMatrix);
+
+            // Get the 3D scale from the matrix
+            Scale3D = M.ExtractScaling();
+
+            // If there is negative scaling going on, we handle that here
+            if (InMatrix.Determinant() < 0.0f)
+            {
+                // Assume it is along X and modify transform accordingly. 
+                // It doesn't actually matter which axis we choose, the 'appearance' will be the same
+                Scale3D.X *= -1.0f;
+                M.SetAxis(0, -M.GetScaledAxis(EAxis.X));
+            }
+
+            Rotation = M.ToQuat();
+            Translation = InMatrix.GetOrigin();
+
+            // Normalize rotation
+            Rotation.Normalize();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FRotator Rotator() => Rotation.Rotator();
 
