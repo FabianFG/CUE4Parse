@@ -30,6 +30,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FMatrix() {}
 
+        public FMatrix(FMatrix m)
+        {
+            M00 = m.M00; M01 = m.M01; M02 = m.M02; M03 = m.M03;
+            M10 = m.M10; M11 = m.M11; M12 = m.M12; M13 = m.M13;
+            M20 = m.M20; M21 = m.M21; M22 = m.M22; M23 = m.M23;
+            M30 = m.M30; M31 = m.M31; M32 = m.M32; M33 = m.M33;
+        }
+
         public FMatrix(
             float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
@@ -81,6 +89,53 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
             a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
         );
+
+        public float this[int i]
+        {
+            get => i switch
+            {
+                0 => M00,
+                1 => M01,
+                2 => M02,
+                3 => M03,
+                4 => M10,
+                5 => M11,
+                6 => M12,
+                7 => M13,
+                8 => M20,
+                9 => M21,
+                10 => M22,
+                11 => M23,
+                12 => M30,
+                13 => M31,
+                14 => M32,
+                15 => M33,
+                _ => throw new IndexOutOfRangeException(),
+            };
+            set
+            {
+                switch (i)
+                {
+                    case 0: M00 = value; break;
+                    case 1: M01 = value; break;
+                    case 2: M02 = value; break;
+                    case 3: M03 = value; break;
+                    case 4: M10 = value; break;
+                    case 5: M11 = value; break;
+                    case 6: M12 = value; break;
+                    case 7: M13 = value; break;
+                    case 8: M20 = value; break;
+                    case 9: M21 = value; break;
+                    case 10: M22 = value; break;
+                    case 11: M23 = value; break;
+                    case 12: M30 = value; break;
+                    case 13: M31 = value; break;
+                    case 14: M32 = value; break;
+                    case 15: M33 = value; break;
+                    default: throw new IndexOutOfRangeException();
+                }
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FVector4 TransformFVector4(FVector4 p) => new(
@@ -261,6 +316,61 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M20 *= scale2;
             M21 *= scale2;
             M22 *= scale2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FVector ExtractScaling(float tolerance = UnrealMath.SmallNumber)
+        {
+            // For each row, find magnitude, and if its non-zero re-scale so its unit length.
+            var squareSum0 = M00*M00 + M01*M01 + M02*M02;
+            var squareSum1 = M10*M10 + M11*M11 + M12*M12;
+            var squareSum2 = M20*M20 + M21*M21 + M22*M22;
+
+            FVector scale3D = new();
+
+            if (squareSum0 > tolerance)
+            {
+                float scale0 = MathF.Sqrt(squareSum0);
+                scale3D.X = scale0;
+                float invScale0 = 1.0f / scale0;
+                M00 *= invScale0;
+                M01 *= invScale0;
+                M02 *= invScale0;
+            }
+            else
+            {
+                scale3D.X = 0.0f;
+            }
+
+            if (squareSum1 > tolerance)
+            {
+                float scale1 = MathF.Sqrt(squareSum1);
+                scale3D.Y = scale1;
+                float invScale1 = 1.0f / scale1;
+                M10 *= invScale1;
+                M11 *= invScale1;
+                M12 *= invScale1;
+            }
+            else
+            {
+                scale3D.Y = 0.0f;
+            }
+
+            if (squareSum2 > tolerance)
+            {
+                float scale2 = MathF.Sqrt(squareSum2);
+                scale3D.Z = scale2;
+                float invScale2 = 1.0f / scale2;
+                M20 *= invScale2;
+                M21 *= invScale2;
+                M22 *= invScale2;
+            }
+            else
+            {
+                scale3D.Z = 0.0f;
+            }
+
+            return scale3D;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
