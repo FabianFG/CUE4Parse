@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using static System.MathF;
@@ -125,11 +127,21 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public bool IsIdentity(float tolerance = UnrealMath.SmallNumber) => Equals(Identity, tolerance);
 
+        public static Vector128<float> AsVector128(FQuat value)
+        {
+            return Unsafe.As<FQuat, Vector128<float>>(ref value);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FQuat operator *(FQuat a, FQuat b)
         {
-            var r = new FQuat();
+            // both yield different results idk why
+            if (Sse.IsSupported)
+            {
+                return UnrealMathSSE.VectorQuaternionMultiply2(a, b);
+            }
 
+            var r = new FQuat();
             var t0 = (a.Z - a.Y) * (b.Y - b.Z);
             var t1 = (a.W + a.X) * (b.W + b.X);
             var t2 = (a.W - a.X) * (b.Y + b.Z);
@@ -145,7 +157,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             r.Y = t2 + t9 - t7;
             r.Z = t3 + t9 - t6;
             r.W = t0 + t9 - t5;
-
             return r;
         }
 
