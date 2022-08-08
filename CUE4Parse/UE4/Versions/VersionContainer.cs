@@ -63,6 +63,7 @@ namespace CUE4Parse.UE4.Versions
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
             Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = Game >= GAME_UE4_27;
             Options["SkeletalMesh.UseNewCookedFormat"] = Game >= GAME_UE4_24;
+            Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus;
             Options["StaticMesh.HasLODsShareStaticLighting"] = Game is < GAME_UE4_15 or >= GAME_UE4_16; // Exists in all engine versions except UE4.15
             Options["StaticMesh.HasRayTracingGeometry"] = Game >= GAME_UE4_25;
             Options["StaticMesh.HasVisibleInRayTracing"] = Game >= GAME_UE4_26;
