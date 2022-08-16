@@ -10,7 +10,7 @@ namespace CUE4Parse.MappingsProvider
 {
     public abstract class UsmapTypeMappingsProvider : AbstractTypeMappingsProvider
     {
-        public override Dictionary<string, TypeMappings> MappingsByGame { get; protected set; } = new Dictionary<string, TypeMappings>();
+        public override Dictionary<string, TypeMappings> MappingsByGame { get; protected set; } = new ();
 
         protected void AddUsmap(byte[] usmap, string game, string name = "An unnamed usmap")
         {
@@ -21,14 +21,14 @@ namespace CUE4Parse.MappingsProvider
     public static class UsmapParser
     {
         public const ushort FileMagic = 0x30C4;
-        
+
         public enum Version : byte {
             INITIAL,
 
             LATEST_PLUS_ONE,
             LATEST = LATEST_PLUS_ONE - 1
         }
-        
+
         public enum ECompressionMethod : byte {
             None,
             Oodle,
@@ -46,7 +46,7 @@ namespace CUE4Parse.MappingsProvider
         {
             return Parse(new FByteArchive(name, data));
         }
-        
+
         public static TypeMappings Parse(FArchive Ar)
         {
             var magic = Ar.Read<ushort>();
@@ -61,7 +61,7 @@ namespace CUE4Parse.MappingsProvider
 
             var compSize = Ar.Read<uint>();
             var decompSize = Ar.Read<uint>();
-            
+
             var data = new byte[decompSize];
             switch (compression)
             {
@@ -101,21 +101,21 @@ namespace CUE4Parse.MappingsProvider
                     var value = Ar.ReadName(nameLut)!;
                     enumNames[j] = value;
                 }
-                
+
                 enums.Add(enumName, enumNames);
             }
 
             var structCount = Ar.Read<uint>();
             var structs = new Dictionary<string, Struct>();
-            
+
             var mappings = new TypeMappings(structs, enums);
-            
+
             for (int i = 0; i < structCount; i++)
             {
                 var s = ParseStruct(mappings, Ar, nameLut);
                 structs[s.Name] = s;
             }
-            
+
             return mappings;
         }
 
@@ -201,7 +201,7 @@ namespace CUE4Parse.MappingsProvider
             return new string((sbyte*) nameBytes, 0, nameLength);
         }
     }
-    
+
     enum EPropertyType : byte {
         ByteProperty,
         BoolProperty,

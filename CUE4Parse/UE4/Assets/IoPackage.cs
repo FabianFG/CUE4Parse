@@ -177,6 +177,9 @@ namespace CUE4Parse.UE4.Assets
             if (ubulk != null) uassetAr.AddPayload(PayloadType.UBULK, Summary.BulkDataStartOffset, ubulk);
             if (uptnl != null) uassetAr.AddPayload(PayloadType.UPTNL, Summary.BulkDataStartOffset, uptnl);
 
+            if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && mappings == null)
+                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
+
             // Populate lazy exports
             var currentExportDataOffset = allExportDataOffset;
             foreach (var exportBundle in exportBundleHeaders)
