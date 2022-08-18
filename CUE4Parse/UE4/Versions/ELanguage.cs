@@ -30,10 +30,10 @@ namespace CUE4Parse.UE4.Versions
         Korean,
         [Description("Polski")]
         Polish,
+        [Description("Português")]
+        Portuguese,
         [Description("Português (Brasil)")]
         PortugueseBrazil,
-        [Description("Português")]
-        PortuguesePortugal,
         [Description("Русский")]
         Russian,
         [Description("Türkçe")]

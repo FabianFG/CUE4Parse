@@ -197,7 +197,34 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-Hans",
                     _ => "en"
                 },
-                _ => "en"
+                _ => language switch // https://www.alchemysoftware.com/livedocs/ezscript/Topics/Catalyst/Language.htm
+                {
+                    ELanguage.English => "en",
+                    ELanguage.AustralianEnglish => "en-AU",
+                    ELanguage.BritishEnglish => "en-GB",
+                    ELanguage.French => "fr",
+                    ELanguage.German => "de",
+                    ELanguage.Italian => "it",
+                    ELanguage.Spanish => "es",
+                    ELanguage.SpanishLatin => "es-419",
+                    ELanguage.SpanishMexico => "es-MX",
+                    ELanguage.Arabic => "ar",
+                    ELanguage.Japanese => "ja",
+                    ELanguage.Korean => "ko",
+                    ELanguage.Polish => "pl",
+                    ELanguage.Portuguese => "pt",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru",
+                    ELanguage.Turkish => "tr",
+                    ELanguage.Chinese => "zh",
+                    ELanguage.TraditionalChinese => "zh-Hant",
+                    ELanguage.Swedish => "sv",
+                    ELanguage.Thai => "th",
+                    ELanguage.Indonesian => "id",
+                    ELanguage.VietnameseVietnam => "vi-VN",
+                    ELanguage.Zulu => "zu",
+                    _ => "en"
+                }
             };
         }
 
