@@ -55,7 +55,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 return;
             }
 
-            var bIsLODCookedOut = Ar.ReadBoolean();
+            var bIsLODCookedOut = false;
+            if (Ar.Game != EGame.GAME_Splitgate)
+                bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
