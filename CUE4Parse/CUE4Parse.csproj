@@ -6,6 +6,11 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <IsPublishable>false</IsPublishable>
     <Platforms>AnyCPU</Platforms>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
