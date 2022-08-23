@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using CUE4Parse.UE4.Objects.Core.i18N;
 
-namespace CUE4Parse_Fortnite.Enums
+namespace CUE4Parse.FN.Enums
 {
     public enum EFortRarity : byte
     {
