@@ -15,5 +15,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Center = new FVector(x, y, z);
             W = w;
         }
+
+        public FSphere(FVector center, float w)
+        {
+            Center = center;
+            W = w;
+        }
+
+        public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);
     }
 }

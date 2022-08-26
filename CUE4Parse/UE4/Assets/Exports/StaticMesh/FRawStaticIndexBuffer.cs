@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 tempAr.Dispose();
             }
         }
-        
+
         public int Length
         {
             get
@@ -63,8 +63,20 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 return -1;
             }
         }
-        
+
         public int this[int i]
+        {
+            get
+            {
+                if (Indices32.Length > 0)
+                    return (int)Indices32[i];
+                if (Indices16.Length > 0)
+                    return Indices16[i];
+                throw new IndexOutOfRangeException();
+            }
+        }
+
+        public int this[long i]
         {
             get
             {

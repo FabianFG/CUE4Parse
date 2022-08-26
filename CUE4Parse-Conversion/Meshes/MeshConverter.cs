@@ -118,7 +118,7 @@ namespace CUE4Parse_Conversion.Meshes
             convertedMesh = new CSkeletalMesh();
             if (originalMesh.LODModels == null) return false;
 
-            convertedMesh.BoundingShere = new FSphere(0f, 0f, 0f, originalMesh.ImportedBounds.SphereRadius / 2);
+            convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.ImportedBounds.SphereRadius / 2);
             convertedMesh.BoundingBox = new FBox(
                 originalMesh.ImportedBounds.Origin - originalMesh.ImportedBounds.BoxExtent,
                 originalMesh.ImportedBounds.Origin + originalMesh.ImportedBounds.BoxExtent);

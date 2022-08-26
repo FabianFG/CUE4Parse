@@ -8,7 +8,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public List<CSkelMeshLod> LODs;
         public List<CSkelMeshBone> RefSkeleton;
         public FBox BoundingBox;
-        public FSphere BoundingShere;
+        public FSphere BoundingSphere;
 
         public CSkeletalMesh()
         {
