@@ -18,7 +18,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
-        public List<UTexture> UE5ReferencedTextures = new();
         private List<IObject> _displayedReferencedTextures = new();
         private bool _shouldDisplay;
 
@@ -57,15 +56,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             }
         }
 
-        public UTexture? GetFirstTexture() =>
-            UE5ReferencedTextures.Count > 0 ? UE5ReferencedTextures[0] :
-            ReferencedTextures.Count > 0 ? ReferencedTextures[0] :
-            null;
-
-        public UTexture? GetTextureAtIndex(int index) =>
-            UE5ReferencedTextures.Count >= index ? UE5ReferencedTextures[index] :
-            ReferencedTextures.Count >= index ? ReferencedTextures[index] :
-            null;
+        public UTexture? GetFirstTexture() => ReferencedTextures.Count > 0 ? ReferencedTextures[0] : null;
+        public UTexture? GetTextureAtIndex(int index) => ReferencedTextures.Count >= index ? ReferencedTextures[index] : null;
 
         private void ScanForTextures(FAssetArchive Ar)
         {
@@ -84,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                             !resolved.TryLoad(out var tex) || tex is not UTexture texture) continue;
 
                         _displayedReferencedTextures.Add(resolved);
-                        UE5ReferencedTextures.Add(texture);
+                        ReferencedTextures.Add(texture);
                     }
                     break;
                 }
@@ -96,7 +88,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                             !import.OuterIndex.TryLoad(out UTexture tex)) continue;
 
                         _displayedReferencedTextures.Add(import);
-                        UE5ReferencedTextures.Add(tex);
+                        ReferencedTextures.Add(tex);
                     }
                     break;
                 }
