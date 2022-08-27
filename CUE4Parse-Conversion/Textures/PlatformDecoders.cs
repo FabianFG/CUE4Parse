@@ -108,7 +108,7 @@ namespace CUE4Parse_Conversion.Textures
                 }
                 default:
                 {
-                    TextureDecoder.DecodeTexture(mip, format, isNormalMap, out data, out colorType);
+                    TextureDecoder.DecodeTexture(mip, format, isNormalMap, ETexturePlatform.DesktopMobile, out data, out colorType);
                     break;
                 }
             }
@@ -171,7 +171,7 @@ namespace CUE4Parse_Conversion.Textures
                 }
                 default:
                 {
-                    TextureDecoder.DecodeTexture(mip, format, isNormalMap, out data, out colorType);
+                    TextureDecoder.DecodeTexture(mip, format, isNormalMap, ETexturePlatform.DesktopMobile, out data, out colorType);
                     break;
                 }
             }

@@ -14,26 +14,11 @@ namespace CUE4Parse_Conversion.Textures
     public static class TextureDecoder
     {
         public static SKBitmap? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
-
         public static SKBitmap? Decode(this UTexture2D texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             if (!texture.IsVirtual && mip != null)
             {
-                byte[] data;
-                SKColorType colorType;
-
-                switch (platform)
-                {
-                    case ETexturePlatform.Playstation:
-                        PlaystationDecoder.DecodeTexturePlaystation(mip, texture.Format, texture.isNormalMap, out data, out colorType);
-                        break;
-                    case ETexturePlatform.NintendoSwitch:
-                        NintendoSwitchDecoder.DecodeTextureNSW(mip, texture.Format, texture.isNormalMap, out data, out colorType);
-                        break;
-                    default:
-                        DecodeTexture(mip, texture.Format, texture.isNormalMap, out data, out colorType);
-                        break;
-                }
+                DecodeTexture(mip, texture.Format, texture.isNormalMap, platform, out var data, out var colorType);
 
                 var width = mip.SizeX;
                 var height = mip.SizeY;
@@ -64,8 +49,26 @@ namespace CUE4Parse_Conversion.Textures
             return null;
         }
 
-        public static void DecodeTexture(FTexture2DMipMap mip, EPixelFormat format, bool isNormalMap, out byte[] data, out SKColorType colorType)
+        public static void DecodeTexture(FTexture2DMipMap? mip, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
         {
+            switch (platform)
+            {
+                case ETexturePlatform.Playstation when mip != null:
+                    PlaystationDecoder.DecodeTexturePlaystation(mip, format, isNormalMap, out data, out colorType);
+                    break;
+                case ETexturePlatform.NintendoSwitch when mip != null:
+                    NintendoSwitchDecoder.DecodeTextureNSW(mip, format, isNormalMap, out data, out colorType);
+                    break;
+                default:
+                    DecodeTexture(mip, format, isNormalMap, out data, out colorType);
+                    break;
+            }
+        }
+
+        private static void DecodeTexture(FTexture2DMipMap? mip, EPixelFormat format, bool isNormalMap, out byte[] data, out SKColorType colorType)
+        {
+            if (mip == null) throw new NotImplementedException($"Unknown pixel format: {format}");
+
             switch (format)
             {
                 case EPixelFormat.PF_DXT1:
