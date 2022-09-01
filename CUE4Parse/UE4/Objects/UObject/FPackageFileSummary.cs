@@ -330,6 +330,20 @@ namespace CUE4Parse.UE4.Objects.UObject
                 AssetRegistryDataOffset = Ar.Read<int>();
             }
 
+            if (Ar.Game == EGame.GAME_TowerOfFantasy)
+            {
+                TotalHeaderSize = (int)(TotalHeaderSize ^ 0xEEB2CEC7);
+                NameCount = (int)(NameCount ^ 0xEEB2CEC7);
+                NameOffset = (int)(NameOffset ^ 0xEEB2CEC7);
+                ExportCount = (int)(ExportCount ^ 0xEEB2CEC7);
+                ExportOffset = (int)(ExportOffset ^ 0xEEB2CEC7);
+                ImportCount = (int)(ImportCount ^ 0xEEB2CEC7);
+                ImportOffset = (int)(ImportOffset ^ 0xEEB2CEC7);
+                DependsOffset = (int)(DependsOffset ^ 0xEEB2CEC7);
+                PackageSource = (int)(PackageSource ^ 0xEEB2CEC7);
+                AssetRegistryDataOffset = (int)(AssetRegistryDataOffset ^ 0xEEB2CEC7);
+            }
+
             if (Ar.Game == EGame.GAME_SeaOfThieves)
             {
                 Ar.Position += 6; // no idea what's going on here.

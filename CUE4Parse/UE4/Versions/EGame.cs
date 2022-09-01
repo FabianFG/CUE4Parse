@@ -43,6 +43,8 @@ namespace CUE4Parse.UE4.Versions
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
             GAME_ReadyOrNot = GAME_UE4_26 + 2,
             GAME_Valorant = GAME_UE4_26 + 3,
+            GAME_TowerOfFantasy = GAME_UE4_26 + 4,
+
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
 
