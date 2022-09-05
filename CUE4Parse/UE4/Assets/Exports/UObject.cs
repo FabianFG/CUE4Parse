@@ -171,13 +171,13 @@ namespace CUE4Parse.UE4.Assets.Exports
             return GetTypedOuter(typeof(T)) as T;
         }
 
-        /** 
-	     * Do any object-specific cleanup required immediately after loading an object, 
+        /**
+	     * Do any object-specific cleanup required immediately after loading an object,
 	     * and immediately after any undo/redo.
 	     */
         public virtual void PostLoad()
         {
-            
+
         }
 
         internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc)
@@ -186,7 +186,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (!header.HasValues)
                 return;
             var type = struc.Name;
-            
+
             Struct? propMappings = null;
             if (struc is UScriptClass)
                 Ar.Owner.Mappings?.Types.TryGetValue(type, out propMappings);
@@ -197,7 +197,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 throw new ParserException(Ar, "Missing prop mappings for type " + type);
             }
-            
+
             using var it = new FIterator(header);
             do
             {
@@ -236,7 +236,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 }
             } while (it.MoveNext());
         }
-        
+
         internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar)
         {
             while (true)
@@ -325,7 +325,26 @@ namespace CUE4Parse.UE4.Assets.Exports
             obj = default;
             return false;
         }
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetAllValues<T>(out T[] obj, string name)
+        {
+            var maxIndex = -1;
+            var collected = new List<FPropertyTag>();
+            foreach (var prop in Properties)
+            {
+                if (prop.Name.Text != name) continue;
+                collected.Add(prop);
+                maxIndex = Math.Max(maxIndex, prop.ArrayIndex);
+            }
+
+            obj = new T[maxIndex + 1];
+            foreach (var prop in collected) {
+                obj[prop.ArrayIndex] = (T) prop.Tag.GetValue(typeof(T));
+            }
+
+            return obj.Length > 0;
+        }
+
         // Just ignore it for the parser
         /*-----------------------------------------------------------------------------
 	        Replication.
@@ -334,33 +353,33 @@ namespace CUE4Parse.UE4.Assets.Exports
         /** Returns properties that are replicated for the lifetime of the actor channel */
         public virtual void GetLifetimeReplicatedProps(List<FLifetimeProperty> outLifetimeProps)
         {
-            
+
         }
 
         /** Called right before receiving a bunch */
         public virtual void PreNetReceive()
         {
-            
+
         }
 
         /** Called right after receiving a bunch */
         public virtual void PostNetReceive()
         {
-            
+
         }
-        
+
         /** Called right after calling all OnRep notifies (called even when there are no notifies) */
         public virtual void PostRepNotifies()
         {
-            
+
         }
 
         /** Called right before being marked for destruction due to network replication */
         public virtual void PreDestroyFromReplication()
         {
-            
+
         }
-        
+
         /** IsNameStableForNetworking means an object can be referred to its path name (relative to outer) over the network */
         public virtual bool IsNameStableForNetworking() => Flags.HasFlag(EObjectFlags.RF_WasLoaded) || Flags.HasFlag(EObjectFlags.RF_DefaultSubObject) /* || IsNative() || IsDefaultSubobject() */;
 
@@ -403,7 +422,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default, 
+        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default,
             StringComparison comparisonType = StringComparison.Ordinal) =>
             new(() => GetOrDefault(holder, name, defaultValue, comparisonType));
 
@@ -422,7 +441,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             throw new NullReferenceException($"Couldn't get property '{name}' of type {typeof(T).Name} in {holder.GetType().Name}");
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Lazy<T> GetLazy<T>(IPropertyHolder holder, string name,
             StringComparison comparisonType = StringComparison.Ordinal) =>
@@ -444,7 +463,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             throw new NullReferenceException($"Couldn't get property of type {typeof(T).Name} at index '{index}' in {holder.GetType().Name}");
         }
     }
-    
+
     public class UObjectConverter : JsonConverter<UObject>
     {
         public override void WriteJson(JsonWriter writer, UObject value, JsonSerializer serializer)
@@ -460,7 +479,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             throw new NotImplementedException();
         }
     }
-    
+
     // ~Fabian: Please just ignore that, needed it in a different project
 
     /** FLifetimeProperty

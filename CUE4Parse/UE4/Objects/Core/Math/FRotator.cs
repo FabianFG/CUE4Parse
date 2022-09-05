@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.Utils;
 
@@ -141,7 +142,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // map [0->256) to [0->360)
             return angle * 360.0f / 256.0f;
         }
-        
+
         public static ushort CompressAxisToShort(float angle)
         {
             // map [0->360) to [0->65536) and mask off any winding
@@ -168,5 +169,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public override bool Equals(object? obj) => obj is FRotator other && Equals(other, 0f);
 
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
+
+        public static implicit operator Vector3(FRotator r) => new(r.Roll, r.Yaw, r.Pitch);
     }
 }

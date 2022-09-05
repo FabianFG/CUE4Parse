@@ -116,8 +116,10 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public static bool operator ==(FGuid one, FGuid two) => one.A == two.A && one.B == two.B && one.C == two.C && one.D == two.D;
         public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
+
+        public static implicit operator FGuid(Guid g) => new(g.ToString().Replace("-", ""));
     }
-    
+
     public class FGuidConverter : JsonConverter<FGuid>
     {
         public override void WriteJson(JsonWriter writer, FGuid value, JsonSerializer serializer)
