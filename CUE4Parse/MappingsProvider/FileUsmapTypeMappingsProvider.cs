@@ -1,29 +1,18 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using CUE4Parse.Utils;
-
-namespace CUE4Parse.MappingsProvider
+﻿namespace CUE4Parse.MappingsProvider
 {
     public sealed class FileUsmapTypeMappingsProvider : UsmapTypeMappingsProvider
     {
-        public string usmapFile;
+        private readonly string _path;
 
-        public FileUsmapTypeMappingsProvider(string usmapFile)
+        public FileUsmapTypeMappingsProvider(string path)
         {
-            this.usmapFile = usmapFile;
-            Reload();
-        }
-        
-        public override bool Reload()
-        {
-            AddUsmap(File.ReadAllBytes(usmapFile), "fortnitegame", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
-            return true;
+            _path = path;
+            Load(path);
         }
 
-        public override async Task<bool> ReloadAsync()
+        public override void Reload()
         {
-            AddUsmap(File.ReadAllBytes(usmapFile), "fortnitegame", usmapFile.SubstringAfterLast('/').SubstringAfterLast('\\'));
-            return true;
+            Load(_path);
         }
     }
 }

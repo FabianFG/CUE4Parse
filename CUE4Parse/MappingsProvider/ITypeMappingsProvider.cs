@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace CUE4Parse.MappingsProvider
+﻿namespace CUE4Parse.MappingsProvider
 {
     public interface ITypeMappingsProvider
     {
-        public Dictionary<string, TypeMappings> MappingsByGame { get; }
+        public TypeMappings? MappingsForGame { get; }
 
-        public TypeMappings ForGame(string game);
+        public void Load(string path);
+        public void Load(byte[] bytes);
 
-        public bool Reload();
-        public Task<bool> ReloadAsync();
+        public void Reload();
     }
 }

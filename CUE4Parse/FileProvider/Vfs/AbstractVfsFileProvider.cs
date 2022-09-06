@@ -44,14 +44,6 @@ namespace CUE4Parse.FileProvider.Vfs
             _files = new FileProviderDictionary(IsCaseInsensitive);
         }
 
-        public void LoadMappings()
-        {
-            if (GameName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase))
-            {
-                MappingsContainer = new BenBotMappingsProvider("fortnitegame");
-            }
-        }
-
         public IEnumerable<IAesVfsReader> UnloadedVfsByGuid(FGuid guid) => _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid);
         public void UnloadAllVfs()
         {

@@ -29,7 +29,7 @@ namespace CUE4Parse.FileProvider
 
         public virtual VersionContainer Versions { get; set; }
         public virtual ITypeMappingsProvider? MappingsContainer { get; set; }
-        public virtual TypeMappings? MappingsForThisGame => MappingsContainer?.ForGame(GameName.ToLowerInvariant());
+        public virtual TypeMappings? MappingsForGame => MappingsContainer?.MappingsForGame;
         public virtual IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
         public Dictionary<string, string> VirtualPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
         public abstract IReadOnlyDictionary<string, GameFile> Files { get; }
@@ -479,7 +479,7 @@ namespace CUE4Parse.FileProvider
 
             if (file is FPakEntry)
             {
-                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForThisGame, UseLazySerialization);
+                return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForGame, UseLazySerialization);
             }
 
             if (this is not IVfsFileProvider vfsFileProvider || vfsFileProvider.GlobalData == null)
@@ -488,7 +488,7 @@ namespace CUE4Parse.FileProvider
             }
 
             var containerHeader = ((FIoStoreEntry) file).IoStoreReader.ContainerHeader;
-            return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, ubulk, uptnl, this, MappingsForThisGame);
+            return new IoPackage(uasset, vfsFileProvider.GlobalData, containerHeader, ubulk, uptnl, this, MappingsForGame);
         }
 
         public virtual async Task<IPackage?> TryLoadPackageAsync(string path)
@@ -521,13 +521,13 @@ namespace CUE4Parse.FileProvider
             {
                 if (file is FPakEntry or OsGameFile)
                 {
-                    return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForThisGame, UseLazySerialization);
+                    return new Package(uasset, uexp, lazyUbulk, lazyUptnl, this, MappingsForGame, UseLazySerialization);
                 }
 
                 if (file is FIoStoreEntry ioStoreEntry)
                 {
                     var globalData = ((IVfsFileProvider) this).GlobalData;
-                    return globalData != null ? new IoPackage(uasset, globalData, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, this, MappingsForThisGame) : null;
+                    return globalData != null ? new IoPackage(uasset, globalData, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, this, MappingsForGame) : null;
                 }
 
                 return null;

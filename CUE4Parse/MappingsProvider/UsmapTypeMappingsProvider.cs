@@ -10,11 +10,16 @@ namespace CUE4Parse.MappingsProvider
 {
     public abstract class UsmapTypeMappingsProvider : AbstractTypeMappingsProvider
     {
-        public override Dictionary<string, TypeMappings> MappingsByGame { get; protected set; } = new ();
+        public override TypeMappings? MappingsForGame { get; protected set; } = new ();
 
-        protected void AddUsmap(byte[] usmap, string game, string name = "An unnamed usmap")
+        public override void Load(string path)
         {
-            MappingsByGame[game] = UsmapParser.Parse(usmap, name);
+            MappingsForGame = UsmapParser.Parse(path);
+        }
+
+        public override void Load(byte[] bytes)
+        {
+            MappingsForGame = UsmapParser.Parse(bytes);
         }
     }
 
@@ -35,6 +40,11 @@ namespace CUE4Parse.MappingsProvider
             Brotli,
 
             Unknown = 0xFF
+        }
+
+        public static TypeMappings Parse(string path, string name = "An unnamed usmap")
+        {
+            return Parse(File.OpenRead(path), name);
         }
 
         public static TypeMappings Parse(Stream data, string name = "An unnamed usmap")

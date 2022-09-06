@@ -15,22 +15,19 @@ namespace CUE4Parse.MappingsProvider
                 NamingStrategy = new CamelCaseNamingStrategy(false, false)
             }
         };
-        public override Dictionary<string, TypeMappings> MappingsByGame { get; protected set; } = new Dictionary<string, TypeMappings>();
 
-        protected bool AddStructs(string structsJson, string game)
+        public override TypeMappings? MappingsForGame { get; protected set; }
+
+        protected bool AddStructs(string structsJson)
         {
-            if (!MappingsByGame.TryGetValue(game, out TypeMappings mappingsForGame))
-            {
-                mappingsForGame = new TypeMappings();
-                MappingsByGame[game] = mappingsForGame;
-            }
+            MappingsForGame ??= new TypeMappings();
 
             var token = JArray.Parse(structsJson);
             foreach (var structToken in token)
             {
                 if (structToken == null) continue;
-                var structEntry = ParseStruct(mappingsForGame, structToken);
-                mappingsForGame.Types[structEntry.Name] = structEntry;
+                var structEntry = ParseStruct(MappingsForGame, structToken);
+                MappingsForGame.Types[structEntry.Name] = structEntry;
             }
             return true;
         }
@@ -52,7 +49,7 @@ namespace CUE4Parse.MappingsProvider
                 }
             }
             var propertyCount = structToken["propertyCount"]!.ToObject<int>()!;
-            
+
             return new Struct(context, name, superType, properties, propertyCount);
         }
 
@@ -78,21 +75,17 @@ namespace CUE4Parse.MappingsProvider
             return new PropertyType(Type, StructType, InnerType, ValueType, EnumName, IsEnumAsByte);
         }
 
-        protected void AddEnums(string enumsJson, string game)
+        protected void AddEnums(string enumsJson)
         {
-            if (!MappingsByGame.TryGetValue(game, out TypeMappings mappingsForGame))
-            {
-                mappingsForGame = new TypeMappings();
-                MappingsByGame[game] = mappingsForGame;
-            }
-            
+            MappingsForGame ??= new TypeMappings();
+
             var token = JArray.Parse(enumsJson);
             foreach (var entry in token)
             {
                 if (entry == null) continue;
                 var values = entry["values"]!.ToObject<string[]>()!;
                 var i = 0;
-                mappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++);
+                MappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++);
             }
         }
     }

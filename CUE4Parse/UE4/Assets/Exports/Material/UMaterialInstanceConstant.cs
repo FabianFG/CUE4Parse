@@ -183,7 +183,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 var tex = p.ParameterValue.Load<UTexture>();
                 if (tex == null) continue;
 
-                if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase)) continue;
+                if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase) ||
+                    name.Contains("_2", StringComparison.CurrentCultureIgnoreCase)) continue;
 
                 Diffuse(name.Contains("dif", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Diffuse(name.Contains("albedo", StringComparison.CurrentCultureIgnoreCase), 100, tex);
