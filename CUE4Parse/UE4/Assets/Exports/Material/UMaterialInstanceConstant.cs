@@ -189,12 +189,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Diffuse(name.Contains("dif", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Diffuse(name.Contains("albedo", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Diffuse(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 80, tex);
+                Diffuse(name.Equals("co", StringComparison.CurrentCultureIgnoreCase), 70, tex);
+                Diffuse(name.StartsWith("co_", StringComparison.CurrentCultureIgnoreCase), 70, tex);
                 Normal(name.Contains("norm", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("fx", StringComparison.CurrentCultureIgnoreCase), 100, tex);
+                Normal(name.Equals("nm", StringComparison.CurrentCultureIgnoreCase), 70, tex);
+                Normal(name.StartsWith("nm_", StringComparison.CurrentCultureIgnoreCase), 70, tex);
                 SpecPower(name.Contains("specpow", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Specular(name.Contains("spec", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 Specular(name.Contains("packed", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Specular(name.Contains("mrae", StringComparison.CurrentCultureIgnoreCase), 80, tex);
                 Specular(name.Contains("mrs", StringComparison.CurrentCultureIgnoreCase), 80, tex);
+                Specular(name.Equals("lp", StringComparison.CurrentCultureIgnoreCase), 70, tex);
+                Specular(name.StartsWith("lp_", StringComparison.CurrentCultureIgnoreCase), 70, tex);
                 Emissive(name.Contains("emiss", StringComparison.CurrentCultureIgnoreCase) && !name.Contains("gradient", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 BakedMask(name.Contains("fx", StringComparison.CurrentCultureIgnoreCase) && name.Contains("mask", StringComparison.CurrentCultureIgnoreCase), 100, tex);
                 CubeMap(name.Contains("cube", StringComparison.CurrentCultureIgnoreCase), 100, tex);
@@ -213,6 +219,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (color == null) continue;
 
                 DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
+                DiffuseColor(name.Equals("co", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
                 EmissiveColor(name.Contains("emis", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
                 EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
             }
