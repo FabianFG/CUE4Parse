@@ -10,7 +10,7 @@ C# Parser for Unreal Engine packages & assets
 
 This file provider lets you load packages locally from a given directory.
 ```csharp
-var provider = new DefaultFileProvider(gameDirectory, SearchOption.TopDirectoryOnly);
+var provider = new DefaultFileProvider(gameDirectory, SearchOption.TopDirectoryOnly, new VersionContainer(EGame.GAME_UE5_1)); // Make sure the UE version matches with the game.
 provider.Initialize();
 ```
 </details>
