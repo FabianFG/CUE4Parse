@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Text;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -24,10 +25,14 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public override string ToString()
         {
-            return $"{PackageName}.{AssetName}";
+            var builder = new StringBuilder();
+            if (PackageName.IsNone) return string.Empty;
+            builder.Append(PackageName);
+            if (!AssetName.IsNone) builder.Append('.').Append(AssetName);
+            return builder.ToString();
         }
     }
-    
+
     public class FTopLevelAssetPathConverter : JsonConverter<FTopLevelAssetPath>
     {
         public override void WriteJson(JsonWriter writer, FTopLevelAssetPath value, JsonSerializer serializer)

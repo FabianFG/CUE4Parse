@@ -32,6 +32,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         ObjectResourceOptionalVersionChange,// Change to linker export/import resource serialization
         AddedChunkHashes,                   // Added FIoHash for each FIoChunkId in the package to the AssetPackageData.
         ClassPaths,							// Classes are serialized as path names rather than short object names, e.g. /Script/Engine.StaticMesh
+        RemoveAssetPathFNames,              // Asset bundles are serialized as FTopLevelAssetPath instead of FSoftObjectPath, deprecated FAssetData::ObjectPath
+        AddedHeader,                        // Added header with bFilterEditorOnlyData flag
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

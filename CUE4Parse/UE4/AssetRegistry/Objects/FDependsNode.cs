@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
@@ -119,7 +119,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             var numSoft = Ar.Read<int>();
             var numName = Ar.Read<int>();
             var numSoftManage = Ar.Read<int>();
-            var numHardManage = Ar.Version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
+            var numHardManage = Ar.Header.Version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
             var numReferencers = Ar.Read<int>();
 
             PackageDependencies = new List<FDependsNode>(numHard + numSoft);

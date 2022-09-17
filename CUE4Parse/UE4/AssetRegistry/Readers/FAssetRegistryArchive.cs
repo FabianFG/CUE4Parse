@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Objects.UObject;
@@ -9,15 +9,15 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
     public abstract class FAssetRegistryArchive : FArchive
     {
         protected readonly FArchive baseArchive;
-        public FAssetRegistryVersionType Version;
+        public FAssetRegistryHeader Header;
         public FNameEntrySerialized[] NameMap;
 
         public abstract void SerializeTagsAndBundles(FAssetData assetData);
 
-        public FAssetRegistryArchive(FArchive Ar, FAssetRegistryVersionType version) : base(Ar.Versions)
+        public FAssetRegistryArchive(FArchive Ar, FAssetRegistryHeader header) : base(Ar.Versions)
         {
             baseArchive = Ar;
-            Version = version;
+            Header = header;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

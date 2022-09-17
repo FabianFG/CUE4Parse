@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
     public class FNameTableArchiveReader : FAssetRegistryArchive
     {
-        public FNameTableArchiveReader(FArchive Ar, FAssetRegistryVersionType version) : base(Ar, version)
+        public FNameTableArchiveReader(FArchive Ar, FAssetRegistryHeader header) : base(Ar, header)
         {
             var nameOffset = Ar.Read<long>();
             if (nameOffset > Ar.Length)
@@ -36,7 +36,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 NameMap = Array.Empty<FNameEntrySerialized>();
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override FName ReadFName()
         {
@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             assetData.TagsAndValues = ret;
             assetData.TaggedAssetBundles = new FAssetBundleData();
         }
-        
-        public override object Clone() => new FNameTableArchiveReader((FArchive) baseArchive.Clone(), Version);
+
+        public override object Clone() => new FNameTableArchiveReader((FArchive) baseArchive.Clone(), Header);
     }
 }
