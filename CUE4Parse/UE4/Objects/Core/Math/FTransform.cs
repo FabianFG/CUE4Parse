@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Readers;
 using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    [StructLayout(LayoutKind.Sequential), StructFallback]
-    public struct FTransform : IUStruct
+    [StructFallback]
+    public class FTransform
     {
         public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1) };
 
@@ -23,6 +23,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Rotation = new FQuat(0f, 0f, 0f, 1f);
             Translation = new FVector(0f);
             Scale3D = FVector.OneVector;
+        }
+
+        public FTransform(FArchive Ar)
+        {
+            Rotation = new FQuat(Ar);
+            Translation = new FVector(Ar);
+            Scale3D = new FVector(Ar);
         }
 
         public FTransform(FVector translation)
@@ -77,7 +84,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // If there is negative scaling going on, we handle that here
             if (inMatrix.Determinant() < 0.0f)
             {
-                // Assume it is along X and modify transform accordingly. 
+                // Assume it is along X and modify transform accordingly.
                 // It doesn't actually matter which axis we choose, the 'appearance' will be the same
                 Scale3D.X *= -1.0f;
                 m.SetAxis(0, -m.GetScaledAxis(EAxis.X));
@@ -173,7 +180,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             if (AnyHasNegativeScale(Scale3D, other.Scale3D))
             {
                 // @note, if you have 0 scale with negative, you're going to lose rotation as it can't convert back to quat
-                GetRelativeTransformUsingMatrixWithScale(ref result, ref this, ref other);
+                GetRelativeTransformUsingMatrixWithScale(ref result, ref other);
             }
             else
             {
@@ -194,15 +201,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static FVector SubstractTranslations(FTransform a, FTransform b) => a.Translation - b.Translation;
 
-        public static void GetRelativeTransformUsingMatrixWithScale(ref FTransform outTransform, ref FTransform @base, ref FTransform relative)
+        public void GetRelativeTransformUsingMatrixWithScale(ref FTransform outTransform, ref FTransform relative)
         {
             // the goal of using M is to get the correct orientation
             // but for translation, we still need scale
-            var am = @base.ToMatrixWithScale();
-            var bm = @base.ToMatrixWithScale();
+            var am = ToMatrixWithScale();
+            var bm = ToMatrixWithScale();
             // get combined scale
             var safeRecipScale3D = GetSafeScaleReciprocal(relative.Scale3D, UnrealMath.SmallNumber);
-            var desiredScale3D = @base.Scale3D * safeRecipScale3D;
+            var desiredScale3D = Scale3D * safeRecipScale3D;
             ConstructTransformFromMatrixWithDesiredScale(am, bm.InverseFast(), desiredScale3D, ref outTransform);
         }
 

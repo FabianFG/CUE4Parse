@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
 
-            Bounds = Ar.Read<FBoxSphereBounds>();
+            Bounds = new FBoxSphereBounds(Ar);
 
             if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
                 bLODsShareStaticLighting = Ar.ReadBoolean();
@@ -155,7 +155,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             writer.WritePropertyName("ScreenSize");
             serializer.Serialize(writer, value.ScreenSize);
-            
+
             writer.WriteEndObject();
         }
 

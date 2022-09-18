@@ -158,8 +158,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveDuplicatedClothingSections)
                 {
-                    var dummyPhysicalMeshVertices = Ar.ReadArray<FVector>();
-                    var dummyPhysicalMeshNormals = Ar.ReadArray<FVector>();
+                    var dummyPhysicalMeshVertices = Ar.ReadArray(() => new FVector(Ar));
+                    var dummyPhysicalMeshNormals = Ar.ReadArray(() => new FVector(Ar));
                 }
 
                 CorrespondClothAssetIndex = Ar.Read<short>();

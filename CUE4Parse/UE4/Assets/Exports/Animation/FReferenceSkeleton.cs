@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FReferenceSkeleton(FAssetArchive Ar)
         {
             FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
-            FinalRefBonePose = Ar.ReadArray<FTransform>();
+            FinalRefBonePose = Ar.ReadArray(() => new FTransform(Ar));
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {

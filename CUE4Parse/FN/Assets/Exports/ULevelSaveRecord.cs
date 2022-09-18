@@ -303,7 +303,7 @@ namespace CUE4Parse.FN.Assets.Exports
                 ActorGuid = Ar.Read<FGuid>();
             }
 
-            Transform = Ar.Read<FTransform>();
+            Transform = new FTransform(Ar);
         }
     }
 
@@ -317,7 +317,7 @@ namespace CUE4Parse.FN.Assets.Exports
         public FLevelStreamedDeleteActorRecord(FAssetArchive Ar)
         {
             ActorId = Ar.ReadFName();
-            Transform = Ar.Read<FTransform>();
+            Transform = new FTransform(Ar);
             ActorClass = new FSoftObjectPath(Ar);
             OwningLevel = new FSoftObjectPath(Ar);
         }
@@ -557,9 +557,9 @@ namespace CUE4Parse.FN.Assets.Exports
 
         private void DeserializeLevelSaveRecordData(FLevelSaveRecordArchive Ar)
         {
-            Center = Ar.Read<FVector>();
-            HalfBoundsExtent = Ar.Read<FVector>();
-            Rotation = Ar.Read<FRotator>();
+            Center = new FVector(Ar);
+            HalfBoundsExtent = new FVector(Ar);
+            Rotation = new FRotator(Ar);
             LastTemplateID = Ar.Read<ulong>();
 
             var numTemplateRecords = Ar.Read<int>();
@@ -584,7 +584,7 @@ namespace CUE4Parse.FN.Assets.Exports
             }
 
             bRequiresGridPlacement = Ar.ReadBoolean();
-            Scale = Ar.Version >= ELevelSaveRecordVersion.AddingScale ? Ar.Read<FVector>() : FVector.OneVector;
+            Scale = Ar.Version >= ELevelSaveRecordVersion.AddingScale ? new FVector(Ar) : FVector.OneVector;
 
             if (Ar.Version >= ELevelSaveRecordVersion.AddedLevelStreamedDeleteRecord)
             {

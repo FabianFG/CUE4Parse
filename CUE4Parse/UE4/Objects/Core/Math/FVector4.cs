@@ -1,12 +1,13 @@
-﻿using System.Runtime.InteropServices;
+﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     /// <summary>
     /// A 4D homogeneous vector, 4x1 FLOATs.
+    /// USE Ar.Read<FVector4> FOR FLOATS AND new FVector4(Ar) FOR DOUBLES
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FVector4 : IUStruct
+    public struct FVector4 : IUStruct
     {
         public readonly float X;
         public readonly float Y;
@@ -24,6 +25,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         public FVector4(float x) : this(x, x, x, x) { }
+
+        public FVector4(FArchive Ar)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            {
+                X = (float) Ar.Read<double>();
+                Y = (float) Ar.Read<double>();
+                Z = (float) Ar.Read<double>();
+                W = (float) Ar.Read<double>();
+            }
+            else
+            {
+                X = Ar.Read<float>();
+                Y = Ar.Read<float>();
+                Z = Ar.Read<float>();
+                W = Ar.Read<float>();
+            }
+        }
 
         /// <summary>
         /// Constructor from 3D Vector and W

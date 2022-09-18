@@ -15,16 +15,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FReferencePose(FAssetArchive Ar)
         {
             PoseName = Ar.ReadFName();
-            ReferencePose = Ar.ReadArray<FTransform>();
+            ReferencePose = Ar.ReadArray(() => new FTransform(Ar));
         }
     }
-    
+
     public class FReferencePoseConverter : JsonConverter<FReferencePose>
     {
         public override void WriteJson(JsonWriter writer, FReferencePose value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("PoseName");
             serializer.Serialize(writer, value.PoseName);
 
@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
             writer.WriteEndArray();
-            
+
             writer.WriteEndObject();
         }
 

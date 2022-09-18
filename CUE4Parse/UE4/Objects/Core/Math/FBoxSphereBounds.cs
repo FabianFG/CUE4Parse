@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using static System.MathF;
 
@@ -9,8 +10,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// <summary>
     /// Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FBoxSphereBounds : IUStruct
+    public class FBoxSphereBounds
     {
         /** Holds the origin of the bounding box and sphere. */
         public FVector Origin;
@@ -18,6 +18,22 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector BoxExtent;
         /** Holds the radius of the bounding sphere. */
         public float SphereRadius;
+
+        public FBoxSphereBounds() { }
+
+        public FBoxSphereBounds(FArchive Ar)
+        {
+            Origin = new FVector(Ar);
+            BoxExtent = new FVector(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            {
+                SphereRadius = (float) Ar.Read<double>();
+            }
+            else
+            {
+                SphereRadius = Ar.Read<float>();
+            }
+        }
 
         public FBoxSphereBounds(FVector origin, FVector boxExtent, float sphereRadius)
         {

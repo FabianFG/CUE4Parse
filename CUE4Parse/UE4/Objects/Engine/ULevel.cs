@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
         public FPrecomputedVisibilityHandler(FAssetArchive Ar)
         {
-            PrecomputedVisibilityCellBucketOriginXY = Ar.Read<FVector2D>();
+            PrecomputedVisibilityCellBucketOriginXY = new FVector2D(Ar);
             PrecomputedVisibilityCellSizeXY = Ar.Read<float>();
             PrecomputedVisibilityCellSizeZ = Ar.Read<float>();
             PrecomputedVisibilityCellBucketSizeXY = Ar.Read<int>();
@@ -99,7 +99,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public FPrecomputedVolumeDistanceField(FAssetArchive Ar)
         {
             VolumeMaxDistance = Ar.Read<float>();
-            VolumeBox = Ar.Read<FBox>();
+            VolumeBox = new FBox(Ar);
             VolumeSizeX = Ar.Read<int>();
             VolumeSizeY = Ar.Read<int>();
             VolumeSizeZ = Ar.Read<int>();

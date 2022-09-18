@@ -79,7 +79,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData5(FAssetArchive Ar)
         {
-            LocalSpaceMeshBounds = Ar.Read<FBox>();
+            LocalSpaceMeshBounds = new FBox(Ar);
             bMostlyTwoSided = Ar.ReadBoolean();
             Mips = Ar.ReadArray<FSparseDistanceFieldMip>(DistanceField.NumMips);
             AlwaysLoadedMip = Ar.ReadArray<byte>();

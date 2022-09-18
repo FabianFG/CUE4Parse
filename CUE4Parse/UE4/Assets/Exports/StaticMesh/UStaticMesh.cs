@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 return;
                 // if (Ar.Ver < UE4Version.VER_UE4_DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED)
                 // {
-                //     var dummyThumbnailAngle = Ar.Read<FRotator>();
+                //     var dummyThumbnailAngle = new FRotator(Ar);
                 //     var dummyThumbnailDistance = Ar.Read<float>();
                 // }
                 // var highResSourceMeshName = Ar.ReadFString();

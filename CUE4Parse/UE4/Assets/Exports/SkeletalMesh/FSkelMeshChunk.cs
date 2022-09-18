@@ -42,8 +42,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 // Physics data, drop
                 var clothMappingData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
-                Ar.ReadArray<FVector>(); // PhysicalMeshVertices
-                Ar.ReadArray<FVector>(); // PhysicalMeshNormals
+                Ar.ReadArray(() => new FVector(Ar)); // PhysicalMeshVertices
+                Ar.ReadArray(() => new FVector(Ar)); // PhysicalMeshNormals
                 Ar.Position += 4; // CorrespondClothAssetIndex, ClothAssetSubmeshIndex
                 HasClothData = clothMappingData.Length > 0;
             }

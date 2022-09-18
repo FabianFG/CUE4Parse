@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MorphTargets = GetOrDefault<FPackageIndex[]>(nameof(MorphTargets));
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
-            ImportedBounds = Ar.Read<FBoxSphereBounds>();
+            ImportedBounds = new FBoxSphereBounds(Ar);
             Materials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
             ReferenceSkeleton = new FReferenceSkeleton(Ar);
 

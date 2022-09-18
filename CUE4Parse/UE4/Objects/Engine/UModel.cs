@@ -252,7 +252,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             const int StripVertexBufferFlag = 1;
             var stripData = new FStripDataFlags(Ar);
 
-            Bounds = Ar.Read<FBoxSphereBounds>();
+            Bounds = new FBoxSphereBounds(Ar);
 
             Vectors = Ar.ReadBulkArray<FVector>();
             Points = Ar.ReadBulkArray<FVector>();
