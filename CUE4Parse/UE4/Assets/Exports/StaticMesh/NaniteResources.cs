@@ -55,13 +55,14 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     public class FNaniteResources
     {
         // Persistent State
-        public byte[] RootClusterPage; // Root page is loaded on resource load, so we always have something to draw.
+        public byte[] RootData; // Root page is loaded on resource load, so we always have something to draw.
         public FByteBulkData StreamableClusterPages; // Remaining pages are streamed on demand.
         public ushort[] ImposterAtlas;
         public FPackedHierarchyNode[] HierarchyNodes;
         public uint[] HierarchyRootOffsets;
         public FPageStreamingState[] PageStreamingStates;
         public uint[] PageDependencies;
+        public int NumRootPages = 0;
         public int PositionPrecision = 0;
         public uint NumInputTriangles = 0;
         public uint NumInputVertices = 0;
@@ -75,14 +76,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!stripFlags.IsDataStrippedForServer())
             {
                 ResourceFlags = Ar.Read<uint>();
-                RootClusterPage = Ar.ReadArray<byte>();
                 StreamableClusterPages = new FByteBulkData(Ar);
+                RootData = Ar.ReadArray<byte>();
                 PageStreamingStates = Ar.ReadArray<FPageStreamingState>();
 
                 HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
                 HierarchyRootOffsets = Ar.ReadArray<uint>();
                 PageDependencies = Ar.ReadArray<uint>();
                 ImposterAtlas = Ar.ReadArray<ushort>();
+                NumRootPages = Ar.Read<int>();
                 PositionPrecision = Ar.Read<int>();
                 NumInputTriangles = Ar.Read<uint>();
                 NumInputVertices = Ar.Read<uint>();
