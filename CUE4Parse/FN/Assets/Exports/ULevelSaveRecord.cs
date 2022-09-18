@@ -370,7 +370,7 @@ namespace CUE4Parse.FN.Assets.Exports
         public bool bCompressed;
         public FVector Center;
         public FVector HalfBoundsExtent;
-        public FRotator Rotation;
+        public FRotator? Rotation;
         public FVector Scale;
         public ulong LastTemplateID; // UnknownData01[0xC]
         public Dictionary<int, FActorTemplateRecord> TemplateRecords;
@@ -451,7 +451,7 @@ namespace CUE4Parse.FN.Assets.Exports
                 serializer.Serialize(writer, HalfBoundsExtent);
             }
 
-            if (Rotation != FRotator.ZeroRotator)
+            if (Rotation is not null && Rotation != FRotator.ZeroRotator)
             {
                 writer.WritePropertyName("Rotation");
                 serializer.Serialize(writer, Rotation);
