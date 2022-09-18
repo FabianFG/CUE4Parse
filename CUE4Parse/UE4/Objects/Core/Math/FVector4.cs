@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Readers;
+﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -7,6 +8,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// A 4D homogeneous vector, 4x1 FLOATs.
     /// USE Ar.Read<FVector4> FOR FLOATS AND new FVector4(Ar) FOR DOUBLES
     /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
     public struct FVector4 : IUStruct
     {
         public readonly float X;

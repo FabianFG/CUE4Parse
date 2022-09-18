@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    public class FBox : IUStruct
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct FBox : IUStruct
     {
         /// <summary>
         /// Holds the box's minimum point.
@@ -20,8 +22,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// Holds a flag indicating whether this box is valid.
         /// </summary>
         public byte IsValid; // It's a bool
-
-        public FBox() { }
 
         /// <summary>
         /// Creates and initializes a new box from the specified extents.
