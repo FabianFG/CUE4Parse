@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
@@ -16,7 +16,8 @@ namespace CUE4Parse.UE4.AssetRegistry
 
         public FAssetRegistryState(FArchive Ar)
         {
-            FAssetRegistryVersion.TrySerializeVersion(Ar, out var version);
+            var header = new FAssetRegistryHeader(Ar);
+            var version = header.Version;
             switch (version)
             {
                 case < FAssetRegistryVersionType.RemovedMD5Hash:
@@ -24,13 +25,13 @@ namespace CUE4Parse.UE4.AssetRegistry
                     break;
                 case < FAssetRegistryVersionType.FixedTags:
                 {
-                    var nameTableReader = new FNameTableArchiveReader(Ar, version);
+                    var nameTableReader = new FNameTableArchiveReader(Ar, header);
                     Load(nameTableReader);
                     break;
                 }
                 default:
                 {
-                    var reader = new FAssetRegistryReader(Ar, version);
+                    var reader = new FAssetRegistryReader(Ar, header);
                     Load(reader);
                     break;
                 }
@@ -41,7 +42,7 @@ namespace CUE4Parse.UE4.AssetRegistry
         {
             PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
 
-            if (Ar.Version < FAssetRegistryVersionType.AddedDependencyFlags)
+            if (Ar.Header.Version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
                 var localNumDependsNodes = Ar.Read<int>();
                 PreallocatedDependsNodeDataBuffers = new FDependsNode[localNumDependsNodes];

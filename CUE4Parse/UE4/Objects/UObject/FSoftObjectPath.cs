@@ -28,8 +28,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 var path = Ar.ReadFString();
                 throw new ParserException(Ar, $"Asset path \"{path}\" is in short form and is not supported, nor recommended");
             }
-            
-            AssetPathName = Ar.ReadFName();
+
+            AssetPathName = Ar.Ver >= EUnrealEngineObjectUE5Version.FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName();
             SubPathString = Ar.ReadFString();
             Owner = Ar.Owner;
         }
@@ -40,9 +40,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             SubPathString = subPathString;
             Owner = owner;
         }
-        
+
         #region Loading Methods
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UExport Load() =>
             Load(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
@@ -62,7 +61,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Load<T>() where T : UExport =>
             Load<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad<T>(out T export) where T : UExport
         {
@@ -74,10 +73,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
             return TryLoad(provider, out export);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport> LoadAsync() => await LoadAsync(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
@@ -85,10 +84,10 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (provider == null) return null;
             return await TryLoadAsync(provider).ConfigureAwait(false);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>() where T : UExport => await LoadAsync<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>() where T : UExport
         {
@@ -116,7 +115,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> LoadAsync<T>(IFileProvider provider) where T : UExport => await LoadAsync(provider) as T ??
-            throw new ParserException("Loaded SoftObjectProperty but it was of wrong type");
+                                                                                       throw new ParserException("Loaded SoftObjectProperty but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
@@ -134,14 +133,13 @@ namespace CUE4Parse.UE4.Objects.UObject
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync(IFileProvider provider) =>
             await provider.TryLoadObjectAsync(AssetPathName.Text);
-        
         #endregion
 
         public override string ToString() => string.IsNullOrEmpty(SubPathString)
             ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
             : $"{AssetPathName.Text}:{SubPathString}";
     }
-    
+
     public class FSoftObjectPathConverter : JsonConverter<FSoftObjectPath>
     {
         public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
@@ -149,13 +147,13 @@ namespace CUE4Parse.UE4.Objects.UObject
             /*var path = value.ToString();
             writer.WriteValue(path.Length > 0 ? path : "None");*/
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("AssetPathName");
             serializer.Serialize(writer, value.AssetPathName);
-            
+
             writer.WritePropertyName("SubPathString");
             writer.WriteValue(value.SubPathString);
-            
+
             writer.WriteEndObject();
         }
 

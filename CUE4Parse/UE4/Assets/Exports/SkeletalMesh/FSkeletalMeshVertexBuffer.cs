@@ -37,8 +37,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 bExtraBoneInfluences = Ar.ReadBoolean();
             }
 
-            MeshExtension = Ar.Read<FVector>();
-            MeshOrigin = Ar.Read<FVector>();
+            MeshExtension = new FVector(Ar);
+            MeshOrigin = new FVector(Ar);
 
             if (!bUseFullPrecisionUVs)
                 VertsHalf = Ar.ReadBulkArray(() => new FGPUVertHalf(Ar, bExtraBoneInfluences, NumTexCoords));

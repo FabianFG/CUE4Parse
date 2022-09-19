@@ -1,9 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
+    /// <summary>
+    /// USE Ar.Read<FPlane> FOR FLOATS AND new FPlane(Ar) FOR DOUBLES
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Size = 16)]
     public struct FPlane : IUStruct
     {
@@ -34,6 +39,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             Vector = @base;
             W = @base | normal;
+        }
+
+        public FPlane(FArchive Ar)
+        {
+            Vector = new FVector(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            {
+                W = (float) Ar.Read<double>();
+            }
+            else
+            {
+                W = Ar.Read<float>();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

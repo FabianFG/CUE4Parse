@@ -43,6 +43,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             "DelegateProperty" => new FDelegateProperty(),
             "EnumProperty" => new FEnumProperty(),
             "FieldPathProperty" => new FFieldPathProperty(),
+            "DoubleProperty" => new FDoubleProperty(),
             "FloatProperty" => new FFloatProperty(),
             "Int16Property" => new FInt16Property(),
             "Int64Property" => new FInt64Property(),

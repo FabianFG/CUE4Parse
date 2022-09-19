@@ -1,9 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct FSphere : IUStruct
+    public class FSphere
     {
         /** The sphere's center point. */
         public FVector Center;
@@ -20,6 +20,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             Center = center;
             W = w;
+        }
+
+        public FSphere(FArchive Ar)
+        {
+            Center = new FVector(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            {
+                W = (float) Ar.Read<double>();
+            }
+            else
+            {
+                W = Ar.Read<float>();
+            }
         }
 
         public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);

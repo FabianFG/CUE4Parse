@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -34,6 +35,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             IsValid = isValid;
         }
 
+        public FBox(FArchive Ar)
+        {
+            Min = new FVector(Ar);
+            Max = new FVector(Ar);
+            IsValid = Ar.Read<byte>();
+        }
+
         public FBox(FVector[] points)
         {
             Min = new FVector(0f, 0f, 0f);
@@ -41,7 +49,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             IsValid = 0;
             foreach (var it in points)
             {
-                this += it;
+                Min += it;
+                Max += it;
             }
         }
 

@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 
         public FPaintedVertex(FArchive Ar)
         {
-            Position = Ar.Read<FVector>();
+            Position = new FVector(Ar);
 
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
             {
@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
             }
             else
             {
-                Normal = Ar.Read<FVector4>();
+                Normal = new FVector4(Ar);
             }
 
             Color = Ar.Read<FColor>();

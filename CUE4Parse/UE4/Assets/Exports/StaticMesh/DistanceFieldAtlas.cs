@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public const int NumMips = 3;
     }
 
-    public struct FSparseDistanceFieldMip
+    public class FSparseDistanceFieldMip
     {
         public FIntVector IndirectionDimensions;
         public int NumDistanceFieldBricks;
@@ -20,6 +20,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FVector2D DistanceFieldToVolumeScaleBias;
         public uint BulkOffset;
         public uint BulkSize;
+
+        public FSparseDistanceFieldMip(FArchive Ar)
+        {
+            IndirectionDimensions = Ar.Read<FIntVector>();
+            NumDistanceFieldBricks = Ar.Read<int>();
+            VolumeToVirtualUVScale = new FVector(Ar);
+            VolumeToVirtualUVAdd = new FVector(Ar);
+            DistanceFieldToVolumeScaleBias = new FVector2D(Ar);
+            BulkOffset = Ar.Read<uint>();
+            BulkSize = Ar.Read<uint>();
+        }
     }
 
     public class FDistanceFieldVolumeData
@@ -79,9 +90,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData5(FAssetArchive Ar)
         {
-            LocalSpaceMeshBounds = Ar.Read<FBox>();
+            LocalSpaceMeshBounds = new FBox(Ar);
             bMostlyTwoSided = Ar.ReadBoolean();
-            Mips = Ar.ReadArray<FSparseDistanceFieldMip>(DistanceField.NumMips);
+            Mips = Ar.ReadArray(DistanceField.NumMips, () => new FSparseDistanceFieldMip(Ar));
             AlwaysLoadedMip = Ar.ReadArray<byte>();
             StreamableMips = new FByteBulkData(Ar);
         }

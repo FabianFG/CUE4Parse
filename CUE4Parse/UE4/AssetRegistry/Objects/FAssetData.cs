@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
     [JsonConverter(typeof(FAssetDataConverter))]
     public class FAssetData
     {
-        public readonly FName ObjectPath;
         public readonly FName PackageName;
         public readonly FName PackagePath;
         public readonly FName AssetName;
@@ -21,9 +20,12 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public FAssetData(FAssetRegistryArchive Ar)
         {
-            ObjectPath = Ar.ReadFName();
+            if (Ar.Header.Version < FAssetRegistryVersionType.RemoveAssetPathFNames)
+            {
+                var oldObjectPath = Ar.ReadFName();
+            }
             PackagePath = Ar.ReadFName();
-            AssetClass = Ar.Version >= FAssetRegistryVersionType.ClassPaths ? new FTopLevelAssetPath(Ar).AssetName : Ar.ReadFName();
+            AssetClass = Ar.Header.Version >= FAssetRegistryVersionType.ClassPaths ? new FTopLevelAssetPath(Ar).AssetName : Ar.ReadFName();
             PackageName = Ar.ReadFName();
             AssetName = Ar.ReadFName();
 
@@ -32,6 +34,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             ChunkIDs = Ar.ReadArray<int>();
             PackageFlags = Ar.Read<uint>();
         }
+
+        public string ObjectPath => $"{PackageName}.{AssetName}";
     }
 
     public class FAssetDataConverter : JsonConverter<FAssetData>
@@ -51,7 +55,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
             writer.WritePropertyName("AssetName");
             serializer.Serialize(writer, value.AssetName);
-            
+
             writer.WritePropertyName("AssetClass");
             serializer.Serialize(writer, value.AssetClass);
 

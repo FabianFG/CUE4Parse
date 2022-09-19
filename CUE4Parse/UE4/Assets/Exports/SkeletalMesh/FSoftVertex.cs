@@ -21,16 +21,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 UV[i] = Ar.Read<FMeshUVFloat>();
 
             Color = Ar.Read<FColor>();
-            if (!isRigid)
-            {
-                Infs = new FSkinWeightInfo(Ar, Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES);
-            }
-            else
-            {
-                Infs = new FSkinWeightInfo();
-                Infs.BoneIndex[0] = Ar.Read<byte>();
-                Infs.BoneWeight[0] = 255;
-            }
+            Infs = !isRigid ?
+                new FSkinWeightInfo(Ar, Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES) :
+                new FSkinWeightInfo { BoneIndex = { [0] = Ar.Read<byte>() }, BoneWeight = { [0] = 255 } };
         }
     }
 

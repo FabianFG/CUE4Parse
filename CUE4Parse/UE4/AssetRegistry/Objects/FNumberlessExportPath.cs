@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.AssetRegistry.Readers;
+using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public FNumberlessExportPath(FAssetRegistryArchive Ar)
         {
-            if (Ar.Version >= FAssetRegistryVersionType.ClassPaths)
+            if (Ar.Header.Version >= FAssetRegistryVersionType.ClassPaths)
             {
                 ClassPackage = Ar.Read<uint>();
                 ClassObject = Ar.Read<uint>();

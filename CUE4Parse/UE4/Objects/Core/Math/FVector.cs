@@ -2,11 +2,16 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
+    /// <summary>
+    /// USE Ar.Read<FVector> FOR FLOATS AND new FVector(Ar) FOR DOUBLES
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct FVector : IUStruct
     {
@@ -36,6 +41,22 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             X = x;
             Y = y;
             Z = z;
+        }
+
+        public FVector(FArchive Ar)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            {
+                X = (float) Ar.Read<double>();
+                Y = (float) Ar.Read<double>();
+                Z = (float) Ar.Read<double>();
+            }
+            else
+            {
+                X = Ar.Read<float>();
+                Y = Ar.Read<float>();
+                Z = Ar.Read<float>();
+            }
         }
 
         /// <summary>
@@ -400,18 +421,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FRotator ToOrientationRotator()
         {
-            FRotator r;
-
-            // Find yaw.
-            r.Yaw = MathF.Atan2(Y, X) * (180.0f / MathF.PI);
-
-            // Find pitch.
-            r.Pitch = MathF.Atan2(Z, MathF.Sqrt(X * X + Y * Y)) * (180.0f / MathF.PI);
-
-            // Find roll.
-            r.Roll = 0;
-
-            return r;
+            return new FRotator
+            {
+                // Find yaw.
+                Yaw = MathF.Atan2(Y, X) * (180.0f / MathF.PI),
+                // Find pitch.
+                Pitch = MathF.Atan2(Z, MathF.Sqrt(X * X + Y * Y)) * (180.0f / MathF.PI),
+                // Find roll.
+                Roll = 0
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -426,12 +444,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             float SP = MathF.Sin(PitchRad * DIVIDE_BY_2), SY = MathF.Sin(YawRad * DIVIDE_BY_2);
             float CP = MathF.Cos(PitchRad * DIVIDE_BY_2), CY = MathF.Cos(YawRad * DIVIDE_BY_2);
 
-            FQuat rotationQuat;
-            rotationQuat.X = SP * SY;
-            rotationQuat.Y = -SP * CY;
-            rotationQuat.Z = CP * SY;
-            rotationQuat.W = CP * CY;
-            return rotationQuat;
+            return new FQuat
+            {
+                X = SP * SY,
+                Y = -SP * CY,
+                Z = CP * SY,
+                W = CP * CY
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

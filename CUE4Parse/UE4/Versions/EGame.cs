@@ -55,8 +55,9 @@ namespace CUE4Parse.UE4.Versions
         // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess
         GAME_UE5_0 = GameUtils.GameUe5Base + 0 << 4,
         GAME_UE5_1 = GameUtils.GameUe5Base + 1 << 4,
+        GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
 
-        GAME_UE5_LATEST = GAME_UE5_1
+        GAME_UE5_LATEST = GAME_UE5_2
     }
 
     public static class GameUtils
@@ -82,6 +83,7 @@ namespace CUE4Parse.UE4.Versions
                 return game switch
                 {
                     EGame.GAME_UE5_0 => new(522, 1002),
+                    EGame.GAME_UE5_1 => new(522, 1006),
                     _ => new((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 };
             }

@@ -220,6 +220,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
     }
 
+    public class FDoubleProperty : FNumericProperty { }
+
     public class FFloatProperty : FNumericProperty { }
 
     public class FInt16Property : FNumericProperty { }
