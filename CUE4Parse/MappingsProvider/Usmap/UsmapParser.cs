@@ -13,7 +13,7 @@ public class UsmapParser
 {
     private const ushort FileMagic = 0x30C4;
     public readonly TypeMappings? Mappings;
-    public FPackageFileVersion Version;
+    public FPackageFileVersion PackageVersion;
     public FCustomVersion[] CustomVersions;
     public uint NetCL;
 
@@ -33,13 +33,13 @@ public class UsmapParser
 
         if (usmapVersion >= EUsmapVersion.PackageVersioning)
         {
-            Version = Ar.Read<FPackageFileVersion>();
+            PackageVersion = Ar.Read<FPackageFileVersion>();
             CustomVersions = Ar.ReadArray<FCustomVersion>();
             NetCL = Ar.Read<uint>();
         }
         else
         {
-            Version = Ar.Ver;
+            PackageVersion = Ar.Ver;
             CustomVersions = (Ar.Versions.CustomVersions ?? new List<FCustomVersion>()).ToArray();
             NetCL = 0;
         }
@@ -99,7 +99,7 @@ public class UsmapParser
 
         for (var i = 0; i < structCount; i++)
         {
-            var s = UsmapProperties.ParseStruct(mappings, Ar, nameLut);
+            var s = UsmapProperties.ParseStruct(mappings, Ar, usmapVersion, nameLut);
             structs[s.Name] = s;
         }
 

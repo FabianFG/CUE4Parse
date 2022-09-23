@@ -80,7 +80,7 @@ namespace CUE4Parse.MappingsProvider
             {
                 var prop = (FProperty) struc.ChildProperties[i];
                 var propInfo = new PropertyInfo(i, prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
-                for (int j = 0; j < prop.ArrayDim; j++)
+                for (var j = 0; j < prop.ArrayDim; j++)
                 {
                     Properties[i + j] = propInfo;
                 }
@@ -129,7 +129,7 @@ namespace CUE4Parse.MappingsProvider
 
         public PropertyType(FProperty prop)
         {
-            Type = prop.GetType().Name.Substring(1);
+            Type = prop.GetType().Name[1..];
             switch (prop)
             {
                 case FArrayProperty array:
