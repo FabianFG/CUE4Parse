@@ -5,6 +5,7 @@ public enum EUsmapCompressionMethod : byte
     None,
     Oodle,
     Brotli,
+    ZStandard,
 
     Unknown = 0xFF
 }

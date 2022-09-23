@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Zstandard.Net;
 
 namespace CUE4Parse.MappingsProvider.Usmap;
 
@@ -53,15 +55,31 @@ public class UsmapParser
         switch (compressionMethod)
         {
             case EUsmapCompressionMethod.None:
+            {
                 if (compSize != decompSize)
                     throw new ParserException("No compression: Compression size must be equal to decompression size");
                 var _ = Ar.Read(data, 0, (int) compSize);
                 break;
+            }
             case EUsmapCompressionMethod.Oodle:
+            {
                 Oodle.Decompress(Ar.ReadBytes((int) compSize), 0, (int) compSize, data, 0, (int) decompSize);
                 break;
+            }
             case EUsmapCompressionMethod.Brotli:
-                throw new NotImplementedException();
+            {
+                using var decoder = new BrotliDecoder();
+                decoder.Decompress(Ar.ReadBytes((int) compSize), data, out _, out _);
+                break;
+            }
+            case EUsmapCompressionMethod.ZStandard:
+            {
+                using var compressionStream = new ZstandardStream(new MemoryStream(Ar.ReadBytes((int) compSize)) { Position = 0 }, CompressionMode.Decompress);
+                using var memStream = new MemoryStream();
+                compressionStream.CopyTo(memStream);
+                data = memStream.ToArray();
+                break;
+            }
             default:
                 throw new ParserException($"Invalid compression method {compressionMethod}");
         }
