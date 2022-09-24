@@ -1,16 +1,17 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap;
-
-public enum EUsmapVersion : byte
+﻿namespace CUE4Parse.MappingsProvider.Usmap
 {
-    /** Initial format. */
-    Initial,
+    public enum EUsmapVersion : byte
+    {
+        /** Initial format. */
+        Initial,
 
-    /** Changes EPropertyType to the official EClassCastFlags enum **/
-    PropertyTypeToClassFlags,
+        /** Changes EPropertyType to the official EClassCastFlags enum **/
+        PropertyTypeToClassFlags,
 
-    /** Adds package versioning to aid with compatibility */
-    PackageVersioning,
+        /** Adds package versioning to aid with compatibility */
+        PackageVersioning,
 
-    LatestPlusOne,
-    Latest = LatestPlusOne - 1
+        LatestPlusOne,
+        Latest = LatestPlusOne - 1
+    }
 }

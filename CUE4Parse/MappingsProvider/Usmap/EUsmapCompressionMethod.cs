@@ -1,11 +1,12 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap;
-
-public enum EUsmapCompressionMethod : byte
+﻿namespace CUE4Parse.MappingsProvider.Usmap
 {
-    None,
-    Oodle,
-    Brotli,
-    ZStandard,
+    public enum EUsmapCompressionMethod : byte
+    {
+        None,
+        Oodle,
+        Brotli,
+        ZStandard,
 
-    Unknown = 0xFF
+        Unknown = 0xFF
+    }
 }

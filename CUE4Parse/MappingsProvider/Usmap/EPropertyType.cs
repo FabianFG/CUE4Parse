@@ -1,35 +1,36 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap;
-
-public enum EPropertyType : byte
+﻿namespace CUE4Parse.MappingsProvider.Usmap
 {
-    ByteProperty,
-    BoolProperty,
-    IntProperty,
-    FloatProperty,
-    ObjectProperty,
-    NameProperty,
-    DelegateProperty,
-    DoubleProperty,
-    ArrayProperty,
-    StructProperty,
-    StrProperty,
-    TextProperty,
-    InterfaceProperty,
-    MulticastDelegateProperty,
-    WeakObjectProperty, //
-    LazyObjectProperty, // When deserialized, these 3 properties will be SoftObjects
-    AssetObjectProperty, //
-    SoftObjectProperty,
-    UInt64Property,
-    UInt32Property,
-    UInt16Property,
-    Int64Property,
-    Int16Property,
-    Int8Property,
-    MapProperty,
-    SetProperty,
-    EnumProperty,
-    FieldPathProperty,
+    public enum EPropertyType : byte
+    {
+        ByteProperty,
+        BoolProperty,
+        IntProperty,
+        FloatProperty,
+        ObjectProperty,
+        NameProperty,
+        DelegateProperty,
+        DoubleProperty,
+        ArrayProperty,
+        StructProperty,
+        StrProperty,
+        TextProperty,
+        InterfaceProperty,
+        MulticastDelegateProperty,
+        WeakObjectProperty, //
+        LazyObjectProperty, // When deserialized, these 3 properties will be SoftObjects
+        AssetObjectProperty, //
+        SoftObjectProperty,
+        UInt64Property,
+        UInt32Property,
+        UInt16Property,
+        Int64Property,
+        Int16Property,
+        Int8Property,
+        MapProperty,
+        SetProperty,
+        EnumProperty,
+        FieldPathProperty,
 
-    Unknown = 0xFF
+        Unknown = 0xFF
+    }
 }
