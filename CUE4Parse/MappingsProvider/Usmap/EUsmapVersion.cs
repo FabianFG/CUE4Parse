@@ -5,9 +5,6 @@
         /** Initial format. */
         Initial,
 
-        /** Changes EPropertyType to the official EClassCastFlags enum **/
-        PropertyTypeToClassFlags,
-
         /** Adds package versioning to aid with compatibility */
         PackageVersioning,
 

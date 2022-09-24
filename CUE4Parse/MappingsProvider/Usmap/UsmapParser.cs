@@ -22,17 +22,19 @@ namespace CUE4Parse.MappingsProvider.Usmap
         public UsmapParser(Stream data, string name = "An unnamed usmap") : this(new FStreamArchive(name, data)) { }
         public UsmapParser(byte[] data, string name = "An unnamed usmap") : this(new FByteArchive(name, data)) { }
 
-        public UsmapParser(FArchive Ar)
+        public UsmapParser(FArchive archive)
         {
-            var magic = Ar.Read<ushort>();
+            var magic = archive.Read<ushort>();
             if (magic != FileMagic)
                 throw new ParserException("Usmap has invalid magic");
 
-            var usmapVersion = Ar.Read<EUsmapVersion>();
+            var usmapVersion = archive.Read<EUsmapVersion>();
             if (usmapVersion is < EUsmapVersion.Initial or > EUsmapVersion.Latest)
                 throw new ParserException($"Usmap has invalid version ({(byte) usmapVersion})");
 
-            if (usmapVersion >= EUsmapVersion.PackageVersioning)
+            var Ar = new FUsmapReader(archive, usmapVersion);
+            
+            if (Ar.Version >= EUsmapVersion.PackageVersioning)
             {
                 PackageVersion = Ar.Read<FPackageFileVersion>();
                 CustomVersions = Ar.ReadArray<FCustomVersion>();
@@ -83,7 +85,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
                     throw new ParserException($"Invalid compression method {compressionMethod}");
             }
 
-            Ar = new FByteArchive(Ar.Name, data);
+            Ar = new FUsmapReader(new FByteArchive(Ar.Name, data), Ar.Version);
             var nameSize = Ar.Read<uint>();
             var nameLut = new List<string>((int) nameSize);
             for (var i = 0; i < nameSize; i++)
@@ -116,7 +118,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
 
             for (var i = 0; i < structCount; i++)
             {
-                var s = UsmapProperties.ParseStruct(mappings, Ar, usmapVersion, nameLut);
+                var s = UsmapProperties.ParseStruct(mappings, Ar, nameLut);
                 structs[s.Name] = s;
             }
 
