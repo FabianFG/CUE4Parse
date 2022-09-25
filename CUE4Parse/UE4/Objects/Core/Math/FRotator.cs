@@ -172,11 +172,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(FRotator a, FRotator b) =>
-            a.Pitch == b.Pitch && a.Yaw == b.Yaw && a.Roll == b.Roll;
+        public static bool operator ==(FRotator? a, FRotator b) =>
+            a is not null && a.Pitch == b.Pitch && a.Yaw == b.Yaw && a.Roll == b.Roll;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(FRotator a, FRotator b) => !(a == b);
+        public static bool operator !=(FRotator? a, FRotator b) => !(a == b);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(FRotator r, float tolerance = KindaSmallNumber) => System.Math.Abs(NormalizeAxis(Pitch - r.Pitch)) <= tolerance &&
