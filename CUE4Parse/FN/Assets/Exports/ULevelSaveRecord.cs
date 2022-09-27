@@ -53,6 +53,9 @@ namespace CUE4Parse.FN.Assets.Exports
         AddedDataHeaderSize,
         AddedCrossReferenceSaving,
         SpawningActorsWithConsistentName,
+        UpdatePackageNameFromIslandTemplateId,
+        LargeWorldCoordinateSerializationChange,
+        SeasionTwentyTwoRelease,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -204,7 +207,8 @@ namespace CUE4Parse.FN.Assets.Exports
             if (ActorData != null && !bUsingRecordDataReferenceTable)
             {
                 var Ar = new FLevelSaveRecordArchive(new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner), SaveVersion);
-                var flags = owner.Summary.PackageFlags; owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
+                var flags = owner.Summary.PackageFlags;
+                owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
                 var props = new FStructFallback(Ar);
                 owner.Summary.PackageFlags = flags; // restore flags
                 return props;
@@ -403,10 +407,9 @@ namespace CUE4Parse.FN.Assets.Exports
                 ActorData = new List<FStructFallback>();
                 foreach (var kv in GetOrDefault<UScriptMap>("TemplateRecords").Properties)
                 {
-                    var val = kv.Value.GetValue(typeof(FActorTemplateRecord));
-                    var templeteRecords = val is FActorTemplateRecord rec ? rec : null;
-                    if (templeteRecords is null) continue;
-                    ActorData.Add( templeteRecords.ReadActorData(Owner, SaveVersion));
+                    var val = kv.Value?.GetValue(typeof(FActorTemplateRecord));
+                    if (val is not FActorTemplateRecord templeteRecords) continue;
+                    ActorData.Add(templeteRecords.ReadActorData(Owner, SaveVersion));
                 }
             }
         }
@@ -451,7 +454,7 @@ namespace CUE4Parse.FN.Assets.Exports
                 serializer.Serialize(writer, HalfBoundsExtent);
             }
 
-            if (Rotation is not null && Rotation != FRotator.ZeroRotator)
+            if (Rotation != FRotator.ZeroRotator)
             {
                 writer.WritePropertyName("Rotation");
                 serializer.Serialize(writer, Rotation);
@@ -524,7 +527,7 @@ namespace CUE4Parse.FN.Assets.Exports
 
             if (SaveVersion >= ELevelSaveRecordVersion.SwitchingToCoreSerialization)
             {
-                throw new NotImplementedException();  //base.Deserialize(wrappedAr, -1);
+                throw new NotImplementedException(); //base.Deserialize(wrappedAr, -1);
             }
             else
             {
