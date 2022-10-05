@@ -43,7 +43,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
             else
             {
                 PackageVersion = Ar.Ver;
-                CustomVersions = (Ar.Versions.CustomVersions ?? new List<FCustomVersion>()).ToArray();
+                CustomVersions = Array.Empty<FCustomVersion>();
                 NetCL = 0;
             }
 
