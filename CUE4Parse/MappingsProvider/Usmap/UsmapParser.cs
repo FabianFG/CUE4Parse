@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using CUE4Parse.Compression;
@@ -33,8 +34,9 @@ namespace CUE4Parse.MappingsProvider.Usmap
                 throw new ParserException($"Usmap has invalid version ({(byte) usmapVersion})");
 
             var Ar = new FUsmapReader(archive, usmapVersion);
-            
-            if (Ar.Version >= EUsmapVersion.PackageVersioning)
+
+            var bHasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
+            if (bHasVersioning)
             {
                 PackageVersion = Ar.Read<FPackageFileVersion>();
                 CustomVersions = Ar.ReadArray<FCustomVersion>();
@@ -42,7 +44,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
             }
             else
             {
-                PackageVersion = Ar.Ver;
+                PackageVersion = default;
                 CustomVersions = Array.Empty<FCustomVersion>();
                 NetCL = 0;
             }
