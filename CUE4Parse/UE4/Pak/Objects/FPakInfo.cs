@@ -5,6 +5,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects
@@ -49,7 +50,17 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
         {
-            var hottaVersion = offsetToTry == OffsetsToTry.SizeHotta ? Ar.Read<uint>() : 0;
+            var hottaVersion = 0u;
+            if (offsetToTry == OffsetsToTry.SizeHotta)
+            {
+                hottaVersion = Ar.Read<uint>();
+                // Dirty way to keep backwards compatibility
+                // This will work if the data at the end is compressed or encrypted which we don't know yet at this point
+                if (hottaVersion > 255)
+                {
+                    hottaVersion = 0;
+                }
+            }
 
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
@@ -152,10 +163,8 @@ namespace CUE4Parse.UE4.Pak.Objects
             SizeMax = SizeLast - 1
         }
 
-        private static OffsetsToTry[] _offsetsToTry =
+        private static readonly OffsetsToTry[] _offsetsToTry =
         {
-            // OffsetsToTry.SizeHotta,
-
             OffsetsToTry.Size8a,
             OffsetsToTry.Size8,
             OffsetsToTry.Size,
@@ -182,7 +191,12 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
-                foreach (var offset in _offsetsToTry)
+                var offsetsToTry = Ar.Game switch
+                {
+                    EGame.GAME_TowerOfFantasy => new[] { OffsetsToTry.SizeHotta },
+                    _ => _offsetsToTry
+                };
+                foreach (var offset in offsetsToTry)
                 {
                     reader.Seek(-(long)offset, SeekOrigin.End);
                     var info = new FPakInfo(reader, offset);
