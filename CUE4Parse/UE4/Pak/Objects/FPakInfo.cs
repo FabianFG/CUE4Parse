@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         private static OffsetsToTry[] _offsetsToTry =
         {
-            OffsetsToTry.SizeHotta,
+            // OffsetsToTry.SizeHotta,
 
             OffsetsToTry.Size8a,
             OffsetsToTry.Size8,
