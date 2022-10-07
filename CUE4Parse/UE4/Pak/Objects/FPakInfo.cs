@@ -5,11 +5,12 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
-    public enum EPakFileVersion : short
+    public enum EPakFileVersion
     {
         PakFile_Version_Initial = 1,
         PakFile_Version_NoTimestamps = 2,
@@ -36,7 +37,6 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         public readonly uint Magic;
         public readonly EPakFileVersion Version;
-        public readonly short SubVersion;
         public readonly bool IsSubVersion;
         public readonly long IndexOffset;
         public readonly long IndexSize;
@@ -50,6 +50,18 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
         {
+            var hottaVersion = 0u;
+            if (offsetToTry == OffsetsToTry.SizeHotta)
+            {
+                hottaVersion = Ar.Read<uint>();
+                // Dirty way to keep backwards compatibility
+                // This will work if the data at the end is compressed or encrypted which we don't know yet at this point
+                if (hottaVersion > 255)
+                {
+                    hottaVersion = 0;
+                }
+            }
+
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
             EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
@@ -62,8 +74,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 return;
             }
 
-            Version = Ar.Read<EPakFileVersion>();
-            SubVersion = Ar.Read<short>();
+            Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             IndexOffset = Ar.Read<long>();
             IndexSize = Ar.Read<long>();
@@ -86,6 +97,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 var maxNumCompressionMethods = offsetToTry switch
                 {
                     OffsetsToTry.Size8a => 5,
+                    OffsetsToTry.SizeHotta => 5,
                     OffsetsToTry.Size8 => 4,
                     OffsetsToTry.Size8_1 => 1,
                     OffsetsToTry.Size8_2 => 2,
@@ -114,6 +126,10 @@ namespace CUE4Parse.UE4.Pak.Objects
                         }
                         CompressionMethods.Add(method);
                     }
+                    if (hottaVersion >= 3)
+                    {
+                        CompressionMethods.Remove(0);
+                    }
                 }
             }
 
@@ -139,14 +155,15 @@ namespace CUE4Parse.UE4.Pak.Objects
             Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
             Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
             Size9 = Size8a + 1, // UE4.25
-
             //Size10 = Size8a
+
+            SizeHotta = Size8a + 4, // additional int for custom pak version
 
             SizeLast,
             SizeMax = SizeLast - 1
         }
 
-        private static OffsetsToTry[] _offsetsToTry =
+        private static readonly OffsetsToTry[] _offsetsToTry =
         {
             OffsetsToTry.Size8a,
             OffsetsToTry.Size8,
@@ -174,7 +191,12 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
-                foreach (var offset in _offsetsToTry)
+                var offsetsToTry = Ar.Game switch
+                {
+                    EGame.GAME_TowerOfFantasy => new[] { OffsetsToTry.SizeHotta },
+                    _ => _offsetsToTry
+                };
+                foreach (var offset in offsetsToTry)
                 {
                     reader.Seek(-(long)offset, SeekOrigin.End);
                     var info = new FPakInfo(reader, offset);
