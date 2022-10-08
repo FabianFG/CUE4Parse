@@ -1,18 +1,18 @@
 using System.ComponentModel;
 using CUE4Parse.UE4.Objects.Core.i18N;
 
-namespace CUE4Parse.FN.Enums
+namespace CUE4Parse.GameTypes.FN.Enums
 {
     public enum EFortRarity : byte
     {
         [Description("Uncommon")]
         Uncommon = 1, // Default
-        
+
         [Description("Unattainable")]
         Impossible = 7,
         [Description("Unattainable")]
         Unattainable = 7,
-        
+
         [Description("Exotic")]
         Exotic = 6,
         [Description("Exotic")]
@@ -54,7 +54,7 @@ namespace CUE4Parse.FN.Enums
         private static readonly FText _rare = new FText("Fort.Rarity", "Rare", "Rare");
         private static readonly FText _uncommon = new FText("Fort.Rarity", "Uncommon", "Uncommon");
         private static readonly FText _common = new FText("Fort.Rarity", "Common", "Common");
-        
+
         public static FText GetNameText(this EFortRarity rarity) => rarity switch
         {
             EFortRarity.Uncommon => _uncommon,

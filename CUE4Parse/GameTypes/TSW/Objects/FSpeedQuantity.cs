@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4;
 
-namespace CUE4Parse.TSW.Objects
+namespace CUE4Parse.GameTypes.TSW.Objects
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FMassQuantity : IUStruct
+    public readonly struct FSpeedQuantity : IUStruct
     {
         public readonly float Value;
 
-        public FMassQuantity(float InValue)
+        public FSpeedQuantity(float InValue)
         {
             Value = InValue;
         }

@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Readers;
 
-namespace CUE4Parse.FN.Assets.Exports.Engine
+namespace CUE4Parse.GameTypes.FN.Assets.Exports.Engine
 {
     public class UFortHomebaseNodeGameplayEffectDataTable : UDataTable
     {
