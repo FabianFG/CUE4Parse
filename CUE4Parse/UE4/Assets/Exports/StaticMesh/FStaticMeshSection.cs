@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) Ar.Position += 5; // byte + int
             bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
             bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();
-            bAffectDistanceFieldLighting = Ar.Game > EGame.GAME_UE5_0 && Ar.ReadBoolean();
+            bAffectDistanceFieldLighting = Ar.Game >= EGame.GAME_UE5_1 && Ar.ReadBoolean();
             if (Ar.Game == EGame.GAME_RogueCompany) Ar.Position += 4;
         }
     }

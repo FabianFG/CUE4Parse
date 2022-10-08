@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.FN.Objects
+namespace CUE4Parse.GameTypes.FN.Objects
 {
     public enum EFortConnectivityCubeFace
     {

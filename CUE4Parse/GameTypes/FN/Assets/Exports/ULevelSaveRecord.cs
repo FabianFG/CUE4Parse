@@ -17,7 +17,7 @@ using Ionic.Crc;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace CUE4Parse.FN.Assets.Exports
+namespace CUE4Parse.GameTypes.FN.Assets.Exports
 {
     // GUID: new(0xA76CBC6B, 0x51634CEE, 0x887E17DE, 0x463D4395)
     public enum ELevelSaveRecordVersion : short

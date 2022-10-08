@@ -1,6 +1,6 @@
 ﻿using System;
-using CUE4Parse.FN.Objects;
-using CUE4Parse.TSW.Objects;
+using CUE4Parse.GameTypes.FN.Objects;
+using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
