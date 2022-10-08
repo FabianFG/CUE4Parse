@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
     public class FPackedHierarchyNode
     {
-        public const int MAX_BVH_NODE_FANOUT_BITS = 3;
+        public const int MAX_BVH_NODE_FANOUT_BITS = 2;
         public const int MAX_BVH_NODE_FANOUT = 1 << MAX_BVH_NODE_FANOUT_BITS;
 
         public FVector4[] LODBounds;
