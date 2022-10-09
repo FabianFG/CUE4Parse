@@ -15,9 +15,11 @@ namespace CUE4Parse.MappingsProvider.Usmap
     {
         private const ushort FileMagic = 0x30C4;
         public readonly TypeMappings? Mappings;
-        public FPackageFileVersion PackageVersion;
-        public FCustomVersion[] CustomVersions;
-        public uint NetCL;
+        public readonly EUsmapCompressionMethod CompressionMethod;
+        public readonly EUsmapVersion Version;
+        public readonly FPackageFileVersion PackageVersion;
+        public readonly FCustomVersion[] CustomVersions;
+        public readonly uint NetCL;
 
         public UsmapParser(string path, string name = "An unnamed usmap") : this(File.OpenRead(path), name) { }
         public UsmapParser(Stream data, string name = "An unnamed usmap") : this(new FStreamArchive(name, data)) { }
@@ -29,11 +31,11 @@ namespace CUE4Parse.MappingsProvider.Usmap
             if (magic != FileMagic)
                 throw new ParserException("Usmap has invalid magic");
 
-            var usmapVersion = archive.Read<EUsmapVersion>();
-            if (usmapVersion is < EUsmapVersion.Initial or > EUsmapVersion.Latest)
-                throw new ParserException($"Usmap has invalid version ({(byte) usmapVersion})");
+            Version = archive.Read<EUsmapVersion>();
+            if (Version is < EUsmapVersion.Initial or > EUsmapVersion.Latest)
+                throw new ParserException($"Usmap has invalid version ({(byte) Version})");
 
-            var Ar = new FUsmapReader(archive, usmapVersion);
+            var Ar = new FUsmapReader(archive, Version);
 
             var bHasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
             if (bHasVersioning)
@@ -49,13 +51,13 @@ namespace CUE4Parse.MappingsProvider.Usmap
                 NetCL = 0;
             }
 
-            var compressionMethod = Ar.Read<EUsmapCompressionMethod>();
+            CompressionMethod = Ar.Read<EUsmapCompressionMethod>();
 
             var compSize = Ar.Read<uint>();
             var decompSize = Ar.Read<uint>();
 
             var data = new byte[decompSize];
-            switch (compressionMethod)
+            switch (CompressionMethod)
             {
                 case EUsmapCompressionMethod.None:
                 {
@@ -84,7 +86,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
                     break;
                 }
                 default:
-                    throw new ParserException($"Invalid compression method {compressionMethod}");
+                    throw new ParserException($"Invalid compression method {CompressionMethod}");
             }
 
             Ar = new FUsmapReader(new FByteArchive(Ar.Name, data), Ar.Version);
