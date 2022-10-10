@@ -82,7 +82,7 @@ namespace CUE4Parse.UE4.Versions
             {
                 return game switch
                 {
-                    EGame.GAME_UE5_0 => new(522, 1002),
+                    EGame.GAME_UE5_0 => new(522, 1004),
                     EGame.GAME_UE5_1 => new(522, 1006),
                     _ => new((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 };

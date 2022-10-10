@@ -8,6 +8,7 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -75,6 +76,9 @@ namespace CUE4Parse.UE4.Assets
                 var offset = Summary.BulkDataStartOffset;
                 uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
+
+            if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && mappings == null)
+                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
 
             if (useLazySerialization)
             {

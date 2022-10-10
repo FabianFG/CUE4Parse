@@ -86,7 +86,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                         {
                             Ar.Position += 4;
                         }
-                        
+
                         if (Ar.AbsolutePosition != skipOffset)
                         {
                             Log.Warning(
