@@ -20,6 +20,7 @@ namespace CUE4Parse_Conversion
         public ELodFormat LodFormat;
         public EMeshFormat MeshFormat;
         public ETexturePlatform Platform;
+        public ESocketFormat SocketFormat;
         public bool ExportMorphTargets;
 
         public ExporterOptions()
@@ -28,6 +29,7 @@ namespace CUE4Parse_Conversion
             LodFormat = ELodFormat.FirstLod;
             MeshFormat = EMeshFormat.ActorX;
             Platform = ETexturePlatform.DesktopMobile;
+            SocketFormat = ESocketFormat.Socket;
             ExportMorphTargets = true;
         }
     }
