@@ -334,6 +334,15 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var rayTracingData = Ar.ReadArray<byte>();
             }
 
+            if (Ar.Game >= EGame.GAME_UE5_1) // 5.1 ??
+            {
+                bool bSerializeCompressedMorphTargets = Ar.ReadBoolean();
+                if (bSerializeCompressedMorphTargets)
+                {
+                    // TODO
+                }
+            }
+
             NumVertices = positionVertexBuffer.NumVertices;
             NumTexCoords = staticMeshVertexBuffer.NumTexCoords;
 
