@@ -75,6 +75,12 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
+            if (Ar.Game == EGame.GAME_StateOfDecay2)
+            {
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                Version &= (EPakFileVersion) 0xFFFF;
+            }
+            
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             IndexOffset = Ar.Read<long>();
             IndexSize = Ar.Read<long>();
