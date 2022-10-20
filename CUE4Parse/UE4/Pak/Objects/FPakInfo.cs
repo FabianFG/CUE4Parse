@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using CUE4Parse.Compression;
@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
         {
             var hottaVersion = 0u;
-            if (offsetToTry == OffsetsToTry.SizeHotta)
+            if (Ar.Game == EGame.GAME_TowerOfFantasy && offsetToTry == OffsetsToTry.SizeHotta)
             {
                 hottaVersion = Ar.Read<uint>();
                 // Dirty way to keep backwards compatibility
@@ -85,6 +85,11 @@ namespace CUE4Parse.UE4.Pak.Objects
             IndexOffset = Ar.Read<long>();
             IndexSize = Ar.Read<long>();
             IndexHash = new FSHAHash(Ar);
+
+            if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeHotta && Version >= EPakFileVersion.PakFile_Version_Latest)
+            {
+                var mymVersion = Ar.Read<uint>(); // I assume this is a version, only 0 right now.
+            }
 
             if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
             {
@@ -199,12 +204,12 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 var offsetsToTry = Ar.Game switch
                 {
-                    EGame.GAME_TowerOfFantasy => new[] { OffsetsToTry.SizeHotta },
+                    EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker => new [] { OffsetsToTry.SizeHotta },
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
                 {
-                    reader.Seek(-(long)offset, SeekOrigin.End);
+                    reader.Seek(-(long) offset, SeekOrigin.End);
                     var info = new FPakInfo(reader, offset);
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
