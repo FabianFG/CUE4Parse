@@ -184,6 +184,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (tex == null) continue;
 
                 if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase) ||
+                    name.Contains("ws ", StringComparison.CurrentCultureIgnoreCase) ||
                     name.Contains("_2", StringComparison.CurrentCultureIgnoreCase)) continue;
 
                 Diffuse(name.Contains("dif", StringComparison.CurrentCultureIgnoreCase), 100, tex);
