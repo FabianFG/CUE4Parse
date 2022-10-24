@@ -17,6 +17,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public bool bHasVertexColors { get; private set; }
         public byte NumVertexColorChannels { get; private set; }
         public FPackageIndex[] MorphTargets { get; private set; }
+        public FPackageIndex[] Sockets { get; private set; }
+        public FPackageIndex Skeleton { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -24,6 +26,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
             NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
             MorphTargets = GetOrDefault<FPackageIndex[]>(nameof(MorphTargets));
+            Sockets = GetOrDefault<FPackageIndex[]>(nameof(Sockets));
+            Skeleton = GetOrDefault<FPackageIndex>(nameof(Skeleton));
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = new FBoxSphereBounds(Ar);

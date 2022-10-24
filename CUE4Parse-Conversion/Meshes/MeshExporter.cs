@@ -102,6 +102,17 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
+            List<FPackageIndex>? totalSockets = null;
+            if (options.SocketFormat != ESocketFormat.None)
+            {
+                totalSockets = new List<FPackageIndex>();
+                totalSockets.AddRange(originalMesh.Sockets);
+                if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
+                {
+                    totalSockets.AddRange(originalSkeleton.Sockets);
+                }
+            }
+            
             var i = 0;
             for (var lodIndex = 0; lodIndex < convertedMesh.LODs.Count; lodIndex++)
             {
@@ -119,7 +130,9 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     case EMeshFormat.ActorX:
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
-                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, options.ExportMorphTargets ? originalMesh.MorphTargets : null, lodIndex, options.Platform);
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, 
+                            options.ExportMorphTargets ? originalMesh.MorphTargets : null, 
+                            totalSockets, lodIndex, options);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -166,7 +179,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, int lodIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, List<FPackageIndex>? sockets, int lodIndex, ExporterOptions options)
         {
             var share = new CVertexShare();
             var infHdr = new VChunkHeader();
@@ -183,7 +196,8 @@ namespace CUE4Parse_Conversion.Meshes
                 share.AddVertex(vert.Position, vert.Normal, weightsHash);
             }
 
-            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports, platform);
+            ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports, options.Platform);
+            if (sockets is not null) ExportSockets(Ar, sockets, bones, options.SocketFormat);
             ExportSkeletonData(Ar, bones);
 
             var numInfluences = 0;
@@ -456,6 +470,58 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 delta.Serialize(Ar);
             }
+        }
+        
+        public void ExportSockets(FArchiveWriter Ar, List<FPackageIndex> sockets, List<CSkelMeshBone> bones, ESocketFormat socketFormat = ESocketFormat.Socket)
+        {
+            if (sockets is null) return;
+
+            if (socketFormat == ESocketFormat.Socket)
+            {
+                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Count, DataSize = Constants.VSocket_SIZE };
+                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+
+                for (var i = 0; i < sockets.Count; i++)
+                {
+                    var socket = sockets[i].Load<USkeletalMeshSocket>();
+                    if (socket is null) continue;
+
+                    var pskSocket = new VSocket(socket.SocketName.PlainText, socket.BoneName.PlainText, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
+                    pskSocket.Serialize(Ar);
+                }
+            }
+            else if (socketFormat == ESocketFormat.Bone)
+            {
+                for (var i = 0; i < sockets.Count; i++)
+                {
+                    var socket = sockets[i].Load<USkeletalMeshSocket>();
+                    if (socket is null) continue;
+
+                    var targetBoneIdx = -1;
+                    for (var j = 0; j < bones.Count; j++)
+                    {
+                        if (bones[j].Name.PlainText.Equals(socket.BoneName.PlainText))
+                        {
+                            targetBoneIdx = j;
+                            break;
+                        }
+                    }
+                    
+                    if (targetBoneIdx == -1) continue;
+                    
+                    var meshBone = new CSkelMeshBone
+                    {
+                        Name = socket.SocketName.PlainText,
+                        ParentIndex = targetBoneIdx,
+                        Position = socket.RelativeLocation,
+                        Orientation = socket.RelativeRotation
+                    };
+                    
+                    bones.Add(meshBone);
+                }
+            }
+            
+           
         }
 
         private int FindVertex(FVector a, IReadOnlyList<FVector> vertices)
