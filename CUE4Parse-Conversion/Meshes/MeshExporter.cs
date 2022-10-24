@@ -102,10 +102,17 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
-            var totalSockets = new List<FPackageIndex>();
-            totalSockets.AddRange(originalMesh.Sockets);
-            totalSockets.AddRange(originalMesh.Skeleton.Sockets);
-
+            List<FPackageIndex>? totalSockets = null;
+            if (options.SocketFormat != ESocketFormat.None)
+            {
+                totalSockets = new List<FPackageIndex>();
+                totalSockets.AddRange(originalMesh.Sockets);
+                if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
+                {
+                    totalSockets.AddRange(originalSkeleton.Sockets);
+                }
+            }
+            
             var i = 0;
             for (var lodIndex = 0; lodIndex < convertedMesh.LODs.Count; lodIndex++)
             {
@@ -125,7 +132,7 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
                         ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, 
                             options.ExportMorphTargets ? originalMesh.MorphTargets : null, 
-                            totalSockets,lodIndex, options);
+                            totalSockets, lodIndex, options);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -172,7 +179,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, List<FPackageIndex> sockets, int lodIndex, ExporterOptions options)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, List<FPackageIndex>? sockets, int lodIndex, ExporterOptions options)
         {
             var share = new CVertexShare();
             var infHdr = new VChunkHeader();
@@ -190,7 +197,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
 
             ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports, options.Platform);
-            ExportSockets(Ar, sockets, bones, options.SocketFormat);
+            if (sockets is not null) ExportSockets(Ar, sockets, bones, options.SocketFormat);
             ExportSkeletonData(Ar, bones);
 
             var numInfluences = 0;
