@@ -150,9 +150,9 @@ namespace CUE4Parse_Conversion.Meshes
                                 materialIndex = 0;
 
                             var materialName = materialIndex < originalMesh.Materials?.Length
-                                ? originalMesh.Materials[materialIndex].MaterialSlotName.Text : null;
+                                ? originalMesh.SkeletalMaterials[materialIndex].MaterialSlotName.Text : null;
                             var material = materialIndex < originalMesh.Materials?.Length
-                                ? originalMesh.Materials[materialIndex].Material : null;
+                                ? originalMesh.SkeletalMaterials[materialIndex].Material : null;
                             sections[j] = new CMeshSection(materialIndex, materialName, material, srcLod.Sections[j].BaseIndex,
                                 srcLod.Sections[j].NumTriangles);
                         }

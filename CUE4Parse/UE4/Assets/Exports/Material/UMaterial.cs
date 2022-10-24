@@ -217,6 +217,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Diffuse = null;
             }
         }
+        public override void GetParams(CMaterialParams2 parameters)
+        {
+            base.GetParams(parameters);
+            for (int i = 0; i < ReferencedTextures.Count; i++)
+            {
+                if (ReferencedTextures[i] is not { } texture) continue;
+                parameters.Textures[texture.Name] = texture;
+            }
+        }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
         {

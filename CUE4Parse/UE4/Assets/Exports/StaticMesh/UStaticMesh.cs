@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -18,11 +19,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FPackageIndex[] Sockets { get; private set; } // UStaticMeshSocket[]
         public FStaticMeshRenderData? RenderData { get; private set; }
         public FStaticMaterial[]? StaticMaterials { get; private set; }
-        public ResolvedObject[]? Materials { get; private set; } // UMaterialInterface[]
+        public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+            Materials = Array.Empty<ResolvedObject>();
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             bCooked = Ar.ReadBoolean();
@@ -71,24 +73,19 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 {
                     // UE4.14+ - "Materials" are deprecated, added StaticMaterials
                     StaticMaterials = Ar.ReadArray(() => new FStaticMaterial(Ar));
+                    Materials = new ResolvedObject[StaticMaterials.Length];
+                    for (var i = 0; i < Materials.Length; i++)
+                    {
+                        Materials[i] = StaticMaterials[i].MaterialInterface;
+                    }
                 }
             }
-
-            if (StaticMaterials is { Length: > 0 })
+            else if (TryGetValue(out FPackageIndex[] materials, "Materials"))
             {
-                Materials = new ResolvedObject[StaticMaterials.Length];
-                for (var i = 0; i < Materials.Length; i++)
+                Materials = new ResolvedObject[materials.Length];
+                for (int i = 0; i < materials.Length; i++)
                 {
-                    Materials[i] = StaticMaterials[i].MaterialInterface;
-                }
-            }
-
-            if (Materials is null && TryGetValue(out FPackageIndex[] mats, "Materials"))
-            {
-                Materials = new ResolvedObject[mats.Length];
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    Materials[i] = mats[i].ResolvedObject!;
+                    Materials[i] = materials[i].ResolvedObject!;
                 }
             }
         }

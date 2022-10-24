@@ -61,6 +61,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             parameters.MobileSpecularPower = MobileSpecularPower;
             parameters.MobileSpecularMask = MobileSpecularMask;
         }
+        public override void GetParams(CMaterialParams2 parameters)
+        {
+            //
+        }
 
         public void DeserializeInlineShaderMaps(FArchive Ar, ICollection<FMaterialResource> loadedResources)
         {
