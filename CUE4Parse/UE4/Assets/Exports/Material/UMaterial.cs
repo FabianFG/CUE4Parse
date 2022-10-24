@@ -220,6 +220,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public override void GetParams(CMaterialParams2 parameters)
         {
             base.GetParams(parameters);
+
+            parameters.AppendAllProperties(Properties);
+
             for (int i = 0; i < ReferencedTextures.Count; i++)
             {
                 if (ReferencedTextures[i] is not { } texture) continue;

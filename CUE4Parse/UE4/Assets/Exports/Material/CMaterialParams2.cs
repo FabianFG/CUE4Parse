@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -15,6 +17,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public readonly string[] SpecularMasks = { "SpecularMasks", "SpecularMasks_3", "SpecularMasks_4", "SpecularMasks_2" };
 
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
+        public readonly Dictionary<string, FLinearColor> Colors = new ();
+        public readonly Dictionary<string, float> Scalars = new ();
+        public readonly Dictionary<string, object?> Properties = new ();
 
         public IEnumerable<UUnrealMaterial> GetDiffuseTextures() => GetTextures(Diffuse);
         public IEnumerable<UUnrealMaterial> GetNormalsTextures() => GetTextures(Normals);
@@ -32,6 +37,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             foreach ((string key, UUnrealMaterial value) in Textures)
                 if (regex.IsMatch(key))
                     yield return value;
+        }
+
+        public void AppendAllProperties(IList<FPropertyTag> properties)
+        {
+            foreach (var property in properties)
+            {
+                if (property.Name.Text is "Parent" or "TextureParameterValues" or "VectorParameterValues" or "ScalarParameterValues")
+                    continue;
+
+                Properties[property.Name.Text] = property.Tag.GenericValue;
+            }
         }
     }
 }

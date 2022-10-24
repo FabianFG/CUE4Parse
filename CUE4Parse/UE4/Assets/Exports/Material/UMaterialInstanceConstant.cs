@@ -252,10 +252,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             base.GetParams(parameters);
 
+            parameters.AppendAllProperties(Properties);
+
             foreach (var textureParameter in TextureParameterValues)
             {
                 if (textureParameter.ParameterValue.Load<UTexture>() is not { } texture) continue;
                 parameters.Textures[textureParameter.Name] = texture;
+            }
+
+            foreach (var vectorParameter in VectorParameterValues)
+            {
+                if (vectorParameter.ParameterValue is not { } vector) continue;
+                parameters.Colors[vectorParameter.Name] = vector;
+            }
+
+            foreach (var scalarParameter in ScalarParameterValues)
+            {
+                parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;
             }
         }
 
