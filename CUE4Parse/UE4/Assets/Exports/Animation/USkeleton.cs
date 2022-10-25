@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -26,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // UObject Properties
             BoneTree = GetOrDefault<FBoneNode[]>(nameof(BoneTree));
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
-            Sockets = GetOrDefault<FPackageIndex[]>(nameof(Sockets));
+            Sockets = GetOrDefault<FPackageIndex[]>(nameof(Sockets), Array.Empty<FPackageIndex>());
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
