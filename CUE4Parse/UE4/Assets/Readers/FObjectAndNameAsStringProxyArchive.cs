@@ -11,12 +11,17 @@ namespace CUE4Parse.UE4.Assets.Readers
     {
         protected readonly FArchive InnerArchive;
 
-        public FObjectAndNameAsStringProxyArchive(FAssetArchive Ar) : base(Ar, Ar.Owner, Ar.AbsoluteOffset)
+        public FObjectAndNameAsStringProxyArchive(FAssetArchive Ar) : this(Ar, Ar.Owner, Ar.AbsoluteOffset)
         {
             InnerArchive = Ar;
         }
 
         public FObjectAndNameAsStringProxyArchive(FArchive Ar) : base(Ar, null)
+        {
+            InnerArchive = Ar;
+        }
+
+        public FObjectAndNameAsStringProxyArchive(FArchive Ar, IPackage owner, int absoluteOffset = 0) : base(Ar, owner, absoluteOffset)
         {
             InnerArchive = Ar;
         }
