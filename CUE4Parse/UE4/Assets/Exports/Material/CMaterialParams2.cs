@@ -10,11 +10,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string DefaultDiffuse = "DefaultDiffuse";
         public const string DefaultNormal = "DefaultNormal";
 
-        // UV       1 2 3 4
-        // TEXTURE  1 3 4 2
-        public static readonly string[] Diffuse = { "Diffuse", "Diffuse_Texture_3", "Diffuse_Texture_4", "Diffuse_Texture_2" };
-        public static readonly string[] Normals = { "Normals", "Normals_Texture_3", "Normals_Texture_4", "Normals_Texture_2" };
-        public static readonly string[] SpecularMasks = { "SpecularMasks", "SpecularMasks_3", "SpecularMasks_4", "SpecularMasks_2" };
+        public static readonly string[] Diffuse = { "Diffuse", "Diffuse_Texture_2", "Diffuse_Texture_3", "Diffuse_Texture_4" };
+        public static readonly string[] Normals = { "Normals", "Normals_Texture_2", "Normals_Texture_3", "Normals_Texture_4" };
+        public static readonly string[] SpecularMasks = { "SpecularMasks", "SpecularMasks_2", "SpecularMasks_3", "SpecularMasks_4" };
 
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
         public readonly Dictionary<string, FLinearColor> Colors = new ();
