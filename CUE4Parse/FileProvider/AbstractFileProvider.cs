@@ -477,7 +477,7 @@ namespace CUE4Parse.FileProvider
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
 
-            if (file is FPakEntry)
+            if (file is FPakEntry || file is OsGameFile)
             {
                 return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForGame, UseLazySerialization);
             }
