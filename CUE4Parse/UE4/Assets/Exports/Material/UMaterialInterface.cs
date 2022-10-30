@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -19,8 +22,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public float MobileSpecularPower = 16.0f;
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
         public UTexture? MobileMaskTexture;
-        public List<FMaterialResource> LoadedMaterialResources = new();
+        public FMaterialTextureInfo[]? TextureStreamingData;
         public FStructFallback? CachedExpressionData;
+        public List<FMaterialResource> LoadedMaterialResources = new();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -33,6 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
             MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
             MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
+            TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
             var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
 
@@ -61,9 +66,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             parameters.MobileSpecularPower = MobileSpecularPower;
             parameters.MobileSpecularMask = MobileSpecularMask;
         }
+
         public override void GetParams(CMaterialParams2 parameters)
         {
-            //
+            if (CachedExpressionData == null ||
+                !CachedExpressionData.TryGetValue(out FStructFallback materialParameters, "Parameters") ||
+                !materialParameters.TryGetAllValues(out FStructFallback[] runtimeEntries, "RuntimeEntries"))
+                return;
+
+            if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
+                runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfos"))
+                for (int i = 0; i < scalarParameterInfos.Length; i++)
+                    parameters.Scalars[scalarParameterInfos[i].Name.Text] = scalarValues[i];
+
+            if (materialParameters.TryGetValue(out FLinearColor[] vectorValues, "VectorValues") &&
+                runtimeEntries[1].TryGetValue(out FMaterialParameterInfo[] vectorParameterInfos, "ParameterInfos"))
+                for (int i = 0; i < vectorParameterInfos.Length; i++)
+                    parameters.Colors[vectorParameterInfos[i].Name.Text] = vectorValues[i];
+
+            if (materialParameters.TryGetValue(out FPackageIndex[] textureValues, "TextureValues") &&
+                runtimeEntries[2].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfos"))
+                for (int i = 0; i < textureParameterInfos.Length; i++)
+                    parameters.Textures[textureParameterInfos[i].Name.Text] = textureValues[i].Load<UTexture>();
         }
 
         public void DeserializeInlineShaderMaps(FArchive Ar, ICollection<FMaterialResource> loadedResources)

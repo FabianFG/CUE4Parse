@@ -11,20 +11,59 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string DefaultDiffuse = "DefaultDiffuse";
         public const string DefaultNormal = "DefaultNormal";
 
-        public static readonly string[] Diffuse = { "Diffuse", "Diffuse_Texture_2", "Diffuse_Texture_3", "Diffuse_Texture_4" };
-        public static readonly string[] Normals = { "Normals", "Normals_Texture_2", "Normals_Texture_3", "Normals_Texture_4" };
-        public static readonly string[] SpecularMasks = { "SpecularMasks", "SpecularMasks_2", "SpecularMasks_3", "SpecularMasks_4" };
-        public static readonly string[] Emissive = { "EmissiveTexture", "L1_Emissive", "L2_Emissive", "Emissive Texture 2" }; // idk tbh
+        public bool IsTransparent = false;
+        public bool IsNull => Textures.Count == 0 &&
+                              Colors.Count == 0 &&
+                              Scalars.Count == 0;
+
+        public static readonly string[][] Diffuse = {
+            new []{ "Diffuse", "Diffuse A", "Albedo", "Base Color" },
+            new []{ "Diffuse_Texture_2" },
+            new []{ "Diffuse_Texture_3" },
+            new []{ "Diffuse_Texture_4" },
+            new []{ "Diffuse_Texture_5" },
+            new []{ "Diffuse_Texture_6" },
+            new []{ "Diffuse_Texture_7" },
+            new []{ DefaultDiffuse }
+        };
+
+        public static readonly string[][] Normals = {
+            new []{ "Normals", "Normal", "Texture A Normal" },
+            new []{ "Normals_Texture_2", "Texture B Normal" },
+            new []{ "Normals_Texture_3" },
+            new []{ "Normals_Texture_4" },
+            new []{ "Normals_Texture_5" },
+            new []{ "Normals_Texture_6" },
+            new []{ "Normals_Texture_7" },
+            new []{ DefaultNormal }
+        };
+
+        public static readonly string[][] SpecularMasks = {
+            new []{ "SpecularMasks", "MRAE", "MRAS", "MRA", "MRS" },
+            new []{ "SpecularMasks_2" },
+            new []{ "SpecularMasks_3" },
+            new []{ "SpecularMasks_4" },
+            new []{ "SpecularMasks_5" },
+            new []{ "SpecularMasks_6" },
+            new []{ "SpecularMasks_7" },
+            new []{ "SpecularMasks_8" }
+        };
+
+        public static readonly string[][] Emissive = {
+            new []{ "Emissive", "EmissiveTexture" },
+            new []{ "L1_Emissive" },
+            new []{ "L2_Emissive" },
+            new []{ "L3_Emissive" },
+            new []{ "L4_Emissive" },
+            new []{ "L5_Emissive" },
+            new []{ "L6_Emissive" },
+            new []{ "L7_Emissive" }
+        };
 
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
         public readonly Dictionary<string, FLinearColor> Colors = new ();
         public readonly Dictionary<string, float> Scalars = new ();
         public readonly Dictionary<string, object?> Properties = new ();
-
-        public IEnumerable<UUnrealMaterial?> GetDiffuseTextures() => GetTexturesOrNull(Diffuse);
-        public IEnumerable<UUnrealMaterial?> GetNormalsTextures() => GetTexturesOrNull(Normals);
-        public IEnumerable<UUnrealMaterial?> GetSpecularMasksTextures() => GetTexturesOrNull(SpecularMasks);
-        public IEnumerable<UUnrealMaterial?> GetEmissiveTextures() => GetTexturesOrNull(Emissive);
 
         public IEnumerable<UUnrealMaterial> GetTextures(IEnumerable<string> names)
         {
@@ -52,7 +91,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     yield return value;
         }
 
-        public bool TryGetTexture2d(out UUnrealMaterial? texture, params string[] names)
+        public bool TryGetTexture2d(out UTexture2D? texture, params string[] names)
         {
             foreach (string name in names)
             {

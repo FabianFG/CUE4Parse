@@ -228,6 +228,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (ReferencedTextures[i] is not { } texture) continue;
                 parameters.Textures[texture.Name] = texture;
             }
+
+            // if (ReferencedTextures.Count > 0 &&
+            //     !parameters.Textures.TryGetValue("Diffuse", out _))
+            //     parameters.Textures["Diffuse"] = ReferencedTextures[0];
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)

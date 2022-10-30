@@ -244,6 +244,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             if (parameters.Diffuse == null && TextureParameterValues.Length == 1)
                 parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
         }
+
         public override void GetParams(CMaterialParams2 parameters)
         {
             // get params from linked UMaterial3
@@ -256,20 +257,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             foreach (var textureParameter in TextureParameterValues)
             {
-                if (textureParameter.ParameterValue.Load<UTexture>() is not { } texture) continue;
+                if (textureParameter.ParameterValue.Load<UTexture>() is not { } texture)
+                    continue;
                 parameters.Textures[textureParameter.Name] = texture;
             }
 
             foreach (var vectorParameter in VectorParameterValues)
             {
-                if (vectorParameter.ParameterValue is not { } vector) continue;
+                if (vectorParameter.ParameterValue is not { } vector)
+                    continue;
                 parameters.Colors[vectorParameter.Name] = vector;
             }
 
             foreach (var scalarParameter in ScalarParameterValues)
-            {
                 parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;
-            }
+
+            if (BasePropertyOverrides != null)
+                parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
