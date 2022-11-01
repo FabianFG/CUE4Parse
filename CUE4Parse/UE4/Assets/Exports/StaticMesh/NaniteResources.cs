@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 {
@@ -68,6 +69,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public uint NumInputVertices = 0;
         public ushort NumInputMeshes = 0;
         public ushort NumInputTexCoords = 0;
+        public uint NumClusters = 0;
         public uint ResourceFlags = 0;
 
         public FNaniteResources(FAssetArchive Ar)
@@ -90,6 +92,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 NumInputVertices = Ar.Read<uint>();
                 NumInputMeshes = Ar.Read<ushort>();
                 NumInputTexCoords = Ar.Read<ushort>();
+                if (Ar.Game >= EGame.GAME_UE5_1) NumClusters = Ar.Read<uint>();
             }
         }
     }
