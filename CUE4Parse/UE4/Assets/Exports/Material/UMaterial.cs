@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -229,9 +230,32 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Textures[texture.Name] = texture;
             }
 
-            // if (ReferencedTextures.Count > 0 &&
-            //     !parameters.Textures.TryGetValue("Diffuse", out _))
-            //     parameters.Textures["Diffuse"] = ReferencedTextures[0];
+            if (ReferencedTextures.Count == 1 && ReferencedTextures[0] is { } fallback)
+            {
+                parameters.Textures[CMaterialParams2.FallbackDiffuse] = fallback;
+                return;
+            }
+
+            for (int i = ReferencedTextures.Count - 1; i > -1; i--)
+            {
+                if (ReferencedTextures[i] is not { } texture) continue;
+
+                if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackDiffuse) &&
+                    Regex.IsMatch(texture.Name, ".*(?:Diff|_Tex|_Albedo|_Base_?Color).*|(?:_D|_DM|_C|_CM)$", RegexOptions.IgnoreCase))
+                    parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
+
+                if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackNormals) &&
+                    Regex.IsMatch(texture.Name, "^NO_|.*Norm.*|(?:_N|_NM)$", RegexOptions.IgnoreCase))
+                    parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
+
+                if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackSpecularMasks) &&
+                    Regex.IsMatch(texture.Name, "^SP_|.*(?:Specu|_S_).*|_S$", RegexOptions.IgnoreCase))
+                    parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
+
+                if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackEmissive) &&
+                    Regex.IsMatch(texture.Name, "^.*Emiss.*|(?:_E|_EM)$", RegexOptions.IgnoreCase))
+                    parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
+            }
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
