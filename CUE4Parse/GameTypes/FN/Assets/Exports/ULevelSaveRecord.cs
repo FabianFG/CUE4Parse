@@ -55,6 +55,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         SeasionTwentyTwoRelease,
         EnforceUniqueLabels,
         AddedConfigForNonSaveGameProperties,
+        AddedLevelSaveTags,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
