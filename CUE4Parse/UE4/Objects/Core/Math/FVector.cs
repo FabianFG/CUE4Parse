@@ -545,6 +545,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Ar.Write(Z);
         }
 
-        public static implicit operator Vector3(FVector v) => new(v.X, v.Z, v.Y);
+        public static implicit operator Vector3(FVector v) => new(v.X, v.Y, v.Z);
     }
 }

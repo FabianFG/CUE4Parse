@@ -29,7 +29,7 @@ namespace CUE4Parse_Conversion
             LodFormat = ELodFormat.FirstLod;
             MeshFormat = EMeshFormat.ActorX;
             Platform = ETexturePlatform.DesktopMobile;
-            SocketFormat = ESocketFormat.Socket;
+            SocketFormat = ESocketFormat.Bone;
             ExportMorphTargets = true;
         }
     }

@@ -187,6 +187,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public override string ToString() => $"P={Pitch} Y={Yaw} R={Roll}";
 
-        public static implicit operator Vector3(FRotator r) => new(r.Roll, r.Yaw, r.Pitch);
+        public static implicit operator Vector3(FRotator r) => new(r.Pitch, r.Yaw, r.Roll);
     }
 }

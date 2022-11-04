@@ -19,9 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool HasTopEmissive => HasTopTexture(Emissive[0]);
 
         public bool IsTransparent = false;
-        public bool IsNull => Textures.Count == 0 &&
-                              Colors.Count == 0 &&
-                              Scalars.Count == 0;
+        public bool IsNull => Textures.Count == 0;
 
         /// <summary>
         /// SWITCH TO REGEX ONCE WE HAVE A GOOD OVERVIEW OF TEXTURE NAMES
@@ -31,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Diffuse = {
             new []
             {
-                "Diffuse", "DiffuseTexture", "Diffuse A", "Albedo",
+                "ShadedDiffuse", "Diffuse", "DiffuseTexture", "Diffuse A", "Albedo",
                 "Base Color", "BaseColor", "Color", "CO", "CO_", "CO_1",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
