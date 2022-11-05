@@ -35,6 +35,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (!stripDataFlags.IsEditorDataStripped())
             {
+                Log.Warning("Static Mesh with Editor Data not implemented yet");
+                Ar.Position = validPos;
+                return;
                 // if (Ar.Ver < EUnrealEngineObjectUE4Version.DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED)
                 // {
                 //     var dummyThumbnailAngle = new FRotator(Ar);
