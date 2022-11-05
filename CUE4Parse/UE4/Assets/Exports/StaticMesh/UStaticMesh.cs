@@ -29,19 +29,18 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             bCooked = Ar.ReadBoolean();
             BodySetup = new FPackageIndex(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_STORE_NAV_COLLISION)
+
+            if (Ar.Game != EGame.GAME_GearsOfWar4 && Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_STORE_NAV_COLLISION)
                 NavCollision = new FPackageIndex(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())
             {
-                Log.Warning("Static Mesh with Editor Data not implemented yet");
-                Ar.Position = validPos;
-                return;
-                // if (Ar.Ver < UE4Version.VER_UE4_DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED)
+                // if (Ar.Ver < EUnrealEngineObjectUE4Version.DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED)
                 // {
                 //     var dummyThumbnailAngle = new FRotator(Ar);
                 //     var dummyThumbnailDistance = Ar.Read<float>();
                 // }
+                //
                 // var highResSourceMeshName = Ar.ReadFString();
                 // var highResSourceMeshCRC = Ar.Read<uint>();
             }

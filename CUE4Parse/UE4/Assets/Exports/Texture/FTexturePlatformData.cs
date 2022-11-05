@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 PackedData = Ar.Read<int>();
             }
 
-            PixelFormat = Ar.ReadFString();
+            PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
             if ((PackedData & BitMask_HasOptData) == BitMask_HasOptData)
             {
