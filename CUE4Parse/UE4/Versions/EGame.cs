@@ -18,6 +18,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_10 = GameUtils.GameUe4Base + 10 << 4,
             GAME_SeaOfThieves = GAME_UE4_10 + 1,
         GAME_UE4_11 = GameUtils.GameUe4Base + 11 << 4,
+            GAME_GearsOfWar4 = GAME_UE4_11 + 1,
         GAME_UE4_12 = GameUtils.GameUe4Base + 12 << 4,
         GAME_UE4_13 = GameUtils.GameUe4Base + 13 << 4,
             GAME_StateOfDecay2 = GAME_UE4_13 + 1,

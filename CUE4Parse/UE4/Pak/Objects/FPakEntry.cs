@@ -37,7 +37,32 @@ namespace CUE4Parse.UE4.Pak.Objects
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
+
             Offset = Ar.Read<long>();
+
+            if (Ar.Game == GAME_GearsOfWar4)
+            {
+                CompressedSize = Ar.Read<int>();
+                UncompressedSize = Ar.Read<int>();
+                CompressionMethod = (CompressionMethod) Ar.Read<byte>();
+
+                if (reader.Info.Version < PakFile_Version_NoTimestamps)
+                {
+                    Ar.Position += 8;
+                }
+
+                if (reader.Info.Version >= PakFile_Version_CompressionEncryption)
+                {
+                    if (CompressionMethod != CompressionMethod.None)
+                        CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
+                    CompressionBlockSize = Ar.Read<uint>();
+                    if (CompressionMethod == CompressionMethod.Oodle)
+                        CompressionMethod = CompressionMethod.LZ4;
+                }
+
+                goto endRead;
+            }
+
             CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
             Size = UncompressedSize;
@@ -119,6 +144,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 }
             }
 
+            endRead:
             StructSize = (int) (Ar.Position - startOffset);
         }
 

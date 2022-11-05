@@ -344,7 +344,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 AssetRegistryDataOffset = (int)(AssetRegistryDataOffset ^ 0xEEB2CEC7);
             }
 
-            if (Ar.Game == EGame.GAME_SeaOfThieves)
+            if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_GearsOfWar4)
             {
                 Ar.Position += 6; // no idea what's going on here.
             }

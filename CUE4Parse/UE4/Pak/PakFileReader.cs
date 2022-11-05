@@ -118,7 +118,7 @@ namespace CUE4Parse.UE4.Pak
         private IReadOnlyDictionary<string, GameFile> ReadIndexLegacy(bool caseInsensitive)
         {
             Ar.Position = Info.IndexOffset;
-            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize));
+            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize), Versions);
 
             string mountPoint;
             try
