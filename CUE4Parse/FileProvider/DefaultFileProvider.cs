@@ -26,7 +26,7 @@ namespace CUE4Parse.FileProvider
         public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
             : base(isCaseInsensitive, versions)
         {
-            _workingDirectory = new DirectoryInfo(@"C:\Users\GMatrixGames\Downloads\New\Paks");
+            _workingDirectory = directory;
             _searchOption = searchOption;
         }
 
