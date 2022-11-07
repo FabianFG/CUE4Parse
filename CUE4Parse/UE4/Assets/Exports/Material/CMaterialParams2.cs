@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
@@ -76,7 +77,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Emissive = {
             new []
             {
-                "Emissive", "EmissiveTexture", "EmissiveColor", "EmissiveMask"
+                "Emissive", "EmissiveTexture", "EmissiveColor", "EmissiveMask",
+                "SkinFX_Mask"
             },
             new []{ "L1_Emissive" },
             new []{ "L2_Emissive" },
@@ -85,6 +87,34 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []{ "L5_Emissive" },
             new []{ "L6_Emissive" },
             new []{ "L7_Emissive" }
+        };
+
+        public static readonly string[][] DiffuseColors = {
+            new []
+            {
+                "ColorMult", "Color_mul", "Base Color", "Color"
+            },
+            new []{ "" },
+            new []{ "" },
+            new []{ "" },
+            new []{ "" },
+            new []{ "" },
+            new []{ "" },
+            new []{ "" }
+        };
+
+        public static readonly string[][] EmissiveColors = {
+            new []
+            {
+                "Emissive", "EmissiveColor", "Emissive Color"
+            },
+            new []{ "Emissive1" },
+            new []{ "Emissive2" },
+            new []{ "Emissive3" },
+            new []{ "Emissive4" },
+            new []{ "Emissive5" },
+            new []{ "Emissive6" },
+            new []{ "Emissive7" }
         };
 
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
@@ -116,6 +146,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             foreach ((string key, UUnrealMaterial value) in Textures)
                 if (regex.IsMatch(key))
                     yield return value;
+        }
+
+        public bool TryGetFirstTexture2d(out UTexture2D? texture)
+        {
+            if (Textures.First() is { Value: UTexture2D texture2D })
+            {
+                texture = texture2D;
+                return true;
+            }
+
+            texture = null;
+            return false;
         }
 
         public bool TryGetTexture2d(out UTexture2D? texture, params string[] names)
