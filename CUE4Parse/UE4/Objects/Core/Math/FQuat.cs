@@ -203,7 +203,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             var squareSum = X * X + Y * Y + Z * Z + W * W;
 
-            if (Abs(squareSum-1.0f) >= tolerance)
+            if (squareSum >= tolerance)
             {
                 var scale = squareSum.InvSqrt();
 
