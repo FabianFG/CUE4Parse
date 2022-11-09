@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_3 = GameUtils.GameUe4Base + 3 << 4,
         GAME_UE4_4 = GameUtils.GameUe4Base + 4 << 4,
         GAME_UE4_5 = GameUtils.GameUe4Base + 5 << 4,
+            GAME_ArkSurvivalEvolved = GAME_UE4_5 + 1,
         GAME_UE4_6 = GameUtils.GameUe4Base + 6 << 4,
         GAME_UE4_7 = GameUtils.GameUe4Base + 7 << 4,
         GAME_UE4_8 = GameUtils.GameUe4Base + 8 << 4,
