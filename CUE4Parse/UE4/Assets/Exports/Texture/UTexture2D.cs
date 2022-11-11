@@ -29,12 +29,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public FGuid LightingGuid { get; private set; }
         public bool bRenderNearestNeighbor { get; private set; }
         public bool isNormalMap { get; private set; }
+        public bool SRGB { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
             LightingGuid = GetOrDefault<FGuid>(nameof(LightingGuid));
+            SRGB = GetOrDefault<bool>(nameof(SRGB), true);
             if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
                 bRenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
                                          trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);

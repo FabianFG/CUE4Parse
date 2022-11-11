@@ -249,7 +249,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackSpecularMasks) &&
-                    Regex.IsMatch(texture.Name, "^SP_|.*(?:Specu|_S_).*|_S$", RegexOptions.IgnoreCase))
+                    Regex.IsMatch(texture.Name, "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP)$", RegexOptions.IgnoreCase))
                     parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackEmissive) &&

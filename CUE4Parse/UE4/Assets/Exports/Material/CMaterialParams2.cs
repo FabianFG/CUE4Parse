@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "ShadedDiffuse", "Diffuse", "DiffuseTexture", "Diffuse A", "Albedo",
-                "Base Color", "BaseColor", "Color", "CO", "CO_", "CO_1",
+                "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
             new []{ "Diffuse_Texture_2", "Diffuse B", "CO_2" },
@@ -61,8 +61,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] SpecularMasks = {
             new []
             {
-                "SpecularMasks", "Specular", "PackedTexture", "SpecMap",
-                "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1",
+                "SpecularMasks", "Specular", "SpecMap",
+                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1",
                 "Cliff Spec Texture"
             },
             new []{ "SpecularMasks_2", "LP_2" },
@@ -77,8 +77,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Emissive = {
             new []
             {
-                "Emissive", "EmissiveTexture", "EmissiveColor", "EmissiveMask",
-                "SkinFX_Mask"
+                "Emissive", "EmissiveTexture", "EmissiveColor", "EmissiveMask"
             },
             new []{ "L1_Emissive" },
             new []{ "L2_Emissive" },
@@ -92,7 +91,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] DiffuseColors = {
             new []
             {
-                "ColorMult", "Color_mul", "Base Color", "Color"
+                "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color"
             },
             new []{ "" },
             new []{ "" },
@@ -106,7 +105,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] EmissiveColors = {
             new []
             {
-                "Emissive", "EmissiveColor", "Emissive Color"
+                "Emissive", "Emissive Color", "EmissiveColor"
             },
             new []{ "Emissive1" },
             new []{ "Emissive2" },
