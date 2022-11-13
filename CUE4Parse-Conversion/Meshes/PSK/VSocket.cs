@@ -10,10 +10,10 @@ public class VSocket
     public readonly string SocketName;
     public readonly string BoneName;
     public readonly FVector RelativeLocation;
-    public readonly FQuat RelativeRotation;
+    public readonly FRotator RelativeRotation;
     public readonly FVector RelativeScale;
 
-    public VSocket(string socketName, string boneName, FVector relativeLocation, FQuat relativeRotation, FVector relativeScale)
+    public VSocket(string socketName, string boneName, FVector relativeLocation, FRotator relativeRotation, FVector relativeScale)
     {
         SocketName = socketName;
         BoneName = boneName;
@@ -21,7 +21,7 @@ public class VSocket
         RelativeRotation = relativeRotation;
         RelativeScale = relativeScale;
     }
-    
+
     public void Serialize(FArchiveWriter Ar)
     {
         Ar.Write(SocketName.Substring(0, Math.Min(SocketName.Length, 64)), 64);

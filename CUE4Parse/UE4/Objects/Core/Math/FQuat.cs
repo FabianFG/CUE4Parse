@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -381,5 +382,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public static float operator |(FQuat a, FQuat b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
         public static FQuat operator *(FQuat a, float scale) => new FQuat(scale * a.X, scale * a.Y, scale * a.Z, scale * a.W);
         public static FQuat operator +(FQuat a, FQuat b) => new FQuat(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
+
+        public static implicit operator Quaternion(FQuat v) => new(v.X, v.Y, v.Z, v.W);
     }
 }

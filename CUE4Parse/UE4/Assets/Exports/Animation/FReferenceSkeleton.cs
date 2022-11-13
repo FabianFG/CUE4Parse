@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     {
         public readonly FMeshBoneInfo[] FinalRefBoneInfo;
         public readonly FTransform[] FinalRefBonePose;
-        public readonly Dictionary<FName, int>? FinalNameToIndexMap;
+        public readonly Dictionary<string, int> FinalNameToIndexMap;
 
         public FReferenceSkeleton(FAssetArchive Ar)
         {
@@ -23,12 +23,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
                 var num = Ar.Read<int>();
-                FinalNameToIndexMap = new Dictionary<FName, int>(num);
+                FinalNameToIndexMap = new Dictionary<string, int>(num);
                 for (var i = 0; i < num; ++i)
                 {
-                    FinalNameToIndexMap[Ar.ReadFName()] = Ar.Read<int>();
+                    FinalNameToIndexMap[Ar.ReadFName().Text] = Ar.Read<int>();
                 }
             }
+            else FinalNameToIndexMap = new Dictionary<string, int>();
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.FIXUP_ROOTBONE_PARENT)
             {

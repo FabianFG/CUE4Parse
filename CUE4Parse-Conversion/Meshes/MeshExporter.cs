@@ -112,7 +112,7 @@ namespace CUE4Parse_Conversion.Meshes
                     totalSockets.AddRange(originalSkeleton.Sockets);
                 }
             }
-            
+
             var i = 0;
             for (var lodIndex = 0; lodIndex < convertedMesh.LODs.Count; lodIndex++)
             {
@@ -130,8 +130,8 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     case EMeshFormat.ActorX:
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
-                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports, 
-                            options.ExportMorphTargets ? originalMesh.MorphTargets : null, 
+                        ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports,
+                            options.ExportMorphTargets ? originalMesh.MorphTargets : null,
                             totalSockets, lodIndex, options);
                         break;
                     case EMeshFormat.Gltf2:
@@ -430,7 +430,7 @@ namespace CUE4Parse_Conversion.Meshes
         public void ExportMorphTargets(FArchiveWriter Ar, CSkelMeshLod lod, CVertexShare share, FPackageIndex[]? morphTargets, int lodIndex)
         {
             if (morphTargets == null) return;
-            
+
             var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
             Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
 
@@ -452,7 +452,7 @@ namespace CUE4Parse_Conversion.Meshes
                     var index = FindVertex(vertex.Position, share.Points);
                     if (index == -1) continue;
                     if (localMorphDeltas.Any(x => x.PointIdx == index)) continue;
-                    
+
                     var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
                     localMorphDeltas.Add(morphData);
                     morphVertCount++;
@@ -463,7 +463,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var morphInfo = new VMorphInfo(morphTarget.Name, morphVertCount);
                 morphInfo.Serialize(Ar);
             }
-            
+
             var morphDataHdr = new VChunkHeader { DataCount = morphDeltas.Count, DataSize = Constants.VMorphData_SIZE };
             Ar.SerializeChunkHeader(morphDataHdr, "MRPHDATA");
             foreach (var delta in morphDeltas)
@@ -471,7 +471,7 @@ namespace CUE4Parse_Conversion.Meshes
                 delta.Serialize(Ar);
             }
         }
-        
+
         public void ExportSockets(FArchiveWriter Ar, List<FPackageIndex> sockets, List<CSkelMeshBone> bones, ESocketFormat socketFormat = ESocketFormat.Socket)
         {
             if (sockets is null) return;
@@ -486,7 +486,7 @@ namespace CUE4Parse_Conversion.Meshes
                     var socket = sockets[i].Load<USkeletalMeshSocket>();
                     if (socket is null) continue;
 
-                    var pskSocket = new VSocket(socket.SocketName.PlainText, socket.BoneName.PlainText, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
+                    var pskSocket = new VSocket(socket.SocketName.Text, socket.BoneName.Text, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
                     pskSocket.Serialize(Ar);
                 }
             }
@@ -500,28 +500,26 @@ namespace CUE4Parse_Conversion.Meshes
                     var targetBoneIdx = -1;
                     for (var j = 0; j < bones.Count; j++)
                     {
-                        if (bones[j].Name.PlainText.Equals(socket.BoneName.PlainText))
+                        if (bones[j].Name.Text.Equals(socket.BoneName.Text))
                         {
                             targetBoneIdx = j;
                             break;
                         }
                     }
-                    
+
                     if (targetBoneIdx == -1) continue;
-                    
+
                     var meshBone = new CSkelMeshBone
                     {
-                        Name = socket.SocketName.PlainText,
+                        Name = socket.SocketName.Text,
                         ParentIndex = targetBoneIdx,
                         Position = socket.RelativeLocation,
-                        Orientation = socket.RelativeRotation
+                        Orientation = socket.RelativeRotation.Quaternion()
                     };
-                    
+
                     bones.Add(meshBone);
                 }
             }
-            
-           
         }
 
         private int FindVertex(FVector a, IReadOnlyList<FVector> vertices)

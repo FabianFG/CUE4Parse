@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     [StructFallback]
     public class FTransform
     {
-        public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = new FVector(1, 1, 1) };
+        public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = FVector.OneVector };
 
         public FQuat Rotation;
         public FVector Translation;

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -182,6 +183,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public bool Equals(FRotator r, float tolerance = KindaSmallNumber) => System.Math.Abs(NormalizeAxis(Pitch - r.Pitch)) <= tolerance &&
                                                            System.Math.Abs(NormalizeAxis(Yaw - r.Yaw)) <= tolerance &&
                                                            System.Math.Abs(NormalizeAxis(Roll - r.Roll)) <= tolerance;
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(Pitch);
+            Ar.Write(Yaw);
+            Ar.Write(Roll);
+        }
 
         public override bool Equals(object? obj) => obj is FRotator other && Equals(other, 0f);
 
