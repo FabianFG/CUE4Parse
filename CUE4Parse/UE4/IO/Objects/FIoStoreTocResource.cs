@@ -117,11 +117,13 @@ namespace CUE4Parse.UE4.IO.Objects
 
             // Directory index
             if (Header.Version >= EIoStoreTocVersion.DirectoryIndex &&
-                readOptions.HasFlag(EIoStoreTocReadOptions.ReadDirectoryIndex) &&
                 Header.ContainerFlags.HasFlag(EIoContainerFlags.Indexed) &&
                 Header.DirectoryIndexSize > 0)
             {
-                DirectoryIndexBuffer = archive.ReadBytes((int) Header.DirectoryIndexSize);
+                if (readOptions.HasFlag(EIoStoreTocReadOptions.ReadDirectoryIndex))
+                    DirectoryIndexBuffer = archive.ReadBytes((int) Header.DirectoryIndexSize);
+                else
+                    archive.Position += Header.DirectoryIndexSize;
             }
 
             // Meta
