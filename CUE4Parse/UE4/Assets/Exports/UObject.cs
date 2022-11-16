@@ -400,7 +400,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             return IsFullNameStableForNetworking();
         }
 
-        public override string ToString() => GetFullName();
+        public override string ToString() => Name;
     }
 
     public static class PropertyUtil

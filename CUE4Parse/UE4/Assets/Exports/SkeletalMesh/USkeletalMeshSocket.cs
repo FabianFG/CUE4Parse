@@ -19,9 +19,9 @@ public class USkeletalMeshSocket : UObject
 
         SocketName = GetOrDefault<FName>(nameof(SocketName));
         BoneName = GetOrDefault<FName>(nameof(BoneName));
-        RelativeLocation = GetOrDefault<FVector>(nameof(RelativeLocation));
-        RelativeRotation = GetOrDefault<FRotator>(nameof(RelativeRotation));
-        RelativeScale = GetOrDefault<FVector>(nameof(RelativeScale));
+        RelativeLocation = GetOrDefault(nameof(RelativeLocation), FVector.ZeroVector);
+        RelativeRotation = GetOrDefault(nameof(RelativeRotation), FRotator.ZeroRotator);
+        RelativeScale = GetOrDefault(nameof(RelativeScale), FVector.OneVector);
         bForceAlwaysAnimated = GetOrDefault<bool>(nameof(bForceAlwaysAnimated));
     }
 }
