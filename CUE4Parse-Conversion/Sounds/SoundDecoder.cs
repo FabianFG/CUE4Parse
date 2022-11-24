@@ -76,7 +76,7 @@ namespace CUE4Parse_Conversion.Sounds
         {
             if (input == null) return null;
             if (!shouldDecompress) return input;
-            if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase))
+            if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase) || audioFormat.Equals("PCM", StringComparison.OrdinalIgnoreCase))
             {
                 using var archive = new FByteArchive("WhoDoesntLoveCats", input);
                 switch (ADPCMDecoder.GetAudioFormat(archive))
