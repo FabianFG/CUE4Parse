@@ -37,7 +37,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Ar.Write(A);
         }
 
-        public static implicit operator Vector4(FColor color) => new Vector4(color.R, color.G, color.B, color.A);
+        public static implicit operator Vector4(FColor color) => new (
+            Convert.ToSingle(color.R) / 255f, Convert.ToSingle(color.G) / 255f,
+            Convert.ToSingle(color.B) / 255f, Convert.ToSingle(color.A) / 255f);
 
         public override string ToString() => Hex;
 
