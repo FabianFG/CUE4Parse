@@ -36,6 +36,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_StarWarsJediFallenOrder = GAME_UE4_21 + 1,
         GAME_UE4_22 = GameUtils.GameUe4Base + 22 << 4,
         GAME_UE4_23 = GameUtils.GameUe4Base + 23 << 4,
+            GAME_ApexLegendsMobile = GAME_UE4_23 + 1,
         GAME_UE4_24 = GameUtils.GameUe4Base + 24 << 4,
         GAME_UE4_25 = GameUtils.GameUe4Base + 25 << 4,
             GAME_RogueCompany = GAME_UE4_25 + 1,
