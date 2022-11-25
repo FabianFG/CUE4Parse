@@ -174,6 +174,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     ClothingData = Ar.Read<FClothingSectionData>();
                 }
 
+                if (Ar.Game == EGame.GAME_KingdomHearts3)
+                {
+                    Ar.Position += sizeof(int) + sizeof(int); // unkBool & unkInt
+                }
+
                 if (FOverlappingVerticesCustomVersion.Get(Ar) >= FOverlappingVerticesCustomVersion.Type.DetectOVerlappingVertices)
                 {
                     var size = Ar.Read<int>();

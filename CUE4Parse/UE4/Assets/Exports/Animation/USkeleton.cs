@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // UObject Properties
             BoneTree = GetOrDefault<FBoneNode[]>(nameof(BoneTree));
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
-            Sockets = GetOrDefault<FPackageIndex[]>(nameof(Sockets), Array.Empty<FPackageIndex>());
+            Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
