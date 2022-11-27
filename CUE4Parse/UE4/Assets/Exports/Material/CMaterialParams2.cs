@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "ShadedDiffuse", "Diffuse", "DiffuseTexture", "Diffuse A", "Albedo",
-                "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1",
+                "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
             new []{ "Diffuse_Texture_2", "Diffuse B", "CO_2" },
@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Normals = {
             new []
             {
-                "Normals", "Normal", "NormalTexture", "NormalMap", "NM", "NM_1",
+                "Normals", "Normal", "NormalTexture", "NormalMap", "NM", "NM_1", "Base_NM",
                 "Texture A Normal", "CliffNormal"
             },
             new []{ "Normals_Texture_2", "Texture B Normal", "NM_2" },
@@ -62,16 +62,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "SpecularMasks", "Specular", "SpecMap",
-                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1",
+                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1", "Base_LP",
                 "Cliff Spec Texture"
             },
             new []{ "SpecularMasks_2", "LP_2" },
-            new []{ "SpecularMasks_3" },
-            new []{ "SpecularMasks_4" },
-            new []{ "SpecularMasks_5" },
-            new []{ "SpecularMasks_6" },
-            new []{ "SpecularMasks_7" },
-            new []{ "SpecularMasks_8" }
+            new []{ "SpecularMasks_3", "LP_3" },
+            new []{ "SpecularMasks_4", "LP_4" },
+            new []{ "SpecularMasks_5", "LP_5" },
+            new []{ "SpecularMasks_6", "LP_6" },
+            new []{ "SpecularMasks_7", "LP_7" },
+            new []{ "SpecularMasks_8", "LP_8" }
         };
 
         public static readonly string[][] Emissive = {
@@ -91,15 +91,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] DiffuseColors = {
             new []
             {
-                "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color"
+                "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "tex1_CO"
             },
-            new []{ "" },
-            new []{ "" },
-            new []{ "" },
-            new []{ "" },
-            new []{ "" },
-            new []{ "" },
-            new []{ "" }
+            new []{ "tex2_CO" },
+            new []{ "tex3_CO" },
+            new []{ "tex4_CO" },
+            new []{ "tex5_CO" },
+            new []{ "tex6_CO" },
+            new []{ "tex7_CO" },
+            new []{ "tex8_CO" }
         };
 
         public static readonly string[][] EmissiveColors = {

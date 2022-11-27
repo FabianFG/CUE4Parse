@@ -76,11 +76,13 @@ namespace CUE4Parse_Conversion.Meshes
                                 materialIndex--;
                             }
 
-                            sections[j] = new CMeshSection(materialIndex,
-                                originalMesh.StaticMaterials?[materialIndex].MaterialSlotName.Text, // materialName
-                                originalMesh.Materials[materialIndex], // material
-                                srcLod.Sections[j].FirstIndex, // firstIndex
-                                srcLod.Sections[j].NumTriangles); // numFaces
+                            if (materialIndex < 0) sections[j] = new CMeshSection(srcLod.Sections[j]);
+                            else
+                            {
+                                sections[j] = new CMeshSection(materialIndex, srcLod.Sections[j],
+                                    originalMesh.StaticMaterials?[materialIndex].MaterialSlotName.Text, // materialName
+                                    originalMesh.Materials[materialIndex]); // numFaces
+                            }
                         }
                         return sections;
                     })
@@ -160,11 +162,13 @@ namespace CUE4Parse_Conversion.Meshes
                                 materialIndex--;
                             }
 
-                            sections[j] = new CMeshSection(materialIndex,
-                                originalMesh.SkeletalMaterials[materialIndex].MaterialSlotName.Text,
-                                originalMesh.SkeletalMaterials[materialIndex].Material,
-                                srcLod.Sections[j].BaseIndex,
-                                srcLod.Sections[j].NumTriangles);
+                            if (materialIndex < 0) sections[j] = new CMeshSection(srcLod.Sections[j]);
+                            else
+                            {
+                                sections[j] = new CMeshSection(materialIndex, srcLod.Sections[j],
+                                    originalMesh.SkeletalMaterials[materialIndex].MaterialSlotName.Text,
+                                    originalMesh.SkeletalMaterials[materialIndex].Material);
+                            }
                         }
 
                         return sections;

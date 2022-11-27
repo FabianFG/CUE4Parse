@@ -1,4 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -10,13 +12,34 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int FirstIndex;
         public int NumFaces;
 
-        public CMeshSection(int materialIndex, string? materialName, ResolvedObject? material, int firstIndex, int numFaces)
+        public bool IsValid => MaterialIndex > -1;
+
+        public CMeshSection(FStaticMeshSection section)
         {
-            MaterialIndex = materialIndex;
+            MaterialIndex = -1;
+            FirstIndex = section.FirstIndex;
+            NumFaces = section.NumTriangles;
+        }
+
+        public CMeshSection(FSkelMeshSection section)
+        {
+            MaterialIndex = -1;
+            FirstIndex = section.BaseIndex;
+            NumFaces = section.NumTriangles;
+        }
+
+        public CMeshSection(int index, FStaticMeshSection section, string? materialName, ResolvedObject? material) : this(section)
+        {
+            MaterialIndex = index;
             MaterialName = materialName;
             Material = material;
-            FirstIndex = firstIndex;
-            NumFaces = numFaces;
+        }
+
+        public CMeshSection(int index, FSkelMeshSection section, string? materialName, ResolvedObject? material) : this(section)
+        {
+            MaterialIndex = index;
+            MaterialName = materialName;
+            Material = material;
         }
     }
 }
