@@ -167,7 +167,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             if (VTData != null)
             {
                 writer.WritePropertyName("VTData");
-                writer.WriteValue(VTData);
+                serializer.Serialize(writer, VTData);
             }
         }
     }

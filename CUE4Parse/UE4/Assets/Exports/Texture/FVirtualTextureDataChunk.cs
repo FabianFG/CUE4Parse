@@ -1,6 +1,8 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
@@ -23,43 +25,45 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public readonly FByteBulkData BulkData;
         public readonly uint SizeInBytes;
         public readonly uint CodecPayloadSize;
-        public readonly ushort[] CodecPayloadOffset;
+        public readonly uint[] CodecPayloadOffset;
         public readonly EVirtualTextureCodec[] CodecType;
 
         public FVirtualTextureDataChunk(FAssetArchive Ar, uint numLayers)
         {
             CodecType = new EVirtualTextureCodec[numLayers];
-            CodecPayloadOffset = new ushort[numLayers];
+            CodecPayloadOffset = new uint[numLayers];
+            if (Ar.Game >= EGame.GAME_UE5_0)
+                Ar.Position += FSHAHash.SIZE; // var bulkDataHash = new FSHAHash(Ar);
 
             SizeInBytes = Ar.Read<uint>();
             CodecPayloadSize = Ar.Read<uint>();
             for (uint layerIndex = 0u; layerIndex < numLayers; ++layerIndex)
             {
                 CodecType[layerIndex] = Ar.Read<EVirtualTextureCodec>();
-                CodecPayloadOffset[layerIndex] = Ar.Read<ushort>();
+                CodecPayloadOffset[layerIndex] = Ar.Game >= EGame.GAME_UE5_0 ? Ar.Read<uint>() : Ar.Read<ushort>();
             }
             BulkData = new FByteBulkData(Ar);
         }
     }
-    
+
     public class FVirtualTextureDataChunkConverter : JsonConverter<FVirtualTextureDataChunk>
     {
         public override void WriteJson(JsonWriter writer, FVirtualTextureDataChunk value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("BulkData");
             serializer.Serialize(writer, value.BulkData);
-            
+
             writer.WritePropertyName("SizeInBytes");
             writer.WriteValue(value.SizeInBytes);
-            
+
             writer.WritePropertyName("CodecPayloadSize");
             writer.WriteValue(value.CodecPayloadSize);
-            
+
             writer.WritePropertyName("CodecPayloadOffset");
             serializer.Serialize(writer, value.CodecPayloadOffset);
-            
+
             writer.WritePropertyName("CodecType");
             writer.WriteStartArray();
             foreach (var codec in value.CodecType)
@@ -67,7 +71,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 writer.WriteValue(codec.ToString());
             }
             writer.WriteEndArray();
-            
+
             writer.WriteEndObject();
         }
 
