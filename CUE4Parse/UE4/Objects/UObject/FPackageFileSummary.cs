@@ -44,6 +44,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly string FolderName;
         public int NameCount;
         public readonly int NameOffset;
+        public readonly int SoftObjectPathsCount;
+        public readonly int SoftObjectPathsOffset;
         public readonly string? LocalizationId;
         public readonly int GatherableTextDataCount;
         public readonly int GatherableTextDataOffset;
@@ -198,6 +200,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             afterPackageFlags:
             NameCount = Ar.Read<int>();
             NameOffset = Ar.Read<int>();
+
+            if (FileVersionUE.FileVersionUE5 >= EUnrealEngineObjectUE5Version.ADD_SOFTOBJECTPATH_LIST)
+            {
+                SoftObjectPathsCount = Ar.Read<int>();
+                SoftObjectPathsOffset = Ar.Read<int>();
+            }
 
             if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
             {
