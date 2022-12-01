@@ -201,7 +201,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             NameCount = Ar.Read<int>();
             NameOffset = Ar.Read<int>();
 
-            if (FileVersionUE.FileVersionUE5 >= EUnrealEngineObjectUE5Version.ADD_SOFTOBJECTPATH_LIST)
+            if (FileVersionUE >= EUnrealEngineObjectUE5Version.ADD_SOFTOBJECTPATH_LIST)
             {
                 SoftObjectPathsCount = Ar.Read<int>();
                 SoftObjectPathsOffset = Ar.Read<int>();
