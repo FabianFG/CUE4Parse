@@ -224,6 +224,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MaterialIndex = Ar.Read<short>();
             BaseIndex = Ar.Read<int>();
             NumTriangles = Ar.Read<int>();
+            if (Ar.Game == EGame.GAME_Paragon) Ar.Position += 1; // bool
             bRecomputeTangent = Ar.ReadBoolean();
             RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
             bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
@@ -235,6 +236,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MaxBoneInfluences = Ar.Read<int>();
             CorrespondClothAssetIndex = Ar.Read<short>();
             ClothingData = Ar.Read<FClothingSectionData>();
+
+            if (Ar.Game == EGame.GAME_Paragon) return;
 
             if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
             {

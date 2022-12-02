@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
@@ -72,6 +72,10 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                // Game Overrides
+                EGame.GAME_Paragon => Type.SplitModelAndRenderData,
+
+                // Engine
                 < EGame.GAME_UE4_13 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_14 => Type.SaveNumVertices,
                 < EGame.GAME_UE4_15 => Type.RegenerateClothingShadowFlags,
