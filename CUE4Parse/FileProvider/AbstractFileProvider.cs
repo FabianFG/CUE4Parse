@@ -324,7 +324,8 @@ namespace CUE4Parse.FileProvider
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
             var root = path.SubstringBefore('/');
-            if (root.Equals(GameName, StringComparison.OrdinalIgnoreCase))
+            var child = path.SubstringAfter('/').SubstringBefore('/');
+            if (root.Equals(GameName, StringComparison.OrdinalIgnoreCase) && child.Equals("Content", StringComparison.Ordinal))
             {
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
