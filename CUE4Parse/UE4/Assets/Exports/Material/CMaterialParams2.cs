@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "ShadedDiffuse", "Diffuse", "DiffuseTexture", "Diffuse A", "Albedo",
-                "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
+                "Base Color Texture", "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
             new []{ "Diffuse_Texture_2", "Diffuse B", "CO_2" },
@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Normals = {
             new []
             {
-                "Normals", "Normal", "NormalTexture", "NormalMap", "NM", "NM_1", "Base_NM",
+                "Normals", "Normal", "NormalTexture", "Normal Texture", "NormalMap", "NM", "NM_1", "Base_NM",
                 "Texture A Normal", "CliffNormal"
             },
             new []{ "Normals_Texture_2", "Texture B Normal", "NM_2" },
@@ -119,6 +119,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
         public readonly Dictionary<string, FLinearColor> Colors = new ();
         public readonly Dictionary<string, float> Scalars = new ();
+        public readonly Dictionary<string, bool> Switchs = new ();
         public readonly Dictionary<string, object?> Properties = new ();
 
         public IEnumerable<UUnrealMaterial> GetTextures(IEnumerable<string> names)
