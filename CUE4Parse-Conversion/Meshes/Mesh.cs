@@ -18,20 +18,21 @@ namespace CUE4Parse_Conversion.Meshes
             Materials = materials;
         }
 
-        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
-            savedFileName = string.Empty;
+            label = string.Empty;
+            savedFilePath = string.Empty;
             if (!baseDirectory.Exists || FileData.Length <= 0) return false;
 
             foreach (var material in Materials)
             {
-                material.TryWriteToDir(baseDirectory, out _);
+                material.TryWriteToDir(baseDirectory, out _, out _);
             }
 
-            var filePath = FixAndCreatePath(baseDirectory, FileName);
-            File.WriteAllBytes(filePath, FileData);
-            savedFileName = Path.GetFileName(filePath);
-            return File.Exists(filePath);
+            savedFilePath = FixAndCreatePath(baseDirectory, FileName);
+            File.WriteAllBytes(savedFilePath, FileData);
+            label = Path.GetFileName(savedFilePath);
+            return File.Exists(savedFilePath);
         }
 
         public override bool TryWriteToZip(out byte[] zipFile)

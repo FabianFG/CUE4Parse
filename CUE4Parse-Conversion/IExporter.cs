@@ -36,14 +36,30 @@ namespace CUE4Parse_Conversion
 
     public interface IExporter
     {
-        public bool TryWriteToDir(DirectoryInfo directoryInfo, out string savedFileName);
+        public bool TryWriteToDir(DirectoryInfo directoryInfo, out string label, out string savedFileName);
         public bool TryWriteToZip(out byte[] zipFile);
         public void AppendToZip();
     }
 
     public abstract class ExporterBase : IExporter
     {
-        public abstract bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName);
+        protected readonly string PackagePath;
+        protected readonly string ExportName;
+
+        protected ExporterBase()
+        {
+            PackagePath = string.Empty;
+            ExportName = string.Empty;
+        }
+
+        protected ExporterBase(UObject export)
+        {
+            var p = export.GetPathName();
+            PackagePath = p.SubstringBeforeLast('.');
+            ExportName = p.SubstringAfterLast('.');
+        }
+
+        public abstract bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath);
         public abstract bool TryWriteToZip(out byte[] zipFile);
         public abstract void AppendToZip();
 
@@ -73,8 +89,8 @@ namespace CUE4Parse_Conversion
             };
         }
 
-        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName) =>
-            _exporterBase.TryWriteToDir(baseDirectory, out savedFileName);
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath) =>
+            _exporterBase.TryWriteToDir(baseDirectory, out label, out savedFilePath);
 
         public override bool TryWriteToZip(out byte[] zipFile) => _exporterBase.TryWriteToZip(out zipFile);
 
