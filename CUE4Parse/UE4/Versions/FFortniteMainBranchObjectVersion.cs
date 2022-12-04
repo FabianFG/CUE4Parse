@@ -225,6 +225,42 @@ namespace CUE4Parse.UE4.Versions
 		    // if a widget exposes its named slot to everyone (even if it has content), which by default they wont any longer.
 		    WidgetInheritedNamedSlots,
 
+            // Added water HLOD material
+            WaterHLODSupportAdded,
+
+            // Moved parameters affecting Skeleton pose rendering from the PoseWatch class to the PoseWatchPoseElement class.
+            PoseWatchMigrateSkeletonDrawParametersToPoseElement,
+
+            // Reset default value for Water exclusion volumes to make them more intuitive and support the "it just works" philosophy.
+            WaterExclusionVolumeExcludeAllDefault,
+
+            // Added water non-tessellated LOD
+            WaterNontessellatedLODSupportAdded,
+
+            // Added FHierarchicalSimplification::SimplificationMethod
+            HierarchicalSimplificationMethodEnumAdded,
+
+            // Changed how world partition streaming cells are named
+            WorldPartitionStreamingCellsNamingShortened,
+
+            // Serialize ContentBundleGuid in WorldPartitionActorDesc
+            WorldPartitionActorDescSerializeContentBundleGuid,
+
+            // Serialize IsActorRuntimeOnly in WorldPartitionActorDesc
+            WorldPartitionActorDescSerializeActorIsRuntimeOnly,
+
+            // Add Nanite Material Override option to materials and material instances.
+            NaniteMaterialOverride,
+
+            // Serialize HLOD stats in HLODActorDesc
+            WorldPartitionHLODActorDescSerializeStats,
+
+            // WorldPartitionStreamingSourceComponent property deprecation
+            WorldPartitionStreamingSourceComponentTargetDeprecation,
+
+            // Fixed localization gathering for external actor packages
+            FixedLocalizationGatherForExternalActorPackage,
+
 		    // -----<new versions can be added above this line>-------------------------------------------------
 		    VersionPlusOne,
 		    LatestVersion = VersionPlusOne - 1

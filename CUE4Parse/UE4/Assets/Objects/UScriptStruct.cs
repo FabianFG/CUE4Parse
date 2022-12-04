@@ -63,6 +63,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "NiagaraVariableBase" => new FNiagaraVariableBase(Ar),
                 "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
                 "NiagaraDataInterfaceGPUParamInfo" => new FNiagaraDataInterfaceGPUParamInfo(Ar),
+                "MaterialOverrideNanite" => type == ReadType.ZERO ? new FMaterialOverrideNanite() : new FMaterialOverrideNanite(Ar),
                 "MovieSceneEvalTemplatePtr" => new FMovieSceneEvalTemplatePtr(Ar),
                 "MovieSceneEvaluationFieldEntityTree" => new FMovieSceneEvaluationFieldEntityTree(Ar),
                 "MovieSceneEvaluationKey" => type == ReadType.ZERO ? new FMovieSceneEvaluationKey() : Ar.Read<FMovieSceneEvaluationKey>(),

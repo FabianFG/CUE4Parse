@@ -40,7 +40,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
             var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
-
             if (bSavedCachedExpressionData)
             {
                 CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
