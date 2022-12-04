@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CUE4Parse.UE4.AssetRegistry.Objects
+﻿namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
     public static class FValueHandle
     {

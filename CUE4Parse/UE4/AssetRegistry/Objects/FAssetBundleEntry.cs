@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public FAssetBundleEntry(FAssetRegistryArchive Ar)
         {
             BundleName = Ar.ReadFName();
-            BundleAssets = Ar.ReadArray(() => new FSoftObjectPath(Ar.ReadFName(), Ar.ReadFString()));
+            BundleAssets = Ar.ReadArray(() => new FSoftObjectPath(Ar.Header.Version >= FAssetRegistryVersionType.ClassPaths ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName(), Ar.ReadFString()));
         }
     }
 }
