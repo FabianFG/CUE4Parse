@@ -13,13 +13,11 @@ namespace CUE4Parse_Conversion.Animations
 {
     public class AnimExporter : ExporterBase
     {
-        public readonly string AnimName;
         public readonly List<Anim> AnimSequences;
 
-        public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null)
+        public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null) : base(animSequence != null ? animSequence : skeleton)
         {
             AnimSequences = new List<Anim>();
-            AnimName = animSequence?.Owner?.Name ?? animSequence?.Name ?? skeleton.Owner?.Name ?? skeleton.Name;
 
             var anim = skeleton.ConvertAnims(animSequence);
             if (anim.Sequences.Count == 0)
@@ -208,7 +206,7 @@ namespace CUE4Parse_Conversion.Animations
             }
 
             // psa file is done
-            AnimSequences.Add(new Anim($"{AnimName}_SEQ{seqIdx}.psa", Ar.GetBuffer()));
+            AnimSequences.Add(new Anim($"{PackagePath}_SEQ{seqIdx}.psa", Ar.GetBuffer()));
             Ar.Dispose();
 
             // generate configuration file with extended attributes
@@ -221,20 +219,21 @@ namespace CUE4Parse_Conversion.Animations
             }
         }
 
-        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
             var b = false;
-            savedFileName = AnimName.SubstringAfterLast('/');
+            label = string.Empty;
+            savedFilePath = PackagePath;
             if (AnimSequences.Count == 0) return b;
 
             var outText = "SEQ ";
             for (var i = 0; i < AnimSequences.Count; i++)
             {
-                b |= AnimSequences[i].TryWriteToDir(baseDirectory, out savedFileName);
+                b |= AnimSequences[i].TryWriteToDir(baseDirectory, out label, out savedFilePath);
                 outText += $"{i} ";
             }
 
-            savedFileName = outText + $"as '{savedFileName.SubstringAfterWithLast('.')}' for '{AnimName.SubstringAfterLast('/')}'";
+            label = outText + $"as '{savedFilePath.SubstringAfterWithLast('.')}' for '{ExportName}'";
             return b;
         }
 

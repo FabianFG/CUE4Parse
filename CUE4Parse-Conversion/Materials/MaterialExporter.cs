@@ -82,14 +82,15 @@ namespace CUE4Parse_Conversion.Materials
                 _parentData = new MaterialExporter(material.Parent, bNoOtherTextures);
         }
 
-        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string savedFileName)
+        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
-            savedFileName = string.Empty;
+            label = string.Empty;
+            savedFilePath = string.Empty;
             if (!baseDirectory.Exists || string.IsNullOrEmpty(_fileData)) return false;
 
-            var filePath = FixAndCreatePath(baseDirectory, _internalFilePath, "mat");
-            File.WriteAllText(filePath, _fileData);
-            savedFileName = Path.GetFileName(filePath);
+            savedFilePath = FixAndCreatePath(baseDirectory, _internalFilePath, "mat");
+            File.WriteAllText(savedFilePath, _fileData);
+            label = Path.GetFileName(savedFilePath);
 
             foreach ((string? name, SKBitmap? bitmap) in _textures)
             {
@@ -103,7 +104,7 @@ namespace CUE4Parse_Conversion.Materials
             }
 
             if (_parentData != null)
-                _parentData.TryWriteToDir(baseDirectory, out _);
+                _parentData.TryWriteToDir(baseDirectory, out _, out _);
 
             return true;
         }
