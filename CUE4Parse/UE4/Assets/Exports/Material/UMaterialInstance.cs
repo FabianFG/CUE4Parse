@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -13,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         private ResolvedObject? _parent;
         public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();
         public bool bHasStaticPermutationResource;
-        public FMaterialInstanceBasePropertyOverrides BasePropertyOverrides;
+        public FMaterialInstanceBasePropertyOverrides? BasePropertyOverrides;
         public FStaticParameterSet? StaticParameters;
         public FStructFallback? CachedData;
 
@@ -87,7 +88,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public FStaticParameterSet(FStructFallback fallback)
         {
-            StaticSwitchParameters = fallback.GetOrDefault<FStaticSwitchParameter[]>(nameof(StaticSwitchParameters));
+            StaticSwitchParameters = fallback.GetOrDefault(nameof(StaticSwitchParameters), Array.Empty<FStaticSwitchParameter>());
+            StaticComponentMaskParameters = fallback.GetOrDefault(nameof(StaticComponentMaskParameters), Array.Empty<FStaticComponentMaskParameter>());
+            TerrainLayerWeightParameters = fallback.GetOrDefault(nameof(TerrainLayerWeightParameters), Array.Empty<FStaticTerrainLayerWeightParameter>());
+            MaterialLayersParameters = fallback.GetOrDefault(nameof(MaterialLayersParameters), Array.Empty<FStaticMaterialLayersParameter>());
         }
     }
 }

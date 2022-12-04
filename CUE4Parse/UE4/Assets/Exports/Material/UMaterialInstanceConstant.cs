@@ -11,8 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FScalarParameterValue[] ScalarParameterValues;
         public FTextureParameterValue[] TextureParameterValues;
         public FVectorParameterValue[] VectorParameterValues;
-        public FStaticParameterSet? StaticParameters;
-        public new FMaterialInstanceBasePropertyOverrides? BasePropertyOverrides;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -20,8 +18,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ScalarParameterValues = GetOrDefault(nameof(ScalarParameterValues), Array.Empty<FScalarParameterValue>());
             TextureParameterValues = GetOrDefault(nameof(TextureParameterValues), Array.Empty<FTextureParameterValue>());
             VectorParameterValues = GetOrDefault(nameof(VectorParameterValues), Array.Empty<FVectorParameterValue>());
-            StaticParameters = GetOrDefault<FStaticParameterSet>(nameof(StaticParameters));
-            BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
         }
 
         public override void GetParams(CMaterialParams parameters)

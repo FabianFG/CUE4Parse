@@ -7,6 +7,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material.Parameters
     {
         public bool R, G, B, A;
 
+        public FStaticComponentMaskParameter() : base()
+        {
+
+        }
+
         public FStaticComponentMaskParameter(FArchive Ar) : base(Ar)
         {
             R = Ar.ReadBoolean();
