@@ -31,31 +31,31 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_BaseColor", "ShadedDiffuse", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Albedo",
-                "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
+                "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
-            new []{ "Diffuse_Texture_2", "Diffuse B", "CO_2" },
-            new []{ "Diffuse_Texture_3", "Diffuse C", "CO_3" },
-            new []{ "Diffuse_Texture_4", "Diffuse D", "CO_4" },
-            new []{ "Diffuse_Texture_5", "Diffuse E", "CO_5" },
-            new []{ "Diffuse_Texture_6", "Diffuse F", "CO_6" },
-            new []{ "Diffuse_Texture_7", "Diffuse G", "CO_7" },
-            new []{ "Diffuse_Texture_8", "Diffuse H", "CO_8" }
+            new []{ "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2" },
+            new []{ "Diffuse_Texture_3", "Diffuse C", "BaseColorC", "CO_3" },
+            new []{ "Diffuse_Texture_4", "Diffuse D", "BaseColorD", "CO_4" },
+            new []{ "Diffuse_Texture_5", "Diffuse E", "BaseColorE", "CO_5" },
+            new []{ "Diffuse_Texture_6", "Diffuse F", "BaseColorF", "CO_6" },
+            new []{ "Diffuse_Texture_7", "Diffuse G", "BaseColorG", "CO_7" },
+            new []{ "Diffuse_Texture_8", "Diffuse H", "BaseColorH", "CO_8" }
         };
 
         public static readonly string[][] Normals = {
             new []
             {
-                "Trunk_Normal", "Normals", "Normal", "NormalTexture", "Normal Texture", "NormalMap", "NM", "NM_1", "Base_NM",
+                "Trunk_Normal", "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "NM", "NM_1", "Base_NM",
                 "Texture A Normal", "CliffNormal"
             },
-            new []{ "Normals_Texture_2", "Texture B Normal", "NM_2" },
-            new []{ "Normals_Texture_3", "Texture C Normal", "NM_3" },
-            new []{ "Normals_Texture_4", "Texture D Normal", "NM_4" },
-            new []{ "Normals_Texture_5", "Texture E Normal", "NM_5" },
-            new []{ "Normals_Texture_6", "Texture F Normal", "NM_6" },
-            new []{ "Normals_Texture_7", "Texture G Normal", "NM_7" },
-            new []{ "Normals_Texture_8", "Texture H Normal", "NM_8" }
+            new []{ "Normals_Texture_2", "Texture B Normal", "NormalB", "NM_2" },
+            new []{ "Normals_Texture_3", "Texture C Normal", "NormalC", "NM_3" },
+            new []{ "Normals_Texture_4", "Texture D Normal", "NormalD", "NM_4" },
+            new []{ "Normals_Texture_5", "Texture E Normal", "NormalE", "NM_5" },
+            new []{ "Normals_Texture_6", "Texture F Normal", "NormalF", "NM_6" },
+            new []{ "Normals_Texture_7", "Texture G Normal", "NormalG", "NM_7" },
+            new []{ "Normals_Texture_8", "Texture H Normal", "NormalH", "NM_8" }
         };
 
         public static readonly string[][] SpecularMasks = {
@@ -77,15 +77,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Emissive = {
             new []
             {
-                "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask"
+                "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
+                "EmmisiveColor_A"
             },
-            new []{ "L1_Emissive" },
-            new []{ "L2_Emissive" },
-            new []{ "L3_Emissive" },
-            new []{ "L4_Emissive" },
-            new []{ "L5_Emissive" },
-            new []{ "L6_Emissive" },
-            new []{ "L7_Emissive" }
+            new []{ "L1_Emissive", "EmmisiveColor_B" },
+            new []{ "L2_Emissive", "EmmisiveColor_C" },
+            new []{ "L3_Emissive", "EmmisiveColor_D" },
+            new []{ "L4_Emissive", "EmmisiveColor_E" },
+            new []{ "L5_Emissive", "EmmisiveColor_F" },
+            new []{ "L6_Emissive", "EmmisiveColor_G" },
+            new []{ "L7_Emissive", "EmmisiveColor_H" }
         };
 
         public static readonly string[][] DiffuseColors = {
