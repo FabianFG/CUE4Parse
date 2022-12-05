@@ -89,6 +89,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
                 "Vector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
                 "Vector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
+                "Vector3f" => type == ReadType.ZERO ? new TIntVector3<float>() : Ar.Read<TIntVector3<float>>(), // FVector but ignore LARGE_WORLD_COORDINATES
                 "Vector4" => type == ReadType.ZERO ? new FVector4() : new FVector4(Ar),
                 "Vector_NetQuantize" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
                 "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
