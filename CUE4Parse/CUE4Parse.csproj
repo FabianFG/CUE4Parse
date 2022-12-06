@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
     <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>1.0.2</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -50,22 +50,22 @@
   <ItemGroup>
     <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>content;contentFiles</PackagePath>
+      <PackagePath>content;contentFiles;lib</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
     <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>content;contentFiles</PackagePath>
+      <PackagePath>content;contentFiles;lib</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
     <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>content;contentFiles</PackagePath>
+      <PackagePath>content;contentFiles;lib</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
     <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackagePath>content;contentFiles</PackagePath>
+      <PackagePath>content;contentFiles;lib</PackagePath>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
   </ItemGroup>
