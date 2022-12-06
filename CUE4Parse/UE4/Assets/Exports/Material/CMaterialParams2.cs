@@ -7,6 +7,12 @@ using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
+    public struct TextureMapping
+    {
+        public int UVSet;
+        public int Index;
+    }
+
     public class CMaterialParams2
     {
         public const string FallbackDiffuse = "PM_Diffuse";
@@ -30,17 +36,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Diffuse = {
             new []
             {
-                "Trunk_BaseColor", "ShadedDiffuse", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Albedo",
+                "Trunk_BaseColor", "ShadedDiffuse", "Background Diffuse", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Albedo",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture"
             },
-            new []{ "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2" },
-            new []{ "Diffuse_Texture_3", "Diffuse C", "BaseColorC", "CO_3" },
-            new []{ "Diffuse_Texture_4", "Diffuse D", "BaseColorD", "CO_4" },
-            new []{ "Diffuse_Texture_5", "Diffuse E", "BaseColorE", "CO_5" },
-            new []{ "Diffuse_Texture_6", "Diffuse F", "BaseColorF", "CO_6" },
-            new []{ "Diffuse_Texture_7", "Diffuse G", "BaseColorG", "CO_7" },
-            new []{ "Diffuse_Texture_8", "Diffuse H", "BaseColorH", "CO_8" }
+            new []{ "Background Diffuse 2", "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2" },
+            new []{ "Background Diffuse 3", "Diffuse_Texture_3", "Diffuse C", "BaseColorC", "CO_3" },
+            new []{ "Background Diffuse 4", "Diffuse_Texture_4", "Diffuse D", "BaseColorD", "CO_4" },
+            new []{ "Background Diffuse 5", "Diffuse_Texture_5", "Diffuse E", "BaseColorE", "CO_5" },
+            new []{ "Background Diffuse 6", "Diffuse_Texture_6", "Diffuse F", "BaseColorF", "CO_6" },
+            new []{ "Background Diffuse 7", "Diffuse_Texture_7", "Diffuse G", "BaseColorG", "CO_7" },
+            new []{ "Background Diffuse 8", "Diffuse_Texture_8", "Diffuse H", "BaseColorH", "CO_8" }
         };
 
         public static readonly string[][] Normals = {
@@ -162,11 +168,49 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             return false;
         }
 
+        /// <summary>
+        /// find matching textures between <paramref name="names"/> and <see cref="Textures"/>
+        /// </summary>
+        /// <param name="numTexCoords"></param>
+        /// <param name="names"></param>
+        /// <returns>
+        /// the uv set and index in <paramref name="names"/> of all textures found limited to <paramref name="numTexCoords"/>
+        /// <br/>
+        /// if used with <paramref name="names"/> it basically gives the textures' key in <see cref="Textures"/>
+        /// </returns>
+        public TextureMapping[] GetTextureMapping(int numTexCoords, params string[][] names)
+        {
+            var uvset = 0;
+            var index = 0;
+            var mapping = new TextureMapping[numTexCoords];
+            for (int i = 0; i < mapping.Length; i++)
+            {
+                for (; uvset < names.Length; uvset++)
+                {
+                    var found = false;
+                    for (; index < names[uvset].Length; index++)
+                    {
+                        if (Textures.ContainsKey(names[uvset][index]))
+                        {
+                            mapping[i] = new TextureMapping { UVSet = uvset, Index = index };
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    index++;
+                    if (found) break;
+                    index = 0;
+                }
+            }
+            return mapping;
+        }
+
         public bool TryGetTexture2d(out UTexture2D? texture, params string[] names)
         {
-            foreach (string name in names)
+            for (int i = 0; i < names.Length; i++)
             {
-                if (Textures.TryGetValue(name, out var unrealMaterial) && unrealMaterial is UTexture2D texture2d)
+                if (Textures.TryGetValue(names[i], out var unrealMaterial) && unrealMaterial is UTexture2D texture2d)
                 {
                     texture = texture2d;
                     return true;
