@@ -9,28 +9,28 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
-    public readonly struct FMovieSceneFloatChannel : IUStruct
+    public readonly struct FMovieSceneChannel<T> : IUStruct
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public readonly ERichCurveExtrapolation PreInfinityExtrap;
         [JsonConverter(typeof(StringEnumConverter))]
         public readonly ERichCurveExtrapolation PostInfinityExtrap;
         public readonly FFrameNumber[] Times;
-        public readonly FMovieSceneFloatValue[] Values;
-        public readonly float DefaultValue;
+        public readonly FMovieSceneValue<T>[] Values;
+        public readonly T? DefaultValue;
         public readonly bool bHasDefaultValue; // 4 bytes
         public readonly FFrameRate TickResolution;
         public readonly bool bShowCurve;
 
-        public FMovieSceneFloatChannel(FAssetArchive Ar)
+        public FMovieSceneChannel(FAssetArchive Ar)
         {
             if (FSequencerObjectVersion.Get(Ar) < FSequencerObjectVersion.Type.SerializeFloatChannelCompletely) // && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve
             {
                 PreInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
                 PostInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
                 Times = Array.Empty<FFrameNumber>();
-                Values = Array.Empty<FMovieSceneFloatValue>();
-                DefaultValue = 0;
+                Values = Array.Empty<FMovieSceneValue<T>>();
+                DefaultValue = default;
                 bHasDefaultValue = false;
                 TickResolution = default;
                 bShowCurve = false;
@@ -69,12 +69,12 @@ namespace CUE4Parse.UE4.Objects.MovieScene
                 }
             }
 
-            CurrentSerializedElementSize = Unsafe.SizeOf<FMovieSceneFloatValue>();
+            CurrentSerializedElementSize = Unsafe.SizeOf<FMovieSceneValue<T>>();
             SerializedElementSize = Ar.Read<int>();
 
             if (SerializedElementSize == CurrentSerializedElementSize)
             {
-                Values = Ar.ReadArray<FMovieSceneFloatValue>();
+                Values = Ar.ReadArray<FMovieSceneValue<T>>();
             }
             else
             {
@@ -83,22 +83,22 @@ namespace CUE4Parse.UE4.Objects.MovieScene
                 if (ArrayNum > 0)
                 {
                     var padding = SerializedElementSize - CurrentSerializedElementSize;
-                    Values = new FMovieSceneFloatValue[ArrayNum];
+                    Values = new FMovieSceneValue<T>[ArrayNum];
 
                     for (var i = 0; i < ArrayNum; i++)
                     {
                         Ar.Position += padding;
-                        Values[i] = Ar.Read<FMovieSceneFloatValue>();
+                        Values[i] = Ar.Read<FMovieSceneValue<T>>();
                         //Ar.Position += padding; TODO check this
                     }
                 }
                 else
                 {
-                    Values = Array.Empty<FMovieSceneFloatValue>();
+                    Values = Array.Empty<FMovieSceneValue<T>>();
                 }
             }
 
-            DefaultValue = Ar.Read<float>();
+            DefaultValue = Ar.Read<T>();
             bHasDefaultValue = Ar.ReadBoolean();
             TickResolution = Ar.Read<FFrameRate>();
             bShowCurve = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve && Ar.ReadBoolean(); // bShowCurve should still only be assigned while in editor

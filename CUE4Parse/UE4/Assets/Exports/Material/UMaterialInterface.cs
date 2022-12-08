@@ -73,19 +73,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 !materialParameters.TryGetAllValues(out FStructFallback[] runtimeEntries, "RuntimeEntries"))
                 return;
 
-            var index = 0;
             if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
-                runtimeEntries[index++].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfos"))
+                runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfos"))
                 for (int i = 0; i < scalarParameterInfos.Length; i++)
                     parameters.Scalars[scalarParameterInfos[i].Name.Text] = scalarValues[i];
 
             if (materialParameters.TryGetValue(out FLinearColor[] vectorValues, "VectorValues") &&
-                runtimeEntries[index++].TryGetValue(out FMaterialParameterInfo[] vectorParameterInfos, "ParameterInfos"))
+                runtimeEntries[1].TryGetValue(out FMaterialParameterInfo[] vectorParameterInfos, "ParameterInfos"))
                 for (int i = 0; i < vectorParameterInfos.Length; i++)
                     parameters.Colors[vectorParameterInfos[i].Name.Text] = vectorValues[i];
 
             if (materialParameters.TryGetValue(out FPackageIndex[] textureValues, "TextureValues") &&
-                runtimeEntries[index++].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfos"))
+                runtimeEntries[2].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfos"))
                 for (int i = 0; i < textureParameterInfos.Length; i++)
                     parameters.Textures[textureParameterInfos[i].Name.Text] = textureValues[i].Load<UTexture>();
         }
