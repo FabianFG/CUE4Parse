@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite
         // Persistent State
         [JsonIgnore]
         public byte[] RootData; // Root page is loaded on resource load, so we always have something to draw.
-        public FByteBulkData StreamableClusterPages; // Remaining pages are streamed on demand.
+        public FByteBulkData StreamablePages; // Remaining pages are streamed on demand.
         public ushort[] ImposterAtlas;
         public FPackedHierarchyNode[] HierarchyNodes;
         public uint[] HierarchyRootOffsets;
@@ -80,7 +80,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite
             if (!stripFlags.IsDataStrippedForServer())
             {
                 ResourceFlags = Ar.Read<uint>();
-                StreamableClusterPages = new FByteBulkData(Ar);
+                StreamablePages = new FByteBulkData(Ar);
                 RootData = Ar.ReadArray<byte>();
                 PageStreamingStates = Ar.ReadArray<FPageStreamingState>();
 
