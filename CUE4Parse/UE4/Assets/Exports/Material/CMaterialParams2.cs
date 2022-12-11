@@ -67,7 +67,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] SpecularMasks = {
             new []
             {
-                "Trunk_Specular", "SpecularMasks", "Specular", "SpecMap",
+                "Trunk_Specular", "SpecularMasks", "PackedTexture", "Specular", "SpecMap",
                 "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1", "Base_LP",
                 "Cliff Spec Texture"
             },
