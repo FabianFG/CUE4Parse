@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_BaseColor", "ShadedDiffuse",
-                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top",
+                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top", "Diffuse Side",
                 "Albedo", "ALB",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC"
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_Normal",
-                "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "T_Normal", "Normals Top",
+                "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "T_Normal", "Normals Top", "Normals Side", "Fallback Normal",
                 "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
                 "Texture A Normal", "CliffNormal"
             },
@@ -78,18 +78,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_Specular", "PackedTexture",
-                "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top",
-                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1", "Base_LP",
+                "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
+                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
                 "Pack", "PAK", "T_PAK", "M1_T_PAK",
                 "Cliff Spec Texture"
             },
-            new []{ "SpecularMasks_2", "LP_2", "M2_T_PAK" },
-            new []{ "SpecularMasks_3", "LP_3", "M3_T_PAK" },
-            new []{ "SpecularMasks_4", "LP_4", "M4_T_PAK" },
-            new []{ "SpecularMasks_5", "LP_5", "M5_T_PAK" },
-            new []{ "SpecularMasks_6", "LP_6", "M6_T_PAK" },
-            new []{ "SpecularMasks_7", "LP_7", "M7_T_PAK" },
-            new []{ "SpecularMasks_8", "LP_8", "M8_T_PAK" }
+            new []{ "SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK" },
+            new []{ "SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK" },
+            new []{ "SpecularMasks_4", "MRA D", "LP_4", "M4_T_PAK" },
+            new []{ "SpecularMasks_5", "MRA E", "LP_5", "M5_T_PAK" },
+            new []{ "SpecularMasks_6", "MRA F", "LP_6", "M6_T_PAK" },
+            new []{ "SpecularMasks_7", "MRA G", "LP_7", "M7_T_PAK" },
+            new []{ "SpecularMasks_8", "MRA H", "LP_8", "M8_T_PAK" }
         };
 
         public static readonly string[][] Emissive = {
