@@ -220,8 +220,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
         public override void GetParams(CMaterialParams2 parameters)
         {
-            base.GetParams(parameters);
-
             parameters.AppendAllProperties(Properties);
 
             for (int i = 0; i < ReferencedTextures.Count; i++)
@@ -236,25 +234,46 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 return;
             }
 
-            for (int i = ReferencedTextures.Count - 1; i > -1; i--)
+            base.GetParams(parameters);
+
+            var textureIndex = ReferencedTextures.Count;
+            while (!(
+                       parameters.Textures.ContainsKey(CMaterialParams2.FallbackDiffuse) &&
+                       parameters.Textures.ContainsKey(CMaterialParams2.FallbackNormals) &&
+                       parameters.Textures.ContainsKey(CMaterialParams2.FallbackSpecularMasks) &&
+                       parameters.Textures.ContainsKey(CMaterialParams2.FallbackEmissive))
+                   && textureIndex > 0)
             {
-                if (ReferencedTextures[i] is not { } texture) continue;
+                textureIndex--;
+                if (ReferencedTextures[textureIndex] is not { } texture) continue;
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackDiffuse) &&
-                    Regex.IsMatch(texture.Name, ".*(?:Diff|_Tex|_Albedo|_Base_?Color).*|(?:_D|_DM|_C|_CM)$", RegexOptions.IgnoreCase))
+                    Regex.IsMatch(texture.Name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
+                {
                     parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
+                    continue;
+                }
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackNormals) &&
-                    Regex.IsMatch(texture.Name, "^NO_|.*Norm.*|(?:_N|_NM)$", RegexOptions.IgnoreCase))
+                    Regex.IsMatch(texture.Name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
+                {
                     parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
+                    continue;
+                }
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackSpecularMasks) &&
-                    Regex.IsMatch(texture.Name, "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP)$", RegexOptions.IgnoreCase))
+                    Regex.IsMatch(texture.Name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
+                {
                     parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
+                    continue;
+                }
 
                 if (!parameters.Textures.ContainsKey(CMaterialParams2.FallbackEmissive) &&
-                    Regex.IsMatch(texture.Name, "^.*Emiss.*|(?:_E|_EM)$", RegexOptions.IgnoreCase))
+                    Regex.IsMatch(texture.Name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
+                {
                     parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
+                    continue;
+                }
             }
         }
 

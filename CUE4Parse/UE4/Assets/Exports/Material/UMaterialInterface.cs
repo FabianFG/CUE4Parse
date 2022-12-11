@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -22,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public float MobileSpecularPower = 16.0f;
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
         public UTexture? MobileMaskTexture;
-        public FMaterialTextureInfo[]? TextureStreamingData;
+        public FMaterialTextureInfo[] TextureStreamingData;
         public FStructFallback? CachedExpressionData;
         public List<FMaterialResource> LoadedMaterialResources = new();
 
@@ -68,6 +69,41 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public override void GetParams(CMaterialParams2 parameters)
         {
+            for (int i = 0; i < TextureStreamingData.Length; i++)
+            {
+                var name = TextureStreamingData[i].TextureName.Text;
+                if (!parameters.TryGetTexture2d(out var texture, name))
+                    continue;
+
+                if (Regex.IsMatch(name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
+                {
+                    parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
+                    continue;
+                }
+
+                if (Regex.IsMatch(name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
+                {
+                    parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
+                    continue;
+                }
+
+                if (Regex.IsMatch(name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
+                {
+                    parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
+                    continue;
+                }
+
+                if (Regex.IsMatch(name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
+                {
+                    parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
+                    continue;
+                }
+            }
+
+            // *****************************************
+            // CachedExpressionData ONLY AFTER THIS LINE
+            // *****************************************
+
             if (CachedExpressionData == null ||
                 !CachedExpressionData.TryGetValue(out FStructFallback materialParameters, "Parameters") ||
                 !materialParameters.TryGetAllValues(out FStructFallback[] runtimeEntries, "RuntimeEntries"))

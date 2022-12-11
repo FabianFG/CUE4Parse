@@ -20,6 +20,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string FallbackSpecularMasks = "PM_SpecularMasks";
         public const string FallbackEmissive = "PM_Emissive";
 
+
+        public const string RegexDiffuse = ".*(?:Diff|_Tex|_Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
+        public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
+        public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP|_PAK)$";
+        public const string RegexEmissive = "^.*Emiss.*|(?:_E|_EM)$";
+
         public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
         public bool HasTopNormals => HasTopTexture(Normals[0]);
         public bool HasTopSpecularMasks => HasTopTexture(SpecularMasks[0]);
@@ -36,48 +42,54 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] Diffuse = {
             new []
             {
-                "Trunk_BaseColor", "ShadedDiffuse", "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Albedo",
+                "Trunk_BaseColor", "ShadedDiffuse",
+                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top",
+                "Albedo", "ALB",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
-                "Decal_Texture", "PetalDetailMap", "CliffTexture"
+                "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC"
             },
-            new []{ "Background Diffuse 2", "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2" },
-            new []{ "Background Diffuse 3", "Diffuse_Texture_3", "Diffuse C", "BaseColorC", "CO_3" },
-            new []{ "Background Diffuse 4", "Diffuse_Texture_4", "Diffuse D", "BaseColorD", "CO_4" },
-            new []{ "Background Diffuse 5", "Diffuse_Texture_5", "Diffuse E", "BaseColorE", "CO_5" },
-            new []{ "Background Diffuse 6", "Diffuse_Texture_6", "Diffuse F", "BaseColorF", "CO_6" },
-            new []{ "Background Diffuse 7", "Diffuse_Texture_7", "Diffuse G", "BaseColorG", "CO_7" },
-            new []{ "Background Diffuse 8", "Diffuse_Texture_8", "Diffuse H", "BaseColorH", "CO_8" }
+            new []{ "Background Diffuse 2", "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2", "M2_T_BC" },
+            new []{ "Background Diffuse 3", "Diffuse_Texture_3", "Diffuse C", "BaseColorC", "CO_3", "M3_T_BC" },
+            new []{ "Background Diffuse 4", "Diffuse_Texture_4", "Diffuse D", "BaseColorD", "CO_4", "M4_T_BC" },
+            new []{ "Background Diffuse 5", "Diffuse_Texture_5", "Diffuse E", "BaseColorE", "CO_5", "M5_T_BC" },
+            new []{ "Background Diffuse 6", "Diffuse_Texture_6", "Diffuse F", "BaseColorF", "CO_6", "M6_T_BC" },
+            new []{ "Background Diffuse 7", "Diffuse_Texture_7", "Diffuse G", "BaseColorG", "CO_7", "M7_T_BC" },
+            new []{ "Background Diffuse 8", "Diffuse_Texture_8", "Diffuse H", "BaseColorH", "CO_8", "M8_T_BC" }
         };
 
         public static readonly string[][] Normals = {
             new []
             {
-                "Trunk_Normal", "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "NM", "NM_1", "Base_NM",
+                "Trunk_Normal",
+                "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "T_Normal", "Normals Top",
+                "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
                 "Texture A Normal", "CliffNormal"
             },
-            new []{ "Normals_Texture_2", "Texture B Normal", "NormalB", "NM_2" },
-            new []{ "Normals_Texture_3", "Texture C Normal", "NormalC", "NM_3" },
-            new []{ "Normals_Texture_4", "Texture D Normal", "NormalD", "NM_4" },
-            new []{ "Normals_Texture_5", "Texture E Normal", "NormalE", "NM_5" },
-            new []{ "Normals_Texture_6", "Texture F Normal", "NormalF", "NM_6" },
-            new []{ "Normals_Texture_7", "Texture G Normal", "NormalG", "NM_7" },
-            new []{ "Normals_Texture_8", "Texture H Normal", "NormalH", "NM_8" }
+            new []{ "Normals_Texture_2", "Texture B Normal", "NormalB", "NM_2", "M2_T_NRM" },
+            new []{ "Normals_Texture_3", "Texture C Normal", "NormalC", "NM_3", "M3_T_NRM" },
+            new []{ "Normals_Texture_4", "Texture D Normal", "NormalD", "NM_4", "M4_T_NRM" },
+            new []{ "Normals_Texture_5", "Texture E Normal", "NormalE", "NM_5", "M5_T_NRM" },
+            new []{ "Normals_Texture_6", "Texture F Normal", "NormalF", "NM_6", "M6_T_NRM" },
+            new []{ "Normals_Texture_7", "Texture G Normal", "NormalG", "NM_7", "M7_T_NRM" },
+            new []{ "Normals_Texture_8", "Texture H Normal", "NormalH", "NM_8", "M8_T_NRM" }
         };
 
         public static readonly string[][] SpecularMasks = {
             new []
             {
-                "Trunk_Specular", "SpecularMasks", "PackedTexture", "Specular", "SpecMap",
+                "Trunk_Specular", "PackedTexture",
+                "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top",
                 "MG", "ORM", "MRAE", "MRAS", "MRA", "MRS", "LP", "LP_1", "Base_LP",
+                "Pack", "PAK", "T_PAK", "M1_T_PAK",
                 "Cliff Spec Texture"
             },
-            new []{ "SpecularMasks_2", "LP_2" },
-            new []{ "SpecularMasks_3", "LP_3" },
-            new []{ "SpecularMasks_4", "LP_4" },
-            new []{ "SpecularMasks_5", "LP_5" },
-            new []{ "SpecularMasks_6", "LP_6" },
-            new []{ "SpecularMasks_7", "LP_7" },
-            new []{ "SpecularMasks_8", "LP_8" }
+            new []{ "SpecularMasks_2", "LP_2", "M2_T_PAK" },
+            new []{ "SpecularMasks_3", "LP_3", "M3_T_PAK" },
+            new []{ "SpecularMasks_4", "LP_4", "M4_T_PAK" },
+            new []{ "SpecularMasks_5", "LP_5", "M5_T_PAK" },
+            new []{ "SpecularMasks_6", "LP_6", "M6_T_PAK" },
+            new []{ "SpecularMasks_7", "LP_7", "M7_T_PAK" },
+            new []{ "SpecularMasks_8", "LP_8", "M8_T_PAK" }
         };
 
         public static readonly string[][] Emissive = {
@@ -99,7 +111,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "tex1_CO",
-                "ColorA"
+                "ColorA", "ALB"
             },
             new []{ "tex2_CO", "ColorB" },
             new []{ "tex3_CO", "ColorC" },
@@ -113,7 +125,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] EmissiveColors = {
             new []
             {
-                "Emissive", "Emissive Color", "EmissiveColor"
+                "Emissive", "Emissive Color", "EmissiveColor", "EMI"
             },
             new []{ "Emissive1" },
             new []{ "Emissive2" },
