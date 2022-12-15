@@ -57,6 +57,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bVisibleInRayTracing = true;
             CorrespondClothSectionIndex = -1;
             SoftVertices = Array.Empty<FSoftVertex>();
+            ClothMappingDataLODs = Array.Empty<FMeshToMeshVertData[]>();
             MaxBoneInfluences = 4;
             GenerateUpToLodIndex = -1;
             OriginalDataSectionIndex = -1;
