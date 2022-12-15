@@ -207,7 +207,6 @@ namespace CUE4Parse.UE4.Assets.Exports
                 {
                     if (propMappings.TryGetValue(val, out var propertyInfo))
                     {
-                        propertyInfo.Index = val;
                         var tag = new FPropertyTag(Ar, propertyInfo, ReadType.NORMAL);
                         if (tag.Tag != null)
                             properties.Add(tag);

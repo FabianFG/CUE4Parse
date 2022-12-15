@@ -88,7 +88,7 @@ namespace CUE4Parse.MappingsProvider
         }
     }
 
-    public class PropertyInfo
+    public class PropertyInfo : ICloneable
     {
         public int Index;
         public string Name;
@@ -102,6 +102,9 @@ namespace CUE4Parse.MappingsProvider
             ArraySize = arraySize;
             MappingType = mappingType;
         }
+
+        public override string ToString() => $"{Index}/{ArraySize - 1} -> {Name}";
+        public object Clone() => this.MemberwiseClone();
     }
 
     public class PropertyType

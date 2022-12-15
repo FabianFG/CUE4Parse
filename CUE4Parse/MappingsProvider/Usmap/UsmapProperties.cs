@@ -18,7 +18,9 @@ namespace CUE4Parse.MappingsProvider.Usmap
                 var propInfo = ParsePropertyInfo(Ar, nameLut);
                 for (var j = 0; j < propInfo.ArraySize; j++)
                 {
-                    properties[propInfo.Index + j] = propInfo;
+                    var clone = (PropertyInfo) propInfo.Clone();
+                    clone.Index = j;
+                    properties[propInfo.Index + j] = clone;
                 }
             }
 
