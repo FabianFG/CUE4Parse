@@ -44,8 +44,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 "Trunk_BaseColor", "ShadedDiffuse",
                 "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top", "Diffuse Side",
-                "Albedo", "ALB",
+                "Albedo", "ALB", "TextureAlbedo",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
+                "Tex_Color", "Tex_BaseColor", "AlbedMap", "Tex_Colormap",
                 "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC"
             },
             new []{ "Background Diffuse 2", "Diffuse_Texture_2", "Diffuse B", "BaseColorB", "CO_2", "M2_T_BC" },
@@ -62,7 +63,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 "Trunk_Normal",
                 "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "T_Normal", "Normals Top", "Normals Side", "Fallback Normal",
-                "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
+                "TextureNormal", "Tex_BakedNormal", "BakedNormalMap", "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
                 "Texture A Normal", "CliffNormal"
             },
             new []{ "Normals_Texture_2", "Texture B Normal", "NormalB", "NM_2", "M2_T_NRM" },
@@ -80,6 +81,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 "Trunk_Specular", "PackedTexture",
                 "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
                 "MG", "ORM", "MRAE", "MRAS", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
+                "TextureRMA", "Tex_MultiMask", "Tex_Multi", "MultiMaskMap",
                 "Pack", "PAK", "T_PAK", "M1_T_PAK",
                 "Cliff Spec Texture"
             },
@@ -96,7 +98,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
-                "EmmisiveColor_A"
+                "EmmisiveColor_A", "TextureEmissive"
             },
             new []{ "L1_Emissive", "EmmisiveColor_B" },
             new []{ "L2_Emissive", "EmmisiveColor_C" },
@@ -111,7 +113,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "tex1_CO",
-                "ColorA", "ALB"
+                "ColorA", "ALB", "AlbedoColor"
             },
             new []{ "tex2_CO", "ColorB" },
             new []{ "tex3_CO", "ColorC" },

@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             Name = new FName(info.Name);
             PropertyType = new FName(info.MappingType.Type);
-            ArrayIndex = 0;
+            ArrayIndex = info.Index;
             TagData = new FPropertyTagData(info.MappingType);
             HasPropertyGuid = false;
             PropertyGuid = null;
