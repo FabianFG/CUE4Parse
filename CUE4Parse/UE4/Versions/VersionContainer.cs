@@ -70,10 +70,11 @@ namespace CUE4Parse.UE4.Versions
             Options["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = Game > GAME_UE4_27;
             Options["StaticMesh.UseNewCookedFormat"] = Game >= GAME_UE4_23;
             Options["VirtualTextures"] = Game >= GAME_UE4_23;
+            Options["SoundWave.UseAudioStreaming"] = Game >= GAME_UE4_25 && Game != GAME_GTATheTrilogyDefinitiveEdition && Game != GAME_ReadyOrNot; // A lot of games use this, but some don't, which causes issues.
 
             if (_optionOverrides != null)
             {
-                foreach (var (key, value) in _optionOverrides)
+                foreach ((string key, bool value) in _optionOverrides)
                 {
                     Options[key] = value;
                 }

@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TestAesKey(FAesKey key) => !IsEncrypted ? true : TestAesKey(MountPointCheckBytes(), key);
+        public bool TestAesKey(FAesKey key) => !IsEncrypted || TestAesKey(MountPointCheckBytes(), key);
 
         public abstract byte[] MountPointCheckBytes();
 
