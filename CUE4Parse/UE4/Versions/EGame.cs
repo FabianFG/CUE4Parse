@@ -27,6 +27,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_15 = GameUtils.GameUe4Base + 15 << 4,
         GAME_UE4_16 = GameUtils.GameUe4Base + 16 << 4,
             GAME_PlayerUnknownsBattlegrounds = GAME_UE4_16 + 1,
+            GAME_LifeIsStrange2 = GAME_UE4_16 + 2,
         GAME_UE4_17 = GameUtils.GameUe4Base + 17 << 4,
         GAME_UE4_18 = GameUtils.GameUe4Base + 18 << 4,
             GAME_KingdomHearts3 = GAME_UE4_18 + 1,

@@ -223,6 +223,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
             }
 
+            if (Ar.Game == EGame.GAME_LifeIsStrange2)
+            {
+                var count = Ar.Read<int>();
+                if (count != Ar.Length - Ar.Position - 4)
+                    Ar.Position += 4;
+                else
+                    Ar.Position -= 4;
+            }
+
             if (Ar.Game >= EGame.GAME_UE4_17)
             {
                 // UE4.17+
