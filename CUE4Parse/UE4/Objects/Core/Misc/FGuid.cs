@@ -56,7 +56,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public bool IsValid() => (A | B | C | D) != 0;
 
-        public string ToString(EGuidFormats guidFormat)
+        public readonly string ToString(EGuidFormats guidFormat)
         {
             switch (guidFormat)
             {
