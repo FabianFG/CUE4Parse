@@ -134,6 +134,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                 CompressionBlockSize = Ar.Read<uint>();
             }
 
+            if (Ar.Game == GAME_TEKKEN7) Flags = (uint) (Flags & ~Flag_Encrypted);
+
             if (reader.Info.Version >= PakFile_Version_RelativeChunkOffsets)
             {
                 // Convert relative compressed offsets to absolute

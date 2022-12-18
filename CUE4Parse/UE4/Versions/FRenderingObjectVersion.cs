@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
@@ -111,7 +111,7 @@ namespace CUE4Parse.UE4.Versions
             // Added per instance custom data (for Instanced Static Meshes)
             PerInstanceCustomData,
 
-            // Added material attributes to shader graph to support anisotropic materials 
+            // Added material attributes to shader graph to support anisotropic materials
             AnisotropicMaterial,
 
             // Add if anything has changed in the exposure, override the bias to avoid the new default propagating
@@ -141,6 +141,10 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                // Game Overrides
+                EGame.GAME_TEKKEN7 => Type.MapBuildDataSeparatePackage,
+
+                // Engine
                 < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_13 => Type.CustomReflectionCaptureResolutionSupport,
                 < EGame.GAME_UE4_14 => Type.IntroducedMeshDecals,

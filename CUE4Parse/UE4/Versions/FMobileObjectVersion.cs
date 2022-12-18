@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Versions
             LatestVersion = VersionPlusOne - 1
         }
 
-        public static readonly FGuid GUID = new(0xCFFC743F, 0x43B04480, 0x939114DF, 0x171D2073);
+        public static readonly FGuid GUID = new(0xB02B49B5, 0xBB2044E9, 0xA30432B7, 0x52E40360);
 
         public static Type Get(FArchive Ar)
         {

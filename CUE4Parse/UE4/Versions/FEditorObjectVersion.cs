@@ -107,6 +107,7 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 // Game Overrides
+                EGame.GAME_TEKKEN7 => Type.ComboBoxControllerSupportUpdate,
                 EGame.GAME_Paragon => Type.AddedMaterialSharedInputs,
 
                 // Engine

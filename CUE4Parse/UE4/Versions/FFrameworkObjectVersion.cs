@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
@@ -56,7 +56,7 @@ namespace CUE4Parse.UE4.Versions
             WheelOffsetIsFromWheel,
 
             // Move curve metadata to be saved in skeleton
-            // Individual asset still saves some flag - i.e. disabled curve and editable or not, but 
+            // Individual asset still saves some flag - i.e. disabled curve and editable or not, but
             // major flag - i.e. material types - moves to skeleton and handle in one place
             MoveCurveTypesToSkeleton,
 
@@ -103,7 +103,7 @@ namespace CUE4Parse.UE4.Versions
             // in order to allow us to do all UFunction loading in a single pass (after classes and CDOs are created):
             RemoveUField_Next,
 
-            // Fix User Defined structs so that all members are correct flagged blueprint visible 
+            // Fix User Defined structs so that all members are correct flagged blueprint visible
             UserDefinedStructsBlueprintVisible,
 
             // FMaterialInput and FEdGraphPin store their name as FName instead of FString
@@ -142,6 +142,10 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                // Game Overrides
+                EGame.GAME_TEKKEN7 => Type.WheelOffsetIsFromWheel,
+
+                // Engine
                 < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_13 => Type.FixNonTransactionalPins,
                 < EGame.GAME_UE4_14 => Type.RemoveSoundWaveCompressionName,

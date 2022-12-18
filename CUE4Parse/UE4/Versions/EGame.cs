@@ -24,6 +24,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_13 = GameUtils.GameUe4Base + 13 << 4,
             GAME_StateOfDecay2 = GAME_UE4_13 + 1,
         GAME_UE4_14 = GameUtils.GameUe4Base + 14 << 4,
+            GAME_TEKKEN7 = GAME_UE4_14 + 1,
         GAME_UE4_15 = GameUtils.GameUe4Base + 15 << 4,
         GAME_UE4_16 = GameUtils.GameUe4Base + 16 << 4,
             GAME_PlayerUnknownsBattlegrounds = GAME_UE4_16 + 1,
