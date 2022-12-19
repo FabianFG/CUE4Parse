@@ -131,7 +131,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 _ => new FTextHistory.None(Ar)
             };
         }
-        
+
         public FText(string sourceString) : this("", "", sourceString) { }
 
         public FText(string @namespace, string key, string sourceString) : this(0, ETextHistoryType.Base,
@@ -146,7 +146,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
 
         public override string ToString() => Text;
     }
-    
+
     public class FTextConverter : JsonConverter<FText>
     {
         public override void WriteJson(JsonWriter writer, FText value, JsonSerializer serializer)
@@ -172,7 +172,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
 
             public None()
             {
-                
+
             }
             public None(FAssetArchive Ar)
             {
@@ -192,13 +192,15 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly string Namespace;
             public readonly string Key;
             public readonly string SourceString;
-            public override string Text => SourceString;
+            public readonly string LocalizedString;
+            public override string Text => LocalizedString;
 
             public Base(FAssetArchive Ar)
             {
                 Namespace = Ar.ReadFString() ?? string.Empty;
                 Key = Ar.ReadFString() ?? string.Empty;
-                SourceString = Ar.Owner.Provider?.GetLocalizedString(Namespace, Key, Ar.ReadFString()) ?? string.Empty;
+                SourceString = Ar.ReadFString();
+                LocalizedString = Ar.Owner.Provider?.GetLocalizedString(Namespace, Key, SourceString) ?? string.Empty;
             }
 
             public Base(string namespacee, string key, string sourceString)
@@ -206,6 +208,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 Namespace = namespacee;
                 Key = key;
                 SourceString = sourceString;
+                LocalizedString = string.Empty;
             }
         }
 
