@@ -67,8 +67,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 if (bInlined)
                 {
                     SerializeBuffers(Ar);
-                    if (Ar.Game == EGame.GAME_RogueCompany)
-                        Ar.Position += 10;
+                    switch (Ar.Game)
+                    {
+                        case EGame.GAME_RogueCompany:
+                            Ar.Position += 10;
+                            break;
+                        case EGame.GAME_TheDivisionResurgence:
+                            Ar.Position += 12;
+                            break;
+                    }
                 }
                 else
                 {
