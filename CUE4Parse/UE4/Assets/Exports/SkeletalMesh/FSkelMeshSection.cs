@@ -114,7 +114,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
             bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
 
-            if (Ar.Game == EGame.GAME_TrainSimWorld2020)  Ar.Position += 8;
+            if (Ar.Game == EGame.GAME_TrainSimWorld2020) Ar.Position += 8;
 
             if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
             {

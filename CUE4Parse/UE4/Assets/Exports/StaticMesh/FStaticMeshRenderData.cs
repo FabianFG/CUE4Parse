@@ -30,6 +30,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 var minMobileLODIdx = Ar.Read<int>();
             }
 
+            if (Ar.Game == EGame.GAME_HYENAS) Ar.Position += 1;
+
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
             if (Ar.Game >= EGame.GAME_UE4_23)
             {
