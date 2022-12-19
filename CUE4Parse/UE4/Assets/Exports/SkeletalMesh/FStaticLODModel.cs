@@ -31,6 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public int[] MeshToImportVertexMap;
         public int MaxImportVertex;
         public int NumTexCoords;
+        public FMorphTargetVertexInfoBuffers MorphTargetVertexInfoBuffers;
         public FSkeletalMeshVertexBuffer VertexBufferGPUSkin;
         public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
@@ -334,12 +335,12 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var rayTracingData = Ar.ReadArray<byte>();
             }
 
-            if (Ar.Game >= EGame.GAME_UE5_1) // 5.1 ??
+            if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeSkeletalMeshMorphTargetRenderData)
             {
                 bool bSerializeCompressedMorphTargets = Ar.ReadBoolean();
                 if (bSerializeCompressedMorphTargets)
                 {
-                    // TODO
+                    MorphTargetVertexInfoBuffers = new FMorphTargetVertexInfoBuffers(Ar);
                 }
             }
 
@@ -394,6 +395,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             // writer.WritePropertyName("RequiredBones");
             // serializer.Serialize(writer, value.RequiredBones);
+
+            writer.WritePropertyName("MorphTargetVertexInfoBuffers");
+            serializer.Serialize(writer, value.MorphTargetVertexInfoBuffers);
 
             writer.WritePropertyName("VertexBufferGPUSkin");
             serializer.Serialize(writer, value.VertexBufferGPUSkin);

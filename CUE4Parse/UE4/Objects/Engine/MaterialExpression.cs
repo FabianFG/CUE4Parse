@@ -77,10 +77,10 @@ namespace CUE4Parse.UE4.Objects.Engine
 
         public FExpressionInput(FAssetArchive Ar)
         {
-            /*if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.MaterialInputNativeSerialize)
-            {
-                // TODO use property serialization instead
-            }*/
+            // if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.MaterialInputNativeSerialize)
+            // {
+            //     // TODO use property serialization instead
+            // }
 
             OutputIndex = Ar.Read<int>();
             InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());

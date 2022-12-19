@@ -16,28 +16,30 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     public class UMaterialInterface : UUnrealMaterial
     {
         //I think those aren't used in UE4 but who knows
-        public UTexture? FlattenedTexture;
-        public UTexture? MobileBaseTexture;
-        public UTexture? MobileNormalTexture;
+        //to delete
         public bool bUseMobileSpecular;
         public float MobileSpecularPower = 16.0f;
         public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
+        public UTexture? FlattenedTexture;
+        public UTexture? MobileBaseTexture;
+        public UTexture? MobileNormalTexture;
         public UTexture? MobileMaskTexture;
-        public FMaterialTextureInfo[] TextureStreamingData;
+
         public FStructFallback? CachedExpressionData;
+        public FMaterialTextureInfo[] TextureStreamingData = Array.Empty<FMaterialTextureInfo>();
         public List<FMaterialResource> LoadedMaterialResources = new();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+            bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
+            MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
+            MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
             FlattenedTexture = GetOrDefault<UTexture>(nameof(FlattenedTexture));
             MobileBaseTexture = GetOrDefault<UTexture>(nameof(MobileBaseTexture));
             MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
-            bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
-            MobileSpecularPower = GetOrDefault(nameof(MobileNormalTexture), 16.0f);
-            MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
-            MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
-            MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
+            MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileMaskTexture));
+
             TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
             var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();

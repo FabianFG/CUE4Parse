@@ -93,8 +93,8 @@ namespace CUE4Parse.UE4.Versions
             {
                 return game switch
                 {
-                    EGame.GAME_UE5_0 => new FPackageFileVersion(522, 1004),
-                    EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1008),
+                    < EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1004),
+                    < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
                     _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 };
             }
