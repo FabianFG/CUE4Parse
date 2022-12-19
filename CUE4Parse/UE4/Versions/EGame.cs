@@ -53,7 +53,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Valorant = GAME_UE4_26 + 3,
             GAME_TowerOfFantasy = GAME_UE4_26 + 4,
             GAME_Dauntless = GAME_UE4_26 + 5,
-
+            GAME_TheDivisionResurgence = GAME_UE4_26 + 6,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
             GAME_MeetYourMaker = GAME_UE4_27 + 2,

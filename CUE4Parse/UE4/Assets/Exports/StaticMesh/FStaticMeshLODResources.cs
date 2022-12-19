@@ -42,6 +42,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
+            if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 4;
+
             Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
             MaxDeviation = Ar.Read<float>();
 
