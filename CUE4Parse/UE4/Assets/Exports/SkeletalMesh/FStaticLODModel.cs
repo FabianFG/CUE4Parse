@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public int[] MeshToImportVertexMap;
         public int MaxImportVertex;
         public int NumTexCoords;
-        public FMorphTargetVertexInfoBuffers MorphTargetVertexInfoBuffers;
+        public FMorphTargetVertexInfoBuffers? MorphTargetVertexInfoBuffers;
         public FSkeletalMeshVertexBuffer VertexBufferGPUSkin;
         public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
@@ -396,8 +396,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             // writer.WritePropertyName("RequiredBones");
             // serializer.Serialize(writer, value.RequiredBones);
 
-            writer.WritePropertyName("MorphTargetVertexInfoBuffers");
-            serializer.Serialize(writer, value.MorphTargetVertexInfoBuffers);
+            if (value.MorphTargetVertexInfoBuffers != null)
+            {
+                writer.WritePropertyName("MorphTargetVertexInfoBuffers");
+                serializer.Serialize(writer, value.MorphTargetVertexInfoBuffers);
+            }
 
             writer.WritePropertyName("VertexBufferGPUSkin");
             serializer.Serialize(writer, value.VertexBufferGPUSkin);
