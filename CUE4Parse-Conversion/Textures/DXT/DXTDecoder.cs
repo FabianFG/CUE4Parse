@@ -40,14 +40,14 @@
                                     // 00 = color_0, 01 = color_1, 10 = color_2, 11 = color_3
                                     // These 2-bit codes correspond to the 2-bit fields
                                     // stored in the 64-bit block.
-                                    colours[2].Blue = (byte)((2 * colours[0].Blue + colours[1].Blue + 1) / 3);
-                                    colours[2].Green = (byte)((2 * colours[0].Green + colours[1].Green + 1) / 3);
-                                    colours[2].Red = (byte)((2 * colours[0].Red + colours[1].Red + 1) / 3);
-                                    //colours[2].alpha = 0xFF;
+                                    colours[2].Blue = (byte)((2 * colours[0].Blue + colours[1].Blue) / 3);
+                                    colours[2].Green = (byte)((2 * colours[0].Green + colours[1].Green) / 3);
+                                    colours[2].Red = (byte)((2 * colours[0].Red + colours[1].Red) / 3);
+                                    // colours[2].Alpha = 0xFF;
 
-                                    colours[3].Blue = (byte)((colours[0].Blue + 2 * colours[1].Blue + 1) / 3);
-                                    colours[3].Green = (byte)((colours[0].Green + 2 * colours[1].Green + 1) / 3);
-                                    colours[3].Red = (byte)((colours[0].Red + 2 * colours[1].Red + 1) / 3);
+                                    colours[3].Blue = (byte)((colours[0].Blue + 2 * colours[1].Blue) / 3);
+                                    colours[3].Green = (byte)((colours[0].Green + 2 * colours[1].Green) / 3);
+                                    colours[3].Red = (byte)((colours[0].Red + 2 * colours[1].Red) / 3);
                                     colours[3].Alpha = 0xFF;
                                 }
                                 else
@@ -60,11 +60,11 @@
                                     colours[2].Blue = (byte)((colours[0].Blue + colours[1].Blue) / 2);
                                     colours[2].Green = (byte)((colours[0].Green + colours[1].Green) / 2);
                                     colours[2].Red = (byte)((colours[0].Red + colours[1].Red) / 2);
-                                    //colours[2].alpha = 0xFF;
+                                    // colours[2].Alpha = 0xFF;
 
-                                    colours[3].Blue = (byte)((colours[0].Blue + 2 * colours[1].Blue + 1) / 3);
-                                    colours[3].Green = (byte)((colours[0].Green + 2 * colours[1].Green + 1) / 3);
-                                    colours[3].Red = (byte)((colours[0].Red + 2 * colours[1].Red + 1) / 3);
+                                    colours[3].Blue = 0x00;
+                                    colours[3].Green = 0x00;
+                                    colours[3].Red = 0x00;
                                     colours[3].Alpha = 0x00;
                                 }
 
