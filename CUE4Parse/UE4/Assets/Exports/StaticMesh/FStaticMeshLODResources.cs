@@ -172,6 +172,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                 _ = new FWeightedRandomSampler(Ar);
             }
+
+            if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 17;
         }
 
         public void SerializeBuffers(FArchive Ar)
