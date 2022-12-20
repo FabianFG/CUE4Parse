@@ -73,7 +73,7 @@ namespace CUE4Parse_Conversion.Textures
             {
                 case EPixelFormat.PF_DXT1:
                     data = DXTDecoder.DXT1(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
-                    colorType = SKColorType.Rgba8888;
+                    colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_DXT5:
                     data = DXTDecoder.DXT5(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
