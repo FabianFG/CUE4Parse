@@ -18,9 +18,9 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public FByteBulkDataHeader(FAssetArchive Ar)
         {
-            if (Ar.Owner is IoPackage pkg && pkg.BulkDataMap.Length > 0)
+            if (Ar.Owner is IoPackage { BulkDataMap.Length: > 0 } pkg)
             {
-                int dataIndex = Ar.Read<int>();
+                var dataIndex = Ar.Read<int>();
                 if (dataIndex >= 0 && dataIndex < pkg.BulkDataMap.Length)
                 {
                     var metaData = pkg.BulkDataMap[dataIndex];
