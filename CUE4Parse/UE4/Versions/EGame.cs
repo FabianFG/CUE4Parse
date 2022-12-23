@@ -58,8 +58,9 @@ namespace CUE4Parse.UE4.Versions
             GAME_Splitgate = GAME_UE4_27 + 1,
             GAME_MeetYourMaker = GAME_UE4_27 + 2,
             GAME_HYENAS = GAME_UE4_27 + 3,
+        GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
-        GAME_UE4_LATEST = GAME_UE4_27,
+        GAME_UE4_LATEST = GAME_UE4_28,
 
         // TODO Figure out the enum name for UE5 Early Access
         // The commit https://github.com/EpicGames/UnrealEngine/commit/cf116088ae6b65c1701eee99288e43c7310d6bb1#diff-6178e9d97c98e321fc3f53770109ea7f6a8ea7a86cac542717a81922f2f93613R723

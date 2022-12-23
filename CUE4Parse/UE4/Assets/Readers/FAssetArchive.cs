@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public FAssetArchive(FArchive baseArchive, IPackage owner, int absoluteOffset = 0, Dictionary<PayloadType, Lazy<FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
         {
-            _payloads = payloads ?? new();
+            _payloads = payloads ?? new Dictionary<PayloadType, Lazy<FAssetArchive?>>();
             _baseArchive = baseArchive;
             Owner = owner;
             AbsoluteOffset = absoluteOffset;
