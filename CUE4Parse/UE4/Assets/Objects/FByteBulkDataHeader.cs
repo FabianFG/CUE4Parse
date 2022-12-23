@@ -18,6 +18,21 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public FByteBulkDataHeader(FAssetArchive Ar)
         {
+            if (Ar.Owner is IoPackage pkg && pkg.BulkDataMap.Length > 0)
+            {
+                int dataIndex = Ar.Read<int>();
+                if (dataIndex >= 0 && dataIndex < pkg.BulkDataMap.Length)
+                {
+                    var metaData = pkg.BulkDataMap[dataIndex];
+                    BulkDataFlags = (EBulkDataFlags)metaData.Flags;
+                    ElementCount = (int)metaData.SerialSize;
+                    OffsetInFile = (long)metaData.SerialOffset;
+                    SizeOnDisk = (uint)metaData.SerialSize; // ??
+                    return;
+                }
+                Ar.Position += -4;
+            }
+
             BulkDataFlags = Ar.Read<EBulkDataFlags>();
             ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
             SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();

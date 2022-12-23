@@ -36,6 +36,8 @@ namespace CUE4Parse.UE4.Versions
         // Add a soft object path list to the package summary for fast remap
         ADD_SOFTOBJECTPATH_LIST,
 
+        // Added bulk/data resource table
+        DATA_RESOURCES,
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)
         AUTOMATIC_VERSION_PLUS_ONE,

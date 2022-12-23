@@ -28,6 +28,7 @@ namespace CUE4Parse.UE4.Assets
         public readonly ulong[]? ImportedPublicExportHashes;
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
+        public readonly FBulkDataMapEntry[] BulkDataMap;
 
         public readonly Lazy<IoPackage?[]> ImportedPackages;
         public override Lazy<UObject>[] ExportsLazy { get; }
@@ -94,6 +95,14 @@ namespace CUE4Parse.UE4.Assets
                     {
                         Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
                     }
+                }
+
+                BulkDataMap = Array.Empty<FBulkDataMapEntry>();
+                if (uassetAr.Game >= EGame.GAME_UE5_2 || Summary.FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES)
+                {
+                    var bulkDataMapSize = uassetAr.Read<ulong>();
+                    if (uassetAr.Game != EGame.GAME_UE5_2 || bulkDataMapSize < 65535) // Fortnite moment
+                        BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int)(bulkDataMapSize / FBulkDataMapEntry.Size));
                 }
 
                 // Imported public export hashes
