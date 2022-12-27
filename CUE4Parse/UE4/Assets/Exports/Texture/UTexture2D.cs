@@ -128,7 +128,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             // ???
         }
-        public override void GetParams(CMaterialParams2 parameters, bool allLayers)
+        public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
         {
             // ???
         }

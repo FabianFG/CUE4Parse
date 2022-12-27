@@ -243,12 +243,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
         }
 
-        public override void GetParams(CMaterialParams2 parameters, bool allLayers)
+        public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
         {
-            if (allLayers && Parent != null && Parent != this)
-                Parent.GetParams(parameters, allLayers);
+            if (format != EMaterialFormat.FirstLayer && Parent != null && Parent != this)
+                Parent.GetParams(parameters, format);
 
-            base.GetParams(parameters, allLayers);
+            base.GetParams(parameters, format);
 
             parameters.AppendAllProperties(Properties);
 

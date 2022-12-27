@@ -22,7 +22,7 @@ namespace CUE4Parse_Conversion.Meshes
     {
         public readonly List<Mesh> MeshLods;
 
-        public MeshExporter(USkeleton originalSkeleton) : base(originalSkeleton)
+        public MeshExporter(USkeleton originalSkeleton, ExporterOptions options) : base(originalSkeleton, options)
         {
             MeshLods = new List<Mesh>();
 
@@ -41,7 +41,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{PackagePath}.psk", Ar.GetBuffer(), new List<MaterialExporter2>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, bool exportMaterials = true) : base(originalMesh)
+        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
@@ -62,7 +62,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
 
                 using var Ar = new FArchiveWriter();
-                var materialExports = exportMaterials ? new List<MaterialExporter2>() : null;
+                var materialExports = new List<MaterialExporter2>();
                 string ext;
                 switch (Options.MeshFormat)
                 {
@@ -82,12 +82,12 @@ namespace CUE4Parse_Conversion.Meshes
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
 
-                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports));
                 if (Options.LodFormat == ELodFormat.FirstLod) break;
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, bool exportMaterials = true) : base(originalMesh)
+        public MeshExporter(USkeletalMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
@@ -119,7 +119,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
 
                 using var Ar = new FArchiveWriter();
-                var materialExports = exportMaterials ? new List<MaterialExporter2>() : null;
+                var materialExports = new List<MaterialExporter2>();
                 var ext = "";
                 switch (Options.MeshFormat)
                 {
@@ -142,7 +142,7 @@ namespace CUE4Parse_Conversion.Meshes
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
 
-                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports));
                 if (Options.LodFormat == ELodFormat.FirstLod) break;
                 i++;
             }
@@ -337,7 +337,7 @@ namespace CUE4Parse_Conversion.Meshes
                 if (sections[i].Material?.Load<UMaterialInterface>() is { } tex)
                 {
                     materialName = tex.Name;
-                    materialExports?.Add(new MaterialExporter2(tex) { Options = Options });
+                    materialExports?.Add(new MaterialExporter2(tex, Options));
                 }
                 else materialName = $"material_{i}";
 

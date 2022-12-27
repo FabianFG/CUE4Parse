@@ -19,8 +19,9 @@ namespace CUE4Parse_Conversion.Materials
         private readonly string _internalFilePath;
         private readonly MaterialData _materialData;
 
-        public MaterialExporter2()
+        public MaterialExporter2(ExporterOptions options)
         {
+            Options = options;
             _internalFilePath = string.Empty;
             _materialData = new MaterialData
             {
@@ -29,12 +30,12 @@ namespace CUE4Parse_Conversion.Materials
             };
         }
 
-        public MaterialExporter2(UUnrealMaterial? unrealMaterial) : this()
+        public MaterialExporter2(UUnrealMaterial? unrealMaterial, ExporterOptions options) : this(options)
         {
             if (unrealMaterial == null) return;
             _internalFilePath = unrealMaterial.Owner?.Name ?? unrealMaterial.Name;
 
-            unrealMaterial.GetParams(_materialData.Parameters, Options.MaterialFormat == EMaterialFormat.AllLayers);
+            unrealMaterial.GetParams(_materialData.Parameters, Options.MaterialFormat);
             foreach ((string key, UUnrealMaterial value) in _materialData.Parameters.Textures)
             {
                 _materialData.Textures[key] = value.GetPathName();

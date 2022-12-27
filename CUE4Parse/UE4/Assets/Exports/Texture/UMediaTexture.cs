@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             throw new System.NotImplementedException();
         }
-        public override void GetParams(CMaterialParams2 parameters, bool allLayers)
+        public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
         {
             throw new System.NotImplementedException();
         }
