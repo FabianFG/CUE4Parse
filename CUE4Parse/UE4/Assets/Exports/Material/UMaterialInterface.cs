@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             parameters.MobileSpecularMask = MobileSpecularMask;
         }
 
-        public override void GetParams(CMaterialParams2 parameters)
+        public override void GetParams(CMaterialParams2 parameters, bool allLayers)
         {
             for (int i = 0; i < TextureStreamingData.Length; i++)
             {

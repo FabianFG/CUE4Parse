@@ -218,7 +218,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Diffuse = null;
             }
         }
-        public override void GetParams(CMaterialParams2 parameters)
+        public override void GetParams(CMaterialParams2 parameters, bool allLayers)
         {
             parameters.AppendAllProperties(Properties);
 
@@ -228,13 +228,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Textures[texture.Name] = texture;
             }
 
+            base.GetParams(parameters, allLayers);
+
             if (ReferencedTextures.Count == 1 && ReferencedTextures[0] is { } fallback)
             {
                 parameters.Textures[CMaterialParams2.FallbackDiffuse] = fallback;
                 return;
             }
-
-            base.GetParams(parameters);
 
             var textureIndex = ReferencedTextures.Count;
             while (!(

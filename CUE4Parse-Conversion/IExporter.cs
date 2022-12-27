@@ -16,18 +16,20 @@ namespace CUE4Parse_Conversion
 {
     public struct ExporterOptions
     {
-        public ETextureFormat TextureFormat;
         public ELodFormat LodFormat;
         public EMeshFormat MeshFormat;
+        public EMaterialFormat MaterialFormat;
+        public ETextureFormat TextureFormat;
         public ETexturePlatform Platform;
         public ESocketFormat SocketFormat;
         public bool ExportMorphTargets;
 
         public ExporterOptions()
         {
-            TextureFormat = ETextureFormat.Png;
             LodFormat = ELodFormat.FirstLod;
             MeshFormat = EMeshFormat.ActorX;
+            MaterialFormat = EMaterialFormat.FirstLayer;
+            TextureFormat = ETextureFormat.Png;
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
             ExportMorphTargets = true;
@@ -45,6 +47,7 @@ namespace CUE4Parse_Conversion
     {
         protected readonly string PackagePath;
         protected readonly string ExportName;
+        public ExporterOptions Options;
 
         protected ExporterBase()
         {
@@ -78,13 +81,14 @@ namespace CUE4Parse_Conversion
 
         public Exporter(UObject export, ExporterOptions options)
         {
+            Options = options;
             _exporterBase = export switch
             {
                 UAnimSequence animSequence => new AnimExporter(animSequence),
-                UMaterialInterface material => new MaterialExporter(material, false, options.Platform),
-                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, options),
+                UMaterialInterface material => new MaterialExporter2(material),
+                USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh),
                 USkeleton skeleton => new MeshExporter(skeleton),
-                UStaticMesh staticMesh => new MeshExporter(staticMesh, options),
+                UStaticMesh staticMesh => new MeshExporter(staticMesh),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }
