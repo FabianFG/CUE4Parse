@@ -270,7 +270,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         {
             foreach (var property in properties)
             {
-                if (property.Name.Text is "Parent" or "TextureParameterValues" or "VectorParameterValues" or "ScalarParameterValues")
+                if (property.Name.Text is "Parent" or
+                    "TextureParameterValues" or
+                    "VectorParameterValues" or
+                    "ScalarParameterValues" or
+                    "StaticParameters" or
+                    "CachedReferencedTextures" or
+                    "TextureStreamingData")
                     continue;
 
                 Properties[property.Name.Text] = property.Tag?.GenericValue;
