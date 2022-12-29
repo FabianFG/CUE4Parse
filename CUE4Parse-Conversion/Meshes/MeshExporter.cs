@@ -467,52 +467,57 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public void ExportSockets(FArchiveWriter Ar, List<FPackageIndex> sockets, List<CSkelMeshBone> bones, ESocketFormat socketFormat = ESocketFormat.Socket)
+        public void ExportSockets(FArchiveWriter Ar, List<FPackageIndex> sockets, List<CSkelMeshBone> bones)
         {
-            if (sockets is null) return;
-
-            if (socketFormat == ESocketFormat.Socket)
+            switch (Options.SocketFormat)
             {
-                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Count, DataSize = Constants.VSocket_SIZE };
-                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
-
-                for (var i = 0; i < sockets.Count; i++)
+                case ESocketFormat.Socket:
                 {
-                    var socket = sockets[i].Load<USkeletalMeshSocket>();
-                    if (socket is null) continue;
+                    var socketInfoHdr = new VChunkHeader { DataCount = sockets.Count, DataSize = Constants.VSocket_SIZE };
+                    Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
 
-                    var pskSocket = new VSocket(socket.SocketName.Text, socket.BoneName.Text, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
-                    pskSocket.Serialize(Ar);
-                }
-            }
-            else if (socketFormat == ESocketFormat.Bone)
-            {
-                for (var i = 0; i < sockets.Count; i++)
-                {
-                    var socket = sockets[i].Load<USkeletalMeshSocket>();
-                    if (socket is null) continue;
-
-                    var targetBoneIdx = -1;
-                    for (var j = 0; j < bones.Count; j++)
+                    for (var i = 0; i < sockets.Count; i++)
                     {
-                        if (bones[j].Name.Text.Equals(socket.BoneName.Text))
-                        {
-                            targetBoneIdx = j;
-                            break;
-                        }
+                        var socket = sockets[i].Load<USkeletalMeshSocket>();
+                        if (socket is null) continue;
+
+                        var pskSocket = new VSocket(socket.SocketName.Text, socket.BoneName.Text, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
+                        pskSocket.Serialize(Ar);
                     }
 
-                    if (targetBoneIdx == -1) continue;
-
-                    var meshBone = new CSkelMeshBone
+                    break;
+                }
+                case ESocketFormat.Bone:
+                {
+                    for (var i = 0; i < sockets.Count; i++)
                     {
-                        Name = socket.SocketName.Text,
-                        ParentIndex = targetBoneIdx,
-                        Position = socket.RelativeLocation,
-                        Orientation = socket.RelativeRotation.Quaternion()
-                    };
+                        var socket = sockets[i].Load<USkeletalMeshSocket>();
+                        if (socket is null) continue;
 
-                    bones.Add(meshBone);
+                        var targetBoneIdx = -1;
+                        for (var j = 0; j < bones.Count; j++)
+                        {
+                            if (bones[j].Name.Text.Equals(socket.BoneName.Text))
+                            {
+                                targetBoneIdx = j;
+                                break;
+                            }
+                        }
+
+                        if (targetBoneIdx == -1) continue;
+
+                        var meshBone = new CSkelMeshBone
+                        {
+                            Name = socket.SocketName.Text,
+                            ParentIndex = targetBoneIdx,
+                            Position = socket.RelativeLocation,
+                            Orientation = socket.RelativeRotation.Quaternion()
+                        };
+
+                        bones.Add(meshBone);
+                    }
+
+                    break;
                 }
             }
         }
