@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -52,16 +53,16 @@ namespace CUE4Parse_Conversion.Materials
             File.WriteAllText(savedFilePath, JsonConvert.SerializeObject(_materialData, Formatting.Indented));
             label = Path.GetFileName(savedFilePath);
 
-            foreach (var texture in _materialData.Parameters.Textures.Values)
+            Parallel.ForEach(_materialData.Parameters.Textures.Values, texture =>
             {
-                if (texture is not UTexture2D t || t.Decode(Options.Platform) is not { } bitmap) continue;
+                if (texture is not UTexture2D t || t.Decode(Options.Platform) is not { } bitmap) return;
 
                 var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, "png");
-                using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
+                using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
                 using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
                 using var stream = data.AsStream();
                 stream.CopyTo(fs);
-            }
+            });
 
             return true;
         }

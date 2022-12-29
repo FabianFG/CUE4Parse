@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using CUE4Parse_Conversion.Materials;
 
 namespace CUE4Parse_Conversion.Meshes
@@ -24,10 +25,10 @@ namespace CUE4Parse_Conversion.Meshes
             savedFilePath = string.Empty;
             if (!baseDirectory.Exists || FileData.Length <= 0) return false;
 
-            foreach (var material in Materials)
+            Parallel.ForEach(Materials, material =>
             {
                 material.TryWriteToDir(baseDirectory, out _, out _);
-            }
+            });
 
             savedFilePath = FixAndCreatePath(baseDirectory, FileName);
             File.WriteAllBytes(savedFilePath, FileData);
