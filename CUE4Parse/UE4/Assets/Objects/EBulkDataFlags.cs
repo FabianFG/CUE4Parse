@@ -5,15 +5,29 @@ namespace CUE4Parse.UE4.Assets.Objects
     [Flags]
     public enum EBulkDataFlags : uint
     {
-        BULKDATA_PayloadAtEndOfFile = 0x0001,               // bulk data stored at the end of this file, data offset added to global data offset in package
-        BULKDATA_CompressedZlib = 0x0002,                   // the same value as for UE3
-        BULKDATA_Unused = 0x0020,                           // the same value as for UE3
-        BULKDATA_ForceInlinePayload = 0x0040,               // bulk data stored immediately after header
-        BULKDATA_PayloadInSeperateFile = 0x0100,            // data stored in .ubulk file near the asset (UE4.12+)
-        BULKDATA_SerializeCompressedBitWindow = 0x0200,     // use platform-specific compression
-        BULKDATA_OptionalPayload = 0x0800,                  // same as BULKDATA_PayloadInSeperateFile, but stored with .uptnl extension (UE4.20+)
-        BULKDATA_Size64Bit = 0x2000,                        // 64-bit size fields, UE4.22+
-        BULKDATA_BadDataVersion = 0x8000,                   // I really don't know one ushort before the data
-        BULKDATA_NoOffsetFixUp = 0x10000                    // do not add Summary.BulkDataStartOffset to bulk location, UE4.26
+        BULKDATA_None                               = 0,
+        BULKDATA_PayloadAtEndOfFile                 = 1 << 0,
+        BULKDATA_SerializeCompressedZLIB            = 1 << 1,
+        BULKDATA_ForceSingleElementSerialization    = 1 << 2,
+        BULKDATA_SingleUse                          = 1 << 3,
+        BULKDATA_Unused                             = 1 << 5,
+        BULKDATA_ForceInlinePayload                 = 1 << 6,
+        BULKDATA_SerializeCompressed                = BULKDATA_SerializeCompressedZLIB,
+        BULKDATA_ForceStreamPayload                 = 1 << 7,
+        BULKDATA_PayloadInSeperateFile              = 1 << 8,
+        BULKDATA_SerializeCompressedBitWindow       = 1 << 9,
+        BULKDATA_Force_NOT_InlinePayload            = 1 << 10,
+        BULKDATA_OptionalPayload                    = 1 << 11,
+        BULKDATA_MemoryMappedPayload                = 1 << 12,
+        BULKDATA_Size64Bit                          = 1 << 13,
+        BULKDATA_DuplicateNonOptionalPayload        = 1 << 14,
+        BULKDATA_BadDataVersion                     = 1 << 15,
+        BULKDATA_NoOffsetFixUp                      = 1 << 16,
+        BULKDATA_WorkspaceDomainPayload             = 1 << 17,
+        BULKDATA_LazyLoadable                       = 1 << 18,
+        // BULKDATA_UsesIoDispatcher                   = 1u << 31,
+        BULKDATA_DataIsMemoryMapped                 = 1 << 30,
+        BULKDATA_HasAsyncReadPending                = 1 << 29,
+        BULKDATA_AlwaysAllowDiscard                 = 1 << 28,
     }
 }

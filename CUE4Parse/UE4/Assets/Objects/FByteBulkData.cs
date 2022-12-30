@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 
                 Ar.Position = savePos;
             }
-            else if (BulkDataFlags.HasFlag(BULKDATA_CompressedZlib))
+            else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
