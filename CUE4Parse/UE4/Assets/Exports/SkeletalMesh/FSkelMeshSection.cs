@@ -177,9 +177,14 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     ClothingData = Ar.Read<FClothingSectionData>();
                 }
 
-                if (Ar.Game == EGame.GAME_KingdomHearts3)
+                if (Ar.Game is EGame.GAME_KingdomHearts3 or EGame.GAME_FinalFantasy7Remake)
                 {
-                    Ar.Position += sizeof(int) + sizeof(int); // unkBool & unkInt
+                    var shouldReadArray = Ar.Read<int>();
+                    var arrayLength = Ar.Read<int>();
+                    if (shouldReadArray == 1)
+                    {
+                        Ar.Position += Ar.Game == EGame.GAME_KingdomHearts3 ? arrayLength * 24 : arrayLength * 16;
+                    }
                 }
 
                 if (FOverlappingVerticesCustomVersion.Get(Ar) >= FOverlappingVerticesCustomVersion.Type.DetectOVerlappingVertices)
