@@ -32,7 +32,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool HasTopSpecularMasks => HasTopTexture(SpecularMasks[0]);
         public bool HasTopEmissive => HasTopTexture(Emissive[0]);
 
-        public bool IsTransparent = false;
+        public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
+        public EMaterialShadingModel ShadingModel = EMaterialShadingModel.MSM_Unlit;
+
+        public bool IsTranslucent => BlendMode == EBlendMode.BLEND_Translucent;
         public bool IsNull => Textures.Count == 0;
 
         /// <summary>
@@ -276,7 +279,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     "ScalarParameterValues" or
                     "StaticParameters" or
                     "CachedReferencedTextures" or
-                    "TextureStreamingData")
+                    "TextureStreamingData" or
+                    "BlendMode" or
+                    "ShadingModel")
                     continue;
 
                 Properties[property.Name.Text] = property.Tag?.GenericValue;

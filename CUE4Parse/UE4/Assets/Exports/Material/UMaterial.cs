@@ -17,6 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool bDisableDepthTest;
         public bool bIsMasked;
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
+        public EMaterialShadingModel ShadingModel = EMaterialShadingModel.MSM_Unlit;
         public float OpacityMaskClipValue = 0.333f;
         public List<UTexture> ReferencedTextures = new();
         private List<IObject> _displayedReferencedTextures = new();
@@ -28,7 +29,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             TwoSided = GetOrDefault<bool>(nameof(TwoSided));
             bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
-            BlendMode = GetOrDefault<EBlendMode>(nameof(EBlendMode));
+            BlendMode = GetOrDefault<EBlendMode>(nameof(BlendMode));
+            ShadingModel = GetOrDefault<EMaterialShadingModel>(nameof(ShadingModel));
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
 
             // 4.25+
@@ -220,6 +222,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
         public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
         {
+            parameters.BlendMode = BlendMode;
+            parameters.ShadingModel = ShadingModel;
             parameters.AppendAllProperties(Properties);
 
             if (format != EMaterialFormat.AllLayersNoRef)

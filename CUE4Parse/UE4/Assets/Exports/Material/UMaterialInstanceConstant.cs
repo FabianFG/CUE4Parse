@@ -248,9 +248,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             if (format != EMaterialFormat.FirstLayer && Parent != null && Parent != this)
                 Parent.GetParams(parameters, format);
 
-            base.GetParams(parameters, format);
-
             parameters.AppendAllProperties(Properties);
+            base.GetParams(parameters, format);
 
             foreach (var textureParameter in TextureParameterValues)
             {
@@ -268,13 +267,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             foreach (var scalarParameter in ScalarParameterValues)
                 parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;
-
-            if (StaticParameters != null)
-                foreach (var switchParameter in StaticParameters.StaticSwitchParameters)
-                    parameters.Switchs[switchParameter.Name] = switchParameter.Value;
-
-            if (BasePropertyOverrides != null)
-                parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
