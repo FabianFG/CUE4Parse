@@ -24,13 +24,13 @@ namespace CUE4Parse.UE4.Assets.Objects
                 if (dataIndex >= 0 && dataIndex < pkg.BulkDataMap.Length)
                 {
                     var metaData = pkg.BulkDataMap[dataIndex];
-                    BulkDataFlags = (EBulkDataFlags)metaData.Flags;
-                    ElementCount = (int)metaData.SerialSize;
-                    OffsetInFile = (long)metaData.SerialOffset;
-                    SizeOnDisk = (uint)metaData.SerialSize; // ??
+                    BulkDataFlags = (EBulkDataFlags) metaData.Flags;
+                    ElementCount = (int) metaData.SerialSize;
+                    OffsetInFile = (long) metaData.SerialOffset;
+                    SizeOnDisk = (uint) metaData.SerialSize; // ??
                     return;
                 }
-                Ar.Position += -4;
+                Ar.Position -= 4;
             }
 
             BulkDataFlags = Ar.Read<EBulkDataFlags>();

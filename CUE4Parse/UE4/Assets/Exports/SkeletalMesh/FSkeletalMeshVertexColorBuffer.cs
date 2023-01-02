@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -17,10 +18,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             Data = Array.Empty<FColor>();
         }
         
-        public FSkeletalMeshVertexColorBuffer(FAssetArchive Ar)
+        public FSkeletalMeshVertexColorBuffer(FArchive Ar)
         {
             var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
-            Data = !stripDataFlags.IsDataStrippedForServer() ? Ar.ReadBulkArray<FColor>() : new FColor[0];
+            Data = !stripDataFlags.IsDataStrippedForServer() ? Ar.ReadBulkArray<FColor>() : Array.Empty<FColor>();
         }
 
         public FSkeletalMeshVertexColorBuffer(FColor[] data)
