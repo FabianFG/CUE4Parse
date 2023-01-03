@@ -19,12 +19,12 @@ namespace CUE4Parse_Conversion.Sounds
                 default: audioFormat = string.Empty; data = null; break;
             }
         }
-        
+
         public static void Decode(this USoundWave soundWave, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
             audioFormat = string.Empty;
             byte[]? input = null;
-            
+
             if (!soundWave.bStreaming)
             {
                 if (soundWave.CompressedFormatData != null)
@@ -49,26 +49,27 @@ namespace CUE4Parse_Conversion.Sounds
                     Buffer.BlockCopy(soundWave.RunningPlatformData.Chunks[i].BulkData.Data, 0, ret, offset, soundWave.RunningPlatformData.Chunks[i].AudioDataSize);
                     offset += soundWave.RunningPlatformData.Chunks[i].AudioDataSize;
                 }
-                
+
                 audioFormat = soundWave.RunningPlatformData.AudioFormat.Text;
                 input = ret;
             }
 
             data = Decompress(shouldDecompress, ref audioFormat, input);
         }
-        
+
         public static void Decode(this UAkMediaAssetData mediaData, bool shouldDecompress, out string audioFormat, out byte[]? data)
         {
             var offset = 0;
             audioFormat = "WEM";
-            
-            var input = new byte[mediaData.DataChunks.Sum(x => x.Data.Data.Length)];
+
+            var input = new byte[mediaData.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data.Length)];
             foreach (var dataChunk in mediaData.DataChunks)
             {
+                if (dataChunk.IsPrefetch) continue;
                 Buffer.BlockCopy(dataChunk.Data.Data, 0, input, offset, dataChunk.Data.Data.Length);
                 offset += dataChunk.Data.Data.Length;
             }
-            
+
             data = Decompress(shouldDecompress, ref audioFormat, input);
         }
 
@@ -97,7 +98,7 @@ namespace CUE4Parse_Conversion.Sounds
                 audioFormat = "OGG";
                 return input;
             }
-            
+
             return null;
         }
     }

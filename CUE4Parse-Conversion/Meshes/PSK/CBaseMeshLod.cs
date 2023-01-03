@@ -11,7 +11,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int NumTexCoords = 0;
         public bool HasNormals = false;
         public bool HasTangents = false;
-        public bool IsMirrored = false;
+        public bool IsTwoSided = false;
         public Lazy<CMeshSection[]> Sections;
         public Lazy<FMeshUVFloat[][]> ExtraUV;
         public FColor[]? VertexColors;
