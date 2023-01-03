@@ -26,14 +26,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public FTexturePlatformData(FAssetArchive Ar)
         {
-            if (Ar.Game >= EGame.GAME_UE5_0 && Ar.IsFilterEditorOnly)
+            if (Ar is { Game: >= EGame.GAME_UE5_0, IsFilterEditorOnly: true })
             {
                 const long PlaceholderDerivedDataSize = 16;
                 Ar.Position += PlaceholderDerivedDataSize;
             }
 
-            var flag = 0;
-            
             if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
             {
                 SizeX = Ar.Read<short>();
@@ -45,19 +43,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             {
                 SizeX = Ar.Read<int>();
                 SizeY = Ar.Read<int>();
-                PackedData = Ar.Read<short>();
-                flag = Ar.Read<short>();
+                PackedData = Ar.Read<int>();
             }
 
             PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
-            if (Ar.Game == EGame.GAME_FinalFantasy7Remake && flag == 16384)
+            if (Ar.Game == EGame.GAME_FinalFantasy7Remake && (PackedData & 0xffff) == 16384)
             {
                 var unk0 = Ar.Read<int>();
                 var unk1 = Ar.Read<int>();
                 var mapNum = Ar.Read<int>();
             }
-            
+
             if ((PackedData & BitMask_HasOptData) == BitMask_HasOptData)
             {
                 OptData = Ar.Read<FOptTexturePlatformData>();
@@ -79,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
                 Ar.Position += 4;
             }
-            
+
             Mips = new FTexture2DMipMap[mipCount];
             for (var i = 0; i < Mips.Length; i++)
             {

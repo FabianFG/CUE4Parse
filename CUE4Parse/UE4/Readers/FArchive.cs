@@ -296,7 +296,7 @@ namespace CUE4Parse.UE4.Readers
                 {
                     length = -length;
                     var ucs2Length = length * sizeof(ushort);
-                    Span<byte> ucs2Bytes = ucs2Length <= 1024 ? stackalloc byte[ucs2Length] : new byte[ucs2Length];
+                    var ucs2Bytes = ucs2Length <= 1024 ? stackalloc byte[ucs2Length] : new byte[ucs2Length];
                     fixed (byte* ucs2BytesPtr = ucs2Bytes)
                     {
                         Serialize(ucs2BytesPtr, ucs2Length);
