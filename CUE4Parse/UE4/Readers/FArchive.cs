@@ -281,8 +281,8 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            if (length is < -512000 or > 512000)
-                throw new ParserException($"Invalid FString length '{length}'");
+            // if (length is < -512000 or > 512000)
+            //     throw new ParserException($"Invalid FString length '{length}'");
 
             if (length == 0)
             {
@@ -296,29 +296,35 @@ namespace CUE4Parse.UE4.Readers
                 {
                     length = -length;
                     var ucs2Length = length * sizeof(ushort);
-                    var ucs2Bytes = stackalloc byte[ucs2Length];
-                    Serialize(ucs2Bytes, ucs2Length);
-#if !NO_STRING_NULL_TERMINATION_VALIDATION
-                    if (ucs2Bytes[ucs2Length - 1] != 0 || ucs2Bytes[ucs2Length - 2] != 0)
+                    Span<byte> ucs2Bytes = ucs2Length <= 1024 ? stackalloc byte[ucs2Length] : new byte[ucs2Length];
+                    fixed (byte* ucs2BytesPtr = ucs2Bytes)
                     {
-                        throw new ParserException(this, "Serialized FString is not null terminated");
-                    }
+                        Serialize(ucs2BytesPtr, ucs2Length);
+#if !NO_STRING_NULL_TERMINATION_VALIDATION
+                        if (ucs2Bytes[ucs2Length - 1] != 0 || ucs2Bytes[ucs2Length - 2] != 0)
+                        {
+                            throw new ParserException(this, "Serialized FString is not null terminated");
+                        }
 #endif
-                    return new string((char*) ucs2Bytes, 0 , length - 1);
+                        return new string((char*) ucs2BytesPtr, 0 , length - 1);
+                    }
                 }
             }
 
             unsafe
             {
-                var ansiBytes = stackalloc byte[length];
-                Serialize(ansiBytes, length);
-#if !NO_STRING_NULL_TERMINATION_VALIDATION
-                if (ansiBytes[length - 1] != 0)
+                var ansiBytes = length <= 1024 ? stackalloc byte[length] : new byte[length];
+                fixed (byte* ansiBytesPtr = ansiBytes)
                 {
-                    throw new ParserException(this, "Serialized FString is not null terminated");
-                }
+                    Serialize(ansiBytesPtr, length);
+#if !NO_STRING_NULL_TERMINATION_VALIDATION
+                    if (ansiBytes[length - 1] != 0)
+                    {
+                        throw new ParserException(this, "Serialized FString is not null terminated");
+                    }
 #endif
-                return new string((sbyte*) ansiBytes, 0, length - 1);
+                    return new string((sbyte*) ansiBytesPtr, 0, length - 1);
+                }
             }
         }
 
