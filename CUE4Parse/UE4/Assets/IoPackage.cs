@@ -102,7 +102,7 @@ namespace CUE4Parse.UE4.Assets
                 {
                     var bulkDataMapSize = uassetAr.Read<ulong>();
                     if (uassetAr.Game != EGame.GAME_UE5_2 || bulkDataMapSize < 65535) // Fortnite moment
-                        BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int)(bulkDataMapSize / FBulkDataMapEntry.Size));
+                        BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int) (bulkDataMapSize / FBulkDataMapEntry.Size));
                 }
 
                 // Imported public export hashes
@@ -175,7 +175,7 @@ namespace CUE4Parse.UE4.Assets
             ImportedPackages = new Lazy<IoPackage?[]>(provider != null ? () =>
             {
                 var packages = new IoPackage?[importedPackageIds.Length];
-                for (int i = 0; i < importedPackageIds.Length; i++)
+                for (var i = 0; i < importedPackageIds.Length; i++)
                 {
                     provider.TryLoadPackage(importedPackageIds[i], out packages[i]);
                 }
@@ -232,8 +232,7 @@ namespace CUE4Parse.UE4.Assets
         }
 
         public IoPackage(FArchive uasset, IoGlobalData globalData, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
-            : this(uasset, globalData, containerHeader, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings)
-        { }
+            : this(uasset, globalData, containerHeader, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FName CreateFNameFromMappedName(FMappedName mappedName) =>

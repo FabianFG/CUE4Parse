@@ -243,15 +243,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
         }
 
-        public override void GetParams(CMaterialParams2 parameters)
+        public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
         {
-            // get params from linked UMaterial3
-            if (Parent != null && Parent != this)
-                Parent.GetParams(parameters);
-
-            base.GetParams(parameters);
+            if (format != EMaterialFormat.FirstLayer && Parent != null && Parent != this)
+                Parent.GetParams(parameters, format);
 
             parameters.AppendAllProperties(Properties);
+            base.GetParams(parameters, format);
 
             foreach (var textureParameter in TextureParameterValues)
             {
@@ -269,13 +267,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             foreach (var scalarParameter in ScalarParameterValues)
                 parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;
-
-            if (StaticParameters != null)
-                foreach (var switchParameter in StaticParameters.StaticSwitchParameters)
-                    parameters.Switchs[switchParameter.Name] = switchParameter.Value;
-
-            if (BasePropertyOverrides != null)
-                parameters.IsTransparent = BasePropertyOverrides.BlendMode == EBlendMode.BLEND_Translucent;
         }
 
         public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)

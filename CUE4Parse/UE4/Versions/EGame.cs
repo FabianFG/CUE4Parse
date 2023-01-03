@@ -33,6 +33,8 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_17 = GameUtils.GameUe4Base + 17 << 4,
         GAME_UE4_18 = GameUtils.GameUe4Base + 18 << 4,
             GAME_KingdomHearts3 = GAME_UE4_18 + 1,
+            GAME_FinalFantasy7Remake = GAME_UE4_18 + 2,
+            GAME_AceCombat7 = GAME_UE4_18 + 3,
         GAME_UE4_19 = GameUtils.GameUe4Base + 19 << 4,
             GAME_Paragon = GAME_UE4_19 + 1,
         GAME_UE4_20 = GameUtils.GameUe4Base + 20 << 4,

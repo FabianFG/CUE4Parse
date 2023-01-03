@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider;
+using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -31,11 +32,19 @@ namespace CUE4Parse.UE4.Assets
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
         public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast("."), provider, mappings)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
-            var uassetAr = new FAssetArchive(uasset, this);
+            FAssetArchive uassetAr;
+            ACE7XORKey? xorKey = null;
+            ACE7Decrypt? decryptor = null;
+            if (uasset.Game == EGame.GAME_AceCombat7)
+            {
+                decryptor = new ACE7Decrypt();
+                uassetAr = new FAssetArchive(decryptor.DecryptUassetArchive(uasset, out xorKey), this);
+            }
+            else uassetAr = new FAssetArchive(uasset, this);
             Summary = new FPackageFileSummary(uassetAr);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
@@ -62,7 +71,15 @@ namespace CUE4Parse.UE4.Assets
                 PreloadDependencies = uassetAr.ReadArray(Summary.PreloadDependencyCount, () => new FPackageIndex(uassetAr));
             }
 
-            var uexpAr = uexp != null ? new FAssetArchive(uexp, this, (int) uassetAr.Length) : uassetAr;
+            FAssetArchive uexpAr;
+            if (uexp != null)
+            {
+                if (uasset.Game == EGame.GAME_AceCombat7 && decryptor != null && xorKey != null)
+                {
+                    uexpAr = new FAssetArchive(decryptor.DecryptUexpArchive(uexp, xorKey), this, (int) uassetAr.Length);
+                } else uexpAr = new FAssetArchive(uexp, this, (int) uassetAr.Length);
+            }
+            else uexpAr = uassetAr;
 
             if (ubulk != null)
             {

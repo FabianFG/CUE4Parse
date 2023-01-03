@@ -31,6 +31,15 @@
     <PackageReference Include="Zstandard2.Net" Version="1.4.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Resources" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\ACE7Key.bin" />
+    <EmbeddedResource Include="Resources\ACE7Key.bin" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <BuildInParallel>false</BuildInParallel> <!-- we can't run 2 cmake build at same time -->
     <CMakeProject>../CUE4Parse-Natives/</CMakeProject>

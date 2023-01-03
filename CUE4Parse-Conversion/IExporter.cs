@@ -16,18 +16,20 @@ namespace CUE4Parse_Conversion
 {
     public struct ExporterOptions
     {
-        public ETextureFormat TextureFormat;
         public ELodFormat LodFormat;
         public EMeshFormat MeshFormat;
+        public EMaterialFormat MaterialFormat;
+        public ETextureFormat TextureFormat;
         public ETexturePlatform Platform;
         public ESocketFormat SocketFormat;
         public bool ExportMorphTargets;
 
         public ExporterOptions()
         {
-            TextureFormat = ETextureFormat.Png;
             LodFormat = ELodFormat.FirstLod;
             MeshFormat = EMeshFormat.ActorX;
+            MaterialFormat = EMaterialFormat.AllLayersNoRef;
+            TextureFormat = ETextureFormat.Png;
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
             ExportMorphTargets = true;
@@ -45,18 +47,21 @@ namespace CUE4Parse_Conversion
     {
         protected readonly string PackagePath;
         protected readonly string ExportName;
+        public ExporterOptions Options;
 
         protected ExporterBase()
         {
             PackagePath = string.Empty;
             ExportName = string.Empty;
+            Options = new ExporterOptions();
         }
 
-        protected ExporterBase(UObject export)
+        protected ExporterBase(UObject export, ExporterOptions options)
         {
             var p = export.GetPathName();
             PackagePath = p.SubstringBeforeLast('.');
             ExportName = p.SubstringAfterLast('.');
+            Options = options;
         }
 
         public abstract bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath);
@@ -72,7 +77,7 @@ namespace CUE4Parse_Conversion
         }
     }
 
-    public class Exporter : ExporterBase
+    public class Exporter
     {
         private readonly ExporterBase _exporterBase;
 
@@ -80,20 +85,20 @@ namespace CUE4Parse_Conversion
         {
             _exporterBase = export switch
             {
-                UAnimSequence animSequence => new AnimExporter(animSequence),
-                UMaterialInterface material => new MaterialExporter(material, false, options.Platform),
+                UAnimSequence animSequence => new AnimExporter(animSequence, options),
+                UMaterialInterface material => new MaterialExporter2(material, options),
                 USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, options),
-                USkeleton skeleton => new MeshExporter(skeleton),
+                USkeleton skeleton => new MeshExporter(skeleton, options),
                 UStaticMesh staticMesh => new MeshExporter(staticMesh, options),
                 _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
             };
         }
 
-        public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath) =>
+        public bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath) =>
             _exporterBase.TryWriteToDir(baseDirectory, out label, out savedFilePath);
 
-        public override bool TryWriteToZip(out byte[] zipFile) => _exporterBase.TryWriteToZip(out zipFile);
+        public bool TryWriteToZip(out byte[] zipFile) => _exporterBase.TryWriteToZip(out zipFile);
 
-        public override void AppendToZip() => _exporterBase.AppendToZip();
+        public void AppendToZip() => _exporterBase.AppendToZip();
     }
 }

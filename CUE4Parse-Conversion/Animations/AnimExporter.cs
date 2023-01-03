@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Animations.PSA;
+using CUE4Parse.UE4.Assets.Exports;
 
 namespace CUE4Parse_Conversion.Animations
 {
@@ -15,7 +16,8 @@ namespace CUE4Parse_Conversion.Animations
     {
         public readonly List<Anim> AnimSequences;
 
-        public AnimExporter(USkeleton skeleton, UAnimSequence? animSequence = null) : base(animSequence != null ? animSequence : skeleton)
+        public AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimSequence? animSequence = null)
+            : base(animSequence != null ? animSequence : skeleton, options)
         {
             AnimSequences = new List<Anim>();
 
@@ -58,7 +60,7 @@ namespace CUE4Parse_Conversion.Animations
             }
         }
 
-        public AnimExporter(UAnimSequence animSequence) : this(animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
+        public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options, animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
 
         private void DoExportPsa(CAnimSet anim, int seqIdx)
         {

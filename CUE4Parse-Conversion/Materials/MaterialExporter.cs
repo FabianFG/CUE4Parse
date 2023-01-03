@@ -24,7 +24,7 @@ namespace CUE4Parse_Conversion.Materials
             _parentData = null;
         }
 
-        public MaterialExporter(UUnrealMaterial? unrealMaterial, bool bNoOtherTextures, ETexturePlatform platform = ETexturePlatform.DesktopMobile) : this()
+        public MaterialExporter(UUnrealMaterial? unrealMaterial) : this()
         {
             if (unrealMaterial == null) return;
             _internalFilePath = unrealMaterial.Owner?.Name ?? unrealMaterial.Name;
@@ -43,13 +43,7 @@ namespace CUE4Parse_Conversion.Materials
             {
                 if (arg == null) return;
                 sb.AppendLine($"{name}={arg.Name}");
-                switch (bNoOtherTextures)
-                {
-                    case true when !name.StartsWith("Other["):
-                    case false:
-                        toExport.Add(arg);
-                        break;
-                }
+                toExport.Add(arg);
             }
 
             Proc("Diffuse", parameters.Diffuse);
@@ -75,11 +69,11 @@ namespace CUE4Parse_Conversion.Materials
             foreach (var texture in toExport)
             {
                 if (texture == unrealMaterial || texture is not UTexture2D t) continue;
-                _textures[t.Owner?.Name ?? t.Name] = t.Decode(platform);
+                _textures[t.Owner?.Name ?? t.Name] = t.Decode(Options.Platform);
             }
 
-            if (!bNoOtherTextures && unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
-                _parentData = new MaterialExporter(material.Parent, bNoOtherTextures);
+            if (unrealMaterial is UMaterialInstanceConstant {Parent: { }} material)
+                _parentData = new MaterialExporter(material.Parent) { Options = Options };
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)

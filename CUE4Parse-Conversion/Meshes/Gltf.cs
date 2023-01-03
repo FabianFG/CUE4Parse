@@ -26,13 +26,13 @@ namespace CUE4Parse_Conversion.Meshes
     {
         public readonly ModelRoot Model;
 
-        public Gltf(string name, CStaticMeshLod lod, List<MaterialExporter>? materialExports)
+        public Gltf(string name, CStaticMeshLod lod, List<MaterialExporter2>? materialExports, ExporterOptions options)
         {
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
 
             for (var i = 0; i < lod.Sections.Value.Length; i++)
             {
-                ExportStaticMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh);
+                ExportStaticMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh, options);
             }
 
             var sceneBuilder = new SceneBuilder();
@@ -40,13 +40,13 @@ namespace CUE4Parse_Conversion.Meshes
             Model = sceneBuilder.ToGltf2();
         }
 
-        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter>? materialExports, FPackageIndex[]? morphTargets, int lodIndex = -1)
+        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter2>? materialExports, ExporterOptions options, FPackageIndex[]? morphTargets = null, int lodIndex = -1)
         {
             var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
 
             for (var i = 0; i < lod.Sections.Value.Length; i++)
             {
-                ExportSkelMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh);
+                ExportSkelMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh, options);
             }
 
             if (morphTargets != null)
@@ -161,13 +161,13 @@ namespace CUE4Parse_Conversion.Meshes
             return res;
         }
 
-        public static void ExportSkelMeshSections(int index, CSkelMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4> mesh)
+        public static void ExportSkelMeshSections(int index, CSkelMeshLod lod, CMeshSection sect, List<MaterialExporter2>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4> mesh, ExporterOptions options)
         {
             string materialName;
             if (sect.Material?.Load<UMaterialInterface>() is { } tex)
             {
                 materialName = tex.Name;
-                var materialExporter = new MaterialExporter(tex, true);
+                var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
             else materialName = $"material_{index}";
@@ -196,13 +196,13 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public static void ExportStaticMeshSections(int index, CStaticMeshLod lod, CMeshSection sect, List<MaterialExporter>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty> mesh)
+        public static void ExportStaticMeshSections(int index, CStaticMeshLod lod, CMeshSection sect, List<MaterialExporter2>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty> mesh, ExporterOptions options)
         {
             string materialName;
             if (sect.Material?.Load<UMaterialInterface>() is { } tex)
             {
                 materialName = tex.Name;
-                var materialExporter = new MaterialExporter(tex, true);
+                var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
             else materialName = $"material_{index}";

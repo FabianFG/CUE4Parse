@@ -20,11 +20,13 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FStaticMeshRenderData? RenderData { get; private set; }
         public FStaticMaterial[]? StaticMaterials { get; private set; }
         public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
+        public int LODForCollision { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             Materials = Array.Empty<ResolvedObject>();
+            LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             bCooked = Ar.ReadBoolean();

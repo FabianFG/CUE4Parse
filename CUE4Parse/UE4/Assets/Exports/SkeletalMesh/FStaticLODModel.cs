@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             else
             {
                 // UE4.19+ uses 32-bit index buffer (for editor data)
-                Indices = new FMultisizeIndexContainer {Indices32 = Ar.ReadBulkArray<uint>()};
+                Indices = new FMultisizeIndexContainer { Indices32 = Ar.ReadBulkArray<uint>() };
             }
 
             ActiveBoneIndices = Ar.ReadArray<short>();
@@ -148,6 +148,42 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         }
 
                         Ar.Position += 13;
+                    }
+
+                    if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+                    {
+                        var checkInt = Ar.Read<int>();
+                        if (checkInt >= 10)
+                        {
+                            Ar.Position -= 4;
+                            AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
+                        }
+
+                        checkInt = Ar.Read<int>();
+                        if (checkInt is 0 or 1) return;
+                        Ar.Position -= 4;
+
+                        var internalStripFlags = new FStripDataFlags(Ar);
+                        if (internalStripFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                        {
+                            Ar.Position -= 2;
+                            return;
+                        }
+
+                        var size = Ar.Read<int>();
+                        var count = Ar.Read<int>();
+
+                        if (count < 30)
+                        {
+                            Ar.Position -= 10;
+                            return;
+                        }
+
+                        Ar.Position += size * count;
+
+                        ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+
+                        return;
                     }
 
                     if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
@@ -250,7 +286,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             Indices = new FMultisizeIndexContainer(Ar);
-            VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer {bUseFullPrecisionUVs = true};
+            VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer { bUseFullPrecisionUVs = true };
 
             ActiveBoneIndices = Ar.ReadArray<short>();
             RequiredBones = Ar.ReadArray<short>();
@@ -308,7 +344,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
             Indices = new FMultisizeIndexContainer(Ar);
-            VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer {bUseFullPrecisionUVs = true};
+            VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer { bUseFullPrecisionUVs = true };
 
             var positionVertexBuffer = new FPositionVertexBuffer(Ar);
             var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);

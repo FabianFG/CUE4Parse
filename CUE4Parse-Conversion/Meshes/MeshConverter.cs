@@ -64,6 +64,7 @@ namespace CUE4Parse_Conversion.Meshes
                     NumTexCoords = numTexCoords,
                     HasNormals = true,
                     HasTangents = true,
+                    IsMirrored = srcLod.CardRepresentationData?.bMostlyTwoSided ?? false,
                     Indices = new Lazy<FRawStaticIndexBuffer>(srcLod.IndexBuffer!),
                     Sections = new Lazy<CMeshSection[]>(() =>
                     {

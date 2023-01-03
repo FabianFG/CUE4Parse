@@ -54,6 +54,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 #endif
         }
 
+        public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+        {
+            base.GetParams(parameters, format);
+
+            if (StaticParameters != null)
+                foreach (var switchParameter in StaticParameters.StaticSwitchParameters)
+                    parameters.Switchs[switchParameter.Name] = switchParameter.Value;
+
+            if (BasePropertyOverrides != null)
+            {
+                parameters.BlendMode = BasePropertyOverrides.BlendMode;
+                parameters.ShadingModel = BasePropertyOverrides.ShadingModel;
+            }
+        }
+
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);

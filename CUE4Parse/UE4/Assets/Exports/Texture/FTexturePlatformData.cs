@@ -32,6 +32,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 Ar.Position += PlaceholderDerivedDataSize;
             }
 
+            var flag = 0;
+            
             if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
             {
                 SizeX = Ar.Read<short>();
@@ -43,11 +45,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             {
                 SizeX = Ar.Read<int>();
                 SizeY = Ar.Read<int>();
-                PackedData = Ar.Read<int>();
+                PackedData = Ar.Read<short>();
+                flag = Ar.Read<short>();
             }
 
             PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
+            if (Ar.Game == EGame.GAME_FinalFantasy7Remake && flag == 16384)
+            {
+                var unk0 = Ar.Read<int>();
+                var unk1 = Ar.Read<int>();
+                var mapNum = Ar.Read<int>();
+            }
+            
             if ((PackedData & BitMask_HasOptData) == BitMask_HasOptData)
             {
                 OptData = Ar.Read<FOptTexturePlatformData>();
@@ -58,6 +68,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             var mipCount = Ar.Read<int>();
             if (Ar.Platform == ETexturePlatform.Playstation && mipCount != 1) mipCount /= 3; // TODO: Some mips are corrupted, so this doesn't work 100% of the time.
 
+            if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+            {
+                var firstMip = new FTexture2DMipMap(Ar);
+                var val = Ar.Read<int>();
+                if (val != PackedData)
+                {
+                    // oh no
+                }
+
+                Ar.Position += 4;
+            }
+            
             Mips = new FTexture2DMipMap[mipCount];
             for (var i = 0; i < Mips.Length; i++)
             {

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
@@ -31,7 +32,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool HasTopSpecularMasks => HasTopTexture(SpecularMasks[0]);
         public bool HasTopEmissive => HasTopTexture(Emissive[0]);
 
-        public bool IsTransparent = false;
+        public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
+        public EMaterialShadingModel ShadingModel = EMaterialShadingModel.MSM_Unlit;
+
+        public bool IsTranslucent => BlendMode == EBlendMode.BLEND_Translucent;
         public bool IsNull => Textures.Count == 0;
 
         /// <summary>
@@ -139,6 +143,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []{ "Emissive7", "Color07" }
         };
 
+        [JsonIgnore]
         public readonly Dictionary<string, UUnrealMaterial> Textures = new ();
         public readonly Dictionary<string, FLinearColor> Colors = new ();
         public readonly Dictionary<string, float> Scalars = new ();
@@ -268,7 +273,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         {
             foreach (var property in properties)
             {
-                if (property.Name.Text is "Parent" or "TextureParameterValues" or "VectorParameterValues" or "ScalarParameterValues")
+                if (property.Name.Text is "Parent" or
+                    "TextureParameterValues" or
+                    "VectorParameterValues" or
+                    "ScalarParameterValues" or
+                    "StaticParameters" or
+                    "CachedReferencedTextures" or
+                    "TextureStreamingData" or
+                    "BlendMode" or
+                    "ShadingModel")
                     continue;
 
                 Properties[property.Name.Text] = property.Tag?.GenericValue;

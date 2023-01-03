@@ -22,6 +22,13 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             {
                 MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
             }
+
+            if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+            {
+                // Cutscene mat replacements
+                var matAssetName = Ar.ReadFName();
+                var matName = Ar.ReadFName();
+            }
         }
     }
 
