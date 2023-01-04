@@ -232,7 +232,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     Ar.Position -= 4;
             }
 
-            if (Ar.Game >= EGame.GAME_UE4_17)
+            if (Ar.Versions["AnimSequence.HasCompressedRawSize"])
             {
                 // UE4.17+
                 CompressedRawDataSize = Ar.Read<int>();

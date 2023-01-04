@@ -71,6 +71,7 @@ namespace CUE4Parse.UE4.Versions
             Options["StaticMesh.UseNewCookedFormat"] = Game >= GAME_UE4_23;
             Options["VirtualTextures"] = Game >= GAME_UE4_23;
             Options["SoundWave.UseAudioStreaming"] = Game >= GAME_UE4_25 && Game != GAME_UE4_28 && Game != GAME_GTATheTrilogyDefinitiveEdition && Game != GAME_ReadyOrNot; // A lot of games use this, but some don't, which causes issues.
+            Options["AnimSequence.HasCompressedRawSize"] = Game >= GAME_UE4_17 && Game != GAME_LifeIsStrange2; // Early 4.17 builds don't have this, and some custom engine builds don't either.
 
             if (_optionOverrides != null)
             {
