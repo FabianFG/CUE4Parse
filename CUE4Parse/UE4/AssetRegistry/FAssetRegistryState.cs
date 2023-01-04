@@ -20,8 +20,8 @@ namespace CUE4Parse.UE4.AssetRegistry
             var version = header.Version;
             switch (version)
             {
-                case < FAssetRegistryVersionType.RemovedMD5Hash:
-                    Log.Warning($"Cannot read registry state before '{version}'");
+                case < FAssetRegistryVersionType.AddAssetRegistryState:
+                    Log.Warning("Cannot read registry state before {Version}", version);
                     break;
                 case < FAssetRegistryVersionType.FixedTags:
                 {
@@ -42,6 +42,9 @@ namespace CUE4Parse.UE4.AssetRegistry
         {
             PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
 
+            if (Ar.Header.Version < FAssetRegistryVersionType.RemovedMD5Hash)
+                return; // Just ignore the rest of this for now.
+            
             if (Ar.Header.Version < FAssetRegistryVersionType.AddedDependencyFlags)
             {
                 var localNumDependsNodes = Ar.Read<int>();
