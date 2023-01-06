@@ -429,9 +429,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector ProjectOnToNormal(FVector normal) => normal * (this | normal);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly FVector ToMapVector() => new FVector { X = X, Y = Z, Z = Y };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FRotator ToOrientationRotator()
         {
             return new FRotator
