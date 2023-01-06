@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             PositionDelta = Ar.Read<FVector>();
             if (Ar.Ver < EUnrealEngineObjectUE4Version.MORPHTARGET_CPU_TANGENTZDELTA_FORMATCHANGE)
             {
-                TangentZDelta = (FVector)Ar.Read<FDeprecatedSerializedPackedNormal>();
+                TangentZDelta = (FVector) Ar.Read<FDeprecatedSerializedPackedNormal>();
             }
             else
             {
