@@ -131,7 +131,7 @@ namespace CUE4Parse.UE4.Readers
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
             {
-                throw new ParserException(this, string.Format("Num ({0}) != Max ({1})", arrayNum, arrayMax));
+                throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
             }
             if (arrayNum == 0)
             {
@@ -153,7 +153,7 @@ namespace CUE4Parse.UE4.Readers
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
             {
-                throw new ParserException(this, string.Format("Num ({0}) != Max ({1})", arrayNum, arrayMax));
+                throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
             }
             if (arrayNum == 0)
             {
@@ -180,7 +180,7 @@ namespace CUE4Parse.UE4.Readers
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
             {
-                throw new ParserException(this, string.Format("Num ({0}) != Max ({1})", arrayNum, arrayMax));
+                throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
             }
             if (arrayNum == 0)
             {
@@ -209,7 +209,10 @@ namespace CUE4Parse.UE4.Readers
             var nextIndexPtr = Read<FFrozenMemoryImagePtr>();
             var hashMask = Read<uint>();
             var indexSize = Read<uint>();
-            return Array.Empty<int>(); // TODO always empty array for now
+            if (indexSize == 0) return Array.Empty<int>();
+
+            var t1 = Read<uint>();
+            return Array.Empty<int>();
         }
 
         public override string ReadFString()
@@ -220,7 +223,7 @@ namespace CUE4Parse.UE4.Readers
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
             {
-                throw new ParserException(this, string.Format("Num ({0}) != Max ({1})", arrayNum, arrayMax));
+                throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
             }
             if (arrayNum <= 1)
             {

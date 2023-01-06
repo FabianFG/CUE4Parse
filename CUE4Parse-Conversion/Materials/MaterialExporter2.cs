@@ -43,6 +43,7 @@ namespace CUE4Parse_Conversion.Materials
             }
         }
 
+        private readonly object _texture = new ();
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
             label = string.Empty;
@@ -57,11 +58,14 @@ namespace CUE4Parse_Conversion.Materials
             {
                 if (texture is not UTexture2D t || t.Decode(Options.Platform) is not { } bitmap) return;
 
-                var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, "png");
-                using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-                using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
-                using var stream = data.AsStream();
-                stream.CopyTo(fs);
+                lock (_texture)
+                {
+                    var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, "png");
+                    using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
+                    using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+                    using var stream = data.AsStream();
+                    stream.CopyTo(fs);
+                }
             });
 
             return true;

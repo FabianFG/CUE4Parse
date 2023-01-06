@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly uint CompressionBlockSize;
 
         public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
-        public bool IsCompressed => UncompressedSize != CompressedSize && CompressionMethod != CompressionMethod.None;
+        public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader)
@@ -285,8 +285,9 @@ namespace CUE4Parse.UE4.Pak.Objects
         public FPakEntry(PakFileReader reader, FMemoryImageArchive Ar) : base(reader)
         {
             Offset = Ar.Read<long>();
-            Size = Ar.Read<long>();
+            CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
+            Size = UncompressedSize;
             Ar.Position += FSHAHash.SIZE + 4 /*align to 8 bytes*/; //Hash = new FSHAHash(Ar);
             CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
             CompressionBlockSize = Ar.Read<uint>();

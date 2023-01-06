@@ -19,6 +19,7 @@ namespace CUE4Parse_Conversion.Meshes
             Materials = materials;
         }
 
+        private readonly object _material = new ();
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
             label = string.Empty;
@@ -27,7 +28,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             Parallel.ForEach(Materials, material =>
             {
-                material.TryWriteToDir(baseDirectory, out _, out _);
+                lock (_material) material.TryWriteToDir(baseDirectory, out _, out _);
             });
 
             savedFilePath = FixAndCreatePath(baseDirectory, FileName);

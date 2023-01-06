@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
@@ -84,18 +85,31 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ShaderHash = Ar.ReadHashTable();
             ShaderTypes = Ar.ReadArray<FHashedName>();
             ShaderPermutations = Ar.ReadArray<int>();
-            Shaders = Ar.ReadArrayOfPtrs(() => new FShader(Ar));
+            Shaders = Ar.ReadArrayOfPtrs(() => new FShader(Ar, false));
             ShaderPipelines = Ar.ReadArrayOfPtrs(() => new FShaderPipeline(Ar));
             ShaderPlatform = Ar.Read<EShaderPlatform>();
-            Ar.Position += 7;
+            Ar.Position += 3 + 4 * 3;
         }
     }
 
     public class FShaderPipeline
     {
+        public enum EFilter
+        {
+            EAll,			// All pipelines
+            EOnlyShared,	// Only pipelines with shared shaders
+            EOnlyUnique,	// Only pipelines with unique shaders
+        }
+
+        public FHashedName TypeName;
+        public FShader Shaders;
+        public int PermutationIds;
+
         public FShaderPipeline(FMemoryImageArchive Ar)
         {
-            // TODO
+            TypeName = new FHashedName(Ar);
+            Shaders = new FShader(Ar, true);
+            PermutationIds = Ar.Read<int>();
         }
     }
 
@@ -112,10 +126,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public uint NumInstructions;
         public uint SortKey;
 
-        public FShader(FMemoryImageArchive Ar)
+        public FShader(FMemoryImageArchive Ar, bool skip)
         {
-            Bindings = new FShaderParameterBindings(Ar);
-            ParameterMapInfo = new FShaderParameterMapInfo(Ar);
+            Bindings = new FShaderParameterBindings(Ar, skip);
+            ParameterMapInfo = new FShaderParameterMapInfo(Ar, skip);
+            if (skip) Ar.Position += 8;
             UniformBufferParameterStructs = Ar.ReadArray<FHashedName>();
             UniformBufferParameters = Ar.ReadArray<FShaderUniformBufferParameter>();
             Type = Ar.Read<ulong>();
@@ -138,9 +153,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public uint StructureLayoutHash = 0;
         public ushort RootParameterBufferIndex = 0xFFFF;
 
-        public FShaderParameterBindings(FMemoryImageArchive Ar)
+        public FShaderParameterBindings(FMemoryImageArchive Ar, bool skip)
         {
             Parameters = Ar.ReadArray<FParameter>();
+            if (skip) Ar.Position += 8;
             ResourceParameters = Ar.ReadArray<FResourceParameter>();
 #if true
             BindlessResourceParameters = Ar.ReadArray<FBindlessResourceParameter>(); // May 2022
@@ -187,18 +203,19 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FShaderParameterMapInfo
     {
-        public FShaderParameterInfo[] UniformBuffers;
-        public FShaderParameterInfo[] TextureSamplers;
-        public FShaderParameterInfo[] SRVs;
+        public FShaderUniformBufferParameterInfo[] UniformBuffers;
+        public FShaderResourceParameterInfo[] TextureSamplers;
+        public FShaderResourceParameterInfo[] SRVs;
         public FShaderLooseParameterBufferInfo[] LooseParameterBuffers;
         public ulong Hash;
 
-        public FShaderParameterMapInfo(FMemoryImageArchive Ar)
+        public FShaderParameterMapInfo(FMemoryImageArchive Ar, bool skip)
         {
-            UniformBuffers = Ar.ReadArray<FShaderParameterInfo>();
-            TextureSamplers = Ar.ReadArray<FShaderParameterInfo>();
-            SRVs = Ar.ReadArray<FShaderParameterInfo>();
-            LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
+            UniformBuffers = Ar.ReadArray<FShaderUniformBufferParameterInfo>();
+            TextureSamplers = Ar.ReadArray<FShaderResourceParameterInfo>();
+            SRVs = Ar.ReadArray<FShaderResourceParameterInfo>();
+            if (skip) Ar.Position += 4 * 4;
+            LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar, skip));
             Hash = Ar.Read<ulong>();
         }
     }
@@ -206,23 +223,36 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     public class FShaderLooseParameterBufferInfo
     {
         public ushort BaseIndex, Size;
-        public FShaderParameterInfo[] Parameters;
+        public FShaderLooseParameterInfo[] Parameters;
 
-        public FShaderLooseParameterBufferInfo(FMemoryImageArchive Ar)
+        public FShaderLooseParameterBufferInfo(FMemoryImageArchive Ar, bool skip)
         {
             BaseIndex = Ar.Read<ushort>();
             Size = Ar.Read<ushort>();
-            Ar.Position += 4;
-            Parameters = Ar.ReadArray<FShaderParameterInfo>();
+            if (!skip) Ar.Position += 4;
+            else Ar.Position += 24;
+            Parameters = Ar.ReadArray<FShaderLooseParameterInfo>();
         }
     }
 
-    public struct FShaderParameterInfo
+    public struct FShaderLooseParameterInfo
     {
         public ushort BaseIndex, Size;
     }
 
+    public struct FShaderResourceParameterInfo
+    {
+        public ushort BaseIndex;
+        public byte BufferIndex;
+        public byte Type; // EShaderParameterType
+    }
+
     public struct FShaderUniformBufferParameter
+    {
+        public ushort BaseIndex;
+    }
+
+    public struct FShaderUniformBufferParameterInfo
     {
         public ushort BaseIndex;
     }
@@ -744,6 +774,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 Name = Ar.ReadFName();
                 Patches = Ar.ReadArray<FMemoryImageNamePatch>();
             }
+
+            public override string ToString() => $"{Name}: x{Patches.Length} Patches";
         }
     }
 
