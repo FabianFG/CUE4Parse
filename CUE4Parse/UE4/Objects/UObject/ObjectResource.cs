@@ -331,6 +331,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         public readonly FName ClassPackage;
         public FName ClassName;
+        public FName PackageName;
         public bool ImportOptional;
 
 #pragma warning disable 8618
@@ -344,6 +345,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassName = Ar.ReadFName();
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
+
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
+            {
+                PackageName = Ar.ReadFName();
+            }
+            
             ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }
     }

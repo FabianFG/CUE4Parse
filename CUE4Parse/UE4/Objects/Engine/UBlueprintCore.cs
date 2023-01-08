@@ -14,7 +14,10 @@ namespace CUE4Parse.UE4.Objects.Engine
         {
             base.Deserialize(Ar, validPos);
 
-            var _ = Ar.ReadBoolean(); // bLegacyGeneratedClassIsAuthoritative
+            if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.BlueprintGeneratedClassIsAlwaysAuthoritative)
+            {
+                var _ = Ar.ReadBoolean(); // bLegacyGeneratedClassIsAuthoritative
+            }
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.BLUEPRINT_SKEL_CLASS_TRANSIENT_AGAIN &&
                 Ar.Ver != EUnrealEngineObjectUE4Version.BLUEPRINT_SKEL_TEMPORARY_TRANSIENT)

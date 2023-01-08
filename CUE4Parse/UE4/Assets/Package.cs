@@ -242,7 +242,7 @@ namespace CUE4Parse.UE4.Assets
                 _export = package.ExportMap[exportIndex];
             }
 
-            public override FName Name => _export.ObjectName;
+            public override FName Name => _export?.ObjectName ?? "None";
             public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
             public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
