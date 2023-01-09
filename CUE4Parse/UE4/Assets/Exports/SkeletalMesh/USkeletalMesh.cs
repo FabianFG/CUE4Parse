@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
             NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
-            MorphTargets = GetOrDefault<FPackageIndex[]>(nameof(MorphTargets));
+            MorphTargets = GetOrDefault(nameof(MorphTargets), Array.Empty<FPackageIndex>());
             Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
             Skeleton = GetOrDefault<FPackageIndex>(nameof(Skeleton));
 
