@@ -281,6 +281,13 @@ namespace CUE4Parse.UE4.Assets.Exports
                 writer.WriteValue(Template.Name.Text);
             }
 
+            // class
+            if (Class != null)
+            {
+                writer.WritePropertyName("Class");
+                serializer.Serialize(writer, Class.GetFullName());
+            }
+
             // export properties
             if (Properties.Count > 0)
             {
