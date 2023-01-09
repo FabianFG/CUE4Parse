@@ -165,6 +165,22 @@ namespace CUE4Parse.UE4.Versions
 
             MoveDefaultValueFromFNiagaraVariableMetaDataToUNiagaraScriptVariable,
 
+            ChangeSystemDeterministicDefault,   // Changed the default mode from deterministic to non-deterministic which matches emitters
+
+            StaticSwitchFunctionPinsUsePersistentGuids, // Update static switch pins to use the PersistentId from their script variable so that when they're renamed their values aren't lost when reallocating pins. 
+
+            VisibilityCullingImprovements, // Extended visibility culling options and moved properties into their own struct.
+
+            AddBakerCameraBookmarks,
+
+            PopulateFunctionCallNodePinNameBindings, // Function call node refresh from external changes has been refactored so that they don't need to populate their name bindings every load.
+
+            ComponentRendererSpawnProperty, // Changed the default value for the component renderer's OnlyCreateComponentsOnParticleSpawn property
+
+            RepopulateFunctionCallNodePinNameBindings, // Previous repopulate didn't handle module attributes like Particles.Module.Name so they need to be repopulated for renaming to work correctly.
+
+            EventSpawnsUpdateInitialAttributeValues, // Event spawns now optionally update Initial. attribute values. New default is true but old data is kept false to maintain existing behavior.
+
             // DO NOT ADD A NEW VERSION UNLESS YOU HAVE TALKED TO THE NIAGARA LEAD. Mismanagement of these versions can lead to data loss if it is adjusted in multiple streams simultaneously.
             // -----<new versions can be added above this line>  -------------------------------------------------
             VersionPlusOne,
@@ -182,11 +198,14 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_21 => Type.EmitterLocalSpaceLiteralConstant,
                 < EGame.GAME_UE4_23 => Type.SkelMeshInterfaceAPIImprovements,
                 < EGame.GAME_UE4_24 => Type.AddLibraryAssetProperty,
                 < EGame.GAME_UE4_25 => Type.DisableSortingByDefault,
                 < EGame.GAME_UE4_26 => Type.StandardizeParameterNames,
                 < EGame.GAME_UE4_27 => Type.SignificanceHandlers,
+                < EGame.GAME_UE5_0 => Type.MoveDefaultValueFromFNiagaraVariableMetaDataToUNiagaraScriptVariable,
+                < EGame.GAME_UE5_1 => Type.StaticSwitchFunctionPinsUsePersistentGuids,
                 _ => Type.LatestVersion
             };
         }
