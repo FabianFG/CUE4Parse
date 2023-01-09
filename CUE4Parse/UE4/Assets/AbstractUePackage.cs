@@ -171,7 +171,7 @@ namespace CUE4Parse.UE4.Assets
         public void GetFullName(bool includeOuterMostName, StringBuilder resultString, bool includeClassPackage = false)
         {
             resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name);
-            resultString.Append(' ');
+            resultString.Append('\'');
             GetPathName(includeOuterMostName, resultString);
         }
 

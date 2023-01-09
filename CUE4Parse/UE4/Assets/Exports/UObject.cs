@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public void GetFullName(UObject? stopOuter, StringBuilder resultString, bool includeClassPackage = false)
         {
             resultString.Append(includeClassPackage ? Class?.GetPathName() : ExportType);
-            resultString.Append(' ');
+            resultString.Append('\'');
             GetPathName(stopOuter, resultString);
         }
 
@@ -291,7 +291,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (Class != null)
             {
                 writer.WritePropertyName("Class");
-                serializer.Serialize(writer, Class.ExportType);
+                serializer.Serialize(writer, Class.GetFullName());
             }
 
             // export properties
