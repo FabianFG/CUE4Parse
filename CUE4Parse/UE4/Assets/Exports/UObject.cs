@@ -291,7 +291,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (Class != null)
             {
                 writer.WritePropertyName("Class");
-                serializer.Serialize(writer, Class.GetFullName());
+                serializer.Serialize(writer, Class.ExportType);
             }
 
             // export properties
