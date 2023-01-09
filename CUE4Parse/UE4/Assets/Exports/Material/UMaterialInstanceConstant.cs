@@ -8,9 +8,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class UMaterialInstanceConstant : UMaterialInstance
     {
-        public FScalarParameterValue[] ScalarParameterValues;
-        public FTextureParameterValue[] TextureParameterValues;
-        public FVectorParameterValue[] VectorParameterValues;
+        public FScalarParameterValue[] ScalarParameterValues = Array.Empty<FScalarParameterValue>();
+        public FTextureParameterValue[] TextureParameterValues = Array.Empty<FTextureParameterValue>();
+        public FVectorParameterValue[] VectorParameterValues = Array.Empty<FVectorParameterValue>();
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
