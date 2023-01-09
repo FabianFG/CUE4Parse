@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
-        public override CompressionMethod CompressionMethod { get; }
+        public sealed override CompressionMethod CompressionMethod { get; }
         public readonly FPakCompressedBlock[] CompressionBlocks = Array.Empty<FPakCompressedBlock>();
         public readonly uint Flags;
         public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly uint CompressionBlockSize;
 
         public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
-        public bool IsCompressed => UncompressedSize != CompressedSize || CompressionMethod != CompressionMethod.None;
+        public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader)
@@ -285,13 +285,20 @@ namespace CUE4Parse.UE4.Pak.Objects
         public FPakEntry(PakFileReader reader, FMemoryImageArchive Ar) : base(reader)
         {
             Offset = Ar.Read<long>();
-            Size = Ar.Read<long>();
+            CompressedSize = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
+            Size = UncompressedSize;
             Ar.Position += FSHAHash.SIZE + 4 /*align to 8 bytes*/; //Hash = new FSHAHash(Ar);
             CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
             CompressionBlockSize = Ar.Read<uint>();
             CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
             Flags = Ar.Read<byte>();
+
+            // Compute StructSize: each file still have FPakEntry data prepended, and it should be skipped.
+            StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
+            // Take into account CompressionBlocks
+            if (CompressionMethod != CompressionMethod.None)
+                StructSize += (int) (sizeof(int) + CompressionBlocks.Length * 2 * sizeof(long));
         }
 
         public PakFileReader PakFileReader

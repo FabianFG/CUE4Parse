@@ -342,7 +342,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite
                 if (PageStreamingStates.Length > 0)
                 {
                     nanite.Position = PageStreamingStates[0].BulkOffset;
-                    Debug.Assert(nanite.Length == PageStreamingStates[0].BulkSize, "nanite.Length != PageStreamingStates[0].BulkSize");
                     RootData = new FNaniteStreamableData(nanite, NumRootPages, PageStreamingStates[0].PageSize);
                 }
             }

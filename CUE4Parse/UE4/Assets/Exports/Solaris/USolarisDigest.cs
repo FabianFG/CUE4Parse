@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.Solaris
 {
     /// <summary>
-    /// ULang Visual Process Language
+    /// Verse Visual Process Language
     /// </summary>
-    public class USolarisDigest : Assets.Exports.UObject
+    public class USolarisDigest : UObject
     {
         public string ProjectName { get; private set; }
         public string ReadableCode { get; private set; }
