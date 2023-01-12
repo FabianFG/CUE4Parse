@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         {
             var sb = new StringBuilder();
             if (!Class.IsNone)
-                sb.Append(Class.Text + "'");
+                sb.Append(Class.Text + '\'');
             sb.Append(Package.Text);
             if (!Object.IsNone)
                 sb.Append('.' + Object.Text);

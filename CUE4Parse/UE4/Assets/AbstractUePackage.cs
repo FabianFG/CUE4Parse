@@ -173,6 +173,7 @@ namespace CUE4Parse.UE4.Assets
             resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name);
             resultString.Append('\'');
             GetPathName(includeOuterMostName, resultString);
+            resultString.Append('\'');
         }
 
         public string GetPathName(bool includeOuterMostName = true)

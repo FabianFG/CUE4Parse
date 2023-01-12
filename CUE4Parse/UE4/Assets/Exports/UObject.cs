@@ -109,6 +109,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             resultString.Append(includeClassPackage ? Class?.GetPathName() : ExportType);
             resultString.Append('\'');
             GetPathName(stopOuter, resultString);
+            resultString.Append('\'');
         }
 
         /**
