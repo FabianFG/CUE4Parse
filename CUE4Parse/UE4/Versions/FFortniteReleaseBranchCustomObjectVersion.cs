@@ -45,6 +45,8 @@ namespace CUE4Parse.UE4.Versions
             {
                 < EGame.GAME_UE4_25 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE5_0 => Type.DisableLevelset_v14_10,
+                < EGame.GAME_UE5_1 => Type.ChaosKinematicTargetRemoveScale,
+                < EGame.GAME_UE5_2 => Type.ActorComponentUCSModifiedPropertiesSparseStorage,
                 _ => Type.LatestVersion
             };
         }

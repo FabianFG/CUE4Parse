@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions
@@ -137,6 +137,12 @@ namespace CUE4Parse.UE4.Versions
             // Add loop counters to sequencer's compiled sub-sequence data
             AddedSubSequenceEntryWarpCounter,
 
+            // Remove default resolution limit of 512 pixels for cubemaps generated from long-lat sources
+            LonglatTextureCubeDefaultMaxResolution,
+
+            // bake center of mass into chaos cache
+            GeometryCollectionCacheRemovesMassToLocal,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -166,8 +172,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_25 => Type.DeprecateFilmbackSettings,
                 < EGame.GAME_UE4_26 => Type.FFieldPathOwnerSerialization,
                 < EGame.GAME_UE4_27 => Type.StructureDataAddedToConvex,
-                < EGame.GAME_UE5_0 => Type.AddedSubSequenceEntryWarpCounter,
-                EGame.GAME_UE5_0 => Type.FixupCopiedEventSections, // ue5-main, please check again after release
+                < EGame.GAME_UE5_0 => Type.LonglatTextureCubeDefaultMaxResolution,
                 _ => Type.LatestVersion
             };
         }

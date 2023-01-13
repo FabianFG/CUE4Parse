@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public FMaterialInputVector(FAssetArchive Ar) : base(Ar)
         {
             UseConstant = Ar.ReadBoolean();
-            Constant = new FVector(Ar);
+            Constant = Ar.Read<FVector>();
         }
     }
 
@@ -55,7 +55,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public FMaterialInputVector2D(FAssetArchive Ar) : base(Ar)
         {
             UseConstant = Ar.ReadBoolean();
-            Constant = new FVector2D(Ar);
+            Constant = Ar.Read<FVector2D>();
         }
     }
 

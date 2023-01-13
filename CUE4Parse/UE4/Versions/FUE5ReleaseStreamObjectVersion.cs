@@ -110,6 +110,30 @@ namespace CUE4Parse.UE4.Versions
             // Serialize LandscapeActorGuid in FLandscapeActorDesc sub class.
             WorldPartitionLandscapeActorDescSerializeLandscapeActorGuid,
 
+            // add inertia tensor and rotation of mass to convex 
+            AddedInertiaTensorAndRotationOfMassAddedToConvex,
+
+            // Storing inertia tensor as vec3 instead of matrix.
+            ChaosInertiaConvertedToVec3,
+
+            // For Blueprint real numbers, ensure that legacy float data is serialized as single-precision
+            SerializeFloatPinDefaultValuesAsSinglePrecision,
+
+            // Upgrade the BlendMasks array in existing LayeredBoneBlend nodes
+            AnimLayeredBoneBlendMasks,
+
+            // Uses RG11B10 format to store the encoded reflection capture data on mobile
+            StoreReflectionCaptureEncodedHDRDataInRG11B10Format,
+
+            // Add WithSerializer type trait and implementation for FRawAnimSequenceTrack
+            RawAnimSequenceTrackSerializer,
+
+            // Removed font from FEditableTextBoxStyle, and added FTextBlockStyle instead.
+            RemoveDuplicatedStyleInfo,
+
+            // Added member reference to linked anim graphs
+            LinkedAnimGraphMemberReference,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -126,7 +150,8 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
-                _ => Type.LatestVersion // TODO change this after they released UE5.0
+                < EGame.GAME_UE5_1 => Type.SerializeFloatPinDefaultValuesAsSinglePrecision,
+                _ => Type.LatestVersion
             };
         }
     }
