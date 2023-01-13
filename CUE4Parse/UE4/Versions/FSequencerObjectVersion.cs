@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Readers;
 namespace CUE4Parse.UE4.Versions
 {
     // Custom serialization version for changes made in Dev-Sequencer stream
-    public class FSequencerObjectVersion
+    public static class FSequencerObjectVersion
     {
         public enum Type
         {
@@ -54,9 +54,9 @@ namespace CUE4Parse.UE4.Versions
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
         }
-        
+
         public static readonly FGuid GUID = new(0x7B5AE74C, 0xD2704C10, 0xA9585798, 0x0B212A5A);
-        
+
         public static Type Get(FArchive Ar)
         {
             var ver = Ar.CustomVer(GUID);
@@ -65,14 +65,14 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
-                < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE4_14 => Type.RenameMediaSourcePlatformPlayers,
-                < EGame.GAME_UE4_15 => Type.ConvertMultipleRowsToTracks,
-                < EGame.GAME_UE4_18 => Type.WhenFinishedDefaultsToRestoreState,
-                < EGame.GAME_UE4_19 => Type.WhenFinishedDefaultsToProjectDefault,
-                < EGame.GAME_UE4_21 => Type.FinishUMGEvaluation,
-                < EGame.GAME_UE4_24 => Type.ModifyLinearKeysForOldInterp,
-                < EGame.GAME_UE4_25 => Type.SerializeFloatChannelCompletely,
+                < EGame.GAME_UE4_14 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_15 => Type.RenameMediaSourcePlatformPlayers,
+                < EGame.GAME_UE4_16 => Type.ConvertMultipleRowsToTracks,
+                < EGame.GAME_UE4_19 => Type.WhenFinishedDefaultsToRestoreState,
+                < EGame.GAME_UE4_20 => Type.WhenFinishedDefaultsToProjectDefault,
+                < EGame.GAME_UE4_22 => Type.FinishUMGEvaluation,
+                < EGame.GAME_UE4_25 => Type.ModifyLinearKeysForOldInterp,
+                < EGame.GAME_UE4_27 => Type.SerializeFloatChannelCompletely,
                 _ => Type.LatestVersion
             };
         }
