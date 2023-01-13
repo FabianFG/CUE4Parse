@@ -179,6 +179,7 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
         public override void WriteJson(JsonWriter writer, FReflectionCaptureData value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
+
             writer.WritePropertyName("CubemapSize");
             writer.WriteValue(value.CubemapSize);
 
@@ -365,10 +366,11 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
         }
     }
 
+    [JsonConverter(typeof(FMeshMapBuildDataConverter))]
     public class FMeshMapBuildData
     {
         public FLightMap? LightMap;
-        public FShadowMap? ShadowMap; 
+        public FShadowMap? ShadowMap;
         public FGuid[] IrrelevantLights;
         public FPerInstanceLightmapData[] PerInstanceLightmapData;
 
@@ -403,6 +405,41 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
             PerInstanceLightmapData = Ar.ReadBulkArray<FPerInstanceLightmapData>();
         }
     }
+
+    public class FMeshMapBuildDataConverter : JsonConverter<FMeshMapBuildData>
+    {
+        public override void WriteJson(JsonWriter writer, FMeshMapBuildData value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            if (value.LightMap != null)
+            {
+                writer.WritePropertyName("LightMap");
+                serializer.Serialize(writer, value.LightMap);
+            }
+
+            if (value.ShadowMap != null)
+            {
+                writer.WritePropertyName("ShadowMap");
+                serializer.Serialize(writer, value.ShadowMap);
+            }
+
+            writer.WritePropertyName("IrrelevantLights");
+            serializer.Serialize(writer, value.IrrelevantLights);
+
+            writer.WritePropertyName("PerInstanceLightmapData");
+            serializer.Serialize(writer, value.PerInstanceLightmapData);
+
+            writer.WriteEndObject();
+        }
+
+        public override FMeshMapBuildData ReadJson(JsonReader reader, Type objectType, FMeshMapBuildData existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public enum ELightMapType : uint
     {
         LMT_None = 0,
@@ -426,6 +463,7 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
         }
     }
 
+    [JsonConverter(typeof(FLightMap2DConverter))]
     public class FLightMap2D : FLightMap
     {
         const int NUM_STORED_LIGHTMAP_COEF = 4;
@@ -511,6 +549,71 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
             }
         }
     }
+
+    public class FLightMap2DConverter : JsonConverter<FLightMap2D>
+    {
+        public override void WriteJson(JsonWriter writer, FLightMap2D value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Textures");
+            serializer.Serialize(writer, value.Textures);
+
+            if (!value.SkyOcclusionTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("SkyOcclusionTexture");
+                serializer.Serialize(writer, value.SkyOcclusionTexture);
+            }
+
+            if (!value.AOMaterialMaskTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("AOMaterialMaskTexture");
+                serializer.Serialize(writer, value.AOMaterialMaskTexture);
+            }
+
+            if (!value.ShadowMapTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("ShadowMapTexture");
+                serializer.Serialize(writer, value.ShadowMapTexture);
+            }
+
+            writer.WritePropertyName("VirtualTextures");
+            serializer.Serialize(writer, value.VirtualTextures);
+
+            writer.WritePropertyName("ScaleVectors");
+            serializer.Serialize(writer, value.ScaleVectors);
+
+            writer.WritePropertyName("AddVectors");
+            serializer.Serialize(writer, value.AddVectors);
+
+            writer.WritePropertyName("CoordinateScale");
+            serializer.Serialize(writer, value.CoordinateScale);
+
+            writer.WritePropertyName("CoordinateBias");
+            serializer.Serialize(writer, value.CoordinateBias);
+
+            writer.WritePropertyName("InvUniformPenumbraSize");
+            serializer.Serialize(writer, value.InvUniformPenumbraSize);
+
+            writer.WritePropertyName("bShadowChannelValid");
+            serializer.Serialize(writer, value.bShadowChannelValid);
+
+            /*
+             * FLightMap
+             */
+            writer.WritePropertyName("LightGuids");
+            serializer.Serialize(writer, value.LightGuids);
+
+            writer.WriteEndObject();
+        }
+
+        public override FLightMap2D ReadJson(JsonReader reader, Type objectType, FLightMap2D existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public enum EShadowMapType : uint
     {
         SMT_None = 0,
@@ -536,7 +639,6 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
 
         public FShadowMap2D(FAssetArchive Ar) : base(Ar)
         {
-
             Texture = new FPackageIndex(Ar);
             CoordinateScale = new FVector2D(Ar);
             CoordinateBias = new FVector2D(Ar);
@@ -546,7 +648,7 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
             {
                 InvUniformPenumbraSize = Ar.Read<FVector4>();
             }
-            else 
+            else
             {
                 const float LegacyValue = 1.0f / .05f;
                 InvUniformPenumbraSize = new FVector4(LegacyValue, LegacyValue, LegacyValue, LegacyValue);
