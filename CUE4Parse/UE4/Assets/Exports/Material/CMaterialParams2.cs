@@ -47,11 +47,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_BaseColor", "ShadedDiffuse",
-                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top", "Diffuse Side", "Diffuse Base", "Diffuse Base Map", "DiffuseLayer1",
+                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Diffuse Top", "Diffuse Side", "Diffuse Base", "Diffuse Base Map", "DiffuseLayer1",
                 "Albedo", "ALB", "TextureAlbedo",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap",
-                "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "DiffuseMap"
+                "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC"
             },
             new []{ "Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "BaseColorB", "CO_2", "M2_T_BC" },
             new []{ "Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "BaseColorC", "CO_3", "M3_T_BC" },
@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "NormalMap", "T_Normal", "Normals Top", "Normals Side", "Fallback Normal",
                 "Normal Base", "TextureNormal", "Tex_BakedNormal", "TexNor", "BakedNormalMap", "Base Texture Normal", "Normal Base Map",
                 "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
-                "Texture A Normal", "CliffNormal", "NormalMap"
+                "Texture A Normal", "CliffNormal"
             },
             new []{ "Normals_Texture_2", "Texture B Normal", "NormalB", "NM_2", "M2_T_NRM" },
             new []{ "Normals_Texture_3", "Texture C Normal", "NormalC", "NM_3", "M3_T_NRM" },
@@ -88,7 +88,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 "MG", "ORM", "MRAE", "MRAS", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
                 "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "Base Texture RMAO",
                 "Pack", "PAK", "T_PAK", "M1_T_PAK",
-                "Cliff Spec Texture", "PhysicalMap"
+                "Cliff Spec Texture", "PhysicalMap", "KizokMap"
             },
             new []{ "SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK" },
             new []{ "SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK" },
