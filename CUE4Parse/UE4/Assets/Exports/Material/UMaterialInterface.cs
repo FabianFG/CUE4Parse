@@ -123,8 +123,27 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             if (materialParameters.TryGetValue(out FPackageIndex[] textureValues, "TextureValues") &&
                 runtimeEntries[2].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfos"))
+            {
                 for (int i = 0; i < textureParameterInfos.Length; i++)
-                    parameters.Textures[textureParameterInfos[i].Name.Text] = textureValues[i].Load<UTexture>();
+                {
+                    var name = textureParameterInfos[i].Name.Text;
+                    if (!textureValues[i].TryLoad(out UTexture texture)) continue;
+
+                    if (Regex.IsMatch(name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
+                        parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
+
+                    if (Regex.IsMatch(name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
+                        parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
+
+                    if (Regex.IsMatch(name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
+                        parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
+
+                    if (Regex.IsMatch(name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
+                        parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
+
+                    parameters.Textures[name] = texture;
+                }
+            }
         }
 
         public void DeserializeInlineShaderMaps(FArchive Ar, ICollection<FMaterialResource> loadedResources)
