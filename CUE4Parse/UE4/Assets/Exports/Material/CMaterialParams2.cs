@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string FallbackEmissive = "PM_Emissive";
 
 
-        public const string RegexDiffuse = ".*(?:Diff|_Tex|_Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
+        public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
         public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
         public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP|_PAK)$";
         public const string RegexEmissive = "^.*Emiss.*|(?:_E|_EM)$";
