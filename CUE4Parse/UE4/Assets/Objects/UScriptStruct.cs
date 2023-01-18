@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -97,6 +98,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
                 "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
                 "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
+                "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
+                "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
 
                 // FortniteGame
                 "ConnectivityCube" => new FConnectivityCube(Ar),

@@ -159,6 +159,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_24 => Type.VirtualTexturedLightmapsV2,
                 < EGame.GAME_UE4_25 => Type.MaterialShaderMapIdSerialization,
                 < EGame.GAME_UE4_26 => Type.AutoExposureDefaultFix,
+                < EGame.GAME_UE4_27 => Type.VolumeExtinctionBecomesRGB,
                 _ => Type.LatestVersion
             };
         }

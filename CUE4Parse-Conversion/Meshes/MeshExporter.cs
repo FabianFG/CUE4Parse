@@ -433,7 +433,7 @@ namespace CUE4Parse_Conversion.Meshes
             for (var i = 0; i < morphTargets.Length; i++)
             {
                 var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex)
+                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex)
                     continue;
 
                 var morphModel = morphTarget.MorphLODModels[lodIndex];

@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string FallbackEmissive = "PM_Emissive";
 
 
-        public const string RegexDiffuse = ".*(?:Diff|_Tex|_Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
+        public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
         public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
         public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP|_PAK)$";
         public const string RegexEmissive = "^.*Emiss.*|(?:_E|_EM)$";
@@ -47,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             new []
             {
                 "Trunk_BaseColor", "ShadedDiffuse",
-                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "Diffuse A", "Diffuse Top", "Diffuse Side", "Diffuse Base", "Diffuse Base Map", "DiffuseLayer1",
+                "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Diffuse Top", "Diffuse Side", "Diffuse Base", "Diffuse Base Map", "DiffuseLayer1",
                 "Albedo", "ALB", "TextureAlbedo",
                 "Base Color Texture", "BaseColorTexture", "Base Color", "BaseColor", "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
                 "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap",
@@ -88,7 +88,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 "MG", "ORM", "MRAE", "MRAS", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
                 "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "Base Texture RMAO",
                 "Pack", "PAK", "T_PAK", "M1_T_PAK",
-                "Cliff Spec Texture"
+                "Cliff Spec Texture", "PhysicalMap", "KizokMap"
             },
             new []{ "SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK" },
             new []{ "SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK" },

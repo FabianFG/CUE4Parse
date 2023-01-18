@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -153,14 +154,16 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
             CubemapSize = Ar.Read<int>();
             AverageBrightness = Ar.Read<float>();
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StoreReflectionCaptureBrightnessForCooking)
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StoreReflectionCaptureBrightnessForCooking &&
+                FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.ExcludeBrightnessFromEncodedHDRCubemap)
             {
                 Brightness = Ar.Read<float>();
             }
 
             FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
 
-            if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile)
+            if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile &&
+                FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format)
             {
                 EncodedCaptureData = new FPackageIndex(Ar);
             }
@@ -176,6 +179,7 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
         public override void WriteJson(JsonWriter writer, FReflectionCaptureData value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
+
             writer.WritePropertyName("CubemapSize");
             writer.WriteValue(value.CubemapSize);
 
@@ -229,17 +233,55 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
         }
     }
 
+    public class FVolumeLightingSample
+    {
+        public FVector Position;
+        public float Radius;
+        public float[][] Lighting;
+        public FColor PackedSkyBentNormal;
+        public float DirectionalLightShadowing;
+
+        public FVolumeLightingSample(FAssetArchive Ar)
+        {
+            Position = Ar.Read<FVector>();
+            Radius = Ar.Read<float>();
+            Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(9));
+            PackedSkyBentNormal = Ar.Read<FColor>();
+            DirectionalLightShadowing = Ar.Read<float>();
+        }
+    }
+
     public class FPrecomputedLightVolumeData
     {
-        public FPrecomputedLightVolumeData? Volume;
+        public FBox Bounds;
+        public float SampleSpacing;
+        public int NumSHSamples;
+        public FVolumeLightingSample[] HighQualitySamples;
+        public FVolumeLightingSample[]? LowQualitySamples;
 
-        public FPrecomputedLightVolumeData(FArchive Ar)
+        public FPrecomputedLightVolumeData(FAssetArchive Ar)
         {
             var bValid = Ar.ReadBoolean();
 
             if (bValid)
             {
-                Volume = new FPrecomputedLightVolumeData(Ar); // It serializes itself?
+                var bVolumeInitialized = Ar.ReadBoolean();
+                if (bVolumeInitialized)
+                {
+                    Bounds = new FBox(Ar);
+                    SampleSpacing = Ar.Read<float>();
+                    NumSHSamples = 4;
+                    if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.IndirectLightingCache3BandSupport)
+                    {
+                        NumSHSamples = Ar.Read<int>();
+                    }
+
+                    HighQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar));
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.VOLUME_SAMPLE_LOW_QUALITY_SUPPORT)
+                    {
+                        LowQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar));
+                    }
+                }
             }
         }
     }
@@ -257,37 +299,42 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
 
         public FPrecomputedVolumetricLightmapData(FArchive Ar)
         {
-            Bounds = new FBox(Ar);
-            IndirectionTextureDimensions = Ar.Read<FIntVector>();
-            IndirectionTexture = new FVolumetricLightmapDataLayer(Ar);
+            var bValid = Ar.ReadBoolean();
 
-            BrickSize = Ar.Read<int>();
-            BrickDataDimensions = Ar.Read<FIntVector>();
-
-            BrickData = new FVolumetricLightmapBrickLayer
+            if (bValid)
             {
-                AmbientVector = new FVolumetricLightmapDataLayer(Ar),
-                SHCoefficients = new FVolumetricLightmapDataLayer[6]
-            };
+                Bounds = new FBox(Ar);
+                IndirectionTextureDimensions = Ar.Read<FIntVector>();
+                IndirectionTexture = new FVolumetricLightmapDataLayer(Ar);
 
-            for (var i = 0; i < BrickData.SHCoefficients.Length; i++)
-            {
-                BrickData.SHCoefficients[i] = new FVolumetricLightmapDataLayer(Ar);
-            }
+                BrickSize = Ar.Read<int>();
+                BrickDataDimensions = Ar.Read<FIntVector>();
 
-            BrickData.SkyBentNormal = new FVolumetricLightmapDataLayer(Ar);
-            BrickData.DirectionalLightShadowing = new FVolumetricLightmapDataLayer(Ar);
+                BrickData = new FVolumetricLightmapBrickLayer
+                {
+                    AmbientVector = new FVolumetricLightmapDataLayer(Ar),
+                    SHCoefficients = new FVolumetricLightmapDataLayer[6]
+                };
 
-            if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.LQVolumetricLightmapLayers)
-            {
-                BrickData.LQLightColor = new FVolumetricLightmapDataLayer(Ar);
-                BrickData.LQLightDirection = new FVolumetricLightmapDataLayer(Ar);
-            }
+                for (var i = 0; i < BrickData.SHCoefficients.Length; i++)
+                {
+                    BrickData.SHCoefficients[i] = new FVolumetricLightmapDataLayer(Ar);
+                }
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VolumetricLightmapStreaming)
-            {
-                SubLevelBrickPositions = Ar.ReadArray<FIntVector>();
-                IndirectionTextureOriginalValues = Ar.ReadArray<FColor>();
+                BrickData.SkyBentNormal = new FVolumetricLightmapDataLayer(Ar);
+                BrickData.DirectionalLightShadowing = new FVolumetricLightmapDataLayer(Ar);
+
+                if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.LQVolumetricLightmapLayers)
+                {
+                    BrickData.LQLightColor = new FVolumetricLightmapDataLayer(Ar);
+                    BrickData.LQLightDirection = new FVolumetricLightmapDataLayer(Ar);
+                }
+
+                if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VolumetricLightmapStreaming)
+                {
+                    SubLevelBrickPositions = Ar.ReadArray<FIntVector>();
+                    IndirectionTextureOriginalValues = Ar.ReadArray<FColor>();
+                }
             }
         }
     }
@@ -310,36 +357,302 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
     public class FVolumetricLightmapDataLayer
     {
         public byte[] Data;
+        public string PixelFormatString;
 
         public FVolumetricLightmapDataLayer(FArchive Ar)
         {
             Data = Ar.ReadArray<byte>();
+            PixelFormatString = Ar.ReadFString();
         }
     }
 
+    [JsonConverter(typeof(FMeshMapBuildDataConverter))]
     public class FMeshMapBuildData
     {
-        public FLightMap LightMap;
-        public FLightMap ShadowMap; // Same LightGuids array
+        public FLightMap? LightMap;
+        public FShadowMap? ShadowMap;
         public FGuid[] IrrelevantLights;
         public FPerInstanceLightmapData[] PerInstanceLightmapData;
 
-        public FMeshMapBuildData(FArchive Ar)
+        public FMeshMapBuildData(FAssetArchive Ar)
         {
-            LightMap = new FLightMap(Ar);
-            ShadowMap = new FLightMap(Ar);
+            var LightMapType = Ar.Read<ELightMapType>();
+            switch (LightMapType)
+            {
+                case ELightMapType.LMT_None:
+                    LightMap = null;
+                    break;
+                case ELightMapType.LMT_1D:
+                    LightMap = new FLegacyLightMap1D(Ar);
+                    break;
+                case ELightMapType.LMT_2D:
+                    LightMap = new FLightMap2D(Ar);
+                    break;
+            }
+
+            var ShadowMapType = Ar.Read<EShadowMapType>();
+            switch (ShadowMapType)
+            {
+                case EShadowMapType.SMT_None:
+                    ShadowMap = null;
+                    break;
+                case EShadowMapType.SMT_2D:
+                    ShadowMap = new FShadowMap2D(Ar);
+                    break;
+            }
+
             IrrelevantLights = Ar.ReadArray<FGuid>();
             PerInstanceLightmapData = Ar.ReadBulkArray<FPerInstanceLightmapData>();
         }
     }
 
+    public class FMeshMapBuildDataConverter : JsonConverter<FMeshMapBuildData>
+    {
+        public override void WriteJson(JsonWriter writer, FMeshMapBuildData value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            if (value.LightMap != null)
+            {
+                writer.WritePropertyName("LightMap");
+                serializer.Serialize(writer, value.LightMap);
+            }
+
+            if (value.ShadowMap != null)
+            {
+                writer.WritePropertyName("ShadowMap");
+                serializer.Serialize(writer, value.ShadowMap);
+            }
+
+            writer.WritePropertyName("IrrelevantLights");
+            serializer.Serialize(writer, value.IrrelevantLights);
+
+            writer.WritePropertyName("PerInstanceLightmapData");
+            serializer.Serialize(writer, value.PerInstanceLightmapData);
+
+            writer.WriteEndObject();
+        }
+
+        public override FMeshMapBuildData ReadJson(JsonReader reader, Type objectType, FMeshMapBuildData existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public enum ELightMapType : uint
+    {
+        LMT_None = 0,
+        LMT_1D = 1,
+        LMT_2D = 2,
+    };
     public class FLightMap
     {
         public readonly FGuid[] LightGuids;
 
-        public FLightMap(FArchive Ar)
+        public FLightMap(FAssetArchive Ar)
         {
             LightGuids = Ar.ReadArray<FGuid>();
+        }
+    }
+    public class FLegacyLightMap1D : FLightMap
+    {
+        public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
+        {
+            throw new ParserException("Unsupported: FLegacyLightMap1D");
+        }
+    }
+
+    [JsonConverter(typeof(FLightMap2DConverter))]
+    public class FLightMap2D : FLightMap
+    {
+        const int NUM_STORED_LIGHTMAP_COEF = 4;
+        public readonly FPackageIndex[]? Textures;
+        public readonly FPackageIndex? SkyOcclusionTexture;
+        public readonly FPackageIndex? AOMaterialMaskTexture;
+        public readonly FPackageIndex? ShadowMapTexture;
+        public readonly FPackageIndex[]? VirtualTextures;
+        public readonly FVector4[]? ScaleVectors;
+        public readonly FVector4[]? AddVectors;
+        public readonly FVector2D? CoordinateScale;
+        public readonly FVector2D? CoordinateBias;
+        public readonly FVector4? InvUniformPenumbraSize;
+        public readonly bool[]? bShadowChannelValid;
+
+        public FLightMap2D(FAssetArchive Ar): base(Ar)
+        {
+            Textures = new FPackageIndex[2];
+            VirtualTextures = new FPackageIndex[2];
+            ScaleVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
+            AddVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
+            if (Ar.Ver <= EUnrealEngineObjectUE4Version.LOW_QUALITY_DIRECTIONAL_LIGHTMAPS)
+            {
+                for (var CoefficientIndex = 0; CoefficientIndex < 3; CoefficientIndex++)
+                {
+                    Ar.Position += 36;
+                }
+            }
+            else if (Ar.Ver <= EUnrealEngineObjectUE4Version.COMBINED_LIGHTMAP_TEXTURES)
+            {
+                for (var CoefficientIndex = 0; CoefficientIndex < 4; CoefficientIndex++)
+                {
+                    Ar.Position += 36;
+                }
+            }
+            else
+            {
+                Textures[0] = new FPackageIndex(Ar);
+                Textures[1] = new FPackageIndex(Ar);
+
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKY_LIGHT_COMPONENT)
+                {
+                    SkyOcclusionTexture = new FPackageIndex(Ar);
+                    if (Ar.Ver >= EUnrealEngineObjectUE4Version.AO_MATERIAL_MASK)
+                    {
+                        AOMaterialMaskTexture = new FPackageIndex(Ar);
+                    }
+                }
+
+                for (var CoefficientIndex = 0; CoefficientIndex < NUM_STORED_LIGHTMAP_COEF; CoefficientIndex++)
+                {
+                    ScaleVectors[CoefficientIndex] = Ar.Read<FVector4>();
+                    AddVectors[CoefficientIndex] = Ar.Read<FVector4>();
+                }
+            }
+            CoordinateScale = new FVector2D(Ar);
+            CoordinateBias = new FVector2D(Ar);
+
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.LightmapHasShadowmapData)
+            {
+                bShadowChannelValid = Ar.ReadArray(4, () => Ar.ReadBoolean());
+                InvUniformPenumbraSize = Ar.Read<FVector4>();
+            }
+
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VirtualTexturedLightmaps)
+            {
+                if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VirtualTexturedLightmapsV2)
+                {
+                    if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VirtualTexturedLightmapsV3)
+                    {
+                        VirtualTextures[0] = new FPackageIndex(Ar);
+                        VirtualTextures[1] = new FPackageIndex(Ar);
+                    }
+                    else
+                    {
+                        VirtualTextures[0] = new FPackageIndex(Ar);
+                    }
+                }
+                else
+                {
+                    VirtualTextures[0] = new FPackageIndex(Ar);
+                }
+            }
+        }
+    }
+
+    public class FLightMap2DConverter : JsonConverter<FLightMap2D>
+    {
+        public override void WriteJson(JsonWriter writer, FLightMap2D value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Textures");
+            serializer.Serialize(writer, value.Textures);
+
+            if (!value.SkyOcclusionTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("SkyOcclusionTexture");
+                serializer.Serialize(writer, value.SkyOcclusionTexture);
+            }
+
+            if (!value.AOMaterialMaskTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("AOMaterialMaskTexture");
+                serializer.Serialize(writer, value.AOMaterialMaskTexture);
+            }
+
+            if (!value.ShadowMapTexture?.IsNull ?? false)
+            {
+                writer.WritePropertyName("ShadowMapTexture");
+                serializer.Serialize(writer, value.ShadowMapTexture);
+            }
+
+            writer.WritePropertyName("VirtualTextures");
+            serializer.Serialize(writer, value.VirtualTextures);
+
+            writer.WritePropertyName("ScaleVectors");
+            serializer.Serialize(writer, value.ScaleVectors);
+
+            writer.WritePropertyName("AddVectors");
+            serializer.Serialize(writer, value.AddVectors);
+
+            writer.WritePropertyName("CoordinateScale");
+            serializer.Serialize(writer, value.CoordinateScale);
+
+            writer.WritePropertyName("CoordinateBias");
+            serializer.Serialize(writer, value.CoordinateBias);
+
+            writer.WritePropertyName("InvUniformPenumbraSize");
+            serializer.Serialize(writer, value.InvUniformPenumbraSize);
+
+            writer.WritePropertyName("bShadowChannelValid");
+            serializer.Serialize(writer, value.bShadowChannelValid);
+
+            /*
+             * FLightMap
+             */
+            writer.WritePropertyName("LightGuids");
+            serializer.Serialize(writer, value.LightGuids);
+
+            writer.WriteEndObject();
+        }
+
+        public override FLightMap2D ReadJson(JsonReader reader, Type objectType, FLightMap2D existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public enum EShadowMapType : uint
+    {
+        SMT_None = 0,
+        SMT_2D = 2,
+    };
+    public class FShadowMap
+    {
+        public readonly FGuid[] LightGuids;
+
+        public FShadowMap(FAssetArchive Ar)
+        {
+            LightGuids = Ar.ReadArray<FGuid>();
+        }
+    }
+
+    public class FShadowMap2D : FShadowMap
+    {
+        public readonly FPackageIndex Texture;
+        public readonly FVector2D CoordinateScale;
+        public readonly FVector2D CoordinateBias;
+        public readonly bool[] bChannelValid;
+        public readonly FVector4 InvUniformPenumbraSize;
+
+        public FShadowMap2D(FAssetArchive Ar) : base(Ar)
+        {
+            Texture = new FPackageIndex(Ar);
+            CoordinateScale = new FVector2D(Ar);
+            CoordinateBias = new FVector2D(Ar);
+            bChannelValid = Ar.ReadArray(4, () => Ar.ReadBoolean());
+
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_SHADOWMAP_PENUMBRA_SIZE)
+            {
+                InvUniformPenumbraSize = Ar.Read<FVector4>();
+            }
+            else
+            {
+                const float LegacyValue = 1.0f / .05f;
+                InvUniformPenumbraSize = new FVector4(LegacyValue, LegacyValue, LegacyValue, LegacyValue);
+            }
         }
     }
 
