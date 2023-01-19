@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -20,6 +21,8 @@ namespace CUE4Parse.UE4.Objects.Meshes
             if (Ar.Game == EGame.GAME_Valorant)
             {
                 bool bUseFullPrecisionPositions = Ar.ReadBoolean();
+                long offset = 28;
+                Ar.Seek(offset, SeekOrigin.Current); // a Vec3 for offset and a Vec4 for distance?
                 if (!bUseFullPrecisionPositions)
                 {
                     var vertsHalf = Ar.ReadBulkArray<FVector4Half>();
