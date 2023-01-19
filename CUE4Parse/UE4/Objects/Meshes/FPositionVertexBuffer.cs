@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
             if (Ar.Game == EGame.GAME_Valorant)
             {
                 bool bUseFullPrecisionPositions = Ar.ReadBoolean();
-                Ar.Position += 28L; // a Vec3 for offset and a Vec4 for distance?
+                _ = new FBoxSphereBounds(Ar);
                 if (!bUseFullPrecisionPositions)
                 {
                     var vertsHalf = Ar.ReadBulkArray<FVector4Half>();
