@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -47,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var pointerTable = new FShaderMapPointerTable();
             var result = new FMemoryImageResult(pointerTable);
             result.LoadFromArchive(Ar);
-            Content = ReadContent(new FMemoryImageArchive(new FByteArchive("FShaderMapContent", result.FrozenObject))
+            Content = ReadContent(new FMemoryImageArchive(new FByteArchive("FShaderMapContent", result.FrozenObject, Ar.Versions))
             {
                 Names = result.GetNames()
             });
@@ -55,7 +56,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var bShareCode = Ar.ReadBoolean();
             if (bUseNewFormat)
             {
-                var shaderPlatform = Ar.Read<EShaderPlatform>();
+                var shaderPlatform = Ar.Game >= EGame.GAME_UE5_2 ? Ar.ReadFString() : Ar.Read<EShaderPlatform>().ToString();
             }
 
             if (bShareCode)
@@ -85,15 +86,24 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             ShaderHash = Ar.ReadHashTable();
             ShaderTypes = Ar.ReadArray<FHashedName>();
             ShaderPermutations = Ar.ReadArray<int>();
-            Shaders = Ar.ReadArrayOfPtrs(() => new FShader(Ar, false));
+            Shaders = Ar.ReadArrayOfPtrs(() => new FShader(Ar));
             ShaderPipelines = Ar.ReadArrayOfPtrs(() => new FShaderPipeline(Ar));
-            ShaderPlatform = Ar.Read<EShaderPlatform>();
-            Ar.Position += 3 + 4 * 3;
+            if (Ar.Game >= EGame.GAME_UE5_2)
+            {
+                var shaderPlatform = Ar.ReadFString();
+                Enum.TryParse("SP_"+shaderPlatform, out ShaderPlatform);
+            }
+            else
+            {
+                ShaderPlatform = Ar.Read<EShaderPlatform>();
+                Ar.Position += 7;
+            }
         }
     }
 
     public class FShaderPipeline
     {
+        private const int SF_NumGraphicsFrequencies = 5;
         public enum EFilter
         {
             EAll,			// All pipelines
@@ -102,14 +112,25 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
 
         public FHashedName TypeName;
-        public FShader Shaders;
-        public int PermutationIds;
+        public FShader[] Shaders;
+        public int[] PermutationIds;
 
         public FShaderPipeline(FMemoryImageArchive Ar)
         {
             TypeName = new FHashedName(Ar);
-            Shaders = new FShader(Ar, true);
-            PermutationIds = Ar.Read<int>();
+            Shaders = new FShader[SF_NumGraphicsFrequencies];
+            for (int i = 0; i < Shaders.Length; i++)
+            {
+                var entryPtrPos = Ar.Position;
+                var entryPtr = new FFrozenMemoryImagePtr(Ar);
+                if (entryPtr.IsFrozen)
+                {
+                    Ar.Position = entryPtrPos + entryPtr.OffsetFromThis;
+                    Shaders[i] = new FShader(Ar);
+                }
+                Ar.Position = (entryPtrPos + 8).Align(8);   
+            }
+            PermutationIds = Ar.ReadArray<int>(SF_NumGraphicsFrequencies);
         }
     }
 
@@ -126,11 +147,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public uint NumInstructions;
         public uint SortKey;
 
-        public FShader(FMemoryImageArchive Ar, bool skip)
+        public FShader(FMemoryImageArchive Ar)
         {
-            Bindings = new FShaderParameterBindings(Ar, skip);
-            ParameterMapInfo = new FShaderParameterMapInfo(Ar, skip);
-            if (skip) Ar.Position += 8;
+            Bindings = new FShaderParameterBindings(Ar);
+            ParameterMapInfo = new FShaderParameterMapInfo(Ar);
             UniformBufferParameterStructs = Ar.ReadArray<FHashedName>();
             UniformBufferParameters = Ar.ReadArray<FShaderUniformBufferParameter>();
             Type = Ar.Read<ulong>();
@@ -138,14 +158,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             Target = Ar.Read<FShaderTarget>();
             ResourceIndex = Ar.Read<int>();
             NumInstructions = Ar.Read<uint>();
-            SortKey = Ar.Read<uint>();
+            SortKey = Ar.Game >= EGame.GAME_UE5_0 ? Ar.Read<uint>() : 0;
         }
     }
 
     public class FShaderParameterBindings
     {
-        public FParameter[] Parameters;
-        public FResourceParameter[] ResourceParameters;
+        public FParameter[]? Parameters;
+        public FResourceParameter[]? Textures;
+        public FResourceParameter[]? SRVs;
+        public FResourceParameter[]? UAVs;
+        public FResourceParameter[]? Samplers;
+        public FResourceParameter[]? GraphTextures;
+        public FResourceParameter[]? GraphSRVs;
+        public FResourceParameter[]? GraphUAVs;
+        public FResourceParameter[]? ResourceParameters;
         public FBindlessResourceParameter[] BindlessResourceParameters;
         public FParameterStructReference[] GraphUniformBuffers;
         public FParameterStructReference[] ParameterReferences;
@@ -153,15 +180,27 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public uint StructureLayoutHash = 0;
         public ushort RootParameterBufferIndex = 0xFFFF;
 
-        public FShaderParameterBindings(FMemoryImageArchive Ar, bool skip)
+
+        public FShaderParameterBindings(FMemoryImageArchive Ar)
         {
             Parameters = Ar.ReadArray<FParameter>();
-            if (skip) Ar.Position += 8;
-            ResourceParameters = Ar.ReadArray<FResourceParameter>();
-#if true
-            BindlessResourceParameters = Ar.ReadArray<FBindlessResourceParameter>(); // May 2022
-#endif
-            GraphUniformBuffers = Ar.ReadArray<FParameterStructReference>();
+            if (Ar.Game>= EGame.GAME_UE4_26)
+            {
+                ResourceParameters = Ar.ReadArray<FResourceParameter>();
+            }
+            else
+            {
+                Textures = Ar.ReadArray(() => new FResourceParameter(Ar));
+                SRVs = Ar.ReadArray(() => new FResourceParameter(Ar));
+                UAVs = Ar.ReadArray(() => new FResourceParameter(Ar));
+                Samplers = Ar.ReadArray(() => new FResourceParameter(Ar));
+                GraphTextures = Ar.ReadArray(() => new FResourceParameter(Ar));
+                GraphSRVs = Ar.ReadArray(() => new FResourceParameter(Ar));
+                GraphUAVs = Ar.ReadArray(() => new FResourceParameter(Ar));
+            }
+
+            BindlessResourceParameters = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FBindlessResourceParameter>() : Array.Empty<FBindlessResourceParameter>();
+            GraphUniformBuffers = Ar.Game >= EGame.GAME_UE4_26 ? Ar.ReadArray<FParameterStructReference>() : Array.Empty<FParameterStructReference>();
             ParameterReferences = Ar.ReadArray<FParameterStructReference>();
 
             StructureLayoutHash = Ar.Read<uint>();
@@ -177,12 +216,27 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             public ushort ByteSize;
         }
 
-        [StructLayout(LayoutKind.Sequential, Size = 8)]
+        [StructLayout(LayoutKind.Sequential, Size = 4)]
         public struct FResourceParameter
         {
             public ushort ByteOffset;
             public byte BaseIndex;
-            public EUniformBufferBaseType BaseType;
+            public EUniformBufferBaseType BaseType = EUniformBufferBaseType.UBMT_INVALID;
+            //4.26+
+            //LAYOUT_FIELD(uint16, ByteOffset);
+            //LAYOUT_FIELD(uint8, BaseIndex);
+		    //LAYOUT_FIELD(EUniformBufferBaseType, BaseType);
+
+            //4.26-
+            //LAYOUT_FIELD(uint16, BaseIndex);
+		    //LAYOUT_FIELD(uint16, ByteOffset);
+
+            public FResourceParameter(FMemoryImageArchive Ar)
+            {
+                BaseIndex = (byte)Ar.Read<ushort>();
+                ByteOffset = Ar.Read<ushort>();
+            }
+
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 8)]
@@ -193,7 +247,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             public EUniformBufferBaseType BaseType;
         }
 
-        [StructLayout(LayoutKind.Sequential, Size = 8)]
+        [StructLayout(LayoutKind.Sequential, Size = 4)]
         public struct FParameterStructReference
         {
             public ushort BufferIndex;
@@ -203,20 +257,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FShaderParameterMapInfo
     {
-        public FShaderUniformBufferParameterInfo[] UniformBuffers;
-        public FShaderResourceParameterInfo[] TextureSamplers;
-        public FShaderResourceParameterInfo[] SRVs;
+        public FShaderParameterInfo[] UniformBuffers;
+        public FShaderParameterInfo[] TextureSamplers;
+        public FShaderParameterInfo[] SRVs;
         public FShaderLooseParameterBufferInfo[] LooseParameterBuffers;
         public ulong Hash;
 
-        public FShaderParameterMapInfo(FMemoryImageArchive Ar, bool skip)
+        public FShaderParameterMapInfo(FMemoryImageArchive Ar)
         {
-            UniformBuffers = Ar.ReadArray<FShaderUniformBufferParameterInfo>();
-            TextureSamplers = Ar.ReadArray<FShaderResourceParameterInfo>();
-            SRVs = Ar.ReadArray<FShaderResourceParameterInfo>();
-            if (skip) Ar.Position += 4 * 4;
-            LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar, skip));
-            Hash = Ar.Read<ulong>();
+            if (Ar.Game >= EGame.GAME_UE5_1)
+            {
+                UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar));
+                TextureSamplers = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
+                SRVs = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
+            }
+            else //4.25-5.0
+            {
+                UniformBuffers = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
+                TextureSamplers = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
+                SRVs = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
+            }
+            LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
+            Hash = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<ulong>() : 0;
         }
     }
 
@@ -225,26 +287,44 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public ushort BaseIndex, Size;
         public FShaderLooseParameterInfo[] Parameters;
 
-        public FShaderLooseParameterBufferInfo(FMemoryImageArchive Ar, bool skip)
+        public FShaderLooseParameterBufferInfo(FMemoryImageArchive Ar)
         {
             BaseIndex = Ar.Read<ushort>();
             Size = Ar.Read<ushort>();
-            if (!skip) Ar.Position += 4;
-            else Ar.Position += 24;
+            Ar.Position += 4;
             Parameters = Ar.ReadArray<FShaderLooseParameterInfo>();
         }
     }
 
+    public class FShaderParameterInfo
+    {
+        public ushort BaseIndex;
+        public ushort Size;
+
+        public FShaderParameterInfo(FMemoryImageArchive Ar)
+        {
+            BaseIndex = Ar.Read<ushort>();
+            Size = Ar.Read<ushort>();
+        }
+
+        public FShaderParameterInfo() { }
+    }
     public struct FShaderLooseParameterInfo
     {
         public ushort BaseIndex, Size;
     }
 
-    public struct FShaderResourceParameterInfo
+    public class FShaderResourceParameterInfo : FShaderParameterInfo
     {
-        public ushort BaseIndex;
         public byte BufferIndex;
         public byte Type; // EShaderParameterType
+
+        public FShaderResourceParameterInfo(FMemoryImageArchive Ar)
+        {
+            BaseIndex = Ar.Read<ushort>();
+            BufferIndex = Ar.Read<byte>();
+            Type = Ar.Read<byte>();   
+        }
     }
 
     public struct FShaderUniformBufferParameter
@@ -252,9 +332,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public ushort BaseIndex;
     }
 
-    public struct FShaderUniformBufferParameterInfo
+    public class FShaderUniformBufferParameterInfo : FShaderParameterInfo
     {
-        public ushort BaseIndex;
+        public FShaderUniformBufferParameterInfo(FMemoryImageArchive Ar)
+        {
+            BaseIndex = Ar.Read<ushort>();
+        }
     }
 
     public struct FShaderTarget
@@ -321,7 +404,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             OrderedMeshShaderMaps = Ar.ReadArrayOfPtrs(() => new FMeshMaterialShaderMap(Ar));
             MaterialCompilationOutput = new FMaterialCompilationOutput(Ar);
             ShaderContentHash = new FSHAHash(Ar);
-            Ar.Position += 4;
         }
     }
 
@@ -371,9 +453,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FUniformExpressionSet
     {
-        public FMaterialUniformPreshaderHeader[] UniformPreshaders;
-        public FMaterialUniformPreshaderField[] UniformPreshaderFields;
-        public FMaterialNumericParameterInfo[] UniformNumericParameters;
+        public FMaterialUniformPreshaderHeader[] UniformVectorPreshaders = Array.Empty<FMaterialUniformPreshaderHeader>();
+        public FMaterialUniformPreshaderHeader[] UniformScalarPreshaders = Array.Empty<FMaterialUniformPreshaderHeader>();
+        public FMaterialScalarParameterInfo[] UniformScalarParameters = Array.Empty<FMaterialScalarParameterInfo>();
+        public FMaterialVectorParameterInfo[] UniformVectorParameters = Array.Empty<FMaterialVectorParameterInfo>();
+
+        public FMaterialUniformPreshaderHeader[] UniformPreshaders = Array.Empty<FMaterialUniformPreshaderHeader>();
+        public FMaterialUniformPreshaderField[]? UniformPreshaderFields;
+        public FMaterialNumericParameterInfo[] UniformNumericParameters = Array.Empty<FMaterialNumericParameterInfo>();
         public readonly FMaterialTextureParameterInfo[][] UniformTextureParameters = new FMaterialTextureParameterInfo[6][];
         public FMaterialExternalTextureParameterInfo[] UniformExternalTextureParameters;
         public uint UniformPreshaderBufferSize;
@@ -385,25 +472,93 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public FUniformExpressionSet(FMemoryImageArchive Ar)
         {
-            UniformPreshaders = Ar.ReadArray<FMaterialUniformPreshaderHeader>();
-            UniformPreshaderFields = Ar.ReadArray<FMaterialUniformPreshaderField>();
-            UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
-            Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
-            UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
-            UniformPreshaderBufferSize = Ar.Read<uint>();
-            Ar.Position += 4;
-            UniformPreshaderData = new FMaterialPreshaderData(Ar);
-            DefaultValues = Ar.ReadArray<byte>();
-            VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
-            ParameterCollections = Ar.ReadArray<FGuid>();
-            UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
+            if (Ar.Game >= EGame.GAME_UE5_0)
+            {
+                UniformPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
+                UniformPreshaderFields = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : Array.Empty<FMaterialUniformPreshaderField>();
+                UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
+                Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
+                UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
+                UniformPreshaderBufferSize = Ar.Read<uint>();
+                Ar.Position += 4;
+                UniformPreshaderData = new FMaterialPreshaderData(Ar);
+                DefaultValues = Ar.ReadArray<byte>();
+                VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
+                ParameterCollections = Ar.ReadArray<FGuid>();
+                UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
+            }
+            else
+            {
+                UniformVectorPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
+                UniformScalarPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
+                UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
+                UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
+                UniformTextureParameters = new FMaterialTextureParameterInfo[5][];
+                Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
+                UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
+                UniformPreshaderData = new FMaterialPreshaderData(Ar);
+                VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
+                ParameterCollections = Ar.ReadArray<FGuid>();
+                UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
+            }
         }
     }
 
-    public struct FMaterialUniformPreshaderHeader
+    public class FMaterialScalarParameterInfo
     {
-        public uint OpcodeOffset, OpcodeSize, FieldIndex, NumFields;
+        public readonly FMemoryImageMaterialParameterInfo ParameterInfo;
+        public readonly float DefaultValue;
+
+        public FMaterialScalarParameterInfo(FMemoryImageArchive Ar)
+        {
+            ParameterInfo = new FMemoryImageMaterialParameterInfo(Ar);
+            DefaultValue = Ar.Read<float>();
+            Ar.Position +=4;
+        }
     }
+
+    public class FMaterialVectorParameterInfo
+    {
+        public readonly FMemoryImageMaterialParameterInfo ParameterInfo;
+        public readonly FLinearColor DefaultValue;
+
+        public FMaterialVectorParameterInfo(FMemoryImageArchive Ar)
+        {
+            ParameterInfo = new FMemoryImageMaterialParameterInfo(Ar);
+            DefaultValue = Ar.Read<FLinearColor>();
+        }
+    }
+
+    public class FMaterialUniformPreshaderHeader
+    {
+        public readonly uint OpcodeOffset;
+        public readonly uint OpcodeSize;
+        public readonly uint? BufferOffset;
+        public readonly EValueComponentType? ComponentType;
+        public readonly byte? NumComponents;
+        public readonly uint? FieldIndex;
+        public readonly uint? NumFields;
+
+        public FMaterialUniformPreshaderHeader(FMemoryImageArchive Ar)
+        {
+            OpcodeOffset = Ar.Read<uint>();
+            OpcodeSize = Ar.Read<uint>();
+
+            if (Ar.Game == EGame.GAME_UE5_0)
+            {
+                BufferOffset = Ar.Read<uint>();
+                ComponentType = Ar.Read<EValueComponentType>();
+                NumComponents = Ar.Read<byte>();
+                Ar.Position += 2;
+            }
+            else if (Ar.Game >= EGame.GAME_UE5_1)
+            {
+                FieldIndex = Ar.Read<uint>();
+                NumFields = Ar.Read<uint>();
+            }
+        }
+    }
+
 
     [StructLayout(LayoutKind.Sequential, Size = 12)]
     public struct FMaterialUniformPreshaderField
@@ -548,16 +703,29 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FMaterialPreshaderData
     {
-        public FName[] Names;
-        public FPreshaderStructType[] StructTypes;
-        public EValueComponentType[] StructComponentTypes;
+        public FName[]? Names;
+        public uint[]? NamesOffset;
+        public FPreshaderStructType[]? StructTypes;
+        public EValueComponentType[]? StructComponentTypes;
         public byte[] Data;
 
         public FMaterialPreshaderData(FMemoryImageArchive Ar)
         {
-            Names = Ar.ReadArray(Ar.ReadFName);
-            StructTypes = Ar.ReadArray<FPreshaderStructType>();
-            StructComponentTypes = Ar.ReadArray<EValueComponentType>();
+            if (Ar.Game >= EGame.GAME_UE4_26)
+            {
+                Names = Ar.ReadArray(Ar.ReadFName);
+            }
+
+            if (Ar.Game == EGame.GAME_UE5_0)
+            {
+                NamesOffset = Ar.ReadArray<uint>();
+            }
+            else if (Ar.Game >= EGame.GAME_UE5_1)
+            {
+                StructTypes = Ar.ReadArray<FPreshaderStructType>();
+                StructComponentTypes = Ar.ReadArray<EValueComponentType>();
+            }
+
             Data = Ar.ReadArray<byte>();
         }
     }
@@ -617,24 +785,58 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public FRHIUniformBufferLayoutInitializer(FMemoryImageArchive Ar)
         {
-            Name = Ar.ReadFString();
-            Resources = Ar.ReadArray<FRHIUniformBufferResource>();
-            GraphResources = Ar.ReadArray<FRHIUniformBufferResource>();
-            GraphTextures = Ar.ReadArray<FRHIUniformBufferResource>();
-            GraphBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
-            GraphUniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
-            UniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
-            Hash = Ar.Read<uint>();
-            ConstantBufferSize = Ar.Read<uint>();
-            RenderTargetsOffset = Ar.Read<ushort>();
-            StaticSlot = Ar.Read<byte>();
-            BindingFlags = Ar.Read<EUniformBufferBindingFlags>();
-            bHasNonGraphOutputs = Ar.ReadFlag();
-            bNoEmulatedUniformBuffer = Ar.ReadFlag();
-            Ar.Position += 2;
+            if (Ar.Game >= EGame.GAME_UE5_0)
+            {
+                Name = Ar.ReadFString();
+                Resources = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphResources = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphTextures = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphUniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                UniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                Hash = Ar.Read<uint>();
+                ConstantBufferSize = Ar.Read<uint>();
+                RenderTargetsOffset = Ar.Read<ushort>();
+                StaticSlot = Ar.Read<byte>();
+                BindingFlags = Ar.Read<EUniformBufferBindingFlags>();
+                bHasNonGraphOutputs = Ar.ReadFlag();
+                bNoEmulatedUniformBuffer = Ar.ReadFlag();
+                Ar.Position += 2;
+            }
+            else if (Ar.Game >= EGame.GAME_UE4_26)
+            {
+                ConstantBufferSize = Ar.Read<uint>();
+                StaticSlot = Ar.Read<byte>();
+                Ar.Position +=1;
+                RenderTargetsOffset = Ar.Read<ushort>();
+                bHasNonGraphOutputs = Ar.ReadFlag();
+                Ar.Position +=7;
+                Resources = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphResources = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphTextures = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                GraphUniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                UniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
+                uint NumUsesForDebugging = Ar.Read<uint>();
+                Ar.Position += 4;
+                Name = Ar.ReadFString();
+                Hash = Ar.Read<uint>();
+                Ar.Position += 4;
+            }
+            else//4.25
+            {
+                ConstantBufferSize = Ar.Read<uint>();
+                StaticSlot = Ar.Read<byte>();
+                Ar.Position += 3;
+                Resources = Ar.ReadArray<FRHIUniformBufferResource>();
+                uint NumUsesForDebugging = Ar.Read<uint>();
+                Ar.Position += 4;
+                Name = Ar.ReadFString();
+                Hash = Ar.Read<uint>();
+                Ar.Position += 4;
+            }
         }
     }
-
 
     [StructLayout(LayoutKind.Sequential, Size = 4)]
     public struct FRHIUniformBufferResource
@@ -708,7 +910,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             var numVTables = Ar.Read<int>();
             var numScriptNames = Ar.Read<int>();
-            var numMinimalNames = Ar.Read<int>();
+            var numMinimalNames = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<int>() : 0;
             VTables = Ar.ReadArray(numVTables, () => new FMemoryImageVTable(Ar));
             ScriptNames = Ar.ReadArray(numScriptNames, () => new FMemoryImageName(Ar));
             MinimalNames = Ar.ReadArray(numMinimalNames, () => new FMemoryImageName(Ar));
@@ -781,23 +983,17 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FShaderMapPointerTable : FPointerTableBase
     {
-        public int NumTypes, NumVFTypes;
+        //public int NumTypes, NumVFTypes;
+        public FHashedName[]? Types;
+        public FHashedName[]? VFTypes;
 
         public override void LoadFromArchive(FArchive Ar, bool bUseNewFormat)
         {
             if (bUseNewFormat) base.LoadFromArchive(Ar, bUseNewFormat);
-            NumTypes = Ar.Read<int>();
-            NumVFTypes = Ar.Read<int>();
-
-            for (var typeIndex = 0; typeIndex < NumTypes; ++typeIndex)
-            {
-                var typeName = new FHashedName(Ar);
-            }
-
-            for (var vfTypeIndex = 0; vfTypeIndex < NumVFTypes; ++vfTypeIndex)
-            {
-                var typeName = new FHashedName(Ar);
-            }
+            var NumTypes = Ar.Read<int>();
+            var NumVFTypes = Ar.Read<int>();
+            Types = Ar.ReadArray<FHashedName>(NumTypes);
+            VFTypes = Ar.ReadArray<FHashedName>(NumVFTypes);
             if (!bUseNewFormat) base.LoadFromArchive(Ar, bUseNewFormat);
         }
     }
@@ -814,17 +1010,33 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FPointerTableBase
     {
-        public int NumDependencies;
+        public FTypeLayoutDesc[] TypeDependencies;
 
         public virtual void LoadFromArchive(FArchive Ar, bool bUseNewFormat)
         {
-            NumDependencies = Ar.Read<int>();
-            for (var i = 0; i < NumDependencies; ++i)
+            TypeDependencies = Ar.ReadArray(() => new FTypeLayoutDesc(Ar, bUseNewFormat));
+        }
+    }
+
+    public class FTypeLayoutDesc
+    {   
+        public readonly FName? Name;
+        public readonly FHashedName? NameHash;
+        public readonly uint SavedLayoutSize;
+        public readonly FSHAHash SavedLayoutHash;
+
+        public FTypeLayoutDesc(FArchive Ar, bool bUseNewFormat)
+        {
+            if (bUseNewFormat)
             {
-                var name = Ar.ReadFName();
-                var savedLayoutSize = Ar.Read<uint>();
-                var savedLayoutHash = new FSHAHash(Ar);
+                Name = Ar.ReadFName();
             }
+            else
+            {
+                NameHash = Ar.Read<FHashedName>();
+            }
+            SavedLayoutSize = Ar.Read<uint>();
+            SavedLayoutHash = new FSHAHash(Ar);
         }
     }
 
@@ -854,7 +1066,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             if (!bIsLegacyPackage)
             {
-                QualityLevel = (EMaterialQualityLevel) Ar.Read<int>();
+                QualityLevel = Ar.Game >= EGame.GAME_UE5_2 ? (EMaterialQualityLevel) Ar.Read<byte>() : (EMaterialQualityLevel) Ar.Read<int>();//changed to byte in FN 23.20 
                 FeatureLevel = (ERHIFeatureLevel) Ar.Read<int>();
             }
             else
