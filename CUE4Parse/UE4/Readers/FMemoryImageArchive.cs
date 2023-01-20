@@ -6,77 +6,35 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Readers
 {
     public struct FFrozenMemoryImagePtr
     {
-#if false
-        private const int bIsFrozenBits = 1;
-        private const int OffsetBits = 40;
-        private const int TypeIndexBits = 64 - OffsetBits - bIsFrozenBits;
+        private const ulong TypeIndexMask = ((1UL << 23) - 1UL) << 1;
 
-        private const int bIsFrozenShift = 0;
-        private const int TypeIndexShift = bIsFrozenBits;
-        private const int OffsetShift = bIsFrozenBits + TypeIndexBits;
+        public readonly ulong _packed;
+        public readonly bool IsFrozen;
+        public readonly long OffsetFromThis;
+        public readonly int TypeIndex = -1;
 
-        private const ulong bIsFrozenMask = 1UL << bIsFrozenShift;
-        private const ulong TypeIndexMask = ((1UL << TypeIndexBits) - 1UL) << TypeIndexShift;
-        private const ulong OffsetMask = ((1UL << OffsetBits) - 1UL) << OffsetShift;
-
-        private ulong _packed;
-
-        /** Whether the value is indeed a frozen pointer, must come first to avoid being set in regular pointers - which are expected to point at padded things so are never even. */
-        public bool IsFrozen
+        public FFrozenMemoryImagePtr(FMemoryImageArchive Ar)
         {
-            get => (_packed & bIsFrozenMask) != 0;
-            set => _packed = (_packed & ~bIsFrozenMask) | (value ? 1u : 0u);
+            _packed = Ar.Read<ulong>();
+            IsFrozen = (_packed & 1) != 0;
+            if (Ar.Game >= EGame.GAME_UE5_0)
+            {
+                OffsetFromThis = (long)_packed >> 24;
+                TypeIndex = (int) ((_packed & TypeIndexMask) >> 1) - 1;
+            }
+            else
+            {
+                OffsetFromThis = (long)_packed >> 1;
+            }
         }
 
-        /** Signed offset from the current position in the memory image. */
-        public long OffsetFromThis
-        {
-            // Since the offset occupies the highest part of the int64, its sign is preserved.
-            // Not masking as there's nothing to the left of the Offset
-            get => (long) (_packed/* & OffsetMask*/) >> OffsetShift;
-            set => _packed = (_packed & ~OffsetMask) | ((ulong) (value << OffsetShift) & OffsetMask);
-        }
-
-        /** The pointer type index in the pointer table. Does not store other negative values except for INDEX_NONE */
-        public int TypeIndex
-        {
-            get => (int) ((_packed & TypeIndexMask) >> TypeIndexShift) - 1;
-            set => _packed = (_packed & ~TypeIndexMask) | (((ulong) (value + 1) << TypeIndexShift) & TypeIndexMask);
-        }
-#else
-        private const int bIsFrozenBits = 1;
-        private const int OffsetBits = 32 - bIsFrozenBits;
-
-        private const int bIsFrozenShift = 0;
-        private const int OffsetShift = bIsFrozenBits;
-
-        private const int bIsFrozenMask = 1 << bIsFrozenShift;
-        private const int OffsetMask = unchecked((1 << OffsetBits) - 1) << OffsetShift;
-
-        private int _offsetFromThis;
-        public int TypeIndex;
-
-        public bool IsFrozen
-        {
-            get => (_offsetFromThis & bIsFrozenMask) != 0;
-            set => _offsetFromThis = (_offsetFromThis & ~bIsFrozenMask) | (value ? 1 : 0);
-        }
-
-        /** Signed offset from the current position in the memory image. */
-        public int OffsetFromThis
-        {
-            // Since the offset occupies the highest part of the int64, its sign is preserved.
-            // Not masking as there's nothing to the left of the Offset
-            get => (_offsetFromThis /* & OffsetMask*/) >> OffsetShift;
-            set => _offsetFromThis = (_offsetFromThis & ~OffsetMask) | ((value << OffsetShift) & OffsetMask);
-        }
-#endif
     }
 
     public class FMemoryImageArchive : FArchive
@@ -126,7 +84,7 @@ namespace CUE4Parse.UE4.Readers
         public override T[] ReadArray<T>()
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var arrayNum = Read<int>();
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
@@ -148,7 +106,7 @@ namespace CUE4Parse.UE4.Readers
         public override T[] ReadArray<T>(Func<T> getter)
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var arrayNum = Read<int>();
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
@@ -166,7 +124,7 @@ namespace CUE4Parse.UE4.Readers
             for (int i = 0; i < data.Length; i++)
             {
                 data[i] = getter();
-                Position = Position.Align(8);
+                Position = Position.Align(4);
             }
             Position = continuePos;
             return data;
@@ -175,7 +133,7 @@ namespace CUE4Parse.UE4.Readers
         public T[] ReadArrayOfPtrs<T>(Func<T> getter)
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var arrayNum = Read<int>();
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
@@ -193,7 +151,7 @@ namespace CUE4Parse.UE4.Readers
             for (int i = 0; i < data.Length; i++)
             {
                 var entryPtrPos = Position;
-                var entryPtr = Read<FFrozenMemoryImagePtr>();
+                var entryPtr = new FFrozenMemoryImagePtr(this);
                 Position = entryPtrPos + entryPtr.OffsetFromThis;
                 data[i] = getter();
                 Position = (entryPtrPos + 8).Align(8);
@@ -205,20 +163,23 @@ namespace CUE4Parse.UE4.Readers
         public int[] ReadHashTable()
         {
             var initialPos = Position;
-            var hashPtr = Read<FFrozenMemoryImagePtr>();
-            var nextIndexPtr = Read<FFrozenMemoryImagePtr>();
+            var hashPtr = new FFrozenMemoryImagePtr(this);
+            //var nextIndexPtr = Read<FFrozenMemoryImagePtr>();
+            var nextIndexPtr = new FFrozenMemoryImagePtr(this);
             var hashMask = Read<uint>();
             var indexSize = Read<uint>();
-            if (indexSize == 0) return Array.Empty<int>();
 
-            var t1 = Read<uint>();
-            return Array.Empty<int>();
+            return Array.Empty<int>(); // TODO always empty array for now
+            //if (indexSize == 0) return Array.Empty<int>();
+
+            //var t1 = Read<uint>();
+            //return Array.Empty<int>();
         }
 
         public override string ReadFString()
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var arrayNum = Read<int>();
             var arrayMax = Read<int>();
             if (arrayNum != arrayMax)
@@ -261,7 +222,7 @@ namespace CUE4Parse.UE4.Readers
         public IEnumerable<ElementType> ReadTSparseArray<ElementType>(Func<ElementType> elementGetter, int elementStructSize)
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var dataNum = Read<int>();
             var dataMax = Read<int>();
             var allocationFlags = ReadTBitArray();
@@ -291,7 +252,7 @@ namespace CUE4Parse.UE4.Readers
         public BitArray ReadTBitArray()
         {
             var initialPos = Position;
-            var dataPtr = Read<FFrozenMemoryImagePtr>();
+            var dataPtr = new FFrozenMemoryImagePtr(this);
             var numBits = Read<int>();
             var maxBits = Read<int>();
             if (numBits == 0)
