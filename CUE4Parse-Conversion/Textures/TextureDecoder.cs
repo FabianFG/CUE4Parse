@@ -153,6 +153,7 @@ namespace CUE4Parse_Conversion.Textures
                     break;
                 case EPixelFormat.PF_R16F:
                 case EPixelFormat.PF_R16F_FILTER:
+                case EPixelFormat.PF_G16:
                     unsafe
                     {
                         fixed (byte* d = mip.Data.Data)
