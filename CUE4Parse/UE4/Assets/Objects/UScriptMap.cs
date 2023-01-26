@@ -59,42 +59,19 @@ namespace CUE4Parse.UE4.Assets.Objects
     {
         public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
+            writer.WriteStartArray();
 
             foreach (var kvp in value.Properties)
             {
-                string? key = null;
-
-                if (kvp.Key is StructProperty s1)
-                {
-                    switch (s1.Value.StructType)
-                    {
-                        case FStructFallback f:
-                            {
-                                foreach (var prop in f.Properties)
-                                {
-                                if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
-                                    key = prop.Tag?.ToString();
-                                    break;
-                                }
-
-                                break;
-                            }
-                        case FNiagaraVariable n:
-                            {
-                                key = n.Name.Text;
-                                break;
-                            }
-                    }
-                }
-                else key = kvp.Key?.ToString();
-
-                if (string.IsNullOrWhiteSpace(key)) continue;
-                writer.WritePropertyName(key.SubstringBefore('(').Trim());
+                writer.WriteStartObject();
+                writer.WritePropertyName("Key");
+                serializer.Serialize(writer, kvp.Key);
+                writer.WritePropertyName("Value");
                 serializer.Serialize(writer, kvp.Value);
+                writer.WriteEndObject();
             }
 
-            writer.WriteEndObject();
+            writer.WriteEndArray();
         }
 
         public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap existingValue, bool hasExistingValue,
