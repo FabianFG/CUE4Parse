@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -18,6 +18,7 @@ namespace CUE4Parse.UE4.Versions
             {
                 _game = value;
                 InitOptions();
+                InitMapStructTypes();
             }
         }
         private EGame _game;
@@ -39,17 +40,21 @@ namespace CUE4Parse.UE4.Versions
             {
                 _platform = value;
                 InitOptions();
+                InitMapStructTypes();
             }
         }
         private FPackageFileVersion _ver;
         public bool bExplicitVer { get; private set; }
         public List<FCustomVersion>? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
+        public readonly Dictionary<string, KeyValuePair<string, string>> MapStructTypes = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
+        private readonly Dictionary<string, KeyValuePair<string, string>>? _mapStructTypesOverrides;
 
-        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null)
+        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null, Dictionary<string, KeyValuePair<string, string>>? mapStructTypesOverrides = null)
         {
             _optionOverrides = optionOverrides;
+            _mapStructTypesOverrides = mapStructTypesOverrides;
             Game = game;
             Ver = ver;
             Platform = platform;
@@ -82,12 +87,31 @@ namespace CUE4Parse.UE4.Versions
             }
         }
 
+        private void InitMapStructTypes()
+        {
+            MapStructTypes.Clear();
+            MapStructTypes["BindingIdToReferences"] = new KeyValuePair<string, string>("Guid", null);
+            MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
+            MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", null);
+            MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
+            MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
+            MapStructTypes["TrackSignatureToTrackIdentifier"] = new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
+
+            if (_mapStructTypesOverrides != null)
+            {
+                foreach (var (key, value) in _mapStructTypesOverrides)
+                {
+                    MapStructTypes[key] = value;
+                }
+            }
+        }
+
         public bool this[string optionKey]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Options[optionKey];
         }
 
-        public object Clone() => new VersionContainer(Game, Platform, Ver, CustomVersions, _optionOverrides) { bExplicitVer = bExplicitVer };
+        public object Clone() => new VersionContainer(Game, Platform, Ver, CustomVersions, _optionOverrides, _mapStructTypesOverrides) { bExplicitVer = bExplicitVer };
     }
 }

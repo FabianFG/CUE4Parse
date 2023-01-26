@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
@@ -22,6 +22,12 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             if (tagData.InnerType == null || tagData.ValueType == null)
                 throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
+
+            if (!Ar.HasUnversionedProperties &&  Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
+            {
+                if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);
+                if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);
+            }
 
             var numKeysToRemove = Ar.Read<int>();
             for (var i = 0; i < numKeysToRemove; i++)
@@ -64,21 +70,21 @@ namespace CUE4Parse.UE4.Assets.Objects
                     switch (s1.Value.StructType)
                     {
                         case FStructFallback f:
-                        {
-                            foreach (var prop in f.Properties)
                             {
+                                foreach (var prop in f.Properties)
+                                {
                                 if (prop.Tag is StructProperty s2 && s2.Value.StructType is FStructFallback) continue;
-                                key = prop.Tag?.ToString();
+                                    key = prop.Tag?.ToString();
+                                    break;
+                                }
+
                                 break;
                             }
-
-                            break;
-                        }
                         case FNiagaraVariable n:
-                        {
-                            key = n.Name.Text;
-                            break;
-                        }
+                            {
+                                key = n.Name.Text;
+                                break;
+                            }
                     }
                 }
                 else key = kvp.Key?.ToString();
