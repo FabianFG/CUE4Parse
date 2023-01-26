@@ -20,6 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MeshIO" Version="1.1.0-alpha" />
+    <PackageReference Include="MeshIO.FBX" Version="1.1.0-alpha" />
     <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0023" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0023" />
     <PackageReference Include="SkiaSharp" Version="2.88.1" />

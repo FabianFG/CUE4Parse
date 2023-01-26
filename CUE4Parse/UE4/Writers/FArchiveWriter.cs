@@ -12,6 +12,7 @@ namespace CUE4Parse.UE4.Writers
             OutStream = _memoryData;
         }
 
+        public MemoryStream GetStream() => _memoryData;
         public byte[] GetBuffer() => _memoryData.ToArray();
 
         public long Length => _memoryData.Length;
