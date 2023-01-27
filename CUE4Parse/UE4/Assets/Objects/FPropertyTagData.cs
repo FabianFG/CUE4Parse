@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -9,6 +9,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 {
     public class FPropertyTagData
     {
+        public string? Name;
         public string Type;
         public string? StructType;
         public FGuid? StructGuid;
@@ -22,8 +23,9 @@ namespace CUE4Parse.UE4.Assets.Objects
         public UStruct? Struct;
         public UEnum? Enum;
 
-        internal FPropertyTagData(FAssetArchive Ar, string type)
+        internal FPropertyTagData(FAssetArchive Ar, string type, string name = "")
         {
+            Name = name;
             Type = type;
             switch (type)
             {
@@ -72,6 +74,13 @@ namespace CUE4Parse.UE4.Assets.Objects
             ValueType = ValueTypeData?.Type;
             Struct = info.Struct;
             Enum = info.Enum;
+        }
+
+        internal FPropertyTagData(string structType, string name = "")
+        {
+            Name = name;
+            Type = "StructProperty";
+            StructType = structType;
         }
 
         public override string ToString()
