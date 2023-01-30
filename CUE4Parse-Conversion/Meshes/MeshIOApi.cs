@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using CSMath;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Writers;
 using MeshIO;
@@ -31,7 +33,7 @@ public class MeshIOApi
     {
         if (meshFormat == EMeshFormat.FBX)
         {
-            new FbxWriter(Ar.GetStream()).WriteAscii(MeshIOScene);
+            new FbxWriter(Ar.GetStream(), FbxVersion.v7500).WriteAscii(MeshIOScene);
             return;
         }
         throw new ArgumentOutOfRangeException();
@@ -71,10 +73,11 @@ public class MeshIOApi
             var sect = sects[sectIndex];
 
             string materialName;
+            MaterialExporter2 materialExporter = null;
             if (sect.Material?.Load<UMaterialInterface>() is { } tex)
             {
                 materialName = tex.Name;
-                var materialExporter = new MaterialExporter2(tex, options);
+                materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
             else materialName = $"material_{sectIndex}";
@@ -125,14 +128,43 @@ public class MeshIOApi
         geometry.Layers.Add(tangentLayer);
         // mesh.Layers.Add(binormalLayer);
 
-        // TODO: UVs
+        // TODO: Multiple UVs
+        var numTextCoords = lod.NumTexCoords;
+        for (int i = 0; i < numTextCoords; i++)
+        {
+            var uvChannelName = $"UVmap_{i}";
+            var uvLayer = new LayerElementUV() { Name = uvChannelName, MappingMode = MappingMode.ByPolygonVertex, ReferenceMode = ReferenceMode.IndexToDirect };
+
+            if (i != 0)
+                throw new NotImplementedException("multiple uvs not implemented");
+
+            (int[] uvsRemap, int[] uniqueUVs) = DetermineUVsToWeld(lod.Verts, i, !options.WeldVerts);
+
+            for (int j = 0; j < uniqueUVs.Length; j++)
+            {
+                int index = uniqueUVs[j];
+                var uvFloat = lod.Verts[index].UV;
+                uvLayer.UV.Add(new XY(uvFloat.U, -uvFloat.V+1.0));
+            }
+
+            uvLayer.Indices.AddRange(Enumerable.Repeat(new int(), indices.Count).ToList());
+            for (int j = 0; j < indices.Count; j++)
+            {
+                uvLayer.Indices[j] = uvsRemap[indices[j]];
+            }
+
+            geometry.Layers.Add(uvLayer);
+        }
+
+        // TODO vertex colors
         return meshNode;
     }
 
     private static XYZ CastToXYZ(FVector vec) => new XYZ(vec.X, vec.Z, vec.Y);
+    private static XY CastToXY(Vector2 vec) => new XY(vec.X, vec.Y);
     private static XYZ CastToXYZNormalize(FVector vec)
     {
-        Gltf.SwapYZAndNormalize(vec);
+        vec = Gltf.SwapYZAndNormalize(vec);
         return new XYZ(vec.X, vec.Y, vec.Z);
     }
 
@@ -157,6 +189,45 @@ public class MeshIOApi
             for(int i=0; i < vertCount; i++)
             {
                 var PositionA = lod.Verts[i].Position;
+                bool bFound = hashedVerts.Keys.Contains(PositionA); // (PositionA);
+                if ( !bFound )
+                {
+                    uniqueVerts.Add(i);
+                    var index = uniqueVerts.Count - 1;
+                    vertRemap[i] = index;
+                    hashedVerts.Add(PositionA, index);
+                }
+                else
+                {
+                    vertRemap[i] = hashedVerts[PositionA];
+                }
+            }
+        }
+
+        return (vertRemap, uniqueVerts.ToArray());
+    }
+
+    public static (int[] VertRemap, int[] UniqueVerts) DetermineUVsToWeld(CMeshVertex[] verts, int texIndex, bool dontDoIt = false)
+    {
+        var vertCount = verts.Length;
+        var vertRemap = new int[vertCount];
+        var uniqueVerts = new List<int>();
+
+        if (dontDoIt)
+        {
+            for (int i = 0; i < vertCount; i++)
+            {
+                uniqueVerts.Add(i);
+                var index = uniqueVerts.Count - 1;
+                vertRemap[i] = index;
+            }
+        }
+        else
+        {
+            var hashedVerts = new Dictionary<FMeshUVFloat, int>();
+            for(int i=0; i < vertCount; i++)
+            {
+                var PositionA = verts[i].UV;
                 bool bFound = hashedVerts.Keys.Contains(PositionA); // (PositionA);
                 if ( !bFound )
                 {
