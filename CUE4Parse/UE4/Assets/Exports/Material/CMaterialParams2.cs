@@ -21,11 +21,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string FallbackSpecularMasks = "PM_SpecularMasks";
         public const string FallbackEmissive = "PM_Emissive";
 
-
-        public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
+        public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
         public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
-        public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_).*|(?:_S|_LP|_PAK)$";
-        public const string RegexEmissive = "^.*Emiss.*|(?:_E|_EM)$";
+        public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
+        public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
 
         public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
         public bool HasTopNormals => HasTopTexture(Normals[0]);
@@ -85,7 +84,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 "Trunk_Specular", "PackedTexture",
                 "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
-                "MG", "ORM", "MRAE", "MRAS", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
+                "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
                 "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "Base Texture RMAO",
                 "Pack", "PAK", "T_PAK", "M1_T_PAK",
                 "Cliff Spec Texture", "PhysicalMap", "KizokMap"
@@ -286,6 +285,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
                 Properties[property.Name.Text] = property.Tag?.GenericValue;
             }
+        }
+
+        public void VerifyTexture(string name, UTexture texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
+        {
+            if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
+                Textures[FallbackDiffuse] = texture;
+            else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal || Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
+                Textures[FallbackNormals] = texture;
+            else if (Regex.IsMatch(name, RegexSpecularMasks, RegexOptions.IgnoreCase))
+                Textures[FallbackSpecularMasks] = texture;
+            else if (Regex.IsMatch(name, RegexEmissive, RegexOptions.IgnoreCase))
+                Textures[FallbackEmissive] = texture;
+
+            if (appendToDictionary) Textures[name] = texture;
         }
 
         private bool HasTopTexture(params string[] names)

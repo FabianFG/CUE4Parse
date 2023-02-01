@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (tagData.InnerType == null || tagData.ValueType == null)
                 throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
 
-            if (!Ar.HasUnversionedProperties &&  Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
+            if (!Ar.HasUnversionedProperties && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
             {
                 if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);
                 if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);
@@ -63,12 +63,23 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             foreach (var kvp in value.Properties)
             {
-                writer.WriteStartObject();
-                writer.WritePropertyName("Key");
-                serializer.Serialize(writer, kvp.Key);
-                writer.WritePropertyName("Value");
-                serializer.Serialize(writer, kvp.Value);
-                writer.WriteEndObject();
+                switch (kvp.Key)
+                {
+                    case StructProperty:
+                        writer.WriteStartObject();
+                        writer.WritePropertyName("Key");
+                        serializer.Serialize(writer, kvp.Key);
+                        writer.WritePropertyName("Value");
+                        serializer.Serialize(writer, kvp.Value);
+                        writer.WriteEndObject();
+                        break;
+                    default:
+                        writer.WriteStartObject();
+                        writer.WritePropertyName(kvp.Key?.ToString().SubstringBefore('(').Trim() ?? "no key name???");
+                        serializer.Serialize(writer, kvp.Value);
+                        writer.WriteEndObject();
+                        break;
+                }
             }
 
             writer.WriteEndArray();

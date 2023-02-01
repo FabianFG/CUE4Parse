@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -13,14 +14,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class UMaterial : UMaterialInterface
     {
-        public bool TwoSided;
-        public bool bDisableDepthTest;
-        public bool bIsMasked;
-        public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
-        public EMaterialShadingModel ShadingModel = EMaterialShadingModel.MSM_Unlit;
-        public float OpacityMaskClipValue = 0.333f;
-        public List<UTexture> ReferencedTextures = new();
-        private List<IObject> _displayedReferencedTextures = new();
+        public bool TwoSided { get; private set; }
+        public bool bDisableDepthTest { get; private set; }
+        public bool bIsMasked { get; private set; }
+        public FPackageIndex[] Expressions { get; private set; }
+        public EBlendMode BlendMode { get; private set; } = EBlendMode.BLEND_Opaque;
+        public EMaterialShadingModel ShadingModel { get; private set; } = EMaterialShadingModel.MSM_Unlit;
+        public float OpacityMaskClipValue { get; private set; } = 0.333f;
+        public List<UTexture> ReferencedTextures { get; } = new();
+
+        private readonly List<IObject> _displayedReferencedTextures = new();
         private bool _shouldDisplay;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -29,6 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             TwoSided = GetOrDefault<bool>(nameof(TwoSided));
             bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
+            Expressions = GetOrDefault(nameof(Expressions), Array.Empty<FPackageIndex>());
             BlendMode = GetOrDefault<EBlendMode>(nameof(BlendMode));
             ShadingModel = GetOrDefault<EMaterialShadingModel>(nameof(ShadingModel));
             OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
@@ -226,6 +230,31 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             parameters.ShadingModel = ShadingModel;
             parameters.AppendAllProperties(Properties);
 
+            foreach (var expression in Expressions)
+            {
+                if (!expression.TryLoad(out UMaterialExpression materialExpression))
+                    continue;
+
+                switch (materialExpression)
+                {
+                    case UMaterialExpressionTextureSampleParameter textureSample:
+                        parameters.VerifyTexture(textureSample.ParameterName.Text, textureSample.Texture, true, textureSample.SamplerType);
+                        break;
+                    case UMaterialExpressionTextureBase textureBase:
+                        parameters.VerifyTexture(textureBase.Texture.Name, textureBase.Texture, true, textureBase.SamplerType);
+                        break;
+                    case UMaterialExpressionVectorParameter vectorParameter:
+                        parameters.Colors[vectorParameter.ParameterName.Text] = vectorParameter.DefaultValue;
+                        break;
+                    case UMaterialExpressionScalarParameter scalarParameter:
+                        parameters.Scalars[scalarParameter.ParameterName.Text] = scalarParameter.DefaultValue;
+                        break;
+                    case UMaterialExpressionStaticBoolParameter staticBoolParameter:
+                        parameters.Switchs[staticBoolParameter.ParameterName.Text] = staticBoolParameter.DefaultValue;
+                        break;
+                }
+            }
+
             if (format != EMaterialFormat.AllLayersNoRef)
             {
                 for (int i = 0; i < ReferencedTextures.Count; i++)
@@ -238,7 +267,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             base.GetParams(parameters, format);
             if (format == EMaterialFormat.AllLayersNoRef) return;
 
-            if (ReferencedTextures.Count == 1 && ReferencedTextures[0] is { } fallback)
+            if (ReferencedTextures is [{ } fallback])
             {
                 parameters.Textures[CMaterialParams2.FallbackDiffuse] = fallback;
                 return;

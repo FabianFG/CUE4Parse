@@ -77,29 +77,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (!parameters.TryGetTexture2d(out var texture, name))
                     continue;
 
-                if (Regex.IsMatch(name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
-                {
-                    parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
-                    continue;
-                }
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
-                {
-                    parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
-                    continue;
-                }
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
-                {
-                    parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
-                    continue;
-                }
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
-                {
-                    parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
-                    continue;
-                }
+                parameters.VerifyTexture(name, texture, false);
             }
 
             // *****************************************
@@ -129,19 +107,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                     var name = textureParameterInfos[i].Name.Text;
                     if (!textureValues[i].TryLoad(out UTexture texture)) continue;
 
-                    if (Regex.IsMatch(name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
-                        parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
-
-                    if (Regex.IsMatch(name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
-                        parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
-
-                    if (Regex.IsMatch(name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
-                        parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
-
-                    if (Regex.IsMatch(name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
-                        parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
-
-                    parameters.Textures[name] = texture;
+                    parameters.VerifyTexture(name, texture);
                 }
             }
         }

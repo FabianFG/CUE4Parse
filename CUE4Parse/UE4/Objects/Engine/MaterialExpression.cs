@@ -61,6 +61,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
     public class FExpressionInput : IUStruct
     {
+        public readonly UMaterialExpression Expression;
         public readonly int OutputIndex;
         public readonly FName InputName;
         public readonly int Mask;
@@ -82,6 +83,11 @@ namespace CUE4Parse.UE4.Objects.Engine
             //     // TODO use property serialization instead
             // }
 
+            if (Ar.Game >= EGame.GAME_UE5_1)
+            {
+                // ???
+            }
+
             OutputIndex = Ar.Read<int>();
             InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());
             Mask = Ar.Read<int>();
@@ -93,6 +99,18 @@ namespace CUE4Parse.UE4.Objects.Engine
             {
                 ExpressionName = Ar.ReadFName();
             }
+        }
+    }
+
+    public class UMaterialExpression : Assets.Exports.UObject
+    {
+        public FPackageIndex Material { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            Material = GetOrDefault<FPackageIndex>(nameof(Material));
         }
     }
 }

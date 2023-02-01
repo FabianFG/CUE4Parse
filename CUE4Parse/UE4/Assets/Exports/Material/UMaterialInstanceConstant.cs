@@ -257,20 +257,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                 if (!textureParameter.ParameterValue.TryLoad(out UTexture texture))
                     continue;
 
-                var name = textureParameter.Name;
-                if (Regex.IsMatch(name, CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase))
-                    parameters.Textures[CMaterialParams2.FallbackDiffuse] = texture;
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexNormals, RegexOptions.IgnoreCase))
-                    parameters.Textures[CMaterialParams2.FallbackNormals] = texture;
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexSpecularMasks, RegexOptions.IgnoreCase))
-                    parameters.Textures[CMaterialParams2.FallbackSpecularMasks] = texture;
-
-                if (Regex.IsMatch(name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
-                    parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
-
-                parameters.Textures[name] = texture;
+                parameters.VerifyTexture(textureParameter.Name, texture);
             }
 
             foreach (var vectorParameter in VectorParameterValues)
