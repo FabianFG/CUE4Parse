@@ -511,7 +511,7 @@ namespace CUE4Parse_Conversion.Meshes
                             Name = socket.SocketName.Text,
                             ParentIndex = targetBoneIdx,
                             Position = socket.RelativeLocation,
-                            Orientation = socket.RelativeRotation.Quaternion()
+                            Orientation = FQuat.Conjugate(socket.RelativeRotation.Quaternion())
                         };
 
                         bones.Add(meshBone);
