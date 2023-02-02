@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using CSMath;
+using AssetRipper.MeshSharp;
+using AssetRipper.MeshSharp.Elements;
+using AssetRipper.MeshSharp.Elements.Geometries.Layers;
+using AssetRipper.MeshSharp.FBX;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Writers;
-using MeshIO;
-using MeshIO.Elements;
-using MeshIO.Elements.Geometries.Layers;
-using MeshIO.FBX;
 
 namespace CUE4Parse_Conversion.Meshes;
 
@@ -33,7 +31,7 @@ public class MeshIOApi
     {
         if (meshFormat == EMeshFormat.FBX)
         {
-            new FbxWriter(Ar.GetStream(), FbxVersion.v7500).WriteAscii(MeshIOScene);
+            new FbxWriter(Ar.GetStream(), MeshIOScene, FbxVersion.v7500).WriteAscii();
             return;
         }
         throw new ArgumentOutOfRangeException();
@@ -42,7 +40,8 @@ public class MeshIOApi
     public static Node ExportStaticMesh(string name, CStaticMeshLod lod, CMeshSection[] sects, List<MaterialExporter2>? materialExports, ExporterOptions options)
     {
         var meshNode = new Node(name);
-        var geometry = new MeshIO.Elements.Geometries.Mesh(name);
+        var geometry = new AssetRipper.MeshSharp.Elements.Geometries.Mesh(name);
+        geometry.Layers.Add(new List<LayerElement>());
         meshNode.Children.Add(geometry);
 
         (int[] vertRemap, int[] uniqueVerts) = DetermineVertsToWeld(lod, !options.WeldVerts);
@@ -58,14 +57,14 @@ public class MeshIOApi
             var vert = lod.Verts[vertIndex];
             meshVert[i] = CastToXYZ(vert.Position*0.01f);
         }
-        geometry.Vertices = meshVert.ToList();
+        geometry.Vertices.AddRange(meshVert);
 
-        var matLayer = new LayerElementMaterial()
+        var matLayer = new LayerElementMaterial(geometry)
         {
             Name = "",
-            MappingMode = MappingMode.ByPolygon, ReferenceMode = ReferenceMode.IndexToDirect
+            MappingInformationType = MappingMode.ByPolygon, ReferenceInformationType = ReferenceMode.IndexToDirect
         };
-        geometry.Layers.Add(matLayer);
+        geometry.Layers[0].Add(matLayer);
 
         var indices = new List<int>();
         for (int sectIndex = 0; sectIndex < numSections; sectIndex++)
@@ -96,14 +95,14 @@ public class MeshIOApi
 
                     indices.Add(index);
                 }
-                matLayer.Indices.Add(sectIndex);
+                matLayer.Materials.Add(sectIndex);
                 geometry.Polygons.Add(new Triangle((uint)wedgeIndex[0], (uint)wedgeIndex[1], (uint)wedgeIndex[2]));
             }
         }
 
         // normal layer needs to be first?
-        var normalLayer = new LayerElementNormal() { MappingMode = MappingMode.ByPolygonVertex, ReferenceMode = ReferenceMode.Direct };
-        var tangentLayer = new LayerElementTangent() { MappingMode = MappingMode.ByPolygonVertex, ReferenceMode = ReferenceMode.Direct };
+        var normalLayer = new LayerElementNormal(geometry) { MappingInformationType = MappingMode.ByPolygonVertex, ReferenceInformationType = ReferenceMode.Direct };
+        var tangentLayer = new LayerElementTangent(geometry) { MappingInformationType = MappingMode.ByPolygonVertex, ReferenceInformationType = ReferenceMode.Direct };
         // var binormalLayer = new LayerElementBinormal() { MappingMode = MappingMode.ByPolygonVertex, ReferenceMode = ReferenceMode.Direct }; // we don't have this i think
 
         // todo can this be done in single loop?
@@ -124,39 +123,54 @@ public class MeshIOApi
             tangentLayer.Tangents.Add(convertedTangents[index]);
         }
 
-        geometry.Layers.Add(normalLayer);
-        geometry.Layers.Add(tangentLayer);
+        geometry.Layers[0].Add(normalLayer);
+        geometry.Layers[0].Add(tangentLayer);
         // mesh.Layers.Add(binormalLayer);
 
-        // TODO: Multiple UVs
+        // TODO: test Multiple UVs
         var numTextCoords = lod.NumTexCoords;
         for (int i = 0; i < numTextCoords; i++)
         {
             var uvChannelName = $"UVmap_{i}";
-            var uvLayer = new LayerElementUV() { Name = uvChannelName, MappingMode = MappingMode.ByPolygonVertex, ReferenceMode = ReferenceMode.IndexToDirect };
-
-            if (i != 0)
-                throw new NotImplementedException("multiple uvs not implemented");
+            var uvLayer = new LayerElementUV(geometry) { Name = uvChannelName, MappingInformationType = MappingMode.ByPolygonVertex, ReferenceInformationType = ReferenceMode.IndexToDirect };
 
             (int[] uvsRemap, int[] uniqueUVs) = DetermineUVsToWeld(lod.Verts, i, !options.WeldVerts);
 
             for (int j = 0; j < uniqueUVs.Length; j++)
             {
                 int index = uniqueUVs[j];
-                var uvFloat = lod.Verts[index].UV;
+                var uvFloat = i == 0 ? lod.Verts[index].UV : lod.ExtraUV.Value[i-1][index];
                 uvLayer.UV.Add(new XY(uvFloat.U, -uvFloat.V+1.0));
             }
 
-            uvLayer.Indices.AddRange(Enumerable.Repeat(new int(), indices.Count).ToList());
+            uvLayer.UVIndex.AddRange(Enumerable.Repeat(new int(), indices.Count).ToList());
             for (int j = 0; j < indices.Count; j++)
             {
-                uvLayer.Indices[j] = uvsRemap[indices[j]];
+                uvLayer.UVIndex[j] = uvsRemap[indices[j]];
             }
 
-            geometry.Layers.Add(uvLayer);
+            if (geometry.Layers.Count <= i)
+                geometry.Layers.Add(new List<LayerElement>());
+            geometry.Layers[i].Add(uvLayer);
         }
 
-        // TODO vertex colors
+        if (lod.VertexColors != null)
+        {
+            var vertexColorLayer = new LayerElementVertexColor(geometry) { MappingInformationType = MappingMode.ByPolygonVertex, ReferenceInformationType = ReferenceMode.IndexToDirect };
+            for (int j = 0; j < indices.Count; j++)
+            {
+                int index = indices[j];
+                var vertColor = new FLinearColor(1, 1, 1, 1 );
+                if (index < lod.VertexColors.Length)
+                {
+                    vertColor = lod.VertexColors[index].AsLinear();
+                }
+
+                vertexColorLayer.Colors.Add(new XYZM(vertColor.R, vertColor.G, vertColor.B, vertColor.A));
+                vertexColorLayer.ColorIndex.Add(j);
+            }
+            geometry.Layers[0].Add(vertexColorLayer);
+        }
         return meshNode;
     }
 

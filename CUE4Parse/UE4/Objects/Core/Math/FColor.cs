@@ -41,6 +41,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Convert.ToSingle(color.R) / 255f, Convert.ToSingle(color.G) / 255f,
             Convert.ToSingle(color.B) / 255f, Convert.ToSingle(color.A) / 255f);
 
+        public FLinearColor AsLinear()
+        {
+            return new FLinearColor(R / 255f, G / 255f, B / 255f, A / 255f);
+        }
+
         public override string ToString() => Hex;
 
         public static byte Requantize16to8(int value16)

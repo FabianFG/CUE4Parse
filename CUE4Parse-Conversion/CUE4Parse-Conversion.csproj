@@ -20,14 +20,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MeshIO" Version="1.1.0-alpha" />
-    <PackageReference Include="MeshIO.FBX" Version="1.1.0-alpha" />
+<!--    <PackageReference Include="AssetRipper.MeshSharp" Version="1.0.0" />-->
+<!--    <PackageReference Include="AssetRipper.MeshSharp.FBX" Version="1.0.0" />-->
     <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0023" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0023" />
     <PackageReference Include="SkiaSharp" Version="2.88.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\MeshSharp\MeshSharp.FBX\MeshSharp.FBX.csproj" />
+    <ProjectReference Include="..\..\..\MeshSharp\MeshSharp\MeshSharp.csproj" />
     <ProjectReference Include="..\CUE4Parse\CUE4Parse.csproj" />
   </ItemGroup>
 
