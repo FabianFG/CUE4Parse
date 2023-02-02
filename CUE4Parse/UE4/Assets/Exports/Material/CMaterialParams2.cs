@@ -287,18 +287,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             }
         }
 
-        public void VerifyTexture(string name, UTexture texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
+        public bool VerifyTexture(string name, UTexture texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
         {
+            var fallback = "";
             if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
-                Textures[FallbackDiffuse] = texture;
-            else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal || Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
-                Textures[FallbackNormals] = texture;
+                fallback = FallbackDiffuse;
+            else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal ||
+                     Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
+                fallback = FallbackNormals;
             else if (Regex.IsMatch(name, RegexSpecularMasks, RegexOptions.IgnoreCase))
-                Textures[FallbackSpecularMasks] = texture;
+                fallback = FallbackSpecularMasks;
             else if (Regex.IsMatch(name, RegexEmissive, RegexOptions.IgnoreCase))
-                Textures[FallbackEmissive] = texture;
+                fallback = FallbackEmissive;
 
+            var ret = !string.IsNullOrEmpty(fallback);
+            if (ret) Textures[fallback] = texture;
             if (appendToDictionary) Textures[name] = texture;
+            return ret;
         }
 
         private bool HasTopTexture(params string[] names)
