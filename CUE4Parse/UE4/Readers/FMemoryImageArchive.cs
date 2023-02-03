@@ -124,7 +124,7 @@ namespace CUE4Parse.UE4.Readers
             for (int i = 0; i < data.Length; i++)
             {
                 data[i] = getter();
-                Position = Position.Align(4);
+                Position = Position.Align(8);
             }
             Position = continuePos;
             return data;

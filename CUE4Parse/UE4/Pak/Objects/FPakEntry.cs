@@ -294,6 +294,16 @@ namespace CUE4Parse.UE4.Pak.Objects
             CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
             Flags = Ar.Read<byte>();
 
+            if (reader.Info.Version >= PakFile_Version_RelativeChunkOffsets)
+            {
+                // Convert relative compressed offsets to absolute
+                for (var i = 0; i < CompressionBlocks.Length; i++)
+                {
+                    CompressionBlocks[i].CompressedStart += Offset;
+                    CompressionBlocks[i].CompressedEnd += Offset;
+                }
+            }
+            
             // Compute StructSize: each file still have FPakEntry data prepended, and it should be skipped.
             StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
             // Take into account CompressionBlocks

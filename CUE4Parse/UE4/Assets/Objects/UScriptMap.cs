@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
