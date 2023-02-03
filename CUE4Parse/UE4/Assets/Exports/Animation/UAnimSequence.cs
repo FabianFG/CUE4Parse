@@ -118,6 +118,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     bUseRawDataOnly = Ar.ReadBoolean();
                 }
             }
+            
+            var ensuredCurveData = EnsureCurveData();
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
