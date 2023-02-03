@@ -12,6 +12,8 @@ using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Writers;
+using CUE4Parse.Utils;
+using Quaternion = AssetRipper.MeshSharp.Quaternion;
 
 namespace CUE4Parse_Conversion.Meshes;
 
@@ -24,6 +26,14 @@ public class MeshIOApi
         MeshIOScene = new Scene("MyScene"); // unused
 
         var meshNode = ExportStaticMesh(name, lod, lod.Sections.Value, materialExports, options);
+        MeshIOScene.Nodes.Add(meshNode);
+    }
+
+    public MeshIOApi(string name, List<CSkelMeshBone> bones, CSkelMeshLod lod, List<MaterialExporter2>? materialExports, ExporterOptions options)
+    {
+        MeshIOScene = new Scene("MyScene"); // unused
+
+        var meshNode = ExportSkeletalMesh(name, bones, lod, lod.Sections.Value, materialExports, options);
         MeshIOScene.Nodes.Add(meshNode);
     }
 
@@ -81,7 +91,7 @@ public class MeshIOApi
             }
             else materialName = $"material_{sectIndex}";
 
-            var material = new Material(materialName) { ShadingModel = "phong"};
+            var material = new Material(materialName) { ShadingModel = "phong", DiffuseColor = GetRandomColor(sectIndex)};
             meshNode.Children.Add(material);
 
             for (int faceIndex = 0; faceIndex < sect.NumFaces; faceIndex++)
@@ -174,12 +184,62 @@ public class MeshIOApi
         return meshNode;
     }
 
+    public static Node ExportSkeletalMesh(string name, List<CSkelMeshBone> bones, CSkelMeshLod lod, CMeshSection[] sects, List<MaterialExporter2>? materialExports, ExporterOptions options)
+    {
+        var node = ExportStaticMesh(name, CastToStaticMesh(lod), sects, materialExports, options);
+
+        // var boneNodes = CreateSkeleton(bones);
+
+        return node;
+    }
+
+    public static Node[] CreateSkeleton(List<CSkelMeshBone> bones)
+    {
+        var boneNodes = new List<Node>(); // NodeAttribute
+
+        for (int i = 0; i < bones.Count; i++)
+        {
+            var bone = bones[i];
+            var boneNode = new Node(bone.Name.ToString());
+            var quat = bone.Orientation.ToQuaternion();
+            boneNode.Transform = new Transform()
+            {
+                Quaternion = new Quaternion(quat.X, quat.Y, quat.Z, quat.W),
+                Translation = CastToXYZ(bone.Position)
+            };
+            // if (bone.)
+        }
+
+        return boneNodes.ToArray();
+    }
+
+    private static CStaticMeshLod CastToStaticMesh(CSkelMeshLod lod)
+    {
+        return new CStaticMeshLod
+            {
+                Indices = lod.Indices, NumVerts = lod.NumVerts, NumTexCoords = lod.NumTexCoords, HasNormals = lod.HasNormals,
+                HasTangents = lod.HasTangents,
+                IsTwoSided = lod.IsTwoSided,
+                Sections = lod.Sections,
+                ExtraUV = lod.ExtraUV,
+                VertexColors = lod.VertexColors,
+                // result.Verts = lod.Verts;
+                Verts = lod.Verts.Cast<CMeshVertex>().ToArray()
+            };
+    }
+
     private static XYZ CastToXYZ(FVector vec) => new XYZ(vec.X, vec.Z, vec.Y);
     private static XY CastToXY(Vector2 vec) => new XY(vec.X, vec.Y);
     private static XYZ CastToXYZNormalize(FVector vec)
     {
         vec = Gltf.SwapYZAndNormalize(vec);
         return new XYZ(vec.X, vec.Y, vec.Z);
+    }
+
+    private static Color GetRandomColor(int seed)
+    {
+        var r = new Random(seed);
+        return new Color((byte)r.Next(0, 255), (byte)r.Next(0, 255), (byte)r.Next(0, 255), 1);
     }
 
     public static (int[] VertRemap, int[] UniqueVerts) DetermineVertsToWeld(CStaticMeshLod lod, bool dontDoIt = false)

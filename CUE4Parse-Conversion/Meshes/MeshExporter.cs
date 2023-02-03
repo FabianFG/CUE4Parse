@@ -142,6 +142,10 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = "obj";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
                         break;
+                    case EMeshFormat.FBX:
+                        ext = "fbx";
+                        new MeshIOApi(ExportName, convertedMesh.RefSkeleton, lod, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
