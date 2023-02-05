@@ -36,6 +36,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             var mainHdr = new VChunkHeader { TypeFlag = Constants.PSK_VERSION };
             Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
+            ExportSockets(Ar, originalSkeleton.Sockets.ToList(), bones);
             ExportSkeletonData(Ar, bones);
 
             MeshLods.Add(new Mesh($"{PackagePath}.psk", Ar.GetBuffer(), new List<MaterialExporter2>()));
