@@ -687,7 +687,7 @@ namespace CUE4Parse_Conversion.Animations
             dst.Name = animSequence.Name;
             dst.NumFrames = animSequence.NumFrames;
             dst.Rate = animSequence.NumFrames / animSequence.SequenceLength * animSequence.RateScale;
-            dst.bAdditive = animSequence.IsValidAdditive();
+            dst.bAdditive = animSequence.AdditiveAnimType != AAT_None;
 
             // Store information for animation retargeting.
             // Reference: UAnimSequence::GetRetargetTransforms()
