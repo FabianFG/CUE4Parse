@@ -36,6 +36,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             var mainHdr = new VChunkHeader { TypeFlag = Constants.PSK_VERSION };
             Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
+            ExportSkeletalSockets(Ar, originalSkeleton.Sockets, bones);
             ExportSkeletonData(Ar, bones);
 
             MeshLods.Add(new Mesh($"{PackagePath}.psk", Ar.GetBuffer(), new List<MaterialExporter2>()));
@@ -68,7 +69,7 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     case EMeshFormat.ActorX:
                         ext = "pskx";
-                        ExportStaticMeshLods(lod, Ar, materialExports);
+                        ExportStaticMeshLods(lod, Ar, materialExports, originalMesh.Sockets);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -97,10 +98,9 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
-            List<FPackageIndex>? totalSockets = null;
+            var totalSockets = new List<FPackageIndex>();
             if (Options.SocketFormat != ESocketFormat.None)
             {
-                totalSockets = new List<FPackageIndex>();
                 totalSockets.AddRange(originalMesh.Sockets);
                 if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
                 {
@@ -127,7 +127,7 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
                         ExportSkeletalMeshLod(lod, convertedMesh.RefSkeleton, Ar, materialExports,
                             Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-                            totalSockets, lodIndex);
+                            totalSockets.ToArray(), lodIndex);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
@@ -148,7 +148,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter2>? materialExports)
+        private void ExportStaticMeshLods(CStaticMeshLod lod, FArchiveWriter Ar, List<MaterialExporter2>? materialExports, FPackageIndex[] sockets)
         {
             var share = new CVertexShare();
             var boneHdr = new VChunkHeader();
@@ -162,9 +162,9 @@ namespace CUE4Parse_Conversion.Meshes
 
             ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
 
-            boneHdr.DataCount = 0;
-            boneHdr.DataSize = 120;
-            Ar.SerializeChunkHeader(boneHdr, "REFSKELT");
+            var bones = new List<CSkelMeshBone>();
+            ExportStaticSockets(Ar, sockets, bones);
+            ExportSkeletonData(Ar, bones);
 
             infHdr.DataCount = 0;
             infHdr.DataSize = 12;
@@ -174,7 +174,7 @@ namespace CUE4Parse_Conversion.Meshes
             ExportExtraUV(Ar, lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
         }
 
-        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter2>? materialExports, FPackageIndex[]? morphTargets, List<FPackageIndex>? sockets, int lodIndex)
+        private void ExportSkeletalMeshLod(CSkelMeshLod lod, List<CSkelMeshBone> bones, FArchiveWriter Ar, List<MaterialExporter2>? materialExports, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex)
         {
             var share = new CVertexShare();
             var infHdr = new VChunkHeader();
@@ -192,7 +192,7 @@ namespace CUE4Parse_Conversion.Meshes
             }
 
             ExportCommonMeshData(Ar, lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
-            if (sockets is not null) ExportSockets(Ar, sockets, bones);
+            ExportSkeletalSockets(Ar, sockets, bones);
             ExportSkeletonData(Ar, bones);
 
             var numInfluences = 0;
@@ -467,16 +467,17 @@ namespace CUE4Parse_Conversion.Meshes
             }
         }
 
-        public void ExportSockets(FArchiveWriter Ar, List<FPackageIndex> sockets, List<CSkelMeshBone> bones)
+        public void ExportSkeletalSockets(FArchiveWriter Ar, FPackageIndex[] sockets, List<CSkelMeshBone> bones)
         {
+            if (sockets.Length == 0) return;
             switch (Options.SocketFormat)
             {
                 case ESocketFormat.Socket:
                 {
-                    var socketInfoHdr = new VChunkHeader { DataCount = sockets.Count, DataSize = Constants.VSocket_SIZE };
+                    var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
                     Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
 
-                    for (var i = 0; i < sockets.Count; i++)
+                    for (var i = 0; i < sockets.Length; i++)
                     {
                         var socket = sockets[i].Load<USkeletalMeshSocket>();
                         if (socket is null) continue;
@@ -489,7 +490,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
                 case ESocketFormat.Bone:
                 {
-                    for (var i = 0; i < sockets.Count; i++)
+                    for (var i = 0; i < sockets.Length; i++)
                     {
                         var socket = sockets[i].Load<USkeletalMeshSocket>();
                         if (socket is null) continue;
@@ -510,6 +511,49 @@ namespace CUE4Parse_Conversion.Meshes
                         {
                             Name = socket.SocketName.Text,
                             ParentIndex = targetBoneIdx,
+                            Position = socket.RelativeLocation,
+                            Orientation = FQuat.Conjugate(socket.RelativeRotation.Quaternion())
+                        };
+
+                        bones.Add(meshBone);
+                    }
+
+                    break;
+                }
+            }
+        }
+        public void ExportStaticSockets(FArchiveWriter Ar, FPackageIndex[] sockets, List<CSkelMeshBone> bones)
+        {
+            if (sockets.Length == 0) return;
+            switch (Options.SocketFormat)
+            {
+                case ESocketFormat.Socket:
+                {
+                    var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
+                    Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+
+                    for (var i = 0; i < sockets.Length; i++)
+                    {
+                        var socket = sockets[i].Load<UStaticMeshSocket>();
+                        if (socket is null) continue;
+
+                        var pskSocket = new VSocket(socket.SocketName.Text, string.Empty, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
+                        pskSocket.Serialize(Ar);
+                    }
+
+                    break;
+                }
+                case ESocketFormat.Bone:
+                {
+                    for (var i = 0; i < sockets.Length; i++)
+                    {
+                        var socket = sockets[i].Load<UStaticMeshSocket>();
+                        if (socket is null) continue;
+
+                        var meshBone = new CSkelMeshBone
+                        {
+                            Name = socket.SocketName.Text,
+                            ParentIndex = -1,
                             Position = socket.RelativeLocation,
                             Orientation = FQuat.Conjugate(socket.RelativeRotation.Quaternion())
                         };
