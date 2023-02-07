@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             base.Deserialize(Ar, validPos);
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
-            LightingGuid = GetOrDefault<FGuid>(nameof(LightingGuid));
+            LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
             SRGB = GetOrDefault(nameof(SRGB), true);
             if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
                 bRenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
