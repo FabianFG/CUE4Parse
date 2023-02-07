@@ -58,8 +58,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_TheDivisionResurgence = GAME_UE4_26 + 6,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
-            GAME_MeetYourMaker = GAME_UE4_27 + 2,
-            GAME_HYENAS = GAME_UE4_27 + 3,
+            GAME_HYENAS = GAME_UE4_27 + 2,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,
@@ -68,6 +67,7 @@ namespace CUE4Parse.UE4.Versions
         // The commit https://github.com/EpicGames/UnrealEngine/commit/cf116088ae6b65c1701eee99288e43c7310d6bb1#diff-6178e9d97c98e321fc3f53770109ea7f6a8ea7a86cac542717a81922f2f93613R723
         // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess
         GAME_UE5_0 = GameUtils.GameUe5Base + 0 << 4,
+            GAME_MeetYourMaker = GAME_UE5_0 + 1,
         GAME_UE5_1 = GameUtils.GameUe5Base + 1 << 4,
         GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
 
