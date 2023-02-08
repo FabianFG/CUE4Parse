@@ -209,13 +209,6 @@ namespace CUE4Parse_Conversion.Animations
         }
     }
 
-    // Local analog of FTransform
-    public struct CSkeletonBonePosition
-    {
-        public FVector Position;
-        public FQuat Orientation;
-    }
-
     public class CAnimSequence
     {
         public string Name; // sequence's name
@@ -224,7 +217,7 @@ namespace CUE4Parse_Conversion.Animations
         public List<CAnimTrack> Tracks; // for each CAnimSet.TrackBoneNames
         public bool bAdditive; // used just for on-screen information
         public UAnimSequence OriginalSequence;
-        public CSkeletonBonePosition[] RetargetBasePose;
+        public FTransform[]? RetargetBasePose;
 
         public CAnimSequence(UAnimSequence originalSequence)
         {
@@ -232,28 +225,15 @@ namespace CUE4Parse_Conversion.Animations
         }
     }
 
-    public enum EBoneRetargetingMode : byte
-    {
-        // Use translation from animation
-        Animation,
-        // Use translation from mesh
-        Mesh,
-        AnimationScaled,
-        AnimationRelative,
-        // Recompute translation from difference between mesh and animation skeletons
-        OrientAndScale,
-
-        Count
-    }
-
     public class CAnimSet
     {
         public UObject OriginalAnim;
-        public FName[] TrackBoneNames;
-        public CSkeletonBonePosition[] BonePositions; // may be empty (for pre-UE4), position in array matches TrackBoneNames
-        public List<CAnimSequence> Sequences = new();
+        public FMeshBoneInfo[] TrackBonesInfo;
+        public FTransform[] BonePositions; // may be empty (for pre-UE4), position in array matches TrackBoneNames
+        public EBoneTranslationRetargetingMode[] BoneModes;
+        public readonly List<CAnimSequence> Sequences = new();
 
-        public EBoneRetargetingMode[] BoneModes;
+        public int BonesCount => TrackBonesInfo.Length;
 
         public CAnimSet() { }
 
@@ -266,8 +246,8 @@ namespace CUE4Parse_Conversion.Animations
         public void CopyAllButSequences(CAnimSet other)
         {
             OriginalAnim = other.OriginalAnim;
-            TrackBoneNames = (FName[]) other.TrackBoneNames.Clone();
-            BoneModes = (EBoneRetargetingMode[]) other.BoneModes.Clone();
+            TrackBonesInfo = (FMeshBoneInfo[]) other.TrackBonesInfo.Clone();
+            BoneModes = (EBoneTranslationRetargetingMode[]) other.BoneModes.Clone();
         }
 
         // If Skeleton has at most this number of animations, export them as separate psa files.
@@ -634,41 +614,46 @@ namespace CUE4Parse_Conversion.Animations
             }
         }
 
-        public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimSequence? animSequence)
+        private static CAnimSet ConvertAnims(this USkeleton skeleton)
         {
             var animSet = new CAnimSet(skeleton);
 
-            // Copy bone names
-            var numBones = skeleton.ReferenceSkeleton.FinalRefBoneInfo.Length;
-            Trace.Assert(skeleton.BoneTree.Length == numBones);
+            animSet.TrackBonesInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo;
+            animSet.BonePositions = skeleton.ReferenceSkeleton.FinalRefBonePose;
 
-            animSet.TrackBoneNames = new FName[numBones];
-            animSet.BonePositions = new CSkeletonBonePosition[numBones];
-            animSet.BoneModes = new EBoneRetargetingMode[numBones];
-
-            for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
+            animSet.BoneModes = new EBoneTranslationRetargetingMode[skeleton.BoneTree.Length];
+            for (var boneIndex = 0; boneIndex < animSet.BoneModes.Length; boneIndex++)
             {
-                // Store bone name
-                animSet.TrackBoneNames[boneIndex] = skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex].Name;
-                // Store skeleton's bone transform
-                CSkeletonBonePosition bonePosition;
-                var transform = skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
-                bonePosition.Orientation = transform.Rotation;
-                bonePosition.Position = transform.Translation;
-                animSet.BonePositions[boneIndex] = bonePosition;
-                // Process bone retargeting mode
-                var boneMode = skeleton.BoneTree[boneIndex].TranslationRetargetingMode switch
-                {
-                    EBoneTranslationRetargetingMode.Skeleton => EBoneRetargetingMode.Mesh,
-                    EBoneTranslationRetargetingMode.Animation => EBoneRetargetingMode.Animation,
-                    EBoneTranslationRetargetingMode.AnimationScaled => EBoneRetargetingMode.AnimationScaled,
-                    EBoneTranslationRetargetingMode.AnimationRelative => EBoneRetargetingMode.AnimationRelative,
-                    EBoneTranslationRetargetingMode.OrientAndScale => EBoneRetargetingMode.OrientAndScale,
-                    _ => EBoneRetargetingMode.OrientAndScale //todo: other modes?
-                };
-
-                animSet.BoneModes[boneIndex] = boneMode;
+                animSet.BoneModes[boneIndex] = skeleton.BoneTree[boneIndex].TranslationRetargetingMode;
             }
+
+            Trace.Assert(animSet.BoneModes.Length == animSet.TrackBonesInfo.Length);
+            return animSet;
+        }
+
+        public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimMontage? animMontage)
+        {
+            var animSet = skeleton.ConvertAnims();
+
+            if (animMontage == null)
+            {
+                return animSet;
+            }
+
+            foreach (var compositeSection in animMontage.CompositeSections)
+            {
+                if (!compositeSection.LinkedSequence.TryLoad(out UAnimSequence animSequence))
+                    continue;
+
+                animSet.Sequences.Add(animSequence.ConvertSequence(skeleton));
+            }
+
+            return animSet;
+        }
+
+        public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimSequence? animSequence)
+        {
+            var animSet = skeleton.ConvertAnims();
 
             // Check for NULL 'animSequence' only after CAnimSet is created: we're doing ConvertAnims(null) to create an empty AnimSet
             if (animSequence == null)
@@ -676,18 +661,23 @@ namespace CUE4Parse_Conversion.Animations
                 return animSet;
             }
 
-            var numTracks = animSequence.GetNumTracks();
-
             // Store UAnimSequence in 'OriginalAnims' array, we just need it from time to time
             //OriginalAnims.Add(animSequence);
 
             // Create CAnimSequence
-            var dst = new CAnimSequence(animSequence);
-            animSet.Sequences.Add(dst);
-            dst.Name = animSequence.Name;
-            dst.NumFrames = animSequence.NumFrames;
-            dst.Rate = animSequence.NumFrames / animSequence.SequenceLength * animSequence.RateScale;
-            dst.bAdditive = animSequence.AdditiveAnimType != AAT_None;
+            animSet.Sequences.Add(animSequence.ConvertSequence(skeleton));
+
+            return animSet;
+        }
+
+        private static CAnimSequence ConvertSequence(this UAnimSequence animSequence, USkeleton skeleton)
+        {
+            var animSeq = new CAnimSequence(animSequence);
+
+            animSeq.Name = animSequence.Name;
+            animSeq.NumFrames = animSequence.NumFrames;
+            animSeq.Rate = animSequence.NumFrames / animSequence.SequenceLength * animSequence.RateScale;
+            animSeq.bAdditive = animSequence.AdditiveAnimType != AAT_None;
 
             // Store information for animation retargeting.
             // Reference: UAnimSequence::GetRetargetTransforms()
@@ -724,19 +714,12 @@ namespace CUE4Parse_Conversion.Animations
                 //todo: UE4 does some remapping "track to skeleton bone index map". Without assertion things works, seems
                 //todo: because RetargetTransforms array is smaller (or of the same size).
                 //Trace.Assert(RetargetTransforms.Length == ReferenceSkeleton.FinalRefBoneInfo.Length);
-                dst.RetargetBasePose = new CSkeletonBonePosition[retargetTransforms.Length];
-                for (var i = 0; i < retargetTransforms.Length; i++)
-                {
-                    var boneTransform = retargetTransforms[i];
-                    CSkeletonBonePosition bonePosition;
-                    bonePosition.Position = boneTransform.Translation;
-                    bonePosition.Orientation = boneTransform.Rotation;
-                    dst.RetargetBasePose[i] = bonePosition;
-                }
+                animSeq.RetargetBasePose = retargetTransforms;
             }
 
-            // bone tracks ...
-            dst.Tracks = new List<CAnimTrack>(numTracks);
+            var numTracks = animSequence.GetNumTracks();
+            var numBones = skeleton.BoneTree.Length;
+            animSeq.Tracks = new List<CAnimTrack>(numTracks);
 
             if (animSequence.RawAnimationData is { Length: > 0 })
             {
@@ -751,7 +734,7 @@ namespace CUE4Parse_Conversion.Animations
                 for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
                     var track = new CAnimTrack();
-                    dst.Tracks.Add(track);
+                    animSeq.Tracks.Add(track);
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
@@ -778,7 +761,7 @@ namespace CUE4Parse_Conversion.Animations
                 for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
                     var track = new CAnimTrack();
-                    dst.Tracks.Add(track);
+                    animSeq.Tracks.Add(track);
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
@@ -815,7 +798,7 @@ namespace CUE4Parse_Conversion.Animations
                 for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
                     var track = new CAnimTrack();
-                    dst.Tracks.Add(track);
+                    animSeq.Tracks.Add(track);
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
@@ -835,10 +818,10 @@ namespace CUE4Parse_Conversion.Animations
             }
 
             // Now should invert all imported rotations
-            FixRotationKeys(dst);
-            AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, retargetTransforms ?? skeleton.ReferenceSkeleton.FinalRefBonePose, dst);
+            FixRotationKeys(animSeq);
+            AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, retargetTransforms ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
 
-            return animSet;
+            return animSeq;
         }
     }
 }

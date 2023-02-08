@@ -76,7 +76,7 @@ namespace CUE4Parse_Conversion.Animations
             mainHdr.TypeFlag = Constants.PSA_VERSION;
             Ar.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
-            int numBones = anim.TrackBoneNames.Length;
+            int numBones = anim.TrackBonesInfo.Length;
             int numAnims = anim.Sequences.Count;
 
             boneHdr.DataCount = numBones;
@@ -84,20 +84,20 @@ namespace CUE4Parse_Conversion.Animations
             Ar.SerializeChunkHeader(boneHdr, "BONENAMES");
             for (i = 0; i < numBones; i++)
             {
-                Trace.Assert(anim.TrackBoneNames[i].Text.Length < 64);
+                Trace.Assert(anim.TrackBonesInfo[i].Name.Text.Length < 64);
                 var bone = new FNamedBoneBinary
                 {
-                    Name = anim.TrackBoneNames[i].Text,
+                    Name = anim.TrackBonesInfo[i].Name.Text,
                     Flags = 0, // reserved
                     NumChildren = 0, // unknown here
-                    ParentIndex = i > 0 ? 0 : -1, // unknown for UAnimSet
+                    ParentIndex = i > 0 ? 0 : -1, // unknown for UAnimSet?? WHAT???
                     BonePos = { Length = 1.0f }
                 };
                 if (i < anim.BonePositions.Length)
                 {
                     // The AnimSet has bone transform information, store it in psa file (UE4+)
-                    bone.BonePos.Position = anim.BonePositions[i].Position;
-                    bone.BonePos.Orientation = anim.BonePositions[i].Orientation;
+                    bone.BonePos.Position = anim.BonePositions[i].Translation;
+                    bone.BonePos.Orientation = anim.BonePositions[i].Rotation;
                 }
                 bone.Serialize(Ar);
             }
@@ -214,11 +214,11 @@ namespace CUE4Parse_Conversion.Animations
             // generate configuration file with extended attributes
 
             // Get statistics of each bone retargeting mode to see if we need a config or not
-            var modeCounts = new int[(int) EBoneRetargetingMode.Count];
-            foreach (var mode in anim.BoneModes)
-            {
-                modeCounts[(int) mode]++;
-            }
+            // var modeCounts = new int[(int) EBoneRetargetingMode.Count];
+            // foreach (var mode in anim.BoneModes)
+            // {
+            //     modeCounts[(int) mode]++;
+            // }
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
