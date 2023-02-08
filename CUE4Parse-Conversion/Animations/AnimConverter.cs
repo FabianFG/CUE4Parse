@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
@@ -214,6 +213,11 @@ namespace CUE4Parse_Conversion.Animations
         public string Name; // sequence's name
         public int NumFrames;
         public float Rate;
+        public float StartPos;
+        public float AnimStartTime;
+        public float AnimEndTime;
+        public float AnimPlayRate;
+        public int LoopingCount;
         public List<CAnimTrack> Tracks; // for each CAnimSet.TrackBoneNames
         public bool bAdditive; // used just for on-screen information
         public UAnimSequence OriginalSequence;
@@ -645,7 +649,15 @@ namespace CUE4Parse_Conversion.Animations
                 if (!compositeSection.LinkedSequence.TryLoad(out UAnimSequence animSequence))
                     continue;
 
-                animSet.Sequences.Add(animSequence.ConvertSequence(skeleton));
+                var seq = animSequence.ConvertSequence(skeleton);
+                var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
+                seq.Name = compositeSection.SectionName.Text;
+                seq.StartPos = segment.StartPos;
+                seq.AnimStartTime = segment.AnimStartTime;
+                seq.AnimEndTime = segment.AnimEndTime;
+                seq.AnimPlayRate = segment.AnimPlayRate;
+                seq.LoopingCount = segment.LoopingCount;
+                animSet.Sequences.Add(seq);
             }
 
             return animSet;
@@ -676,7 +688,12 @@ namespace CUE4Parse_Conversion.Animations
 
             animSeq.Name = animSequence.Name;
             animSeq.NumFrames = animSequence.NumFrames;
-            animSeq.Rate = animSequence.NumFrames / animSequence.SequenceLength * animSequence.RateScale;
+            animSeq.Rate = animSequence.NumFrames / animSequence.SequenceLength * MathF.Max(1, animSequence.RateScale);
+            animSeq.StartPos = 0.0f;
+            animSeq.AnimStartTime = 0.0f;
+            animSeq.AnimEndTime = animSequence.SequenceLength;
+            animSeq.AnimPlayRate = animSequence.RateScale;
+            animSeq.LoopingCount = 1;
             animSeq.bAdditive = animSequence.AdditiveAnimType != AAT_None;
 
             // Store information for animation retargeting.

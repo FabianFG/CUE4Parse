@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Objects.UObject;
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public abstract class UAnimCompositeBase : UAnimSequenceBase { }
-    
+
     [StructFallback]
     public class FAnimSegment
     {
@@ -15,9 +15,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public float AnimEndTime;
         public float AnimPlayRate;
         public int LoopingCount;
+
         public FAnimSegment(FStructFallback fallback)
         {
-            
+
             AnimReference = fallback.GetOrDefault<FPackageIndex>(nameof(AnimReference));
             StartPos = fallback.GetOrDefault<float>(nameof(StartPos));
             AnimStartTime = fallback.GetOrDefault<float>(nameof(AnimStartTime));
@@ -26,12 +27,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             LoopingCount = fallback.GetOrDefault<int>(nameof(LoopingCount));
         }
     }
-    
+
     [StructFallback]
     public class FAnimTrack
     {
         public FAnimSegment[] AnimSegments;
-        
+
         public FAnimTrack(FStructFallback fallback)
         {
             AnimSegments = fallback.GetOrDefault<FAnimSegment[]>(nameof(AnimSegments));
