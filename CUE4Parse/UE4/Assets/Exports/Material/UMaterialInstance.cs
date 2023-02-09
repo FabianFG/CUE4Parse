@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
             bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
             BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
-            StaticParameters = GetOrDefault<FStaticParameterSet>(nameof(StaticParameters));
+            StaticParameters = GetOrDefault<FStaticParameterSet?>(nameof(StaticParameters)) ?? GetOrDefault<FStaticParameterSet>("StaticParametersRuntime");
 
             var bSavedCachedData = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.MaterialSavedCachedData && Ar.ReadBoolean();
             if (bSavedCachedData)
@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
             if (StaticParameters != null)
                 foreach (var switchParameter in StaticParameters.StaticSwitchParameters)
-                    parameters.Switchs[switchParameter.Name] = switchParameter.Value;
+                    parameters.Switches[switchParameter.Name] = switchParameter.Value;
 
             if (BasePropertyOverrides != null)
             {

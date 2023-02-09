@@ -250,7 +250,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                         parameters.Scalars[scalarParameter.ParameterName.Text] = scalarParameter.DefaultValue;
                         break;
                     case UMaterialExpressionStaticBoolParameter staticBoolParameter:
-                        parameters.Switchs[staticBoolParameter.ParameterName.Text] = staticBoolParameter.DefaultValue;
+                        parameters.Switches[staticBoolParameter.ParameterName.Text] = staticBoolParameter.DefaultValue;
                         break;
                 }
             }
