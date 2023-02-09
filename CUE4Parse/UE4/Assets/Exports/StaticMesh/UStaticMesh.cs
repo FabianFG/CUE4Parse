@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             bCooked = Ar.ReadBoolean();
             BodySetup = new FPackageIndex(Ar);
 
-            if (Ar.Game != EGame.GAME_GearsOfWar4 && Ar.Game != EGame.GAME_TEKKEN7 && Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_STORE_NAV_COLLISION)
+            if (Ar.Versions["StaticMesh.HasNavCollision"])
                 NavCollision = new FPackageIndex(Ar);
 
             if (!stripDataFlags.IsEditorDataStripped())
