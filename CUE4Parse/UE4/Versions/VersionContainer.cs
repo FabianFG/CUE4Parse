@@ -64,6 +64,11 @@ namespace CUE4Parse.UE4.Versions
         private void InitOptions()
         {
             Options.Clear();
+
+            // objects
+            Options["MorphTarget"] = true;
+
+            // fields
             Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25;
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
             Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = Game >= GAME_UE5_2;
