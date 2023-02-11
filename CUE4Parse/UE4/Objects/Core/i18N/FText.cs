@@ -402,7 +402,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             Value = Type switch
             {
                 EFormatArgumentType.Text => new FText(Ar),
-                EFormatArgumentType.Int => Ar.Read<long>(),
+                EFormatArgumentType.Int => Ar.Game == EGame.GAME_HogwartsLegacy ? Ar.Read<int>() : Ar.Read<long>(),
                 EFormatArgumentType.UInt => Ar.Read<ulong>(),
                 EFormatArgumentType.Double => Ar.Read<double>(),
                 EFormatArgumentType.Float => Ar.Read<float>(),
