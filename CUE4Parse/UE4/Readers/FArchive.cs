@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -129,7 +131,7 @@ namespace CUE4Parse.UE4.Readers
         {
             var pos = Position;
             T[] array = ReadArray(elementCount, getter);
-            if (Position != pos + array.Length * elementSize)
+            if (Game != EGame.GAME_HogwartsLegacy && Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
             return array;
         }
