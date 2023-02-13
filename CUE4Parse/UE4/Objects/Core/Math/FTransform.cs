@@ -422,5 +422,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             EAxis.Y => TransformVectorNoScale(new FVector(0.0f, 1.0f, 0.0f)),
             _ => TransformVectorNoScale(new FVector(0.0f, 0.0f, 1.0f))
         };
+
+        public override string ToString()
+        {
+            return $"{{T:{Translation} R:{Rotation} S:{Scale3D}}}";
+        }
     }
 }
