@@ -214,9 +214,7 @@ namespace CUE4Parse_Conversion.Animations
         public int NumFrames;
         public float Rate;
         public float StartPos;
-        public float AnimStartTime;
         public float AnimEndTime;
-        public float AnimPlayRate;
         public int LoopingCount;
         public List<CAnimTrack> Tracks; // for each CAnimSet.TrackBoneNames
         public bool bAdditive; // used just for on-screen information
@@ -646,16 +644,14 @@ namespace CUE4Parse_Conversion.Animations
 
             foreach (var compositeSection in animMontage.CompositeSections)
             {
-                if (!compositeSection.LinkedSequence.TryLoad(out UAnimSequence animSequence))
+                var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
+                if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence) || !compositeSection.LinkedSequence.TryLoad(out animSequence))
                     continue;
 
                 var seq = animSequence.ConvertSequence(skeleton);
-                var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
                 seq.Name = compositeSection.SectionName.Text;
                 seq.StartPos = segment.StartPos;
-                seq.AnimStartTime = segment.AnimStartTime;
                 seq.AnimEndTime = segment.AnimEndTime;
-                seq.AnimPlayRate = segment.AnimPlayRate;
                 seq.LoopingCount = segment.LoopingCount;
                 animSet.Sequences.Add(seq);
             }
@@ -690,9 +686,7 @@ namespace CUE4Parse_Conversion.Animations
             animSeq.NumFrames = animSequence.NumFrames;
             animSeq.Rate = animSequence.NumFrames / animSequence.SequenceLength * MathF.Max(1, animSequence.RateScale);
             animSeq.StartPos = 0.0f;
-            animSeq.AnimStartTime = 0.0f;
             animSeq.AnimEndTime = animSequence.SequenceLength;
-            animSeq.AnimPlayRate = animSequence.RateScale;
             animSeq.LoopingCount = 1;
             animSeq.bAdditive = animSequence.AdditiveAnimType != AAT_None;
 
