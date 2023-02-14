@@ -629,6 +629,30 @@ namespace CUE4Parse_Conversion.Animations
             return animSet;
         }
 
+        public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimComposite? animComposite)
+        {
+            var animSet = skeleton.ConvertAnims();
+
+            if (animComposite == null)
+            {
+                return animSet;
+            }
+
+            foreach (var segment in animComposite.AnimationTrack.AnimSegments)
+            {
+                if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence))
+                    continue;
+
+                var seq = animSequence.ConvertSequence(skeleton);
+                seq.StartPos = segment.StartPos;
+                seq.AnimEndTime = segment.AnimEndTime;
+                seq.LoopingCount = segment.LoopingCount;
+                animSet.Sequences.Add(seq);
+            }
+
+            return animSet;
+        }
+
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimMontage? animMontage)
         {
             var animSet = skeleton.ConvertAnims();
