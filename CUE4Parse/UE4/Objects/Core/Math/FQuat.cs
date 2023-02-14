@@ -274,6 +274,33 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return new FQuat(-quat.X, -quat.Y, -quat.Z, quat.W);
         }
 
+        public static FQuat FindBetweenNormals(FVector a, FVector b, float normAb = 1.0f)
+        {
+            float w = normAb + FVector.DotProduct(a, b);
+            FQuat result;
+
+            if (w >= 1e-6f * normAb)
+            {
+                //Axis = FVector::CrossProduct(A, B);
+                result = new FQuat(
+                    a.Y * b.Z - a.Z * b.Y,
+                    a.Z * b.X - a.X * b.Z,
+                    a.X * b.Y - a.Y * b.X,
+                    w);
+            }
+            else
+            {
+                // A and B point in opposite directions
+                w = 0.0f;
+                result = Abs(a.X) > Abs(a.Y)
+                    ? new FQuat(-a.Z, 0.0f, a.X, w)
+                    : new FQuat(0.0f, -a.Z, a.Y, w);
+            }
+
+            result.Normalize();
+            return result;
+        }
+
         public FRotator Rotator()
         {
             var singularityTest = Z * X - W * Y;

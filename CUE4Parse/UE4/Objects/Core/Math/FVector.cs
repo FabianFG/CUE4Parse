@@ -121,6 +121,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             X = X >= 0 ? 1 : -1, Y = Y >= 0 ? 1 : -1, Z = Z >= 0 ? 1 : -1
         };
 
+        public void Scale(float scale)
+        {
+            X *= scale;
+            Y *= scale;
+            Z *= scale;
+        }
+
         public void Scale(FVector scale)
         {
             X *= scale.X;

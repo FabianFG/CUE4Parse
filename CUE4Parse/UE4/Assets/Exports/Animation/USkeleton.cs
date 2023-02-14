@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -12,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class USkeleton : UObject
     {
-        public FBoneNode[] BoneTree { get; private set; }
+        public EBoneTranslationRetargetingMode[] BoneTree { get; private set; }
         public FReferenceSkeleton ReferenceSkeleton { get; private set; }
         public FGuid Guid { get; private set; }
         public FGuid VirtualBoneGuid { get; private set; }
@@ -25,7 +26,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             base.Deserialize(Ar, validPos);
             // UObject Properties
-            BoneTree = GetOrDefault<FBoneNode[]>(nameof(BoneTree));
+            if (TryGetValue(out FStructFallback[] boneTree, nameof(BoneTree)))
+            {
+                BoneTree = new EBoneTranslationRetargetingMode[boneTree.Length];
+                for (int i = 0; i < BoneTree.Length; i++)
+                {
+                    BoneTree[i] = boneTree[i].GetOrDefault<EBoneTranslationRetargetingMode>("TranslationRetargetingMode");
+                }
+            }
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
             Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
 

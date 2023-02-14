@@ -618,16 +618,12 @@ namespace CUE4Parse_Conversion.Animations
 
         private static CAnimSet ConvertAnims(this USkeleton skeleton)
         {
-            var animSet = new CAnimSet(skeleton);
-
-            animSet.TrackBonesInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo;
-            animSet.BonePositions = skeleton.ReferenceSkeleton.FinalRefBonePose;
-
-            animSet.BoneModes = new EBoneTranslationRetargetingMode[skeleton.BoneTree.Length];
-            for (var boneIndex = 0; boneIndex < animSet.BoneModes.Length; boneIndex++)
+            var animSet = new CAnimSet(skeleton)
             {
-                animSet.BoneModes[boneIndex] = skeleton.BoneTree[boneIndex].TranslationRetargetingMode;
-            }
+                TrackBonesInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo,
+                BonePositions = skeleton.ReferenceSkeleton.FinalRefBonePose,
+                BoneModes = skeleton.BoneTree
+            };
 
             Trace.Assert(animSet.BoneModes.Length == animSet.TrackBonesInfo.Length);
             return animSet;

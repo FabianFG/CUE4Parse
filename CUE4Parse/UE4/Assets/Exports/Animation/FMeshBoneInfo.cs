@@ -29,20 +29,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             Name = name;
             ParentIndex = parentIndex;
         }
+
+        public override string ToString() => $"{Name}";
     }
-    
+
     public class FMeshBoneInfoConverter : JsonConverter<FMeshBoneInfo>
     {
         public override void WriteJson(JsonWriter writer, FMeshBoneInfo value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
-            
+
             writer.WritePropertyName("Name");
             serializer.Serialize(writer, value.Name);
-                
+
             writer.WritePropertyName("ParentIndex");
             writer.WriteValue(value.ParentIndex);
-            
+
             writer.WriteEndObject();
         }
 
