@@ -79,6 +79,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             var length = (int) header.Length;
             if (header.IsUtf16)
             {
+                if (Ar.Position % 2 == 1) Ar.Position++;
                 unsafe
                 {
                     var utf16Length = length * 2;

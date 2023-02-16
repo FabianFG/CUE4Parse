@@ -102,6 +102,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
 
                 ScreenSize[i] = Ar.Read<float>();
+
+                if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position +=8;
             }
 
             if (Ar.Game == EGame.GAME_Borderlands3)

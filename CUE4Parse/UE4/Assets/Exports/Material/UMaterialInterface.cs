@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -47,6 +47,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
             }
+
+            if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position +=20; // FSHAHash
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
