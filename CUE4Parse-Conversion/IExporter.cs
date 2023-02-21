@@ -86,11 +86,13 @@ namespace CUE4Parse_Conversion
             _exporterBase = export switch
             {
                 UAnimSequence animSequence => new AnimExporter(animSequence, options),
+                UAnimMontage animMontage => new AnimExporter(animMontage, options),
+                UAnimComposite animComposite => new AnimExporter(animComposite, options),
                 UMaterialInterface material => new MaterialExporter2(material, options),
                 USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, options),
                 USkeleton skeleton => new MeshExporter(skeleton, options),
                 UStaticMesh staticMesh => new MeshExporter(staticMesh, options),
-                _ => throw new ArgumentOutOfRangeException(nameof(export), export, null)
+                _ => throw new NotSupportedException($"export of '{export.GetType()}' is not supported yet.")
             };
         }
 

@@ -249,6 +249,7 @@ namespace CUE4Parse_Conversion.Animations
         {
             OriginalAnim = other.OriginalAnim;
             TrackBonesInfo = (FMeshBoneInfo[]) other.TrackBonesInfo.Clone();
+            BonePositions = (FTransform[]) other.BonePositions.Clone();
             BoneModes = (EBoneTranslationRetargetingMode[]) other.BoneModes.Clone();
         }
 
@@ -656,7 +657,6 @@ namespace CUE4Parse_Conversion.Animations
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimMontage? animMontage)
         {
             var animSet = skeleton.ConvertAnims();
-
             if (animMontage == null)
             {
                 return animSet;
