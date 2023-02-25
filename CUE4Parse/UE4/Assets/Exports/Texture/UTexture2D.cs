@@ -124,6 +124,30 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FTexture2DMipMap? GetFirstMip() => Mips.FirstOrDefault(x => x.Data.Data != null);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FTexture2DMipMap? GetMipByMaxSize(int maxSize)
+        {
+            foreach (var mip in Mips)
+            {
+                if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.Data.Data != null)
+                    return mip;
+            }
+
+            return GetFirstMip();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FTexture2DMipMap? GetMipBySize(int sizeX, int sizeY)
+        {
+            foreach (var mip in Mips)
+            {
+                if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.Data.Data != null)
+                    return mip;
+            }
+
+            return GetFirstMip();
+        }
+
         public override void GetParams(CMaterialParams parameters)
         {
             // ???
