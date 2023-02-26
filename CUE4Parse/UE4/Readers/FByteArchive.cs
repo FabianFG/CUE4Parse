@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Readers
             Name = name;
             Length = _data.Length;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -61,14 +61,6 @@ namespace CUE4Parse.UE4.Readers
             var result = Unsafe.ReadUnaligned<T>(ref _data[Position]);
             Position += size;
             return result;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] ReadBytes(int length)
-        {
-            var buffer = new byte[length];
-            Read(buffer, 0, length);
-            return buffer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -92,7 +92,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
     public class UMorphTarget : UObject
     {
-        public FMorphTargetLODModel[]? MorphLODModels;
+        public FMorphTargetLODModel[] MorphLODModels = { new() };
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -100,7 +100,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (!Ar.Versions["MorphTarget"])
             {
-                MorphLODModels = new[] { new FMorphTargetLODModel() };
                 Ar.Position = validPos;
                 return;
             }
