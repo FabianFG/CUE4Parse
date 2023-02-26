@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -264,7 +264,8 @@ namespace CUE4Parse_Conversion.Meshes
 
                     var i2 = 0;
                     uint packedWeights = 0;
-                    for (var j = 0; j < 4; j++)
+                    var len = Math.Min(v.Infs.BoneWeight.Length, 4);
+                    for (var j = 0; j < len; j++)
                     {
                         uint boneWeight = v.Infs.BoneWeight[j];
                         if (boneWeight == 0) continue; // skip this influence (but do not stop the loop!)

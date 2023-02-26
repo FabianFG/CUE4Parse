@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -19,10 +20,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var dataStripFlags = Ar.Read<FStripDataFlags>();
 
             #region FSkinWeightDataVertexBuffer::SerializeMetaData
-            bool bVariableBonesPerVertex;
+            bool bVariableBonesPerVertex = false;
             bool bExtraBoneInfluences;
             uint maxBoneInfluences;
-            bool bUse16BitBoneIndex;
+            bool bUse16BitBoneIndex = false;
             bool bUse16BitBoneWeight;
             uint numVertices;
             uint numBones;
@@ -69,7 +70,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 if (!bNewWeightFormat)
                 {
-                    Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences));
+                    Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences, bUse16BitBoneIndex));
                 }
                 else
                 {
@@ -84,30 +85,39 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             if (bNewWeightFormat)
             {
-                #region FSkinWeightLookupVertexBuffer
-                var lookupStripFlags = Ar.Read<FStripDataFlags>();
+                uint[] LookupData = Array.Empty<uint>();
 
-                #region FSkinWeightLookupVertexBuffer::SerializeMetaData
-                //if (bNewWeightFormat)
-                //{
+                var lookupStripFlags = Ar.Read<FStripDataFlags>();
                 var numLookupVertices = Ar.Read<int>();
-                //}
-                #endregion
 
                 if (!lookupStripFlags.IsDataStrippedForServer())
                 {
-                    Ar.ReadBulkArray<uint>(); // LookupData
+                    LookupData = Ar.ReadBulkArray<uint>();
                 }
-                #endregion
 
                 // Convert influence data
                 if (newData.Length > 0)
                 {
                     using var tempAr = new FByteArchive("WeightsReader", newData, Ar.Versions);
                     Weights = new FSkinWeightInfo[numVertices];
-                    for (var i = 0; i < Weights.Length; i++)
+
+                    if (bVariableBonesPerVertex)
                     {
-                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences);
+                        if (LookupData.Length != numVertices)
+                            throw new ParserException($"LookupData NumVertices={LookupData.Length} != NumVertices={numVertices}");
+
+                        for (var i = 0; i < Weights.Length; i++)
+                        {
+                            tempAr.Position = LookupData[i] >> 8;
+                            Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex, (byte)LookupData[i]);
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < Weights.Length; i++)
+                        {
+                            Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex);
+                        }
                     }
                 }
             }
