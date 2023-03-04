@@ -55,7 +55,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             AdditiveAnimType = GetOrDefault<EAdditiveAnimationType>(nameof(AdditiveAnimType));
             RefPoseType = GetOrDefault<EAdditiveBasePoseType>(nameof(RefPoseType));
             RefPoseSeq = GetOrDefault<ResolvedObject>(nameof(RefPoseSeq));
-            RefFrameIndex = GetOrDefault(nameof(RefFrameIndex), -1);
+            RefFrameIndex = GetOrDefault(nameof(RefFrameIndex), 0);
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
 
