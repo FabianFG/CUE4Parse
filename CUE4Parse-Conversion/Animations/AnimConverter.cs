@@ -26,6 +26,15 @@ namespace CUE4Parse_Conversion.Animations
         public FVector[] KeyPos = Array.Empty<FVector>();
         public FVector[] KeyScale = Array.Empty<FVector>();
 
+        public CAnimTrack() {}
+
+        public CAnimTrack(int length)
+        {
+            KeyQuat = new FQuat[length];
+            KeyPos = new FVector[length];
+            KeyScale = new FVector[length];
+        }
+
         // 3 time arrays; should be used either KeyTime or KeyQuatTime + KeyPosTime
         // When the corresponding array is empty, it will assume that Array[i] == i
         public float[] KeyTime = Array.Empty<float>();
