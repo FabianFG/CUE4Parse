@@ -267,7 +267,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             base.GetParams(parameters, format);
             if (format == EMaterialFormat.AllLayersNoRef) return;
 
-            if (ReferencedTextures is [{ } fallback])
+            if (ReferencedTextures.Count == 1 && ReferencedTextures[0] is { } fallback)
             {
                 parameters.Textures[CMaterialParams2.FallbackDiffuse] = fallback;
                 return;
