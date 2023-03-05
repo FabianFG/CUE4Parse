@@ -101,6 +101,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
                 "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
 
+                "InstancedStruct" => new FInstancedStruct(Ar),
+                
                 // FortniteGame
                 "ConnectivityCube" => new FConnectivityCube(Ar),
                 //"FortActorRecord" => new FFortActorRecord(Ar),
