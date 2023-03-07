@@ -44,9 +44,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                     var bonePosition = FVector.ZeroVector;
                     var boneScale = FVector.OneVector;
 
-                    track.GetBonePosition(refFrame, seq.NumFrames, false, ref bonePosition, ref boneOrientation);
-                    if (refFrame < seq.Tracks[boneIndex].KeyScale.Length)
-                        boneScale = seq.Tracks[boneIndex].KeyScale[refFrame];
+                    track.GetBoneTransform(refFrame, seq.NumFrames, ref boneOrientation, ref bonePosition, ref boneScale);
 
                     switch (anim.BoneModes[boneIndex])
                     {
@@ -129,9 +127,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                     var bonePosition = FVector.ZeroVector;
                     var boneScale = FVector.ZeroVector;
 
-                    track.GetBonePosition(frameIndex, seq.NumFrames, false, ref bonePosition, ref boneOrientation);
-                    if (frameIndex < seq.Tracks[boneIndex].KeyScale.Length)
-                        boneScale = seq.Tracks[boneIndex].KeyScale[frameIndex];
+                    track.GetBoneTransform(frameIndex, seq.NumFrames, ref boneOrientation, ref bonePosition, ref boneScale);
 
                     poses[frameIndex].Bones[boneIndex] = new FPoseBone
                     {
