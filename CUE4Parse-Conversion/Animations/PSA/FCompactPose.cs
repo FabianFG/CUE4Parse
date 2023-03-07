@@ -1,19 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.PSA
 {
-    public class FCompactPose
+    public class FCompactPose : ICloneable
     {
         public readonly FPoseBone[] Bones;
-        public int AnimFrame;
-        public bool Processed;
 
-        public FCompactPose(FReferenceSkeleton refSkel)
+        public FCompactPose(int boneLength)
         {
-            Bones = new FPoseBone[refSkel.FinalRefBoneInfo.Length];
+            Bones = new FPoseBone[boneLength];
         }
 
         public void NormalizeRotations()
@@ -22,7 +20,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                 bone.Transform.Rotation.Normalize();
         }
 
-        public void AddToTracks(List<CAnimTrack> tracks)
+        public void AddToTracks(List<CAnimTrack> tracks, int frame)
         {
             Debug.Assert(tracks.Count == Bones.Length);
 
@@ -31,10 +29,20 @@ namespace CUE4Parse_Conversion.Animations.PSA
                 if (!Bones[index].IsValidKey) continue;
 
                 FTransform transform = Bones[index].Transform;
-                tracks[index].KeyQuat[AnimFrame] = transform.Rotation;
-                tracks[index].KeyPos[AnimFrame] = transform.Translation;
-                tracks[index].KeyScale[AnimFrame] = transform.Scale3D;
+                tracks[index].KeyQuat[frame] = transform.Rotation;
+                tracks[index].KeyPos[frame] = transform.Translation;
+                tracks[index].KeyScale[frame] = transform.Scale3D;
             }
+        }
+
+        public object Clone()
+        {
+            var pose = new FCompactPose(Bones.Length);
+            for (int i = 0; i < pose.Bones.Length; i++)
+            {
+                pose.Bones[i] = (FPoseBone)Bones[i].Clone();
+            }
+            return pose;
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.PSA
 {
-    public class FPoseBone
+    public class FPoseBone : ICloneable
     {
         public FTransform Transform;
         public int ParentIndex;
@@ -27,6 +28,18 @@ namespace CUE4Parse_Conversion.Animations.PSA
             Transform.Translation += atom.Translation * weight;
             Transform.Scale3D *= FVector.OneVector + atom.Scale3D * weight;
             Accumulated = true;
+        }
+
+        public object Clone()
+        {
+            return new FPoseBone
+            {
+                Transform = (FTransform) Transform.Clone(),
+                ParentIndex = ParentIndex,
+                Name = Name,
+                IsValidKey = IsValidKey,
+                Accumulated = Accumulated
+            };
         }
     }
 }

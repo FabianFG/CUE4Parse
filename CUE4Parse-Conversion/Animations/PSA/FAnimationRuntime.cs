@@ -6,49 +6,38 @@ namespace CUE4Parse_Conversion.Animations.PSA
 {
     public static class FAnimationRuntime
     {
-        public static FCompactPose[] LoadAsPoses(CAnimSet anim, USkeleton skeleton)
+        public static FCompactPose[] LoadRestAsPoses(CAnimSet anim)
         {
-            var seq = anim.Sequences[0];
-            var poses = new FCompactPose[seq.NumFrames];
-            for (int frameIndex = 0; frameIndex < seq.NumFrames; frameIndex++)
+            var poses = new FCompactPose[1];
+            for (int frameIndex = 0; frameIndex < poses.Length; frameIndex++)
             {
-                poses[frameIndex] = new FCompactPose(skeleton.ReferenceSkeleton) { AnimFrame = frameIndex };
+                poses[frameIndex] = new FCompactPose(anim.BonePositions.Length);
                 for (var boneIndex = 0; boneIndex < poses[frameIndex].Bones.Length; boneIndex++)
                 {
-                    var boneInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex];
-                    var track = seq.Tracks[boneIndex];
-
-                    var boneOrientation = FQuat.Identity;
-                    var bonePosition = FVector.ZeroVector;
-                    var boneScale = FVector.ZeroVector;
-
-                    track.GetBonePosition(frameIndex, seq.NumFrames, false, ref bonePosition, ref boneOrientation);
-                    if (frameIndex < seq.Tracks[boneIndex].KeyScale.Length)
-                        boneScale = seq.Tracks[boneIndex].KeyScale[frameIndex];
-
+                    var boneInfo = anim.TrackBonesInfo[boneIndex];
                     poses[frameIndex].Bones[boneIndex] = new FPoseBone
                     {
                         Name = boneInfo.Name.ToString(),
                         ParentIndex = boneInfo.ParentIndex,
-                        Transform = new FTransform(boneOrientation, bonePosition, boneScale),
-                        IsValidKey = frameIndex <= Math.Min(track.KeyPos.Length, track.KeyQuat.Length)
+                        Transform = (FTransform)anim.BonePositions[boneIndex].Clone(),
+                        IsValidKey = true
                     };
                 }
             }
             return poses;
         }
 
-        public static FCompactPose[] LoadAsPoses(CAnimSet anim, USkeleton skeleton, int numFrames, int refFrame)
+        public static FCompactPose[] LoadAsPoses(CAnimSet anim, int refFrame)
         {
             var seq = anim.Sequences[0];
-            var poses = new FCompactPose[numFrames];
+            var poses = new FCompactPose[1];
             for (int frameIndex = 0; frameIndex < poses.Length; frameIndex++)
             {
-                poses[frameIndex] = new FCompactPose(skeleton.ReferenceSkeleton) { AnimFrame = frameIndex };
+                poses[frameIndex] = new FCompactPose(anim.BonePositions.Length);
                 for (var boneIndex = 0; boneIndex < poses[frameIndex].Bones.Length; boneIndex++)
                 {
-                    var boneInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex];
-                    var originalTransform = skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
+                    var boneInfo = anim.TrackBonesInfo[boneIndex];
+                    var originalTransform = anim.BonePositions[boneIndex];
                     var track = seq.Tracks[boneIndex];
 
                     var boneOrientation = FQuat.Identity;
@@ -63,7 +52,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                     {
                         case EBoneTranslationRetargetingMode.Skeleton:
                         {
-                            var targetTransform = seq.RetargetBasePose?[boneIndex] ?? anim.BonePositions[boneIndex];
+                            var targetTransform = seq.RetargetBasePose?[boneIndex] ?? originalTransform;
                             bonePosition = targetTransform.Translation;
                             break;
                         }
@@ -72,7 +61,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                             var sourceTranslationLength = originalTransform.Translation.Size();
                             if (sourceTranslationLength > UnrealMath.KindaSmallNumber)
                             {
-                                var targetTranslationLength = seq.RetargetBasePose?[boneIndex].Translation.Size() ?? anim.BonePositions[boneIndex].Translation.Size();
+                                var targetTranslationLength = seq.RetargetBasePose?[boneIndex].Translation.Size() ?? sourceTranslationLength;
                                 bonePosition.Scale(targetTranslationLength / sourceTranslationLength);
                             }
                             break;
@@ -81,7 +70,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                         {
                             // can't tell if it's working or not
                             var sourceSkelTrans = originalTransform.Translation;
-                            var refPoseTransform  = seq.RetargetBasePose?[boneIndex] ?? anim.BonePositions[boneIndex];
+                            var refPoseTransform  = seq.RetargetBasePose?[boneIndex] ?? originalTransform;
 
                             boneOrientation = boneOrientation * FQuat.Conjugate(originalTransform.Rotation) * refPoseTransform.Rotation;
                             bonePosition += refPoseTransform.Translation - sourceSkelTrans;
@@ -92,7 +81,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
                         case EBoneTranslationRetargetingMode.OrientAndScale:
                         {
                             var sourceSkelTrans = originalTransform.Translation;
-                            var targetSkelTrans = seq.RetargetBasePose?[boneIndex].Translation ?? anim.BonePositions[boneIndex].Translation;
+                            var targetSkelTrans = seq.RetargetBasePose?[boneIndex].Translation ?? sourceSkelTrans;
 
                             if (!sourceSkelTrans.Equals(targetSkelTrans))
                             {
@@ -117,7 +106,39 @@ namespace CUE4Parse_Conversion.Animations.PSA
                         Name = boneInfo.Name.ToString(),
                         ParentIndex = boneInfo.ParentIndex,
                         Transform = new FTransform(boneOrientation, bonePosition, boneScale),
-                        IsValidKey = frameIndex <= numFrames
+                        IsValidKey = true
+                    };
+                }
+            }
+            return poses;
+        }
+
+        public static FCompactPose[] LoadAsPoses(CAnimSet anim)
+        {
+            var seq = anim.Sequences[0];
+            var poses = new FCompactPose[seq.NumFrames];
+            for (int frameIndex = 0; frameIndex < poses.Length; frameIndex++)
+            {
+                poses[frameIndex] = new FCompactPose(anim.BonePositions.Length);
+                for (var boneIndex = 0; boneIndex < poses[frameIndex].Bones.Length; boneIndex++)
+                {
+                    var boneInfo = anim.TrackBonesInfo[boneIndex];
+                    var track = seq.Tracks[boneIndex];
+
+                    var boneOrientation = FQuat.Identity;
+                    var bonePosition = FVector.ZeroVector;
+                    var boneScale = FVector.ZeroVector;
+
+                    track.GetBonePosition(frameIndex, seq.NumFrames, false, ref bonePosition, ref boneOrientation);
+                    if (frameIndex < seq.Tracks[boneIndex].KeyScale.Length)
+                        boneScale = seq.Tracks[boneIndex].KeyScale[frameIndex];
+
+                    poses[frameIndex].Bones[boneIndex] = new FPoseBone
+                    {
+                        Name = boneInfo.Name.ToString(),
+                        ParentIndex = boneInfo.ParentIndex,
+                        Transform = new FTransform(boneOrientation, bonePosition, boneScale),
+                        IsValidKey = frameIndex <= Math.Min(track.KeyPos.Length, track.KeyQuat.Length)
                     };
                 }
             }
