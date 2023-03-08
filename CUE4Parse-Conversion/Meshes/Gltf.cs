@@ -129,7 +129,7 @@ namespace CUE4Parse_Conversion.Meshes
                 if (root.ParentIndex != -1) continue;
 
                 var rootCopy = (CSkelMeshBone)root.Clone(); // we don't want to modify the original skeleton
-                rootCopy.Orientation = FQuat.Conjugate(root.Orientation);
+                // rootCopy.Orientation = FQuat.Conjugate(root.Orientation);
                 result.AddRange(CreateBonesRecursive(rootCopy, armatureNode, skeleton, i));
             }
 

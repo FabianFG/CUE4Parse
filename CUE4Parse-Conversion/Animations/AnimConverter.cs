@@ -239,8 +239,7 @@ namespace CUE4Parse_Conversion.Animations
             }
 
             // Now should invert all imported rotations
-            // WHY???
-            FixRotationKeys(animSeq);
+            // FixRotationKeys(animSeq);
             AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, retargetTransforms ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
 
             return animSeq;

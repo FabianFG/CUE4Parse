@@ -26,8 +26,8 @@ namespace CUE4Parse_Conversion.Meshes
                     Orientation = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
                 };
 
-                if (i >= 1) // fix skeleton; all bones but 0
-                    skeletalMeshBone.Orientation.Conjugate();
+                // if (i >= 1) // fix skeleton; all bones but 0
+                //     skeletalMeshBone.Orientation.Conjugate();
 
                 bones.Add(skeletalMeshBone);
             }
@@ -292,8 +292,8 @@ namespace CUE4Parse_Conversion.Meshes
                     Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation
                 };
 
-                if (i >= 1) // fix skeleton; all bones but 0
-                    skeletalMeshBone.Orientation.Conjugate();
+                // if (i >= 1) // fix skeleton; all bones but 0
+                //     skeletalMeshBone.Orientation.Conjugate();
 
                 convertedMesh.RefSkeleton.Add(skeletalMeshBone);
             }

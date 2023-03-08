@@ -389,7 +389,7 @@ namespace CUE4Parse_Conversion.Meshes
 
                 // MIRROR_MESH
                 bone.BonePos.Orientation.Y *= -1;
-                bone.BonePos.Orientation.W *= -1;
+                // bone.BonePos.Orientation.W *= -1;
                 bone.BonePos.Position.Y *= -1;
 
                 bone.Serialize(Ar);
@@ -512,7 +512,7 @@ namespace CUE4Parse_Conversion.Meshes
                             Name = socket.SocketName.Text,
                             ParentIndex = targetBoneIdx,
                             Position = socket.RelativeLocation,
-                            Orientation = FQuat.Conjugate(socket.RelativeRotation.Quaternion())
+                            Orientation = socket.RelativeRotation.Quaternion()
                         };
 
                         bones.Add(meshBone);
@@ -555,7 +555,7 @@ namespace CUE4Parse_Conversion.Meshes
                             Name = socket.SocketName.Text,
                             ParentIndex = -1,
                             Position = socket.RelativeLocation,
-                            Orientation = FQuat.Conjugate(socket.RelativeRotation.Quaternion())
+                            Orientation = socket.RelativeRotation.Quaternion()
                         };
 
                         bones.Add(meshBone);

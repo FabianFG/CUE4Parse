@@ -172,7 +172,7 @@ namespace CUE4Parse_Conversion.Animations
                         };
                         // MIRROR_MESH
                         key.Orientation.Y *= -1;
-                        key.Orientation.W *= -1;
+                        // key.Orientation.W *= -1;
                         key.Position.Y *= -1;
                         key.Serialize(Ar);
                         keysCount--;
