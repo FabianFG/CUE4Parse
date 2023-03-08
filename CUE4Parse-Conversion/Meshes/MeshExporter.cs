@@ -389,7 +389,7 @@ namespace CUE4Parse_Conversion.Meshes
 
                 // MIRROR_MESH
                 bone.BonePos.Orientation.Y *= -1;
-                // bone.BonePos.Orientation.W *= -1;
+                if (i == 0) bone.BonePos.Orientation.W *= -1; // because the importer has invert enabled by default...
                 bone.BonePos.Position.Y *= -1;
 
                 bone.Serialize(Ar);

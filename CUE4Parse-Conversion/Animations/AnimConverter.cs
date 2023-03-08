@@ -20,22 +20,14 @@ namespace CUE4Parse_Conversion.Animations
 {
     public static class AnimConverter
     {
-        private static CAnimSet ConvertAnims(this USkeleton skeleton)
+        private static CAnimSet ConvertToAnimSet(this USkeleton skeleton)
         {
-            var animSet = new CAnimSet(skeleton)
-            {
-                TrackBonesInfo = skeleton.ReferenceSkeleton.FinalRefBoneInfo,
-                BonePositions = skeleton.ReferenceSkeleton.FinalRefBonePose,
-                BoneModes = skeleton.BoneTree
-            };
-
-            Trace.Assert(animSet.BoneModes.Length == animSet.TrackBonesInfo.Length);
-            return animSet;
+            return new CAnimSet(skeleton);
         }
 
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimComposite? animComposite)
         {
-            var animSet = skeleton.ConvertAnims();
+            var animSet = skeleton.ConvertToAnimSet();
             if (animComposite == null) return animSet;
 
             foreach (var segment in animComposite.AnimationTrack.AnimSegments)
@@ -55,7 +47,7 @@ namespace CUE4Parse_Conversion.Animations
 
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimMontage? animMontage)
         {
-            var animSet = skeleton.ConvertAnims();
+            var animSet = skeleton.ConvertToAnimSet();
             if (animMontage == null) return animSet;
 
             foreach (var compositeSection in animMontage.CompositeSections)
@@ -77,7 +69,7 @@ namespace CUE4Parse_Conversion.Animations
 
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimSequence? animSequence)
         {
-            var animSet = skeleton.ConvertAnims();
+            var animSet = skeleton.ConvertToAnimSet();
             if (animSequence == null) return animSet;
 
             // Store UAnimSequence in 'OriginalAnims' array, we just need it from time to time
@@ -91,60 +83,28 @@ namespace CUE4Parse_Conversion.Animations
 
         private static CAnimSequence ConvertSequence(this UAnimSequence animSequence, USkeleton skeleton)
         {
-            var animSeq = new CAnimSequence(animSequence);
-            animSeq.Name = animSequence.Name;
-            animSeq.NumFrames = animSequence.NumFrames;
-            animSeq.Rate = animSequence.NumFrames / animSequence.SequenceLength * MathF.Max(1, animSequence.RateScale);
-            animSeq.StartPos = 0.0f;
-            animSeq.AnimEndTime = animSequence.SequenceLength;
-            animSeq.LoopingCount = 1;
-            animSeq.bAdditive = animSequence.AdditiveAnimType != AAT_None;
-
-            // Store information for animation retargeting.
-            // Reference: UAnimSequence::GetRetargetTransforms()
-            FTransform[]? retargetTransforms = null;
-            if (animSequence.RetargetSource.IsNone && animSequence.RetargetSourceAssetReferencePose is { Length: > 0 })
+            var animSeq = new CAnimSequence(animSequence)
             {
-                // We'll use RetargetSourceAssetReferencePose as a retarget base
-                retargetTransforms = animSequence.RetargetSourceAssetReferencePose;
-            }
-
-            else
-            {
-                // Use USkeleton pose for retarget base.
-                // Reference: USkeleton::GetRefLocalPoses()
-                if (!animSequence.RetargetSource.IsNone)
+                Name = animSequence.Name, NumFrames = animSequence.NumFrames, Rate = animSequence.NumFrames / animSequence.SequenceLength * MathF.Max(1, animSequence.RateScale),
+                StartPos = 0.0f,
+                AnimEndTime = animSequence.SequenceLength,
+                LoopingCount = 1,
+                bAdditive = animSequence.AdditiveAnimType != AAT_None,
+                RetargetBasePose = animSequence.RetargetSource.IsNone switch
                 {
-                    // The result might be NULL if there's no RetargetSource for this animation
-                    if (skeleton.AnimRetargetSources.TryGetValue(animSequence.RetargetSource, out var refPose))
-                    {
-                        retargetTransforms = refPose.ReferencePose;
-                    }
-                }
+                    true when animSequence.RetargetSourceAssetReferencePose is { Length: > 0 }
+                        => animSequence.RetargetSourceAssetReferencePose,
+                    false when skeleton.AnimRetargetSources.TryGetValue(animSequence.RetargetSource, out var refPose)
+                        => refPose.ReferencePose,
+                    _ => null
+                },
+                Tracks = new List<CAnimTrack>(animSequence.GetNumTracks())
+            };
 
-                if (retargetTransforms == null)
-                {
-                    // Animation will use ReferenceSkeleton for retargeting, we've already copied the
-                    // information into CAnimSet::BonePositions array
-                }
-            }
-
-            if (retargetTransforms != null)
-            {
-                //todo: Solve this: RetargetTransforms size may not match ReferenceSkeleton and sequence's track count.
-                //todo: UE4 does some remapping "track to skeleton bone index map". Without assertion things works, seems
-                //todo: because RetargetTransforms array is smaller (or of the same size).
-                //Trace.Assert(RetargetTransforms.Length == ReferenceSkeleton.FinalRefBoneInfo.Length);
-                animSeq.RetargetBasePose = retargetTransforms;
-            }
-
-            var numTracks = animSequence.GetNumTracks();
             var numBones = skeleton.BoneTree.Length;
-            animSeq.Tracks = new List<CAnimTrack>(numTracks);
-
             if (animSequence.RawAnimationData is { Length: > 0 })
             {
-                Trace.Assert(animSequence.RawAnimationData.Length == numTracks);
+                Trace.Assert(animSequence.RawAnimationData.Length == animSeq.Tracks.Capacity);
 
                 static void CopyArray<T>(out T[] dest, T[] src)
                 {
@@ -159,105 +119,87 @@ namespace CUE4Parse_Conversion.Animations
                     var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                     if (trackIndex >= 0)
                     {
-                        CopyArray(out track.KeyPos, animSequence.RawAnimationData[trackIndex].PosKeys);
                         CopyArray(out track.KeyQuat, animSequence.RawAnimationData[trackIndex].RotKeys);
-                        var scaleKeys = animSequence.RawAnimationData[trackIndex].ScaleKeys;
-                        if (scaleKeys != null)
+                        CopyArray(out track.KeyPos, animSequence.RawAnimationData[trackIndex].PosKeys);
+                        CopyArray(out track.KeyScale, animSequence.RawAnimationData[trackIndex].ScaleKeys);
+                    }
+                }
+            }
+            else switch (animSequence.CompressedDataStructure)
+            {
+                case FUECompressedAnimData ueData:
+                {
+                    // There could be an animation consisting of only trans with offsets == -1, what means
+                    // use of RefPose. In this case there's no point adding the animation to AnimSet. We'll
+                    // create FMemReader even for empty CompressedByteStream, otherwise it would be hard to
+                    // create a valid CAnimSequence which won't crash animation export.
+                    using var reader = new FByteArchive("CompressedByteStream", ueData.CompressedByteStream);
+                    for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
+                    {
+                        var track = new CAnimTrack();
+                        animSeq.Tracks.Add(track);
+                        var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
+                        if (trackIndex >= 0)
                         {
-                            CopyArray(out track.KeyScale, scaleKeys);
+                            if (ueData.KeyEncodingFormat == AKF_PerTrackCompression)
+                                ReadPerTrackData(reader, animSequence, track, trackIndex);
+                            else
+                                ReadKeyLerpData(reader, animSequence, track, trackIndex, ueData.KeyEncodingFormat == AKF_VariableKeyLerp);
                         }
-                        /*CopyArray(ref A.KeyTime, animSequence.RawAnimationData[TrackIndex].KeyTimes); // may be empty
-                        for (int k = 0; k < A.KeyTime.Length; k++)
-                            A.KeyTime[k] *= Dst.Rate;*/
                     }
+
+                    break;
                 }
-            }
-            else if (animSequence.CompressedDataStructure is FUECompressedAnimData ueData)
-            {
-                // There could be an animation consisting of only trans with offsets == -1, what means
-                // use of RefPose. In this case there's no point adding the animation to AnimSet. We'll
-                // create FMemReader even for empty CompressedByteStream, otherwise it would be hard to
-                // create a valid CAnimSequence which won't crash animation export.
-                using var reader = new FByteArchive("CompressedByteStream", ueData.CompressedByteStream);
-                for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
+                case FACLCompressedAnimData aclData:
                 {
-                    var track = new CAnimTrack();
-                    animSeq.Tracks.Add(track);
-                    var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
-                    if (trackIndex >= 0)
-                    {
-                        if (ueData.KeyEncodingFormat == AKF_PerTrackCompression)
-                            ReadPerTrackData(reader, animSequence, track, trackIndex);
-                        else
-                            ReadKeyLerpData(reader, animSequence, track, trackIndex, ueData.KeyEncodingFormat == AKF_VariableKeyLerp);
-                    }
-                }
-            }
-            else if (animSequence.CompressedDataStructure is FACLCompressedAnimData aclData)
-            {
-                var tracks = aclData.GetCompressedTracks();
-                var tracksHeader = tracks.GetTracksHeader();
-                var numSamples = (int) tracksHeader.NumSamples;
+                    var tracks = aclData.GetCompressedTracks();
+                    var tracksHeader = tracks.GetTracksHeader();
+                    var numSamples = (int) tracksHeader.NumSamples;
 
-                // Prepare buffers of all samples of each transform property for the native code to populate
-                var posKeys = new FVector[numTracks * numSamples];
-                var rotKeys = new FQuat[numTracks * numSamples];
-                var scaleKeys = new FVector[numTracks * numSamples];
+                    // Prepare buffers of all samples of each transform property for the native code to populate
+                    var posKeys = new FVector[animSeq.Tracks.Capacity * numSamples];
+                    var rotKeys = new FQuat[posKeys.Length];
+                    var scaleKeys = new FVector[rotKeys.Length];
 
-                // Let the native code do its job
-                unsafe
-                {
-                    fixed (FVector* posKeysPtr = posKeys)
-                    fixed (FQuat* rotKeysPtr = rotKeys)
-                    fixed (FVector* scaleKeysPtr = scaleKeys)
+                    // Let the native code do its job
+                    unsafe
                     {
-                        nReadACLData(tracks.Handle, posKeysPtr, rotKeysPtr, scaleKeysPtr);
+                        fixed (FVector* posKeysPtr = posKeys)
+                        fixed (FQuat* rotKeysPtr = rotKeys)
+                        fixed (FVector* scaleKeysPtr = scaleKeys)
+                        {
+                            nReadACLData(tracks.Handle, posKeysPtr, rotKeysPtr, scaleKeysPtr);
+                        }
                     }
-                }
 
-                // Now create CAnimTracks with the data from those big buffers
-                for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
-                {
-                    var track = new CAnimTrack();
-                    animSeq.Tracks.Add(track);
-                    var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
-                    if (trackIndex >= 0)
+                    // Now create CAnimTracks with the data from those big buffers
+                    for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                     {
-                        var offset = trackIndex * numSamples;
-                        track.KeyPos = new FVector[numSamples];
-                        track.KeyQuat = new FQuat[numSamples];
-                        track.KeyScale = new FVector[numSamples];
-                        Array.Copy(posKeys, offset, track.KeyPos, 0, numSamples);
-                        Array.Copy(rotKeys, offset, track.KeyQuat, 0, numSamples);
-                        Array.Copy(scaleKeys, offset, track.KeyScale, 0, numSamples);
+                        var track = new CAnimTrack();
+                        animSeq.Tracks.Add(track);
+                        var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
+                        if (trackIndex >= 0)
+                        {
+                            var offset = trackIndex * numSamples;
+                            track.KeyPos = new FVector[numSamples];
+                            track.KeyQuat = new FQuat[numSamples];
+                            track.KeyScale = new FVector[numSamples];
+                            Array.Copy(posKeys, offset, track.KeyPos, 0, numSamples);
+                            Array.Copy(rotKeys, offset, track.KeyQuat, 0, numSamples);
+                            Array.Copy(scaleKeys, offset, track.KeyScale, 0, numSamples);
+                        }
                     }
+
+                    break;
                 }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException("Unsupported compressed data type " + animSequence.CompressedDataStructure.GetType().Name);
+                default:
+                    throw new ArgumentOutOfRangeException("Unsupported compressed data type " + animSequence.CompressedDataStructure.GetType().Name);
             }
 
-            // Now should invert all imported rotations
-            // FixRotationKeys(animSeq);
-            AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, retargetTransforms ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
+            // ok?
+            AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, animSeq.RetargetBasePose ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
 
             return animSeq;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FixRotationKeys(CAnimSequence anim)
-        {
-            for (var trackIndex = 0; trackIndex < anim.Tracks.Count; trackIndex++)
-            {
-                if (trackIndex == 0) continue; // don't fix root track
-
-                var track = anim.Tracks[trackIndex];
-                for (var keyQuatIndex = 0; keyQuatIndex < track.KeyQuat.Length; keyQuatIndex++)
-                {
-                    track.KeyQuat[keyQuatIndex].Conjugate();
-                }
-            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -267,14 +209,14 @@ namespace CUE4Parse_Conversion.Animations
                 skeleton.FinalRefBoneInfo.Length != transforms.Length)
                 return;
 
-            for (var trackIndex = 0; trackIndex < anim.Tracks.Count; trackIndex++)
+            for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
             {
-                var track = anim.Tracks[trackIndex];
-                var boneScale = skeleton.GetBoneScale(transforms, trackIndex);
+                var boneScale = skeleton.GetBoneScale(transforms, boneIndex);
                 if (Math.Abs(boneScale.X - 1.0f) > 0.001f ||
                     Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
                     Math.Abs(boneScale.Z - 1.0f) > 0.001f)
                 {
+                    var track = anim.Tracks[boneIndex]; // tracks are bone indexed
                     for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
                     {
                         // Scale translation by accumulated bone scale value
@@ -546,15 +488,16 @@ namespace CUE4Parse_Conversion.Animations
             reader.Position = rotOffset;
             var rotationCompressionFormat = compressedData.RotationCompressionFormat;
 
-            if (rotKeys == 1)
+            switch (rotKeys)
             {
-                rotationCompressionFormat = ACF_Float96NoW; // single key is stored without compression
-            }
-            else if (rotKeys > 1 && rotationCompressionFormat == ACF_IntervalFixed32NoW)
-            {
-                // Mins/Ranges are read only when needed - i.e. for ACF_IntervalFixed32NoW
-                mins = reader.Read<FVector>();
-                ranges = reader.Read<FVector>();
+                case 1:
+                    rotationCompressionFormat = ACF_Float96NoW; // single key is stored without compression
+                    break;
+                case > 1 when rotationCompressionFormat == ACF_IntervalFixed32NoW:
+                    // Mins/Ranges are read only when needed - i.e. for ACF_IntervalFixed32NoW
+                    mins = reader.Read<FVector>();
+                    ranges = reader.Read<FVector>();
+                    break;
             }
 
             for (var k = 0; k < rotKeys; k++)
