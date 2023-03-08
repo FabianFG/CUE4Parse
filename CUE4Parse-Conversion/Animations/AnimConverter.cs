@@ -13,7 +13,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationKeyFormat;
-using static CUE4Parse.UE4.Assets.Exports.Animation.EAdditiveAnimationType;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionUtils;
 
 namespace CUE4Parse_Conversion.Animations
@@ -83,25 +82,9 @@ namespace CUE4Parse_Conversion.Animations
 
         private static CAnimSequence ConvertSequence(this UAnimSequence animSequence, USkeleton skeleton)
         {
-            var animSeq = new CAnimSequence(animSequence)
-            {
-                Name = animSequence.Name, NumFrames = animSequence.NumFrames, Rate = animSequence.NumFrames / animSequence.SequenceLength * MathF.Max(1, animSequence.RateScale),
-                StartPos = 0.0f,
-                AnimEndTime = animSequence.SequenceLength,
-                LoopingCount = 1,
-                bAdditive = animSequence.AdditiveAnimType != AAT_None,
-                RetargetBasePose = animSequence.RetargetSource.IsNone switch
-                {
-                    true when animSequence.RetargetSourceAssetReferencePose is { Length: > 0 }
-                        => animSequence.RetargetSourceAssetReferencePose,
-                    false when skeleton.AnimRetargetSources.TryGetValue(animSequence.RetargetSource, out var refPose)
-                        => refPose.ReferencePose,
-                    _ => null
-                },
-                Tracks = new List<CAnimTrack>(animSequence.GetNumTracks())
-            };
+            var animSeq = new CAnimSequence(animSequence, skeleton);
 
-            var numBones = skeleton.BoneTree.Length;
+            var numBones = skeleton.BoneCount;
             if (animSequence.RawAnimationData is { Length: > 0 })
             {
                 Trace.Assert(animSequence.RawAnimationData.Length == animSeq.Tracks.Capacity);
@@ -198,7 +181,52 @@ namespace CUE4Parse_Conversion.Animations
 
             // ok?
             AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, animSeq.RetargetBasePose ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
+            return !animSequence.IsValidAdditive() ? animSeq : animSeq.ConvertAdditive(skeleton);
+        }
 
+        private static CAnimSequence ConvertAdditive(this CAnimSequence animSeq, USkeleton skeleton)
+        {
+            var refFrameIndex = animSeq.OriginalSequence.RefFrameIndex;
+            var refPoseSeq = animSeq.OriginalSequence.RefPoseSeq?.Load<UAnimSequence>();
+            var refPoseSkel = refPoseSeq?.Skeleton.Load<USkeleton>() ?? skeleton;
+            var refAnimSeq = refPoseSkel.ConvertAnims(refPoseSeq).Sequences[0];
+
+            FCompactPose[] additivePoses = FAnimationRuntime.LoadAsPoses(animSeq, skeleton);
+            FCompactPose[] referencePoses = animSeq.OriginalSequence.RefPoseType switch
+            {
+                EAdditiveBasePoseType.ABPT_RefPose => FAnimationRuntime.LoadRestAsPoses(skeleton),
+                EAdditiveBasePoseType.ABPT_AnimScaled => FAnimationRuntime.LoadAsPoses(refAnimSeq, skeleton),
+                EAdditiveBasePoseType.ABPT_AnimFrame => FAnimationRuntime.LoadAsPoses(refAnimSeq, skeleton, refFrameIndex),
+                EAdditiveBasePoseType.ABPT_LocalAnimFrame => FAnimationRuntime.LoadAsPoses(animSeq, skeleton, refFrameIndex),
+                _ => throw new ArgumentOutOfRangeException("Unsupported additive type " + animSeq.OriginalSequence.RefPoseType)
+            };
+
+            // reset tracks and their size to avoid empty additive track on filled ref track
+            // or the other way around, that way we are sure all tracks can receive all frames
+            animSeq.Tracks = new List<CAnimTrack>(additivePoses[0].Bones.Length);
+            for (int i = 0; i < additivePoses[0].Bones.Length; i++)
+            {
+                animSeq.Tracks.Add(new CAnimTrack(additivePoses.Length));
+            }
+
+            for (var frameIndex = 0; frameIndex < additivePoses.Length; frameIndex++)
+            {
+                var addPose = additivePoses[frameIndex];
+                var refPose = (FCompactPose)referencePoses[refFrameIndex].Clone();
+                switch (animSeq.OriginalSequence.AdditiveAnimType)
+                {
+                    case EAdditiveAnimationType.AAT_LocalSpaceBase:
+                        FAnimationRuntime.AccumulateLocalSpaceAdditivePoseInternal(refPose, addPose, 1);
+                        break;
+                    case EAdditiveAnimationType.AAT_RotationOffsetMeshSpace:
+                        FAnimationRuntime.AccumulateMeshSpaceRotationAdditiveToLocalPoseInternal(refPose, addPose, 1);
+                        break;
+                }
+
+                refPose.PushTransformAtFrame(animSeq.Tracks, frameIndex);
+            }
+
+            animSeq.OriginalSequence = refAnimSeq.OriginalSequence;
             return animSeq;
         }
 

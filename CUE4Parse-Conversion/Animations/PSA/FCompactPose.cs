@@ -20,18 +20,18 @@ namespace CUE4Parse_Conversion.Animations.PSA
                 bone.Transform.Rotation.Normalize();
         }
 
-        public void AddToTracks(List<CAnimTrack> tracks, int frame)
+        public void PushTransformAtFrame(List<CAnimTrack> dstTracks, int frame)
         {
-            Debug.Assert(tracks.Count == Bones.Length);
+            Debug.Assert(dstTracks.Count == Bones.Length);
 
             for (int index = 0; index < Bones.Length; ++index)
             {
                 if (!Bones[index].IsValidKey) continue;
 
                 FTransform transform = Bones[index].Transform;
-                tracks[index].KeyQuat[frame] = transform.Rotation;
-                tracks[index].KeyPos[frame] = transform.Translation;
-                tracks[index].KeyScale[frame] = transform.Scale3D;
+                dstTracks[index].KeyQuat[frame] = transform.Rotation;
+                dstTracks[index].KeyPos[frame] = transform.Translation;
+                dstTracks[index].KeyScale[frame] = transform.Scale3D;
             }
         }
 

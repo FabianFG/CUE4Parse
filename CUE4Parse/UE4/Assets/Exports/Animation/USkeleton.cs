@@ -22,6 +22,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FName[] ExistingMarkerNames { get; private set; }
         public FPackageIndex[] Sockets { get; private set; }
 
+        public int BoneCount => BoneTree.Length;
+
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);

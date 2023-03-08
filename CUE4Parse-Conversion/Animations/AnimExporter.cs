@@ -57,7 +57,7 @@ namespace CUE4Parse_Conversion.Animations
             var mainHdr = new VChunkHeader { TypeFlag = Constants.PSA_VERSION };
             Ar.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
-            var numBones = anim.BoneCount;
+            var numBones = anim.Skeleton.BoneCount;
             var boneHdr = new VChunkHeader { DataCount = numBones, DataSize = Constants.FNamedBoneBinary_SIZE };
             Ar.SerializeChunkHeader(boneHdr, "BONENAMES");
             for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
@@ -94,7 +94,7 @@ namespace CUE4Parse_Conversion.Animations
                 KeyQuotum = sequence.NumFrames * numBones, // reserved, but fill with keys count
                 KeyReduction = 0, // reserved
                 TrackTime = sequence.NumFrames,
-                AnimRate = sequence.Rate,
+                AnimRate = sequence.FramesPerSecond,
                 StartBone = 0, // reserved
                 FirstRawFrame = sequence.NumFrames, // useless, but used in UnrealEd when importing
                 NumRawFrames = sequence.NumFrames
@@ -120,7 +120,7 @@ namespace CUE4Parse_Conversion.Animations
                     };
                     // MIRROR_MESH
                     key.Orientation.Y *= -1;
-                    // key.Orientation.W *= -1;
+                    if (boneIndex == 0) key.Orientation.W *= -1; // because the importer has invert enabled by default...
                     key.Position.Y *= -1;
                     key.Serialize(Ar);
                 }
