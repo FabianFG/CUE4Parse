@@ -185,18 +185,19 @@ namespace CUE4Parse_Conversion.Animations
         }
 
         private static CAnimSequence ConvertAdditive(this CAnimSequence animSeq, USkeleton skeleton)
+            => animSeq.ConvertAdditive(animSeq.OriginalSequence.RefPoseSeq?.Load<UAnimSequence>(), skeleton);
+        public static CAnimSequence ConvertAdditive(this CAnimSequence animSeq, UAnimSequence? refPoseSeq, USkeleton skeleton)
         {
             var refFrameIndex = animSeq.OriginalSequence.RefFrameIndex;
-            var refPoseSeq = animSeq.OriginalSequence.RefPoseSeq?.Load<UAnimSequence>();
             var refPoseSkel = refPoseSeq?.Skeleton.Load<USkeleton>() ?? skeleton;
-            var refAnimSeq = refPoseSkel.ConvertAnims(refPoseSeq).Sequences[0];
+            var refAnimSet = refPoseSkel.ConvertAnims(refPoseSeq);
 
             FCompactPose[] additivePoses = FAnimationRuntime.LoadAsPoses(animSeq, skeleton);
             FCompactPose[] referencePoses = animSeq.OriginalSequence.RefPoseType switch
             {
                 EAdditiveBasePoseType.ABPT_RefPose => FAnimationRuntime.LoadRestAsPoses(skeleton),
-                EAdditiveBasePoseType.ABPT_AnimScaled => FAnimationRuntime.LoadAsPoses(refAnimSeq, skeleton),
-                EAdditiveBasePoseType.ABPT_AnimFrame => FAnimationRuntime.LoadAsPoses(refAnimSeq, skeleton, refFrameIndex),
+                EAdditiveBasePoseType.ABPT_AnimScaled => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel),
+                EAdditiveBasePoseType.ABPT_AnimFrame => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel, refFrameIndex),
                 EAdditiveBasePoseType.ABPT_LocalAnimFrame => FAnimationRuntime.LoadAsPoses(animSeq, skeleton, refFrameIndex),
                 _ => throw new ArgumentOutOfRangeException("Unsupported additive type " + animSeq.OriginalSequence.RefPoseType)
             };
@@ -209,10 +210,16 @@ namespace CUE4Parse_Conversion.Animations
                 animSeq.Tracks.Add(new CAnimTrack(additivePoses.Length));
             }
 
+            var maxRefPosFrame = referencePoses.Length;
             for (var frameIndex = 0; frameIndex < additivePoses.Length; frameIndex++)
             {
                 var addPose = additivePoses[frameIndex];
-                var refPose = (FCompactPose)referencePoses[refFrameIndex].Clone();
+                var refPose = (FCompactPose)referencePoses[animSeq.OriginalSequence.RefPoseType switch
+                {
+                    EAdditiveBasePoseType.ABPT_AnimScaled => frameIndex % maxRefPosFrame,
+                    _ => refFrameIndex
+                }].Clone();
+
                 switch (animSeq.OriginalSequence.AdditiveAnimType)
                 {
                     case EAdditiveAnimationType.AAT_LocalSpaceBase:
@@ -226,7 +233,8 @@ namespace CUE4Parse_Conversion.Animations
                 refPose.PushTransformAtFrame(animSeq.Tracks, frameIndex);
             }
 
-            animSeq.OriginalSequence = refAnimSeq.OriginalSequence;
+            if (refPoseSeq != null) // for FindTrackForBoneIndex in fmodel
+                animSeq.OriginalSequence = refAnimSet.Sequences[0].OriginalSequence;
             return animSeq;
         }
 
