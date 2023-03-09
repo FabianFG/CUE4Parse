@@ -233,7 +233,7 @@ namespace CUE4Parse_Conversion.Animations
                 refPose.PushTransformAtFrame(animSeq.Tracks, frameIndex);
             }
 
-            if (refPoseSeq != null) // for FindTrackForBoneIndex in fmodel
+            if (refPoseSeq != null) // for FindTrackForBoneIndex
                 animSeq.OriginalSequence = refAnimSet.Sequences[0].OriginalSequence;
             return animSeq;
         }

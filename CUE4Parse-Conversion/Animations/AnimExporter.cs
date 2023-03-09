@@ -107,17 +107,19 @@ namespace CUE4Parse_Conversion.Animations
             {
                 for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
-                    var bonePosition = FVector.ZeroVector; // GetBonePosition() will not alter bP and bO when animation tracks are not exists
-                    var boneOrientation = FQuat.Identity;
-                    var useMeYouIdiot = FVector.OneVector;
-                    sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref boneOrientation, ref bonePosition, ref useMeYouIdiot);
-
-                    var key = new VQuatAnimKey
+                    var boneTransform = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
+                    var key = new VQuatAnimKey // scale me you fucking idiot
                     {
-                        Position = bonePosition,
-                        Orientation = boneOrientation,
+                        Position = boneTransform.Translation,
+                        Orientation = boneTransform.Rotation,
                         Time = 1
                     };
+                    if (sequence.OriginalSequence.FindTrackForBoneIndex(boneIndex) >= 0)
+                    {
+                        var eeehhhohhhhh = FVector.OneVector;
+                        sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref key.Orientation, ref key.Position, ref eeehhhohhhhh);
+                    }
+
                     // MIRROR_MESH
                     key.Orientation.Y *= -1;
                     if (boneIndex == 0) key.Orientation.W *= -1; // because the importer has invert enabled by default...
@@ -139,9 +141,13 @@ namespace CUE4Parse_Conversion.Animations
                 {
                     for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
                     {
-                        var boneScale = FVector.OneVector;
-                        if (frame < sequence.Tracks[boneIndex].KeyScale.Length)
-                            boneScale = sequence.Tracks[boneIndex].KeyScale[frame];
+                        FVector boneScale = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex].Scale3D;
+                        if (sequence.OriginalSequence.FindTrackForBoneIndex(boneIndex) >= 0)
+                        {
+                            var bonePosition = FVector.ZeroVector;
+                            var boneOrientation = FQuat.Identity;
+                            sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref boneOrientation, ref bonePosition, ref boneScale);
+                        }
 
                         var key = new VScaleAnimKey
                         {
