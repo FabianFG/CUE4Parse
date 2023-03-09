@@ -67,31 +67,31 @@ namespace CUE4Parse.Utils
         {
             if (len >= 8)
             {
-                var mul = K2 + len * 2;
-                var a = Fetch64(s) + K2;
-                var b = Fetch64(s + len - 8);
-                var c = Rotate(b, 37) * mul + a;
-                var d = (Rotate(a, 25) + b) * mul;
+                ulong mul = K2 + len * 2;
+                ulong a = Fetch64(s) + K2;
+                ulong b = Fetch64(s + len - 8);
+                ulong c = Rotate(b, 37) * mul + a;
+                ulong d = (Rotate(a, 25) + b) * mul;
                 return HashLen16(c, d, mul);
             }
-
+            
             if (len >= 4)
             {
-                var mul = K2 + len * 2;
+                ulong mul = K2 + len * 2;
                 ulong a = Fetch32(s);
                 return HashLen16(len + (a << 3), Fetch32(s + len - 4), mul);
             }
-
+            
             if (len > 0)
             {
-                var a = s;
-                var b = s + (len >> 1);
-                var c = s + (len - 1);
-                var y = Fetch32(a) + (Fetch32(b) << 8);
-                var z = len + (Fetch32(c) << 2);
+                byte a = s[0];
+                byte b = s[len >> 1];
+                byte c = s[len - 1];
+                uint y = (uint)a + ((uint)b << 8);
+                uint z = len + ((uint)c << 2);
                 return ShiftMix(y * K2 ^ z * K0) * K2;
             }
-
+            
             return K2;
         }
 
