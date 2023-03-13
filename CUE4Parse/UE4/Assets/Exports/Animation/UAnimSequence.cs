@@ -348,8 +348,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             return RefPoseType switch
             {
                 EAdditiveBasePoseType.ABPT_RefPose => true,
-                EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null,
-                EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefFrameIndex >= 0,
+                EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
+                EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefPoseSeq.Name.Text != Name && RefFrameIndex >= 0,
                 EAdditiveBasePoseType.ABPT_LocalAnimFrame => RefFrameIndex >= 0,
                 _ => false
             };
