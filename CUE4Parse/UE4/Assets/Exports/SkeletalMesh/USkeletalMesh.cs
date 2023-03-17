@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
             MorphTargets = GetOrDefault(nameof(MorphTargets), Array.Empty<FPackageIndex>());
             Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
-            Skeleton = GetOrDefault<FPackageIndex>(nameof(Skeleton));
+            Skeleton = GetOrDefault(nameof(Skeleton), new FPackageIndex());
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = new FBoxSphereBounds(Ar);
