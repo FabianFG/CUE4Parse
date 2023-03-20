@@ -39,7 +39,7 @@
     <None Remove="Resources\ACE7Key.bin" />
     <EmbeddedResource Include="Resources\ACE7Key.bin" />
   </ItemGroup>
-  
+
   <PropertyGroup>
     <BuildInParallel>false</BuildInParallel> <!-- we can't run 2 cmake build at same time -->
     <CMakeProject>../CUE4Parse-Natives/</CMakeProject>
@@ -48,15 +48,18 @@
 
   <Target Name="Build-Natives" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
-    <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
-      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec"/>
+      <Output TaskParameter="ExitCode" PropertyName="CMakeExitCode"/>
     </Exec>
-    <Exec Command="cmake --build . --config $(Configuration) --target install" ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
+    <Exec Condition=" '$(CMakeExitCode)' == '0' " Command="cmake --build . --config $(Configuration) --target install" ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+      <Output TaskParameter="ExitCode" PropertyName="CMakeExitCode"/>
     </Exec>
+    <Message Condition=" '$(CMakeExitCode)' != '0' " Importance="high" Text="CUE4Parse-Natives build failed. Continuing without it"/>
   </Target>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(CMakeExitCode)' == '0' ">
     <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>content;contentFiles;lib</PackagePath>
