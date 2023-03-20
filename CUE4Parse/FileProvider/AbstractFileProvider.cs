@@ -20,6 +20,7 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
+using UE4Config.Parsing;
 
 namespace CUE4Parse.FileProvider
 {
@@ -27,7 +28,9 @@ namespace CUE4Parse.FileProvider
     {
         protected static readonly ILogger Log = Serilog.Log.ForContext<IFileProvider>();
 
-        public virtual VersionContainer Versions { get; set; }
+        public VersionContainer Versions { get; set; }
+        public ConfigIni DefaultGame { get; set; }
+        public ConfigIni DefaultEngine { get; set; }
         public virtual ITypeMappingsProvider? MappingsContainer { get; set; }
         public virtual TypeMappings? MappingsForGame => MappingsContainer?.MappingsForGame;
         public virtual IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
@@ -42,6 +45,30 @@ namespace CUE4Parse.FileProvider
         {
             IsCaseInsensitive = isCaseInsensitive;
             Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
+            DefaultGame = new ConfigIni(nameof(DefaultGame));
+            DefaultEngine = new ConfigIni(nameof(DefaultEngine));
+        }
+
+        private string? _gameDisplayName;
+        public string? GameDisplayName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_gameDisplayName))
+                {
+                    var inst = new List<InstructionToken>();
+                    DefaultGame.FindPropertyInstructions("/Script/EngineSettings.GeneralProjectSettings", "ProjectDisplayedTitle", inst);
+                    if (inst.Count > 0)
+                    {
+                        var projectMatch = Regex.Match(inst[0].Value, "^(?:NSLOCTEXT\\(\".*\", \".*\", \"(?'target'.*)\"\\)|(?:INVTEXT\\(\"(?'target'.*)\"\\))|(?'target'.*))$", RegexOptions.Singleline);
+                        if (projectMatch.Groups.TryGetValue("target", out var g))
+                        {
+                            _gameDisplayName = g.Value;
+                        }
+                    }
+                }
+                return _gameDisplayName;
+            }
         }
 
         private string _gameName;
@@ -58,7 +85,7 @@ namespace CUE4Parse.FileProvider
             }
         }
 
-        public virtual int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
+        public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{GameName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             LocalizedResources.Clear();
@@ -95,7 +122,6 @@ namespace CUE4Parse.FileProvider
 
             return defaultValue ?? string.Empty;
         }
-
         public string GetLanguageCode(ELanguage language)
         {
             return GameName.ToLowerInvariant() switch
@@ -228,9 +254,8 @@ namespace CUE4Parse.FileProvider
             };
         }
 
-        public virtual int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
-
-        public virtual int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
+        public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
+        public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
@@ -289,6 +314,31 @@ namespace CUE4Parse.FileProvider
             }
 
             return i;
+        }
+
+        public void LoadIniConfigs()
+        {
+            if (TryFindGameFile("/Game/Config/DefaultGame.ini", out var defaultGame) && defaultGame.TryCreateReader(out var gameAr))
+            {
+                DefaultGame.Read(new StreamReader(gameAr));
+                gameAr.Dispose();
+            }
+            if (TryFindGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine) && defaultEngine.TryCreateReader(out var engineAr))
+            {
+                DefaultEngine.Read(new StreamReader(engineAr));
+                // foreach (ConfigIniSection section in DefaultEngine.Sections)
+                // {
+                //     if (section.Name != "ConsoleVariables") continue;
+                //     foreach (var iniToken in section.Tokens)
+                //     {
+                //         if (iniToken is not InstructionToken token ||
+                //             token.Value.Trim() is not "1" or "0")
+                //             continue;
+                //         Versions.Options[token.Key.Trim()] = int.Parse(token.Value.Trim()) == 1;
+                //     }
+                // }
+                engineAr.Dispose();
+            }
         }
 
         public virtual GameFile this[string path] => Files[FixPath(path)];
