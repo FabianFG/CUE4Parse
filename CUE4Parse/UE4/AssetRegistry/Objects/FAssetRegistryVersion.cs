@@ -34,6 +34,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         ClassPaths,							// Classes are serialized as path names rather than short object names, e.g. /Script/Engine.StaticMesh
         RemoveAssetPathFNames,              // Asset bundles are serialized as FTopLevelAssetPath instead of FSoftObjectPath, deprecated FAssetData::ObjectPath
         AddedHeader,                        // Added header with bFilterEditorOnlyData flag
+        AssetPackageDataHasExtension,		// Added Extension to AssetPackageData.
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

@@ -55,6 +55,10 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             {
                 ImportedClasses = Ar.ReadArray(Ar.ReadFName);
             }
+            if (Ar.Header.Version >= FAssetRegistryVersionType.AssetPackageDataHasExtension)
+            {
+                var Extensions = Ar.ReadFString();
+            }
         }
     }
 
