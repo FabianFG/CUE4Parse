@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public FPackageId[] PackageIds;
         public FFilePackageStoreEntry[] StoreEntries;
         public FPackageId[] OptionalSegmentPackageIds;
-        public uint[] OptionalSegmentStoreEntries;
+        public FFilePackageStoreEntry[] OptionalSegmentStoreEntries;
 
         public FIoContainerHeader(FArchive Ar)
         {
@@ -53,19 +53,11 @@ namespace CUE4Parse.UE4.IO.Objects
                 Ar.Position = continuePos;
             }
 
-            PackageIds = Ar.ReadArray<FPackageId>(); // < OptionalSegmentPackages ? Length = PackageCount (FN 20.0)
-            var storeEntriesSize = Ar.Read<int>();
-            var storeEntriesEnd = Ar.Position + storeEntriesSize;
-            StoreEntries = Ar.ReadArray(PackageIds.Length, () => new FFilePackageStoreEntry(Ar));
-            Ar.Position = storeEntriesEnd;
+            ReadPackageIdsAndEntries(Ar, out PackageIds, out StoreEntries);
 
             if (version >= EIoContainerHeaderVersion.OptionalSegmentPackages)
             {
-                OptionalSegmentPackageIds = Ar.ReadArray<FPackageId>();
-                var optionalSegmentStoreEntriesSize = Ar.Read<int>();
-                var optionalSegmentStoreEntriesEnd = Ar.Position + optionalSegmentStoreEntriesSize;
-                OptionalSegmentStoreEntries = Ar.ReadArray<uint>(OptionalSegmentPackageIds.Length);
-                Ar.Position = optionalSegmentStoreEntriesEnd;
+                ReadPackageIdsAndEntries(Ar, out OptionalSegmentPackageIds, out OptionalSegmentStoreEntries);
             }
             if (version >= EIoContainerHeaderVersion.Initial)
             {
@@ -73,6 +65,15 @@ namespace CUE4Parse.UE4.IO.Objects
             }
 
             // Skip CulturePackageMap and PackageRedirects
+        }
+
+        private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries)
+        {
+            packageIds = Ar.ReadArray<FPackageId>();
+            var storeEntriesSize = Ar.Read<int>();
+            var storeEntriesEnd = Ar.Position + storeEntriesSize;
+            storeEntries = Ar.ReadArray(packageIds.Length, () => new FFilePackageStoreEntry(Ar));
+            Ar.Position = storeEntriesEnd;
         }
     }
 }

@@ -66,6 +66,11 @@ namespace CUE4Parse.FileProvider
                             _gameDisplayName = g.Value;
                         }
                     }
+                    else
+                    {
+                        DefaultGame.FindPropertyInstructions("/Script/EngineSettings.GeneralProjectSettings", "ProjectName", inst);
+                        if (inst.Count > 0) _gameDisplayName = inst[0].Value;
+                    }
                 }
                 return _gameDisplayName;
             }
