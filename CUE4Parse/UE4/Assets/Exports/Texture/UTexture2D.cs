@@ -30,6 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public bool bRenderNearestNeighbor { get; private set; }
         public bool isNormalMap { get; private set; }
         public bool SRGB { get; private set; }
+        public TextureCompressionSettings CompressionSettings { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -37,11 +38,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
             LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
             SRGB = GetOrDefault(nameof(SRGB), true);
+            CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
             if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
                 bRenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
                                          trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
-            if (TryGetValue(out FName normalTrigger, "CompressionSettings") && !normalTrigger.IsNone)
-                isNormalMap = normalTrigger.Text.EndsWith("TC_Normalmap", StringComparison.OrdinalIgnoreCase);
+            isNormalMap = CompressionSettings == TextureCompressionSettings.TC_Normalmap;
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
@@ -194,5 +195,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 serializer.Serialize(writer, VTData);
             }
         }
+    }
+    
+    public enum TextureCompressionSettings
+    {
+        TC_Default,
+        TC_Normalmap,
+        TC_Masks,
+        TC_Grayscale,
+        TC_Displacementmap,
+        TC_VectorDisplacementmap,
+        TC_HDR,
+        TC_EditorIcon,
+        TC_Alpha,
+        TC_DistanceFieldFont,
+        TC_HDR_Compressed,
+        TC_BC7,
+        TC_MAX,
     }
 }

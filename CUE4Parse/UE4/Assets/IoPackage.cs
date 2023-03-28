@@ -86,14 +86,23 @@ namespace CUE4Parse.UE4.Assets
                 FFilePackageStoreEntry? storeEntry = null;
                 if (containerHeader != null)
                 {
-                    var storeEntryIdx = Array.IndexOf(containerHeader.PackageIds, FPackageId.FromName(Name));
+                    var packageId = FPackageId.FromName(Name);
+                    var storeEntryIdx = Array.IndexOf(containerHeader.PackageIds, packageId);
                     if (storeEntryIdx != -1)
                     {
                         storeEntry = containerHeader.StoreEntries[storeEntryIdx];
                     }
                     else
                     {
-                        Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                        var optionalSegmentStoreEntryIdx = Array.IndexOf(containerHeader.OptionalSegmentPackageIds, packageId);
+                        if (optionalSegmentStoreEntryIdx != -1)
+                        {
+                            storeEntry = containerHeader.OptionalSegmentStoreEntries[optionalSegmentStoreEntryIdx];
+                        }
+                        else
+                        {
+                            Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                        }
                     }
                 }
 
