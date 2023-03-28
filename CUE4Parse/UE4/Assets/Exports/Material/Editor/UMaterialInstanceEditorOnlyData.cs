@@ -10,6 +10,6 @@ public class UMaterialInstanceEditorOnlyData : UMaterialInterfaceEditorOnlyData
     {
         base.Deserialize(Ar, validPos);
 
-        StaticParameters = Get<FStaticParameterSet>(nameof(StaticParameters));
+        StaticParameters = GetOrDefault<FStaticParameterSet>(nameof(StaticParameters));
     }
 }
