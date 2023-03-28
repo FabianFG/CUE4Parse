@@ -10,6 +10,7 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
@@ -63,7 +64,25 @@ namespace CUE4Parse.FileProvider
                         var projectMatch = Regex.Match(inst[0].Value, "^(?:NSLOCTEXT\\(\".*\", \".*\", \"(?'target'.*)\"\\)|(?:INVTEXT\\(\"(?'target'.*)\"\\))|(?'target'.*))$", RegexOptions.Singleline);
                         if (projectMatch.Groups.TryGetValue("target", out var g))
                         {
-                            _gameDisplayName = g.Value;
+                            if (g.Value.StartsWith("LOCTABLE(\"/Game/"))
+                            {
+                                var stringTablePath = g.Value.SubstringAfter("LOCTABLE(\"").SubstringBeforeLast("\",");
+                                
+                                var stringTable =  Task.Run(() => this.LoadObject<UStringTable>(stringTablePath)).Result;
+                                if (stringTable != null)
+                                {
+                                    var keyName = g.Value.SubstringAfterLast(", \"").SubstringBeforeLast("\")"); // LOCTABLE("/Game/Narrative/LocalisedStrings/UI_Strings.UI_Strings", "23138_ui_pc_game_name_titlebar")
+                                    var stringTableEntry = stringTable.StringTable.KeysToMetaData;
+                                    if (stringTableEntry.TryGetValue(keyName, out var value))
+                                    {
+                                        _gameDisplayName = value;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                _gameDisplayName = g.Value;
+                            }
                         }
                     }
                 }
