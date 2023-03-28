@@ -11,14 +11,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material.Parameters
     public class FStaticParameterBase
     {
         [JsonIgnore]
-        public string Name => ParameterInfo.Name.Text;
-        public FMaterialParameterInfo ParameterInfo;
+        public string Name => ParameterInfo?.Name.Text ?? "None";
+        public FMaterialParameterInfo? ParameterInfo;
         public bool bOverride;
         public FGuid ExpressionGuid;
 
-        public FStaticParameterBase()
-        {
-        }
+        public FStaticParameterBase() { }
 
         public FStaticParameterBase(FStructFallback fallback)
         {
