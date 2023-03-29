@@ -34,11 +34,6 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             PackageName = Ar.ReadFName();
             AssetName = Ar.ReadFName();
 
-            if (Ar.Header is { Version: >= FAssetRegistryVersionType.RemoveAssetPathFNames, bFilterEditorOnlyData: false })
-            {
-                Ar.ReadFName();
-            }
-
             Ar.SerializeTagsAndBundles(this);
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS)

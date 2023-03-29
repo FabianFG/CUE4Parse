@@ -40,8 +40,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override FName ReadFName()
         {
-            var nameIndex = Read<int>();
-            var number = Read<int>();
+            var nameIndex = baseArchive.Read<int>();
+            var number = baseArchive.Read<int>();
 #if !NO_FNAME_VALIDATION
             if (nameIndex < 0 || nameIndex >= NameMap.Length)
             {
@@ -53,11 +53,11 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public override void SerializeTagsAndBundles(FAssetData assetData)
         {
-            var size = Read<ulong>();
+            var size = baseArchive.Read<int>();
             var ret = new Dictionary<FName, string>();
-            for (ulong i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
             {
-                ret[ReadFName()] = ReadFString();
+                ret[ReadFName()] = baseArchive.ReadFString();
             }
             assetData.TagsAndValues = ret;
             assetData.TaggedAssetBundles = new FAssetBundleData();

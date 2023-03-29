@@ -87,14 +87,14 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             };
         }
     }
-
-    public record FPartialMapHandle(ulong Int)
+    
+    public static class FPartialMapHandle
     {
-        public bool bHasNumberlessKeys = Int >> 63 > 0;
-        public ushort Num = (ushort) (Int >> 32);
-        public uint PairBegin;
-
-        public FMapHandle MakeFullHandle(FStore store) => new(bHasNumberlessKeys, store, Num, PairBegin);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FMapHandle MakeFullHandle(FStore store, ulong mapSize)
+        {
+            return new (mapSize >> 63 > 0u, store, (ushort)(mapSize >> 32), (uint)mapSize);
+        }
     }
 
     public class FMapHandle
@@ -132,13 +132,11 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         private IEnumerable<FNumberedPair> GetNumberView()
         {
-            if (!bHasNumberlessKeys) return ArraySegment<FNumberedPair>.Empty;
             return new ArraySegment<FNumberedPair>(Store.Pairs, (int) PairBegin, Num);
         }
 
         private IEnumerable<FNumberlessPair> GetNumberlessView()
         {
-            if (bHasNumberlessKeys) return ArraySegment<FNumberlessPair>.Empty;
             return new ArraySegment<FNumberlessPair>(Store.NumberlessPairs, (int) PairBegin, Num);
         }
     }
