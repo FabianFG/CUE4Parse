@@ -1,10 +1,26 @@
-﻿using CUE4Parse.UE4.Exceptions;
+﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct FIoContainerHeaderLocalizedPackage
+    {
+        public readonly FPackageId SourcePackageId;
+        public readonly FMappedName SourcePackageName;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct FIoContainerHeaderPackageRedirect
+    {
+        public readonly FPackageId SourcePackageId;
+        public readonly FPackageId TargetPackageId;
+        public readonly FMappedName SourcePackageName;
+    }
+
     public enum EIoContainerHeaderVersion // : uint
     {
         BeforeVersionWasAdded = -1, // Custom constant to indicate pre-UE5 data
@@ -20,11 +36,15 @@ namespace CUE4Parse.UE4.IO.Objects
     {
         private const int Signature = 0x496f436e;
         public FIoContainerId ContainerId;
-        public FNameEntrySerialized[]? ContainerNameMap;
+
         public FPackageId[] PackageIds;
         public FFilePackageStoreEntry[] StoreEntries;
-        public FPackageId[] OptionalSegmentPackageIds;
         public FFilePackageStoreEntry[] OptionalSegmentStoreEntries;
+        public FPackageId[] OptionalSegmentPackageIds;
+
+        public FNameEntrySerialized[]? ContainerNameMap; // RedirectsNameMap
+        // public FIoContainerHeaderLocalizedPackage[]? LocalizedPackages;
+        // public FIoContainerHeaderPackageRedirect[] PackageRedirects;
 
         public FIoContainerHeader(FArchive Ar)
         {
@@ -61,10 +81,13 @@ namespace CUE4Parse.UE4.IO.Objects
             }
             if (version >= EIoContainerHeaderVersion.Initial)
             {
-                ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar); // Actual name is RedirectsNameMap
+                ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar);
             }
-
-            // Skip CulturePackageMap and PackageRedirects
+            // if (version >= EIoContainerHeaderVersion.LocalizedPackages)
+            // {
+            //     LocalizedPackages = Ar.ReadArray<FIoContainerHeaderLocalizedPackage>();
+            // }
+            // PackageRedirects = Ar.ReadArray<FIoContainerHeaderPackageRedirect>();
         }
 
         private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries)

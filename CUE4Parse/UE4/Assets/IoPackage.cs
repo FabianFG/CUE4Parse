@@ -107,11 +107,11 @@ namespace CUE4Parse.UE4.Assets
                 }
 
                 BulkDataMap = Array.Empty<FBulkDataMapEntry>();
-                if (uassetAr.Game >= EGame.GAME_UE5_2 || Summary.FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES)
+                if (Summary.FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game >= EGame.GAME_UE5_2)
                 {
+                    // uassetAr.Game >= EGame.GAME_UE5_2 is needed because fortnite doesn't fall into the first condition smh
                     var bulkDataMapSize = uassetAr.Read<ulong>();
-                    if (uassetAr.Game != EGame.GAME_UE5_2 || bulkDataMapSize < 65535) // Fortnite moment
-                        BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int) (bulkDataMapSize / FBulkDataMapEntry.Size));
+                    BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int) (bulkDataMapSize / FBulkDataMapEntry.Size));
                 }
 
                 // Imported public export hashes
