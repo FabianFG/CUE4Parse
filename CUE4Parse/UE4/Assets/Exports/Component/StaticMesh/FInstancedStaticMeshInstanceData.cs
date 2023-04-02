@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
             Transform = new FMatrix(Ar);
 
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
-                Ar.SkipFixedArray(4);
+                Ar.SkipFixedArray(sizeof(int));
             TransformData.SetFromMatrix(Transform);
         }
 
