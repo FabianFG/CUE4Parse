@@ -56,10 +56,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
                 }
-                finally
-                {
-                    Ar.Position += serializedScriptSize;
-                }
             }
             else
             {
