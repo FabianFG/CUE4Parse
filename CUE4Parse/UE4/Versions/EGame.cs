@@ -31,6 +31,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_TrainSimWorld2020 = GAME_UE4_16 + 2,
         GAME_UE4_17 = GameUtils.GameUe4Base + 17 << 4,
             GAME_LifeIsStrange2 = GAME_UE4_17 + 1,
+            GAME_AWayOut = GAME_UE4_17 + 2,
         GAME_UE4_18 = GameUtils.GameUe4Base + 18 << 4,
             GAME_KingdomHearts3 = GAME_UE4_18 + 1,
             GAME_FinalFantasy7Remake = GAME_UE4_18 + 2,
