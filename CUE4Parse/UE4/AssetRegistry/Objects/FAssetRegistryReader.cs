@@ -19,12 +19,12 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public override FName ReadFName()
         {
-            var index = Read<uint>();
+            var index = baseArchive.Read<uint>();
             var number = 0u;
             if ((index & AssetRegistryNumberedNameBit) > 0u)
             {
                 index -= AssetRegistryNumberedNameBit;
-                number = Read<uint>();
+                number = baseArchive.Read<uint>();
             }
 
 #if !NO_FNAME_VALIDATION
@@ -38,10 +38,9 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public override void SerializeTagsAndBundles(FAssetData assetData)
         {
-            var size = Read<ulong>();
+            var size = baseArchive.Read<ulong>();
             var ret = new Dictionary<FName, string>();
-            var handle = new FPartialMapHandle(size);
-            var mapHandle = handle.MakeFullHandle(Tags);
+            var mapHandle = FPartialMapHandle.MakeFullHandle(Tags, size);
             foreach (var m in mapHandle.GetEnumerable())
             {
                 ret[m.Key] = FValueHandle.GetString(Tags, m.Value);
