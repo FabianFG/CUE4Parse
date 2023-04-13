@@ -42,6 +42,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
 
+            if (Ar.Game == EGame.GAME_AWayOut) Ar.Position += 4;
+
             // serialize the function map
             FuncMap = new Dictionary<FName, FPackageIndex>();
             var funcMapNum = Ar.Read<int>();

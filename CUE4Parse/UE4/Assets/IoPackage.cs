@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Assets
             if (uassetAr.Game >= EGame.GAME_UE5_0)
             {
                 // Summary
-                var summary = uassetAr.Read<FZenPackageSummary>();
+                var summary = new FZenPackageSummary(uassetAr);
                 Summary = new FPackageFileSummary
                 {
                     PackageFlags = summary.PackageFlags,
