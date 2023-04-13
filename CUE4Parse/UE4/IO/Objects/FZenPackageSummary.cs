@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -10,6 +8,8 @@ namespace CUE4Parse.UE4.IO.Objects
     public enum EZenPackageVersion : uint
     {
         Initial,
+        DataResourceTable,
+        ImportedPackageNames,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
@@ -31,7 +31,6 @@ namespace CUE4Parse.UE4.IO.Objects
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FZenPackageSummary
     {
         public readonly uint bHasVersioningInfo;
@@ -44,5 +43,25 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly int ExportMapOffset;
         public readonly int ExportBundleEntriesOffset;
         public readonly int GraphDataOffset;
+        public readonly int ImportedPackageNamesOffset;
+
+        public FZenPackageSummary(FArchive Ar)
+        {
+            bHasVersioningInfo = Ar.Read<uint>();
+            HeaderSize = Ar.Read<uint>();
+            Name = Ar.Read<FMappedName>();
+            PackageFlags = Ar.Read<EPackageFlags>();
+            CookedHeaderSize = Ar.Read<uint>();
+            ImportedPublicExportHashesOffset = Ar.Read<int>();
+            ImportMapOffset = Ar.Read<int>();
+            ExportMapOffset = Ar.Read<int>();
+            ExportBundleEntriesOffset = Ar.Read<int>();
+            GraphDataOffset = Ar.Read<int>();
+
+            if (Ar.Game >= EGame.GAME_UE5_3)
+            {
+                ImportedPackageNamesOffset = Ar.Read<int>();
+            }
+        }
     }
 }
