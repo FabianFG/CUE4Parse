@@ -94,12 +94,14 @@ namespace CUE4Parse.UE4.Pak
         {
             var watch = new Stopwatch();
             watch.Start();
+
             if (Info.Version >= PakFile_Version_PathHashIndex)
                 ReadIndexUpdated(caseInsensitive);
             else if (Info.IndexIsFrozen)
                 ReadFrozenIndex(caseInsensitive);
             else
                 ReadIndexLegacy(caseInsensitive);
+
             if (Globals.LogVfsMounts)
             {
                 var elapsed = watch.Elapsed;
@@ -115,7 +117,7 @@ namespace CUE4Parse.UE4.Pak
             return Files;
         }
 
-        private IReadOnlyDictionary<string, GameFile> ReadIndexLegacy(bool caseInsensitive)
+        private void ReadIndexLegacy(bool caseInsensitive)
         {
             Ar.Position = Info.IndexOffset;
             var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize), Versions);
@@ -139,7 +141,7 @@ namespace CUE4Parse.UE4.Pak
             {
                 var path = string.Concat(mountPoint, index.ReadFString());
                 var entry = new FPakEntry(this, path, index);
-                if (entry.IsDeleted && entry.Size == 0)
+                if (entry is { IsDeleted: true, Size: 0 })
                     continue;
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
@@ -149,10 +151,10 @@ namespace CUE4Parse.UE4.Pak
                     files[path] = entry;
             }
 
-            return Files = files;
+            Files = files;
         }
 
-        private IReadOnlyDictionary<string, GameFile> ReadIndexUpdated(bool caseInsensitive)
+        private void ReadIndexUpdated(bool caseInsensitive)
         {
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
@@ -232,10 +234,10 @@ namespace CUE4Parse.UE4.Pak
                 }
             }
 
-            return Files = files;
+            Files = files;
         }
 
-        private IReadOnlyDictionary<string, GameFile> ReadFrozenIndex(bool caseInsensitive)
+        private void ReadFrozenIndex(bool caseInsensitive)
         {
             this.Ar.Position = Info.IndexOffset;
             var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)));
@@ -282,7 +284,7 @@ namespace CUE4Parse.UE4.Pak
                 }
             }
 
-            return Files = files;
+            Files = files;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

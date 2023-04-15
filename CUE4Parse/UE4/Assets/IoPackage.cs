@@ -107,9 +107,8 @@ namespace CUE4Parse.UE4.Assets
                 }
 
                 BulkDataMap = Array.Empty<FBulkDataMapEntry>();
-                if (Summary.FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game >= EGame.GAME_UE5_2)
+                if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES)
                 {
-                    // uassetAr.Game >= EGame.GAME_UE5_2 is needed because fortnite doesn't fall into the first condition smh
                     var bulkDataMapSize = uassetAr.Read<ulong>();
                     BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int) (bulkDataMapSize / FBulkDataMapEntry.Size));
                 }
@@ -356,14 +355,12 @@ namespace CUE4Parse.UE4.Assets
                 {
                     foreach (var pkg in ImportedPackages.Value)
                     {
-                        if (pkg != null)
+                        if (pkg == null) continue;
+                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                         {
-                            for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                            if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
                             {
-                                if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
-                                {
-                                    return new ResolvedExportObject(exportIndex, pkg);
-                                }
+                                return new ResolvedExportObject(exportIndex, pkg);
                             }
                         }
                     }
