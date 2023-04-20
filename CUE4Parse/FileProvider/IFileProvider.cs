@@ -325,10 +325,10 @@ namespace CUE4Parse.FileProvider
         public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UObject;
 
         /// <summary>
-        /// Loads an object from the Package at the passed path
+        /// Loads all objects from the Package at the passed path
         /// </summary>
-        /// <param name="objectPath">The object path</param>
-        /// <returns>All exports of the object</returns>
-        public IEnumerable<UObject> LoadObjectExports(string? objectPath);
+        /// <param name="packagePath">The package path</param>
+        /// <returns>All objects of the package</returns>
+        public IEnumerable<UObject> LoadAllObjects(string? packagePath);
     }
 }

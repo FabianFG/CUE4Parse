@@ -67,7 +67,7 @@ namespace CUE4Parse.FileProvider
                             if (g.Value.StartsWith("LOCTABLE(\"/Game/"))
                             {
                                 var stringTablePath = g.Value.SubstringAfter("LOCTABLE(\"").SubstringBeforeLast("\",");
-                                
+
                                 var stringTable =  Task.Run(() => this.LoadObject<UStringTable>(stringTablePath)).Result;
                                 if (stringTable != null)
                                 {
@@ -551,7 +551,7 @@ namespace CUE4Parse.FileProvider
             var ubulk = ubulkTask != null ? await ubulkTask : null;
             var uptnl = uptnlTask != null ? await uptnlTask : null;
 
-            if (file is FPakEntry || file is OsGameFile)
+            if (file is FPakEntry or OsGameFile)
             {
                 return new Package(uasset, uexp, ubulk, uptnl, this, MappingsForGame, UseLazySerialization);
             }
@@ -780,11 +780,27 @@ namespace CUE4Parse.FileProvider
             await TryLoadObjectAsync(objectPath) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual IEnumerable<UObject> LoadObjectExports(string? objectPath)
+        public virtual IEnumerable<UObject> LoadAllObjects(string? packagePath)
         {
-            if (objectPath == null) throw new ArgumentException("ObjectPath can't be null", nameof(objectPath));
+            if (packagePath == null) throw new ArgumentException("PackagePath can't be null", nameof(packagePath));
 
-            var pkg = LoadPackage(objectPath);
+            var pkg = LoadPackage(packagePath);
+            // if (pkg is IoPackage ioPackage && TryLoadPackage(packagePath.Replace(".uasset", ".o.uasset"), out var oPackage) &&
+            //     oPackage is IoPackage segmentPackage)
+            // {
+            //     for (int i = 0; i < segmentPackage.ExportMap.Length; i++)
+            //     {
+            //         if (ioPackage.ExportMap.Any(x => x.ObjectName == segmentPackage.ExportMap[i].ObjectName))
+            //         {
+            //             ioPackage.ExportsLazy[i].Value.Properties.AddRange(segmentPackage.ExportsLazy[i].Value.Properties);
+            //         }
+            //         else
+            //         {
+            //             ioPackage.ExportsLazy.Add(segmentPackage.ExportsLazy[i]);
+            //         }
+            //     }
+            // }
+
             return pkg.GetExports();
         }
 
