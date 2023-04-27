@@ -367,7 +367,11 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
 
-            Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
+            if (Globals.WarnMissingImportPackage)
+            {
+                Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
+            }
+            
             return null;
         }
 
