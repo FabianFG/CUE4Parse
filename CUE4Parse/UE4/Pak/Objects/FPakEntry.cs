@@ -105,6 +105,10 @@ namespace CUE4Parse.UE4.Pak.Objects
                     {
                         compressionMethodIndex = 3; // TODO: Investigate what a proper detection is.
                     }
+                    else if (reader.Game == GAME_DeadIsland2)
+                    {
+                        compressionMethodIndex = 6; // ¯\_(ツ)_/¯
+                    }
                     else
                     {
                         compressionMethodIndex = -1;
@@ -303,7 +307,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     CompressionBlocks[i].CompressedEnd += Offset;
                 }
             }
-            
+
             // Compute StructSize: each file still have FPakEntry data prepended, and it should be skipped.
             StructSize = sizeof(long) * 3 + sizeof(int) * 2 + 1 + 20;
             // Take into account CompressionBlocks

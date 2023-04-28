@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 CompressionMethods = new List<CompressionMethod>
                 {
-                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4
+                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4, CompressionMethod.Zstd
                 };
             }
             else

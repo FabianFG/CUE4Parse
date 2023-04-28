@@ -48,6 +48,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_24 = GameUtils.GameUe4Base + 24 << 4,
         GAME_UE4_25 = GameUtils.GameUe4Base + 25 << 4,
             GAME_RogueCompany = GAME_UE4_25 + 1,
+            GAME_DeadIsland2 = GAME_UE4_25 + 2,
             GAME_KenaBridgeofSpirits = GAME_UE4_25 + 3,
             GAME_UE4_25_Plus = GAME_UE4_25 + 4,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,

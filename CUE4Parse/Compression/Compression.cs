@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using Ionic.Zlib;
 using K4os.Compression.LZ4;
+using Zstandard.Net;
 
 namespace CUE4Parse.Compression
 {
@@ -63,6 +64,13 @@ namespace CUE4Parse.Compression
                     Buffer.BlockCopy(uncompressedBuffer, 0, uncompressed, uncompressedOffset, uncompressedSize);
                     if (result != uncompressedSize) throw new FileLoadException($"Failed to decompress LZ4 data (Expected: {uncompressedSize}, Result: {result})");
                     return;
+                case CompressionMethod.Zstd:
+                {
+                    var compressionStream = new ZstandardStream(srcStream, System.IO.Compression.CompressionMode.Decompress);
+                    compressionStream.Read(uncompressed, uncompressedOffset, uncompressedSize);
+                    compressionStream.Dispose();
+                    return;
+                }
                 default:
                     if (reader != null) throw new UnknownCompressionMethodException(reader, $"Compression method \"{method}\" is unknown");
                     else throw new UnknownCompressionMethodException($"Compression method \"{method}\" is unknown");
