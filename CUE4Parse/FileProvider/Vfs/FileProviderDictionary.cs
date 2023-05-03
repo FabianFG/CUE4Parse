@@ -29,7 +29,7 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles)
+        public void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles)
         {
             foreach (var file in newFiles.Values)
             {
