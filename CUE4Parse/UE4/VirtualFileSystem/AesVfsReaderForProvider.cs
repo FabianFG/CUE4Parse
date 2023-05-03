@@ -1,7 +1,7 @@
 ﻿using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Vfs;
 
-namespace CUE4Parse.UE4.Vfs
+namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract partial class AbstractVfsReader
     {

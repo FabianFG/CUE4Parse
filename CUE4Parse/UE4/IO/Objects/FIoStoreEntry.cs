@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Vfs;
+using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
