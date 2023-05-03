@@ -1,13 +1,13 @@
 ﻿using CUE4Parse.FileProvider;
 
-namespace CUE4Parse.UE4.Vfs
+namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract class VfsEntry : GameFile
     {
         public readonly IVfsReader Vfs;
 
         public long Offset { get; protected set; }
-        
+
         protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size)
         {
             Vfs = vfs;

@@ -4,7 +4,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.Vfs
+namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public interface IVfsReader : IDisposable
     {
