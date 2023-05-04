@@ -30,12 +30,12 @@ namespace CUE4Parse.FileProvider
         public string Name => Path.SubstringAfterLast('/');
         public string NameWithoutExtension => Name.SubstringBeforeLast('.');
         public string Extension => Path.SubstringAfterLast('.');
-        
+
         public bool IsUE4Package => Ue4PackageExtensions.Contains(Extension, StringComparer.OrdinalIgnoreCase);
-        
+
         public abstract byte[] Read();
         public abstract FArchive CreateReader();
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool TryRead(out byte[] data)
         {
@@ -52,7 +52,7 @@ namespace CUE4Parse.FileProvider
                 return false;
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool TryCreateReader(out FArchive reader)
         {
@@ -73,7 +73,7 @@ namespace CUE4Parse.FileProvider
         public virtual async Task<byte[]> ReadAsync() => await Task.Run(Read); // No ConfigureAwait(false) here since the context is needed handling exceptions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task<FArchive> CreateReaderAsync() => await Task.Run(CreateReader);  // No ConfigureAwait(false) here since the context is needed handling exceptions
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task<byte[]?> TryReadAsync() => await Task.Run(() =>
         {

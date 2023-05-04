@@ -17,7 +17,13 @@ namespace CUE4Parse.FileProvider
             ActualFile = info;
             Versions = versions;
         }
-        
+
+        public OsGameFile(string baseDir, string fullPath, uint size, VersionContainer versions) : base(fullPath.Replace('\\', '/'), size)
+        {
+            ActualFile = new FileInfo(System.IO.Path.Combine(baseDir, fullPath));
+            Versions = versions;
+        }
+
         public override bool IsEncrypted => false;
         public override CompressionMethod CompressionMethod => CompressionMethod.None;
 

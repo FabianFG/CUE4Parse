@@ -7,5 +7,7 @@ namespace CUE4Parse.UE4.VirtualFileCache
     {
         public readonly int FileId;
         public readonly FBlockRange Range;
+
+        public override string ToString() => $"vfc_{FileId}.data: {Range}";
     }
 }

@@ -7,5 +7,7 @@ namespace CUE4Parse.UE4.VirtualFileCache
     {
         public readonly int StartIndex;
         public readonly int NumBlocks;
+
+        public override string ToString() => $"Start: {StartIndex} | Blocks: x{NumBlocks}";
     }
 }
