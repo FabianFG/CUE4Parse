@@ -758,9 +758,9 @@ namespace CUE4Parse.UE4.Versions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 != (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator < (FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 <  (int) b;
+        public static bool operator <(FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 < (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator > (FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 >  (int) b;
+        public static bool operator >(FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 > (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator <=(FPackageFileVersion a, EUnrealEngineObjectUE4Version b) => a.FileVersionUE4 <= (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -774,9 +774,9 @@ namespace CUE4Parse.UE4.Versions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 != (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator < (FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 <  (int) b;
+        public static bool operator <(FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 < (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator > (FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 >  (int) b;
+        public static bool operator >(FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 > (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator <=(FPackageFileVersion a, EUnrealEngineObjectUE5Version b) => a.FileVersionUE5 <= (int) b;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -802,7 +802,7 @@ namespace CUE4Parse.UE4.Versions
 
         public override string ToString()
             => FileVersionUE5 >= (int) EUnrealEngineObjectUE5Version.INITIAL_VERSION
-                ? ((EUnrealEngineObjectUE5Version)FileVersionUE5).ToString()
-                : ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
+                ? ((EUnrealEngineObjectUE5Version) FileVersionUE5).ToString()
+                : ((EUnrealEngineObjectUE4Version) FileVersionUE4).ToString();
     }
 }
