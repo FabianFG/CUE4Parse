@@ -148,6 +148,7 @@ namespace CUE4Parse.UE4.Objects.Engine
                 MaskB = fallback.MaskB;
                 MaskA = fallback.MaskA;
                 ExpressionName = fallback.ExpressionName;
+                return;
             }
 
             if (Ar.Game >= EGame.GAME_UE5_1)
