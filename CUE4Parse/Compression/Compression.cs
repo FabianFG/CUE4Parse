@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using Ionic.Zlib;
 using K4os.Compression.LZ4;
-using Zstandard.Net;
+using ZstdSharp;
 
 namespace CUE4Parse.Compression
 {
@@ -66,7 +66,7 @@ namespace CUE4Parse.Compression
                     return;
                 case CompressionMethod.Zstd:
                 {
-                    var compressionStream = new ZstandardStream(srcStream, System.IO.Compression.CompressionMode.Decompress);
+                    var compressionStream = new DecompressionStream(srcStream);
                     compressionStream.Read(uncompressed, uncompressedOffset, uncompressedSize);
                     compressionStream.Dispose();
                     return;
