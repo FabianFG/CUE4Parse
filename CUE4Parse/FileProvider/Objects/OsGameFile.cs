@@ -4,7 +4,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.FileProvider
+namespace CUE4Parse.FileProvider.Objects
 {
     public class OsGameFile : GameFile
     {
@@ -15,12 +15,6 @@ namespace CUE4Parse.FileProvider
             : base(mountPoint + info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length)
         {
             ActualFile = info;
-            Versions = versions;
-        }
-
-        public OsGameFile(string baseDir, string fullPath, uint size, VersionContainer versions) : base(fullPath.Replace('\\', '/'), size)
-        {
-            ActualFile = new FileInfo(System.IO.Path.Combine(baseDir, fullPath));
             Versions = versions;
         }
 

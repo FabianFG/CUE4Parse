@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.IO;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.VirtualFileCache
 {
@@ -8,6 +9,9 @@ namespace CUE4Parse.UE4.VirtualFileCache
         public readonly int FileId;
         public readonly FBlockRange Range;
 
-        public override string ToString() => $"vfc_{FileId}.data: {Range}";
+        public string GetFileName() => $"vfc_{FileId}.data";
+        public string GetPersistentDownloadPath() => Path.Combine("VFC", GetFileName());
+
+        public override string ToString() => $"{GetFileName()}: {Range}";
     }
 }

@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
@@ -168,48 +169,31 @@ namespace CUE4Parse.FileProvider.Vfs
             return countNewMounts;
         }
 
-        public void LoadVirtualCache()
+        public int LoadVirtualCache()
         {
             var persistentDownloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), GameName, "Saved/PersistentDownloadDir");
-            if (!Directory.Exists(persistentDownloadDir)) return;
+            if (!Directory.Exists(persistentDownloadDir)) return 0;
 
             var vfcMetadata = Path.Combine(persistentDownloadDir, "VFC", "vfc.meta");
             var cachedManifest = new DirectoryInfo(Path.Combine(persistentDownloadDir, "ManifestCache")).GetFiles("*.manifest");
             if (!File.Exists(vfcMetadata) || cachedManifest.Length <= 0)
-                return;
+                return 0;
 
             var vfc = new FFileTable(new FByteArchive("vfc.meta", File.ReadAllBytes(vfcMetadata)));
-            var manifest = new Manifest(File.ReadAllBytes(cachedManifest[0].FullName));
+            var manifest = new OptimizedContentBuildManifest(File.ReadAllBytes(cachedManifest[0].FullName));
 
             var onDemandFiles = new Dictionary<string, GameFile>();
-            foreach (var fileManifest in manifest.FileManifests)
+            foreach ((var vfcHash, var dataReference) in vfc.FileMap)
             {
-                foreach ((var hash, var dataReference) in vfc.FileMap)
-                {
-                    if (fileManifest.Hash == hash.ToString())
-                    {
-                        foreach (var r in dataReference.Ranges)
-                        {
-                            var blockSize = vfc.BlockFiles.First(x => x.FileId == r.FileId).BlockSize;
-                            using var fs = new FileStream(Path.Combine(persistentDownloadDir, "VFC", $"vfc_{r.FileId}.data"), FileMode.Open, FileAccess.Read, FileShare.Read);
-                            fs.Seek(r.Range.StartIndex * blockSize, SeekOrigin.Begin);
-                            var data = new byte[r.Range.NumBlocks * blockSize];
-                            var read = fs.Read(data, 0, data.Length);
-                            if (read == dataReference.TotalSize && !Files.ContainsKey(fileManifest.Name))
-                            {
-                                Directory.CreateDirectory(Path.Combine(persistentDownloadDir, "VFC", fileManifest.Name.SubstringBeforeLast('/')));
-                                File.WriteAllBytes(Path.Combine(persistentDownloadDir, "VFC", fileManifest.Name), data);
+                if (!manifest.HashNameMap.TryGetValue(vfcHash.ToString(), out var filePath)) continue;
 
-                                var onDemandFile = new OsGameFile(Path.Combine(persistentDownloadDir, "VFC"), fileManifest.Name, dataReference.TotalSize, Versions);
-                                if (IsCaseInsensitive) onDemandFiles[onDemandFile.Path.ToLowerInvariant()] = onDemandFile;
-                                else onDemandFiles[onDemandFile.Path] = onDemandFile;
-                            }
-                        }
-                    }
-                }
+                var onDemandFile = new VfcGameFile(vfc.BlockFiles, dataReference, persistentDownloadDir, filePath, Versions);
+                if (IsCaseInsensitive) onDemandFiles[onDemandFile.Path.ToLowerInvariant()] = onDemandFile;
+                else onDemandFiles[onDemandFile.Path] = onDemandFile;
             }
 
             _files.AddFiles(onDemandFiles);
+            return vfc.FileMap.Count;
         }
 
         public void Dispose()

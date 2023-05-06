@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Serilog;
 
-namespace CUE4Parse.FileProvider
+namespace CUE4Parse.FileProvider.Objects
 {
     public abstract class GameFile
     {

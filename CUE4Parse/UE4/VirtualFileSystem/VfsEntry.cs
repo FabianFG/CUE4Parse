@@ -1,4 +1,4 @@
-﻿using CUE4Parse.FileProvider;
+﻿using CUE4Parse.FileProvider.Objects;
 
 namespace CUE4Parse.UE4.VirtualFileSystem
 {
