@@ -2,12 +2,31 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using EpicManifestParser.Enums;
-using GenericReader;
+using CUE4Parse.UE4.Readers;
 using Ionic.Zlib;
 
 namespace CUE4Parse.UE4.VirtualFileCache.Manifest
 {
+    public enum EManifestStorageFlags : byte
+    {
+        // Stored as raw data.
+        None       = 0,
+        // Flag for compressed data.
+        Compressed = 1,
+        // Flag for encrypted. If also compressed, decrypt first. Encryption will ruin compressibility.
+        Encrypted  = 1 << 1,
+    }
+
+    public enum EManifestMetaVersion : byte
+    {
+        Original = 0,
+        SerialisesBuildId,
+
+        // Always after the latest version, signifies the latest version plus 1 to allow initialization simplicity.
+        LatestPlusOne,
+        Latest = LatestPlusOne - 1
+    }
+
     public sealed class OptimizedContentBuildManifest
     {
         public Dictionary<string, string> HashNameMap { get; private set; }
@@ -34,13 +53,13 @@ namespace CUE4Parse.UE4.VirtualFileCache.Manifest
 
         private void ParseData(byte[] buffer)
 		{
-			var reader = new GenericBufferReader(buffer) { Position = 4 };
+			var reader = new FByteArchive("reader", buffer) { Position = 4 };
 			var headerSize = reader.Read<int>();
 			var dataSizeUncompressed = reader.Read<int>();
 			var dataSizeCompressed = reader.Read<int>();
 			reader.Position += 20; // SHAHash.Hash
 			var storedAs = reader.Read<EManifestStorageFlags>();
-			var version = reader.Read<EFeatureLevel>();
+            reader.Position += 4;
 			reader.Seek(headerSize, SeekOrigin.Begin);
 
 			byte[] data;
@@ -63,7 +82,7 @@ namespace CUE4Parse.UE4.VirtualFileCache.Manifest
 			}
 			reader.Dispose();
 
-			var manifest = new GenericBufferReader(data);
+			var manifest = new FByteArchive("manifest", data);
 			var startPos = (int)manifest.Position;
 			var dataSize = manifest.Read<int>();
             // metadata
