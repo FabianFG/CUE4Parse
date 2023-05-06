@@ -7,26 +7,6 @@ using Ionic.Zlib;
 
 namespace CUE4Parse.UE4.VirtualFileCache.Manifest
 {
-    public enum EManifestStorageFlags : byte
-    {
-        // Stored as raw data.
-        None       = 0,
-        // Flag for compressed data.
-        Compressed = 1,
-        // Flag for encrypted. If also compressed, decrypt first. Encryption will ruin compressibility.
-        Encrypted  = 1 << 1,
-    }
-
-    public enum EManifestMetaVersion : byte
-    {
-        Original = 0,
-        SerialisesBuildId,
-
-        // Always after the latest version, signifies the latest version plus 1 to allow initialization simplicity.
-        LatestPlusOne,
-        Latest = LatestPlusOne - 1
-    }
-
     public sealed class OptimizedContentBuildManifest
     {
         public Dictionary<string, string> HashNameMap { get; private set; }
