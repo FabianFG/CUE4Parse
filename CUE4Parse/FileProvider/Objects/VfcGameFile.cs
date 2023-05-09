@@ -2,25 +2,23 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileCache;
 
 namespace CUE4Parse.FileProvider.Objects
 {
-    public class VfcGameFile : GameFile
+    public class VfcGameFile : VersionedGameFile
     {
         public readonly FBlockFile[] BlockFiles;
         public readonly FRangeId[] Ranges;
-        public readonly VersionContainer Versions;
 
         private readonly string _persistentDownloadDir;
 
-        public VfcGameFile(FBlockFile[] blockFiles, FDataReference dataReference, string persistentDownloadDir, string path, VersionContainer versions) : base(path, dataReference.TotalSize)
+        public VfcGameFile(FBlockFile[] blockFiles, FDataReference dataReference, string persistentDownloadDir, string path, VersionContainer versions)
+            : base(path, dataReference.TotalSize, versions)
         {
             BlockFiles = blockFiles;
             Ranges = dataReference.Ranges;
-            Versions = versions;
 
             _persistentDownloadDir = persistentDownloadDir;
         }
@@ -42,8 +40,5 @@ namespace CUE4Parse.FileProvider.Objects
             }
             return data;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Versions);
     }
 }

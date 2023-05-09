@@ -18,7 +18,7 @@ namespace CUE4Parse.FileProvider.Vfs
         private readonly ValueEnumerable _values;
         private readonly ConcurrentBag<IReadOnlyDictionary<string, GameFile>> _indicesBag = new ();
 
-        public bool IsCaseInsensitive;
+        public readonly bool IsCaseInsensitive;
         public IEnumerable<string> Keys => _keys;
         public IEnumerable<GameFile> Values => _values;
 

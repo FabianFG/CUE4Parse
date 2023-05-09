@@ -193,7 +193,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
 
             _files.AddFiles(onDemandFiles);
-            return vfc.FileMap.Count;
+            return onDemandFiles.Count;
         }
 
         public void Dispose()
