@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -94,6 +95,17 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
+
+            if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
+                for (int i = 0; i < LODModels?.Length; i++)
+                {
+                    var lodMatMap = lodInfos[i].GetOrDefault<int[]>("LODMaterialMap");
+                    var lodModel = LODModels[i];
+
+                    for (int j = 0; j < lodModel.Sections?.Length; j++)
+                        if (j < lodMatMap.Length && lodMatMap[j] >= 0 && lodMatMap[j] < Materials.Length)
+                            lodModel.Sections[j].MaterialIndex = (short) Math.Clamp((ushort) lodMatMap[j], 0, Materials.Length);
+                }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
