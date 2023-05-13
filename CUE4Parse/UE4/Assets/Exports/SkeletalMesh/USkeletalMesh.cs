@@ -99,9 +99,14 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
                 for (int i = 0; i < LODModels?.Length; i++)
                 {
-                    var lodMatMap = lodInfos[i].GetOrDefault<int[]>("LODMaterialMap");
-                    var lodModel = LODModels[i];
+                    var lodInfo = i < lodInfos.Length ? lodInfos[i] : null;
+                    if (lodInfo is null)
+                        continue;
 
+                    if (!lodInfo.TryGetValue(out int[] lodMatMap, "LODMaterialMap"))
+                        continue;
+
+                    var lodModel = LODModels[i];
                     for (int j = 0; j < lodModel.Sections?.Length; j++)
                         if (j < lodMatMap.Length && lodMatMap[j] >= 0 && lodMatMap[j] < Materials.Length)
                             lodModel.Sections[j].MaterialIndex = (short) Math.Clamp((ushort) lodMatMap[j], 0, Materials.Length);
