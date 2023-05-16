@@ -23,8 +23,6 @@ git clone https://github.com/FabianFG/CUE4Parse.git --recursive
 
 #### Example
 ```csharp
-// using CUE4Parse_Conversion;
-
 var provider = new DefaultFileProvider(ARCHIVE_DIRECTORY_HERE, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE4_27));
 provider.Initialize(); // will scan the archive directory for supported file extensions
 
