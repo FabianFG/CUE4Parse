@@ -49,9 +49,10 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         public IEnumerable<IAesVfsReader> UnloadedVfsByGuid(FGuid guid) => _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid);
+
         public void UnloadAllVfs()
         {
-            _files = new FileProviderDictionary(IsCaseInsensitive);
+            _files.Clear();
             foreach (var reader in _mountedVfs.Keys)
             {
                 _keys.TryRemove(reader.EncryptionKeyGuid, out _);
@@ -59,6 +60,16 @@ namespace CUE4Parse.FileProvider.Vfs
                 _mountedVfs.TryRemove(reader, out _);
                 _unloadedVfs[reader] = null;
             }
+        }
+        public void UnloadNonStreamedVfs()
+        {
+            var onDemandFiles = new Dictionary<string, GameFile>();
+            foreach (var (path, vfs) in _files)
+                if (vfs is StreamedGameFile)
+                    onDemandFiles[path] = vfs;
+
+            UnloadAllVfs();
+            _files.AddFiles(onDemandFiles);
         }
 
         public int Mount() => MountAsync().Result;

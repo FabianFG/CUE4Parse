@@ -43,6 +43,13 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _indicesBag.Clear();
+            _byId.Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(string key)
         {
             if (IsCaseInsensitive)
