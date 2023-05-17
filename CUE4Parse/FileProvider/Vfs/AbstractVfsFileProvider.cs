@@ -191,7 +191,8 @@ namespace CUE4Parse.FileProvider.Vfs
                 return 0;
 
             var vfc = new FFileTable(new FByteArchive("vfc.meta", File.ReadAllBytes(vfcMetadata)));
-            var manifest = new OptimizedContentBuildManifest(File.ReadAllBytes(cachedManifest[0].FullName));
+            var manifest = new OptimizedContentBuildManifest(
+                File.ReadAllBytes(cachedManifest.OrderBy(f => f.LastWriteTime).Last().FullName));
 
             var onDemandFiles = new Dictionary<string, GameFile>();
             foreach ((var vfcHash, var dataReference) in vfc.FileMap)
