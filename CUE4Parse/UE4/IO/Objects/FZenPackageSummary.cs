@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly int ExportMapOffset;
         public readonly int ExportBundleEntriesOffset;
         public readonly int GraphDataOffset;
-        public readonly int ImportedPackageNamesOffset;
+        public readonly int ImportedPackageNamesOffset = 0;
 
         public FZenPackageSummary(FArchive Ar)
         {

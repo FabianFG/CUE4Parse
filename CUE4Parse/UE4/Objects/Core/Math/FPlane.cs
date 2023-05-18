@@ -41,7 +41,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             W = @base | normal;
         }
 
-        public FPlane(float x, float y, float z, float w)
+        public FPlane(float x, float y, float z, float w) : this()
         {
             X = x;
             Y = y;
