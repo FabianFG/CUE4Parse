@@ -258,7 +258,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 bDisabled = Ar.ReadBoolean();
             }
 
-            if (Ar.Game == EGame.GAME_RogueCompany)
+            if (Ar.Game == EGame.GAME_RogueCompany|| Ar.Game == EGame.GAME_BladeSoul)
             {
                 Ar.Position += 4;
             }
