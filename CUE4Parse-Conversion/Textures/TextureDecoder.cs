@@ -18,6 +18,7 @@ namespace CUE4Parse_Conversion.Textures
         {
             if (!texture.IsVirtual && mip != null)
             {
+                mip.SizeY *= texture.GetNumSlices();
                 DecodeTexture(mip, texture.Format, texture.isNormalMap, platform, out var data, out var colorType);
 
                 var width = mip.SizeX;

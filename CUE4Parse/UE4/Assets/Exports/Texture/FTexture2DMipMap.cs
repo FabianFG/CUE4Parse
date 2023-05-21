@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     {
         public readonly FByteBulkData Data;
         public readonly int SizeX;
-        public readonly int SizeY;
+        public int SizeY;
         public readonly int SizeZ;
 
         public FTexture2DMipMap(FAssetArchive Ar)
