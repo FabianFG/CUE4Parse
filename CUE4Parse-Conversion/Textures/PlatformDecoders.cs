@@ -16,14 +16,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 16;
+                    var totalBlocks = mip.BulkData.Data.Length / 16;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
+                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
                     data = DXTDecoder.DXT5(d, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
@@ -32,14 +32,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 8;
+                    var totalBlocks = mip.BulkData.Data.Length / 8;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
+                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
                     data = DXTDecoder.DXT1(d, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
@@ -48,14 +48,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 4;
+                    var totalBlocks = mip.BulkData.Data.Length / 4;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    data = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 1, 1, 4);
+                    data = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 1, 1, 4);
                     colorType = SKColorType.Bgra8888;
                     break;
                 }
@@ -63,14 +63,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 1;
+                    var totalBlocks = mip.BulkData.Data.Length / 1;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    data = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 1, 1, 1);
+                    data = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 1, 1, 1);
                     colorType = SKColorType.Gray8;
                     break;
                 }
@@ -78,14 +78,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 16;
+                    var totalBlocks = mip.BulkData.Data.Length / 16;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
+                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
                     data = BCDecoder.BC5(d, mip.SizeX, mip.SizeY);
                     colorType = SKColorType.Rgb888x;
                     break;
@@ -94,14 +94,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 8;
+                    var totalBlocks = mip.BulkData.Data.Length / 8;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
+                    var d = PlatformDeswizzlers.DeswizzlePS4(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
                     data = BCDecoder.BC4(d, mip.SizeX, mip.SizeY);
                     colorType = SKColorType.Rgb888x;
                     break;
@@ -126,14 +126,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 16;
+                    var totalBlocks = mip.BulkData.Data.Length / 16;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DesizzleNSW(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
+                    var d = PlatformDeswizzlers.DesizzleNSW(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 16);
                     data = DXTDecoder.DXT5(d, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
@@ -142,14 +142,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 8;
+                    var totalBlocks = mip.BulkData.Data.Length / 8;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    var d = PlatformDeswizzlers.DesizzleNSW(mip.Data.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
+                    var d = PlatformDeswizzlers.DesizzleNSW(mip.BulkData.Data, mip.SizeX, mip.SizeY, 4, 4, 8);
                     data = DXTDecoder.DXT1(d, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
@@ -158,14 +158,14 @@ namespace CUE4Parse_Conversion.Textures
                 {
                     var uBlockSize = mip.SizeX / 4;
                     var vBlockSize = mip.SizeY / 4;
-                    var totalBlocks = mip.Data.Data.Length / 4;
+                    var totalBlocks = mip.BulkData.Data.Length / 4;
 
                     if (uBlockSize * vBlockSize > totalBlocks)
                     {
                         throw new ParserException($"Texture unable to be untiled: {format}");
                     }
 
-                    data = PlatformDeswizzlers.DesizzleNSW(mip.Data.Data, mip.SizeX, mip.SizeY, 1, 1, 4);
+                    data = PlatformDeswizzlers.DesizzleNSW(mip.BulkData.Data, mip.SizeX, mip.SizeY, 1, 1, 4);
                     colorType = SKColorType.Bgra8888;
                     break;
                 }

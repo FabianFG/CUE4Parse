@@ -13,13 +13,12 @@ namespace CUE4Parse_Conversion.Textures
 {
     public static class TextureDecoder
     {
-        public static SKBitmap? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
-        public static SKBitmap? Decode(this UTexture2D texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+        public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
+        public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
         {
             if (!texture.IsVirtual && mip != null)
             {
-                mip.SizeY *= texture.GetNumSlices();
-                DecodeTexture(mip, texture.Format, texture.isNormalMap, platform, out var data, out var colorType);
+                DecodeTexture(mip, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
                 var width = mip.SizeX;
                 var height = mip.SizeY;
@@ -37,7 +36,7 @@ namespace CUE4Parse_Conversion.Textures
                     bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
                 }
 
-                if (!texture.bRenderNearestNeighbor)
+                if (!texture.RenderNearestNeighbor)
                 {
                     return bitmap;
                 }
@@ -73,11 +72,11 @@ namespace CUE4Parse_Conversion.Textures
             switch (format)
             {
                 case EPixelFormat.PF_DXT1:
-                    data = DXTDecoder.DXT1(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
+                    data = DXTDecoder.DXT1(mip.BulkData.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_DXT5:
-                    data = DXTDecoder.DXT5(mip.Data.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
+                    data = DXTDecoder.DXT5(mip.BulkData.Data, mip.SizeX, mip.SizeY, mip.SizeZ);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ASTC_4x4:
@@ -86,7 +85,7 @@ namespace CUE4Parse_Conversion.Textures
                 case EPixelFormat.PF_ASTC_10x10:
                 case EPixelFormat.PF_ASTC_12x12:
                     data = ASTCDecoder.RGBA8888(
-                        mip.Data.Data,
+                        mip.BulkData.Data,
                         FormatHelper.GetBlockWidth(format),
                         FormatHelper.GetBlockHeight(format),
                         FormatHelper.GetBlockDepth(format),
@@ -112,42 +111,42 @@ namespace CUE4Parse_Conversion.Textures
 
                     break;
                 case EPixelFormat.PF_BC4:
-                    data = BCDecoder.BC4(mip.Data.Data, mip.SizeX, mip.SizeY);
+                    data = BCDecoder.BC4(mip.BulkData.Data, mip.SizeX, mip.SizeY);
                     colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_BC5:
-                    data = BCDecoder.BC5(mip.Data.Data, mip.SizeX, mip.SizeY);
+                    data = BCDecoder.BC5(mip.BulkData.Data, mip.SizeX, mip.SizeY);
                     colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_BC6H:
                     // BC6H doesn't work no matter the pixel format, the closest we can get is either
                     // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
 
-                    data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, true,
+                    data = Detex.DecodeDetexLinear(mip.BulkData.Data, mip.SizeX, mip.SizeY, true,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
                     colorType = SKColorType.Rgb565;
                     break;
                 case EPixelFormat.PF_BC7:
-                    data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
+                    data = Detex.DecodeDetexLinear(mip.BulkData.Data, mip.SizeX, mip.SizeY, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC1:
-                    data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
+                    data = Detex.DecodeDetexLinear(mip.BulkData.Data, mip.SizeX, mip.SizeY, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC2_RGB:
-                    data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
+                    data = Detex.DecodeDetexLinear(mip.BulkData.Data, mip.SizeX, mip.SizeY, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
                     break;
                 case EPixelFormat.PF_ETC2_RGBA:
-                    data = Detex.DecodeDetexLinear(mip.Data.Data, mip.SizeX, mip.SizeY, false,
+                    data = Detex.DecodeDetexLinear(mip.BulkData.Data, mip.SizeX, mip.SizeY, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
@@ -157,7 +156,7 @@ namespace CUE4Parse_Conversion.Textures
                 case EPixelFormat.PF_G16:
                     unsafe
                     {
-                        fixed (byte* d = mip.Data.Data)
+                        fixed (byte* d = mip.BulkData.Data)
                         {
                             data = ConvertRawR16DataToRGB888X(mip.SizeX, mip.SizeY, d, mip.SizeX * 2); // 2 BPP
                         }
@@ -166,17 +165,17 @@ namespace CUE4Parse_Conversion.Textures
                     colorType = SKColorType.Rgb888x;
                     break;
                 case EPixelFormat.PF_B8G8R8A8:
-                    data = mip.Data.Data;
+                    data = mip.BulkData.Data;
                     colorType = SKColorType.Bgra8888;
                     break;
                 case EPixelFormat.PF_G8:
-                    data = mip.Data.Data;
+                    data = mip.BulkData.Data;
                     colorType = SKColorType.Gray8;
                     break;
                 case EPixelFormat.PF_FloatRGBA:
                     unsafe
                     {
-                        fixed (byte* d = mip.Data.Data)
+                        fixed (byte* d = mip.BulkData.Data)
                         {
                             data = ConvertRawR16G16B16A16FDataToRGBA8888(mip.SizeX, mip.SizeY, d, mip.SizeX * 8, false); // 8 BPP
                         }
