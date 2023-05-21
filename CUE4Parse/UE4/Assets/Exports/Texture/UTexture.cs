@@ -160,4 +160,16 @@ public abstract class UTexture : UUnrealMaterial
 
         return GetFirstMip();
     }
+
+    public override void GetParams(CMaterialParams parameters)
+    {
+        // Default empty method
+        // ???
+    }
+
+    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    {
+        // Default empty method
+        // ???
+    }
 }

@@ -1,4 +1,3 @@
-namespace CUE4Parse.UE4.Assets.Exports.Texture
-{
-    public class UTextureLightProfile : UTexture2D { }
-}
+namespace CUE4Parse.UE4.Assets.Exports.Texture;
+
+public class UTextureLightProfile : UTexture2D { }

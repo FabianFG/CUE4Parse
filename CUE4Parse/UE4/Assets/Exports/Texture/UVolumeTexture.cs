@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 
@@ -17,15 +16,5 @@ public class UVolumeTexture : UTexture
         {
             DeserializeCookedPlatformData(Ar);
         }
-    }
-
-    public override void GetParams(CMaterialParams parameters)
-    {
-        // ???
-    }
-
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
-    {
-        // ???
     }
 }
