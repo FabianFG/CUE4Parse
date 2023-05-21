@@ -18,7 +18,7 @@ public abstract class UTexture : UUnrealMaterial
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public bool SRGB { get; private set; }
-    public EPixelFormat Format { get; private set; } = EPixelFormat.PF_Unknown;
+    public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
 
     public bool IsVirtual => PlatformData.VTData != null;
