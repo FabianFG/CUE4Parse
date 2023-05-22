@@ -94,9 +94,9 @@ public static class TextureDecoder
             case EPixelFormat.PF_ASTC_12x12:
                 data = ASTCDecoder.RGBA8888(
                     bytes,
-                    FormatHelper.GetBlockWidth(format),
-                    FormatHelper.GetBlockHeight(format),
-                    FormatHelper.GetBlockDepth(format),
+                    formatInfo.BlockSizeX,
+                    formatInfo.BlockSizeY,
+                    formatInfo.BlockSizeZ,
                     mip.SizeX, mip.SizeY, mip.SizeZ);
                 colorType = SKColorType.Rgba8888;
 

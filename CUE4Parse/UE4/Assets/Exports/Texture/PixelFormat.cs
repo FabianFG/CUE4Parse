@@ -6,22 +6,34 @@ public static class PixelFormatUtils
 {
     public static FPixelFormatInfo[] PixelFormats = new FPixelFormatInfo[/*(int) EPixelFormat.PF_MAX*/]
     {
-        //        UnrealFormat               Name       BlockSizeX  BlockSizeY  BlockSizeZ  BlockBytes  NumComponents  Supported
-        new(EPixelFormat.PF_Unknown,       "unknown",       0,          0,          0,          0,            0,         false),
-        new(EPixelFormat.PF_A32B32G32R32F, "A32B32G32R32F", 1,          1,          1,          16,           4,         true),
-        new(EPixelFormat.PF_B8G8R8A8,      "B8G8R8A8",      1,          1,          1,          4,            4,         true),
-        new(EPixelFormat.PF_G8,            "G8",            1,          1,          1,          1,            1,         true),
-        new(EPixelFormat.PF_G16,           "G16",           1,          1,          1,          2,            1,         true),
-        new(EPixelFormat.PF_DXT1,          "DXT1",          4,          4,          1,          8,            3,         true),
-        new(EPixelFormat.PF_DXT3,          "DXT3",          4,          4,          1,          16,           4,         true),
-        new(EPixelFormat.PF_DXT5,          "DXT5",          4,          4,          1,          16,           4,         true),
-        new(EPixelFormat.PF_UYVY,          "UYVY",          2,          1,          1,          4,            4,         false),
-        new(EPixelFormat.PF_FloatRGB,      "FloatRGB",      1,          1,          1,          4,            3,         true),
-        new(EPixelFormat.PF_FloatRGBA,     "FloatRGBA",     1,          1,          1,          8,            4,         true),
-        new(EPixelFormat.PF_DepthStencil,  "DepthStencil",  1,          1,          1,          4,            1,         false),
-        new(EPixelFormat.PF_ShadowDepth,   "ShadowDepth",   1,          1,          1,          4,            1,         false),
-        new(EPixelFormat.PF_R32_FLOAT,     "R32_FLOAT",     1,          1,          1,          4,            1,         true),
-        new(EPixelFormat.PF_G16R16,        "G16R16",        1,          1,          1,          4,            2,         true)
+        //        Pixel Format                   Name         BlockSizeX  BlockSizeY  BlockSizeZ  BlockBytes  NumComponents  Supported by CUE4Parse
+        new(EPixelFormat.PF_Unknown,          "unknown",          0,          0,          0,          0,            0,                false),
+        new(EPixelFormat.PF_A32B32G32R32F,    "A32B32G32R32F",    1,          1,          1,          16,           4,                false),
+        new(EPixelFormat.PF_B8G8R8A8,         "B8G8R8A8",         1,          1,          1,          4,            4,                true),
+        new(EPixelFormat.PF_G8,               "G8",               1,          1,          1,          1,            1,                true),
+        new(EPixelFormat.PF_G16,              "G16",              1,          1,          1,          2,            1,                true),
+        new(EPixelFormat.PF_DXT1,             "DXT1",             4,          4,          1,          8,            3,                true),
+        new(EPixelFormat.PF_DXT3,             "DXT3",             4,          4,          1,          16,           4,                true),
+        new(EPixelFormat.PF_DXT5,             "DXT5",             4,          4,          1,          16,           4,                true),
+        new(EPixelFormat.PF_UYVY,             "UYVY",             2,          1,          1,          4,            4,                false),
+        new(EPixelFormat.PF_FloatRGB,         "FloatRGB",         1,          1,          1,          4,            3,                true),
+        new(EPixelFormat.PF_FloatRGBA,        "FloatRGBA",        1,          1,          1,          8,            4,                true),
+        new(EPixelFormat.PF_DepthStencil,     "DepthStencil",     1,          1,          1,          4,            1,                false),
+        new(EPixelFormat.PF_ShadowDepth,      "ShadowDepth",      1,          1,          1,          4,            1,                false),
+        new(EPixelFormat.PF_R32_FLOAT,        "R32_FLOAT",        1,          1,          1,          4,            1,                false),
+        new(EPixelFormat.PF_G16R16,           "G16R16",           1,          1,          1,          4,            2,                false),
+        new(EPixelFormat.PF_G16R16F,          "G16R16F",          1,          1,          1,          4,            2,                false),
+        new(EPixelFormat.PF_G16R16F_FILTER,   "G16R16F_FILTER",   1,          1,          1,          4,            2,                false),
+        new(EPixelFormat.PF_G32R32F,          "G32R32F",          1,          1,          1,          8,            2,                false),
+        new(EPixelFormat.PF_A2B10G10R10,      "A2B10G10R10",      1,          1,          1,          4,            4,                false),
+        new(EPixelFormat.PF_A16B16G16R16,     "A16B16G16R16",     1,          1,          1,          8,            4,                false),
+        new(EPixelFormat.PF_D24,              "D24",              1,          1,          1,          4,            1,                false),
+        new(EPixelFormat.PF_R16F,             "PF_R16F",          1,          1,          1,          2,            1,                true),
+        new(EPixelFormat.PF_R16F_FILTER,      "PF_R16F_FILTER",   1,          1,          1,          2,            1,                true),
+        new(EPixelFormat.PF_BC5,              "BC5",              4,          4,          1,          16,           2,                true),
+        new(EPixelFormat.PF_V8U8,             "V8U8",             1,          1,          1,          2,            2,                false),
+        new(EPixelFormat.PF_A1,               "A1",               1,          1,          1,          1,            1,                false),
+        new(EPixelFormat.PF_FloatR11G11B10,   "FloatR11G11B10",   1,          1,          1,          4,            3,                false)
     };
 }
 
