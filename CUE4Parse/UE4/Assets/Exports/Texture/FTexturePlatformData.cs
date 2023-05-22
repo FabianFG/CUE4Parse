@@ -98,6 +98,8 @@ public class FTexturePlatformData
 
             if (Owner is UVolumeTexture)
                 Mips[i].SizeX *= GetNumSlices();
+            else if (Owner is UTextureCube)
+                Mips[i].SizeY *= GetNumSlices();
         }
 
         if (Ar.Versions["VirtualTextures"])
@@ -132,4 +134,10 @@ public class FTexturePlatformData
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetNumSlices() => (int) (PackedData & BitMask_NumSlices);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetNumMipsInTail() => (int) OptData.NumMipsInTail;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetExtData() => (int) OptData.ExtData;
 }
