@@ -1,50 +1,90 @@
 using System;
-using CUE4Parse.UE4.Exceptions;
+using System.IO;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 
 namespace CUE4Parse_Conversion.Textures;
 
 public static class PlatformDeswizzlers
 {
-    // TODO: Possibly use the actual Tegra X1 library
-    public static byte[] DesizzleNSW(byte[] data, int width, int height, int blockX, int blockY, int bpb)
+    static PlatformDeswizzlers()
     {
-        var outData = new byte[data.Length];
-        var blockWidth = width / blockX;
-        var blockHeight = height / blockY;
+        PrepareDllFile();
+    }
 
-        var gobsPerBlockX = (blockWidth * bpb + 63) / 64;
-        var bpgX = 64;
-        var bpgY = 8;
+    [DllImport("tegra_swizzle_x64", EntryPoint = "deswizzle_block_linear")]
+    private static extern unsafe void DeswizzleBlockLinearX64(ulong width, ulong height, ulong depth, byte* source, ulong sourceLength, byte[] destination, ulong destinationLength, ulong blockHeight, ulong bytesPerPixel);
 
-        if (blockX == 1 && blockY == 1)
+    [DllImport("tegra_swizzle_x64", EntryPoint = "swizzled_surface_size")]
+    private static extern ulong GetSurfaceSizeX64(ulong width, ulong height, ulong depth, ulong blockHeight, ulong bytesPerPixel);
+
+    [DllImport("tegra_swizzle_x64", EntryPoint = "block_height_mip0")]
+    private static extern ulong BlockHeightMip0X64(ulong height);
+
+    [DllImport("tegra_swizzle_x64", EntryPoint = "mip_block_height")]
+    private static extern ulong MipBlockHeightX64(ulong mipHeight, ulong blockHeightMip0);
+
+    private static void PrepareDllFile()
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse_Conversion.Resources.tegra_swizzle_x64.dll");
+        if (stream == null)
+            throw new MissingManifestResourceException("Couldn't find tegra_swizzle_x64.dll in Embedded Resources");
+        var ba = new byte[(int) stream.Length];
+        stream.Read(ba, 0, (int) stream.Length);
+
+        bool fileOk;
+
+        using (var sha1 = SHA1.Create())
         {
-            bpgY = 16;
-            if (blockHeight < 128) bpgY = 8;
-        }
+            var fileHash = BitConverter.ToString(sha1.ComputeHash(ba)).Replace("-", string.Empty);
 
-        // var gobBytes = bpgX * bpgY;
-
-        if (blockHeight < 64) bpgY = 4;
-        if (blockHeight < 32) bpgY = 2;
-        if (blockHeight < 16) bpgY = 1;
-
-        for (var dy = 0; dy < blockHeight; dy++)
-        {
-            for (var dx = 0; dx < blockWidth; dx++)
+            if (File.Exists("tegra_swizzle_x64.dll"))
             {
-                var xCoordInBlock = dx * bpb;
-                var gobOffset = xCoordInBlock / bpgX * bpgY + dy / (bpgY * 8) * bpgY * gobsPerBlockX + (dy % (bpgY * 8) >> 3);
-                gobOffset *= 512;
-                var offset = (((xCoordInBlock & 0x3f) >> 5) << 8) + (((dy & 7) >> 1) << 6) + (((xCoordInBlock & 0x1f) >> 4) << 5) + ((dy & 1) << 4) + (xCoordInBlock & 0xf);
-                var address = gobOffset + offset;
+                var bb = File.ReadAllBytes("tegra_swizzle_x64.dll");
+                var fileHash2 = BitConverter.ToString(sha1.ComputeHash(bb)).Replace("-", string.Empty);
 
-                if (address >= data.Length) throw new ParserException("Parameters or decoder failed to give proper values");
-
-                Buffer.BlockCopy(data, address, outData, (dy * blockWidth + dx) * bpb, bpb);
+                fileOk = fileHash == fileHash2;
+            }
+            else
+            {
+                fileOk = false;
             }
         }
 
-        return outData;
+        if (!fileOk)
+        {
+            File.WriteAllBytes("tegra_swizzle_x64.dll", ba);
+        }
+    }
+
+    public static byte[] GetDeswizzledData(byte[] data, FPixelFormatInfo formatInfo, int width, int height, int depth)
+    {
+        var blockHeightMip0 = BlockHeightMip0X64(formatInfo.GetBlockCountForHeight(height));
+        var heightInBlocks = formatInfo.GetBlockCountForHeight(height);
+        var mipBlockHeightLog2 = (int) Math.Log(MipBlockHeightX64(heightInBlocks, blockHeightMip0), 2);
+
+        return DeswizzleBlockLinear(width, height, depth, formatInfo, mipBlockHeightLog2, data);
+    }
+
+    private static unsafe byte[] DeswizzleBlockLinear(int width, int height, int depth, FPixelFormatInfo formatInfo, int blockHeightLog2, byte[] data)
+    {
+        var x = formatInfo.GetBlockCountForWidth(width);
+        var y = formatInfo.GetBlockCountForHeight(height);
+        var z = formatInfo.GetBlockCountForDepth(depth);
+
+        var blockHeight = 1 << Math.Max(Math.Min(blockHeightLog2, 5), 0);
+
+        var output = new byte[width * height * formatInfo.BlockBytes];
+
+        fixed (byte* ptr = data)
+        {
+            DeswizzleBlockLinearX64(x, y, z, ptr, (ulong) data.Length, output, (ulong) output.Length, (ulong) blockHeight, (ulong) formatInfo.BlockBytes);
+        }
+
+        return output;
     }
 
     public static byte[] DeswizzlePS4(byte[] data, int width, int height, int blockX, int blockY, int bpb)

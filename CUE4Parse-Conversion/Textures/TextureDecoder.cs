@@ -73,7 +73,7 @@ public static class TextureDecoder
 
         // Handle deswizzling if necessary.
         if (isPS) bytes = PlatformDeswizzlers.DeswizzlePS4(bytes, mip.SizeX, mip.SizeY, formatInfo.BlockSizeX, formatInfo.BlockSizeY, formatInfo.BlockBytes);
-        else if (isNX) bytes = PlatformDeswizzlers.DesizzleNSW(bytes, mip.SizeX, mip.SizeY, formatInfo.BlockSizeX, formatInfo.BlockSizeY, formatInfo.BlockBytes);
+        else if (isNX) bytes = PlatformDeswizzlers.GetDeswizzledData(bytes, formatInfo, mip.SizeX, mip.SizeY, mip.SizeZ);
 
         switch (format)
         {
