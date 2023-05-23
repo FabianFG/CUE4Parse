@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -25,6 +25,7 @@ namespace CUE4Parse.UE4.Objects.Engine
     public class UUserDefinedStruct : UStruct
     {
         public EUserDefinedStructureStatus Status;
+        public uint StructFlags;
         public List<FPropertyTag>? DefaultProperties { get; set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -32,27 +33,40 @@ namespace CUE4Parse.UE4.Objects.Engine
             base.Deserialize(Ar, validPos);
 
             Status = GetOrDefault<EUserDefinedStructureStatus>(nameof(Status));
-            if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject)) return;
-            if (Status != EUserDefinedStructureStatus.UDSS_UpToDate) return;
+            if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+                return;
+            if (Status != EUserDefinedStructureStatus.UDSS_UpToDate)
+                return;
 
-            Ar.Position = validPos;
-            // if (Ar.HasUnversionedProperties)
-            // {
-            //     DeserializePropertiesUnversioned(DefaultProperties = new List<FPropertyTag>(), Ar, this); // Why does this fail?
-            // }
-            // else
-            // {
-            //     DeserializePropertiesTagged(DefaultProperties = new List<FPropertyTag>(), Ar);
-            // }
+            StructFlags = Ar.Read<uint>();
+
+            if (Ar.HasUnversionedProperties)
+            {
+                DeserializePropertiesUnversioned(DefaultProperties = new List<FPropertyTag>(), Ar, this);
+            }
+            else
+            {
+                DeserializePropertiesTagged(DefaultProperties = new List<FPropertyTag>(), Ar);
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
+            writer.WritePropertyName("StructFlags");
+            writer.WriteValue(StructFlags);
 
-            if (DefaultProperties is not { Count: > 0 }) return;
+            if (DefaultProperties is not { Count: > 0 })
+                return;
             writer.WritePropertyName("DefaultProperties");
-            serializer.Serialize(writer, DefaultProperties);
+            writer.WriteStartObject();
+            foreach (var property in DefaultProperties)
+            {
+                writer.WritePropertyName(property.Name.Text);
+                serializer.Serialize(writer, property.Tag);
+            }
+            writer.WriteEndObject();
+
         }
     }
 }
