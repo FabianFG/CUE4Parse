@@ -33,10 +33,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             base.Deserialize(Ar, validPos);
 
             Status = GetOrDefault<EUserDefinedStructureStatus>(nameof(Status));
-            if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
-                return;
-            if (Status != EUserDefinedStructureStatus.UDSS_UpToDate)
-                return;
+            if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject)) return;
+            if (Status != EUserDefinedStructureStatus.UDSS_UpToDate) return;
 
             StructFlags = Ar.Read<uint>();
 

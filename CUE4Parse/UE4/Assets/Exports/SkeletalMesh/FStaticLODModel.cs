@@ -255,6 +255,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         skipBytes += FSkinWeightVertexBuffer.MetadataSize(Ar);
                         Ar.Position += skipBytes;
 
+                        if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+
                         if (HasClothData())
                         {
                             var clothIndexMapping = Ar.ReadArray<long>();

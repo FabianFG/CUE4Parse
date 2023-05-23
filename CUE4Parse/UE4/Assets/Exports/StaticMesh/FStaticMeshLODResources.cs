@@ -102,6 +102,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     {
                         Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                     }
+                    if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4; // bDropNormals
                 }
 
                 // FStaticMeshBuffersSize
@@ -109,6 +110,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 // uint32 DepthOnlyIBSize       = 0;
                 // uint32 ReversedIBsSize       = 0;
                 Ar.Position += 12;
+
+                if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
             }
         }
 
