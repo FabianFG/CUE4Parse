@@ -62,6 +62,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Splitgate = GAME_UE4_27 + 1,
             GAME_HYENAS = GAME_UE4_27 + 2,
             GAME_HogwartsLegacy = GAME_UE4_27 + 3,
+            GAME_OutlastTrials = GAME_UE4_27 + 4,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,
