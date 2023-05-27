@@ -39,53 +39,53 @@ public static class PixelFormatUtils
 
 public record FPixelFormatInfo(EPixelFormat UnrealFormat, string Name, int BlockSizeX, int BlockSizeY, int BlockSizeZ, int BlockBytes, int NumComponents, bool Supported)
 {
-    public ulong GetBlockCountForWidth(int width)
+    public int GetBlockCountForWidth(int width)
     {
         if (BlockSizeX > 0)
         {
-            return (ulong) ((width + BlockSizeX - 1) / BlockSizeX);
+            return (width + BlockSizeX - 1) / BlockSizeX;
         }
 
         return 0;
     }
 
-    public ulong GetBlockCountForHeight(int height)
+    public int GetBlockCountForHeight(int height)
     {
         if (BlockSizeY > 0)
         {
-            return (ulong) ((height + BlockSizeY - 1) / BlockSizeY);
+            return (height + BlockSizeY - 1) / BlockSizeY;
         }
 
         return 0;
     }
 
-    public ulong GetBlockCountForDepth(int depth)
+    public int GetBlockCountForDepth(int depth)
     {
         if (BlockSizeZ > 0)
         {
-            return (ulong) ((depth + BlockSizeZ - 1) / BlockSizeZ);
+            return (depth + BlockSizeZ - 1) / BlockSizeZ;
         }
 
         return 0;
     }
 
-    public ulong Get2DImageSizeInBytes(int width, int height)
+    public int Get2DImageSizeInBytes(int width, int height)
     {
         var blockWidth = GetBlockCountForWidth(width);
         var blockHeight = GetBlockCountForHeight(height);
-        return blockWidth * blockHeight * (ulong) BlockBytes;
+        return blockWidth * blockHeight * BlockBytes;
     }
 
-    public ulong Get2DTextureMipSizeInBytes(int width, int height, int mipIdx)
+    public int Get2DTextureMipSizeInBytes(int width, int height, int mipIdx)
     {
         var mipWidth = Math.Max(width >> mipIdx, 1);
         var mipHeight = Math.Max(height >> mipIdx, 1);
         return Get2DImageSizeInBytes(mipWidth, mipHeight);
     }
 
-    public ulong Get2DTextureSizeInBytes(int width, int height, int mipCount)
+    public int Get2DTextureSizeInBytes(int width, int height, int mipCount)
     {
-        var size = 0UL;
+        var size = 0;
         var mipWidth = width;
         var mipHeight = height;
         for (var idx = 0; idx < mipCount; ++idx)

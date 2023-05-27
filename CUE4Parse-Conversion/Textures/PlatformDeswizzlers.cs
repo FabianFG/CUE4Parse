@@ -60,38 +60,37 @@ public static class PlatformDeswizzlers
         }
     }
 
-    public static byte[] GetDeswizzledData(byte[] data, FPixelFormatInfo formatInfo, int width, int height, int depth)
+    public static byte[] GetDeswizzledData(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
     {
-        var blockHeightMip0 = BlockHeightMip0X64(formatInfo.GetBlockCountForHeight(height));
-        var heightInBlocks = formatInfo.GetBlockCountForHeight(height);
-        var mipBlockHeightLog2 = (int) Math.Log(MipBlockHeightX64(heightInBlocks, blockHeightMip0), 2);
+        var heightInBlocks = (ulong) formatInfo.GetBlockCountForHeight(mip.SizeY);
+        var blockHeightMip0 = BlockHeightMip0X64(heightInBlocks); // !!!!!! assuming heightInBlocks is ALWAYS using mip 0
+        var mipBlockHeightLog2 = Math.Log(MipBlockHeightX64(heightInBlocks, blockHeightMip0), 2);
+        var blockHeight = 1 << Math.Max(Math.Min((int) mipBlockHeightLog2, 5), 0);
 
-        return DeswizzleBlockLinear(width, height, depth, formatInfo, mipBlockHeightLog2, data);
+        return DeswizzleBlockLinear(mip.SizeX, mip.SizeY, mip.SizeZ, formatInfo, blockHeight / 2, data);
     }
 
-    private static unsafe byte[] DeswizzleBlockLinear(int width, int height, int depth, FPixelFormatInfo formatInfo, int blockHeightLog2, byte[] data)
+    private static unsafe byte[] DeswizzleBlockLinear(int width, int height, int depth, FPixelFormatInfo formatInfo, int blockHeight, byte[] data)
     {
-        var x = formatInfo.GetBlockCountForWidth(width);
-        var y = formatInfo.GetBlockCountForHeight(height);
-        var z = formatInfo.GetBlockCountForDepth(depth);
-
-        var blockHeight = 1 << Math.Max(Math.Min(blockHeightLog2, 5), 0);
-
+        width = formatInfo.GetBlockCountForWidth(width);
+        height = formatInfo.GetBlockCountForHeight(height);
+        depth = formatInfo.GetBlockCountForDepth(depth);
         var output = new byte[width * height * formatInfo.BlockBytes];
 
         fixed (byte* ptr = data)
         {
-            DeswizzleBlockLinearX64(x, y, z, ptr, (ulong) data.Length, output, (ulong) output.Length, (ulong) blockHeight, (ulong) formatInfo.BlockBytes);
+            DeswizzleBlockLinearX64((ulong) width, (ulong) height, (ulong) depth, ptr, (ulong) data.Length, output, (ulong) output.Length, (ulong) blockHeight, (ulong) formatInfo.BlockBytes);
         }
 
         return output;
     }
 
-    public static byte[] DeswizzlePS4(byte[] data, int width, int height, int blockX, int blockY, int bpb)
+    public static byte[] DeswizzlePS4(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
     {
         var outData = new byte[data.Length];
-        var blockWidth = width / blockX;
-        var blockHeight = height / blockY;
+        var blockWidth = mip.SizeX / formatInfo.BlockSizeX;
+        var blockHeight = mip.SizeY / formatInfo.BlockSizeY;
+        var bpb = formatInfo.BlockBytes;
 
         var blockWidth2 = blockWidth > 8 ? blockWidth : 8;
         var blockHeight2 = blockHeight > 8 ? blockHeight : 8;
