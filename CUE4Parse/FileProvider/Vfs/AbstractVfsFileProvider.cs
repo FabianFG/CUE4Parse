@@ -186,8 +186,12 @@ namespace CUE4Parse.FileProvider.Vfs
             if (!Directory.Exists(persistentDownloadDir)) return 0;
 
             var vfcMetadata = Path.Combine(persistentDownloadDir, "VFC", "vfc.meta");
-            var cachedManifest = new DirectoryInfo(Path.Combine(persistentDownloadDir, "ManifestCache")).GetFiles("*.manifest");
-            if (!File.Exists(vfcMetadata) || cachedManifest.Length <= 0)
+            var manifestCacheFolder = new DirectoryInfo(Path.Combine(persistentDownloadDir, "ManifestCache"));
+            if (!File.Exists(vfcMetadata) || !manifestCacheFolder.Exists)
+                return 0;
+
+            var cachedManifest = manifestCacheFolder.GetFiles("*.manifest");
+            if (cachedManifest.Length <= 0)
                 return 0;
 
             var vfc = new FFileTable(new FByteArchive("vfc.meta", File.ReadAllBytes(vfcMetadata)));
