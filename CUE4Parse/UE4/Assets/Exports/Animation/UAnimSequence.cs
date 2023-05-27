@@ -243,7 +243,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (nameIndex >= 0 && nameIndex < Ar.Owner.NameMap.Length)
             {
                 var format = Ar.ReadFName();
-                if (format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;
+                if ("AKF_" + format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
                 if (format.Text.StartsWith("ACL"))
                 {
