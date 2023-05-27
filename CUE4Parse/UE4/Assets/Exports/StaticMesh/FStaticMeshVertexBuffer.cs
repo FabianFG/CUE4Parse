@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 else
                 {
                     var tempTangents = Array.Empty<FPackedNormal[]>();
-                    if (Ar.Game == EGame.GAME_StarWarsJediFallenOrder && Ar.ReadBoolean()) // bDropNormals
+                    if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor && Ar.ReadBoolean()) // bDropNormals
                     {
                         goto texture_coordinates;
                     }
@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         UV = new FStaticMeshUVItem[NumVertices];
                         for (var i = 0; i < NumVertices; i++)
                         {
-                            if (Ar.Game == EGame.GAME_StarWarsJediFallenOrder && tempTangents.Length == 0)
+                            if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor && tempTangents.Length == 0)
                             {
                                 UV[i] = new FStaticMeshUVItem(new [] { new FPackedNormal(0), new FPackedNormal(0), new FPackedNormal(0) }, uv[i]);
                             }

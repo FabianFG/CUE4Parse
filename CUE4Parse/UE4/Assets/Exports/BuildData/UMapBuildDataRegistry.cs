@@ -303,6 +303,8 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
 
             if (bValid)
             {
+                if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 8;
+
                 Bounds = new FBox(Ar);
                 IndirectionTextureDimensions = Ar.Read<FIntVector>();
                 IndirectionTexture = new FVolumetricLightmapDataLayer(Ar);

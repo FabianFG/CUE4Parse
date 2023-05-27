@@ -65,6 +65,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
             {
                 PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
             }
+
+            if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 20;
         }
     }
 
