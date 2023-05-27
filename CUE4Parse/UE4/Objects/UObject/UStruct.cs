@@ -39,7 +39,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             var bytecodeBufferSize = Ar.Read<int>();
             var serializedScriptSize = Ar.Read<int>();
 
-            if (Ar.Game >= EGame.GAME_UE4_16 && Ar.Owner.Provider?.ReadScriptData == true && serializedScriptSize > 0)
+            if (Ar.Owner.Provider?.ReadScriptData == true && serializedScriptSize > 0)
             {
                 using var kismetAr = new FKismetArchive(Name, Ar.ReadBytes(serializedScriptSize), Ar.Owner, Ar.Versions);
 

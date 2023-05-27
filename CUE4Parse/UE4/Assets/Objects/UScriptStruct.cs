@@ -103,7 +103,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
                 "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
                 "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
-
+                "Matrix" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar),
                 "InstancedStruct" => new FInstancedStruct(Ar),
                 "WorldConditionQueryDefinition" => new FWorldConditionQueryDefinition(Ar),
 
