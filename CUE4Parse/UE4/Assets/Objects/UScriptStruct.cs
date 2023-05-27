@@ -19,6 +19,7 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -104,7 +105,8 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
 
                 "InstancedStruct" => new FInstancedStruct(Ar),
-                
+                "WorldConditionQueryDefinition" => new FWorldConditionQueryDefinition(Ar),
+
                 // FortniteGame
                 "ConnectivityCube" => new FConnectivityCube(Ar),
                 //"FortActorRecord" => new FFortActorRecord(Ar),
