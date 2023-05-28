@@ -62,12 +62,57 @@ public static class PlatformDeswizzlers
 
     public static byte[] GetDeswizzledData(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
     {
-        var heightInBlocks = (ulong) formatInfo.GetBlockCountForHeight(mip.SizeY);
-        var blockHeightMip0 = BlockHeightMip0X64(heightInBlocks); // !!!!!! assuming heightInBlocks is ALWAYS using mip 0
-        var mipBlockHeightLog2 = Math.Log(MipBlockHeightX64(heightInBlocks, blockHeightMip0), 2);
-        var blockHeight = 1 << Math.Max(Math.Min((int) mipBlockHeightLog2, 5), 0);
+        var heightInBlocks = formatInfo.GetBlockCountForHeight(mip.SizeY);
+        // var blockHeightMip0 = BlockHeightMip0X64(heightInBlocks); // !!!!!! assuming heightInBlocks is ALWAYS using mip 0
+        // var mipBlockHeightLog2 = Math.Log(MipBlockHeightX64(heightInBlocks, blockHeightMip0), 2);
 
-        return DeswizzleBlockLinear(mip.SizeX, mip.SizeY, mip.SizeZ, formatInfo, blockHeight / 2, data);
+        int blockHeight;
+        switch (heightInBlocks)
+        {
+            case < 16:
+                blockHeight = 1;
+                break;
+            case < 24:
+                blockHeight = 2;
+                break;
+            case < 48:
+                blockHeight = 4;
+                break;
+            default:
+            {
+                if (formatInfo is { BlockSizeX: 1, BlockSizeY: 1 } && heightInBlocks >= 96)
+                    blockHeight = 16;
+                else
+                    blockHeight = 8;
+                break;
+            }
+        }
+
+        var widthInBlocks = formatInfo.GetBlockCountForWidth(mip.SizeX);
+        var paddedWidth = mip.SizeX;
+        // fine tune this
+        if (mip.SizeY is > 128 and < 256)
+        {
+            widthInBlocks = (widthInBlocks + 127) & ~127;
+            paddedWidth = widthInBlocks * formatInfo.BlockSizeX;
+        }
+        else if (mip.SizeY is > 256 and < 2048)
+        {
+            widthInBlocks = (widthInBlocks + 255) & ~255;
+            paddedWidth = widthInBlocks * formatInfo.BlockSizeX;
+        }
+
+        var textureData = DeswizzleBlockLinear(paddedWidth, mip.SizeY, mip.SizeZ, formatInfo, blockHeight, data);
+        if (paddedWidth <= mip.SizeX) return textureData;
+
+        var rowSize = widthInBlocks * formatInfo.BlockBytes;
+        var unpaddedRowSize = formatInfo.GetBlockCountForWidth(mip.SizeX) * formatInfo.BlockBytes;
+        var unpaddedTextureData = new byte[heightInBlocks * unpaddedRowSize];
+        for (int rowIndex = 0; rowIndex < heightInBlocks; rowIndex++)
+        {
+            Array.Copy(textureData, rowIndex * rowSize, unpaddedTextureData, rowIndex * unpaddedRowSize, unpaddedRowSize);
+        }
+        return unpaddedTextureData;
     }
 
     private static unsafe byte[] DeswizzleBlockLinear(int width, int height, int depth, FPixelFormatInfo formatInfo, int blockHeight, byte[] data)
@@ -75,7 +120,7 @@ public static class PlatformDeswizzlers
         width = formatInfo.GetBlockCountForWidth(width);
         height = formatInfo.GetBlockCountForHeight(height);
         depth = formatInfo.GetBlockCountForDepth(depth);
-        var output = new byte[width * height * formatInfo.BlockBytes];
+        var output = new byte[width * height * depth * formatInfo.BlockBytes];
 
         fixed (byte* ptr = data)
         {
