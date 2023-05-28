@@ -45,13 +45,13 @@ namespace CUE4Parse.UE4.Versions
         }
         private FPackageFileVersion _ver;
         public bool bExplicitVer { get; private set; }
-        public List<FCustomVersion>? CustomVersions;
+        public FCustomVersionContainer? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         public readonly Dictionary<string, KeyValuePair<string, string>> MapStructTypes = new();
         private readonly Dictionary<string, bool>? _optionOverrides;
         private readonly Dictionary<string, KeyValuePair<string, string>>? _mapStructTypesOverrides;
 
-        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, List<FCustomVersion>? customVersions = null, Dictionary<string, bool>? optionOverrides = null, Dictionary<string, KeyValuePair<string, string>>? mapStructTypesOverrides = null)
+        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, FCustomVersionContainer? customVersions = null, Dictionary<string, bool>? optionOverrides = null, Dictionary<string, KeyValuePair<string, string>>? mapStructTypesOverrides = null)
         {
             _optionOverrides = optionOverrides;
             _mapStructTypesOverrides = mapStructTypesOverrides;
