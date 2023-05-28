@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
@@ -53,7 +53,7 @@ public struct FGuidCustomVersion_DEPRECATED
     public FCustomVersion ToCustomVersion() => new(Tag, Version);
 }
 
-public enum ECustomVersionSerializationFormat
+public enum ECustomVersionSerializationFormat : byte
 {
     Unknown,
     Guids,
