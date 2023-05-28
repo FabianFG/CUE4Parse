@@ -30,8 +30,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_PlayerUnknownsBattlegrounds = GAME_UE4_16 + 1,
             GAME_TrainSimWorld2020 = GAME_UE4_16 + 2,
         GAME_UE4_17 = GameUtils.GameUe4Base + 17 << 4,
-            GAME_LifeIsStrange2 = GAME_UE4_17 + 1,
-            GAME_AWayOut = GAME_UE4_17 + 2,
+            GAME_AWayOut = GAME_UE4_17 + 1,
         GAME_UE4_18 = GameUtils.GameUe4Base + 18 << 4,
             GAME_KingdomHearts3 = GAME_UE4_18 + 1,
             GAME_FinalFantasy7Remake = GAME_UE4_18 + 2,
@@ -54,7 +53,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
             GAME_ReadyOrNot = GAME_UE4_26 + 2,
-
+            GAME_BladeAndSoul = GAME_UE4_26 + 3,
             GAME_TowerOfFantasy = GAME_UE4_26 + 4,
             GAME_Dauntless = GAME_UE4_26 + 5,
             GAME_TheDivisionResurgence = GAME_UE4_26 + 6,
@@ -65,6 +64,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_HogwartsLegacy = GAME_UE4_27 + 3,
             GAME_OutlastTrials = GAME_UE4_27 + 4,
             GAME_Valorant = GAME_UE4_27 + 5,
+            GAME_Gollum = GAME_UE4_27 + 6,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,

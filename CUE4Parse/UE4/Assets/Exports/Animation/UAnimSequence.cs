@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -226,15 +227,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
             }
 
-            if (Ar.Game == EGame.GAME_LifeIsStrange2)
-            {
-                var count = Ar.Read<int>();
-                if (count != Ar.Length - Ar.Position - 4)
-                    Ar.Position += 4;
-                else
-                    Ar.Position -= 4;
-            }
-
             if (Ar.Versions["AnimSequence.HasCompressedRawSize"])
             {
                 // UE4.17+
@@ -246,8 +238,24 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 compressedData.CompressedNumberOfFrames = Ar.Read<int>();
             }
 
-            // compressed data
-            compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
+            var nameIndex = Ar.Read<int>();//ACL thing - KeyEncodingFormat FName
+            Ar.Position -= 4;
+            if (nameIndex >= 0 && nameIndex < Ar.Owner.NameMap.Length)
+            {
+                var format = Ar.ReadFName();
+                if ("AKF_" + format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;
+                compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
+                if (format.Text.StartsWith("ACL"))
+                {
+                    CompressedDataStructure = new UAnimBoneCompressionCodec_ACLSafe().AllocateAnimData();
+                    CompressedDataStructure.Bind(compressedData.CompressedByteStream);
+                }
+            }
+            else
+            {
+                // compressed data
+                compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
+            }
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {

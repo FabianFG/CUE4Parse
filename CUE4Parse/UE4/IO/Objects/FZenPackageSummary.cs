@@ -20,14 +20,14 @@ namespace CUE4Parse.UE4.IO.Objects
         public EZenPackageVersion ZenVersion;
         public FPackageFileVersion PackageVersion;
         public int LicenseeVersion;
-        public FCustomVersion[] CustomVersions;
+        public FCustomVersionContainer CustomVersions;
 
         public FZenPackageVersioningInfo(FArchive Ar)
         {
             ZenVersion = Ar.Read<EZenPackageVersion>();
             PackageVersion = Ar.Read<FPackageFileVersion>();
             LicenseeVersion = Ar.Read<int>();
-            CustomVersions = Ar.ReadArray<FCustomVersion>();
+            CustomVersions = new FCustomVersionContainer(Ar);
         }
     }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -69,7 +68,7 @@ namespace CUE4Parse.UE4.Assets
                     if (!uassetAr.Versions.bExplicitVer)
                     {
                         uassetAr.Versions.Ver = versioningInfo.PackageVersion;
-                        uassetAr.Versions.CustomVersions = versioningInfo.CustomVersions.ToList();
+                        uassetAr.Versions.CustomVersions = versioningInfo.CustomVersions;
                     }
                 }
                 else
@@ -371,7 +370,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
             }
-            
+
             return null;
         }
 

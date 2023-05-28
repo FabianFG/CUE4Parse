@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -39,7 +38,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
         public EUnrealEngineObjectLicenseeUEVersion FileVersionLicenseeUE;
-        public FCustomVersion[] CustomVersionContainer;
+        public FCustomVersionContainer CustomVersionContainer;
         public EPackageFlags PackageFlags;
         public int TotalHeaderSize;
         public readonly string FolderName;
@@ -79,7 +78,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FPackageFileSummary()
         {
-            CustomVersionContainer = Array.Empty<FCustomVersion>();
+            CustomVersionContainer = new FCustomVersionContainer();
             FolderName = string.Empty;
             Generations = Array.Empty<FGenerationInfo>();
             ChunkIds = Array.Empty<int>();
@@ -113,7 +112,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 legacyFileVersion = Ar.Read<int>(); // seems to be always int.MinValue
                 bUnversioned = true;
                 FileVersionUE = Ar.Ver;
-                CustomVersionContainer = Array.Empty<FCustomVersion>();
+                CustomVersionContainer = new FCustomVersionContainer();
                 FolderName = "None";
                 PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
                 goto afterPackageFlags;
@@ -160,11 +159,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
-                CustomVersionContainer = legacyFileVersion <= -2 ? Ar.ReadArray<FCustomVersion>() : Array.Empty<FCustomVersion>();
+                CustomVersionContainer = legacyFileVersion <= -2 ? new FCustomVersionContainer(Ar) : new FCustomVersionContainer();
 
-                if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Length > 0)
+                if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Versions.Length > 0)
                 {
-                    Ar.Versions.CustomVersions = CustomVersionContainer.ToList();
+                    Ar.Versions.CustomVersions = CustomVersionContainer;
                 }
 
                 if (FileVersionUE.FileVersionUE4 == 0 && FileVersionUE.FileVersionUE5 == 0 && FileVersionLicenseeUE == 0)
@@ -412,10 +411,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         private static void FixCorruptEngineVersion(FPackageFileVersion objectVersion, FEngineVersion version)
         {
             if (objectVersion < EUnrealEngineObjectUE4Version.CORRECT_LICENSEE_FLAG
-                && version.Major == 4
-                && version.Minor == 26
-                && version.Patch == 0
-                && version.Changelist >= 12740027
+                && version is { Major: 4, Minor: 26, Patch: 0, Changelist: >= 12740027 }
                 && version.IsLicenseeVersion())
             {
                 version.Set(4, 26, 0, version.Changelist, version.Branch);

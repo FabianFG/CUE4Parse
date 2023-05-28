@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly long DiskSize;
         public readonly FPackageFileVersion FileVersionUE;
         public readonly int FileVersionLicenseeUE = -1;
-        public readonly FCustomVersion[]? CustomVersions;
+        public readonly FCustomVersionContainer CustomVersions;
         public readonly uint Flags;
 
         public FAssetPackageData(FAssetRegistryArchive Ar)
@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
                 FileVersionLicenseeUE = Ar.Read<int>();
                 Flags = Ar.Read<uint>();
-                CustomVersions = Ar.ReadArray<FCustomVersion>();
+                CustomVersions = new FCustomVersionContainer(Ar);
             }
             if (Ar.Header.Version >= FAssetRegistryVersionType.PackageImportedClasses)
             {
@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 serializer.Serialize(writer, value.Flags);
             }
 
-            if (value.CustomVersions is { Length: > 0 })
+            if (value.CustomVersions.Versions is { Length: > 0 })
             {
                 writer.WritePropertyName("CustomVersions");
                 serializer.Serialize(writer, value.CustomVersions);

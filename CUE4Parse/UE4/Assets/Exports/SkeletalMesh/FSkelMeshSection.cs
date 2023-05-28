@@ -259,11 +259,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-
-            if (Ar.Game == EGame.GAME_RogueCompany)
-            {
-                Ar.Position += 4;
-            }
+            if (Ar.Game is EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul) Ar.Position += 4;
         }
     }
 
