@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             if (value.CustomVersions.Versions is { Length: > 0 })
             {
                 writer.WritePropertyName("CustomVersions");
-                serializer.Serialize(writer, value.CustomVersions.Versions);
+                serializer.Serialize(writer, value.CustomVersions);
             }
 
             if (value.ImportedClasses is { Length: > 0 })
