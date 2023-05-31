@@ -45,7 +45,15 @@ public class UTexture2D : UTexture
 
         if (bCooked)
         {
-            DeserializeCookedPlatformData(Ar);
+            var bSerializeMipData = true;
+
+            if (Ar.Game >= EGame.GAME_UE5_3)
+            {
+                // Controls whether FByteBulkData is serialized??
+                bSerializeMipData = Ar.ReadBoolean();
+            }
+
+            DeserializeCookedPlatformData(Ar, bSerializeMipData);
         }
     }
 }

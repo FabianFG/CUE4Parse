@@ -52,7 +52,7 @@ public abstract class UTexture : UUnrealMaterial
         }
     }
 
-    protected void DeserializeCookedPlatformData(FAssetArchive Ar)
+    protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
         var pixelFormatName = Ar.ReadFName();
         while (!pixelFormatName.IsNone)

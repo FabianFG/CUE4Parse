@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -151,7 +152,7 @@ namespace CUE4Parse.UE4.Objects.Engine
                 return;
             }
 
-            if (Ar.Game >= EGame.GAME_UE5_1)
+            if (Ar is { Game: < EGame.GAME_UE5_1, IsFilterEditorOnly: false } || Ar.Game >= EGame.GAME_UE5_1)
                 Expression = new FPackageIndex(Ar);
             OutputIndex = Ar.Read<int>();
             InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());
@@ -160,7 +161,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             MaskG = Ar.Read<int>();
             MaskB = Ar.Read<int>();
             MaskA = Ar.Read<int>();
-            ExpressionName = Ar.Game <= EGame.GAME_UE5_1 && Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name;
+            ExpressionName = Ar is { Game: <= EGame.GAME_UE5_1, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
         }
     }
 

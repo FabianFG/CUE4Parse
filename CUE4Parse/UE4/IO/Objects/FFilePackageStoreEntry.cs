@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -17,8 +17,12 @@ namespace CUE4Parse.UE4.IO.Objects
         {
             if (Ar.Game >= EGame.GAME_UE5_0)
             {
-                ExportCount = Ar.Read<int>();
-                ExportBundleCount = Ar.Read<int>();
+                if (Ar.Game < EGame.GAME_UE5_3)
+                {
+                    ExportCount = Ar.Read<int>();
+                    ExportBundleCount = Ar.Read<int>();
+                }
+
                 ImportedPackages = ReadCArrayView<FPackageId>(Ar);
                 ShaderMapHashes = ReadCArrayView(Ar, () => new FSHAHash(Ar));
             }
