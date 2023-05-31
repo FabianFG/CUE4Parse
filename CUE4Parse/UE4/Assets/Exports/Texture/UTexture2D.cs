@@ -66,6 +66,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
             if (bCooked)
             {
+                var bSerializeMipData = true;
+
+                if (Ar.Game >= EGame.GAME_UE5_3)
+                {
+                    // Controls whether FByteBulkData is serialized??
+                    bSerializeMipData = Ar.ReadBoolean();
+                }
+
                 var pixelFormatEnum = Ar.ReadFName();
                 while (!pixelFormatEnum.IsNone)
                 {

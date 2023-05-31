@@ -27,6 +27,7 @@ namespace CUE4Parse.UE4.IO.Objects
         Initial = 0,
         LocalizedPackages = 1,
         OptionalSegmentPackages = 2,
+        NoExportInfo = 3,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
