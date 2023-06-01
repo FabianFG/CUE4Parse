@@ -86,6 +86,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             IndexOffset = Ar.Read<long>();
+            if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
             IndexSize = Ar.Read<long>();
             IndexHash = new FSHAHash(Ar);
 
