@@ -38,7 +38,9 @@ namespace CUE4Parse.UE4.Pak
             this.Ar = Ar;
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
-            if (Info.Version > PakFile_Version_Latest && Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker) // ToF 2.2 and MyM uses version >= 12 to indicate its custom format
+            if (Info.Version > PakFile_Version_Latest &&
+                Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker &&
+                Ar.Game != EGame.GAME_Snowbreak) // ToF 2.2 and MyM uses version >= 12 to indicate its custom format
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }

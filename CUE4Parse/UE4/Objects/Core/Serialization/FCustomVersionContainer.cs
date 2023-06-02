@@ -18,9 +18,9 @@ public class FCustomVersionContainer
         Versions = Array.Empty<FCustomVersion>();
     }
 
-    public FCustomVersionContainer(IEnumerable<FCustomVersion> versions)
+    public FCustomVersionContainer(IEnumerable<FCustomVersion>? versions)
     {
-        Versions = versions.ToArray();
+        Versions = (versions ?? Array.Empty<FCustomVersion>()) .ToArray();
     }
 
     public FCustomVersionContainer(FArchive Ar, ECustomVersionSerializationFormat format = ECustomVersionSerializationFormat.Latest) : this()
