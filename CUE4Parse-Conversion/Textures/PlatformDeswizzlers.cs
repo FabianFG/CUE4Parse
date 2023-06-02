@@ -130,55 +130,74 @@ public static class PlatformDeswizzlers
         return output;
     }
 
+    // https://github.com/tge-was-taken/GFD-Studio/blob/master/GFDLibrary/Textures/Swizzle/PS4SwizzleAlgorithm.cs
     public static byte[] DeswizzlePS4(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
     {
         var outData = new byte[data.Length];
-        var blockWidth = mip.SizeX / formatInfo.BlockSizeX;
-        var blockHeight = mip.SizeY / formatInfo.BlockSizeY;
-        var bpb = formatInfo.BlockBytes;
 
-        var blockWidth2 = blockWidth > 8 ? blockWidth : 8;
-        var blockHeight2 = blockHeight > 8 ? blockHeight : 8;
+        var heightTexels = mip.SizeY / formatInfo.BlockSizeX;
+        var heightTexelsAligned = (heightTexels + 7) / 8;
+        var widthTexels = mip.SizeX / formatInfo.BlockSizeY;
+        var widthTexelsAligned = (widthTexels + 7) / 8;
+        var dataIndex = 0;
 
-        for (var sy = 0; sy < blockHeight2; sy++)
+        for (var y = 0; y < heightTexelsAligned; ++y)
         {
-            for (var sx = 0; sx < blockWidth2; sx++)
+            for (var x = 0; x < widthTexelsAligned; ++x)
             {
-                var address = GetPS4TiledOffset(sx, sy, blockWidth2);
-                var dy = address / blockWidth2;
-                var dx = address % blockWidth2;
-                if (dx >= blockWidth || dy >= blockHeight) continue;
+                for (var t = 0; t < 64; ++t)
+                {
+                    var pixelIndex = Morton(t, 8, 8);
+                    var num8 = pixelIndex / 8;
+                    var num9 = pixelIndex % 8;
+                    var yOffset = y * 8 + num8;
+                    var xOffset = x * 8 + num9;
 
-                Buffer.BlockCopy(data, bpb * (sy * blockWidth2 + sx), outData, bpb * (dy * blockWidth + dx), bpb);
+                    if (xOffset < widthTexels && yOffset < heightTexels)
+                    {
+                        var destPixelIdx = yOffset * widthTexels + xOffset;
+                        var destIdx = formatInfo.BlockBytes * destPixelIdx;
+
+                        Array.Copy(data, dataIndex, outData, destIdx, formatInfo.BlockBytes);
+                    }
+
+                    dataIndex += formatInfo.BlockBytes;
+                }
             }
         }
 
         return outData;
     }
 
-    private static int GetPS4TiledOffset(int x, int y, int width)
+    private static int Morton(int t, int sx, int sy)
     {
-        (int mx, int my) = MapBlockPosition(x, y, width, 2);
-        (mx, my) = MapBlockPosition(mx, my, width, 4);
-        (mx, my) = MapBlockPosition(mx, my, width, 8);
-        return mx + my * width;
-    }
+        int num1;
+        int num2 = num1 = 1;
+        int num3 = t;
+        int num4 = sx;
+        int num5 = sy;
+        int num6 = 0;
+        int num7 = 0;
 
-    private static (int xout, int yout) MapBlockPosition(int x, int y, int w, int bx)
-    {
-        var by = bx / 2;
-        var ibx = x / bx;
-        var iby = y / by;
-        var obx = x % bx;
-        var oby = y % by;
-        var blockCountX = w / bx;
-        var bl2S = 2 * blockCountX;
-        var ll = ibx + iby * blockCountX;
-        var ll2 = ll % bl2S;
-        var ll22 = ll2 / 2 + ll2 % 2 * blockCountX;
-        var llr = ll / bl2S * bl2S + ll22;
-        var rbx = llr % blockCountX;
-        var rby = llr / blockCountX;
-        return (rbx * bx + obx, rby * by + oby);
+        while (num4 > 1 || num5 > 1)
+        {
+            if (num4 > 1)
+            {
+                num6 += num2 * (num3 & 1);
+                num3 >>= 1;
+                num2 *= 2;
+                num4 >>= 1;
+            }
+
+            if (num5 > 1)
+            {
+                num7 += num1 * (num3 & 1);
+                num3 >>= 1;
+                num1 *= 2;
+                num5 >>= 1;
+            }
+        }
+
+        return num7 * sx + num6;
     }
 }
