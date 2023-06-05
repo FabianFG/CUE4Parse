@@ -9,8 +9,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     [JsonConverter(typeof(FTexture2DMipMapConverter))]
     public class FTexture2DMipMap
     {
-        public readonly FByteBulkData Data;
-        public readonly int SizeX;
+        public readonly FByteBulkData BulkData;
+        public int SizeX;
         public int SizeY;
         public readonly int SizeZ;
 
@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
 
-            Data = new FByteBulkData(Ar);
+            BulkData = new FByteBulkData(Ar);
 
             if (Ar.Game == EGame.GAME_Borderlands3)
             {
@@ -47,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             writer.WriteStartObject();
 
             writer.WritePropertyName("BulkData");
-            serializer.Serialize(writer, value.Data);
+            serializer.Serialize(writer, value.BulkData);
 
             writer.WritePropertyName("SizeX");
             writer.WriteValue(value.SizeX);

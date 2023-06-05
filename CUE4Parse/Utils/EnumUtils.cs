@@ -12,7 +12,7 @@ namespace CUE4Parse.Utils
             var outValues = new List<T>();
             foreach (var enumValue in (T[]) Enum.GetValues(typeof(T)))
             {
-                if (Convert.ToInt64(enumValue) == 0 ? Convert.ToInt64(inEnum) == 0 : inEnum.HasFlag(enumValue))
+                if (Convert.ToUInt64(enumValue) == 0 ? Convert.ToUInt64(inEnum) == 0 : inEnum.HasFlag(enumValue))
                 {
                     outValues.Add(enumValue);
                 }

@@ -9,7 +9,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture
 {
-    public struct FVirtualTextureTileOffsetData: IUStruct
+    public struct FVirtualTextureTileOffsetData : IUStruct
     {
         public uint Width;
         public uint Height;
@@ -34,6 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             {
                 return ~0u;
             }
+
             uint BaseAddress = Addresses[BlockIndex];
             uint LocalOffset = InAddress - BaseAddress;
             return BaseOffset + LocalOffset;
@@ -44,8 +45,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     {
         public readonly uint NumLayers;
         public readonly uint? NumMips;
-        public readonly uint? Width;
-        public readonly uint? Height;
+        public readonly uint Width;
+        public readonly uint Height;
         public readonly uint WidthInBlocks;
         public readonly uint HeightInBlocks;
         public readonly uint TileSize;
@@ -72,25 +73,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             HeightInBlocks = Ar.Read<uint>();
             TileSize = Ar.Read<uint>();
             TileBorderSize = Ar.Read<uint>();
-            if (Ar.Game >= EGame.GAME_UE5_0)
-                TileDataOffsetPerLayer = Ar.ReadArray<uint>();
+            if (Ar.Game >= EGame.GAME_UE5_0) TileDataOffsetPerLayer = Ar.ReadArray<uint>();
+
             if (!bStripMips)
             {
                 NumMips = Ar.Read<uint>();
                 Width = Ar.Read<uint>();
                 Height = Ar.Read<uint>();
+
                 if (Ar.Game >= EGame.GAME_UE5_0)
                 {
                     ChunkIndexPerMip = Ar.ReadArray<uint>();
                     BaseOffsetPerMip = Ar.ReadArray<uint>();
                     TileOffsetData = Ar.ReadArray(() => new FVirtualTextureTileOffsetData(Ar));
                 }
+
                 TileIndexPerChunk = Ar.ReadArray<uint>();
                 TileIndexPerMip = Ar.ReadArray<uint>();
                 TileOffsetInChunk = Ar.ReadArray<uint>();
             }
 
-            LayerTypes = Ar.ReadArray((int)NumLayers, () => (EPixelFormat)Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
+            LayerTypes = Ar.ReadArray((int) NumLayers, () => (EPixelFormat) Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
+
             if (Ar.Game >= EGame.GAME_UE5_0)
             {
                 LayerFallbackColors = new FLinearColor[NumLayers];
@@ -105,7 +109,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public int GetChunkIndex(int vLevel)
         {
-            return ChunkIndexPerMip != null && vLevel < ChunkIndexPerMip.Length ? (int)ChunkIndexPerMip[vLevel] : -1;
+            return ChunkIndexPerMip != null && vLevel < ChunkIndexPerMip.Length ? (int) ChunkIndexPerMip[vLevel] : -1;
         }
 
         private bool IsLegacyData()

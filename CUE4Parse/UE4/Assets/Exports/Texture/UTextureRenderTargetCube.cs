@@ -1,6 +1,3 @@
-namespace CUE4Parse.UE4.Assets.Exports.Texture
-{
-    public class UTextureRenderTargetCube : UTextureRenderTarget
-    {
-    }
-}
+namespace CUE4Parse.UE4.Assets.Exports.Texture;
+
+public class UTextureRenderTargetCube : UTextureRenderTarget { }
