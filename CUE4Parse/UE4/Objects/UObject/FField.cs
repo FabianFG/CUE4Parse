@@ -1,6 +1,8 @@
 ﻿using System;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -9,12 +11,12 @@ namespace CUE4Parse.UE4.Objects.UObject
     public class FField
     {
         public FName Name;
-        public uint Flags;
+        public EObjectFlags Flags;
 
         public virtual void Deserialize(FAssetArchive Ar)
         {
             Name = Ar.ReadFName();
-            Flags = Ar.Read<uint>();
+            Flags = Ar.Read<EObjectFlags>();
         }
 
         protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -28,7 +30,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (Flags != 0)
             {
                 writer.WritePropertyName("Flags");
-                writer.WriteValue(Flags);
+                writer.WriteValue(Flags.ToStringBitfield());
             }
         }
 

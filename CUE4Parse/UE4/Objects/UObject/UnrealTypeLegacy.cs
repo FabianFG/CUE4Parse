@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -7,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     public class UProperty : UField
     {
         public int ArrayDim;
-        public ulong PropertyFlags;
+        public EPropertyFlags PropertyFlags;
         public FName RepNotifyFunc;
         public ELifetimeCondition BlueprintReplicationCondition;
 
@@ -15,7 +16,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             ArrayDim = Ar.Read<int>();
-            PropertyFlags = Ar.Read<ulong>();
+            PropertyFlags = Ar.Read<EPropertyFlags>();
             RepNotifyFunc = Ar.ReadFName();
             if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.PropertiesSerializeRepCondition)
             {
@@ -36,7 +37,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (PropertyFlags != 0)
             {
                 writer.WritePropertyName("PropertyFlags");
-                writer.WriteValue(PropertyFlags);
+                writer.WriteValue(PropertyFlags.ToStringBitfield());
             }
 
             if (!RepNotifyFunc.IsNone)

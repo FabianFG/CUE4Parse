@@ -77,7 +77,7 @@ public class FTexturePlatformData
         FirstMipToSerialize = Ar.Read<int>(); // only for cooked, but we don't read FTexturePlatformData for non-cooked textures
 
         var mipCount = Ar.Read<int>();
-        if (Ar.Platform == ETexturePlatform.Playstation && mipCount != 1) mipCount /= 3; // TODO: Some mips are corrupted, so this doesn't work 100% of the time.
+        if (Ar.Platform == ETexturePlatform.Playstation && mipCount > 1) mipCount = 1; // TODO: Some mips are corrupted, so just use the first
 
         if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
         {
