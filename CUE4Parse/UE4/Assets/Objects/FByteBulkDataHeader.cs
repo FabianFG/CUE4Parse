@@ -47,6 +47,13 @@ namespace CUE4Parse.UE4.Assets.Objects
                 Ar.Position += sizeof(ushort);
                 BulkDataFlags &= ~BULKDATA_BadDataVersion;
             }
+
+            if (BulkDataFlags.HasFlag(BULKDATA_DuplicateNonOptionalPayload))
+            {
+                Ar.Position += sizeof(EBulkDataFlags); // DuplicateFlags
+                Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
+                Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
+            }
         }
     }
 
