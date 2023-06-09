@@ -43,6 +43,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         {
             base.WriteJson(writer, serializer);
 
+            writer.WritePropertyName("CurveTableMode");
+            writer.WriteValue(CurveTableMode.ToString());
+
             writer.WritePropertyName("Rows");
             serializer.Serialize(writer, RowMap);
         }
