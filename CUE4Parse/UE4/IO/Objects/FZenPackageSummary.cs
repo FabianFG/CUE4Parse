@@ -42,10 +42,10 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly int ImportMapOffset;
         public readonly int ExportMapOffset;
         public readonly int ExportBundleEntriesOffset;
-        public readonly int GraphDataOffset;
-        public readonly int DependencyBundleHeadersOffset;
-        public readonly int DependencyBundleEntriesOffset;
-        public readonly int ImportedPackageNamesOffset;
+        public readonly int GraphDataOffset = 0;
+        public readonly int DependencyBundleHeadersOffset = 0;
+        public readonly int DependencyBundleEntriesOffset = 0;
+        public readonly int ImportedPackageNamesOffset = 0;
 
         public FZenPackageSummary(FArchive Ar)
         {
@@ -58,13 +58,17 @@ namespace CUE4Parse.UE4.IO.Objects
             ImportMapOffset = Ar.Read<int>();
             ExportMapOffset = Ar.Read<int>();
             ExportBundleEntriesOffset = Ar.Read<int>();
-            GraphDataOffset = Ar.Game < EGame.GAME_UE5_3 ? Ar.Read<int>() : 0;
 
-            if (Ar.Game >= EGame.GAME_UE5_3)
+            if (Ar.Game >= EGame.GAME_UE5_2)
             {
                 DependencyBundleHeadersOffset = Ar.Read<int>();
                 DependencyBundleEntriesOffset = Ar.Read<int>();
+
                 ImportedPackageNamesOffset = Ar.Read<int>();
+            }
+            else
+            {
+                GraphDataOffset = Ar.Read<int>();
             }
         }
     }

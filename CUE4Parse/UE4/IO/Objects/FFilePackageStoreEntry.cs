@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.IO.Objects
         {
             if (Ar.Game >= EGame.GAME_UE5_0)
             {
-                if (Ar.Game < EGame.GAME_UE5_3)
+                if (Ar.Game < EGame.GAME_UE5_2)
                 {
                     ExportCount = Ar.Read<int>();
                     ExportBundleCount = Ar.Read<int>();
