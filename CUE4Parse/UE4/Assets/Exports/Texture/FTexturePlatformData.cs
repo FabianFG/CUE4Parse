@@ -95,9 +95,7 @@ public class FTexturePlatformData
         {
             Mips[i] = new FTexture2DMipMap(Ar);
 
-            if (Owner is UVolumeTexture)
-                Mips[i].SizeX *= GetNumSlices();
-            else if (Owner is UTextureCube)
+            if (Owner is UVolumeTexture or UTextureCube)
                 Mips[i].SizeY *= GetNumSlices();
         }
 
