@@ -58,10 +58,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 {
                     bUse16BitBoneIndex = Ar.ReadBoolean();
                 }
-                // if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.IncreasedSkinWeightPrecision) // TODO: fortnite support
-                // {
-                //     bUse16BitBoneWeight = Ar.ReadBoolean();
-                // }
+                if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.IncreasedSkinWeightPrecision)
+                {
+                    bUse16BitBoneWeight = Ar.ReadBoolean();
+                }
             }
             #endregion
 
@@ -140,6 +140,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 numBytes = 4 * 4;
                 if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.IncreaseBoneIndexLimitPerChunk)
+                    numBytes += 4;
+                if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.IncreasedSkinWeightPrecision)
                     numBytes += 4;
             }
 

@@ -13,11 +13,11 @@ namespace CUE4Parse.UE4.IO.Objects
         public FPackageId[] ImportedPackages;
         public FSHAHash[] ShaderMapHashes;
 
-        public FFilePackageStoreEntry(FArchive Ar)
+        public FFilePackageStoreEntry(FArchive Ar, EIoContainerHeaderVersion version)
         {
-            if (Ar.Game >= EGame.GAME_UE5_0)
+            if (version >= EIoContainerHeaderVersion.Initial)
             {
-                if (Ar.Game < EGame.GAME_UE5_2)
+                if (version < EIoContainerHeaderVersion.NoExportInfo)
                 {
                     ExportCount = Ar.Read<int>();
                     ExportBundleCount = Ar.Read<int>();

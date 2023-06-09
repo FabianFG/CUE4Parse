@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.Assets
             GlobalData = globalData;
             var uassetAr = new FAssetArchive(uasset, this);
 
-            FExportBundleHeader[] exportBundleHeaders = Array.Empty<FExportBundleHeader>();
+            FExportBundleHeader[]? exportBundleHeaders;
             FExportBundleEntry[] exportBundleEntries;
             FPackageId[] importedPackageIds;
             int cookedHeaderSize;
@@ -77,8 +77,6 @@ namespace CUE4Parse.UE4.Assets
                 {
                     Summary.bUnversioned = true;
                 }
-
-                cookedHeaderSize = (int) summary.CookedHeaderSize;
 
                 // Name map
                 NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
@@ -141,9 +139,11 @@ namespace CUE4Parse.UE4.Assets
                     exportBundleHeaders = uassetAr.ReadArray<FExportBundleHeader>(exportBundleHeadersCount);
                     // We don't read the graph data
                 }
+                else exportBundleHeaders = null;
 
                 importedPackageIds = storeEntry?.ImportedPackages ?? Array.Empty<FPackageId>();
 
+                cookedHeaderSize = (int) summary.CookedHeaderSize;
                 allExportDataOffset = (int) summary.HeaderSize;
             }
             else
@@ -159,8 +159,6 @@ namespace CUE4Parse.UE4.Assets
                     ImportCount = (summary.ExportMapOffset - summary.ImportMapOffset) / FPackageObjectIndex.Size,
                     bUnversioned = true
                 };
-
-                cookedHeaderSize = (int) summary.CookedHeaderSize;
 
                 // Name map
                 uassetAr.Position = summary.NameMapNamesOffset;
@@ -184,6 +182,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr.Position = summary.GraphDataOffset;
                 importedPackageIds = LoadGraphData(uassetAr);
 
+                cookedHeaderSize = (int) summary.CookedHeaderSize;
                 allExportDataOffset = summary.GraphDataOffset + summary.GraphDataSize;
             }
 
@@ -235,26 +234,21 @@ namespace CUE4Parse.UE4.Assets
                 return (int) export.CookedSerialSize;
             }
 
-            if (uassetAr.Game >= EGame.GAME_UE5_2)
-            {
-                foreach (var entry in exportBundleEntries)
-                {
-                    ProcessEntry(entry, allExportDataOffset + (int) ExportMap[entry.LocalExportIndex].CookedSerialOffset, true);
-                }
-            }
-            else // 4.26 - 5.2
+            if (exportBundleHeaders != null) // 4.26 - 5.2
             {
                 foreach (var exportBundle in exportBundleHeaders)
                 {
                     var currentExportDataOffset = allExportDataOffset;
-
                     for (var i = 0u; i < exportBundle.EntryCount; i++)
                     {
                         currentExportDataOffset += ProcessEntry(exportBundleEntries[exportBundle.FirstEntryIndex + i], currentExportDataOffset, false);
                     }
-
                     Summary.BulkDataStartOffset = currentExportDataOffset;
                 }
+            }
+            else foreach (var entry in exportBundleEntries)
+            {
+                ProcessEntry(entry, allExportDataOffset + (int) ExportMap[entry.LocalExportIndex].CookedSerialOffset, true);
             }
 
             IsFullyLoaded = true;
