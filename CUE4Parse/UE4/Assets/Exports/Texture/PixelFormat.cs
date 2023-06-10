@@ -50,6 +50,7 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_A8R8G8B8,           "A8R8G8B8",               1,          1,          1,          4,            4,                false),
         new(EPixelFormat.PF_BC4,                "BC4",                    4,          4,          1,          8,            1,                true),
         new(EPixelFormat.PF_R8G8,               "R8G8",                   1,          1,          1,          2,            2,                false),
+
         new(EPixelFormat.PF_ATC_RGB,            "ATC_RGB",                4,          4,          1,          8,            3,                false),
         new(EPixelFormat.PF_ATC_RGBA_E,         "ATC_RGBA_E",             4,          4,          1,          16,           4,                false),
         new(EPixelFormat.PF_ATC_RGBA_I,         "ATC_RGBA_I",             4,          4,          1,          16,           4,                false),
@@ -59,12 +60,13 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_ETC2_RGBA,          "ETC2_RGBA",              4,          4,          1,          16,           4,                true),
         new(EPixelFormat.PF_R32G32B32A32_UINT,  "PF_R32G32B32A32_UINT",   1,          1,          1,          16,           4,                false),
         new(EPixelFormat.PF_R16G16_UINT,        "PF_R16G16_UINT",         1,          1,          1,          4,            4,                false),
-        new(EPixelFormat.PF_ETC2_RGBA,          "ETC2_RGBA",              4,          4,          1,          16,           4,                true),
+
         new(EPixelFormat.PF_ASTC_4x4,           "ASTC_4x4",               4,          4,          1,          16,           4,                true),
         new(EPixelFormat.PF_ASTC_6x6,           "ASTC_6x6",               6,          6,          1,          16,           4,                true),
         new(EPixelFormat.PF_ASTC_8x8,           "ASTC_8x8",               8,          8,          1,          16,           4,                true),
         new(EPixelFormat.PF_ASTC_10x10,         "ASTC_10x10",             10,         10,         1,          16,           4,                true),
         new(EPixelFormat.PF_ASTC_12x12,         "ASTC_12x12",             12,         12,         1,          16,           4,                true),
+
         new(EPixelFormat.PF_BC6H,               "BC6H",                   4,          4,          1,          16,           3,                true),
         new(EPixelFormat.PF_BC7,                "BC7",                    4,          4,          1,          16,           4,                true)
     };
