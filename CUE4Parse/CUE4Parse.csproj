@@ -39,6 +39,8 @@
   <ItemGroup>
     <None Remove="Resources\ACE7Key.bin" />
     <EmbeddedResource Include="Resources\ACE7Key.bin" />
+    <None Remove="Resources\PUBGNameHashMap.json" />
+    <EmbeddedResource Include="Resources\PUBGNameHashMap.json" />
   </ItemGroup>
 
   <PropertyGroup>

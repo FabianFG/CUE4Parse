@@ -17,6 +17,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
 
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
                 Ar.SkipFixedArray(sizeof(int));
+            if (Ar.Game is EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds)
+                Ar.Position += 16; // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
             TransformData.SetFromMatrix(Transform);
         }
 
