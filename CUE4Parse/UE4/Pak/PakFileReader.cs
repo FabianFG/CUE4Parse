@@ -188,6 +188,8 @@ namespace CUE4Parse.UE4.Pak
             if (!primaryIndex.ReadBoolean())
                 throw new ParserException(primaryIndex, "No directory index");
 
+            if (Ar.Game == EGame.GAME_TheDivisionResurgence) primaryIndex.Position += 40; // duplicate entry
+
             var directoryIndexOffset = primaryIndex.Read<long>();
             var directoryIndexSize = primaryIndex.Read<long>();
             primaryIndex.Position += 20; // Directory Index hash
