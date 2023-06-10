@@ -36,6 +36,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Yaw = yaw;
             Roll = roll;
         }
+        public FRotator(double pitch, double yaw, double roll)
+        {
+            Pitch = (float) pitch;
+            Yaw = (float) yaw;
+            Roll = (float) roll;
+        }
 
         public FRotator(FArchive Ar)
         {
