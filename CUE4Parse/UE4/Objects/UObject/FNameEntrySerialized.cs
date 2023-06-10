@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 if (_pubgNameMap == null)
                 {
-                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse_Conversion.Resources.PUBGNameHashMap.json");
+                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.PUBGNameHashMap.json");
                     if (stream == null) throw new MissingManifestResourceException("Couldn't find PUBGNameHashMap.json in Embedded Resources");
                     using StreamReader reader = new(stream);
                     _pubgNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd()) ?? new Dictionary<string, string>();
