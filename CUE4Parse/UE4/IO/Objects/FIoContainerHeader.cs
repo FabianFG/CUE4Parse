@@ -74,11 +74,11 @@ namespace CUE4Parse.UE4.IO.Objects
                 Ar.Position = continuePos;
             }
 
-            ReadPackageIdsAndEntries(Ar, out PackageIds, out StoreEntries);
+            ReadPackageIdsAndEntries(Ar, out PackageIds, out StoreEntries, version);
 
             if (version >= EIoContainerHeaderVersion.OptionalSegmentPackages)
             {
-                ReadPackageIdsAndEntries(Ar, out OptionalSegmentPackageIds, out OptionalSegmentStoreEntries);
+                ReadPackageIdsAndEntries(Ar, out OptionalSegmentPackageIds, out OptionalSegmentStoreEntries, version);
             }
             if (version >= EIoContainerHeaderVersion.Initial)
             {
@@ -91,12 +91,12 @@ namespace CUE4Parse.UE4.IO.Objects
             // PackageRedirects = Ar.ReadArray<FIoContainerHeaderPackageRedirect>();
         }
 
-        private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries)
+        private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries, EIoContainerHeaderVersion version)
         {
             packageIds = Ar.ReadArray<FPackageId>();
             var storeEntriesSize = Ar.Read<int>();
             var storeEntriesEnd = Ar.Position + storeEntriesSize;
-            storeEntries = Ar.ReadArray(packageIds.Length, () => new FFilePackageStoreEntry(Ar));
+            storeEntries = Ar.ReadArray(packageIds.Length, () => new FFilePackageStoreEntry(Ar, version));
             Ar.Position = storeEntriesEnd;
         }
     }

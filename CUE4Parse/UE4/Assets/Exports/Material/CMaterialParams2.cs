@@ -269,6 +269,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             return false;
         }
 
+        public bool TryGetSwitch(out bool stitch, params string[] names)
+        {
+            foreach (string name in names)
+            {
+                if (Switches.TryGetValue(name, out stitch))
+                {
+                    return true;
+                }
+            }
+
+            stitch = false;
+            return false;
+        }
+
         public void AppendAllProperties(IList<FPropertyTag> properties)
         {
             foreach (var property in properties)

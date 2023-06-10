@@ -43,6 +43,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Z = z;
         }
 
+        public FVector(double x, double y, double z)
+        {
+            X = (float) x;
+            Y = (float) y;
+            Z = (float) z;
+        }
+
         public FVector(FArchive Ar)
         {
             if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)

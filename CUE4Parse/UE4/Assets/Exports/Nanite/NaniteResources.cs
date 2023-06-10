@@ -309,6 +309,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite
         public uint[] PageDependencies;
         public int NumRootPages = 0;
         public int PositionPrecision = 0;
+        public int NormalPrecision = 0;
         public uint NumInputTriangles = 0;
         public uint NumInputVertices = 0;
         public ushort NumInputMeshes = 0;
@@ -333,6 +334,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite
                 ImposterAtlas = Ar.ReadArray<ushort>();
                 NumRootPages = Ar.Read<int>();
                 PositionPrecision = Ar.Read<int>();
+                if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();
                 NumInputTriangles = Ar.Read<uint>();
                 NumInputVertices = Ar.Read<uint>();
                 NumInputMeshes = Ar.Read<ushort>();

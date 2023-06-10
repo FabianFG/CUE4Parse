@@ -49,6 +49,22 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             W = w;
         }
 
+        public FQuat(TIntVector4<float> quat)
+        {
+            X = quat.X;
+            Y = quat.Y;
+            Z = quat.Z;
+            W = quat.W;
+        }
+
+        public FQuat(TIntVector4<double> quat)
+        {
+            X = (float) quat.X;
+            Y = (float) quat.Y;
+            Z = (float) quat.Z;
+            W = (float) quat.W;
+        }
+
         public FQuat(FArchive Ar)
         {
             if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)

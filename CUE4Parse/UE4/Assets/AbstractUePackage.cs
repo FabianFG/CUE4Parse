@@ -66,10 +66,20 @@ namespace CUE4Parse.UE4.Assets
             {
                 obj.Deserialize(Ar, validPos);
 #if DEBUG
-                if (validPos != Ar.Position)
-                    Log.Warning("Did not read {0} correctly, {1} bytes remaining", obj.ExportType, validPos - Ar.Position);
-                else
-                    Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, serialOffset, serialSize);
+                var remaining = validPos - Ar.Position;
+                switch (remaining)
+                {
+                    case > 0:
+                        Log.Warning("Did not read {0} correctly, {1} bytes remaining ({2}%)", obj.ExportType, remaining,
+                            Math.Round((decimal)remaining / validPos * 100, 2));
+                        break;
+                    case < 0:
+                        Log.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
+                        break;
+                    default:
+                        Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, serialOffset, serialSize);
+                        break;
+                }
 #endif
             }
             catch (Exception e)
