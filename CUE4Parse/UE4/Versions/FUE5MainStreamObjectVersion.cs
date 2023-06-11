@@ -323,6 +323,45 @@ namespace CUE4Parse.UE4.Versions
             // New default for number of attributes on 2d grids
             NiagaraGrid2DDefaultUnnamedAttributesZero,
 
+            // RigVM generated class refactor
+            RigVMGeneratedClass,
+
+            // In certain cases, Blueprint pins with a PC_Object category would serialize a null PinSubCategoryObject
+            NullPinSubCategoryObjectFix,
+
+            // Allow custom event nodes to use access specifiers
+            AccessSpecifiersForCustomEvents,
+
+            // Explicit override of Groom's hair width
+            GroomAssetWidthOverride,
+
+            // Smart names removed from animation systems
+            AnimationRemoveSmartNames,
+
+            // Change the default for facing & alignment to be automatic
+            NiagaraSpriteRendererFacingAlignmentAutoDefault,
+
+            // Change the default for facing & alignment to be automatic
+            GroomAssetRemoveInAssetSerialization,
+
+            // Changed the material property connected bitmasks from 32bit to 64bit
+            IncreaseMaterialAttributesInputMask,
+
+            // Combines proprties into a new binding so users can select constant or binding
+            NiagaraSimStageNumIterationsBindings,
+
+            // Skeletal vertex attributes
+            SkeletalVertexAttributes,
+
+            // Store the RigVM execute context struct the VM uses in the archive
+            RigVMExternalExecuteContextStruct,
+
+            // serialization inputs and outputs as two different sections
+            DataflowSeparateInputOutputSerialization,
+
+            // Cloth collection tether initialization
+            ClothCollectionTetherInitialization,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1

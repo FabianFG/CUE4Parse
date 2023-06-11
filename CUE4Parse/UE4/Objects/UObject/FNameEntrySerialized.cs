@@ -13,25 +13,8 @@ namespace CUE4Parse.UE4.Objects.UObject
 {
     public readonly struct FNameEntrySerialized
     {
-        private readonly string? _name;
+        public readonly string? Name;
         private static Dictionary<string, string>? _pubgNameMap;
-        public string? Name
-        {
-            get
-            {
-                if (_pubgNameMap == null)
-                {
-                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.PUBGNameHashMap.json");
-                    if (stream == null) throw new MissingManifestResourceException("Couldn't find PUBGNameHashMap.json in Embedded Resources");
-                    using StreamReader reader = new(stream);
-                    _pubgNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd()) ?? new Dictionary<string, string>();
-                }
-
-                if (_name != null && _pubgNameMap.TryGetValue(_name, out var name)) return name;
-                return _name;
-            }
-            private init => _name = value;
-        }
 
 #if NAME_HASHES
         public readonly ushort NonCasePreservingHash;
@@ -42,6 +25,20 @@ namespace CUE4Parse.UE4.Objects.UObject
             var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game == EGame.GAME_GearsOfWar4;
 
             Name = Ar.ReadFString().Trim();
+
+            if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+            {
+                if (_pubgNameMap == null)
+                {
+                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.PUBGNameHashMap.json");
+                    if (stream == null) throw new MissingManifestResourceException("Couldn't find PUBGNameHashMap.json in Embedded Resources");
+                    using StreamReader reader = new(stream);
+                    _pubgNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd()) ?? new Dictionary<string, string>();
+                }
+
+                if (Name != null && _pubgNameMap.TryGetValue(Name, out var name)) Name = name;
+            }
+
             if (bHasNameHashes)
             {
 #if NAME_HASHES

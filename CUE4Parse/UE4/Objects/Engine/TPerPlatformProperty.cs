@@ -1,4 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
@@ -12,11 +14,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly bool Default;
             public override object Value => Default;
 
-            public FPerPlatformBool()
-            {
-                
-            }
-            
+            public FPerPlatformBool() { }
+
             public FPerPlatformBool(FAssetArchive Ar)
             {
                 bCooked = Ar.ReadBoolean();
@@ -30,10 +29,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly float Default;
             public override object Value => Default;
 
-            public FPerPlatformFloat()
-            {
-                
-            }
+            public FPerPlatformFloat() { }
 
             public FPerPlatformFloat(FAssetArchive Ar)
             {
@@ -48,15 +44,27 @@ namespace CUE4Parse.UE4.Objects.Engine
             public readonly int Default;
             public override object Value => Default;
 
-            public FPerPlatformInt()
-            {
-                
-            }
+            public FPerPlatformInt() { }
 
             public FPerPlatformInt(FAssetArchive Ar)
             {
                 bCooked = Ar.ReadBoolean();
                 Default = Ar.Read<int>();
+            }
+        }
+
+        public class FPerPlatformFrameRate : TPerPlatformProperty
+        {
+            public readonly bool bCooked;
+            public readonly FFrameRate Default;
+            public override object Value => Default;
+
+            public FPerPlatformFrameRate() { }
+
+            public FPerPlatformFrameRate(FArchive Ar)
+            {
+                bCooked = Ar.ReadBoolean();
+                Default = Ar.Read<FFrameRate>();
             }
         }
     }
