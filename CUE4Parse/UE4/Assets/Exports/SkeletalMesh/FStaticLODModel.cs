@@ -366,8 +366,6 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
             var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
 
-            // Note 07/2021: This was added in UE4.27, but we're only reading it on UE5 for compatibility with Fortnite
-            // Note 08/2022: This is more annoying than useful, old fortnite users will need to add a custom option
             if (Ar.Versions["SkeletalMesh.HasRayTracingData"])
             {
                 var rayTracingData = Ar.ReadArray<byte>();

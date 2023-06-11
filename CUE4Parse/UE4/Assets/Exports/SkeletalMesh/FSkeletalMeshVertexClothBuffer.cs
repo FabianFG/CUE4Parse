@@ -2,25 +2,24 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
+namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+
+public class FSkeletalMeshVertexClothBuffer
 {
-    public class FSkeletalMeshVertexClothBuffer
+    public readonly ulong[]? ClothIndexMapping;
+
+    public FSkeletalMeshVertexClothBuffer(FArchive Ar)
     {
-        public readonly ulong[]? ClothIndexMapping;
+        var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
+        if (stripDataFlags.IsDataStrippedForServer()) return;
 
-        public FSkeletalMeshVertexClothBuffer(FArchive Ar)
+        Ar.SkipBulkArrayData();
+        if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.CompactClothVertexBuffer)
         {
-            var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
-            if (stripDataFlags.IsDataStrippedForServer()) return;
-
-            Ar.SkipBulkArrayData();
-            if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.CompactClothVertexBuffer)
+            ClothIndexMapping = Ar.ReadArray<ulong>();
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
             {
-                ClothIndexMapping = Ar.ReadArray<ulong>();
-                if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
-                {
-                    Ar.Position += ClothIndexMapping.Length * 4;
-                }
+                Ar.Position += ClothIndexMapping.Length * 4;
             }
         }
     }
