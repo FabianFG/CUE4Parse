@@ -95,22 +95,26 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
-
+            
+            if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
+            
             if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
-                for (int i = 0; i < LODModels?.Length; i++)
+            {
+                for (var i = 0; i < LODModels?.Length; i++)
                 {
                     var lodInfo = i < lodInfos.Length ? lodInfos[i] : null;
-                    if (lodInfo is null)
-                        continue;
-
-                    if (!lodInfo.TryGetValue(out int[] lodMatMap, "LODMaterialMap"))
-                        continue;
+                    if (lodInfo is null || !lodInfo.TryGetValue(out int[] lodMatMap, "LODMaterialMap")) continue;
 
                     var lodModel = LODModels[i];
-                    for (int j = 0; j < lodModel.Sections?.Length; j++)
+                    for (var j = 0; j < lodModel.Sections.Length; j++)
+                    {
                         if (j < lodMatMap.Length && lodMatMap[j] >= 0 && lodMatMap[j] < Materials.Length)
+                        {
                             lodModel.Sections[j].MaterialIndex = (short) Math.Clamp((ushort) lodMatMap[j], 0, Materials.Length);
+                        }
+                    }
                 }
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
