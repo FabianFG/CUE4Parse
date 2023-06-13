@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
         }
 
-        public FNameEntrySerialized(string name)
+        public FNameEntrySerialized(string? name)
         {
             Name = name;
         }
