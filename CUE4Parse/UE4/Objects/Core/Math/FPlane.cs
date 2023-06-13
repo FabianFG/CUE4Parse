@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             W = w;
         }
 
-        public FPlane(TIntVector3<float> vector, float w)
+        public FPlane(TIntVector3<float> vector, float w) : this()
         {
             X = vector.X;
             Y = vector.Y;
@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             W = w;
         }
 
-        public FPlane(TIntVector3<double> vector, double w)
+        public FPlane(TIntVector3<double> vector, double w) : this()
         {
             X = (float) vector.X;
             Y = (float) vector.Y;
