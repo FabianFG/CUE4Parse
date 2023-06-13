@@ -35,7 +35,7 @@ namespace CUE4Parse.Example
             provider.LoadLocalization(ELanguage.English); // explicit enough
             
             // these 2 lines will load all exports the asset has and transform them in a single Json string
-            var allExports = provider.LoadObjectExports(_objectPath);
+            var allExports = provider.LoadAllObjects(_objectPath);
             var fullJson = JsonConvert.SerializeObject(allExports, Formatting.Indented);
 
             // each exports have a name, these 2 lines will load only one export the asset has
