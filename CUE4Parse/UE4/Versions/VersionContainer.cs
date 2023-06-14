@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Versions
     {
         public static readonly VersionContainer DEFAULT_VERSION_CONTAINER = new();
 
+        private EGame _game;
         public EGame Game
         {
             get => _game;
@@ -21,7 +22,8 @@ namespace CUE4Parse.UE4.Versions
                 InitMapStructTypes();
             }
         }
-        private EGame _game;
+
+        private FPackageFileVersion _ver;
         public FPackageFileVersion Ver
         {
             get => _ver;
@@ -43,18 +45,21 @@ namespace CUE4Parse.UE4.Versions
                 InitMapStructTypes();
             }
         }
-        private FPackageFileVersion _ver;
+
         public bool bExplicitVer { get; private set; }
+
         public FCustomVersionContainer? CustomVersions;
         public readonly Dictionary<string, bool> Options = new();
         public readonly Dictionary<string, KeyValuePair<string, string>> MapStructTypes = new();
-        private readonly Dictionary<string, bool>? _optionOverrides;
-        private readonly Dictionary<string, KeyValuePair<string, string>>? _mapStructTypesOverrides;
 
-        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, FCustomVersionContainer? customVersions = null, Dictionary<string, bool>? optionOverrides = null, Dictionary<string, KeyValuePair<string, string>>? mapStructTypesOverrides = null)
+        private readonly IDictionary<string, bool>? _optionOverrides;
+        private readonly IDictionary<string, KeyValuePair<string, string>>? _mapStructTypesOverrides;
+
+        public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, FCustomVersionContainer? customVersions = null, IDictionary<string, bool>? optionOverrides = null, IDictionary<string, KeyValuePair<string, string>>? mapStructTypesOverrides = null)
         {
             _optionOverrides = optionOverrides;
             _mapStructTypesOverrides = mapStructTypesOverrides;
+
             Game = game;
             Ver = ver;
             Platform = platform;
@@ -86,12 +91,10 @@ namespace CUE4Parse.UE4.Versions
             Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = false;
             Options["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = false;
 
-            if (_optionOverrides != null)
+            if (_optionOverrides == null) return;
+            foreach (var (key, value) in _optionOverrides)
             {
-                foreach (var (key, value) in _optionOverrides)
-                {
-                    Options[key] = value;
-                }
+                Options[key] = value;
             }
         }
 
@@ -105,12 +108,10 @@ namespace CUE4Parse.UE4.Versions
             MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
             MapStructTypes["TrackSignatureToTrackIdentifier"] = new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
 
-            if (_mapStructTypesOverrides != null)
+            if (_mapStructTypesOverrides == null) return;
+            foreach (var (key, value) in _mapStructTypesOverrides)
             {
-                foreach (var (key, value) in _mapStructTypesOverrides)
-                {
-                    MapStructTypes[key] = value;
-                }
+                MapStructTypes[key] = value;
             }
         }
 
