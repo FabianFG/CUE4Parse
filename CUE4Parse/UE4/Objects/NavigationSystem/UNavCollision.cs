@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.NavigationSystem
     public class UNavCollision : Assets.Exports.UObject
     {
         public FFormatContainer? CookedFormatData;
-        public FPackageIndex AreaClass; // UNavArea
+        public FPackageIndex? AreaClass; // UNavArea
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.Objects.NavigationSystem
                 serializer.Serialize(writer, CookedFormatData);
             }
 
-            if (!AreaClass.IsNull)
+            if (AreaClass is { IsNull: false })
             {
                 writer.WritePropertyName("AreaClass");
                 serializer.Serialize(writer, AreaClass);
