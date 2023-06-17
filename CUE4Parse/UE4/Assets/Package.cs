@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -27,6 +27,7 @@ namespace CUE4Parse.UE4.Assets
         public FObjectExport[] ExportMap { get; }
         public FPackageIndex[][]? DependsMap { get; }
         public FPackageIndex[]? PreloadDependencies { get; }
+        public FObjectDataResource[]? DataResourceMap { get; }
         public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
         public override bool IsFullyLoaded { get; } = false;
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
@@ -69,6 +70,16 @@ namespace CUE4Parse.UE4.Assets
             {
                 uassetAr.SeekAbsolute(Summary.PreloadDependencyOffset, SeekOrigin.Begin);
                 PreloadDependencies = uassetAr.ReadArray(Summary.PreloadDependencyCount, () => new FPackageIndex(uassetAr));
+            }
+
+            if (Summary.DataResourceOffset > 0)
+            {
+                uassetAr.SeekAbsolute(Summary.DataResourceOffset, SeekOrigin.Begin);
+                var dataResourceVersion = (EObjectDataResourceVersion) uassetAr.Read<uint>();
+                if (dataResourceVersion > EObjectDataResourceVersion.Invalid && dataResourceVersion <= EObjectDataResourceVersion.Latest)
+                {
+                    DataResourceMap = uassetAr.ReadArray(() => new FObjectDataResource(uassetAr));
+                }
             }
 
             FAssetArchive uexpAr;

@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly FNameComparisonMethod ComparisonMethod;
 
-        public FName(string name, int index = 0, int number = 0, FNameComparisonMethod compare = FNameComparisonMethod.Text)
+        public FName(string? name, int index = 0, int number = 0, FNameComparisonMethod compare = FNameComparisonMethod.Text)
         {
             _name = new FNameEntrySerialized(name);
             Index = index;
