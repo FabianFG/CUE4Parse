@@ -96,23 +96,23 @@ namespace CUE4Parse.FileProvider
             }
         }
 
-        private string _gameName;
-        public virtual string GameName
+        private string _internalGameName;
+        public virtual string InternalGameName
         {
             get
             {
-                if (string.IsNullOrEmpty(_gameName))
+                if (string.IsNullOrEmpty(_internalGameName))
                 {
                     string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase) && !it.StartsWith('/') && it.Contains('/')) ?? string.Empty;
-                    _gameName = t.SubstringBefore('/');
+                    _internalGameName = t.SubstringBefore('/');
                 }
-                return _gameName;
+                return _internalGameName;
             }
         }
 
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
         {
-            var regex = new Regex($"^{GameName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var regex = new Regex($"^{InternalGameName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             LocalizedResources.Clear();
 
             var i = 0;
@@ -149,7 +149,7 @@ namespace CUE4Parse.FileProvider
         }
         public string GetLanguageCode(ELanguage language)
         {
-            return GameName.ToLowerInvariant() switch
+            return InternalGameName.ToLowerInvariant() switch
             {
                 "fortnitegame" => language switch
                 {
@@ -282,7 +282,7 @@ namespace CUE4Parse.FileProvider
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
         public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
-            var regex = new Regex($"^{GameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var regex = new Regex($"^{InternalGameName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
 
             var i = 0;
@@ -399,14 +399,14 @@ namespace CUE4Parse.FileProvider
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
             var root = path.SubstringBefore('/');
-            if (root.Equals(GameName, StringComparison.OrdinalIgnoreCase))
+            if (root.Equals(InternalGameName, StringComparison.OrdinalIgnoreCase))
             {
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
             }
 
             if (root.Equals("Game", comparisonType) || root.Equals("Engine", comparisonType))
             {
-                var gameName = root.Equals("Engine", comparisonType) ? "Engine" : GameName;
+                var gameName = root.Equals("Engine", comparisonType) ? "Engine" : InternalGameName;
                 var p = path.SubstringAfter('/').SubstringBefore('/');
                 if (p.Contains('.'))
                 {
@@ -435,7 +435,7 @@ namespace CUE4Parse.FileProvider
             }
             else
             {
-                var ret = string.Concat(GameName, $"/Plugins/{(GameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{root}/Content/", path.SubstringAfter('/'));
+                var ret = string.Concat(InternalGameName, $"/Plugins/{(InternalGameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{root}/Content/", path.SubstringAfter('/'));
                 return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
             }
         }

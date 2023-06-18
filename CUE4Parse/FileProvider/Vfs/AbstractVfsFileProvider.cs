@@ -182,7 +182,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public int LoadVirtualCache()
         {
-            var persistentDownloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), GameName, "Saved/PersistentDownloadDir");
+            var persistentDownloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), InternalGameName, "Saved/PersistentDownloadDir");
             if (!Directory.Exists(persistentDownloadDir)) return 0;
 
             var vfcMetadata = Path.Combine(persistentDownloadDir, "VFC", "vfc.meta");

@@ -70,7 +70,7 @@ namespace CUE4Parse.FileProvider
         /// This is fetched from the prefix before "Game/".
         /// If there was no file with "Game/" the root folder name is returned
         /// </summary>
-        public string GameName { get; }
+        public string InternalGameName { get; }
 
         /// <summary>
         /// Searches for a game file from this provider.
