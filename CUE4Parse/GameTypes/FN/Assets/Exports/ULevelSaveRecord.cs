@@ -57,6 +57,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         AddedConfigForNonSaveGameProperties,
         AddedLevelSaveTags,
         AddedSubobjectSerialization,
+        RefactoredSubobjectSerialization,
         RemoveInvalidEventBindings,
 
         VersionPlusOne,
