@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.IO.Objects
             ExportMapOffset = Ar.Read<int>();
             ExportBundleEntriesOffset = Ar.Read<int>();
 
-            if (Ar.Game >= EGame.GAME_UE5_2)
+            if (Ar.Game >= EGame.GAME_UE5_3)
             {
                 DependencyBundleHeadersOffset = Ar.Read<int>();
                 DependencyBundleEntriesOffset = Ar.Read<int>();

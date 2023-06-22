@@ -131,7 +131,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr.Position = summary.ExportBundleEntriesOffset;
                 exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
-                if (uassetAr.Game < EGame.GAME_UE5_2)
+                if (uassetAr.Game < EGame.GAME_UE5_3)
                 {
                     // Export bundle headers
                     uassetAr.Position = summary.GraphDataOffset;
