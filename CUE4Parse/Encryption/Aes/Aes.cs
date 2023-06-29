@@ -74,7 +74,7 @@ namespace CUE4Parse.Encryption.Aes
                 Buffer.BlockCopy(encrypted, beginOffset, decrypt, 0, count);
                 fixed (byte* pDecrypt = decrypt)
                 {
-                    for (int i = 0; i < count; i += 16)
+                    for (var i = 0; i < count; i += 16)
                     {
                         ApexDecrypt(rk, pDecrypt + i);
                     }
@@ -91,7 +91,7 @@ namespace CUE4Parse.Encryption.Aes
             internalKey[1] = BitConverter.ToUInt32(key.Key, 4).ByteSwap() ^ 0x78F36777;
             internalKey[2] = BitConverter.ToUInt32(key.Key, 8).ByteSwap() ^ 0xD99D2CF;
             internalKey[3] = BitConverter.ToUInt32(key.Key, 12).ByteSwap() ^ 0x5E144852;
-            for (int i = 0; i < 32; i++)
+            for (var i = 0; i < 32; i++)
             {
                 var tempInt = _table2[i] ^ internalKey[(i + 1) % 4] ^ internalKey[(i + 2) % 4] ^ internalKey[(i + 3) % 4];
                 var temp = (byte*) &tempInt;
@@ -113,7 +113,7 @@ namespace CUE4Parse.Encryption.Aes
             internalData[1] = src[1].ByteSwap();
             internalData[2] = src[2].ByteSwap();
             internalData[3] = src[3].ByteSwap();
-            for (int i = 0; i < 32; i++)
+            for (var i = 0; i < 32; i++)
             {
                 var tempInt = rk[^(i + 1)] ^ internalData[(i + 1) % 4] ^ internalData[(i + 2) % 4] ^ internalData[(i + 3) % 4];
                 var temp = (byte*) &tempInt;
