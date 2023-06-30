@@ -23,6 +23,7 @@ namespace CUE4Parse_Conversion
         public ETexturePlatform Platform;
         public ESocketFormat SocketFormat;
         public bool ExportMorphTargets;
+        public bool ExportMaterials;
 
         public ExporterOptions()
         {
@@ -33,6 +34,7 @@ namespace CUE4Parse_Conversion
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
             ExportMorphTargets = true;
+            ExportMaterials = true;
         }
     }
 

@@ -42,7 +42,7 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{PackagePath}.psk", Ar.GetBuffer(), new List<MaterialExporter2>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options, bool exportMaterials = true) : base(originalMesh, options)
+        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
@@ -63,7 +63,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
 
                 using var Ar = new FArchiveWriter();
-                var materialExports = exportMaterials ? new List<MaterialExporter2>() : null;
+                var materialExports = options.ExportMaterials ? new List<MaterialExporter2>() : null;
                 string ext;
                 switch (Options.MeshFormat)
                 {
@@ -82,13 +82,20 @@ namespace CUE4Parse_Conversion.Meshes
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
-
-                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
-                if (Options.LodFormat == ELodFormat.FirstLod) break;
+                
+                if (Options.LodFormat == ELodFormat.FirstLod)
+                {
+                    MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    break;
+                }
+                else
+                {
+                    MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                }
             }
         }
 
-        public MeshExporter(USkeletalMesh originalMesh, ExporterOptions options, bool exportMaterials = true) : base(originalMesh, options)
+        public MeshExporter(USkeletalMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
@@ -119,7 +126,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
 
                 using var Ar = new FArchiveWriter();
-                var materialExports = exportMaterials ? new List<MaterialExporter2>() : null;
+                var materialExports = options.ExportMaterials ? new List<MaterialExporter2>() : null;
                 var ext = "";
                 switch (Options.MeshFormat)
                 {
@@ -142,8 +149,15 @@ namespace CUE4Parse_Conversion.Meshes
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
 
-                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
-                if (Options.LodFormat == ELodFormat.FirstLod) break;
+                if (Options.LodFormat == ELodFormat.FirstLod)
+                {
+                    MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    break;
+                }
+                else
+                {
+                    MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                }
                 i++;
             }
         }
