@@ -160,7 +160,10 @@ namespace CUE4Parse_Conversion.Animations
             }
 
             // psa file is done
-            AnimSequences.Add(new Anim($"{PackagePath}_SEQ{seqIdx}.psa", Ar.GetBuffer()));
+            AnimSequences.Add(seqIdx > 0
+                ? new Anim($"{PackagePath}_SEQ{seqIdx}.psa", Ar.GetBuffer())
+                : new Anim($"{PackagePath}.psa", Ar.GetBuffer()));
+
             Ar.Dispose();
         }
 
