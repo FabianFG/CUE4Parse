@@ -12,14 +12,16 @@ namespace CUE4Parse.UE4.VirtualFileSystem
     public abstract partial class AbstractVfsReader : IVfsReader
     {
         protected static readonly ILogger log = Log.ForContext<AbstractVfsReader>();
+
         public string Path { get; }
         public string Name { get; }
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
         public virtual int FileCount => Files.Count;
 
 
-        public abstract bool HasDirectoryIndex { get; }
         public abstract string MountPoint { get; protected set; }
+        public abstract bool HasDirectoryIndex { get; }
+
         public bool IsConcurrent { get; set; } = false;
         public bool IsMounted { get; } = false;
 
