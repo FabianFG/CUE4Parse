@@ -2,9 +2,4 @@
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
-public class FIntBulkData : FByteBulkData
-{
-    public FIntBulkData(FAssetArchive Ar) : base(Ar, true)
-    {
-    }
-}
+public class FIntBulkData(FAssetArchive Ar) : FByteBulkData(Ar, true);

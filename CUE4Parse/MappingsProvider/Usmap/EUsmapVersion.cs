@@ -1,14 +1,13 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap
+﻿namespace CUE4Parse.MappingsProvider.Usmap;
+
+public enum EUsmapVersion : byte
 {
-    public enum EUsmapVersion : byte
-    {
-        /** Initial format. */
-        Initial,
+    /** Initial format. */
+    Initial,
 
-        /** Adds package versioning to aid with compatibility */
-        PackageVersioning,
+    /** Adds package versioning to aid with compatibility */
+    PackageVersioning,
 
-        LatestPlusOne,
-        Latest = LatestPlusOne - 1
-    }
+    LatestPlusOne,
+    Latest = LatestPlusOne - 1
 }

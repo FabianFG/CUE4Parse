@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         {
             if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.MaterialInputNativeSerialize)
             {
-                var fallback = new FMaterialInputVector(new FStructFallback(Ar, "MaterialMaterialInput"));
+                var fallback = new FMaterialInputVector(new FStructFallback(Ar, "MaterialInputVector"));
                 UseConstant = fallback.UseConstant;
                 Constant = fallback.Constant;
                 return;

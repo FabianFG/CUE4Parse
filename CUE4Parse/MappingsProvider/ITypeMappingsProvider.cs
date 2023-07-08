@@ -1,12 +1,11 @@
-﻿namespace CUE4Parse.MappingsProvider
+﻿namespace CUE4Parse.MappingsProvider;
+
+public interface ITypeMappingsProvider
 {
-    public interface ITypeMappingsProvider
-    {
-        public TypeMappings? MappingsForGame { get; }
+    public TypeMappings? MappingsForGame { get; }
 
-        public void Load(string path);
-        public void Load(byte[] bytes);
+    public void Load(string path);
+    public void Load(byte[] bytes);
 
-        public void Reload();
-    }
+    public void Reload();
 }

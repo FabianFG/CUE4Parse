@@ -2,65 +2,67 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects
-{
-    [JsonConverter(typeof(UScriptMapConverter))]
-    public class UScriptMap
-    {
-        public Dictionary<FPropertyTagType?, FPropertyTagType?> Properties;
+namespace CUE4Parse.UE4.Assets.Objects;
 
-        public UScriptMap()
+[JsonConverter(typeof(UScriptMapConverter))]
+public class UScriptMap
+{
+    public Dictionary<FPropertyTagType, FPropertyTagType?> Properties;
+
+    public UScriptMap()
+    {
+        Properties = new Dictionary<FPropertyTagType, FPropertyTagType?>();
+    }
+
+    public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData)
+    {
+        if (tagData.InnerType == null || tagData.ValueType == null)
+            throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
+
+        if (!Ar.HasUnversionedProperties && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
         {
-            Properties = new Dictionary<FPropertyTagType?, FPropertyTagType?>();
+            if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);
+            if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);
         }
 
-        public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData)
+        var numKeysToRemove = Ar.Read<int>();
+        for (var i = 0; i < numKeysToRemove; i++)
         {
-            if (tagData.InnerType == null || tagData.ValueType == null)
-                throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
+            FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+        }
 
-            if (!Ar.HasUnversionedProperties && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
+        var numEntries = Ar.Read<int>();
+        Properties = new Dictionary<FPropertyTagType, FPropertyTagType?>(numEntries);
+        for (var i = 0; i < numEntries; i++)
+        {
+            var isReadingValue = false;
+            try
             {
-                if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);
-                if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);
-            }
-
-            var numKeysToRemove = Ar.Read<int>();
-            for (var i = 0; i < numKeysToRemove; i++)
-            {
-                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
-            }
-
-            var numEntries = Ar.Read<int>();
-            Properties = new Dictionary<FPropertyTagType?, FPropertyTagType?>(numEntries);
-            for (var i = 0; i < numEntries; i++)
-            {
-                var isReadingValue = false;
-                try
-                {
-                    var key = FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
-                    isReadingValue = true;
-                    var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
+                var key = FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+                isReadingValue = true;
+                var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
+                if (key != null)
                     Properties[key] = value;
-                }
-                catch (ParserException e)
-                {
-                    throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
-                }
+            }
+            catch (ParserException e)
+            {
+                throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
             }
         }
     }
+}
 
-    public class UScriptMapConverter : JsonConverter<UScriptMap>
+public class UScriptMapConverter : JsonConverter<UScriptMap>
+{
+    public override void WriteJson(JsonWriter writer, UScriptMap? value, JsonSerializer serializer)
     {
-        public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
-        {
-            writer.WriteStartArray();
+        writer.WriteStartArray();
 
+        if (value?.Properties.Count > 0)
+        {
             foreach (var kvp in value.Properties)
             {
                 switch (kvp.Key)
@@ -81,14 +83,13 @@ namespace CUE4Parse.UE4.Assets.Objects
                         break;
                 }
             }
-
-            writer.WriteEndArray();
         }
 
-        public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
+        writer.WriteEndArray();
+    }
+
+    public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
     }
 }

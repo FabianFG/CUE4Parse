@@ -28,7 +28,7 @@ public class FKismetArchive : FArchive
     public KismetExpression ReadExpression()
     {
         var index = Index;
-        EExprToken token = (EExprToken)Read<byte>();
+        EExprToken token = (EExprToken) Read<byte>();
         KismetExpression expression = token switch
         {
             EExprToken.EX_LocalVariable => new EX_LocalVariable(this),
@@ -135,15 +135,15 @@ public class FKismetArchive : FArchive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string XFERSTRING()
     {
-        var eos = Array.IndexOf<byte>(_data, 0, (int)Position);
+        var eos = Array.IndexOf<byte>(_data, 0, (int) Position);
         if (eos == -1) throw new ParserException("Couldn't find end of the string");
-        return Encoding.ASCII.GetString(ReadBytes(eos-(int)Position));
+        return Encoding.ASCII.GetString(ReadBytes(eos - (int) Position));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string XFERUNICODESTRING()
     {
-        var length = _data.AsSpan((int)Position).IndexOf(stackalloc byte[2]);
+        var length = _data.AsSpan((int) Position).IndexOf(stackalloc byte[2]);
         if (length == -1) throw new ParserException("Couldn't find end of the string");
         if (length % 2 == 1) length++;
         return Encoding.Unicode.GetString(ReadBytes(length));
@@ -194,6 +194,7 @@ public class FKismetArchive : FArchive
         }
         else
             Buffer.BlockCopy(_data, (int) Position, buffer, offset, n);
+
         Position += n;
 
         return n;
@@ -216,12 +217,12 @@ public class FKismetArchive : FArchive
             SeekOrigin.Begin => offset,
             SeekOrigin.Current => Position + offset,
             SeekOrigin.End => Length + offset,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(origin))
         };
         return Position;
     }
 
-    public override bool CanSeek { get; } = true;
+    public override bool CanSeek => true;
     public override long Length { get; }
     public override long Position { get; set; }
     public override string Name { get; }
@@ -236,5 +237,5 @@ public class FKismetArchive : FArchive
         return result;
     }
 
-    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions) {Position = Position};
+    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions) { Position = Position };
 }

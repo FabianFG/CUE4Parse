@@ -369,7 +369,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 PackageName = Ar.ReadFName();
             }
-            
+
             ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }
     }

@@ -1,102 +1,101 @@
 using System;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
-namespace CUE4Parse.UE4.Assets.Objects
+namespace CUE4Parse.UE4.Assets.Objects;
+
+[JsonConverter(typeof(FByteBulkDataHeaderConverter))]
+public readonly struct FByteBulkDataHeader
 {
-    [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
-    public readonly struct FByteBulkDataHeader
+    public readonly EBulkDataFlags BulkDataFlags;
+    public readonly int ElementCount;
+    public readonly uint SizeOnDisk;
+    public readonly long OffsetInFile;
+
+    public FByteBulkDataHeader(FAssetArchive Ar)
     {
-        public readonly EBulkDataFlags BulkDataFlags;
-        public readonly int ElementCount;
-        public readonly uint SizeOnDisk;
-        public readonly long OffsetInFile;
-
-        public FByteBulkDataHeader(FAssetArchive Ar)
+        if (Ar.Owner is IoPackage { BulkDataMap.Length: > 0 } iopkg)
         {
-            if (Ar.Owner is IoPackage { BulkDataMap.Length: > 0 } iopkg)
+            var dataIndex = Ar.Read<int>();
+            if (dataIndex >= 0 && dataIndex < iopkg.BulkDataMap.Length)
             {
-                var dataIndex = Ar.Read<int>();
-                if (dataIndex >= 0 && dataIndex < iopkg.BulkDataMap.Length)
-                {
-                    var metaData = iopkg.BulkDataMap[dataIndex];
-                    BulkDataFlags = (EBulkDataFlags) metaData.Flags;
-                    ElementCount = (int) metaData.SerialSize;
-                    OffsetInFile = (long) metaData.SerialOffset;
-                    SizeOnDisk = (uint) metaData.SerialSize; // ??
-                    return;
-                }
-                Ar.Position -= 4;
+                var metaData = iopkg.BulkDataMap[dataIndex];
+                BulkDataFlags = (EBulkDataFlags) metaData.Flags;
+                ElementCount = (int) metaData.SerialSize;
+                OffsetInFile = (long) metaData.SerialOffset;
+                SizeOnDisk = (uint) metaData.SerialSize; // ??
+                return;
             }
 
-            if (Ar.Owner is Package { DataResourceMap.Length: > 0 } pkg)
+            Ar.Position -= 4;
+        }
+
+        if (Ar.Owner is Package { DataResourceMap.Length: > 0 } pkg)
+        {
+            var dataIndex = Ar.Read<int>();
+            if (dataIndex >= 0 && dataIndex < pkg.DataResourceMap.Length)
             {
-                var dataIndex = Ar.Read<int>();
-                if (dataIndex >= 0 && dataIndex < pkg.DataResourceMap.Length)
-                {
-                    var metaData = pkg.DataResourceMap[dataIndex];
-                    BulkDataFlags = (EBulkDataFlags) metaData.LegacyBulkDataFlags;
-                    ElementCount = (int) metaData.RawSize;
-                    OffsetInFile = metaData.SerialOffset;
-                    SizeOnDisk = (uint) metaData.SerialSize;
-                    return;
-                }
-                Ar.Position -= 4;
+                var metaData = pkg.DataResourceMap[dataIndex];
+                BulkDataFlags = (EBulkDataFlags) metaData.LegacyBulkDataFlags;
+                ElementCount = (int) metaData.RawSize;
+                OffsetInFile = metaData.SerialOffset;
+                SizeOnDisk = (uint) metaData.SerialSize;
+                return;
             }
 
-            BulkDataFlags = Ar.Read<EBulkDataFlags>();
-            ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
-            SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
-            OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
-            if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
-            {
-                OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
-            }
+            Ar.Position -= 4;
+        }
 
-            if (BulkDataFlags.HasFlag(BULKDATA_BadDataVersion))
-            {
-                Ar.Position += sizeof(ushort);
-                BulkDataFlags &= ~BULKDATA_BadDataVersion;
-            }
+        BulkDataFlags = Ar.Read<EBulkDataFlags>();
+        ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
+        SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
+        OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
+        if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
+        {
+            OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
+        }
 
-            if (BulkDataFlags.HasFlag(BULKDATA_DuplicateNonOptionalPayload))
-            {
-                Ar.Position += sizeof(EBulkDataFlags); // DuplicateFlags
-                Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
-                Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
-            }
+        if (BulkDataFlags.HasFlag(BULKDATA_BadDataVersion))
+        {
+            Ar.Position += sizeof(ushort);
+            BulkDataFlags &= ~BULKDATA_BadDataVersion;
+        }
+
+        if (BulkDataFlags.HasFlag(BULKDATA_DuplicateNonOptionalPayload))
+        {
+            Ar.Position += sizeof(EBulkDataFlags); // DuplicateFlags
+            Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
+            Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
         }
     }
+}
 
-    public class FByteBulkDataHeaderConverter : JsonConverter<FByteBulkDataHeader>
+public class FByteBulkDataHeaderConverter : JsonConverter<FByteBulkDataHeader>
+{
+    public override void WriteJson(JsonWriter writer, FByteBulkDataHeader value, JsonSerializer serializer)
     {
-        public override void WriteJson(JsonWriter writer, FByteBulkDataHeader value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
+        writer.WriteStartObject();
 
-            writer.WritePropertyName("BulkDataFlags");
-            writer.WriteValue(value.BulkDataFlags.ToStringBitfield());
+        writer.WritePropertyName("BulkDataFlags");
+        writer.WriteValue(value.BulkDataFlags.ToStringBitfield());
 
-            writer.WritePropertyName("ElementCount");
-            writer.WriteValue(value.ElementCount);
+        writer.WritePropertyName("ElementCount");
+        writer.WriteValue(value.ElementCount);
 
-            writer.WritePropertyName("SizeOnDisk");
-            writer.WriteValue(value.SizeOnDisk);
+        writer.WritePropertyName("SizeOnDisk");
+        writer.WriteValue(value.SizeOnDisk);
 
-            writer.WritePropertyName("OffsetInFile");
-            writer.WriteValue($"0x{value.OffsetInFile:X}");
+        writer.WritePropertyName("OffsetInFile");
+        writer.WriteValue($"0x{value.OffsetInFile:X}");
 
-            writer.WriteEndObject();
-        }
+        writer.WriteEndObject();
+    }
 
-        public override FByteBulkDataHeader ReadJson(JsonReader reader, Type objectType, FByteBulkDataHeader existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
+    public override FByteBulkDataHeader ReadJson(JsonReader reader, Type objectType, FByteBulkDataHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -2,21 +2,12 @@
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.VirtualFileCache
-{
-    public class FFileTable
-    {
-        public readonly EVFCFileVersion FileVersion;
-        public readonly FBlockFile[] BlockFiles;
-        public readonly Dictionary<FSHAHash, FDataReference> FileMap;
-        public readonly int LastBlockFileId;
+namespace CUE4Parse.UE4.VirtualFileCache;
 
-        public FFileTable(FByteArchive Ar)
-        {
-            FileVersion = Ar.Read<EVFCFileVersion>();
-            BlockFiles = Ar.ReadArray(() => new FBlockFile(Ar));
-            FileMap = Ar.ReadMap(() => (new FSHAHash(Ar), new FDataReference(Ar)));
-            LastBlockFileId = Ar.Read<int>();
-        }
-    }
+public class FFileTable(FByteArchive Ar)
+{
+    public readonly EVFCFileVersion FileVersion = Ar.Read<EVFCFileVersion>();
+    public readonly FBlockFile[] BlockFiles = Ar.ReadArray(() => new FBlockFile(Ar));
+    public readonly Dictionary<FSHAHash, FDataReference> FileMap = Ar.ReadMap(() => (new FSHAHash(Ar), new FDataReference(Ar)));
+    public readonly int LastBlockFileId = Ar.Read<int>();
 }

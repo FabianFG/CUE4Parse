@@ -159,8 +159,7 @@ public class UScriptStructConverter : JsonConverter<UScriptStruct>
         serializer.Serialize(writer, value?.StructType);
     }
 
-    public override UScriptStruct ReadJson(JsonReader reader, Type objectType, UScriptStruct? existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
+    public override UScriptStruct ReadJson(JsonReader reader, Type objectType, UScriptStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

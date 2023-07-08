@@ -5,36 +5,40 @@ using System.Runtime.InteropServices;
 using System.Text;
 using static CUE4Parse.Utils.CityHash;
 
-namespace CUE4Parse.UE4.IO.Objects
+namespace CUE4Parse.UE4.IO.Objects;
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FPackageId(ulong id) : IEquatable<FPackageId>
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FPackageId : IEquatable<FPackageId>
+    public readonly ulong id = id;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(FPackageId other) => id == other.id;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Equals(object? obj) => obj is FPackageId other && Equals(other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int GetHashCode() => id.GetHashCode();
+
+    public override string ToString() => id.ToString();
+
+    public static FPackageId FromName(string name)
     {
-        public readonly ulong id;
+        var nameStr = name.ToLowerInvariant();
+        var nameBuf = Encoding.Unicode.GetBytes(nameStr);
+        var hash = CityHash64(nameBuf);
+        Trace.Assert(hash != ~0uL, $"Package name hash collision \"{nameStr}\" and InvalidId");
+        return new FPackageId(hash);
+    }
 
-        public FPackageId(ulong id)
-        {
-            this.id = id;
-        }
+    public static bool operator ==(FPackageId left, FPackageId right)
+    {
+        return left.Equals(right);
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(FPackageId other) => id == other.id;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? obj) => obj is FPackageId other && Equals(other);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => id.GetHashCode();
-
-        public override string ToString() => id.ToString();
-
-        public static FPackageId FromName(string name)
-        {
-            var nameStr = name.ToLowerInvariant();
-            var nameBuf = Encoding.Unicode.GetBytes(nameStr);
-            var hash = CityHash64(nameBuf);
-            Trace.Assert(hash != ~0uL, $"Package name hash collision \"{nameStr}\" and InvalidId");
-            return new FPackageId(hash);
-        }
+    public static bool operator !=(FPackageId left, FPackageId right)
+    {
+        return !(left == right);
     }
 }

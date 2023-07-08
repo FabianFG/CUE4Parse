@@ -30,13 +30,12 @@ public class FInstancedStruct : IUStruct
 
 public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
-    public override void WriteJson(JsonWriter writer, FInstancedStruct value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        serializer.Serialize(writer, value.NonConstStruct);
+        serializer.Serialize(writer, value?.NonConstStruct);
     }
 
-    public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
+    public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

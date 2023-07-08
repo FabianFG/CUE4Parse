@@ -1,9 +1,7 @@
 ﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-
 using Serilog;
-
 using System;
 using System.IO;
 using System.Net.Http;
@@ -74,7 +72,8 @@ namespace CUE4Parse.Compression
 
         public static async Task<bool> DownloadOodleDll(string? path)
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
             try
             {
                 using var indexResponse = await client.GetAsync(WARFRAME_INDEX_URL).ConfigureAwait(false);

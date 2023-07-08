@@ -95,9 +95,20 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
-            
+
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
+            {
+                var length = Ar.Read<int>();
+                Ar.Position += sizeof(float) * length; // TArray<float> CachedStreamingTextureFactors
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)
+            {
+
+            }
+
             if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-            
+
             if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
             {
                 for (var i = 0; i < LODModels?.Length; i++)

@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Versions;
 using System;
 using System.Text;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Kismet;
 
@@ -31,13 +32,15 @@ public class FKismetPropertyPointer
 
 public class FKismetPropertyPointerConverter : JsonConverter<FKismetPropertyPointer>
 {
-    public override FKismetPropertyPointer? ReadJson(JsonReader reader, Type objectType, FKismetPropertyPointer? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FKismetPropertyPointer ReadJson(JsonReader reader, Type objectType, FKismetPropertyPointer? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
 
-    public override void WriteJson(JsonWriter writer, FKismetPropertyPointer value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FKismetPropertyPointer? value, JsonSerializer serializer)
     {
+        if (value == null) return;
+
         if (value.bNew)
         {
             value.New!.WriteJson(writer, serializer);
@@ -70,14 +73,14 @@ public abstract class KismetExpression
 
 public class KismetExpressionConverter : JsonConverter<KismetExpression>
 {
-    public override void WriteJson(JsonWriter writer, KismetExpression value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, KismetExpression? value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
-        value.WriteJson(writer, serializer);
+        value?.WriteJson(writer, serializer);
         writer.WriteEndObject();
     }
 
-    public override KismetExpression ReadJson(JsonReader reader, Type objectType, KismetExpression existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override KismetExpression ReadJson(JsonReader reader, Type objectType, KismetExpression? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
@@ -85,7 +88,7 @@ public class KismetExpressionConverter : JsonConverter<KismetExpression>
 
 public abstract class KismetExpression<T> : KismetExpression
 {
-    public T Value;
+    public T? Value;
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -95,17 +98,11 @@ public abstract class KismetExpression<T> : KismetExpression
     }
 }
 
-public class EX_AddMulticastDelegate : KismetExpression
+public class EX_AddMulticastDelegate(FKismetArchive Ar) : KismetExpression
 {
-    public override EExprToken Token => EExprToken.EX_AddMulticastDelegate; 
-    public KismetExpression Delegate;
-    public KismetExpression DelegateToAdd;
-
-    public EX_AddMulticastDelegate(FKismetArchive Ar)
-    {
-        Delegate = Ar.ReadExpression();
-        DelegateToAdd = Ar.ReadExpression();
-    }
+    public override EExprToken Token => EExprToken.EX_AddMulticastDelegate;
+    public KismetExpression Delegate = Ar.ReadExpression();
+    public KismetExpression DelegateToAdd = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -140,17 +137,11 @@ public class EX_ArrayConst : KismetExpression
     }
 }
 
-public class EX_ArrayGetByRef : KismetExpression
+public class EX_ArrayGetByRef(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_ArrayGetByRef;
-    public KismetExpression ArrayVariable;
-    public KismetExpression ArrayIndex;
-
-    public EX_ArrayGetByRef(FKismetArchive Ar)
-    {
-        ArrayVariable = Ar.ReadExpression();
-        ArrayIndex = Ar.ReadExpression();
-    }
+    public KismetExpression ArrayVariable = Ar.ReadExpression();
+    public KismetExpression ArrayIndex = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -162,19 +153,12 @@ public class EX_ArrayGetByRef : KismetExpression
     }
 }
 
-public class EX_Assert : KismetExpression
+public class EX_Assert(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Assert;
-    public ushort LineNumber;
-    public bool DebugMode;
-    public KismetExpression AssertExpression;
-
-    public EX_Assert(FKismetArchive Ar)
-    {
-        LineNumber = Ar.Read<ushort>();
-        DebugMode = Ar.ReadFlag();
-        AssertExpression = Ar.ReadExpression();
-    }
+    public ushort LineNumber = Ar.Read<ushort>();
+    public bool DebugMode = Ar.ReadFlag();
+    public KismetExpression AssertExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -188,19 +172,12 @@ public class EX_Assert : KismetExpression
     }
 }
 
-public class EX_BindDelegate : KismetExpression
+public class EX_BindDelegate(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_BindDelegate;
-    public FName FunctionName;
-    public KismetExpression Delegate;
-    public KismetExpression ObjectTerm;
-
-    public EX_BindDelegate(FKismetArchive Ar)
-    {
-        FunctionName = Ar.ReadFName();
-        Delegate = Ar.ReadExpression();
-        ObjectTerm = Ar.ReadExpression();
-    }
+    public FName FunctionName = Ar.ReadFName();
+    public KismetExpression Delegate = Ar.ReadExpression();
+    public KismetExpression ObjectTerm = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -223,32 +200,23 @@ public class EX_ByteConst : KismetExpression<byte>
 {
     public override EExprToken Token => EExprToken.EX_ByteConst;
 
-    public EX_ByteConst(FKismetArchive Ar)
+    public EX_ByteConst(FArchive Ar)
     {
         Value = Ar.Read<byte>();
     }
 }
 
-public class EX_CallMath : EX_FinalFunction
+public class EX_CallMath(FKismetArchive Ar) : EX_FinalFunction(Ar)
 {
     public override EExprToken Token => EExprToken.EX_CallMath;
-
-    public EX_CallMath(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_CallMulticastDelegate : KismetExpression 
+public class EX_CallMulticastDelegate(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_CallMulticastDelegate;
-    public FPackageIndex StackNode;
-    public KismetExpression Delegate;
-    public KismetExpression[] Parameters;
-
-    public EX_CallMulticastDelegate(FKismetArchive Ar)
-    {
-        StackNode = new FPackageIndex(Ar);
-        Delegate = Ar.ReadExpression();
-        Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
-    }
+    public FPackageIndex StackNode = new FPackageIndex(Ar);
+    public KismetExpression Delegate = Ar.ReadExpression();
+    public KismetExpression[] Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -262,17 +230,11 @@ public class EX_CallMulticastDelegate : KismetExpression
     }
 }
 
-public class EX_Cast : KismetExpression
+public class EX_Cast(FKismetArchive Ar) : KismetExpression
 {
-    public override EExprToken Token => EExprToken.EX_Cast;// EX_PrimitiveCast
-    public ECastToken ConversionType;
-    public KismetExpression Target;
-
-    public EX_Cast(FKismetArchive Ar)
-    {
-        ConversionType = (ECastToken)Ar.Read<byte>();
-        Target = Ar.ReadExpression();
-    }
+    public override EExprToken Token => EExprToken.EX_Cast; // EX_PrimitiveCast
+    public ECastToken ConversionType = (ECastToken) Ar.Read<byte>();
+    public KismetExpression Target = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -284,16 +246,10 @@ public class EX_Cast : KismetExpression
     }
 }
 
-public abstract class EX_CastBase : KismetExpression
+public abstract class EX_CastBase(FKismetArchive Ar) : KismetExpression
 {
-    public FPackageIndex ClassPtr;
-    public KismetExpression Target;
-
-    public EX_CastBase(FKismetArchive Ar)
-    {
-        ClassPtr = new FPackageIndex(Ar);
-        Target = Ar.ReadExpression();
-    }
+    public FPackageIndex ClassPtr = new FPackageIndex(Ar);
+    public KismetExpression Target = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -305,29 +261,20 @@ public abstract class EX_CastBase : KismetExpression
     }
 }
 
-public class EX_ClassContext : EX_Context
+public class EX_ClassContext(FKismetArchive Ar) : EX_Context(Ar)
 {
     public override EExprToken Token => EExprToken.EX_ClassContext;
-
-    public EX_ClassContext(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_ClassSparseDataVariable : EX_VariableBase
+public class EX_ClassSparseDataVariable(FKismetArchive Ar) : EX_VariableBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_ClassSparseDataVariable;
-
-    public EX_ClassSparseDataVariable(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_ClearMulticastDelegate : KismetExpression
+public class EX_ClearMulticastDelegate(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_ClearMulticastDelegate;
-    public KismetExpression DelegateToClear;
-
-    public EX_ClearMulticastDelegate(FKismetArchive Ar)
-    {
-        DelegateToClear = Ar.ReadExpression();
-    }
+    public KismetExpression DelegateToClear = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -337,15 +284,10 @@ public class EX_ClearMulticastDelegate : KismetExpression
     }
 }
 
-public class EX_ComputedJump : KismetExpression
+public class EX_ComputedJump(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_ComputedJump;
-    public KismetExpression CodeOffsetExpression;
-
-    public EX_ComputedJump(FKismetArchive Ar)
-    {
-        CodeOffsetExpression = Ar.ReadExpression();
-    }
+    public KismetExpression CodeOffsetExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -355,21 +297,13 @@ public class EX_ComputedJump : KismetExpression
     }
 }
 
-public class EX_Context : KismetExpression
+public class EX_Context(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Context;
-    public KismetExpression ObjectExpression;
-    public uint Offset;
-    public FKismetPropertyPointer RValuePointer;
-    public KismetExpression ContextExpression;
-
-    public EX_Context(FKismetArchive Ar)
-    {
-        ObjectExpression = Ar.ReadExpression();
-        Offset = Ar.Read<uint>();
-        RValuePointer = new FKismetPropertyPointer(Ar);
-        ContextExpression = Ar.ReadExpression();
-    }
+    public KismetExpression ObjectExpression = Ar.ReadExpression();
+    public uint Offset = Ar.Read<uint>();
+    public FKismetPropertyPointer RValuePointer = new(Ar);
+    public KismetExpression ContextExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -385,25 +319,19 @@ public class EX_Context : KismetExpression
     }
 }
 
-public class EX_Context_FailSilent : EX_Context
+public class EX_Context_FailSilent(FKismetArchive Ar) : EX_Context(Ar)
 {
     public override EExprToken Token => EExprToken.EX_Context_FailSilent;
-
-    public EX_Context_FailSilent(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_CrossInterfaceCast : EX_CastBase
+public class EX_CrossInterfaceCast(FKismetArchive Ar) : EX_CastBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_CrossInterfaceCast;
-
-    public EX_CrossInterfaceCast(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_DefaultVariable : EX_VariableBase
+public class EX_DefaultVariable(FKismetArchive Ar) : EX_VariableBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_DefaultVariable;
-
-    public EX_DefaultVariable(FKismetArchive Ar) : base(Ar) { }
 }
 
 public class EX_DeprecatedOp4A : KismetExpression
@@ -415,17 +343,15 @@ public class EX_DoubleConst : KismetExpression<double>
 {
     public override EExprToken Token => EExprToken.EX_DoubleConst;
 
-    public EX_DoubleConst(FKismetArchive Ar)
+    public EX_DoubleConst(FArchive Ar)
     {
         Value = Ar.Read<double>();
     }
 }
 
-public class EX_DynamicCast : EX_CastBase
+public class EX_DynamicCast(FKismetArchive Ar) : EX_CastBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_DynamicCast;
-
-    public EX_DynamicCast(FKismetArchive Ar) : base(Ar) { }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -471,14 +397,17 @@ public class EX_EndParmValue : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_EndParmValue;
 }
+
 public class EX_EndSet : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_EndSet;
 }
+
 public class EX_EndSetConst : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_EndSetConst;
 }
+
 public class EX_EndStructConst : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_EndStructConst;
@@ -499,17 +428,11 @@ public class EX_FieldPathConst : KismetExpression<KismetExpression>
     }
 }
 
-public class EX_FinalFunction : KismetExpression
+public class EX_FinalFunction(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_FinalFunction;
-    public FPackageIndex StackNode;
-    public KismetExpression[] Parameters;
-
-    public EX_FinalFunction(FKismetArchive Ar)
-    {
-        StackNode = new FPackageIndex(Ar);
-        Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
-    }
+    public FPackageIndex StackNode = new(Ar);
+    public KismetExpression[] Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -519,7 +442,7 @@ public class EX_FinalFunction : KismetExpression
         writer.WritePropertyName("Parameters");
         serializer.Serialize(writer, Parameters);
 
-        if (Parameters.Length == 1 && Parameters[0] is EX_IntConst offsetint)
+        if (Parameters is [EX_IntConst offsetint])
         {
             if (StackNode.ResolvedObject is not null && StackNode.ResolvedObject.Class?.Name.Text == "Function")
             {
@@ -541,21 +464,16 @@ public class EX_FloatConst : KismetExpression<float>
 {
     public override EExprToken Token => EExprToken.EX_FloatConst;
 
-    public EX_FloatConst(FKismetArchive Ar)
+    public EX_FloatConst(FArchive Ar)
     {
         Value = Ar.Read<float>();
     }
 }
 
-public class EX_InstanceDelegate : KismetExpression
+public class EX_InstanceDelegate(FArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_InstanceDelegate;
-    public FName FunctionName;
-
-    public EX_InstanceDelegate(FKismetArchive Ar)
-    {
-        FunctionName = Ar.ReadFName();
-    }
+    public FName FunctionName = Ar.ReadFName();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -565,11 +483,9 @@ public class EX_InstanceDelegate : KismetExpression
     }
 }
 
-public class EX_InstanceVariable : EX_VariableBase
+public class EX_InstanceVariable(FKismetArchive Ar) : EX_VariableBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_InstanceVariable;
-
-    public EX_InstanceVariable(FKismetArchive Ar) : base(Ar) { }
 }
 
 public class EX_InstrumentationEvent : KismetExpression
@@ -579,9 +495,9 @@ public class EX_InstrumentationEvent : KismetExpression
     public EScriptInstrumentationType EventType;
     public FName? EventName;
 
-    public EX_InstrumentationEvent(FKismetArchive Ar)
+    public EX_InstrumentationEvent(FArchive Ar)
     {
-        EventType = (EScriptInstrumentationType)Ar.Read<byte>();
+        EventType = (EScriptInstrumentationType) Ar.Read<byte>();
 
         if (EventType.Equals(EScriptInstrumentationType.InlineEvent))
         {
@@ -604,7 +520,7 @@ public class EX_Int64Const : KismetExpression<long>
 {
     public override EExprToken Token => EExprToken.EX_Int64Const;
 
-    public EX_Int64Const(FKismetArchive Ar)
+    public EX_Int64Const(FArchive Ar)
     {
         Value = Ar.Read<long>();
     }
@@ -614,7 +530,7 @@ public class EX_IntConst : KismetExpression<int>
 {
     public override EExprToken Token => EExprToken.EX_IntConst;
 
-    public EX_IntConst(FKismetArchive Ar)
+    public EX_IntConst(FArchive Ar)
     {
         Value = Ar.Read<int>();
     }
@@ -624,7 +540,7 @@ public class EX_IntConstByte : KismetExpression<byte>
 {
     public override EExprToken Token => EExprToken.EX_IntConstByte;
 
-    public EX_IntConstByte(FKismetArchive Ar)
+    public EX_IntConstByte(FArchive Ar)
     {
         Value = Ar.Read<byte>();
     }
@@ -640,15 +556,10 @@ public class EX_IntZero : KismetExpression
     public override EExprToken Token => EExprToken.EX_IntZero;
 }
 
-public class EX_InterfaceContext : KismetExpression
+public class EX_InterfaceContext(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_InterfaceContext;
-    public KismetExpression InterfaceValue;
-
-    public EX_InterfaceContext(FKismetArchive Ar)
-    {
-        InterfaceValue = Ar.ReadExpression();
-    }
+    public KismetExpression InterfaceValue = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -658,11 +569,9 @@ public class EX_InterfaceContext : KismetExpression
     }
 }
 
-public class EX_InterfaceToObjCast : EX_CastBase
+public class EX_InterfaceToObjCast(FKismetArchive Ar) : EX_CastBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_InterfaceToObjCast;
-
-    public EX_InterfaceToObjCast(FKismetArchive Ar) : base(Ar) { }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -701,15 +610,10 @@ public class EX_Jump : KismetExpression
     }
 }
 
-public class EX_JumpIfNot : EX_Jump
+public class EX_JumpIfNot(FKismetArchive Ar) : EX_Jump(Ar)
 {
     public override EExprToken Token => EExprToken.EX_JumpIfNot;
-    public KismetExpression BooleanExpression;
-
-    public EX_JumpIfNot(FKismetArchive Ar) : base(Ar)
-    {
-        BooleanExpression = Ar.ReadExpression();
-    }
+    public KismetExpression BooleanExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -718,19 +622,13 @@ public class EX_JumpIfNot : EX_Jump
         serializer.Serialize(writer, BooleanExpression);
     }
 }
-public class EX_Let : KismetExpression
+
+public class EX_Let(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Let;
-    public FKismetPropertyPointer Property;
-    public KismetExpression Variable;
-    public KismetExpression Assignment;
-
-    public EX_Let(FKismetArchive Ar)
-    {
-        Property = new FKismetPropertyPointer(Ar);
-        Variable = Ar.ReadExpression();
-        Assignment = Ar.ReadExpression();
-    }
+    public FKismetPropertyPointer Property = new(Ar);
+    public KismetExpression Variable = Ar.ReadExpression();
+    public KismetExpression Assignment = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -744,16 +642,10 @@ public class EX_Let : KismetExpression
     }
 }
 
-public abstract class EX_LetBase : KismetExpression
+public abstract class EX_LetBase(FKismetArchive Ar) : KismetExpression
 {
-    public KismetExpression Variable;
-    public KismetExpression Assignment;
-
-    public EX_LetBase(FKismetArchive Ar)
-    {
-        Variable = Ar.ReadExpression();
-        Assignment = Ar.ReadExpression();
-    }
+    public KismetExpression Variable = Ar.ReadExpression();
+    public KismetExpression Assignment = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -765,44 +657,31 @@ public abstract class EX_LetBase : KismetExpression
     }
 }
 
-public class EX_LetBool : EX_LetBase
+public class EX_LetBool(FKismetArchive Ar) : EX_LetBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LetBool;
-
-    public EX_LetBool(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LetDelegate : EX_LetBase
+public class EX_LetDelegate(FKismetArchive Ar) : EX_LetBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LetDelegate;
-
-    public EX_LetDelegate(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LetMulticastDelegate : EX_LetBase
+public class EX_LetMulticastDelegate(FKismetArchive Ar) : EX_LetBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LetMulticastDelegate;
-
-    public EX_LetMulticastDelegate (FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LetObj : EX_LetBase
+public class EX_LetObj(FKismetArchive Ar) : EX_LetBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LetObj;
-
-    public EX_LetObj(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LetValueOnPersistentFrame : KismetExpression
+public class EX_LetValueOnPersistentFrame(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_LetValueOnPersistentFrame;
-    public FKismetPropertyPointer DestinationProperty;
-    public KismetExpression AssignmentExpression;
-    public EX_LetValueOnPersistentFrame(FKismetArchive Ar)
-    {
-        DestinationProperty = new FKismetPropertyPointer(Ar);
-        AssignmentExpression = Ar.ReadExpression();
-    }
+    public FKismetPropertyPointer DestinationProperty = new(Ar);
+    public KismetExpression AssignmentExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -814,39 +693,29 @@ public class EX_LetValueOnPersistentFrame : KismetExpression
     }
 }
 
-public class EX_LetWeakObjPtr : EX_LetBase
+public class EX_LetWeakObjPtr(FKismetArchive Ar) : EX_LetBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LetWeakObjPtr;
-
-    public EX_LetWeakObjPtr (FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LocalFinalFunction : EX_FinalFunction
+public class EX_LocalFinalFunction(FKismetArchive Ar) : EX_FinalFunction(Ar)
 {
     public override EExprToken Token => EExprToken.EX_LocalFinalFunction;
-
-    public EX_LocalFinalFunction(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LocalOutVariable : EX_VariableBase
+public class EX_LocalOutVariable(FKismetArchive Ar) : EX_VariableBase(Ar)
 {
-    public override EExprToken Token => EExprToken.EX_LocalOutVariable; 
-
-    public EX_LocalOutVariable(FKismetArchive Ar) : base(Ar) { }
+    public override EExprToken Token => EExprToken.EX_LocalOutVariable;
 }
 
-public class EX_LocalVariable : EX_VariableBase
+public class EX_LocalVariable(FKismetArchive Ar) : EX_VariableBase(Ar)
 {
-    public override EExprToken Token => EExprToken.EX_LocalVariable; 
-
-    public EX_LocalVariable(FKismetArchive Ar) : base(Ar) { }
+    public override EExprToken Token => EExprToken.EX_LocalVariable;
 }
 
-public class EX_LocalVirtualFunction  : EX_VirtualFunction 
+public class EX_LocalVirtualFunction(FKismetArchive Ar) : EX_VirtualFunction(Ar)
 {
-    public override EExprToken Token => EExprToken.EX_LocalVirtualFunction ;
-
-    public EX_LocalVirtualFunction (FKismetArchive Ar) : base(Ar) { }
+    public override EExprToken Token => EExprToken.EX_LocalVirtualFunction;
 }
 
 public class EX_MapConst : KismetExpression
@@ -883,15 +752,14 @@ public class EX_MapConst : KismetExpression
             serializer.Serialize(writer, Elements[2 * (j - 1) + 1]);
             writer.WriteEndObject();
         }
+
         writer.WriteEndArray();
     }
 }
 
-public class EX_MetaCast : EX_CastBase
+public class EX_MetaCast(FKismetArchive Ar) : EX_CastBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_MetaCast;
-
-    public EX_MetaCast(FKismetArchive Ar) : base(Ar) { }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -906,7 +774,8 @@ public class EX_MetaCast : EX_CastBase
 public class EX_NameConst : KismetExpression<FName>
 {
     public override EExprToken Token => EExprToken.EX_NameConst;
-    public EX_NameConst(FKismetArchive Ar)
+
+    public EX_NameConst(FArchive Ar)
     {
         Value = Ar.ReadFName();
     }
@@ -927,16 +796,15 @@ public class EX_Nothing : KismetExpression
     public override EExprToken Token => EExprToken.EX_Nothing;
 }
 
-public class EX_ObjToInterfaceCast : EX_CastBase
+public class EX_ObjToInterfaceCast(FKismetArchive Ar) : EX_CastBase(Ar)
 {
     public override EExprToken Token => EExprToken.EX_ObjToInterfaceCast;
-
-    public EX_ObjToInterfaceCast(FKismetArchive Ar) : base(Ar) { }
 }
 
 public class EX_ObjectConst : KismetExpression<FPackageIndex>
 {
     public override EExprToken Token => EExprToken.EX_ObjectConst;
+
     public EX_ObjectConst(FKismetArchive Ar)
     {
         Value = new FPackageIndex(Ar);
@@ -948,14 +816,10 @@ public class EX_PopExecutionFlow : KismetExpression
     public override EExprToken Token => EExprToken.EX_PopExecutionFlow;
 }
 
-public class EX_PopExecutionFlowIfNot : KismetExpression
+public class EX_PopExecutionFlowIfNot(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_PopExecutionFlowIfNot;
-    public KismetExpression BooleanExpression;
-    public EX_PopExecutionFlowIfNot(FKismetArchive Ar)
-    {
-        BooleanExpression = Ar.ReadExpression();
-    }
+    public KismetExpression BooleanExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -965,15 +829,10 @@ public class EX_PopExecutionFlowIfNot : KismetExpression
     }
 }
 
-public class EX_PropertyConst : KismetExpression
+public class EX_PropertyConst(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_PropertyConst;
-    public FKismetPropertyPointer Property;
-
-    public EX_PropertyConst(FKismetArchive Ar)
-    {
-        Property = new FKismetPropertyPointer(Ar);
-    }
+    public FKismetPropertyPointer Property = new(Ar);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1010,17 +869,11 @@ public class EX_PushExecutionFlow : KismetExpression
     }
 }
 
-public class EX_RemoveMulticastDelegate : KismetExpression
+public class EX_RemoveMulticastDelegate(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_RemoveMulticastDelegate;
-    public KismetExpression Delegate;
-    public KismetExpression DelegateToAdd;
-
-    public EX_RemoveMulticastDelegate(FKismetArchive Ar)
-    {
-        Delegate = Ar.ReadExpression();
-        DelegateToAdd = Ar.ReadExpression();
-    }
+    public KismetExpression Delegate = Ar.ReadExpression();
+    public KismetExpression DelegateToAdd = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1032,15 +885,10 @@ public class EX_RemoveMulticastDelegate : KismetExpression
     }
 }
 
-public class EX_Return : KismetExpression
+public class EX_Return(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Return;
-    public KismetExpression ReturnExpression;
-
-    public EX_Return(FKismetArchive Ar)
-    {
-        ReturnExpression = Ar.ReadExpression();
-    }
+    public KismetExpression ReturnExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1054,7 +902,7 @@ public class EX_RotationConst : KismetExpression<FRotator>
 {
     public override EExprToken Token => EExprToken.EX_RotationConst;
 
-    public EX_RotationConst(FKismetArchive Ar)
+    public EX_RotationConst(FArchive Ar)
     {
         Value = new FRotator(Ar);
     }
@@ -1099,6 +947,7 @@ public class EX_SetArray : KismetExpression
             writer.WritePropertyName("ArrayInnerProp");
             serializer.Serialize(writer, ArrayInnerProp);
         }
+
         writer.WritePropertyName("Elements");
         serializer.Serialize(writer, Elements);
     }
@@ -1156,6 +1005,7 @@ public class EX_SetMap : KismetExpression
             serializer.Serialize(writer, Elements[2 * (j - 1) + 1]);
             writer.WriteEndObject();
         }
+
         writer.WriteEndArray();
     }
 }
@@ -1199,7 +1049,6 @@ public class EX_Skip : EX_Jump
         base.WriteJson(writer, serializer, bAddIndex);
         writer.WritePropertyName("SkipExpression");
         serializer.Serialize(writer, SkipExpression);
-
     }
 }
 
@@ -1207,7 +1056,7 @@ public class EX_SkipOffsetConst : KismetExpression<uint>
 {
     public override EExprToken Token => EExprToken.EX_SkipOffsetConst;
 
-    public EX_SkipOffsetConst(FKismetArchive Ar)
+    public EX_SkipOffsetConst(FArchive Ar)
     {
         Value = Ar.Read<uint>();
     }
@@ -1225,7 +1074,8 @@ public class EX_SoftObjectConst : KismetExpression<KismetExpression>
 
 public class EX_StringConst : KismetExpression<string>
 {
-    public override EExprToken Token=> EExprToken.EX_StringConst;
+    public override EExprToken Token => EExprToken.EX_StringConst;
+
     public EX_StringConst(FKismetArchive Ar)
     {
         Value = Ar.XFERSTRING();
@@ -1234,19 +1084,12 @@ public class EX_StringConst : KismetExpression<string>
     }
 }
 
-public class EX_StructConst : KismetExpression
+public class EX_StructConst(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_StructConst;
-    public FPackageIndex Struct;
-    public int StructSize;
-    public KismetExpression[] Properties;
-
-    public EX_StructConst(FKismetArchive Ar)
-    {
-        Struct = new FPackageIndex(Ar);
-        StructSize = Ar.Read<int>();
-        Properties = Ar.ReadExpressionArray(EExprToken.EX_EndStructConst);
-    }
+    public FPackageIndex Struct = new(Ar);
+    public int StructSize = Ar.Read<int>();
+    public KismetExpression[] Properties = Ar.ReadExpressionArray(EExprToken.EX_EndStructConst);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1258,17 +1101,11 @@ public class EX_StructConst : KismetExpression
     }
 }
 
-public class EX_StructMemberContext : KismetExpression
+public class EX_StructMemberContext(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_StructMemberContext;
-    public FKismetPropertyPointer Property;
-    public KismetExpression StructExpression;
-
-    public EX_StructMemberContext(FKismetArchive Ar)
-    {
-        Property = new FKismetPropertyPointer(Ar);
-        StructExpression = Ar.ReadExpression();
-    }
+    public FKismetPropertyPointer Property = new(Ar);
+    public KismetExpression StructExpression = Ar.ReadExpression();
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1280,18 +1117,11 @@ public class EX_StructMemberContext : KismetExpression
     }
 }
 
-public struct FKismetSwitchCase
+public struct FKismetSwitchCase(FKismetArchive Ar)
 {
-    public KismetExpression CaseIndexValueTerm;
-    public uint NextOffset;
-    public KismetExpression CaseTerm;
-
-    public FKismetSwitchCase(FKismetArchive Ar)
-    {
-        CaseIndexValueTerm = Ar.ReadExpression();
-        NextOffset = Ar.Read<uint>();
-        CaseTerm = Ar.ReadExpression();
-    }
+    public KismetExpression CaseIndexValueTerm = Ar.ReadExpression();
+    public uint NextOffset = Ar.Read<uint>();
+    public KismetExpression CaseTerm = Ar.ReadExpression();
 }
 
 public class EX_SwitchValue : KismetExpression
@@ -1344,7 +1174,7 @@ public class EX_TransformConst : KismetExpression<FTransform>
 {
     public override EExprToken Token => EExprToken.EX_TransformConst;
 
-    public EX_TransformConst(FKismetArchive Ar)
+    public EX_TransformConst(FArchive Ar)
     {
         Value = new FTransform(Ar);
     }
@@ -1359,7 +1189,7 @@ public class EX_UInt64Const : KismetExpression<ulong>
 {
     public override EExprToken Token => EExprToken.EX_UInt64Const;
 
-    public EX_UInt64Const(FKismetArchive Ar)
+    public EX_UInt64Const(FArchive Ar)
     {
         Value = Ar.Read<ulong>();
     }
@@ -1377,14 +1207,9 @@ public class EX_UnicodeStringConst : KismetExpression<string>
     }
 }
 
-public abstract class EX_VariableBase : KismetExpression
+public abstract class EX_VariableBase(FKismetArchive Ar) : KismetExpression
 {
-    public FKismetPropertyPointer Variable;
-
-    public EX_VariableBase(FKismetArchive Ar)
-    {
-        Variable = new FKismetPropertyPointer(Ar);
-    }
+    public FKismetPropertyPointer Variable = new(Ar);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1398,7 +1223,7 @@ public class EX_Vector3fConst : KismetExpression<FVector>
 {
     public override EExprToken Token => EExprToken.EX_Vector3fConst;
 
-    public EX_Vector3fConst(FKismetArchive Ar)
+    public EX_Vector3fConst(FArchive Ar)
     {
         Value = Ar.Read<FVector>();
     }
@@ -1408,23 +1233,17 @@ public class EX_VectorConst : KismetExpression<FVector>
 {
     public override EExprToken Token => EExprToken.EX_VectorConst;
 
-    public EX_VectorConst(FKismetArchive Ar)
+    public EX_VectorConst(FArchive Ar)
     {
         Value = new FVector(Ar);
     }
 }
 
-public class EX_VirtualFunction : KismetExpression
+public class EX_VirtualFunction(FKismetArchive Ar) : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_VirtualFunction;
-    public FName VirtualFunctionName;
-    public KismetExpression[] Parameters;
-
-    public EX_VirtualFunction(FKismetArchive Ar)
-    {
-        VirtualFunctionName = Ar.ReadFName();
-        Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
-    }
+    public FName VirtualFunctionName = Ar.ReadFName();
+    public KismetExpression[] Parameters = Ar.ReadExpressionArray(EExprToken.EX_EndFunctionParms);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
@@ -1453,7 +1272,7 @@ public class FScriptText
 
     public FScriptText(FKismetArchive Ar)
     {
-        TextLiteralType = (EBlueprintTextLiteralType)Ar.Read<byte>();
+        TextLiteralType = (EBlueprintTextLiteralType) Ar.Read<byte>();
         switch (TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:
@@ -1480,10 +1299,10 @@ public class FScriptText
 
 public class FScriptTextConverter : JsonConverter<FScriptText>
 {
-    public override void WriteJson(JsonWriter writer, FScriptText value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FScriptText? value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
-        switch (value.TextLiteralType)
+        switch (value?.TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:
                 writer.WritePropertyName("SourceString");
@@ -1511,10 +1330,11 @@ public class FScriptTextConverter : JsonConverter<FScriptText>
                 serializer.Serialize(writer, value.KeyString);
                 break;
         }
+
         writer.WriteEndObject();
     }
 
-    public override FScriptText? ReadJson(JsonReader reader, Type objectType, FScriptText? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FScriptText ReadJson(JsonReader reader, Type objectType, FScriptText? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
