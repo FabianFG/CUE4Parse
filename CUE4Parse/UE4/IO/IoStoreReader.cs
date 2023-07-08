@@ -25,11 +25,13 @@ namespace CUE4Parse.UE4.IO
         public readonly Dictionary<FIoChunkId, FIoOffsetAndLength>? TocImperfectHashMapFallback;
         public readonly FIoStoreTocHeader Info;
         public FIoContainerHeader? ContainerHeader { get; private set; }
+
         public override string MountPoint { get; protected set; }
-        public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
         public sealed override long Length { get; set; }
-        public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
+
         public override bool HasDirectoryIndex => TocResource.DirectoryIndexBuffer != null;
+        public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
+        public override bool IsEncrypted => Info.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
 
 
         public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
