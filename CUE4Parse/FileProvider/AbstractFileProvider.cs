@@ -103,7 +103,10 @@ namespace CUE4Parse.FileProvider
             {
                 if (string.IsNullOrEmpty(_internalGameName))
                 {
-                    string t = Files.Keys.FirstOrDefault(it => !it.SubstringBefore('/').EndsWith("engine", StringComparison.OrdinalIgnoreCase) && !it.StartsWith('/') && it.Contains('/')) ?? string.Empty;
+                    if (Files.Keys.FirstOrDefault(it => it.EndsWith(".uproject", StringComparison.OrdinalIgnoreCase)) is not { } t)
+                        t = Files.Keys.FirstOrDefault(
+                            it => !it.StartsWith('/') && it.Contains('/') &&
+                                  !it.SubstringBefore('/').EndsWith("Engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
                     _internalGameName = t.SubstringBefore('/');
                 }
                 return _internalGameName;
@@ -398,46 +401,42 @@ namespace CUE4Parse.FileProvider
             if (path[^1] != '/' && !lastPart.Contains('.'))
                 path += "." + GameFile.Ue4PackageExtensions[0];
 
+            var ret = path;
             var root = path.SubstringBefore('/');
-            if (root.Equals(InternalGameName, StringComparison.OrdinalIgnoreCase))
-            {
-                return comparisonType == StringComparison.OrdinalIgnoreCase ? path.ToLowerInvariant() : path;
-            }
-
+            var tree = path.SubstringAfter('/');
             if (root.Equals("Game", comparisonType) || root.Equals("Engine", comparisonType))
             {
                 var gameName = root.Equals("Engine", comparisonType) ? "Engine" : InternalGameName;
-                var p = path.SubstringAfter('/').SubstringBefore('/');
-                if (p.Contains('.'))
+                var root2 = tree.SubstringBefore('/');
+                if (root2.Equals("Config", comparisonType) ||
+                    root2.Equals("Content", comparisonType) ||
+                    root2.Equals("Plugins", comparisonType))
                 {
-                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter('/'));
-                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
-                }
-
-                if (p.Equals("Config", comparisonType) ||
-                    p.Equals("Content", comparisonType) ||
-                    p.Equals("Plugins", comparisonType))
-                {
-                    var ret = string.Concat(gameName, '/', path.SubstringAfter('/'));
-                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
+                    ret = string.Concat(gameName, '/', tree);
                 }
                 else
                 {
-                    var ret = string.Concat(gameName, "/Content/", path.SubstringAfter('/'));
-                    return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
+                    ret = string.Concat(gameName, "/Content/", tree);
                 }
             }
-
-            if (VirtualPaths.TryGetValue(root, out var use))
+            else if (root.Equals(InternalGameName, StringComparison.OrdinalIgnoreCase))
             {
-                var ret = string.Concat(use, "/Content/", path.SubstringAfter('/'));
-                return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
+                // everything should be good
+            }
+            else if (VirtualPaths.TryGetValue(root, out var use))
+            {
+                ret = string.Concat(use, "/Content/", tree);
+            }
+            else if (InternalGameName.Equals("FORTNITEGAME", StringComparison.OrdinalIgnoreCase))
+            {
+                ret = string.Concat(InternalGameName, $"/Plugins/GameFeatures/{root}/Content/", tree);
             }
             else
             {
-                var ret = string.Concat(InternalGameName, $"/Plugins/{(InternalGameName.ToLowerInvariant().Equals("fortnitegame") ? "GameFeatures/" : "")}{root}/Content/", path.SubstringAfter('/'));
-                return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
+                ret = string.Concat(InternalGameName, $"/Plugins/{root}/Content/", tree);
             }
+
+            return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
         }
 
         #region SaveAsset Methods
