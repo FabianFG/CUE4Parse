@@ -15,9 +15,9 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-    public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
+    public static SKBitmap? Decode(this UTexture texture, EPlatform platform = EPlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
 
-    public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, EPlatform platform = EPlatform.DesktopMobile)
     {
         if (!texture.IsVirtual && mip != null)
         {
@@ -52,13 +52,13 @@ public static class TextureDecoder
         return null;
     }
 
-    public static void DecodeTexture(FTexture2DMipMap? mip, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
+    public static void DecodeTexture(FTexture2DMipMap? mip, EPixelFormat format, bool isNormalMap, EPlatform platform, out byte[] data, out SKColorType colorType)
     {
         if (mip?.BulkData.Data is not { Length: > 0 }) throw new ParserException("Supplied MipMap is null or has empty data!");
         if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) format) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0) throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
-        var isPS = platform == ETexturePlatform.Playstation;
-        var isNX = platform == ETexturePlatform.NintendoSwitch;
+        var isPS = platform == EPlatform.Playstation;
+        var isNX = platform == EPlatform.NintendoSwitch;
 
         // If the platform requires deswizzling, check if we should even try.
         if (isPS || isNX)

@@ -34,6 +34,7 @@ public class FPakInfo
 {
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
+    public const uint PAK_FILE_EXTRAMAGIC = 0x6469636B;
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
     public readonly uint Magic;
@@ -41,7 +42,9 @@ public class FPakInfo
     public readonly bool IsSubVersion;
     public readonly long IndexOffset;
     public readonly long IndexSize;
+
     public readonly FSHAHash IndexHash;
+
     // When new fields are added to FPakInfo, they're serialized before 'Magic' to keep compatibility
     // with older pak file versions. At the same time, structure size grows.
     public readonly bool EncryptedIndex;
@@ -52,7 +55,7 @@ public class FPakInfo
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
     {
         var hottaVersion = 0u;
-        if (Ar.Game == EGame.GAME_TowerOfFantasy && offsetToTry == OffsetsToTry.SizeHotta)
+        if (Ar.Game == EGame.GAME_TowerOfFantasy && offsetToTry == OffsetsToTry.SizeExtra8a)
         {
             hottaVersion = Ar.Read<uint>();
             // Dirty way to keep backwards compatibility
@@ -64,14 +67,14 @@ public class FPakInfo
         }
 
         // New FPakInfo fields.
-        EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
-        EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
+        EncryptionKeyGuid = Ar.Read<FGuid>(); // PakFile_Version_EncryptionKeyGuid
+        EncryptedIndex = Ar.Read<byte>() != 0; // Do not replace by ReadFlag
 
         // Old FPakInfo fields
         Magic = Ar.Read<uint>();
         if (Magic != PAK_FILE_MAGIC)
         {
-            if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials) goto afterMagic;
+            if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials || Ar.Game == EGame.GAME_FridayThe13th) goto afterMagic;
             // Stop immediately when magic is wrong
             return;
         }
@@ -84,13 +87,25 @@ public class FPakInfo
             Version &= (EPakFileVersion) 0xFFFF;
         }
 
+        if (!EncryptedIndex && Magic == 0 && (int) Version == PAK_FILE_MAGIC)
+        {
+            Magic = PAK_FILE_MAGIC;
+            Version = Ar.Read<EPakFileVersion>();
+        }
+
+        if (Ar.Game == EGame.GAME_FridayThe13th)
+        {
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_EXTRAMAGIC) return; // If the extramagic is wrong, stop
+        }
+
         IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
         IndexOffset = Ar.Read<long>();
         if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
-        if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeHotta && Version >= EPakFileVersion.PakFile_Version_Latest)
+        if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeExtra8a && Version >= EPakFileVersion.PakFile_Version_Latest)
         {
             var mymVersion = Ar.Read<uint>(); // I assume this is a version, only 0 right now.
         }
@@ -104,7 +119,12 @@ public class FPakInfo
         {
             CompressionMethods = new List<CompressionMethod>
             {
-                CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4, CompressionMethod.Zstd
+                CompressionMethod.None,
+                CompressionMethod.Zlib,
+                CompressionMethod.Gzip,
+                CompressionMethod.Oodle,
+                CompressionMethod.LZ4,
+                CompressionMethod.Zstd
             };
         }
         else
@@ -112,7 +132,7 @@ public class FPakInfo
             var maxNumCompressionMethods = offsetToTry switch
             {
                 OffsetsToTry.Size8a => 5,
-                OffsetsToTry.SizeHotta => 5,
+                OffsetsToTry.SizeExtra8a => 5,
                 OffsetsToTry.Size8 => 4,
                 OffsetsToTry.Size8_1 => 1,
                 OffsetsToTry.Size8_2 => 2,
@@ -125,10 +145,7 @@ public class FPakInfo
                 var bufferSize = COMPRESSION_METHOD_NAME_LEN * maxNumCompressionMethods;
                 var buffer = stackalloc byte[bufferSize];
                 Ar.Serialize(buffer, bufferSize);
-                CompressionMethods = new List<CompressionMethod>(maxNumCompressionMethods + 1)
-                {
-                    CompressionMethod.None
-                };
+                CompressionMethods = new List<CompressionMethod>(maxNumCompressionMethods + 1) { CompressionMethod.None };
                 for (var i = 0; i < maxNumCompressionMethods; i++)
                 {
                     var name = new string((sbyte*) buffer + i * COMPRESSION_METHOD_NAME_LEN, 0, COMPRESSION_METHOD_NAME_LEN).TrimEnd('\0');
@@ -139,8 +156,10 @@ public class FPakInfo
                         Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
                         method = CompressionMethod.Unknown;
                     }
+
                     CompressionMethods.Add(method);
                 }
+
                 if (hottaVersion >= 3)
                 {
                     CompressionMethods.Remove(0);
@@ -163,6 +182,7 @@ public class FPakInfo
     private enum OffsetsToTry
     {
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
+
         // Just to be sure
         Size8_1 = Size + 32,
         Size8_2 = Size8_1 + 32,
@@ -172,7 +192,8 @@ public class FPakInfo
         Size9 = Size8a + 1, // UE4.25
         //Size10 = Size8a
 
-        SizeHotta = Size8a + 4, // additional int for custom pak version
+        SizeExtra8a = Size8a + 4, // additional int for custom pak version
+        SizeExtra = Size + 4, // additional uint for custom magic
 
         SizeLast,
         SizeMax = SizeLast - 1
@@ -200,6 +221,7 @@ public class FPakInfo
             {
                 throw new ParserException($"File {Ar.Name} is too small to be a pak file");
             }
+
             Ar.Seek(-maxOffset, SeekOrigin.End);
             var buffer = stackalloc byte[(int) maxOffset];
             Ar.Serialize(buffer, (int) maxOffset);
@@ -208,7 +230,8 @@ public class FPakInfo
 
             var offsetsToTry = Ar.Game switch
             {
-                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker => new [] { OffsetsToTry.SizeHotta },
+                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker => new[] { OffsetsToTry.SizeExtra8a },
+                EGame.GAME_FridayThe13th => new[] { OffsetsToTry.SizeExtra },
                 _ => _offsetsToTry
             };
             foreach (var offset in offsetsToTry)
@@ -216,13 +239,15 @@ public class FPakInfo
                 reader.Seek(-(long) offset, SeekOrigin.End);
                 var info = new FPakInfo(reader, offset);
 
-                if (Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials) return info;
-                if (info.Magic == PAK_FILE_MAGIC)
+                if (info.Magic == PAK_FILE_MAGIC ||
+                    Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials ||
+                    Ar.Game == EGame.GAME_FridayThe13th && info.Magic == PAK_FILE_EXTRAMAGIC)
                 {
                     return info;
                 }
             }
         }
+
         throw new ParserException($"File {Ar.Name} has an unknown format");
     }
 }

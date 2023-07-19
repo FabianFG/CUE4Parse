@@ -30,7 +30,7 @@ public abstract class FArchive(VersionContainer? versions = null) : Stream, IClo
         get => Versions.Ver;
         set => Versions.Ver = value;
     }
-    public ETexturePlatform Platform
+    public EPlatform Platform
     {
         get => Versions.Platform;
         set => Versions.Platform = value;

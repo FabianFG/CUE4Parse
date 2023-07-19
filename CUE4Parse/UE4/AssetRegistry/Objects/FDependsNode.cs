@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Structs.AssetRegistry.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 

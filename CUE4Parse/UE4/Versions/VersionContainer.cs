@@ -34,8 +34,8 @@ public class VersionContainer : ICloneable
         }
     }
 
-    private ETexturePlatform _platform;
-    public ETexturePlatform Platform
+    private EPlatform _platform;
+    public EPlatform Platform
     {
         get => _platform;
         set
@@ -55,7 +55,7 @@ public class VersionContainer : ICloneable
     private readonly IDictionary<string, bool>? _optionOverrides;
     private readonly IDictionary<string, KeyValuePair<string, string?>>? _mapStructTypesOverrides;
 
-    public VersionContainer(EGame game = GAME_UE4_LATEST, ETexturePlatform platform = ETexturePlatform.DesktopMobile, FPackageFileVersion ver = default, FCustomVersionContainer? customVersions = null, IDictionary<string, bool>? optionOverrides = null, IDictionary<string, KeyValuePair<string, string?>>? mapStructTypesOverrides = null)
+    public VersionContainer(EGame game = GAME_UE4_LATEST, EPlatform platform = EPlatform.DesktopMobile, FPackageFileVersion ver = default, FCustomVersionContainer? customVersions = null, IDictionary<string, bool>? optionOverrides = null, IDictionary<string, KeyValuePair<string, string?>>? mapStructTypesOverrides = null)
     {
         _optionOverrides = optionOverrides;
         _mapStructTypesOverrides = mapStructTypesOverrides;
@@ -90,6 +90,9 @@ public class VersionContainer : ICloneable
         // defaults
         Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = false;
         Options["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = false;
+
+        // games
+        Options["FN2500"] = false; // Version 25.00 is 5.2, but with 5.3 IoPackage changes
 
         if (_optionOverrides == null) return;
         foreach (var (key, value) in _optionOverrides)

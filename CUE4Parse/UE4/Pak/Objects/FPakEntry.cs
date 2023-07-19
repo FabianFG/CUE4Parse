@@ -134,7 +134,7 @@ public class FPakEntry : VfsEntry
         {
             if (CompressionMethod != CompressionMethod.None)
                 CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
-            Flags = (uint)Ar.ReadByte();
+            Flags = (uint) Ar.ReadByte();
             CompressionBlockSize = Ar.Read<uint>();
         }
 

@@ -23,14 +23,14 @@ namespace CUE4Parse.UE4.Assets.Exports
 
     [JsonConverter(typeof(UObjectConverter))]
     [SkipObjectRegistration]
-    public class UObject : IPropertyHolder
+    public class UObject(List<FPropertyTag> properties) : IPropertyHolder
     {
         public string Name { get; set; }
         public UObject? Outer;
         public UStruct? Class;
         public ResolvedObject? Super;
         public ResolvedObject? Template;
-        public List<FPropertyTag> Properties { get; private set; }
+        public List<FPropertyTag> Properties { get; private set; } = properties;
         public FGuid? ObjectGuid { get; private set; }
         public EObjectFlags Flags;
 
@@ -56,15 +56,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
         public virtual string ExportType => Class?.Name ?? GetType().Name;
 
-        public UObject()
-        {
-            Properties = new List<FPropertyTag>();
-        }
-
-        public UObject(List<FPropertyTag> properties)
-        {
-            Properties = properties;
-        }
+        public UObject() : this(new List<FPropertyTag>()) { }
 
         public virtual void Deserialize(FAssetArchive Ar, long validPos)
         {

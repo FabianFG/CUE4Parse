@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Structs.AssetRegistry.Readers;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects
 {
