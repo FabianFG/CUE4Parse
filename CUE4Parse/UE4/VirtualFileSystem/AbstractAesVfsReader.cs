@@ -9,12 +9,13 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsReader
     {
-        public abstract FGuid EncryptionKeyGuid { get; }
         public abstract long Length { get; set; }
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public FAesKey? AesKey { get; set; }
 
+        public abstract FGuid EncryptionKeyGuid { get; }
         public abstract bool IsEncrypted { get; }
+
         public int EncryptedFileCount { get; protected set; }
 
         private static EGame _game;

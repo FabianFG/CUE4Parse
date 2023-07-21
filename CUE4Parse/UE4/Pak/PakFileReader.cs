@@ -22,7 +22,6 @@ namespace CUE4Parse.UE4.Pak
     public class PakFileReader : AbstractAesVfsReader
     {
         public readonly FArchive Ar;
-
         public readonly FPakInfo Info;
 
         public override string MountPoint { get; protected set; }
@@ -30,7 +29,6 @@ namespace CUE4Parse.UE4.Pak
 
         public override bool HasDirectoryIndex => true;
         public override FGuid EncryptionKeyGuid => Info.EncryptionKeyGuid;
-
         public override bool IsEncrypted => Info.EncryptedIndex;
 
         public PakFileReader(FArchive Ar) : base(Ar.Name, Ar.Versions)
