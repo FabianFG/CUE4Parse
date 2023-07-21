@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -32,6 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public int MaxImportVertex;
         public int NumTexCoords;
         public FMorphTargetVertexInfoBuffers? MorphTargetVertexInfoBuffers;
+        public Dictionary<FName, FSkeletalMeshAttributeVertexBuffer>? VertexAttributeBuffers;
         public FSkeletalMeshVertexBuffer VertexBufferGPUSkin;
         public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
@@ -380,6 +383,16 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
+            // if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalVertexAttributes)
+            // {
+            //     var count = Ar.Read<int>();
+            //     VertexAttributeBuffers = new Dictionary<FName, FSkeletalMeshAttributeVertexBuffer>(count);
+            //     for (int i = 0; i < count; i++)
+            //     {
+            //         VertexAttributeBuffers[Ar.ReadFName()] = new FSkeletalMeshAttributeVertexBuffer(Ar);
+            //     }
+            // }
+
             NumVertices = positionVertexBuffer.NumVertices;
             NumTexCoords = staticMeshVertexBuffer.NumTexCoords;
 
@@ -436,6 +449,12 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 writer.WritePropertyName("MorphTargetVertexInfoBuffers");
                 serializer.Serialize(writer, value.MorphTargetVertexInfoBuffers);
+            }
+
+            if (value.VertexAttributeBuffers != null)
+            {
+                writer.WritePropertyName("VertexAttributeBuffers");
+                serializer.Serialize(writer, value.VertexAttributeBuffers);
             }
 
             writer.WritePropertyName("VertexBufferGPUSkin");
