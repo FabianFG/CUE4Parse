@@ -456,6 +456,8 @@ namespace CUE4Parse_Conversion.Meshes
                 for (var j = 0; j < morphModel.Vertices.Length; j++)
                 {
                     var delta = morphModel.Vertices[j];
+                    if (delta.SourceIdx >= lod.Verts.Length) continue;
+                    
                     var vertex = lod.Verts[delta.SourceIdx];
 
                     var index = FindVertex(vertex.Position, share.Points);
