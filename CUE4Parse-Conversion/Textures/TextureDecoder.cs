@@ -222,27 +222,6 @@ public static class TextureDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe byte[] ConvertRawR16G16B16A16FDataToRGBA8888(int width, int height, byte* inp, int srcPitch, bool linearToGamma)
     {
-        float minR = 0.0f, minG = 0.0f, minB = 0.0f, minA = 0.0f;
-        float maxR = 1.0f, maxG = 1.0f, maxB = 1.0f, maxA = 1.0f;
-
-        for (int y = 0; y < height; y++)
-        {
-            var srcPtr = (ushort*) (inp + y * srcPitch);
-
-            for (int x = 0; x < width; x++)
-            {
-                minR = MathF.Min(HalfToFloat(srcPtr[0]), minR);
-                minG = MathF.Min(HalfToFloat(srcPtr[1]), minG);
-                minB = MathF.Min(HalfToFloat(srcPtr[2]), minB);
-                minA = MathF.Min(HalfToFloat(srcPtr[3]), minA);
-                maxR = MathF.Max(HalfToFloat(srcPtr[0]), maxR);
-                maxG = MathF.Max(HalfToFloat(srcPtr[1]), maxG);
-                maxB = MathF.Max(HalfToFloat(srcPtr[2]), maxB);
-                maxA = MathF.Max(HalfToFloat(srcPtr[3]), maxA);
-                srcPtr += 4;
-            }
-        }
-
         var ret = new byte[width * height * 4];
         for (int y = 0; y < height; y++)
         {
@@ -252,10 +231,10 @@ public static class TextureDecoder
             for (int x = 0; x < width; x++)
             {
                 var color = new FLinearColor(
-                    (HalfToFloat(*srcPtr++) - minR) / (maxR - minR),
-                    (HalfToFloat(*srcPtr++) - minG) / (maxG - minG),
-                    (HalfToFloat(*srcPtr++) - minB) / (maxB - minB),
-                    (HalfToFloat(*srcPtr++) - minA) / (maxA - minA)
+                    HalfToFloat(*srcPtr++),
+                    HalfToFloat(*srcPtr++),
+                    HalfToFloat(*srcPtr++),
+                    HalfToFloat(*srcPtr++)
                 ).ToFColor(linearToGamma);
                 ret[destPtr++] = color.R;
                 ret[destPtr++] = color.G;
