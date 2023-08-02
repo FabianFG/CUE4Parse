@@ -278,21 +278,21 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (Super != null)
             {
                 writer.WritePropertyName("Super");
-                writer.WriteValue(Super.Name.Text);
+                serializer.Serialize(writer, Super);
             }
 
             // template
             if (Template != null)
             {
                 writer.WritePropertyName("Template");
-                writer.WriteValue(Template.Name.Text);
+                serializer.Serialize(writer, Template);
             }
 
             // class
             if (Class != null)
             {
                 writer.WritePropertyName("Class");
-                serializer.Serialize(writer, Class.GetFullName());
+                writer.WriteValue(Class.GetFullName());
             }
 
             // export properties
