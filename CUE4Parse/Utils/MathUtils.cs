@@ -42,6 +42,9 @@ namespace CUE4Parse.Utils
         public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint DivideAndRoundUp(this uint dividend, uint divisor) => (dividend + divisor - 1u) / divisor;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ToDegrees(this float radVal) => radVal * (180.0f / MathF.PI);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,6 +80,17 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Lerp(float a, float b, float alpha) => a + alpha * (b - a);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint ReverseMortonCode2(uint x)
+        {
+            x &= 0x55555555;
+            x = (x ^ (x >> 1)) & 0x33333333;
+            x = (x ^ (x >> 2)) & 0x0f0f0f0f;
+            x = (x ^ (x >> 4)) & 0x00ff00ff;
+            x = (x ^ (x >> 8)) & 0x0000ffff;
+            return x;
+        }
 
         // FVector -> System.Numerics.Vector
 

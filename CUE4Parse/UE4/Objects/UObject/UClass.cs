@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -15,7 +16,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool bCooked;
 
         /** Class flags; See EClassFlags for more information */
-        public uint ClassFlags; // EClassFlags
+        public EClassFlags ClassFlags; // EClassFlags
 
         /** The required type for the outer of instances of this class */
         public FPackageIndex ClassWithin;
@@ -53,7 +54,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             // Class flags first.
-            ClassFlags = Ar.Read<uint>();
+            ClassFlags = Ar.Read<EClassFlags>();
 
             // Variables.
             if (Ar.Game == EGame.GAME_StarWarsJediFallenOrder || Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
@@ -113,10 +114,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                 serializer.Serialize(writer, FuncMap);
             }
 
-            if (ClassFlags != 0)
+            if (ClassFlags != EClassFlags.CLASS_None)
             {
                 writer.WritePropertyName("ClassFlags");
-                serializer.Serialize(writer, ClassFlags);
+                writer.WriteValue(ClassFlags.ToStringBitfield());
             }
 
             if (ClassWithin is { IsNull: false })
@@ -146,7 +147,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (bCooked)
             {
                 writer.WritePropertyName("bCooked");
-                serializer.Serialize(writer, bCooked);
+                writer.WriteValue(bCooked);
             }
 
             if (ClassDefaultObject is { IsNull: false })

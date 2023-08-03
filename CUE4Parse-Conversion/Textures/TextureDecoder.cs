@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -8,6 +9,7 @@ using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.Utils;
 using SkiaSharp;
 using static CUE4Parse.Utils.TypeConversionUtils;
 
@@ -15,36 +17,72 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-    public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
+    private static readonly ArrayPool<byte> _shared = ArrayPool<byte>.Shared;
 
+    public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
     public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        if (!texture.IsVirtual && mip != null)
+        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && !vt.IsLegacyData())
         {
+            var tileSize = (int) vt.TileSize;
+            var tileBorderSize = (int) vt.TileBorderSize;
+            var tilePixelSize = (int) vt.GetPhysicalTileSize();
+
+            var level = texture.PlatformData.FirstMipToSerialize;
+            var tileOffsetData = vt.TileOffsetData[level];
+            var chunk = vt.Chunks[vt.GetChunkIndex(level)];
+
+            var ret = new SKBitmap((int) tileOffsetData.Width * tileSize, (int) tileOffsetData.Height * tileSize, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
+            using var c = new SKCanvas(ret);
+
+            for (uint layer = 0; layer < vt.NumLayers; layer++)
+            {
+                var layerFormat = vt.LayerTypes[layer];
+                if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) layerFormat) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0)
+                    throw new NotImplementedException($"The supplied pixel format {layerFormat} is not supported!");
+
+                var layerDataLength = (int) vt.TileDataOffsetPerLayer[layer];
+                var layerData = _shared.Rent(layerDataLength);
+                for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
+                {
+                    var tileX = MathUtils.ReverseMortonCode2(tileIndexInMip);
+                    var tileY = MathUtils.ReverseMortonCode2(tileIndexInMip >> 1);
+                    var tileOffset = vt.GetTileOffset(level, tileIndexInMip, layer);
+
+                    Array.Copy(chunk.BulkData.Data, tileOffset, layerData, 0, layerDataLength);
+                    DecodeBytes(layerData, tilePixelSize, tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var colorType);
+                    _shared.Return(layerData);
+
+                    var (x, y) = (tileX * tileSize - tileBorderSize, tileY * tileSize - tileBorderSize);
+                    var bitmap = InstallPixels(data, new SKImageInfo(tilePixelSize, tilePixelSize, colorType, SKAlphaType.Unpremul));
+                    if (!texture.RenderNearestNeighbor)
+                    {
+                        c.DrawBitmap(bitmap, x, y);
+                    }
+                    else
+                    {
+                        var resized = bitmap.Resize(new SKImageInfo(tilePixelSize, tilePixelSize), SKFilterQuality.None);
+                        bitmap.Dispose();
+                        c.DrawBitmap(resized, x, y);
+                    }
+                }
+            }
+            return ret;
+        }
+
+        if (mip != null)
+        {
+            var sizeX = mip.SizeX;
+            var sizeY = mip.SizeY;
             DecodeTexture(mip, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
-            var width = mip.SizeX;
-            var height = mip.SizeY;
-            var info = new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul);
-            var bitmap = new SKBitmap();
-
-            unsafe
-            {
-                var pixelsPtr = NativeMemory.Alloc((nuint) data.Length);
-                fixed (byte* p = data)
-                {
-                    Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint) data.Length);
-                }
-
-                bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
-            }
-
+            var bitmap = InstallPixels(data, new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
             if (!texture.RenderNearestNeighbor)
             {
                 return bitmap;
             }
 
-            var resized = bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.None);
+            var resized = bitmap.Resize(new SKImageInfo(sizeX, sizeY), SKFilterQuality.None);
             bitmap.Dispose();
             return resized;
         }
@@ -75,16 +113,21 @@ public static class TextureDecoder
         if (isPS) bytes = PlatformDeswizzlers.DeswizzlePS4(bytes, mip, formatInfo);
         else if (isNX) bytes = PlatformDeswizzlers.GetDeswizzledData(bytes, mip, formatInfo);
 
-        switch (format)
+        DecodeBytes(bytes, mip.SizeX, mip.SizeY, mip.SizeZ, formatInfo, isNormalMap, out data, out colorType);
+    }
+
+    private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out SKColorType colorType)
+    {
+        switch (formatInfo.UnrealFormat)
         {
             case EPixelFormat.PF_DXT1:
             {
-                data = DXTDecoder.DXT1(bytes, mip.SizeX, mip.SizeY, mip.SizeZ);
+                data = DXTDecoder.DXT1(bytes, sizeX, sizeY, sizeZ);
                 colorType = SKColorType.Rgba8888;
                 break;
             }
             case EPixelFormat.PF_DXT5:
-                data = DXTDecoder.DXT5(bytes, mip.SizeX, mip.SizeY, mip.SizeZ);
+                data = DXTDecoder.DXT5(bytes, sizeX, sizeY, sizeZ);
                 colorType = SKColorType.Rgba8888;
                 break;
             case EPixelFormat.PF_ASTC_4x4:
@@ -97,7 +140,7 @@ public static class TextureDecoder
                     formatInfo.BlockSizeX,
                     formatInfo.BlockSizeY,
                     formatInfo.BlockSizeZ,
-                    mip.SizeX, mip.SizeY, mip.SizeZ);
+                    sizeX, sizeY, sizeZ);
                 colorType = SKColorType.Rgba8888;
 
                 if (isNormalMap)
@@ -108,7 +151,7 @@ public static class TextureDecoder
                         var offset = 0;
                         fixed (byte* d = data)
                         {
-                            for (var i = 0; i < mip.SizeX * mip.SizeY; i++)
+                            for (var i = 0; i < sizeX * sizeY; i++)
                             {
                                 d[offset + 2] = BCDecoder.GetZNormal(d[offset], d[offset + 1]);
                                 offset += 4;
@@ -119,42 +162,42 @@ public static class TextureDecoder
 
                 break;
             case EPixelFormat.PF_BC4:
-                data = BCDecoder.BC4(bytes, mip.SizeX, mip.SizeY);
+                data = BCDecoder.BC4(bytes, sizeX, sizeY);
                 colorType = SKColorType.Rgb888x;
                 break;
             case EPixelFormat.PF_BC5:
-                data = BCDecoder.BC5(bytes, mip.SizeX, mip.SizeY);
+                data = BCDecoder.BC5(bytes, sizeX, sizeY);
                 colorType = SKColorType.Rgb888x;
                 break;
             case EPixelFormat.PF_BC6H:
                 // BC6H doesn't work no matter the pixel format, the closest we can get is either
                 // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
 
-                data = Detex.DecodeDetexLinear(bytes, mip.SizeX, mip.SizeY, true,
+                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, true,
                     DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT,
                     DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
                 colorType = SKColorType.Rgb565;
                 break;
             case EPixelFormat.PF_BC7:
-                data = Detex.DecodeDetexLinear(bytes, mip.SizeX, mip.SizeY, false,
+                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false,
                     DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
                     DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                 colorType = SKColorType.Rgba8888;
                 break;
             case EPixelFormat.PF_ETC1:
-                data = Detex.DecodeDetexLinear(bytes, mip.SizeX, mip.SizeY, false,
+                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false,
                     DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1,
                     DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                 colorType = SKColorType.Rgba8888;
                 break;
             case EPixelFormat.PF_ETC2_RGB:
-                data = Detex.DecodeDetexLinear(bytes, mip.SizeX, mip.SizeY, false,
+                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false,
                     DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2,
                     DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                 colorType = SKColorType.Rgba8888;
                 break;
             case EPixelFormat.PF_ETC2_RGBA:
-                data = Detex.DecodeDetexLinear(bytes, mip.SizeX, mip.SizeY, false,
+                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false,
                     DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC,
                     DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                 colorType = SKColorType.Rgba8888;
@@ -166,7 +209,7 @@ public static class TextureDecoder
                 {
                     fixed (byte* d = bytes)
                     {
-                        data = ConvertRawR16DataToRGB888X(mip.SizeX, mip.SizeY, d, mip.SizeX * 2); // 2 BPP
+                        data = ConvertRawR16DataToRGB888X(sizeX, sizeY, d, sizeX * 2); // 2 BPP
                     }
                 }
 
@@ -185,13 +228,13 @@ public static class TextureDecoder
                 {
                     fixed (byte* d = bytes)
                     {
-                        data = ConvertRawR16G16B16A16FDataToRGBA8888(mip.SizeX, mip.SizeY, d, mip.SizeX * 8, false); // 8 BPP
+                        data = ConvertRawR16G16B16A16FDataToRGBA8888(sizeX, sizeY, d, sizeX * 8, false); // 8 BPP
                     }
                 }
 
                 colorType = SKColorType.Rgba8888;
                 break;
-            default: throw new NotImplementedException($"Unknown pixel format: {format}");
+            default: throw new NotImplementedException($"Unknown pixel format: {formatInfo.UnrealFormat}");
         }
     }
 
@@ -244,5 +287,21 @@ public static class TextureDecoder
         }
 
         return ret;
+    }
+
+    private static SKBitmap InstallPixels(byte[] data, SKImageInfo info)
+    {
+        var bitmap = new SKBitmap();
+        unsafe
+        {
+            var pixelsPtr = NativeMemory.Alloc((nuint) data.Length);
+            fixed (byte* p = data)
+            {
+                Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint) data.Length);
+            }
+
+            bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
+        }
+        return bitmap;
     }
 }
