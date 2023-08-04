@@ -27,6 +27,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             Offsets = Ar.ReadArray<uint>();
         }
 
+        public FVirtualTextureTileOffsetData(uint width, uint height, uint maxAddress)
+        {
+            Width = width;
+            Height = height;
+            MaxAddress = maxAddress;
+            Addresses = Array.Empty<uint>();
+            Offsets = Array.Empty<uint>();
+        }
+
         public uint GetTileOffset(uint inAddress)
         {
             // var blockIndex = Addresses.FirstOrDefault(x => x >= inAddress); // Algo::UpperBound(Addresses, InAddress) - 1;
@@ -62,7 +71,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     public class FVirtualTextureBuiltData
     {
         public readonly uint NumLayers;
-        public readonly uint? NumMips;
+        public readonly uint NumMips;
         public readonly uint Width;
         public readonly uint Height;
         public readonly uint WidthInBlocks;
@@ -77,7 +86,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         public readonly uint[]? ChunkIndexPerMip;
         public readonly uint[]? BaseOffsetPerMip;
         public readonly uint[]? TileDataOffsetPerLayer;
-        public readonly FVirtualTextureTileOffsetData[] TileOffsetData;
+        public readonly FVirtualTextureTileOffsetData[]? TileOffsetData;
         public readonly FLinearColor[] LayerFallbackColors;
 
         public FVirtualTextureBuiltData(FAssetArchive Ar, int firstMip)
@@ -125,8 +134,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             Chunks = Ar.ReadArray(() => new FVirtualTextureDataChunk(Ar, NumLayers));
         }
 
-        public bool IsLegacyData() => TileOffsetInChunk == null || TileOffsetInChunk.Length > 0;
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsInitialized() => TileSize != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -136,9 +143,26 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint GetHeightInTiles() => Height.DivideAndRoundUp(TileSize);
 
+        public bool IsLegacyData() => TileOffsetInChunk == null || TileOffsetInChunk.Length > 0;
         public int GetNumTileHeaders() => TileOffsetInChunk?.Length ?? 0;
+
         public int GetChunkIndex(int vLevel)
             => ChunkIndexPerMip != null && vLevel < ChunkIndexPerMip.Length ? (int) ChunkIndexPerMip[vLevel] : -1;
+
+        public int GetChunkIndex_Legacy(uint tileIndex)
+        {
+            var max = Chunks.Length - 1;
+            if (TileIndexPerChunk != null && tileIndex <= TileIndexPerChunk.Last())
+            {
+                for (var i = 0; i < max; i++)
+                {
+                    if (tileIndex >= TileIndexPerChunk[i] && tileIndex < TileIndexPerChunk[i + 1])
+                        return i;
+                }
+            }
+
+            return max;
+        }
 
         public uint GetTileIndex_Legacy(int vLevel, uint vAddress)
         {
@@ -165,43 +189,65 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             return Chunks[chunkIndex].SizeInBytes;
         }
 
-        public uint GetTileOffset(int vLevel, uint vAddress, uint layerIndex)
+        public bool IsValidAddress(int vLevel, uint vAddress)
         {
+            bool bIsValid = false;
+            if (IsLegacyData())
+            {
+                bIsValid = GetTileIndex_Legacy(vLevel, vAddress) != ~0u;
+            }
+            else
+            {
+                if (TileOffsetData != null && vLevel < TileOffsetData.Length)
+                {
+                    var x = MathUtils.ReverseMortonCode2(vAddress);
+                    var y = MathUtils.ReverseMortonCode2(vAddress >> 1);
+                    bIsValid = x < TileOffsetData[vLevel].Width && y < TileOffsetData[vLevel].Height;
+                }
+            }
+
+            return bIsValid;
+        }
+
+        public (int, uint, uint) GetTileData(int vLevel, uint vAddress, uint layerIndex)
+        {
+            int chunkIndex = 0;
             uint offset = 0u;
+            uint tileDataLength = 0;
+
             if (IsLegacyData())
             {
                 var tileIndex = GetTileIndex_Legacy(vLevel, vAddress);
                 if (tileIndex != ~0u)
                 {
                     // If size of the tile is 0 we return ~0u to indicate that there is no data present.
-                    var chunkIndex = GetChunkIndex(vLevel);
+                    chunkIndex = GetChunkIndex_Legacy(tileIndex);
                     var tileOffset = GetTileOffset_Legacy(chunkIndex, tileIndex);
                     var nextTileOffset = GetTileOffset_Legacy(chunkIndex, tileIndex + NumLayers);
                     if (tileOffset != nextTileOffset)
                     {
                         offset = GetTileOffset_Legacy(chunkIndex, tileIndex + layerIndex);
+                        tileDataLength = GetTileOffset_Legacy(chunkIndex, tileIndex + layerIndex + 1) - offset;
                     }
                 }
             }
-            else
+            else if (BaseOffsetPerMip != null && BaseOffsetPerMip.Length > vLevel && TileOffsetData.Length > vLevel)
             {
-                if (BaseOffsetPerMip != null && BaseOffsetPerMip.Length > vLevel && TileOffsetData.Length > vLevel)
+                // If the tile offset is ~0u there is no data present so we return ~0u to indicate that.
+                chunkIndex = GetChunkIndex(vLevel);
+                var baseOffset = BaseOffsetPerMip[vLevel];
+                var tileOffset = TileOffsetData[vLevel].GetTileOffset(vAddress);
+                if (baseOffset != ~0u && tileOffset != ~0u)
                 {
-                    // If the tile offset is ~0u there is no data present so we return ~0u to indicate that.
-                    var baseOffset = BaseOffsetPerMip[vLevel];
-                    var tileOffset = TileOffsetData[vLevel].GetTileOffset(vAddress);
-                    if (baseOffset != ~0u && tileOffset != ~0u)
-                    {
-                        Debug.Assert(TileDataOffsetPerLayer != null, nameof(TileDataOffsetPerLayer) + " != null");
-                        var tileDataSize = TileDataOffsetPerLayer.Last();
-                        var layerDataOffset = layerIndex == 0 ? 0 : TileDataOffsetPerLayer[layerIndex - 1];
+                    Debug.Assert(TileDataOffsetPerLayer != null, nameof(TileDataOffsetPerLayer) + " != null");
+                    var tileDataSize = TileDataOffsetPerLayer.Last();
+                    tileDataLength = layerIndex == 0 ? 0 : TileDataOffsetPerLayer[layerIndex - 1];
 
-                        offset = baseOffset + (tileOffset * tileDataSize) + layerDataOffset;
-                    }
+                    offset = baseOffset + (tileOffset * tileDataSize) + tileDataLength;
                 }
             }
 
-            return offset;
+            return (chunkIndex, offset, tileDataLength);
         }
     }
 }

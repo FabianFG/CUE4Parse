@@ -82,6 +82,17 @@ namespace CUE4Parse.Utils
         public static float Lerp(float a, float b, float alpha) => a + alpha * (b - a);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint MortonCode2(uint x)
+        {
+            x &= 0x0000ffff;
+            x = (x ^ (x << 8)) & 0x00ff00ff;
+            x = (x ^ (x << 4)) & 0x0f0f0f0f;
+            x = (x ^ (x << 2)) & 0x33333333;
+            x = (x ^ (x << 1)) & 0x55555555;
+            return x;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReverseMortonCode2(uint x)
         {
             x &= 0x55555555;

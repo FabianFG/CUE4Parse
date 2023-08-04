@@ -1,22 +1,23 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
     public class UFunction : UStruct
     {
-        public uint FunctionFlags;
-        public FPackageIndex EventGraphFunction; // UFunction
+        public EFunctionFlags FunctionFlags;
+        public FPackageIndex? EventGraphFunction; // UFunction
         public int EventGraphCallOffset;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            FunctionFlags = Ar.Read<uint>();
+            FunctionFlags = Ar.Read<EFunctionFlags>();
 
             // Replication info
-            if ((FunctionFlags & 0x40 /*EFunctionFlags.FUNC_Net*/) != 0)
+            if ((FunctionFlags & EFunctionFlags.FUNC_Net) != 0)
             {
                 // Unused.
                 var repOffset = Ar.Read<short>();
@@ -34,7 +35,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.WriteJson(writer, serializer);
 
             writer.WritePropertyName("FunctionFlags");
-            writer.WriteValue(FunctionFlags);
+            writer.WriteValue(FunctionFlags.ToStringBitfield());
 
             if (EventGraphFunction is { IsNull: false })
             {

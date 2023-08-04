@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
 using SkiaSharp;
@@ -24,18 +25,36 @@ public static class TextureDecoder
     public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
     public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && !vt.IsLegacyData())
+        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
         {
             var tileSize = (int) vt.TileSize;
             var tileBorderSize = (int) vt.TileBorderSize;
             var tilePixelSize = (int) vt.GetPhysicalTileSize();
-
+            var tileCrop = new SKRect(tileBorderSize, tileBorderSize, tilePixelSize - tileBorderSize, tilePixelSize - tileBorderSize);
             var level = texture.PlatformData.FirstMipToSerialize;
-            var tileOffsetData = vt.TileOffsetData[level];
-            var chunk = vt.Chunks[vt.GetChunkIndex(level)];
 
-            var ret = new SKBitmap((int) tileOffsetData.Width * tileSize, (int) tileOffsetData.Height * tileSize, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
-            using var c = new SKCanvas(ret);
+            FVirtualTextureTileOffsetData tileOffsetData;
+            if (vt.IsLegacyData())
+            {
+                var blockWidthInTiles = vt.GetWidthInTiles();
+                var blockHeightInTiles = vt.GetHeightInTiles();
+                var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
+                tileOffsetData = new (blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
+            }
+            else tileOffsetData = vt.TileOffsetData[level];
+
+            var bitmapWidth = (int) tileOffsetData.Width * tileSize;
+            var bitmapHeight = (int) tileOffsetData.Height * tileSize;
+            var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
+            if (maxLevel == 0 || vt.IsLegacyData())
+            {
+                var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
+                var factor = Convert.ToInt32(Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1));
+                bitmapWidth /= factor;
+                bitmapHeight /= factor;
+            }
+            var bitmap = new SKBitmap(bitmapWidth, bitmapHeight, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
+            using var c = new SKCanvas(bitmap);
 
             for (uint layer = 0; layer < vt.NumLayers; layer++)
             {
@@ -43,33 +62,39 @@ public static class TextureDecoder
                 if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) layerFormat) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0)
                     throw new NotImplementedException($"The supplied pixel format {layerFormat} is not supported!");
 
-                var layerDataLength = (int) vt.TileDataOffsetPerLayer[layer];
-                var layerData = _shared.Rent(layerDataLength);
+                var tileWidthInBlocks = tilePixelSize.DivideAndRoundUp(formatInfo.BlockSizeX);
+                var tileHeightInBlocks = tilePixelSize.DivideAndRoundUp(formatInfo.BlockSizeY);
+                var packedStride = tileWidthInBlocks * formatInfo.BlockBytes;
+                var packedOutputSize = packedStride * tileHeightInBlocks;
+
+                var layerData = _shared.Rent(packedOutputSize);
                 for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
                 {
                     var tileX = MathUtils.ReverseMortonCode2(tileIndexInMip);
                     var tileY = MathUtils.ReverseMortonCode2(tileIndexInMip >> 1);
-                    var tileOffset = vt.GetTileOffset(level, tileIndexInMip, layer);
+                    var (chunkIndex, tileStart, tileLength) = vt.GetTileData(level, tileIndexInMip, layer);
 
-                    Array.Copy(chunk.BulkData.Data, tileOffset, layerData, 0, layerDataLength);
+                    switch (vt.Chunks[chunkIndex].CodecType[layer])
+                    {
+                        case EVirtualTextureCodec.ZippedGPU_DEPRECATED:
+                            Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data, (int) tileStart, (int) tileLength, layerData, 0, packedOutputSize, CompressionMethod.Zlib);
+                            break;
+                        default:
+                            Array.Copy(vt.Chunks[chunkIndex].BulkData.Data, tileStart, layerData, 0, packedOutputSize);
+                            break;
+                    }
+
                     DecodeBytes(layerData, tilePixelSize, tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var colorType);
-                    _shared.Return(layerData);
 
-                    var (x, y) = (tileX * tileSize - tileBorderSize, tileY * tileSize - tileBorderSize);
-                    var bitmap = InstallPixels(data, new SKImageInfo(tilePixelSize, tilePixelSize, colorType, SKAlphaType.Unpremul));
-                    if (!texture.RenderNearestNeighbor)
-                    {
-                        c.DrawBitmap(bitmap, x, y);
-                    }
-                    else
-                    {
-                        var resized = bitmap.Resize(new SKImageInfo(tilePixelSize, tilePixelSize), SKFilterQuality.None);
-                        bitmap.Dispose();
-                        c.DrawBitmap(resized, x, y);
-                    }
+                    var (x, y) = (tileX * tileSize, tileY * tileSize);
+                    var b = InstallPixels(data, new SKImageInfo(tilePixelSize, tilePixelSize, colorType, SKAlphaType.Unpremul));
+                    c.DrawBitmap(b, tileCrop, new SKRect(x, y, x + tileSize, y + tileSize));
+                    b.Dispose();
                 }
+                _shared.Return(layerData);
             }
-            return ret;
+
+            return bitmap;
         }
 
         if (mip != null)
