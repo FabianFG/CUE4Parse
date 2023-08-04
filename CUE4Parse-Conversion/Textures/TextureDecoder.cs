@@ -36,6 +36,8 @@ public static class TextureDecoder
             FVirtualTextureTileOffsetData tileOffsetData;
             if (vt.IsLegacyData())
             {
+                // calculate the max address in this mip
+                // aka get the next mip max address and subtract it by the current mip max address
                 var blockWidthInTiles = vt.GetWidthInTiles();
                 var blockHeightInTiles = vt.GetHeightInTiles();
                 var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
@@ -48,6 +50,8 @@ public static class TextureDecoder
             var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
             if (maxLevel == 0 || vt.IsLegacyData())
             {
+                // All: if we are here that means the mip is tiled and so the bitmap size must be lowered by one-fourth
+                // if texture is legacy we must always lower the bitmap size because GetXXXXInTiles gives the number of tiles in mip 0
                 var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
                 var factor = Convert.ToInt32(Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1));
                 bitmapWidth /= factor;
