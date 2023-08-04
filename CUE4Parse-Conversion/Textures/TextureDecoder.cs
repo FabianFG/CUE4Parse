@@ -50,8 +50,9 @@ public static class TextureDecoder
             var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
             if (maxLevel == 0 || vt.IsLegacyData())
             {
-                // All: if we are here that means the mip is tiled and so the bitmap size must be lowered by one-fourth
+                // if we are here that means the mip is tiled and so the bitmap size must be lowered by one-fourth
                 // if texture is legacy we must always lower the bitmap size because GetXXXXInTiles gives the number of tiles in mip 0
+                // but that doesn't mean the mip is tiled in the first place
                 var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
                 var factor = Convert.ToInt32(Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1));
                 bitmapWidth /= factor;
@@ -74,6 +75,8 @@ public static class TextureDecoder
                 var layerData = _shared.Rent(packedOutputSize);
                 for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
                 {
+                    if (!vt.IsValidAddress(level, tileIndexInMip)) continue;
+
                     var tileX = MathUtils.ReverseMortonCode2(tileIndexInMip);
                     var tileY = MathUtils.ReverseMortonCode2(tileIndexInMip >> 1);
                     var (chunkIndex, tileStart, tileLength) = vt.GetTileData(level, tileIndexInMip, layer);
