@@ -8,6 +8,8 @@ namespace CUE4Parse_Conversion.Animations.PSA
         public readonly USkeleton Skeleton;
         public readonly List<CAnimSequence> Sequences = new();
 
+        public float TotalAnimTime;
+
         public CAnimSet(USkeleton skeleton)
         {
             Skeleton = skeleton;

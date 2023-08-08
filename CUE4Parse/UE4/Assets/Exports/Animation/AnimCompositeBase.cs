@@ -1,5 +1,7 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
@@ -26,6 +28,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             AnimPlayRate = fallback.GetOrDefault<float>(nameof(AnimPlayRate));
             LoopingCount = fallback.GetOrDefault<int>(nameof(LoopingCount));
         }
+
+        public float GetValidPlayRate()
+        {
+            float seqPlayRate = AnimReference.TryLoad(out UAnimSequenceBase sequenceBase) ? sequenceBase.RateScale : 1.0f;
+            float finalPlayRate = seqPlayRate * AnimPlayRate;
+            return (UnrealMath.IsNearlyZero(finalPlayRate) ? 1.0f : finalPlayRate);
+        }
+
+        public float GetLength()
+        {
+            return (LoopingCount * (AnimEndTime - AnimStartTime)) / Math.Abs(GetValidPlayRate());
+        }
     }
 
     [StructFallback]
@@ -36,6 +50,24 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FAnimTrack(FStructFallback fallback)
         {
             AnimSegments = fallback.GetOrDefault<FAnimSegment[]>(nameof(AnimSegments));
+        }
+
+        public float GetLength()
+        {
+            float totalLength = 0.0f;
+
+            // in the future, if we're more clear about exactly what requirement is for segments,
+            // this can be optimized. For now this is slow.
+            foreach (var animSegment in AnimSegments)
+            {
+                var endFrame = animSegment.StartPos + animSegment.GetLength();
+                if (endFrame > totalLength)
+                {
+                    totalLength = endFrame;
+                }
+            }
+
+            return totalLength;
         }
     }
 

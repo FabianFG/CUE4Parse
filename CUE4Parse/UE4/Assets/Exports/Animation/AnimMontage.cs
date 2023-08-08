@@ -18,15 +18,28 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             CompositeSections = GetOrDefault(nameof(CompositeSections), Array.Empty<FCompositeSection>());
             SlotAnimTracks = GetOrDefault(nameof(SlotAnimTracks), Array.Empty<FSlotAnimationTrack>());
         }
+
+        public float CalculateSequenceLength()
+        {
+            float calculatedSequenceLength = 0.0f;
+            foreach (var slotAnimTrack in SlotAnimTracks)
+            {
+                if (slotAnimTrack.AnimTrack.AnimSegments.Length > 0)
+                {
+                    calculatedSequenceLength = Math.Max(calculatedSequenceLength, slotAnimTrack.AnimTrack.GetLength());
+                }
+            }
+            return calculatedSequenceLength;
+        }
     }
-    
+
     [StructFallback]
     public class FCompositeSection : FAnimLinkableElement
     {
         public FName SectionName;
         public FName NextSectionName;
         public UAnimMetaData[] MetaData;
-    
+
         public FCompositeSection(FStructFallback fallback) : base(fallback)
         {
             SectionName = fallback.GetOrDefault<FName>(nameof(SectionName));
@@ -34,13 +47,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             MetaData = fallback.GetOrDefault<UAnimMetaData[]>(nameof(MetaData));
         }
     }
-    
+
     [StructFallback]
     public class FSlotAnimationTrack
     {
         public FName SlotName;
         public FAnimTrack AnimTrack;
-    
+
         public FSlotAnimationTrack(FStructFallback fallback)
         {
             SlotName = fallback.GetOrDefault<FName>(nameof(SlotName));

@@ -88,38 +88,6 @@ namespace CUE4Parse_Conversion.Animations.PSA
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasKeys() => KeyQuat.Length + KeyPos.Length + KeyScale.Length > 0;
 
-        /// <summary>
-        /// find index in time key array
-        /// </summary>
-        /// <returns></returns>
-        private static int FindTimeKey(float[] keyTime, float frame)
-        {
-            // *** binary search ***
-            int low = 0, high = keyTime.Length - 1;
-            while (low + Constants.MAX_ANIM_LINEAR_KEYS < high)
-            {
-                var mid = (low + high) / 2;
-                if (frame < keyTime[mid])
-                    high = mid - 1;
-                else
-                    low = mid;
-            }
-
-            // *** linear search ***
-            int i;
-            for (i = low; i <= high; i++)
-            {
-                var currKeyTime = keyTime[i];
-                if (frame == currKeyTime) // exact key
-                    return i;
-                if (frame < currKeyTime) // previous key
-                    return i > 0 ? i - 1 : 0;
-            }
-
-            if (i > high) i = high;
-            return i;
-        }
-
         // In:  KeyTime, Frame, NumFrames, Loop
         // Out: X - previous key index, Y - next key index, F - fraction between keys
         private static void GetKeyParams(float[] keyTime, float frame, int frameCount, int keyCount, out int x, out int y, out float f)
@@ -158,6 +126,38 @@ namespace CUE4Parse_Conversion.Animations.PSA
             {
                 f = (frame - keyTime[x]) / (keyTime[y] - keyTime[x]);
             }
+        }
+
+        /// <summary>
+        /// find index in time key array
+        /// </summary>
+        /// <returns></returns>
+        private static int FindTimeKey(float[] keyTime, float frame)
+        {
+            // *** binary search ***
+            int low = 0, high = keyTime.Length - 1;
+            while (low + Constants.MAX_ANIM_LINEAR_KEYS < high)
+            {
+                var mid = (low + high) / 2;
+                if (frame < keyTime[mid])
+                    high = mid - 1;
+                else
+                    low = mid;
+            }
+
+            // *** linear search ***
+            int i;
+            for (i = low; i <= high; i++)
+            {
+                var currKeyTime = keyTime[i];
+                if (frame == currKeyTime) // exact key
+                    return i;
+                if (frame < currKeyTime) // previous key
+                    return i > 0 ? i - 1 : 0;
+            }
+
+            if (i > high) i = high;
+            return i;
         }
 
         private static void Reset(out int x, out int y, out float f)
