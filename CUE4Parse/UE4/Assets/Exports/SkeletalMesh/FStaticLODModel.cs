@@ -20,33 +20,26 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
     };
 
     [JsonConverter(typeof(FStaticLODModelConverter))]
-    public class FStaticLODModel
+    public class FStaticLODModel()
     {
         public FSkelMeshSection[] Sections;
         public FMultisizeIndexContainer? Indices;
         public short[] ActiveBoneIndices;
-        public FSkelMeshChunk[] Chunks;
+        public FSkelMeshChunk[] Chunks = Array.Empty<FSkelMeshChunk>();
         public int Size;
         public int NumVertices;
         public short[] RequiredBones;
         public FIntBulkData RawPointIndices;
-        public int[] MeshToImportVertexMap;
+        public int[] MeshToImportVertexMap = Array.Empty<int>();
         public int MaxImportVertex;
         public int NumTexCoords;
         public FMorphTargetVertexInfoBuffers? MorphTargetVertexInfoBuffers;
         public Dictionary<FName, FSkeletalMeshAttributeVertexBuffer>? VertexAttributeBuffers;
         public FSkeletalMeshVertexBuffer VertexBufferGPUSkin;
-        public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
+        public FSkeletalMeshVertexColorBuffer ColorVertexBuffer = new();
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
         public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
         public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
-
-        public FStaticLODModel()
-        {
-            Chunks = Array.Empty<FSkelMeshChunk>();
-            MeshToImportVertexMap = Array.Empty<int>();
-            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
-        }
 
         public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors) : this()
         {
