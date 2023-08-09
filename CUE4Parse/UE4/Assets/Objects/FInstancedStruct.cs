@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FInstancedStructConverter))]
 public class FInstancedStruct : IUStruct
 {
-    public readonly FStructFallback NonConstStruct;
+    public readonly FStructFallback? NonConstStruct;
 
     public FInstancedStruct(FAssetArchive Ar)
     {
@@ -30,13 +30,12 @@ public class FInstancedStruct : IUStruct
 
 public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
-    public override void WriteJson(JsonWriter writer, FInstancedStruct value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        serializer.Serialize(writer, value.NonConstStruct);
+        serializer.Serialize(writer, value?.NonConstStruct);
     }
 
-    public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
+    public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
