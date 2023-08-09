@@ -51,21 +51,21 @@ namespace CUE4Parse_Conversion.Animations
             var animSet = skeleton.ConvertToAnimSet();
             if (animMontage == null) return animSet;
 
-            // foreach (var slotAnimTrack in animMontage.SlotAnimTracks)
-            // {
-            //     foreach (var segment in slotAnimTrack.AnimTrack.AnimSegments)
-            //     {
-            //         if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence))
-            //             continue;
-            //
-            //         var seq = animSequence.ConvertSequence(skeleton);
-            //         seq.Name = slotAnimTrack.SlotName.Text;
-            //         seq.StartPos = segment.StartPos;
-            //         seq.AnimEndTime = segment.AnimEndTime;
-            //         seq.LoopingCount = segment.LoopingCount;
-            //         animSet.Sequences.Add(seq);
-            //     }
-            // }
+            foreach (var slotAnimTrack in animMontage.SlotAnimTracks)
+            {
+                foreach (var segment in slotAnimTrack.AnimTrack.AnimSegments)
+                {
+                    if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence))
+                        continue;
+
+                    var seq = animSequence.ConvertSequence(skeleton);
+                    seq.Name = slotAnimTrack.SlotName.Text;
+                    seq.StartPos = segment.StartPos;
+                    seq.AnimEndTime = segment.AnimEndTime;
+                    seq.LoopingCount = segment.LoopingCount;
+                    animSet.Sequences.Add(seq);
+                }
+            }
 
             // var compositeSection = animMontage.CompositeSections[0];
             // do
@@ -85,19 +85,19 @@ namespace CUE4Parse_Conversion.Animations
             // } while (compositeSection is not null && !compositeSection.NextSectionName.IsNone &&
             //          compositeSection.SectionName != compositeSection.NextSectionName);
 
-            foreach (var compositeSection in animMontage.CompositeSections)
-            {
-                var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
-                if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence) || !compositeSection.LinkedSequence.TryLoad(out animSequence))
-                    continue;
-
-                var seq = animSequence.ConvertSequence(skeleton);
-                seq.Name = compositeSection.SectionName.Text;
-                seq.StartPos = segment.StartPos;
-                seq.AnimEndTime = segment.AnimEndTime;
-                seq.LoopingCount = segment.LoopingCount;
-                animSet.Sequences.Add(seq);
-            }
+            // foreach (var compositeSection in animMontage.CompositeSections)
+            // {
+            //     var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
+            //     if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence) || !compositeSection.LinkedSequence.TryLoad(out animSequence))
+            //         continue;
+            //
+            //     var seq = animSequence.ConvertSequence(skeleton);
+            //     seq.Name = compositeSection.SectionName.Text;
+            //     seq.StartPos = segment.StartPos;
+            //     seq.AnimEndTime = segment.AnimEndTime;
+            //     seq.LoopingCount = segment.LoopingCount;
+            //     animSet.Sequences.Add(seq);
+            // }
 
             animSet.TotalAnimTime = animMontage.CalculateSequenceLength();
             return animSet;
