@@ -34,6 +34,15 @@ public static class FFortniteReleaseBranchCustomObjectVersion
         // Fix the Nanite landscape mesh being reused because of a bad name
         FixNaniteLandscapeMeshNames,
 
+        // Fixup and synchronize shared properties modified before the synchronicity enforcement
+        LandscapeSharedPropertiesEnforcement,
+
+        // Include the cell size when computing the cell guid
+        WorldPartitionRuntimeCellGuidWithCellSize,
+
+        // Enable SkipOnlyEditorOnly style cooking of NaniteOverrideMaterial
+        NaniteMaterialOverrideUsesEditorOnly,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1

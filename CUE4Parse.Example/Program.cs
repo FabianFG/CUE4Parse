@@ -4,6 +4,8 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace CUE4Parse.Example
 {
@@ -24,6 +26,8 @@ namespace CUE4Parse.Example
 
         public static void Main()
         {
+            Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+
             var provider = new ApkFileProvider(@"C:\Users\valen\Downloads\ZqOY4K41h0N_Qb6WjEe23TlGExojpQ.apk", true, new VersionContainer(EGame.GAME_UE5_3));
             // var provider = new DefaultFileProvider(_gameDirectory, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE5_3));
             // provider.MappingsContainer = new FileUsmapTypeMappingsProvider(_mapping);

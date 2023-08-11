@@ -266,25 +266,25 @@ namespace CUE4Parse.UE4.Assets.Exports
                 writer.WriteValue(Outer.Name); // TODO serialize the path too
             }
 
+            // class
+            if (Class != null)
+            {
+                writer.WritePropertyName("Class");
+                writer.WriteValue(Class.GetFullName());
+            }
+
             // super
             if (Super != null)
             {
                 writer.WritePropertyName("Super");
-                writer.WriteValue(Super.Name.Text);
+                serializer.Serialize(writer, Super);
             }
 
             // template
             if (Template != null)
             {
                 writer.WritePropertyName("Template");
-                writer.WriteValue(Template.Name.Text);
-            }
-
-            // class
-            if (Class != null)
-            {
-                writer.WritePropertyName("Class");
-                serializer.Serialize(writer, Class.GetFullName());
+                serializer.Serialize(writer, Template);
             }
 
             // export properties

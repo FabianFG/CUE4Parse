@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FInstancedStructConverter))]
 public class FInstancedStruct : IUStruct
 {
-    public readonly FStructFallback NonConstStruct;
+    public readonly FStructFallback? NonConstStruct;
 
     public FInstancedStruct(FAssetArchive Ar)
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse_Conversion.Animations.PSA;
@@ -41,6 +42,7 @@ namespace CUE4Parse_Conversion.Animations
                 animSet.Sequences.Add(seq);
             }
 
+            animSet.TotalAnimTime = animComposite.AnimationTrack.GetLength();
             return animSet;
         }
 
@@ -49,20 +51,55 @@ namespace CUE4Parse_Conversion.Animations
             var animSet = skeleton.ConvertToAnimSet();
             if (animMontage == null) return animSet;
 
-            foreach (var compositeSection in animMontage.CompositeSections)
+            foreach (var slotAnimTrack in animMontage.SlotAnimTracks)
             {
-                var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
-                if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence) || !compositeSection.LinkedSequence.TryLoad(out animSequence))
-                    continue;
+                foreach (var segment in slotAnimTrack.AnimTrack.AnimSegments)
+                {
+                    if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence))
+                        continue;
 
-                var seq = animSequence.ConvertSequence(skeleton);
-                seq.Name = compositeSection.SectionName.Text;
-                seq.StartPos = segment.StartPos;
-                seq.AnimEndTime = segment.AnimEndTime;
-                seq.LoopingCount = segment.LoopingCount;
-                animSet.Sequences.Add(seq);
+                    var seq = animSequence.ConvertSequence(skeleton);
+                    seq.Name = slotAnimTrack.SlotName.Text;
+                    seq.StartPos = segment.StartPos;
+                    seq.AnimEndTime = segment.AnimEndTime;
+                    seq.LoopingCount = segment.LoopingCount;
+                    animSet.Sequences.Add(seq);
+                }
             }
 
+            // var compositeSection = animMontage.CompositeSections[0];
+            // do
+            // {
+            //     if (compositeSection.LinkedSequence.TryLoad(out UAnimSequence animSequence))
+            //     {
+            //         var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
+            //         var seq = animSequence.ConvertSequence(skeleton);
+            //         seq.Name = compositeSection.SectionName.Text;
+            //         seq.StartPos = segment.StartPos;
+            //         seq.AnimEndTime = segment.AnimEndTime;
+            //         seq.LoopingCount = segment.LoopingCount;
+            //         animSet.Sequences.Add(seq);
+            //     }
+            //
+            //     compositeSection = animMontage.CompositeSections.FirstOrDefault(x => x.SectionName == compositeSection.NextSectionName);
+            // } while (compositeSection is not null && !compositeSection.NextSectionName.IsNone &&
+            //          compositeSection.SectionName != compositeSection.NextSectionName);
+
+            // foreach (var compositeSection in animMontage.CompositeSections)
+            // {
+            //     var segment = animMontage.SlotAnimTracks[compositeSection.SlotIndex].AnimTrack.AnimSegments[compositeSection.SegmentIndex];
+            //     if (!segment.AnimReference.TryLoad(out UAnimSequence animSequence) || !compositeSection.LinkedSequence.TryLoad(out animSequence))
+            //         continue;
+            //
+            //     var seq = animSequence.ConvertSequence(skeleton);
+            //     seq.Name = compositeSection.SectionName.Text;
+            //     seq.StartPos = segment.StartPos;
+            //     seq.AnimEndTime = segment.AnimEndTime;
+            //     seq.LoopingCount = segment.LoopingCount;
+            //     animSet.Sequences.Add(seq);
+            // }
+
+            animSet.TotalAnimTime = animMontage.CalculateSequenceLength();
             return animSet;
         }
 
@@ -76,7 +113,7 @@ namespace CUE4Parse_Conversion.Animations
 
             // Create CAnimSequence
             animSet.Sequences.Add(animSequence.ConvertSequence(skeleton));
-
+            animSet.TotalAnimTime = animSequence.SequenceLength;
             return animSet;
         }
 

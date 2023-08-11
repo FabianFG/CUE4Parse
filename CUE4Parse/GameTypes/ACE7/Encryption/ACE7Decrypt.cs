@@ -18,7 +18,7 @@ public class ACE7Decrypt
         if (stream == null)
             throw new MissingManifestResourceException("Couldn't find ACE7Key.bin in Embedded Resources");
         fullKey = new byte[stream.Length];
-        var _ = stream.Read(fullKey, 0, (int) stream.Length);
+        _ = stream.Read(fullKey, 0, (int) stream.Length);
     }
 
     public FArchive DecryptUassetArchive(FArchive Ar, out ACE7XORKey key)

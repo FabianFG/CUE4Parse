@@ -192,8 +192,8 @@ public class FPakInfo
         Size9 = Size8a + 1, // UE4.25
         //Size10 = Size8a
 
-        SizeExtra8a = Size8a + 4, // additional int for custom pak version
         SizeExtra = Size + 4, // additional uint for custom magic
+        SizeExtra8a = Size8a + 4, // additional int for custom pak version
 
         SizeLast,
         SizeMax = SizeLast - 1

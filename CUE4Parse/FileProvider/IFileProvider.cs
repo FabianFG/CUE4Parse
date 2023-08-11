@@ -151,6 +151,7 @@ namespace CUE4Parse.FileProvider
         /// <param name="path">The file path</param>
         /// <returns>The reader if it could be created; null otherwise</returns>
         public Task<FArchive?> TryCreateReaderAsync(string path);
+
         /// <summary>
         /// Loads and parses a Package at the passed path.
         /// Can throw various exceptions
@@ -219,6 +220,7 @@ namespace CUE4Parse.FileProvider
         /// <param name="file">The package file</param>
         /// <returns>The parsed package content if it could be parsed; default otherwise</returns>
         public Task<IPackage?> TryLoadPackageAsync(GameFile file);
+
         /// <summary>
         /// Loads all parts of the Package at the passed path.
         /// Can throw various exceptions
@@ -324,7 +326,6 @@ namespace CUE4Parse.FileProvider
         /// <param name="objectPath">The object path</param>
         /// <returns>The loaded object if loaded successfully and of correct type; null otherwise</returns>
         public Task<T?> TryLoadObjectAsync<T>(string? objectPath) where T : UObject;
-
         /// <summary>
         /// Loads all objects from the Package at the passed path
         /// </summary>

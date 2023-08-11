@@ -14,8 +14,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         White,			//Special case codec, always outputs white pixels 255,255,255,255
         Flat,			//Special case codec, always outputs 128,125,255,255 (flat normal map)
         RawGPU,			//Uncompressed data in an GPU-ready format (e.g R8G8B8A8, BC7, ASTC, ...)
-        ZippedGPU,		//Same as RawGPU but with the data zipped
-        Crunch,			//Use the Crunch library to compress data
+        ZippedGPU_DEPRECATED,		//Same as RawGPU but with the data zipped
+        Crunch_DEPRECATED,			//Use the Crunch library to compress data
         Max,			// Add new codecs before this entry
     };
 

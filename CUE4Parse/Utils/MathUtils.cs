@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -42,6 +42,9 @@ public static class MathUtils
     public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint DivideAndRoundUp(this uint dividend, uint divisor) => (dividend + divisor - 1u) / divisor;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ToDegrees(this float radVal) => radVal * (180.0f / MathF.PI);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,14 +72,35 @@ public static class MathUtils
     public static float Clamp(this float f, float min, float max) => f < min ? min : f < max ? f : max;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float FloatSelect(float comparand, float valueGEZero, float valueLTZero) =>
-        comparand >= 0.0f ? valueGEZero : valueLTZero;
+    public static float FloatSelect(float comparand, float valueGEZero, float valueLTZero) => comparand >= 0.0f ? valueGEZero : valueLTZero;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FVector Lerp(FVector a, FVector b, float alpha) => a + alpha * (b - a);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float alpha) => a + alpha * (b - a);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint MortonCode2(uint x)
+    {
+        x &= 0x0000ffff;
+        x = (x ^ (x << 8)) & 0x00ff00ff;
+        x = (x ^ (x << 4)) & 0x0f0f0f0f;
+        x = (x ^ (x << 2)) & 0x33333333;
+        x = (x ^ (x << 1)) & 0x55555555;
+        return x;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint ReverseMortonCode2(uint x)
+    {
+        x &= 0x55555555;
+        x = (x ^ (x >> 1)) & 0x33333333;
+        x = (x ^ (x >> 2)) & 0x0f0f0f0f;
+        x = (x ^ (x >> 4)) & 0x00ff00ff;
+        x = (x ^ (x >> 8)) & 0x0000ffff;
+        return x;
+    }
 
     // FVector -> System.Numerics.Vector
 

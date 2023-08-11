@@ -80,9 +80,15 @@ namespace CUE4Parse.FileProvider
                                     }
                                 }
                             }
-                            else
+                            else if (!string.IsNullOrWhiteSpace(g.Value))
                             {
                                 _gameDisplayName = g.Value;
+                            }
+                            else
+                            {
+                                inst.Clear();
+                                DefaultGame.FindPropertyInstructions("/Script/EngineSettings.GeneralProjectSettings", "ProjectName", inst);
+                                if (inst.Count > 0) _gameDisplayName = inst[0].Value;
                             }
                         }
                     }

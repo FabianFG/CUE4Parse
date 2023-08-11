@@ -246,6 +246,19 @@ namespace CUE4Parse.UE4.Assets
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(ResolvedObject? other)
+            => other != null && ExportIndex == other.ExportIndex && Name == other.Name && Package == other.Package;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object? obj) => obj is ResolvedObject other && Equals(other);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ExportIndex, Name.GetHashCode(), Package.GetHashCode());
+        }
+
         public override string ToString() => GetFullName();
     }
 

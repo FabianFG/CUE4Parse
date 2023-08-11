@@ -20,7 +20,7 @@ public class FCustomVersionContainer
 
     public FCustomVersionContainer(IEnumerable<FCustomVersion>? versions)
     {
-        Versions = (versions ?? Array.Empty<FCustomVersion>()) .ToArray();
+        Versions = (versions ?? Array.Empty<FCustomVersion>()).ToArray();
     }
 
     public FCustomVersionContainer(FArchive Ar, ECustomVersionSerializationFormat format = ECustomVersionSerializationFormat.Latest) : this()
