@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Objects.Core.Serialization;
 
@@ -81,9 +82,15 @@ public class FCustomVersionContainerConverter : JsonConverter<FCustomVersionCont
         serializer.Serialize(writer, value?.Versions);
     }
 
-    public override FCustomVersionContainer ReadJson(JsonReader reader, Type objectType, FCustomVersionContainer? existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
+    public override FCustomVersionContainer ReadJson(JsonReader reader, Type objectType, FCustomVersionContainer? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
+        if (reader.TokenType != JsonToken.StartArray) throw new JsonSerializationException("Expected StartArray token type while deserializing.");
+
+        var jsonToken = JToken.Load(reader);
+        if (jsonToken.Type != JTokenType.Array) throw new JsonSerializationException("Expected Array token type while deserializing.");
+
+        var versionsArray = jsonToken.ToObject<FCustomVersion[]>();
+
+        return new FCustomVersionContainer(versionsArray);
     }
 }
