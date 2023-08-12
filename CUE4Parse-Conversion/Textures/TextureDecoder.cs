@@ -110,15 +110,7 @@ public static class TextureDecoder
             var sizeY = mip.SizeY;
             DecodeTexture(mip, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
-            var bitmap = InstallPixels(data, new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
-            if (!texture.RenderNearestNeighbor)
-            {
-                return bitmap;
-            }
-
-            var resized = bitmap.Resize(new SKImageInfo(sizeX, sizeY), SKFilterQuality.None);
-            bitmap.Dispose();
-            return resized;
+            return InstallPixels(data, new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
         }
 
         return null;

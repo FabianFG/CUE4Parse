@@ -42,5 +42,79 @@ namespace CUE4Parse_Conversion.Animations.PSA
             LoopingCount = 1;
             Tracks = new List<CAnimTrack>(OriginalSequence.GetNumTracks());
         }
+
+        public void Retarget(USkeleton skeleton)
+        {
+            for (int skeletonBoneIndex = 0; skeletonBoneIndex < Tracks.Count; skeletonBoneIndex++)
+            {
+                switch (skeleton.BoneTree[skeletonBoneIndex])
+                {
+                    case EBoneTranslationRetargetingMode.Skeleton:
+                    {
+                        var targetTransform = RetargetBasePose?[skeletonBoneIndex] ?? skeleton.ReferenceSkeleton.FinalRefBonePose[skeletonBoneIndex];
+                        for (int i = 0; i < Tracks[skeletonBoneIndex].KeyPos.Length; i++)
+                        {
+                            Tracks[skeletonBoneIndex].KeyPos[i] = targetTransform.Translation;
+                        }
+                        break;
+                    }
+                    case EBoneTranslationRetargetingMode.AnimationScaled:
+                    {
+                        for (int i = 0; i < Tracks[skeletonBoneIndex].KeyPos.Length; i++)
+                        {
+                            var sourceTranslationLength = skeleton.ReferenceSkeleton.FinalRefBonePose[skeletonBoneIndex].Translation.Size();
+                            if (sourceTranslationLength > UnrealMath.KindaSmallNumber)
+                            {
+                                var targetTranslationLength = RetargetBasePose?[skeletonBoneIndex].Translation.Size() ?? sourceTranslationLength;
+                                Tracks[skeletonBoneIndex].KeyPos[i].Scale(targetTranslationLength / sourceTranslationLength);
+                            }
+                        }
+                        break;
+                    }
+                    case EBoneTranslationRetargetingMode.AnimationRelative:
+                    {
+                        var refPoseTransform  = RetargetBasePose?[skeletonBoneIndex] ?? skeleton.ReferenceSkeleton.FinalRefBonePose[skeletonBoneIndex];
+                        for (int i = 0; i < Tracks[skeletonBoneIndex].KeyQuat.Length; i++)
+                        {
+                            Tracks[skeletonBoneIndex].KeyQuat[i] = Tracks[skeletonBoneIndex].KeyQuat[i] * FQuat.Conjugate(Tracks[skeletonBoneIndex].KeyQuat[i]) * refPoseTransform.Rotation;
+                            Tracks[skeletonBoneIndex].KeyQuat[i].Normalize();
+                        }
+                        for (int i = 0; i < Tracks[skeletonBoneIndex].KeyPos.Length; i++)
+                        {
+                            Tracks[skeletonBoneIndex].KeyPos[i] += refPoseTransform.Translation - Tracks[skeletonBoneIndex].KeyPos[i];
+                        }
+                        for (int i = 0; i < Tracks[skeletonBoneIndex].KeyScale.Length; i++)
+                        {
+                            Tracks[skeletonBoneIndex].KeyScale[i] *= refPoseTransform.Scale3D * Tracks[skeletonBoneIndex].KeyScale[i];
+                        }
+                        break;
+                    }
+                    case EBoneTranslationRetargetingMode.OrientAndScale:
+                    {
+                        var sourceSkelTrans = skeleton.ReferenceSkeleton.FinalRefBonePose[skeletonBoneIndex].Translation;
+                        var targetSkelTrans = RetargetBasePose?[skeletonBoneIndex].Translation ?? sourceSkelTrans;
+
+                        if (!sourceSkelTrans.Equals(targetSkelTrans))
+                        {
+                            var sourceSkelTransLength = sourceSkelTrans.Size();
+                            var targetSkelTransLength = targetSkelTrans.Size();
+                            if (!UnrealMath.IsNearlyZero(sourceSkelTransLength * targetSkelTransLength))
+                            {
+                                var sourceSkelTransDir = sourceSkelTrans / sourceSkelTransLength;
+                                var targetSkelTransDir = targetSkelTrans / targetSkelTransLength;
+
+                                var deltaRotation = FQuat.FindBetweenNormals(sourceSkelTransDir, targetSkelTransDir);
+                                var scale = targetSkelTransLength / sourceSkelTransLength;
+                                for (int i = 0; i < Tracks[skeletonBoneIndex].KeyPos.Length; i++)
+                                {
+                                    Tracks[skeletonBoneIndex].KeyPos[i] = deltaRotation.RotateVector(Tracks[skeletonBoneIndex].KeyPos[i]) * scale;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
