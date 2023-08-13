@@ -18,12 +18,17 @@ public abstract class UTexture : UUnrealMaterial
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public bool SRGB { get; private set; }
+    public bool RenderNearestNeighbor { get; private set; }
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
 
-    public bool IsVirtual => PlatformData.VTData != null;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
-    public bool RenderNearestNeighbor { get; private set; }
+    public bool IsHDR => CompressionSettings is
+        TextureCompressionSettings.TC_HDR or
+        TextureCompressionSettings.TC_HDR_F32 or
+        TextureCompressionSettings.TC_HDR_Compressed or
+        TextureCompressionSettings.TC_HalfFloat or
+        TextureCompressionSettings.TC_SingleFloat;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
