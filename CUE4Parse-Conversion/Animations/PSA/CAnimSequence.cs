@@ -43,7 +43,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
             Tracks = new List<CAnimTrack>(OriginalSequence.GetNumTracks());
         }
 
-        public void Retarget(USkeleton skeleton)
+        public void RetargetTracks(USkeleton skeleton)
         {
             for (int skeletonBoneIndex = 0; skeletonBoneIndex < Tracks.Count; skeletonBoneIndex++)
             {

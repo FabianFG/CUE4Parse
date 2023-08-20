@@ -83,6 +83,7 @@ namespace CUE4Parse_Conversion
     {
         private readonly ExporterBase _exporterBase;
 
+        public Exporter(UObject export) : this(export, new ExporterOptions()) { }
         public Exporter(UObject export, ExporterOptions options)
         {
             _exporterBase = export switch
