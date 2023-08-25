@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -67,7 +69,8 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
     [StructFallback]
     public class FPoseDataContainer
     {
-        public FSmartName[] PoseNames;
+        public FSmartName[]? PoseNames_DEPRECATED;
+        public FName[]? PoseFNames;
         public FName[] Tracks;
         public FPoseAssetInfluences[] TrackPoseInfluenceIndices;
         public FPoseData[] Poses;
@@ -75,12 +78,27 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
 
         public FPoseDataContainer(FStructFallback fallback)
         {
-            PoseNames = fallback.GetOrDefault<FSmartName[]>(nameof(PoseNames));
-            PoseNames ??= fallback.GetOrDefault<FSmartName[]>("PoseFNames");
+            PoseNames_DEPRECATED = fallback.GetOrDefault<FSmartName[]>("PoseNames"); // FUE5MainStreamObjectVersion.Type.AnimationRemoveSmartNames
+            PoseFNames = fallback.GetOrDefault<FName[]>(nameof(PoseFNames));
             Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks));
             TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices));
             Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses));
             Curves = fallback.GetOrDefault<FAnimCurveBase[]>(nameof(Curves));
+        }
+
+        public IEnumerable<string> GetPoseNames()
+        {
+            if (PoseNames_DEPRECATED is not null)
+            {
+                return PoseNames_DEPRECATED.Select(x => x.DisplayName.Text);
+            }
+            
+            if (PoseFNames is not null)
+            {
+                return PoseFNames.Select(x => x.Text);
+            }
+
+            return Enumerable.Empty<string>();
         }
     }
 }
