@@ -76,6 +76,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
         public FPoseDataContainer(FStructFallback fallback)
         {
             PoseNames = fallback.GetOrDefault<FSmartName[]>(nameof(PoseNames));
+            PoseNames ??= fallback.GetOrDefault<FSmartName[]>("PoseFNames");
             Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks));
             TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices));
             Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses));
