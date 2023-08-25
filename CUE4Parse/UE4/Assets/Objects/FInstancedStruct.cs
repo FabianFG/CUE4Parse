@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -12,7 +13,19 @@ public class FInstancedStruct : IUStruct
 
     public FInstancedStruct(FAssetArchive Ar)
     {
-        var version = Ar.Read<byte>();
+        if (FInstancedStructCustomVersion.Get(Ar) < FInstancedStructCustomVersion.Type.CustomVersionAdded)
+        {
+            var headerOffset = Ar.Position;
+            var header = Ar.Read<uint>();
+            
+            const uint LegacyEditorHeader = 0xABABABAB;
+            if (header != LegacyEditorHeader)
+            {
+                Ar.Position = headerOffset;
+            }
+
+            _ = Ar.Read<byte>(); // Old Version
+        }
 
         var struc = new FPackageIndex(Ar);
         var serialSize = Ar.Read<int>();
