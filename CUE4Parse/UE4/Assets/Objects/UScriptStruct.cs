@@ -1,10 +1,10 @@
-using System;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -155,19 +155,5 @@ namespace CUE4Parse.UE4.Assets.Objects
         }
 
         public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
-    }
-
-    public class UScriptStructConverter : JsonConverter<UScriptStruct>
-    {
-        public override void WriteJson(JsonWriter writer, UScriptStruct value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value.StructType);
-        }
-
-        public override UScriptStruct ReadJson(JsonReader reader, Type objectType, UScriptStruct existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

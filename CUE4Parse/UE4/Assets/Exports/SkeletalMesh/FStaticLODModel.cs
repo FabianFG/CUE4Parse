@@ -244,7 +244,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 else
                 {
                     var bulk = new FByteBulkData(Ar);
-                    if (bulk.Header.ElementCount > 0)
+                    if (bulk.Header.ElementCount > 0 && bulk.Data != null)
                     {
                         using (var tempAr = new FByteArchive("LodReader", bulk.Data, Ar.Versions))
                         {
@@ -418,79 +418,6 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 if (Sections[i].HasClothData)
                     return true;
             return false;
-        }
-    }
-
-    public class FStaticLODModelConverter : JsonConverter<FStaticLODModel>
-    {
-        public override void WriteJson(JsonWriter writer, FStaticLODModel value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("Sections");
-            serializer.Serialize(writer, value.Sections);
-
-            // writer.WritePropertyName("Indices");
-            // serializer.Serialize(writer, value.Indices);
-
-            // writer.WritePropertyName("ActiveBoneIndices");
-            // serializer.Serialize(writer, value.ActiveBoneIndices);
-
-            writer.WritePropertyName("NumVertices");
-            writer.WriteValue(value.NumVertices);
-
-            writer.WritePropertyName("NumTexCoords");
-            writer.WriteValue(value.NumTexCoords);
-
-            // writer.WritePropertyName("RequiredBones");
-            // serializer.Serialize(writer, value.RequiredBones);
-
-            if (value.MorphTargetVertexInfoBuffers != null)
-            {
-                writer.WritePropertyName("MorphTargetVertexInfoBuffers");
-                serializer.Serialize(writer, value.MorphTargetVertexInfoBuffers);
-            }
-
-            if (value.VertexAttributeBuffers != null)
-            {
-                writer.WritePropertyName("VertexAttributeBuffers");
-                serializer.Serialize(writer, value.VertexAttributeBuffers);
-            }
-
-            writer.WritePropertyName("VertexBufferGPUSkin");
-            serializer.Serialize(writer, value.VertexBufferGPUSkin);
-
-            // writer.WritePropertyName("ColorVertexBuffer");
-            // serializer.Serialize(writer, value.ColorVertexBuffer);
-
-            // writer.WritePropertyName("AdjacencyIndexBuffer");
-            // serializer.Serialize(writer, value.AdjacencyIndexBuffer);
-
-            if (value.Chunks.Length > 0)
-            {
-                writer.WritePropertyName("Chunks");
-                serializer.Serialize(writer, value.Chunks);
-
-                // writer.WritePropertyName("ClothVertexBuffer");
-                // serializer.Serialize(writer, value.ClothVertexBuffer);
-            }
-
-            if (value.MeshToImportVertexMap.Length > 0)
-            {
-                // writer.WritePropertyName("MeshToImportVertexMap");
-                // serializer.Serialize(writer, value.MeshToImportVertexMap);
-
-                writer.WritePropertyName("MaxImportVertex");
-                serializer.Serialize(writer, value.MaxImportVertex);
-            }
-
-            writer.WriteEndObject();
-        }
-
-        public override FStaticLODModel ReadJson(JsonReader reader, Type objectType, FStaticLODModel existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

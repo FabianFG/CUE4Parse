@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public FRigVMRegisterOffset[] RegisterOffsets;
         public string[] ScriptStructPaths;
         public ulong TotalBytes;
-        public object View; // View can have dynamically different data, so it's just object here
+        public object? View; // View can have dynamically different data, so it's just object here
 
         public FRigVMMemoryContainer(FAssetArchive Ar)
         {

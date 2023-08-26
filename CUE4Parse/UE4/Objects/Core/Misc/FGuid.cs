@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
@@ -118,22 +116,5 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
 
         public static implicit operator FGuid(Guid g) => new(g.ToString().Replace("-", ""));
-    }
-
-    public class FGuidConverter : JsonConverter<FGuid>
-    {
-        public override void WriteJson(JsonWriter writer, FGuid value, JsonSerializer serializer)
-        {
-            writer.WriteValue(value.ToString(EGuidFormats.UniqueObjectGuid));
-        }
-
-        public override FGuid ReadJson(JsonReader reader, Type objectType, FGuid existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            if (reader.Value is not string s)
-                throw new JsonSerializationException();
-
-            return new FGuid(s.Replace("-", ""));
-        }
     }
 }

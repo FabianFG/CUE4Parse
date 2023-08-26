@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool TwoSided { get; private set; }
         public bool bDisableDepthTest { get; private set; }
         public bool bIsMasked { get; private set; }
-        public FPackageIndex[] Expressions { get; private set; }
+        public FPackageIndex[] Expressions { get; private set; } = Array.Empty<FPackageIndex>();
         public EBlendMode BlendMode { get; private set; } = EBlendMode.BLEND_Opaque;
         public EMaterialShadingModel ShadingModel { get; private set; } = EMaterialShadingModel.MSM_Unlit;
         public float OpacityMaskClipValue { get; private set; } = 0.333f;
@@ -32,10 +32,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             TwoSided = GetOrDefault<bool>(nameof(TwoSided));
             bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
             bIsMasked = GetOrDefault<bool>(nameof(bIsMasked));
-            Expressions = GetOrDefault(nameof(Expressions), Array.Empty<FPackageIndex>());
-            BlendMode = GetOrDefault<EBlendMode>(nameof(BlendMode));
-            ShadingModel = GetOrDefault<EMaterialShadingModel>(nameof(ShadingModel));
-            OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), 0.333f);
+            Expressions = GetOrDefault(nameof(Expressions), Expressions);
+            BlendMode = GetOrDefault(nameof(BlendMode), BlendMode);
+            ShadingModel = GetOrDefault(nameof(ShadingModel), ShadingModel);
+            OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), OpacityMaskClipValue);
 
             // 4.25+
             if (Ar.Game >= EGame.GAME_UE4_25)
@@ -96,7 +96,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
                         if (resolved?.Class == null || !resolved.TryLoad(out var tex) || tex is not UTexture texture) continue;
 
                         _displayedReferencedTextures.Add(resolved);
-                        ReferencedTextures.Add(texture);                     
+                        ReferencedTextures.Add(texture);
                     }
                     break;
                 }
@@ -238,10 +238,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
                 switch (materialExpression)
                 {
-                    case UMaterialExpressionTextureSampleParameter textureSample:
+                    case UMaterialExpressionTextureSampleParameter { Texture: not null } textureSample:
                         parameters.VerifyTexture(textureSample.ParameterName.Text, textureSample.Texture, true, textureSample.SamplerType);
                         break;
-                    case UMaterialExpressionTextureBase textureBase:
+                    case UMaterialExpressionTextureBase { Texture: not null } textureBase:
                         parameters.VerifyTexture(textureBase.Texture.Name, textureBase.Texture, true, textureBase.SamplerType);
                         break;
                     case UMaterialExpressionVectorParameter vectorParameter:

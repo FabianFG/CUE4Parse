@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
@@ -46,34 +45,6 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 UVChannelData = new FMeshUVChannelInfo(Ar);
 
             if (Ar.Game == EGame.GAME_CalabiYau) Ar.Position += 4;
-        }
-    }
-
-    public class FSkeletalMaterialConverter : JsonConverter<FSkeletalMaterial>
-    {
-        public override void WriteJson(JsonWriter writer, FSkeletalMaterial value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("MaterialSlotName");
-            serializer.Serialize(writer, value.MaterialSlotName);
-
-            writer.WritePropertyName("Material");
-            serializer.Serialize(writer, value.Material);
-
-            writer.WritePropertyName("ImportedMaterialSlotName");
-            serializer.Serialize(writer, value.ImportedMaterialSlotName);
-
-            writer.WritePropertyName("UVChannelData");
-            serializer.Serialize(writer, value.UVChannelData);
-
-            writer.WriteEndObject();
-        }
-
-        public override FSkeletalMaterial ReadJson(JsonReader reader, Type objectType, FSkeletalMaterial existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

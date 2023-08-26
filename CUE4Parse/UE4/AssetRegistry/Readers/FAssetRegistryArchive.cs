@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.AssetRegistry.Objects;
@@ -18,6 +19,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         {
             baseArchive = Ar;
             Header = header;
+            NameMap = Array.Empty<FNameEntrySerialized>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -27,27 +26,6 @@ namespace CUE4Parse.GameTypes.FF7.Objects
                     Entries.Add(key.Text, val);
                 }
             }
-        }
-    }
-
-    public class FEndTextResourceStringsConverter : JsonConverter<FEndTextResourceStrings>
-    {
-        public override void WriteJson(JsonWriter writer, FEndTextResourceStrings value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            if (value.Entries?.Count > 0)
-            {
-                writer.WritePropertyName("Entries");
-                serializer.Serialize(writer, value.Entries);
-            }
-
-            writer.WriteEndObject();
-        }
-
-        public override FEndTextResourceStrings ReadJson(JsonReader reader, Type objectType, FEndTextResourceStrings? existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

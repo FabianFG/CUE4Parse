@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -145,20 +144,6 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
         }
 
         public override string ToString() => Text;
-    }
-
-    public class FTextConverter : JsonConverter<FText>
-    {
-        public override void WriteJson(JsonWriter writer, FText value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value.TextHistory);
-        }
-
-        public override FText ReadJson(JsonReader reader, Type objectType, FText existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public abstract class FTextHistory : IUStruct

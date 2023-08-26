@@ -1,10 +1,8 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects
+namespace CUE4Parse.UE4.Assets.Objects.Properties
 {
     [JsonConverter(typeof(SoftObjectPropertyConverter))]
     public class SoftObjectProperty : FPropertyTagType<FSoftObjectPath>
@@ -25,20 +23,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                 //    Ar.Position += 16 - (Ar.Position - pos);
                 //}
             }
-        }
-    }
-
-    public class SoftObjectPropertyConverter : JsonConverter<SoftObjectProperty>
-    {
-        public override void WriteJson(JsonWriter writer, SoftObjectProperty value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value.Value);
-        }
-
-        public override SoftObjectProperty ReadJson(JsonReader reader, Type objectType, SoftObjectProperty existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

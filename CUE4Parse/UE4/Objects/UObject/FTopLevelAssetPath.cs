@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -30,20 +29,6 @@ namespace CUE4Parse.UE4.Objects.UObject
             builder.Append(PackageName);
             if (!AssetName.IsNone) builder.Append('.').Append(AssetName);
             return builder.ToString();
-        }
-    }
-
-    public class FTopLevelAssetPathConverter : JsonConverter<FTopLevelAssetPath>
-    {
-        public override void WriteJson(JsonWriter writer, FTopLevelAssetPath value, JsonSerializer serializer)
-        {
-            writer.WriteValue(value.ToString());
-        }
-
-        public override FTopLevelAssetPath ReadJson(JsonReader reader, Type objectType, FTopLevelAssetPath existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

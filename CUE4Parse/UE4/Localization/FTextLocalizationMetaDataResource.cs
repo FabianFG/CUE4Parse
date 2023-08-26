@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -15,7 +14,7 @@ namespace CUE4Parse.UE4.Localization
         public readonly string NativeCulture;
         public readonly string NativeLocRes;
         public readonly string[]? CompiledCultures;
-        
+
         public FTextLocalizationMetaDataResource(FArchive Ar)
         {
             var versionNumber = ELocMetaVersion.Initial;
@@ -29,7 +28,7 @@ namespace CUE4Parse.UE4.Localization
                 Ar.Position = 0;
                 Log.Warning($"LocMeta '{Ar.Name}' failed the magic number check!");
             }
-            
+
             // Is this LocRes file too new to load?
             if (versionNumber > ELocMetaVersion.Latest)
             {
@@ -38,7 +37,7 @@ namespace CUE4Parse.UE4.Localization
 
             NativeCulture = Ar.ReadFString();
             NativeLocRes = Ar.ReadFString();
-            
+
             if (versionNumber >= ELocMetaVersion.AddedCompiledCultures)
             {
                 CompiledCultures = Ar.ReadArray(Ar.ReadFString);
@@ -47,31 +46,6 @@ namespace CUE4Parse.UE4.Localization
             {
                 CompiledCultures = null;
             }
-        }
-    }
-    
-    public class FTextLocalizationMetaDataResourceConverter : JsonConverter<FTextLocalizationMetaDataResource>
-    {
-        public override void WriteJson(JsonWriter writer, FTextLocalizationMetaDataResource value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            writer.WritePropertyName("NativeCulture");
-            writer.WriteValue(value.NativeCulture);
-            
-            writer.WritePropertyName("NativeLocRes");
-            writer.WriteValue(value.NativeLocRes);
-            
-            writer.WritePropertyName("CompiledCultures");
-            serializer.Serialize(writer, value.CompiledCultures);
-
-            writer.WriteEndObject();
-        }
-
-        public override FTextLocalizationMetaDataResource ReadJson(JsonReader reader, Type objectType, FTextLocalizationMetaDataResource existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

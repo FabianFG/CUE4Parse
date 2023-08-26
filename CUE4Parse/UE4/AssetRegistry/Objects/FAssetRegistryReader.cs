@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             var mapHandle = FPartialMapHandle.MakeFullHandle(Tags, size);
             foreach (var m in mapHandle.GetEnumerable())
             {
-                ret[m.Key] = FValueHandle.GetString(Tags, m.Value);
+                ret[m.Key] = FValueHandle.GetString(Tags, m.Value) ?? $"UNK_Value_{m.Value.Index}";
             }
 
             assetData.TagsAndValues = ret;

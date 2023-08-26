@@ -6,10 +6,10 @@ namespace CUE4Parse.UE4.Objects.RigVM
 {
     public class URigVM : Assets.Exports.UObject
     {
-        public FRigVMMemoryContainer WorkMemoryStorage;
-        public FRigVMMemoryContainer LiteralMemoryStorage;
-        public FRigVMByteCode ByteCodeStorage;
-        public FRigVMParameter[] Parameters;
+        public FRigVMMemoryContainer? WorkMemoryStorage;
+        public FRigVMMemoryContainer? LiteralMemoryStorage;
+        public FRigVMByteCode? ByteCodeStorage;
+        public FRigVMParameter[]? Parameters;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {

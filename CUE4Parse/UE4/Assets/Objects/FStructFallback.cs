@@ -70,26 +70,4 @@ namespace CUE4Parse.UE4.Assets.Objects
             return obj.Length > 0;
         }
     }
-
-    public class FStructFallbackConverter : JsonConverter<FStructFallback>
-    {
-        public override void WriteJson(JsonWriter writer, FStructFallback value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            foreach (var property in value.Properties)
-            {
-                writer.WritePropertyName(property.Name.Text);
-                serializer.Serialize(writer, property.Tag);
-            }
-
-            writer.WriteEndObject();
-        }
-
-        public override FStructFallback ReadJson(JsonReader reader, Type objectType, FStructFallback existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }

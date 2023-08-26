@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
@@ -49,26 +49,5 @@ namespace CUE4Parse.UE4.Assets.Objects
         }
 
         public override string ToString() => $"{InnerType}[{Properties.Count}]";
-    }
-
-    public class UScriptArrayConverter : JsonConverter<UScriptArray>
-    {
-        public override void WriteJson(JsonWriter writer, UScriptArray value, JsonSerializer serializer)
-        {
-            writer.WriteStartArray();
-
-            foreach (var property in value.Properties)
-            {
-                serializer.Serialize(writer, property);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        public override UScriptArray ReadJson(JsonReader reader, Type objectType, UScriptArray existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
@@ -21,7 +20,7 @@ namespace CUE4Parse.UE4.Wwise
         public Dictionary<uint, string>? IdToString { get; }
         public string? Platform { get; }
         public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
-        
+
         public WwiseReader(FArchive Ar)
         {
             IdToString = new Dictionary<uint, string>();
@@ -31,13 +30,13 @@ namespace CUE4Parse.UE4.Wwise
                 var sectionIdentifier = Ar.Read<ESectionIdentifier>();
                 var sectionLength = Ar.Read<int>();
                 var position = Ar.Position;
-                
+
                 switch (sectionIdentifier)
                 {
                     case ESectionIdentifier.AKPK:
                         if (!Ar.ReadBoolean())
                             throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
-                        
+
                         Ar.Position += 16;
                         Folders = Ar.ReadArray(() => new AkFolder(Ar));
                         foreach (var folder in Folders) folder.PopulateName(Ar);
@@ -48,7 +47,7 @@ namespace CUE4Parse.UE4.Wwise
                             {
                                 var entry = new AkEntry(Ar);
                                 entry.Path = Folders[entry.FolderId].Name;
-                                
+
                                 var savePos = Ar.Position;
                                 Ar.Position = entry.Offset;
                                 entry.IsSoundBank = Ar.Read<ESectionIdentifier>() == ESectionIdentifier.BKHD;
@@ -112,7 +111,7 @@ namespace CUE4Parse.UE4.Wwise
 #endif
                         break;
                 }
-                
+
                 if (Ar.Position != position + sectionLength)
                 {
                     var shouldBe = position + sectionLength;
@@ -123,7 +122,7 @@ namespace CUE4Parse.UE4.Wwise
                 }
             }
 
-            
+
             if (Folders != null)
             {
                 foreach (var folder in Folders)
@@ -135,43 +134,6 @@ namespace CUE4Parse.UE4.Wwise
                     }
                 }
             }
-        }
-    }
-    
-    public class WwiseConverter : JsonConverter<WwiseReader>
-    {
-        public override void WriteJson(JsonWriter writer, WwiseReader value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            
-            writer.WritePropertyName("Header");
-            serializer.Serialize(writer, value.Header);
-            
-            writer.WritePropertyName("Folders");
-            serializer.Serialize(writer, value.Folders);
-
-            writer.WritePropertyName("Initialization");
-            serializer.Serialize(writer, value.Initialization);
-            
-            writer.WritePropertyName("WemIndexes");
-            serializer.Serialize(writer, value.WemIndexes);
-            
-            writer.WritePropertyName("Hierarchy");
-            serializer.Serialize(writer, value.Hierarchy);
-            
-            writer.WritePropertyName("IdToString");
-            serializer.Serialize(writer, value.IdToString);
-            
-            writer.WritePropertyName("Platform");
-            writer.WriteValue(value.Platform);
-            
-            writer.WriteEndObject();
-        }
-
-        public override WwiseReader ReadJson(JsonReader reader, Type objectType, WwiseReader existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

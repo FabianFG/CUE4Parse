@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -138,29 +137,5 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override string ToString() => string.IsNullOrEmpty(SubPathString)
             ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
             : $"{AssetPathName.Text}:{SubPathString}";
-    }
-
-    public class FSoftObjectPathConverter : JsonConverter<FSoftObjectPath>
-    {
-        public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
-        {
-            /*var path = value.ToString();
-            writer.WriteValue(path.Length > 0 ? path : "None");*/
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("AssetPathName");
-            serializer.Serialize(writer, value.AssetPathName);
-
-            writer.WritePropertyName("SubPathString");
-            writer.WriteValue(value.SubPathString);
-
-            writer.WriteEndObject();
-        }
-
-        public override FSoftObjectPath ReadJson(JsonReader reader, Type objectType, FSoftObjectPath existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

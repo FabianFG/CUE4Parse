@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.WriteJson(writer, serializer);
 
-            if (Next != null)
+            if (Next is { IsNull: false })
             {
                 writer.WritePropertyName("Next");
                 serializer.Serialize(writer, Next);

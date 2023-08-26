@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FStaticSwitchParameter[] StaticSwitchParameters;
         public FStaticComponentMaskParameter[] StaticComponentMaskParameters;
         public FStaticTerrainLayerWeightParameter[] TerrainLayerWeightParameters;
-        public FStaticMaterialLayersParameter[] MaterialLayersParameters;
+        public FStaticMaterialLayersParameter[]? MaterialLayersParameters;
 
         public FStaticParameterSet(FArchive Ar)
         {

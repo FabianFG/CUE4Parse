@@ -77,11 +77,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
     public class UInt8Property : UNumericProperty { }
 
-    public class UInt16Property : UNumericProperty { }
-
     public class UIntProperty : UNumericProperty { }
-
-    public class UInt64Property : UNumericProperty { }
 
     public class UUInt16Property : UNumericProperty { }
 

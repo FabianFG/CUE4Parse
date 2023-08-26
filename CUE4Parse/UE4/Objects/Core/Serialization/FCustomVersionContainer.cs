@@ -73,17 +73,3 @@ public class FCustomVersionContainer
         return -1;
     }
 }
-
-public class FCustomVersionContainerConverter : JsonConverter<FCustomVersionContainer>
-{
-    public override void WriteJson(JsonWriter writer, FCustomVersionContainer? value, JsonSerializer serializer)
-    {
-        serializer.Serialize(writer, value?.Versions);
-    }
-
-    public override FCustomVersionContainer ReadJson(JsonReader reader, Type objectType, FCustomVersionContainer? existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}

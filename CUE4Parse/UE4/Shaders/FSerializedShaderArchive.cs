@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -26,52 +25,6 @@ namespace CUE4Parse.UE4.Shaders
             ShaderEntries = Ar.ReadArray<FShaderCodeEntry>();
             PreloadEntries = Ar.ReadArray<FFileCachePreloadEntry>();
             ShaderIndices = Ar.ReadArray<uint>();
-        }
-
-        public class FSerializedShaderArchiveConverter : JsonConverter<FSerializedShaderArchive>
-        {
-            public override void WriteJson(JsonWriter writer, FSerializedShaderArchive value, JsonSerializer serializer)
-            {
-                writer.WriteStartObject();
-
-                writer.WritePropertyName("ShaderMapHashes");
-                writer.WriteStartArray();
-                foreach (var shaderMapHash in value.ShaderMapHashes)
-                {
-                    serializer.Serialize(writer, shaderMapHash.Hash);
-                }
-
-                writer.WriteEndArray();
-
-                writer.WritePropertyName("ShaderHashes");
-                writer.WriteStartArray();
-                foreach (var shaderHash in value.ShaderHashes)
-                {
-                    serializer.Serialize(writer, shaderHash.Hash);
-                }
-
-                writer.WriteEndArray();
-
-                writer.WritePropertyName("ShaderMapEntries");
-                serializer.Serialize(writer, value.ShaderMapEntries);
-
-                writer.WritePropertyName("ShaderEntries");
-                serializer.Serialize(writer, value.ShaderEntries);
-
-                writer.WritePropertyName("PreloadEntries");
-                serializer.Serialize(writer, value.PreloadEntries);
-
-                writer.WritePropertyName("ShaderIndices");
-                serializer.Serialize(writer, value.ShaderIndices);
-
-                writer.WriteEndObject();
-            }
-
-            public override FSerializedShaderArchive ReadJson(JsonReader reader, Type objectType, FSerializedShaderArchive existingValue, bool hasExistingValue,
-                JsonSerializer serializer)
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 

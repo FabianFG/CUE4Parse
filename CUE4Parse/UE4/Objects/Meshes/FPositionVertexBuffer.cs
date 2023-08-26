@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -32,31 +31,6 @@ namespace CUE4Parse.UE4.Objects.Meshes
             }
             if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
             Verts = Ar.ReadBulkArray<FVector>();
-        }
-    }
-
-    public class FPositionVertexBufferConverter : JsonConverter<FPositionVertexBuffer>
-    {
-        public override void WriteJson(JsonWriter writer, FPositionVertexBuffer value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            // writer.WritePropertyName("Verts");
-            // serializer.Serialize(writer, value.Verts);
-
-            writer.WritePropertyName("Stride");
-            writer.WriteValue(value.Stride);
-
-            writer.WritePropertyName("NumVertices");
-            writer.WriteValue(value.NumVertices);
-
-            writer.WriteEndObject();
-        }
-
-        public override FPositionVertexBuffer ReadJson(JsonReader reader, Type objectType, FPositionVertexBuffer existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

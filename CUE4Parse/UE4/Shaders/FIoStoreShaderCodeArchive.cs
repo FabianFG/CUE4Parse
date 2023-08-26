@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -31,55 +30,6 @@ namespace CUE4Parse.UE4.Shaders
             ShaderEntries = Ar.ReadArray<FIoStoreShaderCodeEntry>();
             ShaderGroupEntries = Ar.ReadArray<FIoStoreShaderGroupEntry>();
             ShaderIndices = Ar.ReadArray<uint>();
-        }
-    }
-
-    public class FIoStoreShaderCodeArchiveConverter : JsonConverter<FIoStoreShaderCodeArchive>
-    {
-        public override void WriteJson(JsonWriter writer, FIoStoreShaderCodeArchive value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("ShaderMapHashes");
-            writer.WriteStartArray();
-            foreach (var shaderMapHash in value.ShaderMapHashes)
-            {
-                serializer.Serialize(writer, shaderMapHash.Hash);
-            }
-
-            writer.WriteEndArray();
-
-            writer.WritePropertyName("ShaderHashes");
-            writer.WriteStartArray();
-            foreach (var shaderHash in value.ShaderHashes)
-            {
-                serializer.Serialize(writer, shaderHash.Hash);
-            }
-
-            writer.WriteEndArray();
-
-            writer.WritePropertyName("ShaderGroupIoHashes");
-            serializer.Serialize(writer, value.ShaderGroupIoHashes);
-
-            writer.WritePropertyName("ShaderMapEntries");
-            serializer.Serialize(writer, value.ShaderMapEntries);
-
-            writer.WritePropertyName("ShaderEntries");
-            serializer.Serialize(writer, value.ShaderEntries);
-
-            writer.WritePropertyName("ShaderGroupEntries");
-            serializer.Serialize(writer, value.ShaderGroupEntries);
-
-            writer.WritePropertyName("ShaderIndices");
-            serializer.Serialize(writer, value.ShaderIndices);
-
-            writer.WriteEndObject();
-        }
-
-        public override FIoStoreShaderCodeArchive ReadJson(JsonReader reader, Type objectType, FIoStoreShaderCodeArchive existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 

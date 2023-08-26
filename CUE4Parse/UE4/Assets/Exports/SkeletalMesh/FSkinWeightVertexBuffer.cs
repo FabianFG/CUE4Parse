@@ -121,6 +121,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                     }
                 }
             }
+
+            Weights ??= Array.Empty<FSkinWeightInfo>();
         }
 
         public static int MetadataSize(FArchive Ar)

@@ -110,7 +110,7 @@ namespace CUE4Parse.UE4.Objects.Engine
     [StructFallback]
     public class FExpressionInput : IUStruct
     {
-        public readonly FPackageIndex Expression;
+        public readonly FPackageIndex? Expression;
         public readonly int OutputIndex;
         public readonly FName InputName;
         public readonly int Mask;
@@ -167,12 +167,11 @@ namespace CUE4Parse.UE4.Objects.Engine
 
     public class UMaterialExpression : Assets.Exports.UObject
     {
-        public FPackageIndex Material { get; private set; }
+        public FPackageIndex? Material { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-
             Material = GetOrDefault<FPackageIndex>(nameof(Material));
         }
     }

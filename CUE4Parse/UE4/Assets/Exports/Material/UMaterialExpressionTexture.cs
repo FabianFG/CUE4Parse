@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class UMaterialExpressionTextureBase : UMaterialExpression
     {
-        public UTexture Texture { get; private set; }
+        public UTexture? Texture { get; private set; }
         public EMaterialSamplerType SamplerType { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -66,12 +66,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class UMaterialExpressionTextureSample : UMaterialExpressionTextureBase
     {
-        public FExpressionInput Coordinates { get; private set; }
-        public FExpressionInput TextureObject { get; private set; }
-        public FExpressionInput MipValue { get; private set; }
-        public FExpressionInput CoordinatesDX { get; private set; }
-        public FExpressionInput CoordinatesDY { get; private set; }
-        public FExpressionInput AutomaticViewMipBiasValue { get; private set; }
+        public FExpressionInput? Coordinates { get; private set; }
+        public FExpressionInput? TextureObject { get; private set; }
+        public FExpressionInput? MipValue { get; private set; }
+        public FExpressionInput? CoordinatesDX { get; private set; }
+        public FExpressionInput? CoordinatesDY { get; private set; }
+        public FExpressionInput? AutomaticViewMipBiasValue { get; private set; }
         public ETextureMipValueMode MipValueMode { get; private set; }
         public ESamplerSourceMode SamplerSource { get; private set; }
 

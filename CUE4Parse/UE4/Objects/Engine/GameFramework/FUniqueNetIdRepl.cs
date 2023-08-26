@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -22,20 +21,6 @@ namespace CUE4Parse.UE4.Objects.Engine.GameFramework
             {
                 UniqueNetId = null;
             }
-        }
-    }
-
-    public class FUniqueNetIdReplConverter : JsonConverter<FUniqueNetIdRepl>
-    {
-        public override void WriteJson(JsonWriter writer, FUniqueNetIdRepl value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value.UniqueNetId != null ? value.UniqueNetId : "INVALID");
-        }
-
-        public override FUniqueNetIdRepl ReadJson(JsonReader reader, Type objectType, FUniqueNetIdRepl existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

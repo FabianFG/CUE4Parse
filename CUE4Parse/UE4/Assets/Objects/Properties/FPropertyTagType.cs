@@ -11,7 +11,7 @@ using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace CUE4Parse.UE4.Assets.Objects
+namespace CUE4Parse.UE4.Assets.Objects.Properties
 {
     public enum ReadType : byte
     {
@@ -143,20 +143,6 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
 #endif
             return tagType;
-        }
-    }
-
-    public class FPropertyTagTypeConverter : JsonConverter<FPropertyTagType>
-    {
-        public override void WriteJson(JsonWriter writer, FPropertyTagType value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value);
-        }
-
-        public override FPropertyTagType ReadJson(JsonReader reader, Type objectType, FPropertyTagType existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

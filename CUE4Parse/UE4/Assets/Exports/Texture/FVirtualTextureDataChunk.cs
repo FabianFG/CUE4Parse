@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -43,42 +42,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 CodecPayloadOffset[layerIndex] = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<uint>() : Ar.Read<ushort>();
             }
             BulkData = new FByteBulkData(Ar);
-        }
-    }
-
-    public class FVirtualTextureDataChunkConverter : JsonConverter<FVirtualTextureDataChunk>
-    {
-        public override void WriteJson(JsonWriter writer, FVirtualTextureDataChunk value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("BulkData");
-            serializer.Serialize(writer, value.BulkData);
-
-            writer.WritePropertyName("SizeInBytes");
-            writer.WriteValue(value.SizeInBytes);
-
-            writer.WritePropertyName("CodecPayloadSize");
-            writer.WriteValue(value.CodecPayloadSize);
-
-            writer.WritePropertyName("CodecPayloadOffset");
-            serializer.Serialize(writer, value.CodecPayloadOffset);
-
-            writer.WritePropertyName("CodecType");
-            writer.WriteStartArray();
-            foreach (var codec in value.CodecType)
-            {
-                writer.WriteValue(codec.ToString());
-            }
-            writer.WriteEndArray();
-
-            writer.WriteEndObject();
-        }
-
-        public override FVirtualTextureDataChunk ReadJson(JsonReader reader, Type objectType, FVirtualTextureDataChunk existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

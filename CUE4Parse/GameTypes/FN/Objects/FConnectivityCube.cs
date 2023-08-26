@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -33,34 +32,6 @@ namespace CUE4Parse.GameTypes.FN.Objects
                 var data = Ar.ReadArray<int>(numWords);
                 Faces[i] = new BitArray(data) { Length = numBits };
             }
-        }
-    }
-
-    public class FConnectivityCubeConverter : JsonConverter<FConnectivityCube>
-    {
-        public override void WriteJson(JsonWriter writer, FConnectivityCube value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            for (int i = 0; i < value.Faces.Length; i++)
-            {
-                var face = value.Faces[i];
-                writer.WritePropertyName(((EFortConnectivityCubeFace) i).ToString());
-                writer.WriteStartArray();
-                for (int j = 0; j < face.Length; j++)
-                {
-                    writer.WriteValue(face[j]);
-                }
-                writer.WriteEndArray();
-            }
-
-            writer.WriteEndObject();
-        }
-
-        public override FConnectivityCube ReadJson(JsonReader reader, Type objectType, FConnectivityCube existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

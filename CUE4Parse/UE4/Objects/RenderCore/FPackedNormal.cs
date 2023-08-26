@@ -57,25 +57,6 @@ namespace CUE4Parse.UE4.Objects.RenderCore
         public static bool operator !=(FPackedNormal a, FPackedNormal b) => a.Data != b.Data || a.X != b.X || a.Y != b.Y || a.Z != b.Z || a.W != b.W;
     }
 
-    public class FPackedNormalConverter : JsonConverter<FPackedNormal>
-    {
-        public override void WriteJson(JsonWriter writer, FPackedNormal value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("Data");
-            writer.WriteValue(value.Data);
-
-            writer.WriteEndObject();
-        }
-
-        public override FPackedNormal ReadJson(JsonReader reader, Type objectType, FPackedNormal existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public struct FDeprecatedSerializedPackedNormal
     {
         public uint Data;

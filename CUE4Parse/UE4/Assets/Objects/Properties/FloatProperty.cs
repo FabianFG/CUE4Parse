@@ -1,8 +1,7 @@
 ﻿using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using System;
 
-namespace CUE4Parse.UE4.Assets.Objects
+namespace CUE4Parse.UE4.Assets.Objects.Properties
 {
     [JsonConverter(typeof(FloatPropertyConverter))]
     public class FloatProperty : FPropertyTagType<float>
@@ -14,20 +13,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                 ReadType.ZERO => 0,
                 _ => Ar.Read<float>()
             };
-        }
-    }
-
-    public class FloatPropertyConverter : JsonConverter<FloatProperty>
-    {
-        public override void WriteJson(JsonWriter writer, FloatProperty value, JsonSerializer serializer)
-        {
-            writer.WriteValue(value.Value);
-        }
-
-        public override FloatProperty ReadJson(JsonReader reader, Type objectType, FloatProperty existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

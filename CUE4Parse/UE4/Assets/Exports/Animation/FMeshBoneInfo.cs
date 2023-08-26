@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -31,27 +30,5 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         }
 
         public override string ToString() => $"{Name}";
-    }
-
-    public class FMeshBoneInfoConverter : JsonConverter<FMeshBoneInfo>
-    {
-        public override void WriteJson(JsonWriter writer, FMeshBoneInfo value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("Name");
-            serializer.Serialize(writer, value.Name);
-
-            writer.WritePropertyName("ParentIndex");
-            writer.WriteValue(value.ParentIndex);
-
-            writer.WriteEndObject();
-        }
-
-        public override FMeshBoneInfo ReadJson(JsonReader reader, Type objectType, FMeshBoneInfo existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

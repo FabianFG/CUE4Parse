@@ -2,7 +2,7 @@
 {
     public static class FValueHandle
     {
-        public static string GetString(FStore store, FValueId id)
+        public static string? GetString(FStore store, FValueId id)
         {
             return id.Type switch
             {

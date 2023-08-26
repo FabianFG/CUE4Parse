@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -66,29 +65,6 @@ namespace CUE4Parse.UE4.Shaders
                     // }
                     break;
             }
-        }
-    }
-
-    public class FShaderCodeArchiveConverter : JsonConverter<FShaderCodeArchive>
-    {
-        public override void WriteJson(JsonWriter writer, FShaderCodeArchive value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("SerializedShaders");
-            serializer.Serialize(writer, value.SerializedShaders);
-
-            // TODO: Try to read this as actual data.
-            // writer.WritePropertyName("ShaderCode");
-            // serializer.Serialize(writer, value.ShaderCode);
-
-            writer.WriteEndObject();
-        }
-
-        public override FShaderCodeArchive ReadJson(JsonReader reader, Type objectType, FShaderCodeArchive existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

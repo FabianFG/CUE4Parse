@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using Newtonsoft.Json;
@@ -37,27 +37,6 @@ namespace CUE4Parse.UE4.Assets.Objects
                 else
                     Log.Debug($"Failed to read element for index {i} in set");
             }
-        }
-    }
-
-    public class UScriptSetConverter : JsonConverter<UScriptSet>
-    {
-        public override void WriteJson(JsonWriter writer, UScriptSet value, JsonSerializer serializer)
-        {
-            writer.WriteStartArray();
-
-            foreach (var property in value.Properties)
-            {
-                serializer.Serialize(writer, property);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        public override UScriptSet ReadJson(JsonReader reader, Type objectType, UScriptSet existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

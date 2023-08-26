@@ -20,6 +20,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+
             SuperStruct = new FPackageIndex(Ar);
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveUField_Next)
             {

@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     public class FFieldPath
     {
         public List<FName> Path;
-        public FPackageIndex ResolvedOwner; //UStruct
+        public FPackageIndex? ResolvedOwner; //UStruct
 
         public FFieldPath()
         {
@@ -98,7 +98,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 default:
                     serializer.Serialize(writer, this);
                     break;
-            }  
+            }
         }
     }
 }

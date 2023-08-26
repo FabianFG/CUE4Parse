@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -17,7 +16,7 @@ public class FInstancedStruct : IUStruct
         {
             var headerOffset = Ar.Position;
             var header = Ar.Read<uint>();
-            
+
             const uint LegacyEditorHeader = 0xABABABAB;
             if (header != LegacyEditorHeader)
             {
@@ -38,18 +37,5 @@ public class FInstancedStruct : IUStruct
         {
             NonConstStruct = new FStructFallback(Ar, struc.Name);
         }
-    }
-}
-
-public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
-{
-    public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
-    {
-        serializer.Serialize(writer, value?.NonConstStruct);
-    }
-
-    public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
     }
 }

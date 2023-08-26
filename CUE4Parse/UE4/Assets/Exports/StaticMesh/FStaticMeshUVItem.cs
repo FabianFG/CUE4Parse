@@ -1,7 +1,5 @@
-using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Objects.RenderCore;
-using System.Linq;
 using CUE4Parse.UE4.Objects.Meshes;
 using Newtonsoft.Json;
 
@@ -51,28 +49,6 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 }
             }
             return uv;
-        }
-    }
-    
-    public class FStaticMeshUVItemConverter : JsonConverter<FStaticMeshUVItem>
-    {
-        public override void WriteJson(JsonWriter writer, FStaticMeshUVItem value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("Normal");
-            serializer.Serialize(writer, value.Normal);
-
-            writer.WritePropertyName("UV");
-            serializer.Serialize(writer, value.UV);
-
-            writer.WriteEndObject();
-        }
-
-        public override FStaticMeshUVItem ReadJson(JsonReader reader, Type objectType, FStaticMeshUVItem existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

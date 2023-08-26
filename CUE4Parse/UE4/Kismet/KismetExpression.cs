@@ -2,7 +2,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Versions;
-using System;
 using System.Text;
 using CUE4Parse.UE4.Assets.Readers;
 
@@ -29,26 +28,6 @@ public class FKismetPropertyPointer
     }
 }
 
-public class FKismetPropertyPointerConverter : JsonConverter<FKismetPropertyPointer>
-{
-    public override FKismetPropertyPointer? ReadJson(JsonReader reader, Type objectType, FKismetPropertyPointer? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void WriteJson(JsonWriter writer, FKismetPropertyPointer value, JsonSerializer serializer)
-    {
-        if (value.bNew)
-        {
-            value.New!.WriteJson(writer, serializer);
-        }
-        else
-        {
-            value.Old!.WriteJson(writer, serializer);
-        }
-    }
-}
-
 [JsonConverter(typeof(KismetExpressionConverter))]
 public abstract class KismetExpression
 {
@@ -68,21 +47,6 @@ public abstract class KismetExpression
     }
 }
 
-public class KismetExpressionConverter : JsonConverter<KismetExpression>
-{
-    public override void WriteJson(JsonWriter writer, KismetExpression value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-        value.WriteJson(writer, serializer);
-        writer.WriteEndObject();
-    }
-
-    public override KismetExpression ReadJson(JsonReader reader, Type objectType, KismetExpression existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 public abstract class KismetExpression<T> : KismetExpression
 {
     public T Value;
@@ -97,7 +61,7 @@ public abstract class KismetExpression<T> : KismetExpression
 
 public class EX_AddMulticastDelegate : KismetExpression
 {
-    public override EExprToken Token => EExprToken.EX_AddMulticastDelegate; 
+    public override EExprToken Token => EExprToken.EX_AddMulticastDelegate;
     public KismetExpression Delegate;
     public KismetExpression DelegateToAdd;
 
@@ -236,7 +200,7 @@ public class EX_CallMath : EX_FinalFunction
     public EX_CallMath(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_CallMulticastDelegate : KismetExpression 
+public class EX_CallMulticastDelegate : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_CallMulticastDelegate;
     public FPackageIndex StackNode;
@@ -830,19 +794,19 @@ public class EX_LocalFinalFunction : EX_FinalFunction
 
 public class EX_LocalOutVariable : EX_VariableBase
 {
-    public override EExprToken Token => EExprToken.EX_LocalOutVariable; 
+    public override EExprToken Token => EExprToken.EX_LocalOutVariable;
 
     public EX_LocalOutVariable(FKismetArchive Ar) : base(Ar) { }
 }
 
 public class EX_LocalVariable : EX_VariableBase
 {
-    public override EExprToken Token => EExprToken.EX_LocalVariable; 
+    public override EExprToken Token => EExprToken.EX_LocalVariable;
 
     public EX_LocalVariable(FKismetArchive Ar) : base(Ar) { }
 }
 
-public class EX_LocalVirtualFunction  : EX_VirtualFunction 
+public class EX_LocalVirtualFunction  : EX_VirtualFunction
 {
     public override EExprToken Token => EExprToken.EX_LocalVirtualFunction ;
 
@@ -1475,47 +1439,5 @@ public class FScriptText
                 KeyString = Ar.ReadExpression();
                 break;
         }
-    }
-}
-
-public class FScriptTextConverter : JsonConverter<FScriptText>
-{
-    public override void WriteJson(JsonWriter writer, FScriptText value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-        switch (value.TextLiteralType)
-        {
-            case EBlueprintTextLiteralType.Empty:
-                writer.WritePropertyName("SourceString");
-                writer.WriteValue("");
-                break;
-            case EBlueprintTextLiteralType.LocalizedText:
-                writer.WritePropertyName("SourceString");
-                serializer.Serialize(writer, value.SourceString);
-                writer.WritePropertyName("KeyString");
-                serializer.Serialize(writer, value.KeyString);
-                writer.WritePropertyName("Namespace");
-                serializer.Serialize(writer, value.Namespace);
-                break;
-            case EBlueprintTextLiteralType.InvariantText:
-            case EBlueprintTextLiteralType.LiteralString:
-                writer.WritePropertyName("SourceString");
-                serializer.Serialize(writer, value.SourceString);
-                break;
-            case EBlueprintTextLiteralType.StringTableEntry:
-                writer.WritePropertyName("StringTableAsset");
-                serializer.Serialize(writer, value.StringTableAsset);
-                writer.WritePropertyName("TableIdString");
-                serializer.Serialize(writer, value.TableIdString);
-                writer.WritePropertyName("KeyString");
-                serializer.Serialize(writer, value.KeyString);
-                break;
-        }
-        writer.WriteEndObject();
-    }
-
-    public override FScriptText? ReadJson(JsonReader reader, Type objectType, FScriptText? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
     }
 }
