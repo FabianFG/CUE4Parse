@@ -20,21 +20,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
                 bCooked = Ar.ReadBoolean();
             }
 
-            PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
-
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData)
+            var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+            if (bHasSkipSerializationPropertiesData)
             {
-                PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+                PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData)
+                {
+                    PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+                }
             }
 
             if (bCooked && (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
                             FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData))
             {
-                var renderDataSizeBytes = Ar.Read<long>();
-
+                var renderDataSizeBytes = Ar.Read<ulong>();
                 if (renderDataSizeBytes > 0)
                 {
-                    // idk what to do here... But it fixes the warnings 🤷‍
+                    // FStaticMeshInstanceData::Serialize
                     Ar.Position = validPos;
                 }
             }

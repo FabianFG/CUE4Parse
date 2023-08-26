@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags;
@@ -48,7 +49,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
 
         return false;
     }
-    
+
     public bool HasAll(FGameplayTagContainer containerToCheck)
     {
         if (containerToCheck.IsEmpty()) return true;
@@ -65,7 +66,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
     {
         return query.Matches(this);
     }
-    
+
     public bool IsValid()
     {
         return GameplayTags.Length > 0;
@@ -89,6 +90,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
 }
 
 [StructFallback]
+[JsonConverter(typeof(FGameplayTagConverter))]
 public struct FGameplayTag
 {
     public FName TagName;
@@ -97,7 +99,7 @@ public struct FGameplayTag
     {
         TagName = Ar.ReadFName();
     }
-    
+
     public FGameplayTag(FStructFallback fallback)
     {
         TagName = fallback.Get<FName>(nameof(TagName));
@@ -121,7 +123,7 @@ public struct FGameplayTag
     {
         return a.TagName != b.TagName;
     }
-    
+
     public bool Equals(FGameplayTag other)
     {
         return TagName.Equals(other.TagName);
@@ -251,7 +253,7 @@ public class FQueryEvaluator
             if (bReadError) return false;
 
             if (shortCircuit) continue;
-            
+
             var tag = Query.GetTagFromIndex(tagIdx);
 
             var bHasTag = tags.HasTag(tag);
@@ -264,7 +266,7 @@ public class FQueryEvaluator
 
         return result;
     }
-    
+
     private bool EvalAllTagsMatch(FGameplayTagContainer tags, bool skip)
     {
         var shortCircuit = skip;
@@ -279,7 +281,7 @@ public class FQueryEvaluator
             if (bReadError) return false;
 
             if (shortCircuit) continue;
-            
+
             var tag = Query.GetTagFromIndex(tagIdx);
 
             var bHasTag = tags.HasTag(tag);
@@ -292,7 +294,7 @@ public class FQueryEvaluator
 
         return result;
     }
-    
+
     private bool EvalNoTagsMatch(FGameplayTagContainer tags, bool skip)
     {
         var shortCircuit = skip;
@@ -307,7 +309,7 @@ public class FQueryEvaluator
             if (bReadError) return false;
 
             if (shortCircuit) continue;
-            
+
             var tag = Query.GetTagFromIndex(tagIdx);
 
             var bHasTag = tags.HasTag(tag);
@@ -320,7 +322,7 @@ public class FQueryEvaluator
 
         return result;
     }
-    
+
     private bool EvalAnyExprMatch(FGameplayTagContainer tags, bool skip)
     {
         var shortCircuit = skip;
@@ -334,14 +336,14 @@ public class FQueryEvaluator
             var exprResult = EvalExpr(tags, shortCircuit);
             if (shortCircuit) continue;
             if (!exprResult) continue;
-            
+
             shortCircuit = true;
             result = true;
         }
 
         return result;
     }
-    
+
     private bool EvalAllExprMatch(FGameplayTagContainer tags, bool skip)
     {
         var shortCircuit = skip;
@@ -355,14 +357,14 @@ public class FQueryEvaluator
             var exprResult = EvalExpr(tags, shortCircuit);
             if (shortCircuit) continue;
             if (exprResult) continue;
-            
+
             shortCircuit = true;
             result = false;
         }
 
         return result;
     }
-    
+
     private bool EvalNoExprMatch(FGameplayTagContainer tags, bool skip)
     {
         var shortCircuit = skip;
@@ -376,7 +378,7 @@ public class FQueryEvaluator
             var exprResult = EvalExpr(tags, shortCircuit);
             if (shortCircuit) continue;
             if (!exprResult) continue;
-            
+
             shortCircuit = true;
             result = false;
         }
@@ -395,7 +397,7 @@ public class FQueryEvaluator
         bReadError = true;
         return 0;
     }
-    
+
 }
 
 public static class FGameplayTagContainerUtility
@@ -404,28 +406,18 @@ public static class FGameplayTagContainerUtility
     {
         foreach (var tag in gameplayTags)
         {
-            if (tag.IsValid() || !tag.TagName.Text.StartsWith(startWith)) continue;
-                
+            if (!tag.IsValid() || !tag.TagName.Text.StartsWith(startWith)) continue;
+
             gameplayTag = tag.TagName;
             return true;
         }
-            
+
         gameplayTag = default;
         return false;
     }
-        
+
     public static IList<string> GetAllGameplayTags(this IEnumerable<FGameplayTag> gameplayTags, params string[] startWith)
     {
-        var ret = new List<string>();
-        foreach (var tag in gameplayTags)
-        {
-            if (!tag.IsValid()) continue;
-            foreach (string s in startWith)
-            {
-                if (!tag.TagName.Text.StartsWith(s)) continue;
-                ret.Add(tag.TagName.Text);
-            }
-        }
-        return ret;
+        return (from tag in gameplayTags where tag.IsValid() from s in startWith where tag.TagName.Text.StartsWith(s) select tag.TagName.Text).ToList();
     }
 }
