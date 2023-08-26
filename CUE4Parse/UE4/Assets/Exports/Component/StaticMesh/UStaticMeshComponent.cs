@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
             base.Deserialize(Ar, validPos);
 
             LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
-            Ar.Position += 64;
+            Ar.Position += 64; // ?
         }
 
         public FPackageIndex GetStaticMesh()

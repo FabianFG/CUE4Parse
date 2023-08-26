@@ -44,7 +44,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
         public FStaticMeshComponentLODInfo(FArchive Ar)
         {
             var stripFlags = new FStripDataFlags(Ar);
-
             if (!stripFlags.IsDataStrippedForServer())
             {
                 MapBuildDataId = Ar.Read<FGuid>();
@@ -53,7 +52,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
             if (!stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
             {
                 var bLoadVertexColorData = Ar.Read<byte>();
-
                 if (bLoadVertexColorData == 1)
                 {
                     OverrideVertexColors = new FColorVertexBuffer(Ar);
