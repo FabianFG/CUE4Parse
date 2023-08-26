@@ -406,7 +406,7 @@ public static class FGameplayTagContainerUtility
     {
         foreach (var tag in gameplayTags)
         {
-            if (tag.IsValid() || !tag.TagName.Text.StartsWith(startWith)) continue;
+            if (!tag.IsValid() || !tag.TagName.Text.StartsWith(startWith)) continue;
 
             gameplayTag = tag.TagName;
             return true;
@@ -418,16 +418,6 @@ public static class FGameplayTagContainerUtility
 
     public static IList<string> GetAllGameplayTags(this IEnumerable<FGameplayTag> gameplayTags, params string[] startWith)
     {
-        var ret = new List<string>();
-        foreach (var tag in gameplayTags)
-        {
-            if (!tag.IsValid()) continue;
-            foreach (string s in startWith)
-            {
-                if (!tag.TagName.Text.StartsWith(s)) continue;
-                ret.Add(tag.TagName.Text);
-            }
-        }
-        return ret;
+        return (from tag in gameplayTags where tag.IsValid() from s in startWith where tag.TagName.Text.StartsWith(s) select tag.TagName.Text).ToList();
     }
 }
