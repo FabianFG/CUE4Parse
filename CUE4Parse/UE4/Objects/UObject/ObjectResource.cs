@@ -240,7 +240,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 CreateBeforeCreateDependencies = 0;
             }
 
-            ExportObject = new Lazy<UExport>();
             ClassName = ClassIndex.Name;
         }
 
