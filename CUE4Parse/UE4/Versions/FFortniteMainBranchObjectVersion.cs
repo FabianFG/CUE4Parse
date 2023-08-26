@@ -387,6 +387,8 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_0 => Type.RemoveLandscapeWaterInfo,
                 < EGame.GAME_UE5_1 => Type.GravityOverrideDefinedInWorldSpace,
                 < EGame.GAME_UE5_2 => Type.WorldPartitionHLODActorDescSerializeStats,
+                < EGame.GAME_UE5_3 => Type.WorldPartitionHLODActorUseSourceCellGuid,
+                < EGame.GAME_UE5_4 => Type.WaterBodyStaticMeshFixup,
                 _ => Type.LatestVersion
             };
         }

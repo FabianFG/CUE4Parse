@@ -128,10 +128,10 @@ namespace CUE4Parse.UE4.Readers
         public T[] ReadBulkArray<T>(int elementSize, int elementCount, Func<T> getter)
         {
             var pos = Position;
-            T[] array = ReadArray(elementCount, getter);
-            if (Game != EGame.GAME_HogwartsLegacy && Position != pos + array.Length * elementSize)
-                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
-            return array;
+            if (Game != EGame.GAME_HogwartsLegacy && Position != pos + elementCount * elementSize)
+                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / elementCount}");
+
+            return ReadArray(elementCount, getter);
         }
 
         public T[] ReadBulkArray<T>() where T : struct
@@ -142,10 +142,10 @@ namespace CUE4Parse.UE4.Readers
                 return Array.Empty<T>();
 
             var pos = Position;
-            T[] array = ReadArray<T>(elementCount);
-            if (Position != pos + array.Length * elementSize)
-                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
-            return array;
+            if (Position != pos + elementCount * elementSize)
+                throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / elementCount}");
+
+            return ReadArray<T>(elementCount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
