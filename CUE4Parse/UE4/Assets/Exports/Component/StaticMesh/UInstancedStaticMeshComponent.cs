@@ -20,11 +20,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
                 bCooked = Ar.ReadBoolean();
             }
 
-            PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+            var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData)
+            if (bHasSkipSerializationPropertiesData)
             {
-                PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+                PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+
+                if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData)
+                {
+                    PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+                }
             }
 
             if (bCooked && (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
