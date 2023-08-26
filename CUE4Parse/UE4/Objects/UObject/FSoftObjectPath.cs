@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool TryLoad(out UExport export)
         {
             var provider = Owner?.Provider;
-            if (provider == null)
+            if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
                 export = default;
                 return false;
@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool TryLoad<T>(out T export) where T : UExport
         {
             var provider = Owner?.Provider;
-            if (provider == null)
+            if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
                 export = default;
                 return false;
@@ -80,7 +80,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<UExport?> TryLoadAsync()
         {
             var provider = Owner?.Provider;
-            if (provider == null) return null;
+            if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text)) return null;
             return await TryLoadAsync(provider).ConfigureAwait(false);
         }
 
@@ -91,7 +91,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<T?> TryLoadAsync<T>() where T : UExport
         {
             var provider = Owner?.Provider;
-            if (provider == null) return null;
+            if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text)) return null;
             return await TryLoadAsync<T>(provider).ConfigureAwait(false);
         }
 
