@@ -28,6 +28,7 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
+using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.UObject;
@@ -2814,6 +2815,20 @@ public class FScriptTextConverter : JsonConverter<FScriptText>
     }
 
     public override FScriptText? ReadJson(JsonReader reader, Type objectType, FScriptText? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FGameplayTagConverter : JsonConverter<FGameplayTag>
+{
+    public override void WriteJson(JsonWriter writer, FGameplayTag value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value.TagName);
+    }
+
+    public override FGameplayTag ReadJson(JsonReader reader, Type objectType, FGameplayTag existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
