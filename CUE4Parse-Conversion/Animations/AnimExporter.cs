@@ -96,7 +96,7 @@ namespace CUE4Parse_Conversion.Animations
                 TrackTime = sequence.NumFrames,
                 AnimRate = sequence.FramesPerSecond,
                 StartBone = 0, // reserved
-                FirstRawFrame = sequence.NumFrames, // useless, but used in UnrealEd when importing
+                FirstRawFrame = 0, // useless, but used in UnrealEd when importing
                 NumRawFrames = sequence.NumFrames
             };
             animInfo.Serialize(Ar);
