@@ -38,7 +38,8 @@ namespace CUE4Parse.UE4.Pak
             Info = FPakInfo.ReadFPakInfo(Ar);
             if (Info.Version > PakFile_Version_Latest &&
                 Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker &&
-                Ar.Game != EGame.GAME_Snowbreak && Ar.Game != EGame.GAME_TheDivisionResurgence) // These games use version >= 12 to indicate their custom formats
+                Ar.Game != EGame.GAME_Snowbreak && Ar.Game != EGame.GAME_TheDivisionResurgence &&
+                Ar.Game != EGame.GAME_TorchlightInfinite) // These games use version >= 12 to indicate their custom formats
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
