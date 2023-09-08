@@ -258,6 +258,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             // Take into account CompressionBlocks
             if (CompressionMethod != CompressionMethod.None)
                 StructSize += (int) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
+            if (reader.Ar.Game == GAME_TorchlightInfinite) StructSize += 1;
 
             // Handle building of the CompressionBlocks array.
             if (compressionBlocksCount == 1 && !IsEncrypted)
