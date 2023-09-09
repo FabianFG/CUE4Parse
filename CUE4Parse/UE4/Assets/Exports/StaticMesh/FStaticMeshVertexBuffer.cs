@@ -78,6 +78,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                                 UV[i] = new FStaticMeshUVItem(tempTangents[i], uv[i]);
                             }
                         }
+
+                        if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.SkipBulkArrayData();
                 }
             }
             else
