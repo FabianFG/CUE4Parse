@@ -263,7 +263,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 case EGame.GAME_OutlastTrials:
                     Ar.Position += 1;
                     break;
-                case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul:
+                case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED:
                     Ar.Position += 4;
                     break;
                 case EGame.GAME_CalabiYau:
