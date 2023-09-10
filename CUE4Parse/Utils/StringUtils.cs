@@ -14,6 +14,21 @@ namespace CUE4Parse.Utils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryParseAesKey(this string s, out FAesKey key)
+        {
+            try
+            {
+                key = ParseAesKey(s);
+                return true;
+            }
+            catch (Exception)
+            {
+                key = null;
+                return false;
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringBefore(this string s, char delimiter)
         {
             var index = s.IndexOf(delimiter);
