@@ -1472,6 +1472,9 @@ public class FStreamedAudioChunkConverter : JsonConverter<FStreamedAudioChunk>
         writer.WritePropertyName("AudioDataSize");
         writer.WriteValue(value.AudioDataSize);
 
+        writer.WritePropertyName("SeekOffsetInAudioFrames");
+        writer.WriteValue(value.SeekOffsetInAudioFrames);
+
         writer.WritePropertyName("BulkData");
         serializer.Serialize(writer, value.BulkData);
 

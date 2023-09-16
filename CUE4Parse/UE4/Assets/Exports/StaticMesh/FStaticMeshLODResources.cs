@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public float MaxDeviation { get; }
         public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
         public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
-        public FColorVertexBuffer? ColorVertexBuffer { get; private set; }
+        public FColorVertexBuffer? ColorVertexBuffer { get; set; }
         public FRawStaticIndexBuffer? IndexBuffer { get; private set; }
         public FRawStaticIndexBuffer? ReversedIndexBuffer { get; private set; }
         public FRawStaticIndexBuffer? DepthOnlyIndexBuffer { get; private set; }
