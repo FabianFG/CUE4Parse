@@ -85,7 +85,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                 ObjectGuid = Ar.Read<FGuid>();
             }
 
-            if (Ar.Game >= EGame.GAME_UE5_0 && Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+            if (Ar.Game >= EGame.GAME_UE5_0 && (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Flags.HasFlag(EObjectFlags.RF_DefaultSubObject)))
             {
                 Ar.Position += 4; // No idea honestly
             }

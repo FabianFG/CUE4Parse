@@ -128,7 +128,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     ColorVertexBuffer = new FColorVertexBuffer(Ar);
                     for (var i = 0; i < numColorStreams - 1; i++)
                     {
-                        var _ = new FColorVertexBuffer(Ar);
+                        _ = new FColorVertexBuffer(Ar);
                     }
                 }
             }
@@ -155,7 +155,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.FTEXT_HISTORY && Ar.Ver < EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN)
                 {
-                    var _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
+                    _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
                 }
 
                 if (!stripDataFlags.IsEditorDataStripped())
@@ -169,7 +169,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 for (var i = 0; i < Sections.Length; i++)
                 {
-                    var _ = new FWeightedRandomSampler(Ar);
+                    _ = new FWeightedRandomSampler(Ar);
                 }
 
                 _ = new FWeightedRandomSampler(Ar);
@@ -188,7 +188,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game == EGame.GAME_RogueCompany)
             {
-                var _ = new FColorVertexBuffer(Ar);
+                _ = new FColorVertexBuffer(Ar);
             }
 
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -211,7 +211,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
             {
-                var _ = Ar.ReadBulkArray<byte>(); // rayTracingGeometry
+                _ = Ar.ReadBulkArray<byte>(); // rayTracingGeometry
             }
 
             // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547

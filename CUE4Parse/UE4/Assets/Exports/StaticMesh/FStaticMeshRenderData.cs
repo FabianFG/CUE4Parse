@@ -64,11 +64,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         {
                             if (Ar.Game >= EGame.GAME_UE5_0)
                             {
-                                var _ = new FDistanceFieldVolumeData5(Ar);
+                                _ = new FDistanceFieldVolumeData5(Ar);
                             }
                             else
                             {
-                                var _ = new FDistanceFieldVolumeData(Ar);
+                                _ = new FDistanceFieldVolumeData(Ar);
                             }
                         }
                     }
