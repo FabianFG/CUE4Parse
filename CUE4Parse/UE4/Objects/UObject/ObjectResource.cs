@@ -184,6 +184,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int CreateBeforeSerializationDependencies;
         public int SerializationBeforeCreateDependencies;
         public int CreateBeforeCreateDependencies;
+        public long ScriptSerializationStartOffset;
+        public long ScriptSerializationEndOffset;
         public Lazy<UExport> ExportObject;
 
         public string ClassName;
@@ -238,6 +240,17 @@ namespace CUE4Parse.UE4.Objects.UObject
                 CreateBeforeSerializationDependencies = 0;
                 SerializationBeforeCreateDependencies = 0;
                 CreateBeforeCreateDependencies = 0;
+            }
+
+            if (!Ar.HasUnversionedProperties && Ar.Ver >= EUnrealEngineObjectUE5Version.SCRIPT_SERIALIZATION_OFFSET)
+            {
+                ScriptSerializationStartOffset = Ar.Read<long>();
+                ScriptSerializationEndOffset = Ar.Read<long>();
+            }
+            else
+            {
+                ScriptSerializationStartOffset = 0;
+                ScriptSerializationEndOffset = 0;
             }
 
             ClassName = ClassIndex.Name;
