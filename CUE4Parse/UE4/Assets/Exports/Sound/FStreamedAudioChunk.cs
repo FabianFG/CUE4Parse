@@ -7,7 +7,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
     public enum EStreamedAudioChunk : uint
     {
         IsCooked			 = 1 << 0,
-        HasSeekOffset		 = 1 << 1
+        HasSeekOffset		 = 1 << 1,
+        IsInlined			 = 1 << 2,
     }
 
     [JsonConverter(typeof(FStreamedAudioChunkConverter))]

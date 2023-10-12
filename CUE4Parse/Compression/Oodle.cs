@@ -23,8 +23,8 @@ namespace CUE4Parse.Compression
         public unsafe delegate long OodleDecompress(byte* bufferPtr, long bufferSize, byte* outputPtr, long outputSize, int a, int b, int c, long d, long e, long f, long g, long h, long i, int threadModule);
 
         private const string WARFRAME_CDN_HOST = "https://content.warframe.com";
-        private const string WARFRAME_INDEX_PATH = "/origin/E926E926/index.txt.lzma";
-        private static string WARFRAME_INDEX_URL => WARFRAME_CDN_HOST + WARFRAME_INDEX_PATH;
+        private const string WARFRAME_INDEX_PATH = "/origin/50F7040A/index.txt.lzma";
+        private const string WARFRAME_INDEX_URL = WARFRAME_CDN_HOST + WARFRAME_INDEX_PATH;
         public const string OODLE_DLL_NAME = "oo2core_9_win64.dll";
 
         public static OodleDecompress DecompressFunc;
