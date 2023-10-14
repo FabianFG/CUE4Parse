@@ -19,13 +19,13 @@ namespace CUE4Parse.UE4.Objects.Meshes
             if (Ar.Game == EGame.GAME_Valorant)
             {
                 bool bUseFullPrecisionPositions = Ar.ReadBoolean();
-                _ = new FBoxSphereBounds(Ar);
+                var bounds = new FBoxSphereBounds(Ar);
                 if (!bUseFullPrecisionPositions)
                 {
-                    var vertsHalf = Ar.ReadBulkArray<FVector4Half>();
+                    var vertsHalf = Ar.ReadBulkArray<FVector3SignedShortScale>();
                     Verts = new FVector[vertsHalf.Length];
                     for (int i = 0; i < vertsHalf.Length; i++)
-                        Verts[i] = vertsHalf[i]; // W appears to be all zeros (alignment?), simply dropping
+                        Verts[i] = vertsHalf[i] * bounds.BoxExtent + bounds.Origin;
                     return;
                 }
             }
