@@ -22,9 +22,10 @@ namespace CUE4Parse.Compression
     {
         public unsafe delegate long OodleDecompress(byte* bufferPtr, long bufferSize, byte* outputPtr, long outputSize, int a, int b, int c, long d, long e, long f, long g, long h, long i, int threadModule);
 
-        private const string WARFRAME_CDN_HOST = "https://content.warframe.com";
+        private const string WARFRAME_CONTENT_HOST = "https://content.warframe.com";
+        private const string WARFRAME_ORIGIN_HOST = "https://origin.warframe.com";
         private const string WARFRAME_INDEX_PATH = "/origin/50F7040A/index.txt.lzma";
-        private const string WARFRAME_INDEX_URL = WARFRAME_CDN_HOST + WARFRAME_INDEX_PATH;
+        private const string WARFRAME_INDEX_URL = WARFRAME_ORIGIN_HOST + WARFRAME_INDEX_PATH;
         public const string OODLE_DLL_NAME = "oo2core_9_win64.dll";
 
         public static OodleDecompress DecompressFunc;
@@ -93,7 +94,7 @@ namespace CUE4Parse.Compression
 
                     if (line.Contains(OODLE_DLL_NAME))
                     {
-                        dllUrl = WARFRAME_CDN_HOST + line[..line.IndexOf(',')];
+                        dllUrl = WARFRAME_CONTENT_HOST + line[..line.IndexOf(',')];
                         break;
                     }
                 }
