@@ -1,11 +1,22 @@
-﻿namespace CUE4Parse.UE4.Objects.Core.Math
+﻿using System.Runtime.InteropServices;
+
+namespace CUE4Parse.UE4.Objects.Core.Math
 {
-    public readonly struct FVector3SignedShortScale(short x, short y, short z, short w) : IUStruct
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct FVector3SignedShortScale : IUStruct
     {
-        public readonly short X = x;
-        public readonly short Y = y;
-        public readonly short Z = z;
-        public readonly short W = w;
+        public readonly short X;
+        public readonly short Y;
+        public readonly short Z;
+        public readonly short W;
+
+        public FVector3SignedShortScale(short x, short y, short z, short w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
 
         public static implicit operator FVector(FVector3SignedShortScale v)
         {
