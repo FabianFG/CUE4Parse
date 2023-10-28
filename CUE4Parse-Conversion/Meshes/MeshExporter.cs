@@ -26,7 +26,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalSkeleton.TryConvert(out var bones) || bones.Count == 0)
+            if (!originalSkeleton.TryConvert(out var bones, out _) || bones.Count == 0)
             {
                 Log.Logger.Warning($"Skeleton '{ExportName}' has no bone");
                 return;
@@ -82,7 +82,7 @@ namespace CUE4Parse_Conversion.Meshes
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
-                
+
                 if (Options.LodFormat == ELodFormat.FirstLod)
                 {
                     MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
@@ -457,7 +457,7 @@ namespace CUE4Parse_Conversion.Meshes
                 {
                     var delta = morphModel.Vertices[j];
                     if (delta.SourceIdx >= lod.Verts.Length) continue;
-                    
+
                     var vertex = lod.Verts[delta.SourceIdx];
 
                     var index = FindVertex(vertex.Position, share.Points);
