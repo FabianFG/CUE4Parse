@@ -14,6 +14,7 @@ namespace CUE4Parse.UE4.IO.Objects
         PartitionSize,
         PerfectHash,
         PerfectHashWithOverflow,
+        OnDemandMetaData,
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     }
@@ -25,6 +26,7 @@ namespace CUE4Parse.UE4.IO.Objects
         Encrypted	= (1 << 1),
         Signed		= (1 << 2),
         Indexed		= (1 << 3),
+        OnDemand	= (1 << 4),
     }
 
     public class FIoStoreTocHeader

@@ -110,7 +110,13 @@ namespace CUE4Parse.UE4.Assets
                 BulkDataMap = Array.Empty<FBulkDataMapEntry>();
                 if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES)
                 {
-                    var bulkDataMapSize = uassetAr.Read<ulong>();
+                    if (uassetAr.Game >= EGame.GAME_UE5_4)
+                    {
+                        var pad = uassetAr.Read<ulong>(); // pad
+                        _ = uassetAr.ReadArray<byte>((int) pad);
+                    }
+
+                    var bulkDataMapSize = uassetAr.Read<long>();
                     BulkDataMap = uassetAr.ReadArray<FBulkDataMapEntry>((int) (bulkDataMapSize / FBulkDataMapEntry.Size));
                 }
 
