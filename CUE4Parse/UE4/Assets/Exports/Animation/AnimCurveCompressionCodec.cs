@@ -14,9 +14,12 @@ public abstract class UAnimCurveCompressionCodec : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.SerializeAnimCurveCompressionCodecGuidOnCook)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.RemoveAnimCurveCompressionCodecInstanceGuid)
         {
-            InstanceGuid = Ar.Read<FGuid>();
+            if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.SerializeAnimCurveCompressionCodecGuidOnCook)
+            {
+                InstanceGuid = Ar.Read<FGuid>();
+            }
         }
     }
 
