@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FOnDemandTocEntry(FArchive Ar)
         {
-            Hash = Ar.Read<FSHAHash>();
+            Hash = new FSHAHash(Ar);
             ChunkId = Ar.Read<FIoChunkId>();
             RawSize = Ar.Read<ulong>();
             EncodedSize = Ar.Read<ulong>();

@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly string EncryptionKeyGuid;
         public readonly FOnDemandTocEntry[] Entries;
         public readonly uint[] BlockSizes;
-        public readonly FSHAHash[] BlockHashes;
+        public readonly uint[] BlockHashes; // FIoBlockHash is just uint32
         public readonly FSHAHash UTocHash;
 
         public FOnDemandTocContainerEntry(FArchive Ar)
@@ -18,8 +18,8 @@ namespace CUE4Parse.UE4.IO.Objects
             EncryptionKeyGuid = Ar.ReadFString();
             Entries = Ar.ReadArray(() => new FOnDemandTocEntry(Ar));
             BlockSizes = Ar.ReadArray<uint>();
-            BlockHashes = Ar.ReadArray<FSHAHash>();
-            UTocHash = Ar.Read<FSHAHash>();
+            BlockHashes = Ar.ReadArray<uint>();
+            UTocHash = new FSHAHash(Ar);
         }
     }
 }
