@@ -54,18 +54,20 @@ namespace CUE4Parse.FileProvider.Vfs
         public void RegisterVfs(string file) => RegisterVfs(new FileInfo(file));
         public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName, new Stream[] { file.OpenRead() });
         public void RegisterVfs(string file, Stream[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
+            => RegisterVfs(new FStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+        public void RegisterVfs(FArchive archive, Stream? stream, Func<string, FArchive>? openContainerStreamFunc = null)
         {
             try
             {
                 AbstractAesVfsReader reader;
-                switch (file.SubstringAfterLast('.').ToUpper())
+                switch (archive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
-                        reader = new PakFileReader(file, stream[0], Versions);
+                        reader = new PakFileReader(archive);
                         break;
                     case "UTOC":
-                        openContainerStreamFunc ??= it => new FStreamArchive(it, stream[1], Versions);
-                        reader = new IoStoreReader(file, stream[0], openContainerStreamFunc, EIoStoreTocReadOptions.ReadDirectoryIndex, Versions);
+                        openContainerStreamFunc ??= it => new FStreamArchive(it, stream!, Versions);
+                        reader = new IoStoreReader(archive, openContainerStreamFunc);
                         break;
                     default:
                         return;

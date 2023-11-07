@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.IO.Objects
         {
             var streamBuffer = new byte[Ar.Length];
             Ar.Read(streamBuffer, 0, streamBuffer.Length);
-            using var archive = new FByteArchive(Ar.Name, streamBuffer);
+            using var archive = new FByteArchive(Ar.Name, streamBuffer, Ar.Versions);
 
             // Header
             Header = new FIoStoreTocHeader(archive);

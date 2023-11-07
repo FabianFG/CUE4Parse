@@ -43,6 +43,7 @@ public class ApkFileProvider : DefaultFileProvider
                 var streams = new Stream[2];
                 streams[0] = new MemoryStream();
                 fileEntry.Extract(streams[0]);
+                streams[0].Position = 0;
 
                 var upperExt = fileEntry.FileName.SubstringAfterLast('.').ToUpper();
                 switch (upperExt)
@@ -55,6 +56,7 @@ public class ApkFileProvider : DefaultFileProvider
                         {
                             streams[1] = new MemoryStream();
                             ucasEntry.Extract(streams[1]);
+                            streams[1].Position = 0;
                         }
                         RegisterVfs(fileEntry.FileName, streams);
                         continue;
