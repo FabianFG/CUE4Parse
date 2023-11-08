@@ -34,6 +34,7 @@ namespace CUE4Parse.UE4.IO
         public Uri ChunkBaseUri { get; set; }
         public DirectoryInfo ChunkCacheDirectory { get; set; }
         public AuthenticationHeaderValue? Authorization { get; set; }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
 
         public bool UseAuth => Authorization != null;
     }
@@ -53,7 +54,7 @@ namespace CUE4Parse.UE4.IO
                 CheckCertificateRevocationList = false,
                 UseDefaultCredentials = false,
                 AutomaticDecompression = DecompressionMethods.None
-            }) { Timeout = TimeSpan.FromSeconds(5) };
+            }) { Timeout = options.Timeout };
         }
 
         public async Task<Stream> Download(string url)
