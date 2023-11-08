@@ -72,18 +72,32 @@ namespace CUE4Parse.FileProvider.Vfs
                     default:
                         return;
                 }
-
-                if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.EncryptionKeyGuid))
-                    _requiredKeys[reader.EncryptionKeyGuid] = null;
-
-                _unloadedVfs[reader] = null;
-                reader.IsConcurrent = true;
-                reader.CustomEncryption = CustomEncryption;
+                PostLoadReader(reader);
             }
             catch (Exception e)
             {
                 Log.Warning(e.ToString());
             }
+        }
+        public async Task RegisterVfs(IoChunkToc chunkToc, IoStoreOnDemandOptions options)
+        {
+            var downloader = new IoStoreOnDemandDownloader(options);
+            foreach (var container in chunkToc.Containers)
+            {
+                PostLoadReader(new IoStoreOnDemandReader(
+                    new FStreamArchive($"{container.ContainerName}.utoc", await downloader.Download($"{container.UTocHash.ToString().ToLower()}.utoc"), Versions),
+                    container.Entries, downloader));
+            }
+        }
+
+        private void PostLoadReader(AbstractAesVfsReader reader)
+        {
+            if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.EncryptionKeyGuid))
+                _requiredKeys[reader.EncryptionKeyGuid] = null;
+
+            _unloadedVfs[reader] = null;
+            reader.IsConcurrent = true;
+            reader.CustomEncryption = CustomEncryption;
         }
 
         public int Mount() => MountAsync().Result;

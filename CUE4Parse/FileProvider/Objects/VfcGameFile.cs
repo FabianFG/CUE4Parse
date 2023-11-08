@@ -34,7 +34,7 @@ namespace CUE4Parse.FileProvider.Objects
             foreach (var r in Ranges)
             {
                 var blockSize = BlockFiles.First(x => x.FileId == r.FileId).BlockSize;
-                using var fs = new FileStream(System.IO.Path.Combine(_persistentDownloadDir, r.GetPersistentDownloadPath()), FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var fs = new FileStream(System.IO.Path.Combine(_persistentDownloadDir, r.GetPersistentDownloadPath()), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 fs.Seek(r.Range.StartIndex * blockSize, SeekOrigin.Begin);
                 offset += fs.Read(data, offset, r.Range.NumBlocks * blockSize);
             }

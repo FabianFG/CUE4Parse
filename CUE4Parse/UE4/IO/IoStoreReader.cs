@@ -36,11 +36,9 @@ namespace CUE4Parse.UE4.IO
         public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FileInfo(tocPath), readOptions, versions) { }
         public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
-            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), versions),
-                it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions), readOptions) { }
+            : this(new FByteArchive(utocFile.FullName, File.ReadAllBytes(utocFile.FullName), versions), it => new FStreamArchive(it, File.Open(it, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions), readOptions) { }
         public IoStoreReader(string tocPath, Stream tocStream, Stream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
-            : this(new FStreamArchive(tocPath, tocStream, versions),
-                it => new FStreamArchive(it, casStream, versions), readOptions) { }
+            : this(new FStreamArchive(tocPath, tocStream, versions), it => new FStreamArchive(it, casStream, versions), readOptions) { }
         public IoStoreReader(string tocPath, Stream tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
 
@@ -191,7 +189,7 @@ namespace CUE4Parse.UE4.IO
             return true;
         }
 
-        public byte[] Read(FIoChunkId chunkId)
+        public virtual byte[] Read(FIoChunkId chunkId)
         {
             if (TryResolve(chunkId, out var offsetLength))
             {
