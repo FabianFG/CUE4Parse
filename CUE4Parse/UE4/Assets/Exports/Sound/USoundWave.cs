@@ -38,6 +38,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound
                 Ar.ReadFName(); // DummyCompressionName
             }
 
+            if (Ar.Game >= EGame.GAME_UE5_4 && flags.HasFlag(ESoundWaveFlag.CookedFlag))
+            {
+                Ar.ReadArray(Ar.ReadFString); // PlatformCuePoints
+            }
+
             if (!bStreaming)
             {
                 if (flags.HasFlag(ESoundWaveFlag.CookedFlag))
