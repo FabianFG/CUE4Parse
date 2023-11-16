@@ -58,6 +58,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "PerPlatformInt" => type == ReadType.ZERO ? new TPerPlatformProperty.FPerPlatformInt() : new TPerPlatformProperty.FPerPlatformInt(Ar),
                 "PerPlatformFrameRate" => type == ReadType.ZERO ? new TPerPlatformProperty.FPerPlatformFrameRate() : new TPerPlatformProperty.FPerPlatformFrameRate(Ar),
                 "PerQualityLevelInt" => type == ReadType.ZERO ? new FPerQualityLevelInt() : new FPerQualityLevelInt(Ar),
+                "PerQualityLevelFloat" => type == ReadType.ZERO ? new FPerQualityLevelFloat() : new FPerQualityLevelFloat(Ar),
                 "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
                 "IntPoint" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
                 "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),

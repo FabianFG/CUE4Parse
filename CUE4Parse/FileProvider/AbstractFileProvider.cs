@@ -791,21 +791,6 @@ namespace CUE4Parse.FileProvider
             if (packagePath == null) throw new ArgumentException("PackagePath can't be null", nameof(packagePath));
 
             var pkg = LoadPackage(packagePath);
-            // if (pkg is IoPackage ioPackage && TryLoadPackage(packagePath.Replace(".uasset", ".o.uasset"), out var oPackage) &&
-            //     oPackage is IoPackage segmentPackage)
-            // {
-            //     for (int i = 0; i < segmentPackage.ExportMap.Length; i++)
-            //     {
-            //         if (ioPackage.ExportMap.Any(x => x.ObjectName == segmentPackage.ExportMap[i].ObjectName))
-            //         {
-            //             ioPackage.ExportsLazy[i].Value.Properties.AddRange(segmentPackage.ExportsLazy[i].Value.Properties);
-            //         }
-            //         else
-            //         {
-            //             ioPackage.ExportsLazy.Add(segmentPackage.ExportsLazy[i]);
-            //         }
-            //     }
-            // }
 
             return pkg.GetExports();
         }
