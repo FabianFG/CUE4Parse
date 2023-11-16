@@ -89,8 +89,8 @@ public static class SoundDecoder
                     return input;
             }
         }
-        // else if (audioFormat.Equals("BINKA", StringComparison.OrdinalIgnoreCase))
-        //     return input;
+        else if (audioFormat.Equals("BINKA", StringComparison.OrdinalIgnoreCase))
+            return input;
         else if (audioFormat.Equals("OPUS", StringComparison.OrdinalIgnoreCase))
             return input;
         else if (audioFormat.Equals("WEM", StringComparison.OrdinalIgnoreCase))
