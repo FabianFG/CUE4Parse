@@ -117,7 +117,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public static readonly string[][] DiffuseColors = {
             new []
             {
-                "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "tex1_CO",
+                "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "DiffuseColor", "tex1_CO",
                 "ColorA", "ALB", "AlbedoColor"
             },
             new []{ "tex2_CO", "ColorB" },

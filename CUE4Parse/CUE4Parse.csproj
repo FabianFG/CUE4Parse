@@ -3,7 +3,7 @@
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPublishable>false</IsPublishable>
     <Platforms>AnyCPU</Platforms>
     <Description>C# Parser for Unreal Engine packages &amp; assets</Description>
