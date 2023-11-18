@@ -1,2 +1,6 @@
-﻿builddir
+﻿build
+bin
+out
+builddir
 *.log
+Oodle/external/oodle2/**

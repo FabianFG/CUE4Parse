@@ -16,6 +16,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Serilog;
 
+
 namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
@@ -78,6 +79,12 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.OBJ:
                         ext = "obj";
                         new Gltf(ExportName, lod, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
+                    case EMeshFormat.FBX:
+                        ext = "fbx";
+                        var fbxExporter = new FBX(ExportName, lod, materialExports, Options);
+                        fbxExporter.Save(Options.MeshFormat, Ar);
+                        //fbxExporter.Dispose();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
