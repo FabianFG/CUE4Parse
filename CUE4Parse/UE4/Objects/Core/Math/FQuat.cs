@@ -174,6 +174,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                                                         (Abs(X + q.X) <= tolerance && Abs(Y + q.Y) <= tolerance && Abs(Z + q.Z) <= tolerance && Abs(W + q.W) <= tolerance);
 
         public bool IsIdentity(float tolerance = UnrealMath.SmallNumber) => Equals(Identity, tolerance);
+        public bool IsVectorZero() => X == 0 && Y == 0 && Z == 0;
 
         public static Vector128<float> AsVector128(FQuat value)
         {

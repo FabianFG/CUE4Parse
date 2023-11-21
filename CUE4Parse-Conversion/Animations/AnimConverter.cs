@@ -283,17 +283,26 @@ namespace CUE4Parse_Conversion.Animations
 
             for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
             {
+                var track = anim.Tracks[boneIndex]; // tracks are bone indexed
                 var boneScale = skeleton.GetBoneScale(transforms, boneIndex);
-                if (Math.Abs(boneScale.X - 1.0f) > 0.001f ||
-                    Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
-                    Math.Abs(boneScale.Z - 1.0f) > 0.001f)
+                var doScale = Math.Abs(boneScale.X - 1.0f) > 0.001f ||
+                              Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
+                              Math.Abs(boneScale.Z - 1.0f) > 0.001f;
+
+                for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
                 {
-                    var track = anim.Tracks[boneIndex]; // tracks are bone indexed
-                    for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
+                    if (!track.KeyPos[keyIndex].IsZero())
                     {
                         // Scale translation by accumulated bone scale value
-                        track.KeyPos[keyIndex].Scale(boneScale);
+                        if (doScale) track.KeyPos[keyIndex].Scale(boneScale);
+                        continue;
                     }
+                    track.KeyPos[keyIndex] = transforms[boneIndex].Translation;
+                }
+                for (int keyIndex = 0; keyIndex < track.KeyQuat.Length; keyIndex++)
+                {
+                    if (!track.KeyQuat[keyIndex].IsVectorZero()) continue;
+                    track.KeyQuat[keyIndex] = transforms[boneIndex].Rotation;
                 }
             }
         }
