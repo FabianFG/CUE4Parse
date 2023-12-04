@@ -97,6 +97,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     break;
                 case "ArrayProperty":
                 case "SetProperty":
+                case "OptionalProperty":
                     sb.AppendFormat("<{0}>", InnerTypeData?.ToString() ?? InnerType);
                     break;
                 case "MapProperty":

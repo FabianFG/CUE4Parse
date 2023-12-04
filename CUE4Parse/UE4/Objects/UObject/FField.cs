@@ -65,6 +65,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             "UInt16Property" => new FUInt16Property(),
             "UInt32Property" => new FUInt32Property(),
             "UInt64Property" => new FUInt64Property(),
+            // "WeakObjectProperty" => new FWeakObjectProperty(),
+            // "OptionalProperty" => new FOptionalProperty(),
             _ => throw new ParserException("Unsupported serialized property type " + fieldTypeName)
         };
 

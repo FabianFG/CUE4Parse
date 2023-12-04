@@ -57,6 +57,7 @@ namespace CUE4Parse.MappingsProvider.Usmap
                     break;
                 case EPropertyType.SetProperty:
                 case EPropertyType.ArrayProperty:
+                case EPropertyType.OptionalProperty:
                     innerType = ParsePropertyType(Ar, nameLut);
                     break;
                 case EPropertyType.MapProperty:

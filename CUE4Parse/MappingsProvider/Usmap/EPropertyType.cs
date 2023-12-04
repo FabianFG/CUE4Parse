@@ -30,6 +30,7 @@
         SetProperty,
         EnumProperty,
         FieldPathProperty,
+        OptionalProperty,
 
         Unknown = 0xFF
     }
