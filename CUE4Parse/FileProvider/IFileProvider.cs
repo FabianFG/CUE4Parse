@@ -332,5 +332,11 @@ namespace CUE4Parse.FileProvider
         /// <param name="packagePath">The package path</param>
         /// <returns>All objects of the package</returns>
         public IEnumerable<UObject> LoadAllObjects(string? packagePath);
+        /// <summary>
+        /// Asynchronusly loads all objects from the Package at the passed path
+        /// </summary>
+        /// <param name="packagePath">The package path</param>
+        /// <returns>All objects of the package</returns>
+        public Task<IEnumerable<UObject>> LoadAllObjectsAsync(string? packagePath);
     }
 }
