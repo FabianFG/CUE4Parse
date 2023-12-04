@@ -57,6 +57,9 @@ namespace CUE4Parse.UE4.Assets.Objects
                         ValueType = Ar.ReadFName().Text;
                     }
                     break;
+                case "OptionalProperty":
+                    InnerType = Ar.ReadFName().Text;
+                    break;
             }
         }
 
