@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -134,7 +134,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                 "UInt32Property" => new UInt32Property(Ar, type),
                 "UInt64Property" => new UInt64Property(Ar, type),
                 "WeakObjectProperty" => new WeakObjectProperty(Ar, type),
-                "OptionalProperty" => new OptionalProperty(Ar, type),
+                // "OptionalProperty" => new OptionalProperty(Ar, type), // TODO
                 _ => null
             };
 #if DEBUG
