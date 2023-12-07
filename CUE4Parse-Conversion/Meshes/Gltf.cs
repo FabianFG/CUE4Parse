@@ -77,7 +77,7 @@ namespace CUE4Parse_Conversion.Meshes
                 }
 
                 targetNames += "]}";
-                mesh.Extras = JsonContent.Parse(targetNames);
+                mesh.Extras = morphTargets.Length > 0 ? JsonContent.Parse(targetNames) : null;
             }
 
             var sceneBuilder = new SceneBuilder();
