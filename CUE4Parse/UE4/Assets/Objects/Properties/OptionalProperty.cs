@@ -1,9 +1,25 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
+using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(OptionalPropertyConverter))]
+public class OptionalProperty : FPropertyTagType<FPropertyTagType>
 {
-    public class OptionalProperty : ObjectProperty
+    public OptionalProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
     {
-        public OptionalProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
+        if (tagData == null)
+            throw new ParserException(Ar, "Can't load OptionalProperty without tag data");
+        if (tagData.InnerType == null)
+            throw new ParserException(Ar, "OptionalProperty needs inner type");
+
+        var version = Ar.Read<int>(); // TODO: version??
+
+        Value = type switch
+        {
+            ReadType.ZERO => default,
+            _ => ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, type) ?? default
+        };
     }
 }

@@ -610,6 +610,20 @@ public class ObjectPropertyConverter : JsonConverter<ObjectProperty>
     }
 }
 
+public class OptionalPropertyConverter : JsonConverter<OptionalProperty>
+{
+    public override void WriteJson(JsonWriter writer, OptionalProperty value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value.Value);
+    }
+
+    public override OptionalProperty ReadJson(JsonReader reader, Type objectType, OptionalProperty existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class SetPropertyConverter : JsonConverter<SetProperty>
 {
     public override void WriteJson(JsonWriter writer, SetProperty value, JsonSerializer serializer)
