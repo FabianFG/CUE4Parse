@@ -7,12 +7,13 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags;
 
-public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTag>
+public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTag>, ISerializable
 {
     public readonly FGameplayTag[] GameplayTags;
 
@@ -26,6 +27,18 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
         {
             GameplayTags = Ar.ReadArray(() => new FGameplayTag(Ar.ReadFName()));
         }
+    }
+
+    public void Serialize(FArchiveWriter Ar)
+    {
+        // if (Ar.Ver >= EUnrealEngineObjectUE4Version.GAMEPLAY_TAG_CONTAINER_TAG_TYPE_CHANGE)
+        // {
+        Ar.SerializeEnumerable(GameplayTags);
+        // }
+        // else
+        // {
+        //    GameplayTags = Ar.ReadArray(() => new FGameplayTag(Ar.ReadFName()));
+        // }
     }
 
     public FGameplayTagContainer(params FGameplayTag[] gameplayTags)
@@ -91,7 +104,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
 
 [StructFallback]
 [JsonConverter(typeof(FGameplayTagConverter))]
-public struct FGameplayTag
+public struct FGameplayTag : ISerializable
 {
     public FName TagName;
 
@@ -110,12 +123,18 @@ public struct FGameplayTag
         TagName = tagName;
     }
 
+    public void Serialize(FArchiveWriter Ar)
+    {
+        Ar.Serialize(TagName);
+    }
+
     public bool IsValid()
     {
         return !TagName.IsNone;
     }
 
-    public static bool operator ==(FGameplayTag a, FGameplayTag b) {
+    public static bool operator ==(FGameplayTag a, FGameplayTag b)
+    {
         return a.TagName == b.TagName;
     }
 
@@ -397,7 +416,6 @@ public class FQueryEvaluator
         bReadError = true;
         return 0;
     }
-
 }
 
 public static class FGameplayTagContainerUtility

@@ -1,12 +1,13 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine.Font
 {
     [JsonConverter(typeof(FFontDataConverter))]
-    public class FFontData : IUStruct
+    public class FFontData : IUStruct, ISerializable
     {
         public FPackageIndex? LocalFontFaceAsset; // UObject
         public string? FontFilename;
@@ -32,6 +33,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine.Font
 
                 SubFaceIndex = Ar.Read<int>();
             }
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(true); // Serializing always will be cooked
+
+            Ar.Serialize(LocalFontFaceAsset);
+
+            if (LocalFontFaceAsset == null)
+            {
+                // TODO: FString writing
+                // Ar.WriteFString(FontFilename);
+                Ar.Write((byte) Hinting);
+                Ar.Write((byte) LoadingPolicy);
+            }
+
+            Ar.Write(SubFaceIndex);
         }
     }
 

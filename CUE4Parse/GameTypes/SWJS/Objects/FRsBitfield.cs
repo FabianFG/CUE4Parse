@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.SWJS.Objects;
 
 public class FRsBitfield : FStructFallback
 {
-    public FRsBitfield(FAssetArchive Ar, string propertyName) : base()
+    public FRsBitfield(FAssetArchive Ar, string propertyName)
     {
         Properties.Add(new FPropertyTag(Ar, new PropertyInfo(-1, propertyName, new PropertyType("StrProperty")), ReadType.NORMAL));
         UObject.DeserializePropertiesTagged(Properties, Ar);

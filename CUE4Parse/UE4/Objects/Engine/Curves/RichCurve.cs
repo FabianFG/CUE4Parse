@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -78,7 +79,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 
     /** One key in a rich, editable float curve */
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FRichCurveKey : IUStruct
+    public struct FRichCurveKey : IUStruct, ISerializable
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public ERichCurveInterpMode InterpMode;
@@ -120,6 +121,19 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             ArriveTangentWeight = 0.0f;
             LeaveTangent = leaveTangent;
             LeaveTangentWeight = 0.0f;
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write((byte) InterpMode);
+            Ar.Write((byte) TangentMode);
+            Ar.Write((byte) TangentWeightMode);
+            Ar.Write(Time);
+            Ar.Write(Value);
+            Ar.Write(ArriveTangent);
+            Ar.Write(ArriveTangentWeight);
+            Ar.Write(LeaveTangent);
+            Ar.Write(LeaveTangentWeight);
         }
     }
 

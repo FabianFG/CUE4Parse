@@ -1,37 +1,47 @@
 ﻿using System.Collections;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.GameTypes.FN.Objects
+namespace CUE4Parse.GameTypes.FN.Objects;
+
+public enum EFortConnectivityCubeFace
 {
-    public enum EFortConnectivityCubeFace
+    Front,
+    Left,
+    Back,
+    Right,
+    Upper,
+    Lower,
+    MAX
+}
+
+[JsonConverter(typeof(FConnectivityCubeConverter))]
+public class FConnectivityCube : IUStruct, ISerializable
+{
+    public readonly BitArray[] Faces = new BitArray[(int) EFortConnectivityCubeFace.MAX];
+    private readonly int[][] Data = new int[(int) EFortConnectivityCubeFace.MAX][];
+
+    public FConnectivityCube(FArchive Ar)
     {
-        Front,
-        Left,
-        Back,
-        Right,
-        Upper,
-        Lower,
-        MAX
+        for (var i = 0; i < Faces.Length; i++)
+        {
+            // Reference: FArchive& operator<<(FArchive&, TBitArray&)
+            var numBits = Ar.Read<int>();
+            var numWords = numBits.DivideAndRoundUp(32);
+            Data[i] = Ar.ReadArray<int>(numWords);
+            Faces[i] = new BitArray(Data[i]) { Length = numBits };
+        }
     }
 
-    [JsonConverter(typeof(FConnectivityCubeConverter))]
-    public class FConnectivityCube : IUStruct
+    public void Serialize(FArchiveWriter Ar)
     {
-        public readonly BitArray[] Faces = new BitArray[(int) EFortConnectivityCubeFace.MAX];
-
-        public FConnectivityCube(FArchive Ar)
+        for (var i = 0; i < Faces.Length; i++)
         {
-            for (int i = 0; i < Faces.Length; i++)
-            {
-                // Reference: FArchive& operator<<(FArchive&, TBitArray&)
-                var numBits = Ar.Read<int>();
-                var numWords = numBits.DivideAndRoundUp(32);
-                var data = Ar.ReadArray<int>(numWords);
-                Faces[i] = new BitArray(data) { Length = numBits };
-            }
+            Ar.Write(Faces[i].Length); // numBits
+            Ar.SerializeEnumerable(Data[i], Ar.Write);
         }
     }
 }

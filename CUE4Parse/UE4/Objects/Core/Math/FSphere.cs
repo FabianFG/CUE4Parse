@@ -1,49 +1,64 @@
 ﻿using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse.UE4.Objects.Core.Math
+namespace CUE4Parse.UE4.Objects.Core.Math;
+
+public class FSphere : IUStruct, ISerializable
 {
-    public class FSphere : IUStruct
+    /** The sphere's center point. */
+    public FVector Center;
+    /** The sphere's radius. */
+    public float W;
+
+    public FSphere() { }
+    public FSphere(float x, float y, float z, float w)
     {
-        /** The sphere's center point. */
-        public FVector Center;
-        /** The sphere's radius. */
-        public float W;
-
-        public FSphere() { }
-        public FSphere(float x, float y, float z, float w)
-        {
-            Center = new FVector(x, y, z);
-            W = w;
-        }
-        public FSphere(FVector center, float w)
-        {
-            Center = center;
-            W = w;
-        }
-        public FSphere(TIntVector3<float> center, float w)
-        {
-            Center = new FVector(center.X, center.Y, center.Z);
-            W = w;
-        }
-        public FSphere(TIntVector3<double> center, double w)
-        {
-            Center = new FVector(center.X, center.Y, center.Z);
-            W = (float) w;
-        }
-        public FSphere(FArchive Ar)
-        {
-            Center = new FVector(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                W = (float) Ar.Read<double>();
-            }
-            else
-            {
-                W = Ar.Read<float>();
-            }
-        }
-
-        public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);
+        Center = new FVector(x, y, z);
+        W = w;
     }
+    public FSphere(FVector center, float w)
+    {
+        Center = center;
+        W = w;
+    }
+    public FSphere(TIntVector3<float> center, float w)
+    {
+        Center = new FVector(center.X, center.Y, center.Z);
+        W = w;
+    }
+    public FSphere(TIntVector3<double> center, double w)
+    {
+        Center = new FVector(center.X, center.Y, center.Z);
+        W = (float) w;
+    }
+    public FSphere(FArchive Ar)
+    {
+        Center = new FVector(Ar);
+        if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+        {
+            W = (float) Ar.Read<double>();
+        }
+        else
+        {
+            W = Ar.Read<float>();
+        }
+    }
+
+    public void Serialize(FArchiveWriter Ar)
+    {
+        Ar.Serialize(Center);
+
+        // TODO: Versioning
+        // if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+        // {
+        Ar.Write((double) W);
+        // }
+        // else
+        // {
+        //     W = Ar.Read<float>();
+        // }
+    }
+
+    public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);
 }

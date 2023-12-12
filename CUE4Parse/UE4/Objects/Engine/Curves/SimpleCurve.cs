@@ -3,16 +3,23 @@ using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using static CUE4Parse.UE4.Objects.Engine.Curves.ERichCurveInterpMode;
 
 namespace CUE4Parse.UE4.Objects.Engine.Curves
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FSimpleCurveKey : IUStruct
+    public readonly struct FSimpleCurveKey : IUStruct, ISerializable
     {
         public readonly float Time;
         public readonly float Value;
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(Time);
+            Ar.Write(Value);
+        }
     }
 
     [StructFallback]

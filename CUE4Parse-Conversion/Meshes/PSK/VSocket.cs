@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public class VSocket
+public class VSocket : ISerializable
 {
     public readonly string SocketName;
     public readonly string BoneName;
@@ -24,10 +24,10 @@ public class VSocket
 
     public void Serialize(FArchiveWriter Ar)
     {
-        Ar.Write(SocketName.Substring(0, Math.Min(SocketName.Length, 64)), 64);
-        Ar.Write(BoneName.Substring(0, Math.Min(BoneName.Length, 64)), 64);
-        RelativeLocation.Serialize(Ar);
-        RelativeRotation.Serialize(Ar);
-        RelativeScale.Serialize(Ar);
+        Ar.Serialize(SocketName[..Math.Min(SocketName.Length, 64)], 64);
+        Ar.Serialize(BoneName[..Math.Min(BoneName.Length, 64)], 64);
+        Ar.Serialize(RelativeLocation);
+        Ar.Serialize(RelativeRotation);
+        Ar.Serialize(RelativeScale);
     }
 }
