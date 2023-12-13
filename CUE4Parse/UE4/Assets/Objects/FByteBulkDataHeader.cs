@@ -1,12 +1,13 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
-    public readonly struct FByteBulkDataHeader
+    public readonly struct FByteBulkDataHeader : ISerializable
     {
         public readonly EBulkDataFlags BulkDataFlags;
         public readonly int ElementCount;
@@ -65,6 +66,21 @@ namespace CUE4Parse.UE4.Assets.Objects
                 Ar.Position += sizeof(EBulkDataFlags); // DuplicateFlags
                 Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
                 Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
+            }
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write((uint) BulkDataFlags);
+            Ar.Write(BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (long) ElementCount : ElementCount);
+            Ar.Write(BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (long) SizeOnDisk : SizeOnDisk);
+            
+            // TODO: Versioning
+            Ar.Write(/* Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? */OffsetInFile/* : (int) OffsetInFile*/);
+
+            if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp))
+            {
+                // TODO: Remaining
             }
         }
     }

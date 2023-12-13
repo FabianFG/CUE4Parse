@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -24,14 +25,14 @@ namespace CUE4Parse.UE4.Assets.Exports
 
     [JsonConverter(typeof(UObjectConverter))]
     [SkipObjectRegistration]
-    public class UObject : IPropertyHolder
+    public class UObject(List<FPropertyTag> properties) : IPropertyHolder, ISerializable
     {
         public string Name { get; set; }
         public UObject? Outer;
         public UStruct? Class;
         public ResolvedObject? Super;
         public ResolvedObject? Template;
-        public List<FPropertyTag> Properties { get; private set; }
+        public List<FPropertyTag> Properties { get; private set; } = properties;
         public FGuid? ObjectGuid { get; private set; }
         public EObjectFlags Flags;
 
@@ -57,15 +58,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
         public virtual string ExportType => Class?.Name ?? GetType().Name;
 
-        public UObject()
-        {
-            Properties = new List<FPropertyTag>();
-        }
-
-        public UObject(List<FPropertyTag> properties)
-        {
-            Properties = properties;
-        }
+        public UObject() : this([]) { }
 
         public virtual void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -73,11 +66,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 if (Class == null)
                     throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
-                DeserializePropertiesUnversioned(Properties = new List<FPropertyTag>(), Ar, Class);
+                DeserializePropertiesUnversioned(Properties = [], Ar, Class);
             }
             else
             {
-                DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar);
+                DeserializePropertiesTagged(Properties = [], Ar);
             }
 
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
@@ -89,6 +82,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 Ar.Position += 4; // No idea honestly
             }
+        }
+        
+        public virtual void Serialize(FArchiveWriter Ar)
+        {
+            // TODO: Serialize properties lol
         }
 
         /**

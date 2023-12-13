@@ -23,9 +23,9 @@ public class FArchiveWriter : BinaryWriter
     public long Position => _memoryData.Position;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Serialize(ISerializable item)
+    public void Serialize(ISerializable? item)
     {
-        item.Serialize(this);
+        item?.Serialize(this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

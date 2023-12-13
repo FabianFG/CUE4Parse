@@ -1,6 +1,7 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
@@ -8,7 +9,7 @@ using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FByteBulkDataConverter))]
-    public class FByteBulkData
+    public class FByteBulkData : ISerializable
     {
         public readonly FByteBulkDataHeader Header;
         public readonly EBulkDataFlags BulkDataFlags;
@@ -95,6 +96,12 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 Ar.Position += Header.SizeOnDisk;
             }
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Serialize(Header);
+            // TODO: Remaining
         }
     }
 }

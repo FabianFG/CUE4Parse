@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
 {
@@ -11,6 +12,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL
         {
             base.Deserialize(Ar, validPos);
             SafetyFallbackCodec = GetOrDefault<FPackageIndex>(nameof(SafetyFallbackCodec));
+        }
+
+        public override void Serialize(FArchiveWriter Ar)
+        {
+            base.Serialize(Ar);
+            
+            Ar.Serialize(SafetyFallbackCodec);
         }
 
         public override UAnimBoneCompressionCodec? GetCodec(string ddcHandle)
