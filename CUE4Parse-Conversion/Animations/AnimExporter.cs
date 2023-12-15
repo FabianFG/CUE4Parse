@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Animations.PSA;
+using CUE4Parse_Conversion.Animations.UEFormat;
 using CUE4Parse.UE4.Assets.Exports;
 
 namespace CUE4Parse_Conversion.Animations
@@ -26,12 +27,24 @@ namespace CUE4Parse_Conversion.Animations
             for (var sequenceIndex = 0; sequenceIndex < animSet.Sequences.Count; sequenceIndex++)
             {
                 using var Ar = new FArchiveWriter();
-                
-                new ActorXAnim(animSet, sequenceIndex, Options).Save(Ar);
-                
+                string ext;
+                switch (Options.AnimFormat)
+                {
+                    case EAnimFormat.ActorX:
+                        ext = "psa";
+                        new ActorXAnim(animSet, sequenceIndex, Options).Save(Ar);
+                        break;
+                    case EAnimFormat.UEFormat:
+                        ext = "ueanim";
+                        new UEAnim(export.Name, animSet, sequenceIndex, Options).Save(Ar);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
+                }
+            
                 AnimSequences.Add(sequenceIndex > 0
-                    ? new Anim($"{PackagePath}_SEQ{sequenceIndex}.psa", Ar.GetBuffer())
-                    : new Anim($"{PackagePath}.psa", Ar.GetBuffer()));
+                    ? new Anim($"{PackagePath}_SEQ{sequenceIndex}.{ext}", Ar.GetBuffer())
+                    : new Anim($"{PackagePath}.{ext}", Ar.GetBuffer()));
             }
         }
 

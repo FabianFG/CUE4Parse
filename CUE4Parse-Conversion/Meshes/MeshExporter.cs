@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse_Conversion.Meshes.UEFormat;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Serilog;
@@ -40,6 +41,10 @@ namespace CUE4Parse_Conversion.Meshes
                     throw new NotImplementedException();
                 case EMeshFormat.OBJ:
                     throw new NotImplementedException();
+                case EMeshFormat.UEFormat:
+                    ext = "uemodel";
+                    new ActorXMesh(bones, originalSkeleton.Sockets, Options).Save(Ar);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
             }
@@ -83,6 +88,10 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.OBJ:
                         ext = "obj";
                         new Gltf(ExportName, lod, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
+                    case EMeshFormat.UEFormat:
+                        ext = "uemodel";
+                        new UEModel(lod, originalMesh.Name, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
@@ -149,6 +158,10 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.OBJ:
                         ext = "obj";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
+                    case EMeshFormat.UEFormat:
+                        ext = "uemodel";
+                        new UEModel(lod, originalMesh.Name, convertedMesh.RefSkeleton, originalMesh.MorphTargets, totalSockets.ToArray(), lodIndex, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
