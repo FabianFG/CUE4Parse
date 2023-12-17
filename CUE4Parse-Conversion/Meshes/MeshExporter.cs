@@ -43,7 +43,7 @@ namespace CUE4Parse_Conversion.Meshes
                     throw new NotImplementedException();
                 case EMeshFormat.UEFormat:
                     ext = "uemodel";
-                    new ActorXMesh(bones, originalSkeleton.Sockets, Options).Save(Ar);
+                    new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, Options).Save(Ar);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
@@ -91,7 +91,7 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.UEFormat:
                         ext = "uemodel";
-                        new UEModel(lod, originalMesh.Name, Options).Save(Ar);
+                        new UEModel(originalMesh.Name, lod, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
@@ -161,7 +161,7 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.UEFormat:
                         ext = "uemodel";
-                        new UEModel(lod, originalMesh.Name, convertedMesh.RefSkeleton, originalMesh.MorphTargets, totalSockets.ToArray(), lodIndex, Options).Save(Ar);
+                        new UEModel(originalMesh.Name, lod, convertedMesh.RefSkeleton, originalMesh.MorphTargets, totalSockets.ToArray(), lodIndex, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);

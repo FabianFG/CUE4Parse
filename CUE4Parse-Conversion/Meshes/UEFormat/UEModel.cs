@@ -16,12 +16,12 @@ public class UEModel : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEMODEL";
     
-    public UEModel(CStaticMeshLod lod, string name, ExporterOptions options) : base(name, options) 
+    public UEModel(string name, CStaticMeshLod lod, ExporterOptions options) : base(name, options) 
     {
         SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
     }
     
-    public UEModel(CSkelMeshLod lod, string name, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
+    public UEModel(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
     {
         SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
         SerializeSkeletalMeshData(lod.Verts, morphTargets, lodIndex);
