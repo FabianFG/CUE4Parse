@@ -1,5 +1,6 @@
 using System;
 using CUE4Parse_Conversion.UEFormat.Enums;
+using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Writers;
 using Ionic.Zlib;
 using ZstdSharp;

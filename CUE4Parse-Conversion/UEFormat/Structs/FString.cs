@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.UEFormat;
+namespace CUE4Parse_Conversion.UEFormat.Structs;
 
 public readonly struct FString : ISerializable
 {

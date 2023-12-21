@@ -3,7 +3,7 @@ using System.Text;
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.UEFormat;
+namespace CUE4Parse_Conversion.UEFormat.Structs;
 
 public struct FUEFormatHeader : ISerializable
 {

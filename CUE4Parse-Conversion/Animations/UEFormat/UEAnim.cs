@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.UEFormat;
+using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.UEFormat;
