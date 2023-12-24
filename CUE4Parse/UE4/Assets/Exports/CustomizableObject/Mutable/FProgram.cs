@@ -14,12 +14,8 @@ public class FProgram
         var type = Ar.Read<ushort>();
         var unusedFlags = Ar.Read<ushort>();
 
-        var IntConstantArgs = Ar.Read<int>();
-        var ScalarConstantArgs = Ar.Read<float>();
-        var ColourConstantArgs = new float[4];
-        for (var i = 0; i < ColourConstantArgs.Length; i++)
-        {
-            ColourConstantArgs[i] = Ar.Read<float>();
-        }
+        var IntConstantArgs = Ar.Read<IntConstantArgs>();
+        var ScalarConstantArgs = Ar.Read<ScalarConstantArgs>();
+        var ColourConstantArgs = Ar.Read<ColourConstantArgs>();
     }
 }
