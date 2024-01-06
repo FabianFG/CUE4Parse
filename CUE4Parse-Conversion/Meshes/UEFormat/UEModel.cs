@@ -127,7 +127,7 @@ public class UEModel : UEFormatExport
         {
             foreach (var section in sections)
             {
-                var materialName = section.Material?.Load<UMaterialInterface>()?.Name ?? string.Empty;
+                var materialName = section.Material?.Name.Text ?? string.Empty;
                 materialChunk.WriteFString(materialName);
                 materialChunk.Write(section.FirstIndex);
                 materialChunk.Write(section.NumFaces);

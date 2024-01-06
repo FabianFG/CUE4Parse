@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
-public class FMorphTarget : ISerializable
+public readonly struct FMorphTarget : ISerializable
 {
     private readonly FString MorphName;
     private readonly List<FMorphData> MorphData = new();
@@ -28,7 +28,7 @@ public class FMorphTarget : ISerializable
     }
 }
 
-public class FMorphData : ISerializable
+public readonly struct FMorphData : ISerializable
 {
     private readonly FVector PositionDelta;
     private readonly FVector TangentZDelta;
