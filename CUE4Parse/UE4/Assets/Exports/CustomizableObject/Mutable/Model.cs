@@ -7,11 +7,10 @@ public class Model
 {
     public int Version;
     public FProgram Program;
-    
+
     public Model(FArchive Ar)
     {
         Version = Ar.Read<int>();
-
         Program = new FProgram(Ar);
     }
 }
