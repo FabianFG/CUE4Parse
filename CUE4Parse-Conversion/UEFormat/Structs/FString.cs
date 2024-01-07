@@ -11,10 +11,9 @@ public readonly struct FString(string Text) : ISerializable
     {
         Ar.Write(Text.Length);
         
-        var padded = ArrayPool<byte>.Shared.Rent(Text.Length);
+        var padded = new byte[Text.Length];
         var bytes = Encoding.UTF8.GetBytes(Text); 
         Buffer.BlockCopy(bytes, 0, padded, 0, bytes.Length);
         Ar.Write(padded);
-        ArrayPool<byte>.Shared.Return(padded);
     }
 }
