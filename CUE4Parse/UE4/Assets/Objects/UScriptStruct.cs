@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
+using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -151,6 +152,9 @@ namespace CUE4Parse.UE4.Assets.Objects
                 "RsBitfield_WorldMapLODLevel" => new FRsBitfield(Ar, structName),
                 "RsBitfield_WorldMapWidgetFilterType" => new FRsBitfield(Ar, structName),
 
+                // Lego 2K Drive
+                "LegoGraphPartInstance" => type == ReadType.ZERO ? new FLegoGraphPartInstance() : new FLegoGraphPartInstance(Ar),
+				
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             };
         }
