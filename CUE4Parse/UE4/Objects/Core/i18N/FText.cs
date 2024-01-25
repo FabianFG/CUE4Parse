@@ -209,8 +209,9 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public NamedFormat(FAssetArchive Ar)
             {
                 SourceFmt = new FText(Ar);
-                Arguments = new Dictionary<string, FFormatArgumentValue>(Ar.Read<int>());
-                for (int i = 0; i < Arguments.Count; i++)
+                int ArgCount = Ar.Read<int>();
+                Arguments = new Dictionary<string, FFormatArgumentValue>(ArgCount);
+                for (int i = 0; i < ArgCount; i++)
                 {
                     Arguments[Ar.ReadFString()] = new FFormatArgumentValue(Ar);
                 }
