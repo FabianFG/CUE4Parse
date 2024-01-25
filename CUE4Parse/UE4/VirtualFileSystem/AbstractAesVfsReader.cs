@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Aes = System.Security.Cryptography.Aes;
 
 namespace CUE4Parse.UE4.VirtualFileSystem
 {
@@ -34,7 +35,21 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public abstract byte[] MountPointCheckBytes();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TestAesKey(byte[] bytes, FAesKey key) => IsValidIndex(_game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(key) : bytes.Decrypt(key));
+        public static bool TestAesKey(byte[] bytes, FAesKey key)
+        {
+            byte[] decrypted;
+            switch (_game)
+            {
+                case EGame.GAME_ApexLegendsMobile:
+                    decrypted = bytes.DecryptApexMobile(key);
+                    break;
+                default:
+                    decrypted = bytes.Decrypt(key);
+                    break;
+            }
+
+            return IsValidIndex(decrypted);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected byte[] DecryptIfEncrypted(byte[] bytes) =>
@@ -51,9 +66,9 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             }
             if (AesKey != null)
             {
-                if (Game == EGame.GAME_Snowbreak)
+                if (_game == EGame.GAME_Snowbreak)
                 {
-                    var newKey = GetSnowbreakAESKey(Name, AesKey);
+                    var newKey = ConvertSnowbreakAes(Name, AesKey);
                     if (TestAesKey(newKey))
                     {
                         AesKey = newKey;
@@ -75,7 +90,18 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             }
             if (AesKey != null)
             {
-                return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
+                if (_game == EGame.GAME_Snowbreak)
+                {
+                    var newKey = ConvertSnowbreakAes(Name, AesKey);
+                    if (TestAesKey(newKey))
+                    {
+                        AesKey = newKey;
+                        return bytes.Decrypt(AesKey);
+                    }
+                }
+                
+                if (TestAesKey(AesKey))
+                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
             }
             throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
         }
@@ -87,7 +113,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
             DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
 
-        private FAesKey GetSnowbreakAESKey(string name, FAesKey key)
+        private FAesKey ConvertSnowbreakAes(string name, FAesKey key)
         {
             var pakName = System.IO.Path.GetFileNameWithoutExtension(name).ToLower();
             var pakNameBytes = Encoding.ASCII.GetBytes(pakName);
@@ -96,7 +122,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             var md5AsString = Convert.ToHexString(md5Name).ToLower();
             var md5StrBytes = Encoding.ASCII.GetBytes(md5AsString);
 
-            using var aesEnc = System.Security.Cryptography.Aes.Create();
+            using var aesEnc = Aes.Create();
             aesEnc.Mode = CipherMode.ECB;
             aesEnc.Key = key.Key;
 
