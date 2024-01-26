@@ -269,6 +269,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 case EGame.GAME_CalabiYau:
                     Ar.Position += 8;
                     break;
+                case EGame.GAME_MortalKombat1:
+                    Ar.Position += 12;
+                    break;
             }
         }
     }

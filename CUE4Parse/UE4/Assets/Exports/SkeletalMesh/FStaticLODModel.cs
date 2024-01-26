@@ -240,6 +240,15 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         if (elementSize > 0 && elementCount > 0)
                             Ar.SkipBulkArrayData();
                     }
+                    if (Ar.Game == EGame.GAME_MortalKombat1 && Ar.ReadBoolean())
+                    {
+                        for (int i = 0; i < 7; i++)
+                        {
+                            Ar.SkipBulkArrayData();
+                        }
+
+                        Ar.Position += 8;
+                    }
                 }
                 else
                 {
