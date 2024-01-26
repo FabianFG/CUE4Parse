@@ -102,8 +102,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             TileBorderSize = Ar.Read<uint>();
             if (Ar.Game >= EGame.GAME_UE5_0) TileDataOffsetPerLayer = Ar.ReadArray<uint>();
 
-            if (!bStripMips)
-            {
+            //if (!bStripMips)
+            //{
                 NumMips = Ar.Read<uint>();
                 Width = Ar.Read<uint>();
                 Height = Ar.Read<uint>();
@@ -118,7 +118,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
                 TileIndexPerChunk = Ar.ReadArray<uint>();
                 TileIndexPerMip = Ar.ReadArray<uint>();
                 TileOffsetInChunk = Ar.ReadArray<uint>();
-            }
+            //}
 
             LayerTypes = Ar.ReadArray((int) NumLayers, () => (EPixelFormat) Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
 
