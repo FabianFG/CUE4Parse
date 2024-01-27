@@ -1,8 +1,8 @@
-﻿namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums
 {
     public enum EHierarchyObjectType : byte
     {
-        Settings,
+        Settings = 0x01,
         SoundSfxVoice,
         EventAction,
         Event,

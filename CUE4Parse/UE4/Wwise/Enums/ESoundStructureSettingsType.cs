@@ -1,8 +1,6 @@
-using System;
-
 namespace CUE4Parse.UE4.Wwise.Enums
 {
-    public enum EHierarchyParameterType : ushort
+    public enum ESoundStructureSettingsType : byte
     {
         VoiceVolume,
         VoicePitch = 0x02,

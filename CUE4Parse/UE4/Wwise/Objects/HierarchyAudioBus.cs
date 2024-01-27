@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects
 {
-    public class HierarchyDialogueEvent : AbstractHierarchy
+    public class HierarchyAudioBus : AbstractHierarchy
     {
-        public HierarchyDialogueEvent(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyAudioBus(FArchive Ar, long hierarchyEndPosition) : base(Ar)
         {
             Ar.Position = hierarchyEndPosition;
         }
@@ -13,3 +13,4 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
     }
 }
+
