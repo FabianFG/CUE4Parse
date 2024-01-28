@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -10,7 +12,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly uint ParentId;
         public readonly bool OverrideParentPlaybackPriority;
         public readonly bool OffsetPriorityAtMaxDistance;
-        public readonly ushort SettingsCount;
         public readonly Setting<ESoundStructureSettingsType>[] Settings;
         public readonly byte Unknown;
 
@@ -20,14 +21,15 @@ namespace CUE4Parse.UE4.Wwise.Objects
             ParentId = Ar.Read<uint>();
             OverrideParentPlaybackPriority = Ar.Read<bool>();
             OffsetPriorityAtMaxDistance = Ar.Read<bool>();
-            SettingsCount = Ar.Read<ushort>();
-            Settings = new Setting<ESoundStructureSettingsType>[SettingsCount];
-            var settingIds = Ar.ReadArray<ESoundStructureSettingsType>(SettingsCount);
-            var settingValues = Ar.ReadArray<float>(SettingsCount);
-            for (int index = 0; index < SettingsCount; index++)
+
+            Settings = new Setting<ESoundStructureSettingsType>[Ar.Read<byte>()];
+            var settingIds = Ar.ReadArray<ESoundStructureSettingsType>(Settings.Length);
+            var settingValues = Ar.ReadArray<float>(settingIds.Length);
+            for (int index = 0; index < Settings.Length; index++)
             {
                 Settings[index] = new Setting<ESoundStructureSettingsType>(settingIds[index], settingValues[index]);
             }
+
             Unknown = Ar.Read<byte>();
         }
 
@@ -49,21 +51,13 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
             writer.WritePropertyName("Settings");
             writer.WriteStartObject();
-            writer.WritePropertyName("SettingsCount");
-            writer.WriteValue(SettingsCount);
-            if (SettingsCount != 0)
-            {
-                writer.WritePropertyName("Settings");
-                writer.WriteStartObject();
-                foreach (Setting<ESoundStructureSettingsType> setting in Settings)
-                    setting.WriteJson(writer, serializer);
-                writer.WriteEndObject();
-            }
+            foreach (Setting<ESoundStructureSettingsType> setting in Settings)
+                setting.WriteJson(writer, serializer);
             writer.WriteEndObject();
 
             writer.WriteEndObject();
 
-            
+
         }
     }
 }

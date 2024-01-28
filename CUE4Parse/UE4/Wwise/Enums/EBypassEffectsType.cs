@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace CUE4Parse.UE4.Wwise.Enums
 {
-    public enum EBypassEffectsType: byte
+    public enum EBypassEffectsType : byte
     {
         BypassEffect0 = 0x01,
         BypassEffect1,

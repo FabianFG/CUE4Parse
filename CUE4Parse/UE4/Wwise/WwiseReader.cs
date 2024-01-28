@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Wwise
         public string[]? Initialization { get; }
         public DataIndex[]? WemIndexes { get; }
         public byte[][]? WemSounds { get; }
-        public Hierarchy[]? Hierarchy { get; }
+        public Hierarchy[]? Hierarchies { get; }
         public Dictionary<uint, string>? IdToString { get; }
         public string? Platform { get; }
         public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
@@ -83,7 +83,7 @@ namespace CUE4Parse.UE4.Wwise
                         }
                         break;
                     case ESectionIdentifier.HIRC:
-                        Hierarchy = Ar.ReadArray(() => new Hierarchy(Ar));
+                        Hierarchies = Ar.ReadArray(() => new Hierarchy(Ar));
                         break;
                     case ESectionIdentifier.RIFF:
                         // read byte[sectionLength] it's simply a wem file
@@ -133,6 +133,27 @@ namespace CUE4Parse.UE4.Wwise
                         WwiseEncodedMedias[IdToString.TryGetValue(entry.NameHash, out var k) ? k : $"{entry.Path.ToUpper()}_{entry.NameHash}"] = entry.Data;
                     }
                 }
+            }
+            if (Hierarchies != null)
+            {
+                // the proper way seems to read the header id to get the main hierarchy
+                // that hierarchy will give other hierarchy ids and so on until the end sound data
+                // but not everything is currently getting parsed so that's not possible
+
+                // foreach (var hierarchy in Hierarchies)
+                // {
+                //     switch (hierarchy.Type)
+                //     {
+                //         case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice
+                //         {
+                //             SoundSource: ESoundSource.Embedded
+                //         } sfxVoice:
+                //             WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
+                //             break;
+                //         default:
+                //             break;
+                //     }
+                // }
             }
         }
     }

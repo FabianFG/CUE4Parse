@@ -1176,8 +1176,8 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         writer.WritePropertyName("WemIndexes");
         serializer.Serialize(writer, value.WemIndexes);
 
-        writer.WritePropertyName("Hierarchy");
-        serializer.Serialize(writer, value.Hierarchy);
+        writer.WritePropertyName("Hierarchies");
+        serializer.Serialize(writer, value.Hierarchies);
 
         writer.WritePropertyName("IdToString");
         serializer.Serialize(writer, value.IdToString);

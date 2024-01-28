@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
 {
     public class HierarchyAuxiliaryBus : AbstractHierarchy
     {
-        public HierarchyAuxiliaryBus(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyAuxiliaryBus(FArchive Ar) : base(Ar)
         {
-            Ar.Position = hierarchyEndPosition;
+
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }

@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
 {
     public class HierarchyActorMixer : AbstractHierarchy
     {
-        public HierarchyActorMixer(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyActorMixer(FArchive Ar) : base(Ar)
         {
-            Ar.Position = hierarchyEndPosition;
+
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }

@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly uint ReferencedId;
         public readonly short ParameterCount;
 
-        public HierarchyEventAction(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyEventAction(FArchive Ar) : base(Ar)
         {
             EventActionScope = Ar.Read<EEventActionScope>();
             EventActionType = Ar.Read<EEventActionType>();
@@ -23,7 +23,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
             ParameterCount = BitConverter.ToInt16(reversedCount, 0);
 
             // TODO: https://web.archive.org/web/20230818023606/http://wiki.xentax.com/index.php/Wwise_SoundBank_(*.bnk)#type_.233:_Event_Action
-            Ar.Position = hierarchyEndPosition;
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

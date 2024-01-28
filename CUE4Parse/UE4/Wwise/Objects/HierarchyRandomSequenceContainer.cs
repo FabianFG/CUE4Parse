@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
 {
     public class HierarchyRandomSequenceContainer : AbstractHierarchy
     {
-        public HierarchyRandomSequenceContainer(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
         {
-            Ar.Position = hierarchyEndPosition;
+
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }

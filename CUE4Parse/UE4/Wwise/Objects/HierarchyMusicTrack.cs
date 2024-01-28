@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
 {
     public class HierarchyMusicTrack : AbstractHierarchy
     {
-        public HierarchyMusicTrack(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchyMusicTrack(FArchive Ar) : base(Ar)
         {
-            Ar.Position = hierarchyEndPosition;
+
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }

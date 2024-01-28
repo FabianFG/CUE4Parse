@@ -2,6 +2,7 @@ using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Wwise.Objects
 {
@@ -20,27 +21,35 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Data = Type switch
             {
                 EHierarchyObjectType.Settings => new HierarchySettings(Ar),
-                //EHierarchyObjectType.Settings => new HierarchyGeneric(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.SoundSfxVoice => new HierarchySoundSfxVoice(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.EventAction => new HierarchyEventAction(Ar, hierarchyEndPosition),
+                // EHierarchyObjectType.Settings => new HierarchyGeneric(Ar),
+                EHierarchyObjectType.SoundSfxVoice => new HierarchySoundSfxVoice(Ar),
+                EHierarchyObjectType.EventAction => new HierarchyEventAction(Ar),
                 EHierarchyObjectType.Event => new HierarchyEvent(Ar),
-                EHierarchyObjectType.RandomSequenceContainer => new HierarchyRandomSequenceContainer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.SwitchContainer => new HierarchySwitchContainer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.ActorMixer => new HierarchyActorMixer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.AudioBus => new HierarchyAudioBus(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.BlendContainer => new HierarchyBlendContainer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MusicSegment => new HierarchyMusicSegment(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MusicTrack => new HierarchyMusicTrack(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MusicPlaylistContainer => new HierarchyMusicPlaylistContainer(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.Attenuation => new HierarchyAttenuation(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.DialogueEvent => new HierarchyDialogueEvent(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MotionBus => new HierarchyMotionBus(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.MotionFx => new HierarchyMotionFx(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.Effect => new HierarchyEffect(Ar, hierarchyEndPosition),
-                EHierarchyObjectType.AuxiliaryBus => new HierarchyAuxiliaryBus(Ar, hierarchyEndPosition),
-                _ => new HierarchyGeneric(Ar, hierarchyEndPosition),
+                EHierarchyObjectType.RandomSequenceContainer => new HierarchyRandomSequenceContainer(Ar),
+                EHierarchyObjectType.SwitchContainer => new HierarchySwitchContainer(Ar),
+                EHierarchyObjectType.ActorMixer => new HierarchyActorMixer(Ar),
+                EHierarchyObjectType.AudioBus => new HierarchyAudioBus(Ar),
+                EHierarchyObjectType.BlendContainer => new HierarchyBlendContainer(Ar),
+                EHierarchyObjectType.MusicSegment => new HierarchyMusicSegment(Ar),
+                EHierarchyObjectType.MusicTrack => new HierarchyMusicTrack(Ar),
+                EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar),
+                EHierarchyObjectType.MusicPlaylistContainer => new HierarchyMusicPlaylistContainer(Ar),
+                EHierarchyObjectType.Attenuation => new HierarchyAttenuation(Ar),
+                EHierarchyObjectType.DialogueEvent => new HierarchyDialogueEvent(Ar),
+                EHierarchyObjectType.MotionBus => new HierarchyMotionBus(Ar),
+                EHierarchyObjectType.MotionFx => new HierarchyMotionFx(Ar),
+                EHierarchyObjectType.Effect => new HierarchyEffect(Ar),
+                EHierarchyObjectType.AuxiliaryBus => new HierarchyAuxiliaryBus(Ar),
+                _ => new HierarchyGeneric(Ar),
             };
+
+            if (Ar.Position != hierarchyEndPosition)
+            {
+#if DEBUG
+                Log.Warning($"Didn't read hierarchy {Type} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+#endif
+                Ar.Position = hierarchyEndPosition;
+            }
         }
     }
 

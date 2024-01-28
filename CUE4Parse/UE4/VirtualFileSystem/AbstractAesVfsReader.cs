@@ -52,6 +52,28 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected byte[] Decrypt(byte[] bytes, FAesKey? key)
+        {
+            if (key != null)
+            {
+                var valid = TestAesKey(key);
+                if (!valid && _game == EGame.GAME_Snowbreak)
+                {
+                    var newKey = ConvertSnowbreakAes(Name, key);
+                    if (TestAesKey(newKey))
+                    {
+                        valid = true;
+                        key = newKey;
+                    }
+                }
+
+                if (valid)
+                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(key) : bytes.Decrypt(key);
+            }
+            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected byte[] DecryptIfEncrypted(byte[] bytes) =>
             DecryptIfEncrypted(bytes, IsEncrypted);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,22 +86,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             {
                 return CustomEncryption(bytes, 0, bytes.Length, this);
             }
-            if (AesKey != null)
-            {
-                if (_game == EGame.GAME_Snowbreak)
-                {
-                    var newKey = ConvertSnowbreakAes(Name, AesKey);
-                    if (TestAesKey(newKey))
-                    {
-                        AesKey = newKey;
-                        return bytes.Decrypt(AesKey);
-                    }
-                }
 
-                if (TestAesKey(AesKey))
-                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
-            }
-            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+            return Decrypt(bytes, AesKey);
         }
         protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted)
         {
@@ -88,22 +96,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             {
                 return CustomEncryption(bytes, beginOffset, count, this);
             }
-            if (AesKey != null)
-            {
-                if (_game == EGame.GAME_Snowbreak)
-                {
-                    var newKey = ConvertSnowbreakAes(Name, AesKey);
-                    if (TestAesKey(newKey))
-                    {
-                        AesKey = newKey;
-                        return bytes.Decrypt(AesKey);
-                    }
-                }
-                
-                if (TestAesKey(AesKey))
-                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
-            }
-            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+
+            return Decrypt(bytes, AesKey);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -18,7 +17,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
 
 
-        public HierarchySoundSfxVoice(FArchive Ar, long hierarchyEndPosition) : base(Ar)
+        public HierarchySoundSfxVoice(FArchive Ar) : base(Ar)
         {
             SoundConversion = Ar.Read<ESoundConversion>();
             //Ar.Position += 4;
@@ -36,7 +35,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
             SoundStructureData = new SoundStructure(Ar);
 
             // TODO: https://web.archive.org/web/20230818023606/http://wiki.xentax.com/index.php/Wwise_SoundBank_(*.bnk)#Sound_structure
-            Ar.Position = hierarchyEndPosition; // Go to end of position as temporary solution
         }
 
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

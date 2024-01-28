@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
     {
         public readonly ushort SettingsCount;
         public readonly Setting<EHierarchyParameterType>[] Settings;
-        
+
         public HierarchySettings(FArchive Ar) : base(Ar)
         {
             SettingsCount = Ar.Read<ushort>();
@@ -25,10 +25,10 @@ namespace CUE4Parse.UE4.Wwise.Objects
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("SettingsCount");
-            writer.WriteValue(SettingsCount);
+            // writer.WritePropertyName("SettingsCount");
+            // writer.WriteValue(SettingsCount);
 
-            if (SettingsCount != 0)
+            // if (SettingsCount != 0)
             {
                 writer.WritePropertyName("Settings");
                 writer.WriteStartObject();

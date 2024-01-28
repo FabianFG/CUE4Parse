@@ -1,8 +1,5 @@
-using System;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Wwise.Objects
 {
@@ -11,7 +8,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly SoundStructureEffects SoundStructureEffectsData;
         public readonly SoundStructureSettings SoundStructureSettingsData;
         public readonly SoundStructurePosition SoundStructurePositionData;
-        
 
         public SoundStructure(FArchive Ar)
         {
