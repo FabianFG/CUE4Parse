@@ -12,6 +12,10 @@ namespace CUE4Parse.MappingsProvider.Usmap;
 
 public class UsmapParser
 {
+    private const uint CEXT_MAGIC = 0x54584543;
+    private const uint PPTH_MAGIC = 0x48545050;
+    private const uint ENVP_MAGIC = 0x50564E45;
+
     private const ushort FileMagic = 0x30C4;
     public readonly TypeMappings? Mappings;
     public readonly EUsmapCompressionMethod CompressionMethod;
@@ -78,7 +82,7 @@ public class UsmapParser
             }
             case EUsmapCompressionMethod.ZStandard:
             {
-                var decompressor = new Decompressor();
+                using var decompressor = new Decompressor();
                 data = decompressor.Unwrap(Ar.ReadBytes((int) compSize), (int) decompSize).ToArray();
                 break;
             }
@@ -86,6 +90,7 @@ public class UsmapParser
                 throw new ParserException($"Invalid compression method {CompressionMethod}");
         }
 
+        Ar.Dispose();
         Ar = new FUsmapReader(new FByteArchive(Ar.Name, data), Ar.Version);
         var nameSize = Ar.Read<uint>();
         var nameLut = new List<string>((int) nameSize);
@@ -96,33 +101,87 @@ public class UsmapParser
         }
 
         var enumCount = Ar.Read<uint>();
-        var enums = new Dictionary<string, Dictionary<int, string>>((int) enumCount);
+        var enums = new List<(string, string?, List<(long, string)>)>((int) enumCount);
+
+        var mappings = new TypeMappings();
         for (var i = 0; i < enumCount; i++)
         {
             var enumName = Ar.ReadName(nameLut)!;
 
             var enumNamesSize = Ar.Read<byte>();
-            var enumNames = new Dictionary<int, string>(enumNamesSize);
+            var enumNames = new List<(long, string)>(enumNamesSize);
             for (var j = 0; j < enumNamesSize; j++)
             {
                 var value = Ar.ReadName(nameLut)!;
-                enumNames[j] = value;
+                enumNames.Add((j, value));
             }
 
-            enums.Add(enumName, enumNames);
+            enums.Add((enumName, null, enumNames));
         }
 
         var structCount = Ar.Read<uint>();
-        var structs = new Dictionary<string, Struct>();
-
-        var mappings = new TypeMappings(structs, enums);
+        var structs = new List<Struct>();
 
         for (var i = 0; i < structCount; i++)
         {
-            var s = UsmapProperties.ParseStruct(mappings, Ar, nameLut);
-            structs[s.Name] = s;
+            structs.Add(UsmapProperties.ParseStruct(mappings, Ar, nameLut));
+        }
+
+        if (Ar.Length - Ar.Position > 5) {
+            if (Ar.Read<uint>() == CEXT_MAGIC) {
+
+                var version = Ar.ReadByte();
+                if (version > 0) {
+                    return;
+                }
+
+                var extensionCount = Ar.Read<int>();
+                for (var i = 0; i < extensionCount; ++i) {
+                    var extMagic = Ar.Read<uint>();
+                    var extensionSize = Ar.Read<int>();
+                    using var ExtAr = new FUsmapReader(new FByteArchive(Ar.Name, Ar.ReadBytes(extensionSize)), Ar.Version);
+
+                    if (extMagic == PPTH_MAGIC && ExtAr.ReadByte() == 0) {
+                        var enumPathCount = ExtAr.Read<int>();
+                        for (var index = 0; index < enumPathCount; ++index) {
+                            var name = ExtAr.ReadName(nameLut)!;
+                            enums[index] = (enums[index].Item1, name, enums[index].Item3);
+                        }
+
+                        var structPathCount = ExtAr.Read<int>();
+                        for (var index = 0; index < structPathCount; ++index) {
+                            var name = ExtAr.ReadName(nameLut)!;
+                            structs[index].Module = name;
+                        }
+                    } else if (extMagic == ENVP_MAGIC && ExtAr.ReadByte() == 0) {
+                        enumCount = ExtAr.Read<uint>();
+                        for (var index = 0; index < enumCount; ++index) {
+                            var valueCount = ExtAr.Read<int>();
+                            var enumValues = new List<(long, string)>(valueCount);
+                            for (var j = 0; j < valueCount; ++j) {
+                                var name = ExtAr.ReadName(nameLut)!;
+                                var id = ExtAr.Read<long>();
+                                enumValues.Add((id, name));
+                            }
+
+                            enums[index] = (enums[index].Item1, enums[index].Item2, enumValues);
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var enumClass in enums) {
+            mappings.Enums[enumClass.Item1] = enumClass.Item3;
+            mappings.Enums[(enumClass.Item2 ?? "") + "/" + enumClass.Item1] = enumClass.Item3;
+        }
+
+        foreach (var structClass in structs) {
+            mappings.Types[structClass.Name] = structClass;
+            mappings.Types[(structClass.Module ?? "") + "/" + structClass.Name] = structClass;
         }
 
         Mappings = mappings;
+        Ar.Dispose();
     }
 }

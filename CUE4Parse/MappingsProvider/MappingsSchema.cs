@@ -11,6 +11,7 @@ namespace CUE4Parse.MappingsProvider
         public readonly TypeMappings? Context;
         public string Name;
         public string? SuperType;
+        public string? Module;
         public Lazy<Struct?> Super;
         public Dictionary<int, PropertyInfo> Properties;
         public int PropertyCount;
@@ -51,7 +52,7 @@ namespace CUE4Parse.MappingsProvider
 
     public class SerializedStruct : Struct
     {
-        public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
+        public SerializedStruct(TypeMappings? context, UStruct struc, string? name = null) : base(context, name ?? struc.Name, struc.ChildProperties.Length)
         {
             Super = new Lazy<Struct?>(() =>
             {
