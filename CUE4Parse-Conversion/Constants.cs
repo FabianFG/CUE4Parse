@@ -22,6 +22,6 @@ public class Constants
 
     public const int DXT_BITS_PER_PIXEL = 4;
 
-    public const string DETEX_DLL_NAME = "Detex";
+    public const string DETEX_DLL_NAME = "detex";
     public const string TEGRA_SWIZZLE_DLL_NAME = "tegra_swizzle_x64";
 }
