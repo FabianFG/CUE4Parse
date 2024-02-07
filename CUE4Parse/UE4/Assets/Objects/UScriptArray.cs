@@ -26,6 +26,12 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             InnerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptArray needs inner type");
             var elementCount = Ar.Read<int>();
+            if (elementCount > Ar.Length - Ar.Position)
+            {
+                throw new ParserException(Ar,
+                    $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
+            }
+
             if (Ar.HasUnversionedProperties)
             {
                 InnerTagData = tagData.InnerTypeData;
