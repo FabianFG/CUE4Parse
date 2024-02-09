@@ -304,11 +304,11 @@ namespace CUE4Parse.UE4.Pak
                     // Calculate the uncompressed size,
                     // its either just the compression block size
                     // or if its the last block its the remaining data size
-                    var uncompressedSize = (int)Math.Min(pakEntry.CompressionBlockSize, size - uncompressedOff);
+                    var uncompressedSize = (int)Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - uncompressedOff);
                     Decompress(compressed, 0, blockSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
                     uncompressedOff += (int)pakEntry.CompressionBlockSize;
 
-                    if (uncompressedOff >= uncompressed.Length)
+                    if (uncompressedOff >= size)
                         break;
                 }
 

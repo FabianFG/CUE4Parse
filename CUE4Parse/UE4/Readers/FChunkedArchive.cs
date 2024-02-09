@@ -41,10 +41,16 @@ public abstract class FChunkedArchive : FArchive
                 if (Position.Align(BUFFER_SIZE) != Position)
                     BufferOffset = Position.Align(BUFFER_SIZE) - BUFFER_SIZE;
 
-                ReadChunks(BufferOffset, blockSize).CopyTo(Buffer);
+                if ((int) (Position - BufferOffset) + n <= BUFFER_SIZE) //overflow check
+                    ReadChunks(BufferOffset, blockSize).CopyTo(Buffer);
+                else
+                    BufferOffset = -1; // reset buffer position because we didn't actually read
             }
 
-            data = Buffer.AsSpan().Slice((int)(Position - BufferOffset), n);
+            if (BufferOffset == -1 || (int) (Position - BufferOffset) + n > BUFFER_SIZE)
+                data = ReadChunks(Position, n);
+            else
+                data = Buffer.AsSpan().Slice((int) (Position - BufferOffset), n);
         }
         else
         {
