@@ -199,7 +199,7 @@ namespace CUE4Parse.UE4.IO
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
         }
 
-        private byte[] Read(long offset, long length)
+        public byte[] Read(long offset, long length)
         {
             var compressionBlockSize = TocResource.Header.CompressionBlockSize;
             var dst = new byte[length];

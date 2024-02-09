@@ -39,6 +39,6 @@ namespace CUE4Parse.UE4.IO.Objects
         public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
+        public override FArchive CreateReader() => Size > int.MaxValue || Globals.AlwaysUseChunkedReader ? new FIoChunkArchive(Path, this, Vfs.Versions) :  new FByteArchive(Path, Read(), Vfs.Versions);
     }
 }
