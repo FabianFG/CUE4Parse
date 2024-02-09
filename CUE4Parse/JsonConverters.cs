@@ -960,7 +960,16 @@ public class UScriptMapConverter : JsonConverter<UScriptMap>
 
         foreach (var kvp in value.Properties)
         {
-            writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+            var gameTagValue = kvp.Key.GetValue(typeof(FGameplayTag));
+            if (gameTagValue is FGameplayTag tag && tag.IsValid())
+            {
+                writer.WritePropertyName(tag.ToString());
+            }
+            else
+            {
+                writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+            }
+
             serializer.Serialize(writer, kvp.Value);
         }
 
