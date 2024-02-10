@@ -960,8 +960,19 @@ public class UScriptMapConverter : JsonConverter<UScriptMap>
 
         foreach (var kvp in value.Properties)
         {
-            writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
-            serializer.Serialize(writer, kvp.Value);
+            switch (kvp.Key)
+            {
+                case StructProperty:
+                    writer.WritePropertyName("Key");
+                    serializer.Serialize(writer, kvp.Key);
+                    writer.WritePropertyName("Value");
+                    serializer.Serialize(writer, kvp.Value);
+                    break;
+                default:
+                    writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+                    serializer.Serialize(writer, kvp.Value);
+                    break;
+            }
         }
 
         writer.WriteEndObject();
