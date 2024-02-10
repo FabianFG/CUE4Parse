@@ -956,26 +956,32 @@ public class UScriptMapConverter : JsonConverter<UScriptMap>
 {
     public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
+        writer.WriteStartArray();
 
         foreach (var kvp in value.Properties)
         {
             switch (kvp.Key)
             {
                 case StructProperty:
+                    writer.WriteStartObject();
                     writer.WritePropertyName("Key");
                     serializer.Serialize(writer, kvp.Key);
                     writer.WritePropertyName("Value");
                     serializer.Serialize(writer, kvp.Value);
+                    writer.WriteEndObject();
                     break;
                 default:
-                    writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
+                    writer.WriteStartObject();
+                    writer.WritePropertyName("Key");
+                    writer.WriteValue(kvp.Key.ToString().SubstringBefore('(').Trim());
+                    writer.WritePropertyName("Value");
                     serializer.Serialize(writer, kvp.Value);
+                    writer.WriteEndObject();
                     break;
             }
         }
 
-        writer.WriteEndObject();
+        writer.WriteEndArray();
     }
 
     public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap existingValue, bool hasExistingValue,
