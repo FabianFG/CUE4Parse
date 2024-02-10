@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.VirtualFileSystem;
@@ -39,6 +40,6 @@ namespace CUE4Parse.UE4.IO.Objects
         public override byte[] Read() => Vfs.Extract(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => Size > int.MaxValue || Globals.AlwaysUseChunkedReader ? new FIoChunkArchive(Path, this, Vfs.Versions) :  new FByteArchive(Path, Read(), Vfs.Versions);
+        public override FArchive CreateReader() => Globals.AlwaysUseChunkedReader || Size > Math.Min(Globals.LargeFileLimit, int.MaxValue) ? new FIoChunkArchive(Path, this, Vfs.Versions) :  new FByteArchive(Path, Read(), Vfs.Versions);
     }
 }

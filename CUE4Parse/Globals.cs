@@ -10,5 +10,7 @@ namespace CUE4Parse
         public static bool FatalObjectSerializationErrors = false;
         public static bool WarnMissingImportPackage = true;
         public static bool AlwaysUseChunkedReader = false;
+        public static bool AllowLargeFiles = false;
+        public static long LargeFileLimit = int.MaxValue;
     }
 }
