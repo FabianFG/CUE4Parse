@@ -62,7 +62,7 @@ public class UsmapParser
             {
                 if (compSize != decompSize)
                     throw new ParserException("No compression: Compression size must be equal to decompression size");
-                var _ = Ar.Read(data, 0, (int) compSize);
+                _ = Ar.Read(data, 0, (int) compSize);
                 break;
             }
             case EUsmapCompressionMethod.Oodle:
@@ -91,7 +91,7 @@ public class UsmapParser
         var nameLut = new List<string>((int) nameSize);
         for (var i = 0; i < nameSize; i++)
         {
-            var nameLength = Ar.Read<byte>();
+            var nameLength = Ar.Version >= EUsmapVersion.LongFName ? Ar.Read<ushort>() : Ar.Read<byte>();
             nameLut.Add(Ar.ReadStringUnsafe(nameLength));
         }
 
