@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
@@ -960,25 +960,23 @@ public class UScriptMapConverter : JsonConverter<UScriptMap>
 
         foreach (var kvp in value.Properties)
         {
+            writer.WriteStartObject();
             switch (kvp.Key)
             {
                 case StructProperty:
-                    writer.WriteStartObject();
                     writer.WritePropertyName("Key");
                     serializer.Serialize(writer, kvp.Key);
                     writer.WritePropertyName("Value");
                     serializer.Serialize(writer, kvp.Value);
-                    writer.WriteEndObject();
                     break;
                 default:
-                    writer.WriteStartObject();
                     writer.WritePropertyName("Key");
                     writer.WriteValue(kvp.Key.ToString().SubstringBefore('(').Trim());
                     writer.WritePropertyName("Value");
                     serializer.Serialize(writer, kvp.Value);
-                    writer.WriteEndObject();
                     break;
             }
+            writer.WriteEndObject();
         }
 
         writer.WriteEndArray();
