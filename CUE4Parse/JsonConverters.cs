@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
@@ -956,15 +956,30 @@ public class UScriptMapConverter : JsonConverter<UScriptMap>
 {
     public override void WriteJson(JsonWriter writer, UScriptMap value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
+        writer.WriteStartArray();
 
         foreach (var kvp in value.Properties)
         {
-            writer.WritePropertyName(kvp.Key.ToString().SubstringBefore('(').Trim());
-            serializer.Serialize(writer, kvp.Value);
+            writer.WriteStartObject();
+            switch (kvp.Key)
+            {
+                case StructProperty:
+                    writer.WritePropertyName("Key");
+                    serializer.Serialize(writer, kvp.Key);
+                    writer.WritePropertyName("Value");
+                    serializer.Serialize(writer, kvp.Value);
+                    break;
+                default:
+                    writer.WritePropertyName("Key");
+                    writer.WriteValue(kvp.Key.ToString().SubstringBefore('(').Trim());
+                    writer.WritePropertyName("Value");
+                    serializer.Serialize(writer, kvp.Value);
+                    break;
+            }
+            writer.WriteEndObject();
         }
 
-        writer.WriteEndObject();
+        writer.WriteEndArray();
     }
 
     public override UScriptMap ReadJson(JsonReader reader, Type objectType, UScriptMap existingValue, bool hasExistingValue,
