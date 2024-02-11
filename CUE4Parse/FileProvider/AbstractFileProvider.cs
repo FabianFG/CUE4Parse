@@ -549,9 +549,9 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
-            if (ubulkFile != null && !Globals.AllowLargeFiles && ubulkFile.Size >= Globals.LargeFileLimit)
+            if (ubulkFile?.HasValidSize() == false)
                 ubulkFile = null;
-            if (uptnlFile != null && !Globals.AllowLargeFiles && uptnlFile.Size >= Globals.LargeFileLimit)
+            if (uptnlFile?.HasValidSize() == false)
                 uptnlFile = null;
             var uassetTask = file.CreateReaderAsync();
             var uexpTask = uexpFile?.CreateReaderAsync();
@@ -593,9 +593,9 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
-            if (ubulkFile != null && !Globals.AllowLargeFiles && ubulkFile.Size >= Globals.LargeFileLimit)
-                ubulkFile = null;
-            if (uptnlFile != null && !Globals.AllowLargeFiles && uptnlFile.Size >= Globals.LargeFileLimit)
+            if (ubulkFile?.HasValidSize() == false)
+                ubulkFile = null; 
+            if (uptnlFile?.HasValidSize() == false)
                 uptnlFile = null;
             var uassetTask = file.TryCreateReaderAsync().ConfigureAwait(false);
             var uexpTask = uexpFile?.TryCreateReaderAsync().ConfigureAwait(false);
@@ -661,9 +661,9 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
-            if (ubulkFile != null && !Globals.AllowLargeFiles && ubulkFile.Size >= Globals.LargeFileLimit)
+            if (ubulkFile?.HasValidSize() == false)
                 ubulkFile = null;
-            if (uptnlFile != null && !Globals.AllowLargeFiles && uptnlFile.Size >= Globals.LargeFileLimit)
+            if (uptnlFile?.HasValidSize() == false)
                 uptnlFile = null;
             var uassetTask = file.ReadAsync();
             var uexpTask = uexpFile?.ReadAsync();
@@ -700,9 +700,9 @@ namespace CUE4Parse.FileProvider
             Files.TryGetValue(file.PathWithoutExtension + ".uexp", out var uexpFile);
             Files.TryGetValue(file.PathWithoutExtension + ".ubulk", out var ubulkFile);
             Files.TryGetValue(file.PathWithoutExtension + ".uptnl", out var uptnlFile);
-            if (ubulkFile != null && !Globals.AllowLargeFiles && ubulkFile.Size >= Globals.LargeFileLimit)
+            if (ubulkFile?.HasValidSize() == false)
                 ubulkFile = null;
-            if (uptnlFile != null && !Globals.AllowLargeFiles && uptnlFile.Size >= Globals.LargeFileLimit)
+            if (uptnlFile?.HasValidSize() == false)
                 uptnlFile = null;
             var uassetTask = file.TryReadAsync().ConfigureAwait(false);
             var uexpTask = uexpFile?.TryReadAsync().ConfigureAwait(false);
