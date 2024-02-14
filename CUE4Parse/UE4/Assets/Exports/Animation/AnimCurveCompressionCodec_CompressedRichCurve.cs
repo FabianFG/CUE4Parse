@@ -39,14 +39,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
                 {
-                    DefaultValue = *(float*) &constantValue,
+                    DefaultValue = Unsafe.As<int, float>(ref constantValue),
                     PreInfinityExtrap = preInfinityExtrap,
                     PostInfinityExtrap = postInfinityExtrap,
                     Keys = Array.Empty<FRichCurveKey>()
                 },
                 (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
                 {
-                    DefaultValue = *(float*) &constantValue,
+                    DefaultValue = Unsafe.As<int, float>(ref constantValue),
                     PreInfinityExtrap = preInfinityExtrap,
                     PostInfinityExtrap = postInfinityExtrap,
                     Keys = Array.Empty<FRichCurveKey>()
@@ -60,14 +60,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     DefaultValue = 3.402823466e+38f, // MAX_flt
                     PreInfinityExtrap = preInfinityExtrap,
                     PostInfinityExtrap = postInfinityExtrap,
-                    Keys = new FRichCurveKey[] { new(0.0f, *(float*) &constantValue) }
+                    Keys = new FRichCurveKey[] { new(0.0f, Unsafe.As<int, float>(ref constantValue)) }
                 },
                 (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
                 {
                     DefaultValue = 3.402823466e+38f, // MAX_flt
                     PreInfinityExtrap = preInfinityExtrap,
                     PostInfinityExtrap = postInfinityExtrap,
-                    Keys = new FRichCurveKey[] { new(0.0f, *(float*) &constantValue) }
+                    Keys = new FRichCurveKey[] { new(0.0f, Unsafe.As<int, float>(ref constantValue)) }
                 }
             },
             // RCCF_Linear
