@@ -37,6 +37,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 "Box" => type == ReadType.ZERO ? new FBox() : new FBox(Ar),
                 "Box2D" => type == ReadType.ZERO ? new FBox2D() : new FBox2D(Ar),
+                "Box2f" => type == ReadType.ZERO ? new TBox2<float>() : new TBox2<float>(Ar),
                 "Color" => type == ReadType.ZERO ? new FColor() : Ar.Read<FColor>(),
                 "ColorMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
                 "DateTime" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),

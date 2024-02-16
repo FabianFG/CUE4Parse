@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     var bExperimentalOverridableLogic = Ar.ReadBoolean();
                 }
             }
-            
+
             if (readData)
             {
                 var pos = Ar.Position;
