@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             else
             {
-                UObject.DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar);
+                UObject.DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar, true);
             }
         }
 

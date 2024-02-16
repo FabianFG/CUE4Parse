@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             else
             {
-                DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar);
+                DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar, false);
             }
 
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
@@ -245,8 +245,19 @@ namespace CUE4Parse.UE4.Assets.Exports
             } while (it.MoveNext());
         }
 
-        internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar)
+        internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar, bool isStruct)
         {
+            if (!isStruct && Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
+            {
+                var SerializationControl = Ar.Read<byte>(); // EClassSerializationControlExtension
+
+                // TODO
+                // if (SerializationControl.HasFlags(EClassSerializationControlExtension.OverridableSerializationInformation))
+                // {
+                //     var Operation = Ar.Read<byte>(); // Operation
+                // }
+            }
+            
             while (true)
             {
                 var tag = new FPropertyTag(Ar, true);
