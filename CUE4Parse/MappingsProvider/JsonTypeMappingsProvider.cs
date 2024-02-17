@@ -85,7 +85,7 @@ namespace CUE4Parse.MappingsProvider
                 if (entry == null) continue;
                 var values = entry["values"]!.ToObject<string[]>()!;
                 var i = 0;
-                MappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++);
+                MappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++).Select(x => ((long) x.Key, x.Value)).ToList();
             }
         }
     }

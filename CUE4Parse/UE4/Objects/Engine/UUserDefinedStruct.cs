@@ -40,7 +40,8 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.HasUnversionedProperties)
             {
-                DeserializePropertiesUnversioned(DefaultProperties = new List<FPropertyTag>(), Ar, this);
+                var name = ClassIndex?.ResolvedObject?.Outer?.Name;
+                DeserializePropertiesUnversioned(DefaultProperties = new List<FPropertyTag>(), Ar, this, name?.PlainText);
             }
             else
             {
