@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using CUE4Parse_Conversion.Materials;
+using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -9,17 +11,14 @@ using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
-using CUE4Parse_Conversion.Materials;
-using CUE4Parse_Conversion.Meshes.glTF;
-using CUE4Parse_Conversion.Meshes.PSK;
 using SharpGLTF.Geometry;
 using SharpGLTF.Geometry.VertexTypes;
+using SharpGLTF.IO;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
-using SharpGLTF.IO;
 
-namespace CUE4Parse_Conversion.Meshes
+namespace CUE4Parse_Conversion.Meshes.glTF
 {
     using VERTEX = VertexPositionNormalTangent;
     public class Gltf

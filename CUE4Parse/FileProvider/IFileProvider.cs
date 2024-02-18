@@ -64,6 +64,11 @@ namespace CUE4Parse.FileProvider
         /// Whether UStructs serialized by this file provider should read the script data
         /// </summary>
         public bool ReadScriptData { get; set; }
+        
+        /// <summary>
+        /// Whether UMaterial loading should skip loading ReferencedTextures
+        /// </summary>
+        public bool SkipReferencedTextures { get; set; }
 
         /// <summary>
         /// The name of the game represented by this provider.

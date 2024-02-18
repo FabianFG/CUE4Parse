@@ -9,6 +9,8 @@ namespace CUE4Parse_Conversion.Meshes
         [Description("glTF 2.0 (binary)")]
         Gltf2,
         [Description("Wavefront OBJ (Not Implemented)")]
-        OBJ
+        OBJ,
+        [Description("UEFormat (uemodel)")]
+        UEFormat
     }
 }

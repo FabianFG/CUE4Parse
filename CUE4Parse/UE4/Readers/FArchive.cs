@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Wwise.Enums;
 using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
@@ -280,6 +281,11 @@ namespace CUE4Parse.UE4.Readers
 
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
+
+            if (Math.Abs(length) > Length - Position)
+            {
+                throw new ParserException($"Invalid FString length '{length}'");
+            }
 
             // if (length is < -512000 or > 512000)
             //     throw new ParserException($"Invalid FString length '{length}'");

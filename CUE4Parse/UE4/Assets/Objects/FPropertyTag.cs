@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
@@ -9,6 +10,21 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
+    [Flags]
+    public enum EPropertyTagExtension : byte
+    {
+        NoExtension					= 0x00,
+        ReserveForFutureUse			= 0x01, // Can be use to add a next group of extension
+
+        ////////////////////////////////////////////////
+        // First extension group
+        OverridableInformation		= 0x02,
+
+        //
+        // Add more extension for the first group here
+        //
+    }
+    
     public class FPropertyTag
     {
         public FName Name;
@@ -58,6 +74,17 @@ namespace CUE4Parse.UE4.Assets.Objects
                 if (HasPropertyGuid)
                 {
                     PropertyGuid = Ar.Read<FGuid>();
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
+            {
+                var tagExtensions = Ar.Read<EPropertyTagExtension>();
+
+                if (tagExtensions.HasFlag(EPropertyTagExtension.OverridableInformation))
+                {
+                    var OverrideOperation = Ar.Read<byte>(); // EOverriddenPropertyOperation
+                    var bExperimentalOverridableLogic = Ar.ReadBoolean();
                 }
             }
 

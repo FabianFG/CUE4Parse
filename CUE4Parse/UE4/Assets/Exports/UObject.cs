@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -243,8 +243,18 @@ namespace CUE4Parse.UE4.Assets.Exports
             } while (it.MoveNext());
         }
 
-        internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar)
+        internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar, bool isStruct)
         {
+            if (!isStruct && Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
+            {
+                var SerializationControl = Ar.Read<EClassSerializationControlExtension>();
+
+                if (SerializationControl.HasFlag(EClassSerializationControlExtension.OverridableSerializationInformation))
+                {
+                    var Operation = Ar.Read<byte>(); // Operation
+                }
+            }
+            
             while (true)
             {
                 var tag = new FPropertyTag(Ar, true);
@@ -532,5 +542,20 @@ namespace CUE4Parse.UE4.Assets.Exports
 
         public static bool operator ==(FLifetimeProperty a, FLifetimeProperty b) => a.RepIndex == b.RepIndex && a.Condition == b.Condition && a.RepNotifyCondition == b.RepNotifyCondition;
         public static bool operator !=(FLifetimeProperty a, FLifetimeProperty b) => !(a == b);
+    }
+    
+    [Flags]
+    public enum EClassSerializationControlExtension : byte
+    {
+        NoExtension					= 0x00,
+        ReserveForFutureUse			= 0x01, // Can be use to add a next group of extension
+
+        ////////////////////////////////////////////////
+        // First extension group
+        OverridableSerializationInformation	= 0x02,
+
+        //
+        // Add more extension for the first group here
+        //
     }
 }

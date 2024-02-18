@@ -83,8 +83,9 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
         GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
+        GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
 
-        GAME_UE5_LATEST = GAME_UE5_3
+        GAME_UE5_LATEST = GAME_UE5_5
     }
 
     public static class GameUtils
@@ -112,6 +113,7 @@ namespace CUE4Parse.UE4.Versions
                     < EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1004),
                     < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
                     < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
+                    < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1011),
                     _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 };
             }

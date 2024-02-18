@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
@@ -19,7 +19,7 @@ public readonly struct FColor : IUStruct, ISerializable
     public readonly byte R;
     public readonly byte A;
 
-    public string Hex => A is 1 or 0 ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
+        public string Hex => A is byte.MaxValue or byte.MinValue ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
     public FColor(byte r, byte g, byte b, byte a)
     {

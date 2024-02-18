@@ -11,6 +11,6 @@ public class FRsBitfield : FStructFallback
     public FRsBitfield(FAssetArchive Ar, string propertyName)
     {
         Properties.Add(new FPropertyTag(Ar, new PropertyInfo(-1, propertyName, new PropertyType("StrProperty")), ReadType.NORMAL));
-        UObject.DeserializePropertiesTagged(Properties, Ar);
+        UObject.DeserializePropertiesTagged(Properties, Ar, true);
     }
 }

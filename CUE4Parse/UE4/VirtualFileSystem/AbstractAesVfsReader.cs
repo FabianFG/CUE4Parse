@@ -1,9 +1,13 @@
+using System;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Aes = System.Security.Cryptography.Aes;
 
 namespace CUE4Parse.UE4.VirtualFileSystem
 {
@@ -31,7 +35,43 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public abstract byte[] MountPointCheckBytes();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TestAesKey(byte[] bytes, FAesKey key) => IsValidIndex(_game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(key) : bytes.Decrypt(key));
+        public static bool TestAesKey(byte[] bytes, FAesKey key)
+        {
+            byte[] decrypted;
+            switch (_game)
+            {
+                case EGame.GAME_ApexLegendsMobile:
+                    decrypted = bytes.DecryptApexMobile(key);
+                    break;
+                default:
+                    decrypted = bytes.Decrypt(key);
+                    break;
+            }
+
+            return IsValidIndex(decrypted);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected byte[] Decrypt(byte[] bytes, FAesKey? key)
+        {
+            if (key != null)
+            {
+                var valid = TestAesKey(key);
+                if (!valid && _game == EGame.GAME_Snowbreak)
+                {
+                    var newKey = ConvertSnowbreakAes(Name, key);
+                    if (TestAesKey(newKey))
+                    {
+                        valid = true;
+                        key = newKey;
+                    }
+                }
+
+                if (valid)
+                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(key) : bytes.Decrypt(key);
+            }
+            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected byte[] DecryptIfEncrypted(byte[] bytes) =>
@@ -46,11 +86,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             {
                 return CustomEncryption(bytes, 0, bytes.Length, this);
             }
-            if (AesKey != null && TestAesKey(AesKey))
-            {
-                return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
-            }
-            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+
+            return Decrypt(bytes, AesKey);
         }
         protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted)
         {
@@ -59,11 +96,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             {
                 return CustomEncryption(bytes, beginOffset, count, this);
             }
-            if (AesKey != null)
-            {
-                return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(AesKey) : bytes.Decrypt(AesKey);
-            }
-            throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
+
+            return Decrypt(bytes, AesKey);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,5 +106,24 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
             DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
+
+        private FAesKey ConvertSnowbreakAes(string name, FAesKey key)
+        {
+            var pakName = System.IO.Path.GetFileNameWithoutExtension(name).ToLower();
+            var pakNameBytes = Encoding.ASCII.GetBytes(pakName);
+            var md5Name = MD5.HashData(pakNameBytes);
+
+            var md5AsString = Convert.ToHexString(md5Name).ToLower();
+            var md5StrBytes = Encoding.ASCII.GetBytes(md5AsString);
+
+            using var aesEnc = Aes.Create();
+            aesEnc.Mode = CipherMode.ECB;
+            aesEnc.Key = key.Key;
+
+            var newKey = new byte[32];
+            aesEnc.EncryptEcb(md5StrBytes, newKey, PaddingMode.None);
+
+            return new FAesKey(newKey);
+        }
     }
 }
