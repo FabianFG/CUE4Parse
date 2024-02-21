@@ -17,10 +17,13 @@ public struct FCustomVersion(FGuid key, int version) : ISerializable
     /** Custom version */
     public int Version = version;
 
+    public override bool Equals(object? obj) => obj is FCustomVersion other && Equals(other);
+    public bool Equals(FCustomVersion other) => Key == other.Key && Version == other.Version;
     public static bool operator ==(FCustomVersion one, FCustomVersion two) => one.Key == two.Key && one.Version == two.Version;
     public static bool operator !=(FCustomVersion one, FCustomVersion two) => one.Key != two.Key || one.Version != two.Version;
 
     public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
+    public override int GetHashCode() => HashCode.Combine(Key, Version);
     
     public void Serialize(FArchiveWriter Ar)
     {
