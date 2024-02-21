@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             }
             else
             {
-                DeserializePropertiesTagged(DefaultProperties = new List<FPropertyTag>(), Ar);
+                DeserializePropertiesTagged(DefaultProperties = new List<FPropertyTag>(), Ar, true);
             }
         }
 
