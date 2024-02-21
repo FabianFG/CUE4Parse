@@ -716,13 +716,14 @@ namespace CUE4Parse.UE4.Versions
     /// This object combines all of our version enums into a single easy to use structure
     /// which allows us to update older version numbers independently of the newer version numbers.
     /// </summary>
-    public struct FPackageFileVersion : IComparable<EUnrealEngineObjectUE4Version>, IComparable<EUnrealEngineObjectUE5Version>
+    [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public struct FPackageFileVersion(int ue4Version, int ue5Version) : IComparable<EUnrealEngineObjectUE4Version>, IComparable<EUnrealEngineObjectUE5Version>
     {
         /// UE4 file version
-        public int FileVersionUE4;
+        public int FileVersionUE4 = ue4Version;
 
         /// UE5 file version
-        public int FileVersionUE5;
+        public int FileVersionUE5 = ue5Version;
 
         /// Set all versions to the default state
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -730,13 +731,6 @@ namespace CUE4Parse.UE4.Versions
         {
             FileVersionUE4 = 0;
             FileVersionUE5 = 0;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPackageFileVersion(int ue4Version, int ue5Version)
-        {
-            FileVersionUE4 = ue4Version;
-            FileVersionUE5 = ue5Version;
         }
 
         /// Creates and returns a FPackageFileVersion based on a single EUnrealEngineObjectUEVersion and no other versions.

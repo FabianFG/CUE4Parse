@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
@@ -50,5 +51,11 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         }
 
         public override string ToString() => ToString(EVersionComponent.Branch);
+
+        public override void Serialize(FArchiveWriter Ar)
+        {
+            base.Serialize(Ar);
+            Ar.WriteFString(_branch);
+        }
     }
 }

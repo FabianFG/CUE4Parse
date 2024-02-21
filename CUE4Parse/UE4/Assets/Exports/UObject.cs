@@ -70,7 +70,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
             else
             {
-                DeserializePropertiesTagged(Properties = [], Ar);
+                DeserializePropertiesTagged(Properties = [], Ar, false);
             }
 
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)

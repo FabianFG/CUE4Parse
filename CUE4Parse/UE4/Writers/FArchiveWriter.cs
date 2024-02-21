@@ -108,6 +108,29 @@ public class FArchiveWriter : BinaryWriter
         }
     }
 
+    // Basic FString writing
+    public void WriteFString(string? value)
+    {
+        if (value == null)
+        {
+            Write(0);
+        }
+        else if (value.All(c => c < 128))
+        {
+            var data = Encoding.ASCII.GetBytes(value);
+            Write(value.Length - 1);
+            Write(data);
+            Write((byte) 0);
+        }
+        else
+        {
+            var data = Encoding.UTF8.GetBytes(value);
+            Write(-value.Length - 1);
+            Write(data);
+            Write((ushort) 0);
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);

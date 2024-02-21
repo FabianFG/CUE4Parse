@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -216,12 +215,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             {
                 var name = p.Name;
                 var color = p.ParameterValue;
-                if (color == null) continue;
 
-                DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
-                DiffuseColor(name.Equals("co", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
-                EmissiveColor(name.Contains("emis", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color.Value);
-                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 80, color.Value);
+                DiffuseColor(name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color);
+                DiffuseColor(name.Equals("co", StringComparison.CurrentCultureIgnoreCase), 80, color);
+                EmissiveColor(name.Contains("emis", StringComparison.CurrentCultureIgnoreCase) && name.Contains("color", StringComparison.CurrentCultureIgnoreCase), 100, color);
+                EmissiveColor(name.Contains("emissive", StringComparison.CurrentCultureIgnoreCase), 80, color);
             }
 
             foreach (var p in ScalarParameterValues)
@@ -262,11 +260,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             }
 
             foreach (var vectorParameter in VectorParameterValues)
-            {
-                if (vectorParameter.ParameterValue is not { } vector)
-                    continue;
-                parameters.Colors[vectorParameter.Name] = vector;
-            }
+                parameters.Colors[vectorParameter.Name] = vectorParameter.ParameterValue;
 
             foreach (var scalarParameter in ScalarParameterValues)
                 parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;

@@ -4,23 +4,24 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.Serialization;
 
 [JsonConverter(typeof(FCustomVersionContainerConverter))]
-public class FCustomVersionContainer
+public class FCustomVersionContainer : ISerializable
 {
     public readonly FCustomVersion[] Versions;
 
     public FCustomVersionContainer()
     {
-        Versions = Array.Empty<FCustomVersion>();
+        Versions = [];
     }
 
     public FCustomVersionContainer(IEnumerable<FCustomVersion>? versions)
     {
-        Versions = (versions ?? Array.Empty<FCustomVersion>()) .ToArray();
+        Versions = (versions ?? Array.Empty<FCustomVersion>()).ToArray();
     }
 
     public FCustomVersionContainer(FArchive Ar, ECustomVersionSerializationFormat format = ECustomVersionSerializationFormat.Latest) : this()
@@ -57,6 +58,11 @@ public class FCustomVersionContainer
                 break;
             }
         }
+    }
+
+    public void Serialize(FArchiveWriter Ar)
+    {
+        Ar.SerializeEnumerable(Versions);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

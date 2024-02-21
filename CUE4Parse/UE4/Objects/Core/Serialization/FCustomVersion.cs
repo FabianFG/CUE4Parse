@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Objects.Core.Serialization;
 
@@ -8,23 +9,23 @@ namespace CUE4Parse.UE4.Objects.Core.Serialization;
 /// Structure to hold unique custom key with its version.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct FCustomVersion
+public struct FCustomVersion(FGuid key, int version) : ISerializable
 {
     /** Unique custom key. */
-    public FGuid Key;
+    public FGuid Key = key;
 
     /** Custom version */
-    public int Version;
+    public int Version = version;
 
     public static bool operator ==(FCustomVersion one, FCustomVersion two) => one.Key == two.Key && one.Version == two.Version;
     public static bool operator !=(FCustomVersion one, FCustomVersion two) => one.Key != two.Key || one.Version != two.Version;
 
     public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
-
-    public FCustomVersion(FGuid key, int version)
+    
+    public void Serialize(FArchiveWriter Ar)
     {
-        Key = key;
-        Version = version;
+        Ar.Serialize(Key);
+        Ar.Write(Version);
     }
 }
 
