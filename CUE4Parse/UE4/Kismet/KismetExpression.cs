@@ -396,8 +396,6 @@ public class EX_DynamicCast : EX_CastBase
         base.WriteJson(writer, serializer, bAddIndex);
         writer.WritePropertyName("Class");
         serializer.Serialize(writer, ClassPtr);
-        writer.WritePropertyName("Target");
-        serializer.Serialize(writer, Target);
     }
 }
 
