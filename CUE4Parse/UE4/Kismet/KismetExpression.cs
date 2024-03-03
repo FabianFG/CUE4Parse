@@ -390,15 +390,6 @@ public class EX_DynamicCast : EX_CastBase
     public override EExprToken Token => EExprToken.EX_DynamicCast;
 
     public EX_DynamicCast(FKismetArchive Ar) : base(Ar) { }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName("Class");
-        serializer.Serialize(writer, ClassPtr);
-        writer.WritePropertyName("Target");
-        serializer.Serialize(writer, Target);
-    }
 }
 
 public class EX_EndArray : KismetExpression
@@ -627,15 +618,6 @@ public class EX_InterfaceToObjCast : EX_CastBase
     public override EExprToken Token => EExprToken.EX_InterfaceToObjCast;
 
     public EX_InterfaceToObjCast(FKismetArchive Ar) : base(Ar) { }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName("ObjectClass");
-        serializer.Serialize(writer, ClassPtr);
-        writer.WritePropertyName("Target");
-        serializer.Serialize(writer, Target);
-    }
 }
 
 public class EX_Jump : KismetExpression
@@ -856,15 +838,6 @@ public class EX_MetaCast : EX_CastBase
     public override EExprToken Token => EExprToken.EX_MetaCast;
 
     public EX_MetaCast(FKismetArchive Ar) : base(Ar) { }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName("Class");
-        serializer.Serialize(writer, ClassPtr);
-        writer.WritePropertyName("Target");
-        serializer.Serialize(writer, Target);
-    }
 }
 
 public class EX_NameConst : KismetExpression<FName>
