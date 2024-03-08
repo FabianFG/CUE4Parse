@@ -113,6 +113,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     Ar.Position += count2 * 12; // bool, bool, float
                 }
             }
+
+            if (Ar.Game >= EGame.GAME_UE5_4) _ = Ar.Read<FStripDataFlags>();
         }
 
         private void SerializeInlineDataRepresentations(FAssetArchive Ar)

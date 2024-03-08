@@ -43,7 +43,7 @@ public static class FFortniteReleaseBranchCustomObjectVersion
 
         // Enable SkipOnlyEditorOnly style cooking of NaniteOverrideMaterial
         NaniteMaterialOverrideUsesEditorOnly,
-        
+
         // Store game thread particles data in single precision
         SinglePrecisionParticleData,
 
@@ -68,6 +68,7 @@ public static class FFortniteReleaseBranchCustomObjectVersion
             < EGame.GAME_UE5_2 => Type.ActorComponentUCSModifiedPropertiesSparseStorage,
             < EGame.GAME_UE5_3 => Type.RemoveUselessLandscapeMeshesCookedCollisionData,
             < EGame.GAME_UE5_4 => Type.NaniteMaterialOverrideUsesEditorOnly,
+            < EGame.GAME_UE5_5 => Type.SinglePrecisionParticleData,
             _ => Type.LatestVersion
         };
     }
