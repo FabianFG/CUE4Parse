@@ -788,14 +788,13 @@ namespace CUE4Parse.FileProvider
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual IEnumerable<UObject> LoadAllObjects(string? packagePath) => LoadAllObjectsAsync(packagePath).Result;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task<IEnumerable<UObject>> LoadAllObjectsAsync(string? packagePath)
         {
             if (packagePath == null) throw new ArgumentException("PackagePath can't be null", nameof(packagePath));
 
             var pkg = await LoadPackageAsync(packagePath);
-
             return pkg.GetExports();
         }
 

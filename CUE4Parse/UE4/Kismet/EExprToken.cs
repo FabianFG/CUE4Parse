@@ -15,12 +15,12 @@ public enum EExprToken : byte
     EX_Assert				= 0x09,	// Assertion.
     //						= 0x0A,
     EX_Nothing				= 0x0B,	// No operation.
-    //						= 0x0C,
+    EX_NothingInt32			= 0x0C, // No operation with an int32 argument (useful for debugging script disassembly)
     //						= 0x0D,
     //						= 0x0E,
     EX_Let					= 0x0F,	// Assign an arbitrary size value to a variable.
     //						= 0x10,
-    //						= 0x11,
+    EX_BitFieldConst		= 0x11, // assign to a single bit, defined by an FProperty
     EX_ClassContext			= 0x12,	// Class default object context.
     EX_MetaCast             = 0x13, // Metaclass cast.
     EX_LetBool				= 0x14, // Let boolean variable.
@@ -113,13 +113,18 @@ public enum EExprToken : byte
     EX_ArrayGetByRef		= 0x6B,
     EX_ClassSparseDataVariable = 0x6C, // Sparse data variable
     EX_FieldPathConst		= 0x6D,
+    //						= 0x6E,
+    //						= 0x6F,
+    EX_AutoRtfmTransact     = 0x70, // AutoRTFM: run following code in a transaction
+    EX_AutoRtfmStopTransact = 0x71, // AutoRTFM: if in a transaction, abort or break, otherwise no operation
+    EX_AutoRtfmAbortIfNot   = 0x72, // AutoRTFM: evaluate bool condition, abort transaction on false
     EX_Max					= 0xFF,
 };
 
 public enum ECastToken : byte
 {
     CST_ObjectToInterface		= 0x00,
-    CST_ObjectToBool			= 0x01,//idk if this is used or 0x47 is used 
+    CST_ObjectToBool			= 0x01,//idk if this is used or 0x47 is used
     CST_InterfaceToBool			= 0x02,
     CST_DoubleToFloat			= 0x03,
     CST_FloatToDouble			= 0x04,

@@ -276,6 +276,28 @@ public class EX_ClassContext : EX_Context
     public EX_ClassContext(FKismetArchive Ar) : base(Ar) { }
 }
 
+public class EX_BitFieldConst : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_BitFieldConst;
+    public FKismetPropertyPointer InnerProperty;
+    public byte ConstValue;
+
+    public EX_BitFieldConst(FKismetArchive Ar)
+    {
+        InnerProperty = new FKismetPropertyPointer(Ar);
+        ConstValue = Ar.Read<byte>();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
+    {
+        base.WriteJson(writer, serializer, bAddIndex);
+        writer.WritePropertyName("InnerProperty");
+        serializer.Serialize(writer, InnerProperty);
+        writer.WritePropertyName("ConstValue");
+        serializer.Serialize(writer, ConstValue);
+    }
+}
+
 public class EX_ClassSparseDataVariable : EX_VariableBase
 {
     public override EExprToken Token => EExprToken.EX_ClassSparseDataVariable;
