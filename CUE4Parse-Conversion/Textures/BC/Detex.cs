@@ -57,39 +57,32 @@ namespace CUE4Parse_Conversion.Textures.BC
         [DllImport(Constants.DETEX_DLL_NAME)]
         private static extern unsafe bool detexDecompressTextureLinear(detexTexture* texture, byte* pixelBuffer,
             uint pixelFormat);
-
+        
         private static void PrepareDllFile()
         {
+            if (!OperatingSystem.IsWindows() || RuntimeInformation.ProcessArchitecture != Architecture.X64)
+                return;
+            
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse_Conversion.Resources.Detex.dll");
             if (stream == null)
                 throw new MissingManifestResourceException("Couldn't find Detex.dll in Embedded Resources");
+            
             var ba = new byte[(int)stream.Length];
-            stream.Read(ba, 0, (int)stream.Length);
+            stream.ReadExactly(ba);
 
-            bool fileOk;
-            var dllFile = Constants.DETEX_DLL_NAME;
-
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            var dllFile = Constants.DETEX_DLL_NAME + ".dll";
+            
+            if (File.Exists(dllFile))
             {
-                var fileHash = BitConverter.ToString(sha1.ComputeHash(ba)).Replace("-", string.Empty);
+                var bb = File.ReadAllBytes(dllFile);
+                var fileHash = SHA1.HashData(ba).AsSpan();
+                var fileHash2 = SHA1.HashData(bb).AsSpan();
 
-                if (File.Exists(dllFile))
-                {
-                    var bb = File.ReadAllBytes(dllFile);
-                    var fileHash2 = BitConverter.ToString(sha1.ComputeHash(bb)).Replace("-", string.Empty);
-
-                    fileOk = fileHash == fileHash2;
-                }
-                else
-                {
-                    fileOk = false;
-                }
+                if (fileHash.SequenceEqual(fileHash2))
+                    return;
             }
 
-            if (!fileOk)
-            {
-                File.WriteAllBytes(dllFile, ba);
-            }
+            File.WriteAllBytes(dllFile, ba);
         }
     }
 }
