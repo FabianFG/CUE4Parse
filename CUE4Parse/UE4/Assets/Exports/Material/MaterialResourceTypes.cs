@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             var bShareCode = Ar.ReadBoolean();
             if (bUseNewFormat)
             {
-                var shaderPlatform = Ar.Game >= EGame.GAME_UE5_2 ? Ar.ReadFString() : Ar.Read<EShaderPlatform>().ToString();
+                var shaderPlatform = Ar.Game >= EGame.GAME_UE5_2 ? Ar.ReadFName() : Ar.Read<EShaderPlatform>().ToString();
             }
 
             if (bShareCode)
