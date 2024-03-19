@@ -1,6 +1,8 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
@@ -11,20 +13,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         AACF_Metadata = 0x00000010,
     }
 
+    [StructFallback]
     public class FAnimCurveBase
     {
-        public FSmartName Name;
+        public FName CurveName;
         public int CurveTypeFlags; // Should be editor only
 
         public FAnimCurveBase() { }
 
         public FAnimCurveBase(FStructFallback data)
         {
-            Name = data.GetOrDefault<FSmartName>(nameof(Name));
+            CurveName = data.GetOrDefault<FName>(nameof(CurveName));
             CurveTypeFlags = data.GetOrDefault<int>(nameof(CurveTypeFlags));
         }
     }
 
+    [StructFallback]
     public class FFloatCurve : FAnimCurveBase
     {
         public FRichCurve FloatCurve;
@@ -37,6 +41,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         }
     }
 
+    [StructFallback]
     public struct FRawCurveTracks
     {
         public FFloatCurve[]? FloatCurves;
