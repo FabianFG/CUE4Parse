@@ -41,6 +41,7 @@ public class FKismetArchive : FArchive
             EExprToken.EX_Nothing => new EX_Nothing(),
             EExprToken.EX_Let => new EX_Let(this),
             EExprToken.EX_ClassContext => new EX_ClassContext(this),
+            EExprToken.EX_BitFieldConst => new EX_BitFieldConst(this),
             EExprToken.EX_MetaCast => new EX_MetaCast(this),
             EExprToken.EX_LetBool => new EX_LetBool(this),
             EExprToken.EX_EndParmValue => new EX_EndParmValue(),

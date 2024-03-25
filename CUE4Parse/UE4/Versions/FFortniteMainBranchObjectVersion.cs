@@ -386,6 +386,51 @@ namespace CUE4Parse.UE4.Versions
 		    // Update paths to keep a flag if they are the widget BP
 		    MVVMPropertyPathSelf,
 
+		    // Enabled ObjectPtr property serialization for Dataflow nodes
+		    AddDataflowObjectSerialization,
+
+		    // Add anim notify rate scaling, defaults to on for new content, off for old content
+		    AnimNotifyAddRateScale,
+
+		    // Fix tangents for non-uniform build scales, and add a flag to optionally match the previous (incorrect) tangents
+		    FixedTangentTransformForNonuniformBuildScale,
+
+		    // AnimNode Layers will now start in a Shared Group, instead of being each one on a different group at runtime
+		    AnimNodeRootDefaultGroupChange,
+
+		    // Move AnimNext graphs to sub-entries of assets
+		    AnimNextMoveGraphsToEntries,
+
+		    // Removed debug information containing compressed data author, time etc. from animation DDC data as it introduces indeterminism
+		    AnimationSequenceCompressedDataRemoveDebugData,
+
+		    // Changes to Orthographic Camera default settings
+		    OrthographicCameraDefaultSettings,
+
+		    // Added settings to Landscape HLODs
+		    LandscapeAddedHLODSettings,
+
+		    // Skeletal Mesh uses Mesh Description to store mesh bulk data.
+		    MeshDescriptionForSkeletalMesh,
+
+		    // Skeletal Mesh optionally cooks half edge data per lod
+		    SkeletalHalfEdgeData,
+
+		    // Combine graph contexts for AnimNext graphs
+		    AnimNextCombineGraphContexts,
+
+		    // Combine parameter blocks and graphs
+		    AnimNextCombineParameterBlocksAndGraphs,
+
+		    // Move workspaces to a seperate plugin
+		    AnimNextMoveWorkspaces,
+
+		    // Level Instance Property overrides
+		    LevelInstancePropertyOverrides,
+
+		    // Added FVolumetricLightMapGridDesc in MapBuildData
+		    VolumetricLightMapGridDescSupport,
+
 		    // -----<new versions can be added above this line>-------------------------------------------------
 		    VersionPlusOne,
 		    LatestVersion = VersionPlusOne - 1
@@ -413,6 +458,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_2 => Type.WorldPartitionHLODActorDescSerializeStats,
                 < EGame.GAME_UE5_3 => Type.WorldPartitionHLODActorUseSourceCellGuid,
                 < EGame.GAME_UE5_4 => Type.WaterBodyStaticMeshFixup,
+                < EGame.GAME_UE5_5 => Type.SkeletalHalfEdgeData,
                 _ => Type.LatestVersion
             };
         }

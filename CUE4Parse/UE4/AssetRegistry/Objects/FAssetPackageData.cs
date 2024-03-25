@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly long DiskSize;
         public readonly FPackageFileVersion FileVersionUE;
         public readonly int FileVersionLicenseeUE = -1;
-        public readonly FCustomVersionContainer CustomVersions;
+        public readonly FCustomVersionContainer? CustomVersions;
         public readonly uint Flags;
 
         public FAssetPackageData(FAssetRegistryArchive Ar)

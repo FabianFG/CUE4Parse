@@ -25,9 +25,20 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             IndirectionDimensions = Ar.Read<FIntVector>();
             NumDistanceFieldBricks = Ar.Read<int>();
-            VolumeToVirtualUVScale = new FVector(Ar);
-            VolumeToVirtualUVAdd = new FVector(Ar);
-            DistanceFieldToVolumeScaleBias = new FVector2D(Ar);
+
+            if (Ar.Game >= EGame.GAME_UE5_4)
+            {
+                VolumeToVirtualUVScale = Ar.Read<FVector>();
+                VolumeToVirtualUVAdd = Ar.Read<FVector>();
+                DistanceFieldToVolumeScaleBias = Ar.Read<FVector2D>();
+            }
+            else
+            {
+                VolumeToVirtualUVScale = new FVector(Ar);
+                VolumeToVirtualUVAdd = new FVector(Ar);
+                DistanceFieldToVolumeScaleBias = new FVector2D(Ar);
+            }
+
             BulkOffset = Ar.Read<uint>();
             BulkSize = Ar.Read<uint>();
         }
@@ -90,7 +101,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData5(FAssetArchive Ar)
         {
-            LocalSpaceMeshBounds = new FBox(Ar);
+            LocalSpaceMeshBounds = Ar.Game >= EGame.GAME_UE5_4 ? new FBox(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<byte>()) : new FBox(Ar);
             bMostlyTwoSided = Ar.ReadBoolean();
             Mips = Ar.ReadArray(DistanceField.NumMips, () => new FSparseDistanceFieldMip(Ar));
             AlwaysLoadedMip = Ar.ReadArray<byte>();
