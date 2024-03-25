@@ -99,6 +99,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadArray<T>(int length, Func<T> getter)
         {
+            if (length > 1000000)
+            {
+                throw new ParserException($"FArchive.ReadArray huge array {length}");
+            }
             var result = new T[length];
 
             if (length == 0)
@@ -154,6 +158,9 @@ namespace CUE4Parse.UE4.Readers
         {
             var elementSize = Read<int>();
             var elementCount = Read<int>();
+            if (elementSize < 0 || elementSize > 10000000 || elementCount < 0 || elementCount > 10000000)
+                return Array.Empty<T>();
+                //throw new ParserException($"ReadBulkArray ElementSize {elementSize} ElementCount {elementCount}");
             return ReadBulkArray(elementSize, elementCount, getter);
         }
 
