@@ -2428,7 +2428,7 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
             serializer.Serialize(writer, value.Flags);
         }
 
-        if (value.CustomVersions.Versions is { Length: > 0 })
+        if (value.CustomVersions?.Versions is { Length: > 0 })
         {
             writer.WritePropertyName("CustomVersions");
             serializer.Serialize(writer, value.CustomVersions);

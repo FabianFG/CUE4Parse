@@ -70,6 +70,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Valorant = GAME_UE4_27 + 5,
             GAME_Gollum = GAME_UE4_27 + 6,
             GAME_Grounded = GAME_UE4_27 + 7,
+            GAME_SeekersofSkyveil = GAME_UE4_27 + 8,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,
