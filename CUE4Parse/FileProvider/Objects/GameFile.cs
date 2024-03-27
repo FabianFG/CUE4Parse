@@ -88,5 +88,8 @@ namespace CUE4Parse.FileProvider.Objects
         }).ConfigureAwait(false);
 
         public override string ToString() => Path;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasValidSize() => Size > 0 && (Globals.AllowLargeFiles || Size < Globals.LargeFileLimit);
     }
 }
