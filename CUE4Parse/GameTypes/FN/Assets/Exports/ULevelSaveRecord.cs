@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
@@ -10,8 +11,9 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using Ionic.Crc;
+
 using Newtonsoft.Json;
+
 using Serilog;
 
 namespace CUE4Parse.GameTypes.FN.Assets.Exports

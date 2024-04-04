@@ -1,10 +1,13 @@
-﻿using System;
+using System;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
+
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
-using Ionic.Zlib;
+
 using K4os.Compression.LZ4;
+
 using ZstdSharp;
 
 namespace CUE4Parse.Compression
@@ -28,16 +31,14 @@ namespace CUE4Parse.Compression
             Decompress(compressed, 0, compressed.Length, dst, 0, dst.Length, method, reader);
         public static void Decompress(byte[] compressed, int compressedOffset, int compressedSize, byte[] uncompressed, int uncompressedOffset, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         {
-            using var srcStream = new MemoryStream(compressed, compressedOffset, compressedSize, false) {Position = 0};
+            var srcStream = new MemoryStream(compressed, compressedOffset, compressedSize, false);
             switch (method)
             {
                 case CompressionMethod.None:
                     Buffer.BlockCopy(compressed, compressedOffset, uncompressed, uncompressedOffset, compressedSize);
                     return;
                 case CompressionMethod.Zlib:
-                    var zlib = new ZlibStream(srcStream, CompressionMode.Decompress);
-                    zlib.Read(uncompressed, uncompressedOffset, uncompressedSize);
-                    zlib.Dispose();
+                    ZlibHelper.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
                 case CompressionMethod.Gzip:
                     var gzip = new GZipStream(srcStream, CompressionMode.Decompress);
@@ -45,7 +46,7 @@ namespace CUE4Parse.Compression
                     gzip.Dispose();
                     return;
                 case CompressionMethod.Oodle:
-                    Oodle.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
+                    OodleHelper.Decompress(compressed, compressedOffset, compressedSize, uncompressed, uncompressedOffset, uncompressedSize, reader);
                     return;
                 case CompressionMethod.LZ4:
                     var uncompressedBuffer = new byte[uncompressedSize + uncompressedSize / 255 + 16]; // LZ4_compressBound(uncompressedSize)
