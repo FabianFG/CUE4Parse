@@ -80,7 +80,7 @@ public static class ZlibHelper
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Uncaught exception while downloading oodle dll");
+            Log.Warning(ex, "Uncaught exception while downloading zlib-ng dll");
         }
         return false;
     }
