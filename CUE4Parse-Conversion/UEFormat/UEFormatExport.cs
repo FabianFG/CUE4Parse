@@ -1,8 +1,11 @@
-using System;
+using System.IO;
+using System.IO.Compression;
+
+using CUE4Parse.UE4.Writers;
+
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse_Conversion.UEFormat.Structs;
-using CUE4Parse.UE4.Writers;
-using Ionic.Zlib;
+
 using ZstdSharp;
 
 namespace CUE4Parse_Conversion.UEFormat;
@@ -30,7 +33,7 @@ public class UEFormatExport
         
         var compressedData = header.CompressionFormat switch
         {
-            EFileCompressionFormat.GZIP => GZipStream.CompressBuffer(data),
+            EFileCompressionFormat.GZIP => GzipCompress(data),
             EFileCompressionFormat.ZSTD => new Compressor(ZSTD_LEVEL).Wrap(data),
             _ => data
         };
@@ -38,5 +41,15 @@ public class UEFormatExport
         
         header.Serialize(archive);
         archive.Write(compressedData);
+    }
+
+    private static byte[] GzipCompress(byte[] src)
+    {
+        var outputMs = new MemoryStream();
+        {
+            using var gzipStream = new GZipStream(new MemoryStream(src), CompressionLevel.Optimal);
+            gzipStream.CopyTo(outputMs);
+        }
+        return outputMs.ToArray();
     }
 }

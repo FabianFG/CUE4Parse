@@ -1,3 +1,4 @@
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Oodle.Objects
@@ -21,7 +22,7 @@ namespace CUE4Parse.UE4.Oodle.Objects
 
         private bool SerializeOodleDecompressData(FOodleCompressedData dataInfo, out byte[] outData)
         {
-            outData = new byte[0];
+            outData = [];
             var decompressedLength = (int) dataInfo.DecompressedLength;
             var compressedLength = (int) dataInfo.CompressedLength;
             if (compressedLength > _innerArchive.Length - dataInfo.Offset || decompressedLength > MAX_COMPRESS_BUFFER ||
@@ -36,7 +37,7 @@ namespace CUE4Parse.UE4.Oodle.Objects
             {
                 outData = new byte[decompressedLength];
                 var compressedData = _innerArchive.ReadBytes(compressedLength);
-                Compression.Oodle.Decompress(compressedData, 0, compressedLength, outData, 0, decompressedLength);
+                OodleHelper.Decompress(compressedData, 0, compressedLength, outData, 0, decompressedLength);
             }
 
             return outData.Length == decompressedLength;

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
+
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Ionic.Zip;
 
 namespace CUE4Parse.FileProvider;
 
@@ -28,37 +29,47 @@ public class ApkFileProvider : DefaultFileProvider
             throw new FileNotFoundException("Given APK file must exist");
 
         var osFiles = new Dictionary<string, GameFile>();
-        var zipFile = new ZipFile(_apkFile.FullName);
-        foreach (var entry in zipFile.SelectEntries("*main.obb.png"))
+        using var apkFs = File.OpenRead(_apkFile.FullName);
+        using var zipFile = new ZipArchive(apkFs, ZipArchiveMode.Read);
+        foreach (var pngEntry in zipFile.Entries.Where(x => x.FullName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase)))
         {
-            MemoryStream pngStream = new();
-            entry.Extract(pngStream);
-            pngStream.Seek(0, SeekOrigin.Begin);
+            var pngStream = new MemoryStream((int)pngEntry.Length);
+            {
+                using var pngEntryStream = pngEntry.Open();
+                pngEntryStream.CopyTo(pngStream);
+            }
+            pngStream.Position = 0;
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var container = ZipFile.Read(pngStream);
+            using var container = new ZipArchive(pngStream, ZipArchiveMode.Read);
 
             foreach (var fileEntry in container.Entries)
             {
                 var streams = new Stream[2];
-                streams[0] = new MemoryStream();
-                fileEntry.Extract(streams[0]);
+                streams[0] = new MemoryStream((int)fileEntry.Length);
+                {
+                    using var fileEntryStream = fileEntry.Open();
+                    fileEntryStream.CopyTo(streams[0]);
+                }
                 streams[0].Position = 0;
 
-                var upperExt = fileEntry.FileName.SubstringAfterLast('.').ToUpper();
+                var upperExt = fileEntry.Name.SubstringAfterLast('.').ToUpperInvariant();
                 switch (upperExt)
                 {
                     case "PAK":
-                        RegisterVfs(fileEntry.FileName, streams);
+                        RegisterVfs(fileEntry.Name, streams);
                         continue;
                     case "UTOC":
-                        if (container.SelectEntries($"{fileEntry.FileName.SubstringBeforeLast('.') + ".ucas"}").First() is { } ucasEntry)
+                        if (container.Entries.FirstOrDefault(x => x.Name == $"{fileEntry.Name.SubstringBeforeLast('.')}.ucas") is { } ucasEntry)
                         {
-                            streams[1] = new MemoryStream();
-                            ucasEntry.Extract(streams[1]);
+                            streams[1] = new MemoryStream((int)ucasEntry.Length);
+                            {
+                                using var ucasEntryStream = ucasEntry.Open();
+                                ucasEntryStream.CopyTo(streams[1]);
+                            }
                             streams[1].Position = 0;
                         }
-                        RegisterVfs(fileEntry.FileName, streams);
+                        RegisterVfs(fileEntry.Name, streams);
                         continue;
                 }
 
@@ -66,7 +77,7 @@ public class ApkFileProvider : DefaultFileProvider
                 if (!GameFile.Ue4KnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
                     continue;
 
-                var osFile = new StreamedGameFile(fileEntry.FileName, streams[0], Versions);
+                var osFile = new StreamedGameFile(fileEntry.Name, streams[0], Versions);
                 if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
                 else osFiles[osFile.Path] = osFile;
             }

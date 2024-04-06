@@ -39,6 +39,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FSkeletalMeshVertexColorBuffer ColorVertexBuffer;
         public FMultisizeIndexContainer AdjacencyIndexBuffer;
         public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
+        public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
         public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
 
         public FStaticLODModel()
@@ -390,6 +391,16 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 for (int i = 0; i < count; i++)
                 {
                     VertexAttributeBuffers[Ar.ReadFName()] = new FSkeletalMeshAttributeVertexBuffer(Ar);
+                }
+            }
+
+            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData)
+            {
+                const byte MeshDeformerStripFlag = 1;
+                var meshDeformerStripFlags = Ar.Read<FStripDataFlags>();
+                if (!meshDeformerStripFlags.IsClassDataStripped(MeshDeformerStripFlag))
+                {
+                    HalfEdgeBuffer = new FSkeletalMeshHalfEdgeBuffer(Ar);
                 }
             }
 

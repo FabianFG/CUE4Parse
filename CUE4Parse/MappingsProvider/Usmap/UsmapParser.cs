@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+
 using ZstdSharp;
 
 namespace CUE4Parse.MappingsProvider.Usmap;
@@ -67,7 +69,7 @@ public class UsmapParser
             }
             case EUsmapCompressionMethod.Oodle:
             {
-                Oodle.Decompress(Ar.ReadBytes((int) compSize), 0, (int) compSize, data, 0, (int) decompSize);
+                OodleHelper.Decompress(Ar.ReadBytes((int) compSize), 0, (int) compSize, data, 0, (int) decompSize);
                 break;
             }
             case EUsmapCompressionMethod.Brotli:

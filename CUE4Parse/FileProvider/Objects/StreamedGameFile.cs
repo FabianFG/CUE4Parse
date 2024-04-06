@@ -1,4 +1,5 @@
 ﻿using System.IO;
+
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Versions;
 
@@ -24,7 +25,7 @@ namespace CUE4Parse.FileProvider.Objects
             var _ = _baseStream.Seek(_position, SeekOrigin.Begin);
             var bytesRead = _baseStream.Read(data, 0, data.Length);
             if (bytesRead != Size)
-                throw new Ionic.Zip.BadReadException("Read operation mismatch: bytesRead ≠ Size");
+                throw new FileLoadException("Read operation mismatch: bytesRead ≠ Size");
             return data;
         }
     }
