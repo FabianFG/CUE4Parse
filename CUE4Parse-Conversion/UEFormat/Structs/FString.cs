@@ -15,11 +15,9 @@ public readonly struct FString : ISerializable
 
     public void Serialize(FArchiveWriter Ar)
     {
-        Ar.Write(Text.Length);
-
-        var padded = new byte[Text.Length];
         var bytes = Encoding.UTF8.GetBytes(Text);
-        Buffer.BlockCopy(bytes, 0, padded, 0, bytes.Length);
-        Ar.Write(padded);
+
+        Ar.Write(bytes.Length);
+        Ar.Write(bytes);
     }
 }
