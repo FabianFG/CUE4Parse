@@ -30,6 +30,12 @@ public static class ZlibHelper
         Instance ??= new Zlibng(path);
     }
 
+    public static void Initialize(Zlibng instance)
+    {
+        Instance?.Dispose();
+        Instance = instance;
+    }
+
     public static bool DownloadDll(string? path = null, string? url = null)
     {
         if (File.Exists(path ?? DLL_NAME)) return true;

@@ -34,6 +34,12 @@ public static class OodleHelper
         Instance ??= new Oodle(path);
     }
 
+    public static void Initialize(Oodle instance)
+    {
+        Instance?.Dispose();
+        Instance = instance;
+    }
+
     public static bool DownloadOodleDll(string? path = null)
     {
         if (File.Exists(path ?? OODLE_DLL_NAME)) return true;
