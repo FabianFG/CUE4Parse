@@ -210,7 +210,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     var rawCurve = ConverterMap[(int) curve.CompressionFormat][(int) curve.KeyTimeCompressionFormat](curve.PreInfinityExtrap, curve.PostInfinityExtrap, curve.NumKeys, compressedKeys);
                     floatCurves[curveIndex] = new FFloatCurve
                     {
-                        Name = curveName,
+                        CurveName = curveName.DisplayName,
                         FloatCurve = rawCurve,
                         CurveTypeFlags = 4
                     };

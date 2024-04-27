@@ -84,7 +84,7 @@ public class UEAnim : UEFormatExport
             foreach (var floatCurve in floatCurves)
             {
                 // TODO serialize more data for better accuracy
-                curveChunk.WriteFString(floatCurve.Name.DisplayName.Text);
+                curveChunk.WriteFString(floatCurve.CurveName.Text);
                 curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
                 foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
                 {
