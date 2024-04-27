@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         #region FCompressedAnimSequence CompressedData
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
-        public FName[] CompressedCurveNames;
+        public FSmartName[] CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
         public byte[]? CompressedCurveByteStream;
         public FRawCurveTracks CompressedCurveData; // disappeared in 4.23
@@ -224,7 +224,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             else
             {
-                CompressedCurveNames = Ar.ReadArray(Ar.ReadFName);
+                CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
             }
 
             if (Ar.Versions["AnimSequence.HasCompressedRawSize"])
@@ -277,7 +277,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             CompressedRawDataSize = Ar.Read<int>();
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
-            CompressedCurveNames = Ar.ReadArray(Ar.ReadFName);
+            CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
 
             var compressedData = new FUECompressedAnimData();
             CompressedDataStructure = compressedData;
@@ -298,7 +298,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             CompressedRawDataSize = Ar.Read<int>();
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
-            CompressedCurveNames = Ar.ReadArray(Ar.ReadFName);
+            CompressedCurveNames = Ar.ReadArray(() => new FSmartName(Ar));
 
             var serializedByteStream = ReadSerializedByteStream(Ar);
 
