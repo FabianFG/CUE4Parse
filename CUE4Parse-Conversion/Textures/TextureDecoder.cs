@@ -41,7 +41,7 @@ public static class TextureDecoder
                 var blockWidthInTiles = vt.GetWidthInTiles();
                 var blockHeightInTiles = vt.GetHeightInTiles();
                 var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
-                tileOffsetData = new (blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
+                tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
             }
             else tileOffsetData = vt.TileOffsetData[level];
 
@@ -108,7 +108,14 @@ public static class TextureDecoder
         {
             var sizeX = mip.SizeX;
             var sizeY = mip.SizeY;
-            DecodeTexture(mip, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
+
+            if (texture.Format == EPixelFormat.PF_BC7)
+            {
+                sizeX = (sizeX + 3) / 4 * 4;
+                sizeY = (sizeY + 3) / 4 * 4;
+            }
+
+            DecodeTexture(mip, sizeX, sizeY, mip.SizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
             return InstallPixels(data, new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
         }
@@ -116,7 +123,7 @@ public static class TextureDecoder
         return null;
     }
 
-    private static void DecodeTexture(FTexture2DMipMap? mip, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
+    private static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
     {
         if (mip?.BulkData.Data is not { Length: > 0 }) throw new ParserException("Supplied MipMap is null or has empty data!");
         if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) format) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0) throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
@@ -139,7 +146,7 @@ public static class TextureDecoder
         if (isPS) bytes = PlatformDeswizzlers.DeswizzlePS4(bytes, mip, formatInfo);
         else if (isNX) bytes = PlatformDeswizzlers.GetDeswizzledData(bytes, mip, formatInfo);
 
-        DecodeBytes(bytes, mip.SizeX, mip.SizeY, mip.SizeZ, formatInfo, isNormalMap, out data, out colorType);
+        DecodeBytes(bytes, sizeX, sizeY, sizeZ, formatInfo, isNormalMap, out data, out colorType);
     }
 
     private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out SKColorType colorType)
