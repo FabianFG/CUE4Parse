@@ -139,25 +139,17 @@ public class UEModel : UEFormatExport
 
     private void SerializeSkeletalMeshData(CSkelMeshVertex[] verts, FPackageIndex[]? morphTargets, int lodIndex)
     {
-        // TODO can we work on getting unlimited influences, no more psk restrictions !!
         using (var weightsChunk = new FDataChunk("WEIGHTS"))
         {
             for (var vertexIndex = 0; vertexIndex < verts.Length; vertexIndex++)
             {
                 var vert = verts[vertexIndex];
-            
-                var vertBones = vert.Bone;
-                if (vertBones is null) continue;
-            
-                var weights = vert.UnpackWeights();
-                for (var index = 0; index < weights.Length; index++)
+                
+                foreach (var influence in vert.Influences)
                 {
-                    var weight = weights[index];
-                    if (weight <= 0) continue;
-                    
-                    weightsChunk.Write(vertBones[index]);
+                    weightsChunk.Write(influence.Bone);
                     weightsChunk.Write(vertexIndex);
-                    weightsChunk.Write(weight);
+                    weightsChunk.Write(influence.Weight);
                     weightsChunk.Count++;
                 }
             }

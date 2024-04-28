@@ -231,18 +231,14 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         public static VertexJoints4 PrepareVertexJoint(CSkelMeshVertex vert)
         {
-            var weights = vert.UnpackWeights();
-            var j1 = new List<(int, float)>();
+            var bindings = new List<(int, float)>();
 
-            if (weights.All((v) => v == 0) || vert.Bone == null)
-                return new VertexJoints4(j1.ToArray());
-
-            for (int i = 0; i < vert.Bone.Length; i++)
+            foreach (var influence in vert.Influences)
             {
-                j1.Add((vert.Bone[i], weights[i]));
+                bindings.Add((influence.Bone, influence.Weight));
             }
-
-            return new VertexJoints4(j1.ToArray());
+            
+            return new VertexJoints4(bindings.ToArray());
         }
 
         public static (VertexJoints4, VertexJoints4, VertexJoints4) PrepareVertexJoints(CSkelMeshVertex vert1, CSkelMeshVertex vert2, CSkelMeshVertex vert3)
