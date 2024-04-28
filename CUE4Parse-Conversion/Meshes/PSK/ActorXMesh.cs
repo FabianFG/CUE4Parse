@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.ActorX;
@@ -82,12 +83,7 @@ public class ActorXMesh
         share.Prepare(lod.Verts);
         foreach (var vert in lod.Verts)
         {
-            var weightsHash = vert.PackedWeights;
-            for (var i = 0; i < vert.Bone.Length; i++)
-            {
-                weightsHash ^= (uint) vert.Bone[i] << i;
-            }
-
+            var weightsHash = (uint)StructuralComparisons.StructuralEqualityComparer.GetHashCode(vert.Influences);
             share.AddVertex(vert.Position, vert.Normal, weightsHash);
         }
 
@@ -98,12 +94,7 @@ public class ActorXMesh
         var numInfluences = 0;
         for (var i = 0; i < share.Points.Count; i++)
         {
-            for (var j = 0; j < Constants.NUM_INFLUENCES_UE4; j++)
-            {
-                if (lod.Verts[share.VertToWedge.Value[i]].Bone[j] < 0)
-                    break;
-                numInfluences++;
-            }
+            numInfluences += lod.Verts[share.VertToWedge.Value[i]].Influences.Count;
         }
         infHdr.DataCount = numInfluences;
         infHdr.DataSize = 12;
@@ -111,16 +102,12 @@ public class ActorXMesh
         for (var i = 0; i < share.Points.Count; i++)
         {
             var v = lod.Verts[share.VertToWedge.Value[i]];
-            var unpackedWeights = v.UnpackWeights();
 
-            for (var j = 0; j < Constants.NUM_INFLUENCES_UE4; j++)
+            foreach (var influence in v.Influences)
             {
-                if (v.Bone[j] < 0)
-                    break;
-
-                Ar.Write(unpackedWeights[j]);
+                Ar.Write(influence.Weight);
                 Ar.Write(i);
-                Ar.Write((int) v.Bone[j]);
+                Ar.Write((int) influence.Bone);
             }
         }
 
