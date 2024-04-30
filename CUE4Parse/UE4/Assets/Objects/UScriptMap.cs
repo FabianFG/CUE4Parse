@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects.Properties;
@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             if (tagData.InnerType == null || tagData.ValueType == null)
                 throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
 
-            if (!Ar.HasUnversionedProperties && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
+            if (!Ar.HasUnversionedProperties && tagData.Name is not null && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
             {
                 if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);
                 if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);

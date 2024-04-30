@@ -36,9 +36,9 @@ namespace CUE4Parse.UE4.Assets.Readers
             var nameIndex = Read<int>();
             var extraIndex = Read<int>();
 #if !NO_FNAME_VALIDATION
-            if (nameIndex < 0 || nameIndex >= Owner.NameMap.Length)
+            if (nameIndex < 0 || nameIndex >= Owner!.NameMap.Length)
             {
-                throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner.NameMap.Length}");
+                throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner!.NameMap.Length}");
             }
 #endif
             return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
@@ -62,7 +62,7 @@ namespace CUE4Parse.UE4.Assets.Readers
                     return null;
                 }
 
-                if (Owner.Provider == null)
+                if (Owner?.Provider == null)
                 {
                     Log.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
                     return null;

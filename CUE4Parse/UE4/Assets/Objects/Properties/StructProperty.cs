@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
             Value = new UScriptStruct(Ar, tagData?.StructType, tagData?.Struct, type);
         }
 
-        public override string ToString() => Value.ToString().SubstringBeforeLast(')') + ", StructProperty)";
+        public override string ToString() => Value is null
+            ? "(null struct)"
+            : Value.ToString().SubstringBeforeLast(')') + ", StructProperty)";
     }
 }

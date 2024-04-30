@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -7,10 +8,10 @@ using static System.MathF;
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     /// <summary>
-    /// USE Ar.Read<FPlane> FOR FLOATS AND new FPlane(Ar) FOR DOUBLES
+    /// USE Ar.Read&lt;FPlane&gt; FOR FLOATS AND new FPlane(Ar) FOR DOUBLES
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Size = 16)]
-    public struct FPlane : IUStruct
+    public struct FPlane : IUStruct, IEquatable<FPlane>
     {
         public FVector Vector;
 
@@ -81,8 +82,16 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float PlaneDot(FVector p) => X * p.X + Y * p.Y + Z * p.Z - W;
 
-        public bool Equals(FPlane v, float tolerance = UnrealMath.KindaSmallNumber) => Abs(X - v.X) <= tolerance && Abs(Y - v.Y) <= tolerance && Abs(Z - v.Z) <= tolerance && Abs(W - v.W) <= tolerance;
+        public readonly bool Equals(FPlane v, float tolerance) => Vector.Equals(v.Vector, tolerance) && Abs(W - v.W) <= tolerance;
 
-        public override bool Equals(object? obj) => obj is FPlane other && Equals(other, 0f);
+        public readonly override bool Equals(object? obj) => obj is FPlane other && Equals(other);
+
+        public readonly override int GetHashCode() => HashCode.Combine(Vector, W);
+
+        public static bool operator ==(FPlane left, FPlane right) => left.Equals(right);
+
+        public static bool operator !=(FPlane left, FPlane right) => !left.Equals(right);
+
+        public readonly bool Equals(FPlane v) => Equals(v, UnrealMath.KindaSmallNumber);
     }
 }

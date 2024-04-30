@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,10 +19,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     }
 
     /// <summary>
-    /// USE Ar.Read<FQuat> FOR FLOATS AND new FQuat(Ar) FOR DOUBLES
+    /// USE Ar.Read&lt;FQuat&gt; FOR FLOATS AND new FQuat(Ar) FOR DOUBLES
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct FQuat : IUStruct
+    public struct FQuat : IUStruct, IEquatable<FQuat>
     {
         public const float THRESH_QUAT_NORMALIZED = 0.01f;   /** Allowed error for a normalized quaternion (against squared magnitude) */
 
@@ -170,7 +170,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             W = c;
         }
 
-        public bool Equals(FQuat q, float tolerance) => (Abs(X - q.X) <= tolerance && Abs(Y - q.Y) <= tolerance && Abs(Z - q.Z) <= tolerance && Abs(W - q.W) <= tolerance) ||
+        public readonly bool Equals(FQuat q, float tolerance) => (Abs(X - q.X) <= tolerance && Abs(Y - q.Y) <= tolerance && Abs(Z - q.Z) <= tolerance && Abs(W - q.W) <= tolerance) ||
                                                         (Abs(X + q.X) <= tolerance && Abs(Y + q.Y) <= tolerance && Abs(Z + q.Z) <= tolerance && Abs(W + q.W) <= tolerance);
 
         public bool IsIdentity(float tolerance = UnrealMath.SmallNumber) => Equals(Identity, tolerance);
@@ -211,11 +211,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator *(FQuat a, FVector b) => a.RotateVector(b);
-
-        public static bool operator ==(FQuat a, FQuat b) =>
-            a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
-
-        public static bool operator !=(FQuat a, FQuat b) => !(a == b);
 
         public void Normalize(float tolerance = UnrealMath.SmallNumber)
         {
@@ -428,5 +423,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public static FQuat operator +(FQuat a, FQuat b) => new FQuat(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
 
         public static implicit operator Quaternion(FQuat v) => new(v.X, v.Y, v.Z, v.W);
+
+        public readonly bool Equals(FQuat other) => Equals(other, UnrealMath.KindaSmallNumber);
+
+        public readonly override bool Equals(object? obj) => obj is FQuat other && Equals(other);
+
+        public readonly override int GetHashCode() => HashCode.Combine(X, Y, Z, W);
+
+        public static bool operator ==(FQuat left, FQuat right) => left.Equals(right);
+
+        public static bool operator !=(FQuat left, FQuat right) => !left.Equals(right);
     }
 }

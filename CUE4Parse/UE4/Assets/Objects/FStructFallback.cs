@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
+        public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault<T>(this, name, defaultValue, comparisonType);
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 }
             }
 
-            obj = default;
+            obj = default!;
             return false;
         }
         public bool TryGetAllValues<T>(out T[] obj, string name)
@@ -64,7 +64,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             obj = new T[maxIndex + 1];
             foreach (var prop in collected) {
-                obj[prop.ArrayIndex] = (T) prop.Tag.GetValue(typeof(T));
+                obj[prop.ArrayIndex] = (T)prop.Tag?.GetValue(typeof(T))!;
             }
 
             return obj.Length > 0;

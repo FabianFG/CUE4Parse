@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     [SkipObjectRegistration]
     public class UObject : IPropertyHolder
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public UObject? Outer;
         public UStruct? Class;
         public ResolvedObject? Super;
@@ -197,9 +197,9 @@ namespace CUE4Parse.UE4.Assets.Exports
 
             Struct? propMappings = null;
             if (struc is UScriptClass)
-                Ar.Owner.Mappings?.Types.TryGetValue(type, out propMappings);
+                Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
             else
-                propMappings = new SerializedStruct(Ar.Owner.Mappings, struc);
+                propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 
             if (propMappings == null)
             {
@@ -322,10 +322,10 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetOrDefault<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
+        public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal) =>
+        public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
@@ -340,14 +340,14 @@ namespace CUE4Parse.UE4.Assets.Exports
         {
             foreach (string name in names)
             {
-                if (GetOrDefault<T>(name, comparisonType: StringComparison.OrdinalIgnoreCase) is T ret && !ret.Equals(default(T)))
+                if (GetOrDefault<T>(name, comparisonType: StringComparison.OrdinalIgnoreCase) is { } ret && !ret.Equals(default(T)))
                 {
                     obj = ret;
                     return true;
                 }
             }
 
-            obj = default;
+            obj = default!;
             return false;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -364,7 +364,7 @@ namespace CUE4Parse.UE4.Assets.Exports
 
             obj = new T[maxIndex + 1];
             foreach (var prop in collected) {
-                obj[prop.ArrayIndex] = (T) prop.Tag.GetValue(typeof(T));
+                obj[prop.ArrayIndex] = (T)prop.Tag?.GetValue(typeof(T))!;
             }
 
             return obj.Length > 0;
@@ -431,7 +431,7 @@ namespace CUE4Parse.UE4.Assets.Exports
     public static class PropertyUtil
     {
         // TODO Little Problem here: Can't use T? since this would need a constraint to struct or class, which again wouldn't work fine with primitives
-        public static T GetOrDefault<T>(IPropertyHolder holder, string name, T defaultValue = default, StringComparison comparisonType = StringComparison.Ordinal)
+        public static T GetOrDefault<T>(IPropertyHolder holder, string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal)
         {
             foreach (var prop in holder.Properties)
             {
@@ -447,7 +447,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default,
+        public static Lazy<T> GetOrDefaultLazy<T>(IPropertyHolder holder, string name, T defaultValue = default!,
             StringComparison comparisonType = StringComparison.Ordinal) =>
             new(() => GetOrDefault(holder, name, defaultValue, comparisonType));
 

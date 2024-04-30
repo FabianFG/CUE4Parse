@@ -43,13 +43,13 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
             }
             switch (this)
             {
-                case FPropertyTagType<UScriptStruct> structProp when type.IsInstanceOfType(structProp.Value.StructType):
+                case FPropertyTagType<UScriptStruct> structProp when type.IsInstanceOfType(structProp.Value!.StructType):
                     return structProp.Value.StructType;
-                case FPropertyTagType<UScriptStruct> structProp when structProp.Value.StructType is FStructFallback fallback && type.GetCustomAttribute<StructFallback>() != null:
+                case FPropertyTagType<UScriptStruct> {Value.StructType: FStructFallback fallback} when type.GetCustomAttribute<StructFallback>() != null:
                     return fallback.MapToClass(type);
                 case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
                 {
-                    var array = arrayProp.Value.Properties;
+                    var array = arrayProp.Value!.Properties;
                     var contentType = type.GetElementType()!;
                     var result = Array.CreateInstance(contentType, array.Count);
                     for (var i = 0; i < array.Count; i++)
@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                 }
                 case FPropertyTagType<UScriptArray> arrayProp when typeof(IList).IsAssignableFrom(type):
                 {
-                    var array = arrayProp.Value.Properties;
+                    var array = arrayProp.Value!.Properties;
                     var contentType = type.GenericTypeArguments[0];
                     var listType = typeof(List<>).MakeGenericType(contentType);
                     var result = (IList) Activator.CreateInstance(listType, array.Count)!;
@@ -71,11 +71,11 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                     return result;
                 }
                 case FPropertyTagType<FPackageIndex> objProp when typeof(UObject).IsAssignableFrom(type):
-                    if (objProp.Value.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
+                    if (objProp.Value!.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
                         return objExport;
                     return null;
                 case FPropertyTagType<FPackageIndex> objProp when typeof(ResolvedObject).IsAssignableFrom(type):
-                    return objProp.Value.ResolvedObject;
+                    return objProp.Value!.ResolvedObject;
                 case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(UObject).IsAssignableFrom(type):
                     if (softObjProp.Value.TryLoad(out var softExport) && type.IsInstanceOfType(softExport))
                         return softExport;

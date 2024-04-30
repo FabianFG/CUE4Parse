@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// USE Ar.Read<FVector> FOR FLOATS AND new FVector(Ar) FOR DOUBLES
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct FVector : IUStruct
+    public struct FVector : IUStruct, IEquatable<FVector>
     {
         /// <summary>
         /// Allowed error for a normalized vector (against squared magnitude)
@@ -248,18 +248,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public override bool Equals(object? obj) => obj is FVector other && Equals(other, 0f);
+        public readonly override bool Equals(object? obj) => obj is FVector other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = X.GetHashCode();
-                hashCode = (hashCode * 397) ^ Y.GetHashCode();
-                hashCode = (hashCode * 397) ^ Z.GetHashCode();
-                return hashCode;
-            }
-        }
+        public readonly override int GetHashCode() => HashCode.Combine(X, Y, Z);
 
         /// <summary>
         /// Check against another vector for equality, within specified error limits.
@@ -268,7 +259,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         /// <param name="tolerance">Error tolerance.</param>
         /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(FVector v, float tolerance = UnrealMath.KindaSmallNumber) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
+        public readonly bool Equals(FVector v, float tolerance) => MathF.Abs(X - v.X) <= tolerance && MathF.Abs(Y - v.Y) <= tolerance && MathF.Abs(Z - v.Z) <= tolerance;
+
+        /// <summary>
+        /// Check against another vector for equality, within specified error limits.
+        /// </summary>
+        /// <param name="v">The vector to check against.</param>
+        /// <returns>true if the vectors are equal within tolerance limits, false otherwise.</returns>
+        public readonly bool Equals(FVector v) => Equals(v, UnrealMath.KindaSmallNumber);
 
         /// <summary>
         /// Checks whether all components of this vector are the same, within a tolerance.
