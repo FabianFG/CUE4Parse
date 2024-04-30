@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
@@ -59,6 +60,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return (byte) value8;
         }
 
-        public int ToPackedARGB() => A << 24 + R << 16 + G << 8 + B;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int ToPackedARGB() => (A << 24) | (R << 16) | (G << 8) | (B << 0);
     }
 }

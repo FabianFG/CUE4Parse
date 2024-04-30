@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (length > 0) numSkelInfluences = length;
 
             BoneIndex = bUse16BitBoneIndex ? Ar.ReadArray<ushort>(numSkelInfluences) : Ar.ReadArray(numSkelInfluences, () => (ushort)Ar.Read<byte>());
-            BoneWeight = Ar.ReadArray<byte>(numSkelInfluences);        
+            BoneWeight = Ar.ReadArray<byte>(numSkelInfluences);
         }
     }
 }
