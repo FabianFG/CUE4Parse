@@ -35,6 +35,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
         public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
         public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;
+        public const uint PAK_FILE_MAGIC_WildAssault = 0xA4CCD123;
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
         public readonly uint Magic;
@@ -75,12 +76,14 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (Magic != PAK_FILE_MAGIC)
             {
                 if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials ||
-                    Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite) goto afterMagic;
+                    Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
+                    Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault)
+                    goto afterMagic;
                 // Stop immediately when magic is wrong
                 return;
             }
 
-            afterMagic:
+        afterMagic:
             Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
             if (Ar.Game == EGame.GAME_StateOfDecay2)
             {
@@ -98,6 +101,13 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeHotta && Version >= EPakFileVersion.PakFile_Version_Latest)
             {
                 var mymVersion = Ar.Read<uint>(); // I assume this is a version, only 0 right now.
+            }
+
+            if (Ar.Game == EGame.GAME_WildAssault)
+            {
+                EncryptionKeyGuid = default;
+                IndexOffset ^= 0x345457bec96524a9;
+                IndexSize = (long) ((ulong) IndexSize ^ 0xB54CA4A45C698156);
             }
 
             if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
@@ -222,7 +232,9 @@ namespace CUE4Parse.UE4.Pak.Objects
                     var info = new FPakInfo(reader, offset);
 
                     if (Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials ||
-                        Ar.Game == EGame.GAME_TorchlightInfinite && info.Magic == PAK_FILE_MAGIC_TorchlightInfinite) return info;
+                        Ar.Game == EGame.GAME_TorchlightInfinite && info.Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
+                        Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault)
+                        return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
                         return info;
