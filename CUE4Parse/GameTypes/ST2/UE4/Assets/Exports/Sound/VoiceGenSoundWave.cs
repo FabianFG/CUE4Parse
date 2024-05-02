@@ -2,4 +2,4 @@
 
 namespace CUE4Parse.GameTypes.ST2.UE4.Assets.Exports.Sound;
 
-public class VoiceGenSoundWave : USoundWave { }
+public class UVoiceGenSoundWave : USoundWave;

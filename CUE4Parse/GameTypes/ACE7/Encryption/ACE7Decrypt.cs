@@ -18,14 +18,14 @@ public class ACE7Decrypt
         if (stream == null)
             throw new MissingManifestResourceException("Couldn't find ACE7Key.bin in Embedded Resources");
         fullKey = new byte[stream.Length];
-        var _ = stream.Read(fullKey, 0, (int) stream.Length);
+        _ = stream.Read(fullKey, 0, (int) stream.Length);
     }
 
     public FArchive DecryptUassetArchive(FArchive Ar, out ACE7XORKey key)
     {
         key = new ACE7XORKey(Ar.Name.SubstringBeforeLast('.').SubstringAfterLast('/'));
         var uasset = new byte[Ar.Length];
-        var _ = Ar.Read(uasset, 0, (int) Ar.Length);
+        _ = Ar.Read(uasset, 0, (int) Ar.Length);
         return new FByteArchive(Ar.Name, DecryptUasset(uasset, key), Ar.Versions);
     }
 

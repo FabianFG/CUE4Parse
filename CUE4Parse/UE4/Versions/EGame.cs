@@ -41,6 +41,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Borderlands3 = GAME_UE4_20 + 1,
         GAME_UE4_21 = GameUtils.GameUe4Base + 21 << 4,
             GAME_StarWarsJediFallenOrder = GAME_UE4_21 + 1,
+            GAME_Undawn = GAME_UE4_21 + 2,
         GAME_UE4_22 = GameUtils.GameUe4Base + 22 << 4,
         GAME_UE4_23 = GameUtils.GameUe4Base + 23 << 4,
             GAME_ApexLegendsMobile = GAME_UE4_23 + 1,

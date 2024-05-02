@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -19,7 +19,7 @@ using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
 
 namespace CUE4Parse.UE4.Pak
 {
-    public class PakFileReader : AbstractAesVfsReader
+    public partial class PakFileReader : AbstractAesVfsReader
     {
         public readonly FArchive Ar;
         public readonly FPakInfo Info;

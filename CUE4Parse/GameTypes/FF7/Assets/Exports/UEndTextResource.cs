@@ -3,7 +3,6 @@ using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.GameTypes.FF7.Assets.Exports
@@ -36,7 +35,7 @@ namespace CUE4Parse.GameTypes.FF7.Assets.Exports
             {
                 writer.WritePropertyName("Strings");
                 writer.WriteStartObject();
-                foreach ((string key, FEndTextResourceStrings val) in Strings)
+                foreach (var (key, val) in Strings)
                 {
                     if (val.Entries == null || val.Entries?.Count <= 0) continue;
                     writer.WritePropertyName(key);
