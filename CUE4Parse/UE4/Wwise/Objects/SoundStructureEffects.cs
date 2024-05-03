@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
             if (EffectCount != 0)
             {
                 BypassEffects = Ar.Read<EBypassEffectsType>();
-                EffectReferences = Ar.ReadArray<EffectReference>(EffectCount);
+                EffectReferences = Ar.ReadArray(EffectCount, () => new EffectReference(Ar));
             }
         }
 
@@ -38,8 +38,10 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 writer.WriteValue(BypassEffects);
 
                 writer.WritePropertyName("EffectReferences");
+                writer.WriteStartArray();
                 foreach (EffectReference effect in EffectReferences)
                     effect.WriteJson(writer, serializer);
+                writer.WriteEndArray();
             }
 
             writer.WriteEndObject();
