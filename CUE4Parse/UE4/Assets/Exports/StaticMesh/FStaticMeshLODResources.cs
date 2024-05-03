@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             CDSF_StripIndexBuffers = 128 | 64 | 32
         }
 
-        public FStaticMeshLODResources(FAssetArchive Ar)
+        public FStaticMeshLODResources(FArchive Ar)
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
@@ -76,9 +76,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                             break;
                     }
                 }
-                else
+                else if (Ar is FAssetArchive assetArchive)
                 {
-                    var bulkData = new FByteBulkData(Ar);
+                    var bulkData = new FByteBulkData(assetArchive);
                     if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
                     {
                         var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
@@ -115,7 +115,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         }
 
         // Pre-UE4.23 code
-        public void SerializeBuffersLegacy(FAssetArchive Ar, FStripDataFlags stripDataFlags)
+        public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
         {
             PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);

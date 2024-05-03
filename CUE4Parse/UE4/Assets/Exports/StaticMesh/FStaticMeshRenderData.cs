@@ -1,7 +1,9 @@
 using CUE4Parse.UE4.Assets.Exports.Nanite;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -30,7 +32,23 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Game == EGame.GAME_HYENAS) Ar.Position += 1;
 
-            LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
+            if (Ar.Game == EGame.GAME_Undawn)
+            {
+                var size = Ar.Read<int>();
+                
+                var bulkData = new FByteBulkData(Ar);
+                if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
+                {
+                    var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
+
+                    LODs = Ar.ReadArray(size, () => new FStaticMeshLODResources(tempAr));
+                }
+            }
+            else
+            {
+                LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
+            }
+
             if (Ar.Game >= EGame.GAME_UE4_23)
             {
                 var numInlinedLODs = Ar.Read<byte>();
