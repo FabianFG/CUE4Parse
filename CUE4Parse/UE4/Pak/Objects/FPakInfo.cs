@@ -50,6 +50,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly bool IndexIsFrozen;
         public readonly FGuid EncryptionKeyGuid;
         public readonly List<CompressionMethod> CompressionMethods;
+        public readonly byte[] CustomEncryptionData;
 
         private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
         {
@@ -110,6 +111,12 @@ namespace CUE4Parse.UE4.Pak.Objects
                 IndexSize = (long) ((ulong) IndexSize ^ 0xB54CA4A45C698156);
             }
 
+            if (Ar.Game == EGame.GAME_DeadbyDaylight)
+            {
+                CustomEncryptionData = Ar.ReadBytes(28);
+                _ = Ar.Read<uint>();
+            }
+
             if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
             {
                 IndexIsFrozen = Ar.Read<byte>() != 0;
@@ -128,6 +135,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     OffsetsToTry.Size8a => 5,
                     OffsetsToTry.SizeHotta => 5,
+                    OffsetsToTry.SizeDbD => 5,
                     OffsetsToTry.Size8 => 4,
                     OffsetsToTry.Size8_1 => 1,
                     OffsetsToTry.Size8_2 => 2,
@@ -188,6 +196,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             //Size10 = Size8a
 
             SizeHotta = Size8a + 4, // additional int for custom pak version
+            SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
             SizeLast,
             SizeMax = SizeLast - 1
@@ -224,6 +233,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 var offsetsToTry = Ar.Game switch
                 {
                     EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => new [] { OffsetsToTry.SizeHotta },
+                    EGame.GAME_DeadbyDaylight => new[] { OffsetsToTry.SizeDbD },
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)

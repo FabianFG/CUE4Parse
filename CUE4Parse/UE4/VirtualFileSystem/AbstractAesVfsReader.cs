@@ -68,7 +68,13 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 }
 
                 if (valid)
-                    return _game == EGame.GAME_ApexLegendsMobile ? bytes.DecryptApexMobile(key) : bytes.Decrypt(key);
+                {
+                    return (_game) switch
+                    {
+                        EGame.GAME_ApexLegendsMobile => bytes.DecryptApexMobile(key),
+                        _ => bytes.Decrypt(key)
+                    };
+                }
             }
             throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
         }
@@ -84,7 +90,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             if (!isEncrypted) return bytes;
             if (CustomEncryption != null)
             {
-                return CustomEncryption(bytes, 0, bytes.Length, this);
+                return CustomEncryption(bytes, 0, bytes.Length, true, this);
             }
 
             return Decrypt(bytes, AesKey);
@@ -94,7 +100,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             if (!isEncrypted) return bytes;
             if (CustomEncryption != null)
             {
-                return CustomEncryption(bytes, beginOffset, count, this);
+                return CustomEncryption(bytes, beginOffset, count, false, this);
             }
 
             return Decrypt(bytes, AesKey);
