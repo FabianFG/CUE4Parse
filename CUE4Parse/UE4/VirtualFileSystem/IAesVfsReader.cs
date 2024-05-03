@@ -1,4 +1,4 @@
-﻿using CUE4Parse.Encryption.Aes;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Objects.Core.Misc;
 
@@ -19,6 +19,6 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 
         public void MountTo(FileProviderDictionary files, bool caseInsensitive, FAesKey? key);
 
-        public delegate byte[] CustomEncryptionDelegate(byte[] bytes, int beginOffset, int count, IAesVfsReader reader);
+        public delegate byte[] CustomEncryptionDelegate(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader);
     }
 }
