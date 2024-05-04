@@ -22,6 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         public FPackageIndex[] Sockets { get; private set; }
         public FPackageIndex Skeleton { get; private set; }
         public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
+        public FPackageIndex PhysicsAsset { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -33,6 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             MorphTargets = GetOrDefault(nameof(MorphTargets), Array.Empty<FPackageIndex>());
             Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
             Skeleton = GetOrDefault(nameof(Skeleton), new FPackageIndex());
+            PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
 
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             ImportedBounds = new FBoxSphereBounds(Ar);
