@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
 {
     public class UBodySetup : Assets.Exports.UObject
     {
-        public FKAggregateGeom AggGeom;
+        public FKAggregateGeom? AggGeom;
         public FGuid BodySetupGuid;
         public FFormatContainer? CookedFormatData;
 
@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
             }
 
             CookedFormatData = new FFormatContainer(Ar);
-            
+
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
