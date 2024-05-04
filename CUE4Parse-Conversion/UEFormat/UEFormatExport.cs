@@ -1,11 +1,11 @@
 using System.IO;
 using System.IO.Compression;
-
 using CUE4Parse.UE4.Writers;
 
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse_Conversion.UEFormat.Structs;
-
+using CUE4Parse.Compression;
+using OodleDotNet;
 using ZstdSharp;
 
 namespace CUE4Parse_Conversion.UEFormat;
@@ -16,8 +16,11 @@ public class UEFormatExport
     protected readonly FArchiveWriter Ar = new();
     protected ExporterOptions Options;
     private string ObjectName;
-    
-    private const int ZSTD_LEVEL = 6; // let user change eventually?
+
+    // TODO make user selectable
+    private const OodleCompressor OODLE_COMPRESSOR = OodleCompressor.Leviathan;
+    private const OodleCompressionLevel OODLE_COMPRESSION_LEVEL = OodleCompressionLevel.Fast;
+    private const int ZSTD_LEVEL = 6;
     
     protected UEFormatExport(string name, ExporterOptions options)
     {
@@ -35,6 +38,7 @@ public class UEFormatExport
         {
             EFileCompressionFormat.GZIP => GzipCompress(data),
             EFileCompressionFormat.ZSTD => new Compressor(ZSTD_LEVEL).Wrap(data),
+            EFileCompressionFormat.Oodle => OodleCompress(data),
             _ => data
         };
         header.CompressedSize = compressedData.Length;
@@ -43,7 +47,7 @@ public class UEFormatExport
         archive.Write(compressedData);
     }
 
-    private static byte[] GzipCompress(byte[] src)
+    public static byte[] GzipCompress(byte[] src)
     {
         using var outStream = new MemoryStream();
         using var srcStream = new MemoryStream(src);
@@ -53,5 +57,18 @@ public class UEFormatExport
         }
 
         return outStream.ToArray();
+    }
+    
+    public static byte[] OodleCompress(byte[] src)
+    {
+        if (OodleHelper.Instance is null) throw new OodleException("Oodle compression failed: not initialized");
+
+        var compressedBufferSize = OodleHelper.Instance.GetCompressedBufferSizeNeeded(OODLE_COMPRESSOR, src.Length);
+        var compressedBuffer = new byte[compressedBufferSize];
+        
+        var compressedSize = (int) OodleHelper.Instance.Compress(OODLE_COMPRESSOR, OODLE_COMPRESSION_LEVEL, src, compressedBuffer);
+        if (compressedSize <= 0) throw new OodleException($"Oodle compression failed with result {compressedSize}");
+        
+        return compressedBuffer[..compressedSize];
     }
 }

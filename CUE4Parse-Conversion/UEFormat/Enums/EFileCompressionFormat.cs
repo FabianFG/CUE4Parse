@@ -11,5 +11,8 @@ public enum EFileCompressionFormat
     GZIP,
     
     [Description("ZStandard Compression")]
-    ZSTD
+    ZSTD,
+    
+    [Description("Oodle Compression")]
+    Oodle
 }
