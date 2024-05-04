@@ -45,11 +45,13 @@ public class UEFormatExport
 
     private static byte[] GzipCompress(byte[] src)
     {
-        var outputMs = new MemoryStream();
+        using var outStream = new MemoryStream();
+        using var srcStream = new MemoryStream(src);
+        using (var gzipStream = new GZipStream(outStream, CompressionMode.Compress))
         {
-            using var gzipStream = new GZipStream(new MemoryStream(src), CompressionLevel.Optimal);
-            gzipStream.CopyTo(outputMs);
+            srcStream.CopyTo(gzipStream);
         }
-        return outputMs.ToArray();
+
+        return outStream.ToArray();
     }
 }
