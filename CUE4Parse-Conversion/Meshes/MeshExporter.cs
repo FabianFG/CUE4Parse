@@ -9,6 +9,7 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
+using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Serilog;
@@ -91,7 +92,9 @@ namespace CUE4Parse_Conversion.Meshes
                         break;
                     case EMeshFormat.UEFormat:
                         ext = "uemodel";
-                        new UEModel(originalMesh.Name, lod, Options).Save(Ar);
+
+                        originalMesh.BodySetup.TryLoad<UBodySetup>(out var bodySetup); // can be null obv
+                        new UEModel(originalMesh.Name, lod, bodySetup, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);

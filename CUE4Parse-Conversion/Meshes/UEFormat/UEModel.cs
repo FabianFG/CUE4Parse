@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse_Conversion.Meshes.UEFormat.Collision;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -9,6 +10,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat;
@@ -17,14 +19,14 @@ public class UEModel : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEMODEL";
     
-    public UEModel(string name, CStaticMeshLod lod, ExporterOptions options) : base(name, options) 
+    public UEModel(string name, CStaticMeshLod lod, UBodySetup? bodySetup, ExporterOptions options) : base(name, options) 
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
+        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value, bodySetup?.AggGeom);
     }
     
     public UEModel(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
+        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value, null); // todo skeletal aggGeom
         SerializeSkeletalMeshData(lod.Verts, morphTargets, lodIndex);
         SerializeSkeletonData(bones, sockets);
     }
@@ -34,7 +36,7 @@ public class UEModel : UEFormatExport
         SerializeSkeletonData(bones, sockets);
     }
 
-    private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CVertexColor[]? extraVertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs)
+    private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CVertexColor[]? extraVertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs, FKAggregateGeom? aggregateGeom)
     {
         using var vertexChunk = new FDataChunk("VERTICES", verts.Count);
         using var normalsChunk = new FDataChunk("NORMALS", verts.Count);
@@ -134,6 +136,17 @@ public class UEModel : UEFormatExport
             }
 
             materialChunk.Serialize(Ar);
+        }
+
+        if (aggregateGeom is not null)
+        {
+            using var collisionChunk = new FDataChunk("COLLISION", aggregateGeom.ConvexElems.Length);
+            foreach (var convexElem in aggregateGeom.ConvexElems)
+            {
+                var collision = new FConvexMeshCollision(convexElem);
+                collision.Serialize(collisionChunk);
+            }
+            collisionChunk.Serialize(Ar);
         }
     }
 

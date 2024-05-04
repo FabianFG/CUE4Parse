@@ -10,7 +10,7 @@ namespace CUE4Parse_Conversion.Meshes.UEFormat;
 public readonly struct FMorphTarget : ISerializable
 {
     private readonly FString MorphName;
-    private readonly List<FMorphData> MorphData = new();
+    private readonly List<FMorphData> MorphData = [];
     
     public FMorphTarget(string morphName, FMorphTargetLODModel morphLod)
     {
