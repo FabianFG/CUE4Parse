@@ -6,6 +6,7 @@ public enum EUEFormatVersion
     SerializeBinormalSign = 1,
     AddMultipleVertexColors = 2,
     AddConvexCollisionGeom = 3,
+    LevelOfDetailFormatRestructure = 4,
         
     VersionPlusOne,
     LatestVersion = VersionPlusOne - 1

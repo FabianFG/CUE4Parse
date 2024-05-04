@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
@@ -19,24 +20,77 @@ public class UEModel : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEMODEL";
     
-    public UEModel(string name, CStaticMeshLod lod, UBodySetup? bodySetup, ExporterOptions options) : base(name, options) 
+    public UEModel(string name, CStaticMesh mesh, UBodySetup? bodySetup, ExporterOptions options) : base(name, options) 
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value, bodySetup?.AggGeom);
+        using (var lodChunk = new FDataChunk("LODS"))
+        {
+            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            {
+                var lod = mesh.LODs[lodIdx];
+                if (lod.SkipLod) continue;
+
+                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
+                SerializeStaticMeshData(subLodChunk, lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
+                subLodChunk.Serialize(lodChunk);
+            
+                lodChunk.Count++;
+            }
+        
+            lodChunk.Serialize(Ar);
+        }
+        
+        if (bodySetup?.AggGeom.ConvexElems is { } convexElems)
+        {
+            using var collisionChunk = new FDataChunk("COLLISION", convexElems.Length);
+            foreach (var convexElem in convexElems)
+            {
+                var collision = new FConvexMeshCollision(convexElem);
+                collision.Serialize(collisionChunk);
+            }
+            collisionChunk.Serialize(Ar);
+        }
+       
     }
     
-    public UEModel(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
+    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value, null); // todo skeletal aggGeom
-        SerializeSkeletalMeshData(lod.Verts, morphTargets, lodIndex);
-        SerializeSkeletonData(bones, sockets);
+        using (var lodChunk = new FDataChunk("LODS"))
+        {
+            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            {
+                var lod = mesh.LODs[lodIdx];
+                if (lod.SkipLod) continue;
+
+                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
+                SerializeStaticMeshData(subLodChunk, lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
+                SerializeSkeletalMeshData(subLodChunk, lod.Verts, morphTargets, lodIdx);
+                subLodChunk.Serialize(lodChunk);
+            
+                lodChunk.Count++;
+            }
+        
+            lodChunk.Serialize(Ar);
+        }
+
+        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
+        {
+            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets);
+            
+            skeletonChunk.Serialize(Ar);
+        }
     }
     
     public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
     {
-        SerializeSkeletonData(bones, sockets);
+        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
+        {
+            SerializeSkeletonData(skeletonChunk, bones, sockets);
+            
+            skeletonChunk.Serialize(Ar);
+        }
     }
 
-    private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CVertexColor[]? extraVertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs, FKAggregateGeom? aggregateGeom)
+    private void SerializeStaticMeshData(FArchiveWriter archive, IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CVertexColor[]? extraVertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs)
     {
         using var vertexChunk = new FDataChunk("VERTICES", verts.Count);
         using var normalsChunk = new FDataChunk("NORMALS", verts.Count);
@@ -66,9 +120,9 @@ public class UEModel : UEFormatExport
             mainUVs.Add(uv);
         }
         
-        vertexChunk.Serialize(Ar);
-        normalsChunk.Serialize(Ar);
-        tangentsChunk.Serialize(Ar);
+        vertexChunk.Serialize(archive);
+        normalsChunk.Serialize(archive);
+        tangentsChunk.Serialize(archive);
         
         using (var texCoordsChunk = new FDataChunk("TEXCOORDS"))
         {
@@ -89,7 +143,7 @@ public class UEModel : UEFormatExport
                 SerializeUVSet(extraUVSet);
             }
             
-            texCoordsChunk.Serialize(Ar);
+            texCoordsChunk.Serialize(archive);
         }
         
         using (var indexChunk = new FDataChunk("INDICES", indices.Length))
@@ -99,7 +153,7 @@ public class UEModel : UEFormatExport
                 indexChunk.Write(indices[i]);
             }
             
-            indexChunk.Serialize(Ar);
+            indexChunk.Serialize(archive);
         }
         
         if (vertexColors?.Length > 0 || extraVertexColors?.Length > 0)
@@ -122,7 +176,7 @@ public class UEModel : UEFormatExport
                 }
             }
            
-            vertexColorChunk.Serialize(Ar);
+            vertexColorChunk.Serialize(archive);
         }
         
         using (var materialChunk = new FDataChunk("MATERIALS", sections.Length))
@@ -135,22 +189,11 @@ public class UEModel : UEFormatExport
                 materialChunk.Write(section.NumFaces);
             }
 
-            materialChunk.Serialize(Ar);
-        }
-
-        if (aggregateGeom is not null)
-        {
-            using var collisionChunk = new FDataChunk("COLLISION", aggregateGeom.ConvexElems.Length);
-            foreach (var convexElem in aggregateGeom.ConvexElems)
-            {
-                var collision = new FConvexMeshCollision(convexElem);
-                collision.Serialize(collisionChunk);
-            }
-            collisionChunk.Serialize(Ar);
+            materialChunk.Serialize(archive);
         }
     }
 
-    private void SerializeSkeletalMeshData(CSkelMeshVertex[] verts, FPackageIndex[]? morphTargets, int lodIndex)
+    private void SerializeSkeletalMeshData(FArchiveWriter archive, CSkelMeshVertex[] verts, FPackageIndex[]? morphTargets, int lodIndex)
     {
         using (var weightsChunk = new FDataChunk("WEIGHTS"))
         {
@@ -167,10 +210,10 @@ public class UEModel : UEFormatExport
                 }
             }
         
-            weightsChunk.Serialize(Ar);
+            weightsChunk.Serialize(archive);
         }
         
-        if (morphTargets is not null)
+        if (morphTargets is {Length: > 0})
         {
             using var morphTargetsChunk = new FDataChunk("MORPHTARGETS", morphTargets.Length);
             foreach (var morphTarget in morphTargets)
@@ -183,11 +226,11 @@ public class UEModel : UEFormatExport
                 var morphData = new FMorphTarget(morph.Name, morphLod);
                 morphData.Serialize(morphTargetsChunk);
             }
-            morphTargetsChunk.Serialize(Ar);
+            morphTargetsChunk.Serialize(archive);
         }
     }
 
-    private void SerializeSkeletonData(List<CSkelMeshBone> bones, FPackageIndex[] sockets)
+    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets)
     {
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
@@ -207,7 +250,7 @@ public class UEModel : UEFormatExport
                 boneRot.W = -boneRot.W;
                 boneRot.Serialize(boneChunk);
             }
-            boneChunk.Serialize(Ar);
+            boneChunk.Serialize(archive);
         }
         
         using (var socketChunk = new FDataChunk("SOCKETS", sockets.Length))
@@ -234,7 +277,7 @@ public class UEModel : UEFormatExport
                 boneScale.Serialize(socketChunk);
             }
 
-            socketChunk.Serialize(Ar);
+            socketChunk.Serialize(archive);
         }
     }
 
