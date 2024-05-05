@@ -6,29 +6,16 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat.Collision;
 
-public readonly struct FConvexMeshCollision : ISerializable
+public readonly struct FConvexMeshCollision(FKConvexElem ConvexElem) : ISerializable
 {
-    private readonly string Name;
-    private readonly List<FVector> Vertices = [];
-    private readonly int[] Indices;
-
-    public FConvexMeshCollision(FKConvexElem convexElem)
-    {
-        Name = convexElem.Name.Text;
-        Indices = convexElem.IndexData;
-        
-        foreach (var vertex in convexElem.VertexData)
-        {
-            var serializeVertex = vertex;
-            serializeVertex.Y = -serializeVertex.Y;
-            Vertices.Add(serializeVertex);
-        }
-    }
-    
     public void Serialize(FArchiveWriter Ar)
     {
-        Ar.WriteFString(Name);
-        Ar.WriteArray(Vertices, (writer, vector) => vector.Serialize(writer));
-        Ar.WriteArray(Indices, (writer, index) => writer.Write(index));
+        Ar.WriteFString(ConvexElem.Name.Text);
+        Ar.WriteArray(ConvexElem.VertexData, (writer, vector) =>
+        {
+            vector.Y = -vector.Y;
+            vector.Serialize(writer);
+        });
+        Ar.WriteArray(ConvexElem.IndexData, (writer, index) => writer.Write(index));
     }
 }
