@@ -74,7 +74,7 @@ public class UEModel : UEFormatExport
 
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets);
+            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets, []);
             
             skeletonChunk.Serialize(Ar);
         }
@@ -89,11 +89,11 @@ public class UEModel : UEFormatExport
         }*/
     }
     
-    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
+    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones, ExporterOptions options) : base(name, options)
     {
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, bones, sockets);
+            SerializeSkeletonData(skeletonChunk, bones, sockets, virtualBones);
             
             skeletonChunk.Serialize(Ar);
         }
@@ -239,7 +239,7 @@ public class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets)
+    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
     {
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
@@ -288,9 +288,21 @@ public class UEModel : UEFormatExport
 
             socketChunk.Serialize(archive);
         }
+        
+        using (var virtualBoneChunk = new FDataChunk("VIRTUALBONES", virtualBones.Length))
+        {
+            foreach (var virtualBone in virtualBones)
+            {
+                virtualBoneChunk.WriteFString(virtualBone.SourceBoneName.Text);
+                virtualBoneChunk.WriteFString(virtualBone.TargetBoneName.Text);
+                virtualBoneChunk.WriteFString(virtualBone.VirtualBoneName.Text);
+            }
+
+            virtualBoneChunk.Serialize(archive);
+        }
     }
 
-    private void SerializePhysicsData(FArchiveWriter writer, UPhysicsAsset physicsAsset)
+    private void SerializePhysicsData(FArchiveWriter archive, UPhysicsAsset physicsAsset)
     {
         using (var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length))
         {
@@ -302,7 +314,7 @@ public class UEModel : UEFormatExport
                 exportBodySetup.Serialize(bodyChunk);
             }
             
-            bodyChunk.Serialize(writer);
+            bodyChunk.Serialize(archive);
         }
     }
 

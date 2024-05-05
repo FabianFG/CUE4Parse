@@ -33,7 +33,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, Options).Save(ueModelArchive);
+                new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
                 return;
             }
