@@ -67,6 +67,8 @@ public class UEModel : UEFormatExport
                 subLodChunk.Serialize(lodChunk);
             
                 lodChunk.Count++;
+                
+                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
         
             lodChunk.Serialize(Ar);
