@@ -35,13 +35,21 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game == EGame.GAME_Undawn)
             {
                 var size = Ar.Read<int>();
-                
-                var bulkData = new FByteBulkData(Ar);
-                if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
+                LODs = new FStaticMeshLODResources[size];
+                for (int i = 0; i < size; i++)
                 {
-                    var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
-
-                    LODs = Ar.ReadArray(size, () => new FStaticMeshLODResources(tempAr));
+                    var savedPos = Ar.Position;
+                    var bulkData = new FByteBulkData(Ar);
+                    if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
+                    {
+                        var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
+                        LODs[i] = new FStaticMeshLODResources(tempAr);
+                    }
+                    else
+                    {
+                        Ar.Position = savedPos;
+                        LODs[i] = new FStaticMeshLODResources(Ar);
+                    }
                 }
             }
             else
