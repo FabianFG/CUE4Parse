@@ -76,7 +76,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 }
 
                 targetNames += "]}";
-                mesh.Extras = JsonContent.Parse(targetNames);
+                mesh.Extras = (JsonContent) targetNames;
             }
 
             var sceneBuilder = new SceneBuilder();
@@ -237,7 +237,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             {
                 bindings.Add((influence.Bone, influence.Weight));
             }
-            
+
             return new VertexJoints4(bindings.ToArray());
         }
 
