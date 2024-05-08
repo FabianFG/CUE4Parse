@@ -195,6 +195,28 @@ namespace CUE4Parse.FileProvider.Vfs
             return countNewMounts;
         }
 
+        public void PostMount()
+        {
+            var workingAes = LoadIniConfigs();
+            if (workingAes) return;
+
+            var vfsToVerify = _mountedVfs.Keys
+                    .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
+                    .GroupBy(it => it.EncryptionKeyGuid);
+
+            foreach (var group in vfsToVerify)
+            {
+                if (group.Key != DefaultGame.EncryptionKeyGuid) continue;
+                foreach (var reader in group)
+                {
+                    _mountedVfs.TryRemove(reader, out _);
+                    _unloadedVfs[reader] = null;
+                }
+                _keys.TryRemove(group.Key, out _);
+                _requiredKeys[group.Key] = null;
+            }
+        }
+
         private void VerifyGlobalData(IAesVfsReader reader)
         {
             if (GlobalData != null || reader is not IoStoreReader ioStoreReader) return;
@@ -202,38 +224,6 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 GlobalData = new IoGlobalData(ioStoreReader);
             }
-        }
-
-        public int LoadVirtualCache()
-        {
-            var persistentDownloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), InternalGameName, "Saved/PersistentDownloadDir");
-            if (!Directory.Exists(persistentDownloadDir)) return 0;
-
-            var vfcMetadata = Path.Combine(persistentDownloadDir, "VFC", "vfc.meta");
-            var manifestCacheFolder = new DirectoryInfo(Path.Combine(persistentDownloadDir, "ManifestCache"));
-            if (!File.Exists(vfcMetadata) || !manifestCacheFolder.Exists)
-                return 0;
-
-            var cachedManifest = manifestCacheFolder.GetFiles("*.manifest");
-            if (cachedManifest.Length <= 0)
-                return 0;
-
-            var vfc = new FFileTable(new FByteArchive("vfc.meta", File.ReadAllBytes(vfcMetadata)));
-            var manifest = new OptimizedContentBuildManifest(
-                File.ReadAllBytes(cachedManifest.OrderBy(f => f.LastWriteTime).Last().FullName));
-
-            var onDemandFiles = new Dictionary<string, GameFile>();
-            foreach ((var vfcHash, var dataReference) in vfc.FileMap)
-            {
-                if (!manifest.HashNameMap.TryGetValue(vfcHash.ToString(), out var filePath)) continue;
-
-                var onDemandFile = new VfcGameFile(vfc.BlockFiles, dataReference, persistentDownloadDir, filePath, Versions);
-                if (IsCaseInsensitive) onDemandFiles[onDemandFile.Path.ToLowerInvariant()] = onDemandFile;
-                else onDemandFiles[onDemandFile.Path] = onDemandFile;
-            }
-
-            _files.AddFiles(onDemandFiles);
-            return onDemandFiles.Count;
         }
 
         public void UnloadAllVfs()
