@@ -345,8 +345,8 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             public readonly FName TableId;
             public readonly string Key;
             public readonly string SourceString;
-            public string LocalizedString => Text;
-            public override string Text { get; }
+            public readonly string LocalizedString;
+            public override string Text => LocalizedString;
 
             public StringTableEntry(FAssetArchive Ar)
             {
@@ -357,7 +357,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                     table.StringTable.KeysToMetaData.TryGetValue(Key, out var t))
                 {
                     SourceString = t;
-                    Text = Ar.Owner.Provider!.GetLocalizedString(table.StringTable.TableNamespace, Key, t);
+                    LocalizedString = Ar.Owner.Provider!.GetLocalizedString(table.StringTable.TableNamespace, Key, t);
                 }
             }
         }
