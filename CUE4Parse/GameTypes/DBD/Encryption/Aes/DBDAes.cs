@@ -7,9 +7,9 @@ using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.GameTypes.DBD.Encryption.Aes;
 
-public static class DbDAes
+public static class DBDAes
 {
-    public static unsafe byte[] DbDDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] DbDDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
         var aesKey = reader.AesKey;
         if (aesKey is null)
@@ -27,6 +27,7 @@ public static class DbDAes
             {
                 decrypted[i] ^= key[i % keylength];
             }
+
             return decrypted;
         }
 
@@ -42,16 +43,16 @@ public static class DbDAes
 
     private static byte[] GetDbDEncryptionKey(IAesVfsReader reader)
     {
-        if (reader is PakFileReader pak)
+        switch (reader)
         {
-            return pak.Info.CustomEncryptionData;
+            case PakFileReader pak:
+                return pak.Info.CustomEncryptionData;
+            case IoStoreReader ioreader:
+                var key = new byte[36];
+                Buffer.BlockCopy(ioreader.TocResource.Header._reserved8, 0, key, 0, key.Length);
+                return key;
+            default:
+                return [];
         }
-        else if (reader is IoStoreReader ioreader)
-        {
-            var key = new byte[36];
-            Buffer.BlockCopy(ioreader.TocResource.Header._reserved8, 0, key, 0, key.Length);
-            return key;
-        }
-        return Array.Empty<byte>();
     }
 }

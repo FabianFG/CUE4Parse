@@ -42,11 +42,11 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             }
             else if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE)
             {
-                ChunkIDs = new[] { Ar.Read<int>() };
+                ChunkIDs = [Ar.Read<int>()];
             }
             else
             {
-                ChunkIDs = Array.Empty<int>();
+                ChunkIDs = [];
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT)

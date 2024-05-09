@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
         public FAssetBundleData()
         {
-            Bundles = new FAssetBundleEntry[0];
+            Bundles = [];
         }
         
         public FAssetBundleData(FAssetRegistryArchive Ar)

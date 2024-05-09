@@ -49,6 +49,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
             }
 
+            // In Fortnite S8, engine is 4.22, but has static mesh from 4.23.
+            // Comment this check out to fix.
             if (Ar.Game >= EGame.GAME_UE4_23)
             {
                 var numInlinedLODs = Ar.Read<byte>();
@@ -110,7 +112,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             }
 
             ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
-            for (var i = 0; i < ScreenSize.Length; i++)
+            for (var i = 0; i < ScreenSize.Length; ++i)
             {
                 if (Ar.Game >= EGame.GAME_UE4_20) // FPerPlatformProperty
                 {
@@ -119,7 +121,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
                 ScreenSize[i] = Ar.Read<float>();
 
-                if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position +=8;
+                if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position += 8;
             }
 
             if (Ar.Game == EGame.GAME_Borderlands3)

@@ -111,7 +111,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 IndexSize = (long) ((ulong) IndexSize ^ 0xB54CA4A45C698156);
             }
 
-            if (Ar.Game == EGame.GAME_DeadbyDaylight)
+            if (Ar.Game == EGame.GAME_DeadByDaylight)
             {
                 CustomEncryptionData = Ar.ReadBytes(28);
                 _ = Ar.Read<uint>();
@@ -232,8 +232,8 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 var offsetsToTry = Ar.Game switch
                 {
-                    EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => new [] { OffsetsToTry.SizeHotta },
-                    EGame.GAME_DeadbyDaylight => new[] { OffsetsToTry.SizeDbD },
+                    EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
+                    EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)

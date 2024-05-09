@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.AssetRegistry.Readers;
+using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
@@ -19,6 +19,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly int FileVersionLicenseeUE = -1;
         public readonly FCustomVersionContainer? CustomVersions;
         public readonly uint Flags;
+        public readonly string? ExtensionText;
 
         public FAssetPackageData(FAssetRegistryArchive Ar)
         {
@@ -53,6 +54,10 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             if (Ar.Header.Version >= FAssetRegistryVersionType.PackageImportedClasses)
             {
                 ImportedClasses = Ar.ReadArray(Ar.ReadFName);
+            }
+            if (Ar.Header.Version >= FAssetRegistryVersionType.AssetPackageDataHasExtension)
+            {
+                ExtensionText = Ar.ReadFString();
             }
         }
     }

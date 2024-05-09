@@ -92,8 +92,8 @@ namespace CUE4Parse.FileProvider.Vfs
 
         private void PostLoadReader(AbstractAesVfsReader reader)
         {
-            if (reader.IsEncrypted && !_requiredKeys.ContainsKey(reader.EncryptionKeyGuid))
-                _requiredKeys[reader.EncryptionKeyGuid] = null;
+            if (reader.IsEncrypted)
+                _requiredKeys.TryAdd(reader.EncryptionKeyGuid, null);
 
             _unloadedVfs[reader] = null;
             reader.IsConcurrent = true;

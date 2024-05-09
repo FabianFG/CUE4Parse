@@ -73,11 +73,11 @@ namespace CUE4Parse.UE4.Assets.Exports
             {
                 if (Class == null)
                     throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
-                DeserializePropertiesUnversioned(Properties = new List<FPropertyTag>(), Ar, Class);
+                DeserializePropertiesUnversioned(Properties = [], Ar, Class);
             }
             else
             {
-                DeserializePropertiesTagged(Properties = new List<FPropertyTag>(), Ar, false);
+                DeserializePropertiesTagged(Properties = [], Ar, false);
             }
 
             if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
