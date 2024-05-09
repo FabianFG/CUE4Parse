@@ -38,7 +38,6 @@ public class UEFormatExport
         {
             EFileCompressionFormat.GZIP => GzipCompress(data),
             EFileCompressionFormat.ZSTD => new Compressor(ZSTD_LEVEL).Wrap(data),
-            EFileCompressionFormat.Oodle => OodleCompress(data),
             _ => data
         };
         header.CompressedSize = compressedData.Length;
@@ -57,18 +56,5 @@ public class UEFormatExport
         }
 
         return outStream.ToArray();
-    }
-    
-    public static byte[] OodleCompress(byte[] src)
-    {
-        if (OodleHelper.Instance is null) throw new OodleException("Oodle compression failed: not initialized");
-
-        var compressedBufferSize = OodleHelper.Instance.GetCompressedBufferSizeNeeded(OODLE_COMPRESSOR, src.Length);
-        var compressedBuffer = new byte[compressedBufferSize];
-        
-        var compressedSize = (int) OodleHelper.Instance.Compress(OODLE_COMPRESSOR, OODLE_COMPRESSION_LEVEL, src, compressedBuffer);
-        if (compressedSize <= 0) throw new OodleException($"Oodle compression failed with result {compressedSize}");
-        
-        return compressedBuffer[..compressedSize];
     }
 }

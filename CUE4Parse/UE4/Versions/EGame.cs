@@ -84,6 +84,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE5_1 = GameUtils.GameUe5Base + 1 << 4,
         GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
             GAME_DeadByDaylight = GAME_UE5_2 + 1,
+            GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
             GAME_WildAssault = GAME_UE5_3 + 1,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,

@@ -20,7 +20,7 @@ public class UEModel : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEMODEL";
     
-    public UEModel(string name, CStaticMesh mesh, UBodySetup? bodySetup, ExporterOptions options) : base(name, options) 
+    public UEModel(string name, CStaticMesh mesh, FPackageIndex bodySetupLazy, ExporterOptions options) : base(name, options) 
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
@@ -39,7 +39,7 @@ public class UEModel : UEFormatExport
             lodChunk.Serialize(Ar);
         }
         
-        if (bodySetup?.AggGeom.ConvexElems is { } convexElems)
+        if (bodySetupLazy.TryLoad<UBodySetup>(out var bodySetup) && bodySetup.AggGeom?.ConvexElems is { } convexElems)
         {
             using var collisionChunk = new FDataChunk("COLLISION", convexElems.Length);
             foreach (var convexElem in convexElems)
@@ -52,7 +52,7 @@ public class UEModel : UEFormatExport
        
     }
     
-    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
+    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, FPackageIndex physicsAssetLazy, ExporterOptions options) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
@@ -67,6 +67,8 @@ public class UEModel : UEFormatExport
                 subLodChunk.Serialize(lodChunk);
             
                 lodChunk.Count++;
+                
+                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
         
             lodChunk.Serialize(Ar);
@@ -74,17 +76,26 @@ public class UEModel : UEFormatExport
 
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets);
+            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets, []);
             
             skeletonChunk.Serialize(Ar);
         }
+
+        /*if (physicsAssetLazy.TryLoad(out UPhysicsAsset physicsAsset))
+        {
+            using var physicsChunk = new FDataChunk("PHYSICS", 1);
+
+            SerializePhysicsData(physicsChunk, physicsAsset);
+            
+            physicsChunk.Serialize(Ar);
+        }*/
     }
     
-    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
+    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones, ExporterOptions options) : base(name, options)
     {
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, bones, sockets);
+            SerializeSkeletonData(skeletonChunk, bones, sockets, virtualBones);
             
             skeletonChunk.Serialize(Ar);
         }
@@ -230,7 +241,7 @@ public class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets)
+    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
     {
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
@@ -278,6 +289,34 @@ public class UEModel : UEFormatExport
             }
 
             socketChunk.Serialize(archive);
+        }
+        
+        using (var virtualBoneChunk = new FDataChunk("VIRTUALBONES", virtualBones.Length))
+        {
+            foreach (var virtualBone in virtualBones)
+            {
+                virtualBoneChunk.WriteFString(virtualBone.SourceBoneName.Text);
+                virtualBoneChunk.WriteFString(virtualBone.TargetBoneName.Text);
+                virtualBoneChunk.WriteFString(virtualBone.VirtualBoneName.Text);
+            }
+
+            virtualBoneChunk.Serialize(archive);
+        }
+    }
+
+    private void SerializePhysicsData(FArchiveWriter archive, UPhysicsAsset physicsAsset)
+    {
+        using (var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length))
+        {
+            foreach (var bodySetupLazy in physicsAsset.SkeletalBodySetups)
+            {
+                if (!bodySetupLazy.TryLoad<USkeletalBodySetup>(out var bodySetup)) continue;
+                
+                var exportBodySetup = new FBodySetup(bodySetup);
+                exportBodySetup.Serialize(bodyChunk);
+            }
+            
+            bodyChunk.Serialize(archive);
         }
     }
 

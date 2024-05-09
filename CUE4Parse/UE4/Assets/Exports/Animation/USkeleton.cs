@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -21,6 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public Dictionary<FName, FSmartNameMapping> NameMappings { get; private set; }
         public FName[] ExistingMarkerNames { get; private set; }
         public FPackageIndex[] Sockets { get; private set; }
+        public FVirtualBone[] VirtualBones { get; private set; }
 
         public int BoneCount => BoneTree.Length;
 
@@ -38,6 +40,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
             Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
+            VirtualBones = GetOrDefault(nameof(VirtualBones), Array.Empty<FVirtualBone>());
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {
@@ -105,5 +108,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             writer.WritePropertyName("ExistingMarkerNames");
             serializer.Serialize(writer, ExistingMarkerNames);
         }
+    }
+}
+
+[StructFallback]
+public class FVirtualBone
+{
+    public FName SourceBoneName;
+    public FName TargetBoneName;
+    public FName VirtualBoneName;
+    
+    public FVirtualBone(FStructFallback fallback)
+    {
+        SourceBoneName = fallback.GetOrDefault<FName>(nameof(SourceBoneName));
+        TargetBoneName = fallback.GetOrDefault<FName>(nameof(TargetBoneName));
+        VirtualBoneName = fallback.GetOrDefault<FName>(nameof(VirtualBoneName));
     }
 }

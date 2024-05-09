@@ -33,7 +33,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, Options).Save(ueModelArchive);
+                new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
                 return;
             }
@@ -69,10 +69,8 @@ namespace CUE4Parse_Conversion.Meshes
             
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
-                originalMesh.BodySetup.TryLoad<UBodySetup>(out var bodySetup); // can be null obv
-
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, bodySetup, Options).Save(ueModelArchive);
+                new UEModel(originalMesh.Name, convertedMesh, originalMesh.BodySetup, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
                 return;
             }
@@ -143,7 +141,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             { 
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), Options).Save(ueModelArchive);
+                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
                 return;
             }

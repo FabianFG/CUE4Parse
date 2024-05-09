@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CUE4Parse_Conversion.UEFormat;
-using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
@@ -9,12 +8,12 @@ namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
 public readonly struct FMorphTarget : ISerializable
 {
-    private readonly FString MorphName;
+    private readonly string MorphName;
     private readonly List<FMorphData> MorphData = [];
     
     public FMorphTarget(string morphName, FMorphTargetLODModel morphLod)
     {
-        MorphName = new FString(morphName);
+        MorphName = morphName;
         foreach (var delta in morphLod.Vertices)
         {
             MorphData.Add(new FMorphData(delta.PositionDelta, delta.TangentZDelta, delta.SourceIdx));
@@ -23,7 +22,7 @@ public readonly struct FMorphTarget : ISerializable
     
     public void Serialize(FArchiveWriter Ar)
     {
-        MorphName.Serialize(Ar);
+        Ar.WriteFString(MorphName);
         Ar.WriteArray(MorphData);
     }
 }

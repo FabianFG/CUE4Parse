@@ -54,7 +54,7 @@ namespace CUE4Parse.FileProvider.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual bool TryCreateReader(out FArchive reader)
+        public virtual bool TryCreateReader(out FArchive? reader)
         {
             try
             {

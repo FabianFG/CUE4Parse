@@ -103,6 +103,11 @@ namespace CUE4Parse.UE4.Pak
             else
                 ReadIndexLegacy(caseInsensitive);
 
+            if (!IsEncrypted && EncryptedFileCount > 0)
+            {
+                log.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
+            }
+
             if (Globals.LogVfsMounts)
             {
                 var elapsed = watch.Elapsed;
@@ -130,7 +135,7 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}' is not working with '{Name}'", e);
             }
 
             ValidateMountPoint(ref mountPoint);
@@ -168,7 +173,7 @@ namespace CUE4Parse.UE4.Pak
             }
             catch (Exception e)
             {
-                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}'is not working with '{Name}'", e);
+                throw new InvalidAesKeyException($"Given aes key '{AesKey?.KeyString}' is not working with '{Name}'", e);
             }
 
             ValidateMountPoint(ref mountPoint);

@@ -15,10 +15,12 @@ using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Localization;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Plugins;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
@@ -26,13 +28,20 @@ using UE4Config.Parsing;
 
 namespace CUE4Parse.FileProvider
 {
+    public class CustomConfigIni : ConfigIni
+    {
+        public FGuid EncryptionKeyGuid { get; set; }
+
+        public CustomConfigIni(string name) : base(name) { }
+    }
+
     public abstract class AbstractFileProvider : IFileProvider
     {
         protected static readonly ILogger Log = Serilog.Log.ForContext<IFileProvider>();
 
         public VersionContainer Versions { get; set; }
-        public ConfigIni DefaultGame { get; set; }
-        public ConfigIni DefaultEngine { get; set; }
+        public CustomConfigIni DefaultGame { get; set; }
+        public CustomConfigIni DefaultEngine { get; set; }
         public virtual ITypeMappingsProvider? MappingsContainer { get; set; }
         public virtual TypeMappings? MappingsForGame => MappingsContainer?.MappingsForGame;
         public virtual IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();
@@ -48,8 +57,8 @@ namespace CUE4Parse.FileProvider
         {
             IsCaseInsensitive = isCaseInsensitive;
             Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
-            DefaultGame = new ConfigIni(nameof(DefaultGame));
-            DefaultEngine = new ConfigIni(nameof(DefaultEngine));
+            DefaultGame = new CustomConfigIni(nameof(DefaultGame));
+            DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }
 
         private string? _gameDisplayName;
@@ -351,29 +360,36 @@ namespace CUE4Parse.FileProvider
             return i;
         }
 
-        public void LoadIniConfigs()
+        protected bool LoadIniConfigs()
         {
-            if (TryFindGameFile("/Game/Config/DefaultGame.ini", out var defaultGame) && defaultGame.TryCreateReader(out var gameAr))
+            if (TryFindGameFile("/Game/Config/DefaultGame.ini", out var defaultGame))
             {
-                DefaultGame.Read(new StreamReader(gameAr));
-                gameAr.Dispose();
+                if (defaultGame is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultGame.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
+                if (defaultGame.TryCreateReader(out var gameAr)) DefaultGame.Read(new StreamReader(gameAr));
+                gameAr?.Dispose();
             }
-            if (TryFindGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine) && defaultEngine.TryCreateReader(out var engineAr))
+            if (TryFindGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
-                DefaultEngine.Read(new StreamReader(engineAr));
-                // foreach (ConfigIniSection section in DefaultEngine.Sections)
-                // {
-                //     if (section.Name != "ConsoleVariables") continue;
-                //     foreach (var iniToken in section.Tokens)
-                //     {
-                //         if (iniToken is not InstructionToken token ||
-                //             token.Value.Trim() is not "1" or "0")
-                //             continue;
-                //         Versions.Options[token.Key.Trim()] = int.Parse(token.Value.Trim()) == 1;
-                //     }
-                // }
-                engineAr.Dispose();
+                if (defaultEngine is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultEngine.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
+                if (defaultEngine.TryCreateReader(out var engineAr)) DefaultEngine.Read(new StreamReader(engineAr));
+                engineAr?.Dispose();
+
+                foreach (var token in DefaultEngine.Sections.FirstOrDefault(s => s.Name == "ConsoleVariables")?.Tokens ?? [])
+                {
+                    if (token is not InstructionToken it) continue;
+                    var boolValue = it.Value.Equals("1");
+
+                    switch (it.Key)
+                    {
+                        case "a.StripAdditiveRefPose":
+                        case "r.StaticMesh.KeepMobileMinLODSettingOnDesktop":
+                        case "r.SkeletalMesh.KeepMobileMinLODSettingOnDesktop":
+                            Versions[it.Key[2..]] = boolValue;
+                            continue;
+                    }
+                }
             }
+            return DefaultGame.Sections.Any(x => x.Name == "/Script/EngineSettings.GeneralProjectSettings");
         }
 
         public virtual GameFile this[string path] => Files[FixPath(path)];

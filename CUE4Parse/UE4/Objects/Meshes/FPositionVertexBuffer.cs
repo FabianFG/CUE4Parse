@@ -14,6 +14,14 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public FPositionVertexBuffer(FArchive Ar)
         {
+            if (Ar.Game == EGame.GAME_Undawn)
+            {
+                bool bUseFullPrecisionPositions = Ar.ReadBoolean();
+                Stride = Ar.Read<int>();
+                NumVertices = Ar.Read<int>();
+                Verts = bUseFullPrecisionPositions ? Ar.ReadBulkArray<FVector>() : Ar.ReadBulkArray<FVector>(() => Ar.Read<FVector3UnsignedShort>());
+                return;
+            }
             Stride = Ar.Read<int>();
             NumVertices = Ar.Read<int>();
             if (Ar.Game == EGame.GAME_Valorant)
@@ -30,7 +38,7 @@ namespace CUE4Parse.UE4.Objects.Meshes
                 }
             }
             if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
-            Verts = Ar.ReadBulkArray<FVector>();
+            Verts = Ar.ReadBulkArray<FVector>();           
         }
     }
 }
