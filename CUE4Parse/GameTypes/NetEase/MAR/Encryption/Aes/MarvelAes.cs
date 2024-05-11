@@ -5,6 +5,8 @@ namespace CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 
 /// <summary>
 /// Reversed by FabianFG
+///
+/// Based on reference implementation: http://www.efgh.com/software/rijndael.htm
 /// </summary>
 public static class MarvelAes
 {
@@ -428,7 +430,6 @@ public static class MarvelAes
         /* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
     ];
 
-    // X20 Modification
     private static uint GETU32(Span<byte> plaintext) => (uint) (plaintext[3] << 24 | plaintext[2] << 16 | plaintext[1] << 8 | plaintext[0]);
 
     private static void PUTU32(Span<byte> plaintext, uint st)
