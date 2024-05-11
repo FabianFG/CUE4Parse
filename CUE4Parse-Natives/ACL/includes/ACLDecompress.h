@@ -31,3 +31,19 @@ struct FCUE4ParseOutputWriter final : public acl::track_writer
         rtm::vector_store3(scale, &Scales[trackIndex * NumSamples + SampleIndex].X);
     }
 };
+
+struct FCUE4ParseScalarOutputWriter final : public acl::track_writer
+{
+    float* Floats;
+
+    FCUE4ParseScalarOutputWriter(float* inFloats)
+        : Floats(inFloats)
+    {
+    }
+
+    RTM_FORCE_INLINE void RTM_SIMD_CALL write_float1(uint32_t trackIndex, rtm::scalarf_arg0 floatValue)
+    {
+        Floats[trackIndex] = rtm::scalar_cast(floatValue);
+    }
+
+};
