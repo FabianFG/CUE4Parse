@@ -62,6 +62,8 @@ namespace CUE4Parse.UE4.Pak
 #if DEBUG
                 Log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
 #endif
+                if (Game is EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse) 
+                    return NetEaseExtract(reader, pakEntry);
                 var uncompressed = new byte[(int) pakEntry.UncompressedSize];
                 var uncompressedOff = 0;
                 foreach (var block in pakEntry.CompressionBlocks)

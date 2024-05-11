@@ -1,4 +1,4 @@
-using CUE4Parse.UE4.AssetRegistry.Readers;
+﻿using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
@@ -49,6 +49,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
                 FileVersionLicenseeUE = Ar.Read<int>();
                 Flags = Ar.Read<uint>();
+                if (Ar.Game is EGame.GAME_MarvelRivals) Ar.Position += 4;
                 CustomVersions = new FCustomVersionContainer(Ar);
             }
             if (Ar.Header.Version >= FAssetRegistryVersionType.PackageImportedClasses)

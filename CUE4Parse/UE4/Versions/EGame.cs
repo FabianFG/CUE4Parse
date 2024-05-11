@@ -53,6 +53,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_KenaBridgeofSpirits = GAME_UE4_25 + 4,
             GAME_CalabiYau = GAME_UE4_25 + 5,
             GAME_SYNCED = GAME_UE4_25 + 6,
+            GAME_OperationApocalypse = GAME_UE4_25 + 7,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
             GAME_ReadyOrNot = GAME_UE4_26 + 2,
@@ -86,7 +87,8 @@ namespace CUE4Parse.UE4.Versions
             GAME_DeadByDaylight = GAME_UE5_2 + 1,
             GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
-            GAME_WildAssault = GAME_UE5_3 + 1,
+            GAME_MarvelRivals = GAME_UE5_3 + 1,
+            GAME_WildAssault = GAME_UE5_3 + 2,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
         GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
 
