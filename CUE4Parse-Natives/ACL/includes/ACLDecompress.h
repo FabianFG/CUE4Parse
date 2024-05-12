@@ -32,18 +32,19 @@ struct FCUE4ParseOutputWriter final : public acl::track_writer
     }
 };
 
-struct FCUE4ParseScalarOutputWriter final : public acl::track_writer
+struct FCUE4ParseCurveWriter final : public acl::track_writer
 {
-    float* Floats;
+	float* Floats;
+    uint32_t NumSamples;
+    uint32_t SampleIndex;
 
-    FCUE4ParseScalarOutputWriter(float* inFloats)
+    FCUE4ParseCurveWriter(float* inFloats, uint32_t inNumSamples)
         : Floats(inFloats)
-    {
-    }
+        , NumSamples(inNumSamples)
+    {}
 
-    RTM_FORCE_INLINE void RTM_SIMD_CALL write_float1(uint32_t trackIndex, rtm::scalarf_arg0 floatValue)
+	RTM_FORCE_INLINE void RTM_SIMD_CALL write_float1(uint32_t trackIndex, rtm::scalarf_arg0 floatValue)
     {
-        Floats[trackIndex] = rtm::scalar_cast(floatValue);
+        Floats[trackIndex * NumSamples + SampleIndex] = rtm::scalar_cast(floatValue);
     }
-
 };
