@@ -54,6 +54,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_CalabiYau = GAME_UE4_25 + 5,
             GAME_SYNCED = GAME_UE4_25 + 6,
             GAME_OperationApocalypse = GAME_UE4_25 + 7,
+            GAME_Farlight84 = GAME_UE4_25 + 8,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
             GAME_ReadyOrNot = GAME_UE4_26 + 2,

@@ -84,7 +84,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 return;
             }
 
-        afterMagic:
+            afterMagic:
             Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
             if (Ar.Game == EGame.GAME_StateOfDecay2)
             {
@@ -95,6 +95,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 1;
             IndexOffset = Ar.Read<long>();
+            if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 8; // unknown long
             if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
             IndexSize = Ar.Read<long>();
             IndexHash = new FSHAHash(Ar);
@@ -196,6 +197,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             //Size10 = Size8a
 
             SizeHotta = Size8a + 4, // additional int for custom pak version
+            SizeFarlight = Size8a + 9, // additional long and byte
             SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
             SizeLast,
@@ -234,6 +236,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 {
                     EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
                     EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
+                    EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
