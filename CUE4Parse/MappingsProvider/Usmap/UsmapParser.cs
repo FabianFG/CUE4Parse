@@ -111,7 +111,8 @@ public class UsmapParser
                 enumNames[j] = value;
             }
 
-            enums.Add(enumName, enumNames);
+            // Some companies man... Their duplicated enums, even with different values, have to be ignored.
+            enums.TryAdd(enumName, enumNames);
         }
 
         var structCount = Ar.Read<uint>();
