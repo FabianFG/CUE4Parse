@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public readonly long CompressedSize;
         public readonly long UncompressedSize;
         public sealed override CompressionMethod CompressionMethod { get; }
-        public readonly FPakCompressedBlock[] CompressionBlocks = Array.Empty<FPakCompressedBlock>();
+        public readonly FPakCompressedBlock[] CompressionBlocks = [];
         public readonly uint Flags;
         public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
         public bool IsDeleted => (Flags & Flag_Deleted) == Flag_Deleted;

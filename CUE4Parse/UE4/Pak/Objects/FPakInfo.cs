@@ -198,6 +198,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             SizeHotta = Size8a + 4, // additional int for custom pak version
             SizeFarlight = Size8a + 9, // additional long and byte
+            SizeQQ = Size8a + 26, // TODO
             SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
             SizeLast,
@@ -205,7 +206,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         }
 
         private static readonly OffsetsToTry[] _offsetsToTry =
-        {
+        [
             OffsetsToTry.Size8a,
             OffsetsToTry.Size8,
             OffsetsToTry.Size,
@@ -214,7 +215,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             OffsetsToTry.Size8_1,
             OffsetsToTry.Size8_2,
             OffsetsToTry.Size8_3
-        };
+        ];
 
         public static FPakInfo ReadFPakInfo(FArchive Ar)
         {
@@ -237,6 +238,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
                     EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
                     EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
+                    EGame.GAME_QQ => [OffsetsToTry.SizeQQ],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
