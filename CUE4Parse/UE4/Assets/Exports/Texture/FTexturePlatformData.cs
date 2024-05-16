@@ -99,7 +99,7 @@ public class FTexturePlatformData
                 Mips[i].SizeY *= GetNumSlices();
         }
 
-        if (Ar.Versions["VirtualTextures"] && Ar.Platform != ETexturePlatform.Playstation) // TODO: Until we figure out how to calculate mipCount properly, VT has to be ignored.
+        if (Ar.Versions["VirtualTextures"])
         {
             var bIsVirtual = Ar.ReadBoolean();
             if (bIsVirtual)
