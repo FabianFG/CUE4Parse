@@ -9,6 +9,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         [Description("Playstation 4/5")]
         Playstation,
         [Description("Nintendo Switch")]
-        NintendoSwitch
+        NintendoSwitch,
+        [Description("Xbox One (S/X) / Xbox Series X|S")]
+        Xbox
     }
 }

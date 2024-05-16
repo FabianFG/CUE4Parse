@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -118,7 +117,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 CompressionMethod = compressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[compressionMethodIndex];
             }
-            else if (reader.Info.Version == PakFile_Version_FNameBasedCompressionMethod && !reader.Info.IsSubVersion)
+            else if (reader.Info is { Version: PakFile_Version_FNameBasedCompressionMethod, IsSubVersion: false })
             {
                 CompressionMethod = reader.Info.CompressionMethods[Ar.Read<byte>()];
             }
@@ -134,7 +133,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 if (CompressionMethod != CompressionMethod.None)
                     CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
-                Flags = (uint)Ar.ReadByte();
+                Flags = (uint) Ar.ReadByte();
                 CompressionBlockSize = Ar.Read<uint>();
             }
 
@@ -160,7 +159,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             Path = path;
 
             // UE4 reference: FPakFile::DecodePakEntry()
-            uint bitfield = *(uint*) data;
+            var bitfield = *(uint*) data;
             data += sizeof(uint);
 
             uint compressionBlockSize;
@@ -280,7 +279,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                 // compressedBlockOffset is the starting offset. Everything else can be derived from there.
                 var compressedBlockOffset = Offset + StructSize;
-                for (int compressionBlockIndex = 0; compressionBlockIndex < compressionBlocksCount; ++compressionBlockIndex)
+                for (var compressionBlockIndex = 0; compressionBlockIndex < compressionBlocksCount; ++compressionBlockIndex)
                 {
                     ref var compressedBlock = ref CompressionBlocks[compressionBlockIndex];
                     compressedBlock.CompressedStart = compressedBlockOffset;

@@ -37,6 +37,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;
         public const uint PAK_FILE_MAGIC_WildAssault = 0xA4CCD123;
         public const uint PAK_FILE_MAGIC_Gameloop_Undawn = 0x5A6F12EC;
+        public const uint PAK_FILE_MAGIC_FridayThe13th = 0x65617441;
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
         public readonly uint Magic;
@@ -80,7 +81,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                 if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials ||
                     Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
                     Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault ||
-                    Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn)
+                    Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
+                    Ar.Game == EGame.GAME_FridayThe13th && Magic == PAK_FILE_MAGIC_FridayThe13th)
                     goto afterMagic;
                 // Stop immediately when magic is wrong
                 return;
@@ -92,6 +94,21 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 Version &= (EPakFileVersion) 0xFFFF;
+            }
+
+            if (Ar.Game == EGame.GAME_FridayThe13th)
+            {
+                if (!EncryptedIndex && Magic == 0 && (int) Version == PAK_FILE_MAGIC)
+                {
+                    Magic = PAK_FILE_MAGIC;
+                    Version = Ar.Read<EPakFileVersion>();
+                }
+
+                if (Version >= EPakFileVersion.PakFile_Version_RelativeChunkOffsets) // PakFile_Version_IllFonic
+                {
+                    Version = EPakFileVersion.PakFile_Version_IndexEncryption; // Actual version
+                    Ar.Position += 4; // ExtraMagic
+                }
             }
 
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
@@ -198,6 +215,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             Size9 = Size8a + 1, // UE4.25
             //Size10 = Size8a
 
+            SizeFTT = Size + 4, // additional int for extra magic
             SizeHotta = Size8a + 4, // additional int for custom pak version
             SizeFarlight = Size8a + 9, // additional long and byte
             SizeDreamStar = Size8a + 10,
@@ -239,6 +257,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 var offsetsToTry = Ar.Game switch
                 {
                     EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
+                    EGame.GAME_FridayThe13th => [OffsetsToTry.SizeFTT],
                     EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
                     EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                     EGame.GAME_QQ => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
@@ -252,7 +271,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                     if (Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials ||
                         Ar.Game == EGame.GAME_TorchlightInfinite && info.Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
                         Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault ||
-                        Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn)
+                        Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
+                        Ar.Game == EGame.GAME_FridayThe13th && info.Magic == PAK_FILE_MAGIC_FridayThe13th)
                         return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {

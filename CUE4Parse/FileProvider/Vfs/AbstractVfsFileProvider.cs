@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -15,8 +15,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.VirtualFileCache;
-using CUE4Parse.UE4.VirtualFileCache.Manifest;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 
