@@ -37,16 +37,11 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TestAesKey(byte[] bytes, FAesKey key)
         {
-            byte[] decrypted;
-            switch (_game)
+            var decrypted = _game switch
             {
-                case EGame.GAME_ApexLegendsMobile:
-                    decrypted = bytes.DecryptApexMobile(key);
-                    break;
-                default:
-                    decrypted = bytes.Decrypt(key);
-                    break;
-            }
+                EGame.GAME_ApexLegendsMobile => bytes.DecryptApexMobile(key),
+                _ => bytes.Decrypt(key)
+            };
 
             return IsValidIndex(decrypted);
         }
@@ -69,7 +64,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 
                 if (valid)
                 {
-                    return (_game) switch
+                    return _game switch
                     {
                         EGame.GAME_ApexLegendsMobile => bytes.DecryptApexMobile(key),
                         _ => bytes.Decrypt(key)
@@ -113,7 +108,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
             DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
 
-        private FAesKey ConvertSnowbreakAes(string name, FAesKey key)
+        private static FAesKey ConvertSnowbreakAes(string name, FAesKey key)
         {
             var pakName = System.IO.Path.GetFileNameWithoutExtension(name).ToLower();
             var pakNameBytes = Encoding.ASCII.GetBytes(pakName);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -89,19 +89,19 @@ namespace CUE4Parse.UE4.Objects.UObject
             Tag = Ar.Read<uint>();
 
             /*
-            * The package file version number when this package was saved.
-            *
-            * Lower 16 bits stores the UE3 engine version
-            * Upper 16 bits stores the UE4/licensee version
-            * For newer packages this is -7
-            *		-2 indicates presence of enum-based custom versions
-            *		-3 indicates guid-based custom versions
-            *		-4 indicates removal of the UE3 version. Packages saved with this ID cannot be loaded in older engine versions
-            *		-5 indicates the replacement of writing out the "UE3 version" so older versions of engine can gracefully fail to open newer packages
-            *		-6 indicates optimizations to how custom versions are being serialized
-            *		-7 indicates the texture allocation info has been removed from the summary
-            *		-8 indicates that the UE5 version has been added to the summary
-            */
+             * The package file version number when this package was saved.
+             *
+             * Lower 16 bits stores the UE3 engine version
+             * Upper 16 bits stores the UE4/licensee version
+             * For newer packages this is -7
+             *		-2 indicates presence of enum-based custom versions
+             *		-3 indicates guid-based custom versions
+             *		-4 indicates removal of the UE3 version. Packages saved with this ID cannot be loaded in older engine versions
+             *		-5 indicates the replacement of writing out the "UE3 version" so older versions of engine can gracefully fail to open newer packages
+             *		-6 indicates optimizations to how custom versions are being serialized
+             *		-7 indicates the texture allocation info has been removed from the summary
+             *		-8 indicates that the UE5 version has been added to the summary
+             */
             const int CurrentLegacyFileVersion = -8;
             var legacyFileVersion = CurrentLegacyFileVersion;
 
@@ -230,8 +230,8 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION)
             {
-                Generations = Array.Empty<FGenerationInfo>();
-                ChunkIds = Array.Empty<int>();
+                Generations = [];
+                ChunkIds = [];
                 return; // we can't safely load more than this because the below was different in older files.
             }
 
@@ -346,16 +346,16 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game == EGame.GAME_TowerOfFantasy)
             {
-                TotalHeaderSize = (int)(TotalHeaderSize ^ 0xEEB2CEC7);
-                NameCount = (int)(NameCount ^ 0xEEB2CEC7);
-                NameOffset = (int)(NameOffset ^ 0xEEB2CEC7);
-                ExportCount = (int)(ExportCount ^ 0xEEB2CEC7);
-                ExportOffset = (int)(ExportOffset ^ 0xEEB2CEC7);
-                ImportCount = (int)(ImportCount ^ 0xEEB2CEC7);
-                ImportOffset = (int)(ImportOffset ^ 0xEEB2CEC7);
-                DependsOffset = (int)(DependsOffset ^ 0xEEB2CEC7);
-                PackageSource = (int)(PackageSource ^ 0xEEB2CEC7);
-                AssetRegistryDataOffset = (int)(AssetRegistryDataOffset ^ 0xEEB2CEC7);
+                TotalHeaderSize = (int) (TotalHeaderSize ^ 0xEEB2CEC7);
+                NameCount = (int) (NameCount ^ 0xEEB2CEC7);
+                NameOffset = (int) (NameOffset ^ 0xEEB2CEC7);
+                ExportCount = (int) (ExportCount ^ 0xEEB2CEC7);
+                ExportOffset = (int) (ExportOffset ^ 0xEEB2CEC7);
+                ImportCount = (int) (ImportCount ^ 0xEEB2CEC7);
+                ImportOffset = (int) (ImportOffset ^ 0xEEB2CEC7);
+                DependsOffset = (int) (DependsOffset ^ 0xEEB2CEC7);
+                PackageSource = (int) (PackageSource ^ 0xEEB2CEC7);
+                AssetRegistryDataOffset = (int) (AssetRegistryDataOffset ^ 0xEEB2CEC7);
             }
 
             if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_GearsOfWar4)
@@ -380,11 +380,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             else if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE)
             {
                 var chunkId = Ar.Read<int>();
-                ChunkIds = chunkId < 0 ? Array.Empty<int>() : new[] { chunkId };
+                ChunkIds = chunkId < 0 ? [] : [chunkId];
             }
             else
             {
-                ChunkIds = Array.Empty<int>();
+                ChunkIds = [];
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)

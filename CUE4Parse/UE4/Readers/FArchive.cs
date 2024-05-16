@@ -122,7 +122,7 @@ namespace CUE4Parse.UE4.Readers
         public virtual T[] ReadArray<T>() where T : struct
         {
             var length = Read<int>();
-            return length > 0 ? ReadArray<T>(length) : Array.Empty<T>();
+            return length > 0 ? ReadArray<T>(length) : [];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

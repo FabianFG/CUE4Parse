@@ -36,6 +36,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
         public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;
         public const uint PAK_FILE_MAGIC_WildAssault = 0xA4CCD123;
+        public const uint PAK_FILE_MAGIC_Gameloop_Undawn = 0x5A6F12EC;
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
         public readonly uint Magic;
@@ -78,7 +79,8 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials ||
                     Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
-                    Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault)
+                    Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault ||
+                    Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn)
                     goto afterMagic;
                 // Stop immediately when magic is wrong
                 return;
@@ -249,7 +251,8 @@ namespace CUE4Parse.UE4.Pak.Objects
 
                     if (Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials ||
                         Ar.Game == EGame.GAME_TorchlightInfinite && info.Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
-                        Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault)
+                        Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault ||
+                        Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn)
                         return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
