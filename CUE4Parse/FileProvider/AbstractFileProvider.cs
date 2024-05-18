@@ -454,10 +454,6 @@ namespace CUE4Parse.FileProvider
             {
                 ret = string.Concat(InternalGameName, $"/Plugins/GameFeatures/{root}/Content/", tree);
             }
-            else
-            {
-                ret = string.Concat(InternalGameName, $"/Plugins/{root}/Content/", tree);
-            }
 
             return comparisonType == StringComparison.OrdinalIgnoreCase ? ret.ToLowerInvariant() : ret;
         }
