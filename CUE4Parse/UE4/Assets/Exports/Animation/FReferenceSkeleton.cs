@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Versions;
@@ -39,7 +39,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             AdjustBoneScales(FinalRefBonePose);
 
-            if (Ar.Game == EGame.GAME_WutheringWaves) Ar.Position += 8;
+            if (Ar.Game == EGame.GAME_WutheringWaves)
+            {
+                Ar.SkipFixedArray(12);
+                Ar.Position += 4;
+            }
         }
 
         public void AdjustBoneScales(FTransform[] transforms)
