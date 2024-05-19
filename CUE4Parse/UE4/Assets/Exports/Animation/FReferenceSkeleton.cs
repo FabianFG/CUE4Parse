@@ -38,6 +38,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             AdjustBoneScales(FinalRefBonePose);
+
+            if (Ar.Game == EGame.GAME_WutheringWaves) Ar.Position += 8;
         }
 
         public void AdjustBoneScales(FTransform[] transforms)
@@ -45,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (FinalRefBoneInfo.Length != transforms.Length)
                 return;
 
-            for (int boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
+            for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
             {
                 var scale = GetBoneScale(transforms, boneIndex);
                 transforms[boneIndex].Translation.Scale(scale);

@@ -22,6 +22,7 @@ public static class PaxDeiAes
         {
             state = Decrypt(state, roundkeys[i]);
         }
+
         state = DecryptLast(state, roundkeys[13]);
         state.CopyTo(output);
     }
@@ -42,12 +43,14 @@ public static class PaxDeiAes
         {
             Decrypt16(output.AsSpan(i * 16, 16), reader.AesKey, output.AsSpan(i * 16, 16));
         }
+
         return output;
     }
 
     public static Vector128<byte>[] KeyExpansion(byte[] key)
     {
-        Vector128<byte>[] roundkeys = {
+        Vector128<byte>[] roundkeys =
+        [
             Vector128<byte>.Zero,
             Vector128<byte>.Zero,
             Vector128<byte>.Zero,
@@ -61,16 +64,15 @@ public static class PaxDeiAes
             Vector128<byte>.Zero,
             Vector128<byte>.Zero,
             Vector128<byte>.Zero,
-            Vector128<byte>.Zero,
-        };
-        Vector128<int> xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7;
-        xmm5 = Create(key, 0).AsInt32();
+            Vector128<byte>.Zero
+        ];
+        var xmm5 = Create(key, 0).AsInt32();
         roundkeys[13] = xmm5.AsByte();
-        xmm1 = Create(key, 16).AsInt32();
+        var xmm1 = Create(key, 16).AsInt32();
 
-        xmm2 = ShiftLeftLogical128BitLane(xmm5, 4);
-        xmm3 = ShiftLeftLogical128BitLane(xmm1, 4);
-        xmm0 = ShiftLeftLogical128BitLane(xmm2, 4);
+        var xmm2 = ShiftLeftLogical128BitLane(xmm5, 4);
+        var xmm3 = ShiftLeftLogical128BitLane(xmm1, 4);
+        var xmm0 = ShiftLeftLogical128BitLane(xmm2, 4);
         xmm2 = Xor(xmm2, xmm5);
         xmm2 = Xor(xmm2, xmm0);
         xmm0 = ShiftLeftLogical128BitLane(xmm0, 4);
@@ -92,7 +94,7 @@ public static class PaxDeiAes
         xmm1 = Xor(xmm1, xmm0);
         xmm0 = ShiftLeftLogical128BitLane(xmm0, 4);
         xmm1 = Xor(xmm1, xmm0);
-        xmm4 = ShiftLeftLogical128BitLane(xmm3, 4);
+        var xmm4 = ShiftLeftLogical128BitLane(xmm3, 4);
         xmm0 = KeygenAssist(xmm3.AsByte(), 2).AsInt32();
         xmm0 = Shuffle(xmm0, 0xFF);
         xmm1 = Xor(xmm1, xmm0);
@@ -101,7 +103,7 @@ public static class PaxDeiAes
         xmm4 = Xor(xmm4, xmm0);
         xmm0 = ShiftLeftLogical128BitLane(xmm0, 4);
         xmm4 = Xor(xmm4, xmm0);
-        xmm6 = InverseMixColumns(xmm2.AsByte()).AsInt32();
+        var xmm6 = InverseMixColumns(xmm2.AsByte()).AsInt32();
         xmm0 = KeygenAssist(xmm1.AsByte(), 2).AsInt32();
         xmm0 = Shuffle(xmm0, 0xAA);
         xmm4 = Xor(xmm4, xmm0);
@@ -112,7 +114,7 @@ public static class PaxDeiAes
         xmm2 = Xor(xmm2, xmm0);
         xmm0 = ShiftLeftLogical128BitLane(xmm0, 4);
         xmm2 = Xor(xmm2, xmm0);
-        xmm7 = InverseMixColumns(xmm3.AsByte()).AsInt32();
+        var xmm7 = InverseMixColumns(xmm3.AsByte()).AsInt32();
         xmm0 = KeygenAssist(xmm4.AsByte(), 0x4).AsInt32();
         xmm0 = Shuffle(xmm0, 0xFF);
         xmm2 = Xor(xmm2, xmm0);

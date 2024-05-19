@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (TryGetValue(out FStructFallback[] boneTree, nameof(BoneTree)))
             {
                 BoneTree = new EBoneTranslationRetargetingMode[boneTree.Length];
-                for (int i = 0; i < BoneTree.Length; i++)
+                for (var i = 0; i < BoneTree.Length; i++)
                 {
                     BoneTree[i] = boneTree[i].GetOrDefault<EBoneTranslationRetargetingMode>("TranslationRetargetingMode");
                 }
