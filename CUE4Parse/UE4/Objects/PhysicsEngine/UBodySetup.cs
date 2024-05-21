@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
             }
 
             CookedFormatData = new FFormatContainer(Ar);
-
+            if (Ar.Game == EGame.GAME_DreamStar) Ar.Position += 4;
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
