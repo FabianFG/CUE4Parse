@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Pak
                 Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker &&
                 Ar.Game != EGame.GAME_Snowbreak && Ar.Game != EGame.GAME_TheDivisionResurgence &&
                 Ar.Game != EGame.GAME_TorchlightInfinite && Ar.Game != EGame.GAME_DeadByDaylight &&
-                Ar.Game != EGame.GAME_QQ) // These games use version >= 12 to indicate their custom formats
+                Ar.Game != EGame.GAME_QQ && Ar.Game != EGame.GAME_DreamStar) // These games use version >= 12 to indicate their custom formats
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
@@ -169,6 +169,15 @@ namespace CUE4Parse.UE4.Pak
             Ar.Position = Info.IndexOffset;
             FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
 
+            int fileCount = 0;
+            EncryptedFileCount = 0;
+
+            if (Ar.Game == EGame.GAME_DreamStar)
+            {
+                primaryIndex.Position += 8; // PathHashSeed
+                fileCount = primaryIndex.Read<int>();
+            }
+
             string mountPoint;
             try
             {
@@ -182,10 +191,11 @@ namespace CUE4Parse.UE4.Pak
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
-            var fileCount = primaryIndex.Read<int>();
-            EncryptedFileCount = 0;
-
-            primaryIndex.Position += 8; // PathHashSeed
+            if (Ar.Game != EGame.GAME_DreamStar)
+            {
+                fileCount = primaryIndex.Read<int>();
+                primaryIndex.Position += 8; // PathHashSeed
+            }
 
             if (!primaryIndex.ReadBoolean())
                 throw new ParserException(primaryIndex, "No path hash index");

@@ -195,7 +195,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             if (reader.Ar.Game == GAME_Snowbreak) Offset ^= 0x1F1E1D1C;
-            if (reader.Ar.Game == GAME_QQ) Offset += 8;
+            if (reader.Ar.Game is GAME_QQ or GAME_DreamStar) Offset += 8;
 
             // Read the UncompressedSize.
             var bIsUncompressedSize32BitSafe = (bitfield & (1 << 30)) != 0;

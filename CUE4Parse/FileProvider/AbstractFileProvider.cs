@@ -124,6 +124,7 @@ namespace CUE4Parse.FileProvider
                             it => !it.StartsWith('/') && it.Contains('/') &&
                                   !it.SubstringBefore('/').EndsWith("Engine", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
                     _internalGameName = t.SubstringBefore('/');
+                    if (_internalGameName == "midnightsuns") _internalGameName = "codagame";
                 }
                 return _internalGameName;
             }

@@ -71,6 +71,7 @@ public class FTexturePlatformData
 
         if (HasOptData())
         {
+            if (Ar.Game == EGame.GAME_MidnightSuns) Ar.Position += 4;
             OptData = Ar.Read<FOptTexturePlatformData>();
         }
 

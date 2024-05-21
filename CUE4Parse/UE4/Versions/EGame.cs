@@ -68,6 +68,8 @@ namespace CUE4Parse.UE4.Versions
             GAME_TorchlightInfinite = GAME_UE4_26 + 9,
             GAME_QQ = GAME_UE4_26 + 10,
             GAME_WutheringWaves = GAME_UE4_26 + 11,
+            GAME_DreamStar = GAME_UE4_26 + 12,
+            GAME_MidnightSuns = GAME_UE4_26 + 13,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
             GAME_HYENAS = GAME_UE4_27 + 2,
