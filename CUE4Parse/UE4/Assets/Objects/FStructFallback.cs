@@ -35,8 +35,26 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault<T>(this, name, defaultValue, comparisonType);
+
+        public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default,
+            StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
+
+        public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T GetByIndex<T>(int index)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool TryGetValue<T>(out T obj, params string[] names)
         {
             foreach (string name in names)

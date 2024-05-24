@@ -20,6 +20,27 @@ namespace CUE4Parse.UE4.Assets.Exports
     public interface IPropertyHolder
     {
         public List<FPropertyTag> Properties { get; }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetByIndex<T>(int index);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetValue<T>(out T obj, params string[] names);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetAllValues<T>(out T[] obj, string name);
     }
 
     [JsonConverter(typeof(UObjectConverter))]
@@ -256,7 +277,7 @@ namespace CUE4Parse.UE4.Assets.Exports
                     var Operation = Ar.Read<byte>(); // Operation
                 }
             }
-            
+
             while (true)
             {
                 var tag = new FPropertyTag(Ar, true);
@@ -321,21 +342,20 @@ namespace CUE4Parse.UE4.Assets.Exports
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.Get<T>(this, name, comparisonType);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
             PropertyUtil.GetLazy<T>(this, name, comparisonType);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public T GetByIndex<T>(int index) => PropertyUtil.GetByIndex<T>(this, index);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public bool TryGetValue<T>(out T obj, params string[] names)
         {
             foreach (string name in names)
@@ -350,7 +370,7 @@ namespace CUE4Parse.UE4.Assets.Exports
             obj = default!;
             return false;
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public bool TryGetAllValues<T>(out T[] obj, string name)
         {
             var maxIndex = -1;
@@ -545,7 +565,7 @@ namespace CUE4Parse.UE4.Assets.Exports
         public static bool operator ==(FLifetimeProperty a, FLifetimeProperty b) => a.RepIndex == b.RepIndex && a.Condition == b.Condition && a.RepNotifyCondition == b.RepNotifyCondition;
         public static bool operator !=(FLifetimeProperty a, FLifetimeProperty b) => !(a == b);
     }
-    
+
     [Flags]
     public enum EClassSerializationControlExtension : byte
     {
