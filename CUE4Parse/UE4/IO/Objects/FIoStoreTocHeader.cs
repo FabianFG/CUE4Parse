@@ -15,6 +15,8 @@ namespace CUE4Parse.UE4.IO.Objects
         PerfectHash,
         PerfectHashWithOverflow,
         OnDemandMetaData,
+        RemovedOnDemandMetaData,
+        ReplaceIoChunkHashWithIoHash,
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     }

@@ -178,7 +178,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public bool TryGetFirstTexture2d(out UTexture2D? texture)
         {
-            if (Textures.First() is { Value: UTexture2D texture2D })
+            if (Textures.FirstOrDefault() is { Value: UTexture2D texture2D })
             {
                 texture = texture2D;
                 return true;

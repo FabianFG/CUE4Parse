@@ -129,10 +129,20 @@ namespace CUE4Parse.UE4.IO.Objects
             // Meta
             if (readOptions.HasFlag(EIoStoreTocReadOptions.ReadTocMeta))
             {
+                var replacedIoChunkHashWithIoHash = Header.Version >= EIoStoreTocVersion.ReplaceIoChunkHashWithIoHash;
                 ChunkMetas = new FIoStoreTocEntryMeta[Header.TocEntryCount];
                 for (int i = 0; i < Header.TocEntryCount; i++)
                 {
-                    ChunkMetas[i] = new FIoStoreTocEntryMeta(archive);
+                    ChunkMetas[i] = new FIoStoreTocEntryMeta(archive, replacedIoChunkHashWithIoHash);
+                }
+
+                // OnDemand
+                if (Header.Version == EIoStoreTocVersion.OnDemandMetaData && Header.ContainerFlags.HasFlag(EIoContainerFlags.OnDemand))
+                {
+                    // FIoStoreTocOnDemandChunkMeta (FIoHash) OnDemandChunkMeta;
+                    Ar.Position += Header.TocEntryCount * FSHAHash.SIZE;
+                    // FIoStoreTocOnDemandCompressedBlockMeta (FIoHash) OnDemandCompressedBlockMeta;
+                    Ar.Position += Header.TocCompressedBlockEntryCount * FSHAHash.SIZE;
                 }
             }
         }
