@@ -26,6 +26,9 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyCollection<FGuid> RequiredKeys { get; }
 
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
+        public event EventHandler<int>? VfsRegistered;
+        public event EventHandler<int>? VfsMounted;
+        public event EventHandler<int>? VfsUnmounted;
 
         public void Initialize();
 
