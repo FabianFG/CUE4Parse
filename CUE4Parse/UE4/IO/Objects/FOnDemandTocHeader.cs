@@ -13,6 +13,9 @@ namespace CUE4Parse.UE4.IO.Objects
         BlockHash32		= 3,
         NoRawHash		= 4,
         Meta			= 5,
+        ContainerId		= 6,
+        AdditionalFiles	= 7,
+        TagSets			= 8,
 
         LatestPlusOne,
         Latest			= (LatestPlusOne - 1)

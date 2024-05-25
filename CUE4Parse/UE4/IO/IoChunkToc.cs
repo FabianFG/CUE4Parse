@@ -15,6 +15,8 @@ namespace CUE4Parse.UE4.IO
         public readonly FOnDemandTocHeader Header;
         public readonly FTocMeta Meta;
         public readonly FOnDemandTocContainerEntry[] Containers;
+        public readonly FOnDemandTocAdditionalFile[] AdditionalFiles;
+        public readonly FOnDemandTocTagSet[] TagSets;
 
         public IoChunkToc(string file) : this(new FileInfo(file)) { }
         public IoChunkToc(FileInfo file) : this(new FByteArchive(file.FullName, File.ReadAllBytes(file.FullName))) { }
@@ -25,7 +27,13 @@ namespace CUE4Parse.UE4.IO
             if (Header.Version >= EOnDemandTocVersion.Meta)
                 Meta = new FTocMeta(Ar);
 
-            Containers = Ar.ReadArray(() => new FOnDemandTocContainerEntry(Ar));
+            Containers = Ar.ReadArray(() => new FOnDemandTocContainerEntry(Ar, Header.Version));
+            
+            if (Header.Version >= EOnDemandTocVersion.AdditionalFiles)
+                AdditionalFiles = Ar.ReadArray(() => new FOnDemandTocAdditionalFile(Ar));
+            
+            if (Header.Version >= EOnDemandTocVersion.TagSets)
+                TagSets = Ar.ReadArray(() => new FOnDemandTocTagSet(Ar));
         }
     }
 
