@@ -175,20 +175,30 @@ namespace CUE4Parse_Conversion.Animations
                     var tracksHeader = tracks.GetTracksHeader();
                     var numSamples = (int) tracksHeader.NumSamples;
 
-                    // Prepare buffers of all samples of each transform property for the native code to populate
-                    var posKeys = new FVector[animSeq.Tracks.Capacity * numSamples];
-                    var rotKeys = new FQuat[posKeys.Length];
-                    var scaleKeys = new FVector[rotKeys.Length];
+                    // smh Valo has this set to 1, but it should be 0, right?
+                    if (animSequence.IsValidAdditive()) tracks.SetDefaultScale(0);
 
                     // Let the native code do its job
+                    var atomKeys = new FTransform[animSeq.Tracks.Capacity * numSamples];
                     unsafe
                     {
-                        fixed (FVector* posKeysPtr = posKeys)
-                        fixed (FQuat* rotKeysPtr = rotKeys)
-                        fixed (FVector* scaleKeysPtr = scaleKeys)
+                        fixed (FTransform* refPosePtr = animSeq.RetargetBasePose ?? skeleton.ReferenceSkeleton.FinalRefBonePose)
+                        fixed (FTrackToSkeletonMap* trackToSkeletonMapPtr = animSequence.GetTrackMap())
+                        fixed (FTransform* atomKeysPtr = atomKeys)
                         {
-                            nReadACLData(tracks.Handle, posKeysPtr, rotKeysPtr, scaleKeysPtr);
+                            nReadACLData(tracks.Handle, refPosePtr, trackToSkeletonMapPtr, atomKeysPtr);
                         }
+                    }
+
+                    // Prepare buffers of all samples of each transform property for the native code to populate
+                    var posKeys = new FVector[atomKeys.Length];
+                    var rotKeys = new FQuat[atomKeys.Length];
+                    var scaleKeys = new FVector[atomKeys.Length];
+                    for (var i = 0; i < atomKeys.Length; i++)
+                    {
+                        posKeys[i] = atomKeys[i].Translation;
+                        rotKeys[i] = atomKeys[i].Rotation;
+                        scaleKeys[i] = atomKeys[i].Scale3D;
                     }
 
                     // Now create CAnimTracks with the data from those big buffers
@@ -284,26 +294,17 @@ namespace CUE4Parse_Conversion.Animations
 
             for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
             {
-                var track = anim.Tracks[boneIndex]; // tracks are bone indexed
                 var boneScale = skeleton.GetBoneScale(transforms, boneIndex);
-                var doScale = Math.Abs(boneScale.X - 1.0f) > 0.001f ||
-                              Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
-                              Math.Abs(boneScale.Z - 1.0f) > 0.001f;
-
-                for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
+                if (Math.Abs(boneScale.X - 1.0f) > 0.001f ||
+                    Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
+                    Math.Abs(boneScale.Z - 1.0f) > 0.001f)
                 {
-                    if (!track.KeyPos[keyIndex].IsZero())
+                    var track = anim.Tracks[boneIndex]; // tracks are bone indexed
+                    for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
                     {
                         // Scale translation by accumulated bone scale value
-                        if (doScale) track.KeyPos[keyIndex].Scale(boneScale);
-                        continue;
+                        track.KeyPos[keyIndex].Scale(boneScale);
                     }
-                    track.KeyPos[keyIndex] = transforms[boneIndex].Translation;
-                }
-                for (int keyIndex = 0; keyIndex < track.KeyQuat.Length; keyIndex++)
-                {
-                    if (!track.KeyQuat[keyIndex].IsVectorZero()) continue;
-                    track.KeyQuat[keyIndex] = transforms[boneIndex].Rotation;
                 }
             }
         }
@@ -606,6 +607,6 @@ namespace CUE4Parse_Conversion.Animations
         }
 
         [DllImport(ACLNative.LIB_NAME)]
-        private static extern unsafe void nReadACLData(IntPtr compressedTracks, FVector* outPosKeys, FQuat* outRotKeys, FVector* outScaleKeys);
+        private static extern unsafe void nReadACLData(IntPtr compressedTracks, FTransform* inRefPoses, FTrackToSkeletonMap* inTrackToSkeletonMap, FTransform* outAtom);
     }
 }

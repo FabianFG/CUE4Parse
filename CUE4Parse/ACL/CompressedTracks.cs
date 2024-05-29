@@ -45,8 +45,12 @@ namespace CUE4Parse.ACL
         }
 
         public TracksHeader GetTracksHeader() => Marshal.PtrToStructure<TracksHeader>(Handle + Marshal.SizeOf<RawBufferHeader>());
+        public void SetDefaultScale(float scale) => nTracksHeader_SetDefaultScale(Handle + Marshal.SizeOf<RawBufferHeader>(), scale);
 
         [DllImport(LIB_NAME)]
         private static extern IntPtr nCompressedTracks_IsValid(IntPtr handle, bool checkHash);
+
+        [DllImport(LIB_NAME)]
+        private static extern IntPtr nTracksHeader_SetDefaultScale(IntPtr handle, float scale);
     }
 }

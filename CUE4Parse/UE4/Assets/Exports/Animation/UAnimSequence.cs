@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     public class UAnimSequence : UAnimSequenceBase
     {
         public int NumFrames;
-        public FTrackToSkeletonMap[] TrackToSkeletonMapTable; // used for raw data
+        public FTrackToSkeletonMap[]? TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;
         public ResolvedObject? BoneCompressionSettings; // UAnimBoneCompressionSettings
         public ResolvedObject? CurveCompressionSettings; // UAnimCurveCompressionSettings
@@ -369,14 +369,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public int GetNumTracks() => CompressedTrackToSkeletonMapTable.Length > 0 ?
             CompressedTrackToSkeletonMapTable.Length :
-            TrackToSkeletonMapTable.Length;
+            TrackToSkeletonMapTable?.Length ?? 0;
 
         public int GetTrackBoneIndex(int trackIndex) => CompressedTrackToSkeletonMapTable.Length > 0 ?
             CompressedTrackToSkeletonMapTable[trackIndex].BoneTreeIndex :
-            TrackToSkeletonMapTable[trackIndex].BoneTreeIndex;
+            TrackToSkeletonMapTable?[trackIndex].BoneTreeIndex ?? -1;
+
+        public FTrackToSkeletonMap[] GetTrackMap() => CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable ?? [];
 
         public int FindTrackForBoneIndex(int boneIndex) {
-            var trackMap = CompressedTrackToSkeletonMapTable.Length > 0 ? CompressedTrackToSkeletonMapTable : TrackToSkeletonMapTable;
+            var trackMap = GetTrackMap();
             for (var trackIndex = 0; trackIndex < trackMap.Length; trackIndex++)
             {
                 if (trackMap[trackIndex].BoneTreeIndex == boneIndex)
