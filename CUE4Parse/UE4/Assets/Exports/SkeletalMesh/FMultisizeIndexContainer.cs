@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -23,6 +23,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
             
             var dataSize = Ar.Read<byte>();
+            if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
+
             if (dataSize == 0x02)
             {
                 Indices16 = Ar.ReadBulkArray<ushort>();
