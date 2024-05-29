@@ -39,6 +39,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_Gameloop_Undawn = 0x5A6F12EC;
         public const uint PAK_FILE_MAGIC_FridayThe13th = 0x65617441;
         public const uint PAK_FILE_MAGIC_DreamStar = 0x1B6A32F1;
+        public const uint PAK_FILE_MAGIC_GameForPeace = 0xff67ff70;
+
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
         public readonly uint Magic;
@@ -70,6 +72,23 @@ namespace CUE4Parse.UE4.Pak.Objects
             }
 
             if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 3;
+
+            if (Ar.Game == EGame.GAME_GameForPeace)
+            {
+                EncryptionKeyGuid = default;
+                EncryptedIndex = Ar.Read<byte>() != 0x6c;
+                Magic = Ar.Read<uint>();
+                if (Magic != PAK_FILE_MAGIC_GameForPeace) return;
+                Version = Ar.Read<EPakFileVersion>();
+                IndexHash = new FSHAHash(Ar);
+                IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
+                IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);
+                CompressionMethods = new List<CompressionMethod>
+                {
+                    CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4, CompressionMethod.Zstd
+                };
+                return;
+            }
 
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
@@ -214,6 +233,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         {
             Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
             // Just to be sure
+            SizeGameForPeace = 45,
             Size8_1 = Size + 32,
             Size8_2 = Size8_1 + 32,
             Size8_3 = Size8_2 + 32,
@@ -268,6 +288,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
                     EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                     EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
+                    EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
@@ -280,7 +301,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                         Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault ||
                         Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                         Ar.Game == EGame.GAME_FridayThe13th && info.Magic == PAK_FILE_MAGIC_FridayThe13th ||
-                        Ar.Game == EGame.GAME_DreamStar && info.Magic == PAK_FILE_MAGIC_DreamStar)
+                        Ar.Game == EGame.GAME_DreamStar && info.Magic == PAK_FILE_MAGIC_DreamStar ||
+                        Ar.Game == EGame.GAME_GameForPeace && info.Magic == PAK_FILE_MAGIC_GameForPeace)
                         return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
