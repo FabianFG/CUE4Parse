@@ -36,6 +36,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_FinalFantasy7Remake = GAME_UE4_18 + 2,
             GAME_AceCombat7 = GAME_UE4_18 + 3,
             GAME_FridayThe13th = GAME_UE4_18 + 4,
+            GAME_GameForPeace = GAME_UE4_18 + 5,
         GAME_UE4_19 = GameUtils.GameUe4Base + 19 << 4,
             GAME_Paragon = GAME_UE4_19 + 1,
         GAME_UE4_20 = GameUtils.GameUe4Base + 20 << 4,
@@ -79,6 +80,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Gollum = GAME_UE4_27 + 6,
             GAME_Grounded = GAME_UE4_27 + 7,
             GAME_SeekersofSkyveil = GAME_UE4_27 + 8,
+            GAME_MortalKombat1 = GAME_UE4_27 + 9,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,

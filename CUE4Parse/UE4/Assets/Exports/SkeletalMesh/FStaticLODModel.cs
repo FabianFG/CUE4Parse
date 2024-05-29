@@ -233,6 +233,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 if (bInlined)
                 {
                     SerializeStreamedData(Ar, bHasVertexColors);
+
                     if (Ar.Game == EGame.GAME_RogueCompany)
                     {
                         Ar.Position += 12; // 1 (Long) + 2^16 (Int)
@@ -240,6 +241,18 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                         var elementCount = Ar.Read<int>();
                         if (elementSize > 0 && elementCount > 0)
                             Ar.SkipBulkArrayData();
+                    }
+
+                    if (Ar.Game == EGame.GAME_MortalKombat1 && Ar.ReadBoolean())
+                    {
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.Position += 8;
                     }
                 }
                 else
