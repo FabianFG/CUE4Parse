@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -17,6 +17,9 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
         {
             Type = new FAnimCurveType(Ar);
             LinkedBones = Ar.ReadArray(Ar.ReadFName);
+
+            if (Ar.Game == EGame.GAME_TheFirstDescendent) Ar.Position += 4;
+
             if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
             {
                 MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();

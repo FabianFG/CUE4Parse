@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FPackageIndex[] Sockets { get; private set; }
         public FVirtualBone[] VirtualBones { get; private set; }
 
-        public int BoneCount => BoneTree.Length;
+        public int BoneCount => ReferenceSkeleton.FinalRefBoneInfo.Length;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -117,7 +117,7 @@ public class FVirtualBone
     public FName SourceBoneName;
     public FName TargetBoneName;
     public FName VirtualBoneName;
-    
+
     public FVirtualBone(FStructFallback fallback)
     {
         SourceBoneName = fallback.GetOrDefault<FName>(nameof(SourceBoneName));

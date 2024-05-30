@@ -3,6 +3,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
@@ -329,5 +330,29 @@ namespace CUE4Parse.UE4.Pak.Objects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader)
+        {
+            Path = path;
+            var startOffset = Ar.Position;
+
+            if (game == GAME_GameForPeace)
+            {
+                Ar.Position += 20;
+                Offset = Ar.Read<long>();
+                UncompressedSize = Ar.Read<long>();
+                CompressionMethod = reader.Info.CompressionMethods[Ar.Read<int>()];
+                CompressedSize = Ar.Read<long>();
+                Size = UncompressedSize;
+                Ar.Position += 21;
+                if (CompressionMethod != CompressionMethod.None)
+                    CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
+                CompressionBlockSize = Ar.Read<uint>();
+                Flags = (uint) Ar.ReadByte();
+            }
+
+            StructSize = (int) (Ar.Position - startOffset);
+        }
     }
 }

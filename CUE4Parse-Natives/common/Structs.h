@@ -69,3 +69,26 @@ struct FTransform
     FVector Translation;
     FVector Scale3D;
 };
+
+struct FACLTransform final : public FTransform
+{
+    RTM_FORCE_INLINE void RTM_SIMD_CALL SetRotationRaw(rtm::quatf_arg0 Rotation_)
+    {
+        rtm::quat_store(Rotation_, &Rotation.X);
+    }
+
+    RTM_FORCE_INLINE void RTM_SIMD_CALL SetTranslationRaw(rtm::vector4f_arg0 Translation_)
+    {
+        rtm::vector_store3(Translation_, &Translation.X);
+    }
+
+    RTM_FORCE_INLINE void RTM_SIMD_CALL SetScale3DRaw(rtm::vector4f_arg0 Scale3D_)
+    {
+        rtm::vector_store3(Scale3D_, &Scale3D.X);
+    }
+};
+
+struct FTrackToSkeletonMap
+{
+    int32_t BoneTreeIndex;
+};

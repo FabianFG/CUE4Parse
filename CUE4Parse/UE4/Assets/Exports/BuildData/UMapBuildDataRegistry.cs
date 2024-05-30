@@ -296,8 +296,11 @@ namespace CUE4Parse.UE4.Assets.Exports.BuildData
 
                 if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.LQVolumetricLightmapLayers)
                 {
-                    BrickData.LQLightColor = new FVolumetricLightmapDataLayer(Ar);
-                    BrickData.LQLightDirection = new FVolumetricLightmapDataLayer(Ar);
+                    if (FUE5MainStreamObjectVersion.Get(Ar) <= FUE5MainStreamObjectVersion.Type.MobileStationaryLocalLights)
+                    {
+                        BrickData.LQLightColor = new FVolumetricLightmapDataLayer(Ar);
+                        BrickData.LQLightDirection = new FVolumetricLightmapDataLayer(Ar);
+                    }
                 }
 
                 if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VolumetricLightmapStreaming)

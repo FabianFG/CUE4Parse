@@ -8,7 +8,7 @@ using static System.MathF;
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
     [StructFallback]
-    public class FTransform : ICloneable
+    public struct FTransform : ICloneable
     {
         public static FTransform Identity = new() { Rotation = FQuat.Identity, Translation = FVector.ZeroVector, Scale3D = FVector.OneVector };
 
