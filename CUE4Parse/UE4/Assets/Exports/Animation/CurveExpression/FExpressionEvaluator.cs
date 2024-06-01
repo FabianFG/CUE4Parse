@@ -175,7 +175,7 @@ public static class GBuiltInFunctions
 
     public static bool IsValidFunctionIndex(int index)
     {
-        return index > 0 && index < Functions.Count;
+        return index >= 0 && index < Functions.Count;
     }
 
     public static FFunctionInfo GetInfoByIndex(int inIndex)
