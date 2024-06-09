@@ -33,6 +33,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
+        private const uint PACKAGE_FILE_ASH_ECHOES = 0x56DE5ECAU; // ECHO
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
 
         public readonly uint Tag;
@@ -118,6 +119,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 goto afterPackageFlags;
             }
 
+            if (Tag == PACKAGE_FILE_ASH_ECHOES)
+                goto skipTagCheck;
+
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {
                 throw new ParserException($"Invalid uasset magic: 0x{Tag:X8} != 0x{PACKAGE_FILE_TAG:X8}");
@@ -133,6 +137,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException("Byte swapping for packages not supported");
             }
 
+            skipTagCheck:
             legacyFileVersion = Ar.Read<int>();
 
             if (legacyFileVersion < 0) // means we have modern version numbers

@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Serilog;
+using static CUE4Parse.UE4.Pak.Objects.PakMagic;
 
 namespace CUE4Parse.UE4.Pak.Objects
 {
@@ -30,7 +31,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         PakFile_Version_Latest = PakFile_Version_Last - 1
     }
 
-    public class FPakInfo
+    file static class PakMagic
     {
         public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
         public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
@@ -39,8 +40,11 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_Gameloop_Undawn = 0x5A6F12EC;
         public const uint PAK_FILE_MAGIC_FridayThe13th = 0x65617441;
         public const uint PAK_FILE_MAGIC_DreamStar = 0x1B6A32F1;
-        public const uint PAK_FILE_MAGIC_GameForPeace = 0xff67ff70;
+        public const uint PAK_FILE_MAGIC_GameForPeace = 0xFF67FF70;
+    }
 
+    public class FPakInfo
+    {
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
         public readonly uint Magic;
@@ -81,7 +85,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 if (Magic != PAK_FILE_MAGIC_GameForPeace) return;
                 Version = Ar.Read<EPakFileVersion>();
                 IndexHash = new FSHAHash(Ar);
-                IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
+                IndexSize = (long) (Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
                 IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);
                 CompressionMethods = new List<CompressionMethod>
                 {

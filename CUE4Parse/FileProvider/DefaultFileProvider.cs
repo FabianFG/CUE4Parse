@@ -71,7 +71,7 @@ namespace CUE4Parse.FileProvider
                 var upperExt = file.Extension.SubstringAfter('.').ToUpper();
 
                 // Only load containers if .uproject file is not found
-                if (uproject == null && upperExt is "PAK" or "UTOC")
+                if (uproject == null && (upperExt is "PAK" or "UTOC" || file.Name.Equals("new_index")))
                 {
                     RegisterVfs(file.FullName, new Stream[] { file.OpenRead() }, it => new FStreamArchive(it, File.OpenRead(it), Versions));
                     continue;

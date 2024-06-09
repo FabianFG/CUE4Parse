@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.Tencent.AE.Repo;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
@@ -60,19 +61,30 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             try
             {
-                AbstractAesVfsReader reader;
-                switch (archive.Name.SubstringAfterLast('.').ToUpper())
+                AbstractAesVfsReader? reader = null;
+
+                if (archive.Game == EGame.GAME_AshEchoes && archive.Name.SubstringAfterLast(Path.DirectorySeparatorChar).Equals("new_index"))
                 {
-                    case "PAK":
-                        reader = new PakFileReader(archive);
-                        break;
-                    case "UTOC":
-                        openContainerStreamFunc ??= it => new FStreamArchive(it, stream!, Versions);
-                        reader = new IoStoreReader(archive, openContainerStreamFunc);
-                        break;
-                    default:
-                        return;
+                    // custom container
+                    reader = new RepoFileReader(archive);
                 }
+
+                if (reader == null)
+                {
+                    switch (archive.Name.SubstringAfterLast('.').ToUpper())
+                    {
+                        case "PAK":
+                            reader = new PakFileReader(archive);
+                            break;
+                        case "UTOC":
+                            openContainerStreamFunc ??= it => new FStreamArchive(it, stream!, Versions);
+                            reader = new IoStoreReader(archive, openContainerStreamFunc);
+                            break;
+                        default:
+                            return;
+                    }
+                }
+
                 PostLoadReader(reader);
             }
             catch (Exception e)
