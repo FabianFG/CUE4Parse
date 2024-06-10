@@ -61,6 +61,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         AddedSubobjectSerialization,
         RefactoredSubobjectSerialization,
         RemoveInvalidEventBindings,
+        AddRedirectForPackageName,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
