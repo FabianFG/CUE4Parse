@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -26,16 +26,16 @@ namespace CUE4Parse.FileProvider.Vfs
         public override IReadOnlyDictionary<string, GameFile> Files => _files;
         public override IReadOnlyDictionary<FPackageId, GameFile> FilesById => _files.byId;
 
-        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
+        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
-        private readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
+        private readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new();
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
 
-        private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
+        private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
 
-        protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
+        protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
         public IoGlobalData? GlobalData { get; private set; }
@@ -141,12 +141,12 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {{ guid, key }});
+        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> { { guid, key } });
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys) => SubmitKeysAsync(keys).Result;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<int> SubmitKeyAsync(FGuid guid, FAesKey key)
-            => await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> {{ guid, key }}).ConfigureAwait(false);
+            => await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> { { guid, key } }).ConfigureAwait(false);
         public async Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys)
         {
             var countNewMounts = 0;
@@ -201,8 +201,8 @@ namespace CUE4Parse.FileProvider.Vfs
             if (workingAes) return;
 
             var vfsToVerify = _mountedVfs.Keys
-                    .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
-                    .GroupBy(it => it.EncryptionKeyGuid);
+                .Where(it => it is { IsEncrypted: false, EncryptedFileCount: > 0 })
+                .GroupBy(it => it.EncryptionKeyGuid);
 
             foreach (var group in vfsToVerify)
             {
