@@ -97,9 +97,9 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
-            
+
             if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-            
+
             if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
             {
                 for (var i = 0; i < LODModels?.Length; i++)
@@ -126,8 +126,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             writer.WritePropertyName("ImportedBounds");
             serializer.Serialize(writer, ImportedBounds);
 
-            writer.WritePropertyName("Materials");
-            serializer.Serialize(writer, Materials);
+            writer.WritePropertyName("SkeletalMaterials");
+            serializer.Serialize(writer, SkeletalMaterials);
 
             writer.WritePropertyName("LODModels");
             serializer.Serialize(writer, LODModels);
