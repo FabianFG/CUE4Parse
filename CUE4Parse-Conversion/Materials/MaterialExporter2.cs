@@ -60,9 +60,17 @@ namespace CUE4Parse_Conversion.Materials
 
                 lock (_texture)
                 {
-                    var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, "png");
+                    var ext = Options.TextureFormat switch
+                    {
+                        ETextureFormat.Png => "png",
+                        ETextureFormat.Tga => "tga",
+                        ETextureFormat.Dds => "dds",
+                        _ => "png"
+                    };
+                    
+                    var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, ext);
                     using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
-                    using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+                    using var data = bitmap.Encode(Options.TextureFormat, 100);
                     using var stream = data.AsStream();
                     stream.CopyTo(fs);
                 }
