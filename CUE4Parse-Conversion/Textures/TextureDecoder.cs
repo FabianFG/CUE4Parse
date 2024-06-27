@@ -146,11 +146,12 @@ public static class TextureDecoder
             out var colorType);
 
         var bitmaps = new List<SKBitmap>();
+        var offset = sizeX * sizeY * 4;
         for (var i = 0; i < mip.SizeZ; i++)
         {
-            var offset = sizeX * sizeY * 4;
             var startIndex = offset * i;
             var endIndex = startIndex + offset;
+            if (endIndex > data.Length) break;
             bitmaps.Add(InstallPixels(data[startIndex..endIndex],
                 new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul)));
         }
