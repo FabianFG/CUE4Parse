@@ -127,12 +127,12 @@ public static class TextureDecoder
         return null;
     }
 
-    public static List<SKBitmap>? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static SKBitmap[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
         var mip = texture.GetFirstMip();
 
         if (mip is null) return null;
-        
+
         var sizeX = mip.SizeX;
         var sizeY = mip.SizeY;
 
@@ -156,8 +156,7 @@ public static class TextureDecoder
                 new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul)));
         }
 
-        return bitmaps;
-
+        return bitmaps.ToArray();
     }
 
     public static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
