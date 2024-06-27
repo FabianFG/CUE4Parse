@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -23,7 +24,7 @@ public static class TextureDecoder
     public static SKBitmap? Decode(this UTexture2D texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetMipByMaxSize(maxMipSize), platform);
     public static SKBitmap? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
     public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
-    public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static SKBitmap? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
         {
@@ -117,10 +118,45 @@ public static class TextureDecoder
 
             DecodeTexture(mip, sizeX, sizeY, mip.SizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
-            return InstallPixels(data, new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
+            var offset = sizeX * sizeY * 4;
+            var startIndex = offset * zLayer;
+            var endIndex = startIndex + offset;
+            return InstallPixels(data[startIndex..endIndex], new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
         }
 
         return null;
+    }
+
+    public static List<SKBitmap>? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    {
+        var mip = texture.GetFirstMip();
+
+        if (mip is null) return null;
+        
+        var sizeX = mip.SizeX;
+        var sizeY = mip.SizeY;
+
+        if (texture.Format == EPixelFormat.PF_BC7)
+        {
+            sizeX = (sizeX + 3) / 4 * 4;
+            sizeY = (sizeY + 3) / 4 * 4;
+        }
+
+        DecodeTexture(mip, sizeX, sizeY, mip.SizeZ, texture.Format, texture.IsNormalMap, platform, out var data,
+            out var colorType);
+
+        var bitmaps = new List<SKBitmap>();
+        for (var i = 0; i < mip.SizeZ; i++)
+        {
+            var offset = sizeX * sizeY * 4;
+            var startIndex = offset * i;
+            var endIndex = startIndex + offset;
+            bitmaps.Add(InstallPixels(data[startIndex..endIndex],
+                new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul)));
+        }
+
+        return bitmaps;
+
     }
 
     public static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
