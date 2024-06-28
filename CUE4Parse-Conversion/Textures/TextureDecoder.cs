@@ -117,11 +117,8 @@ public static class TextureDecoder
             }
 
             DecodeTexture(mip, sizeX, sizeY, mip.SizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
-
-            var offset = sizeX * sizeY * 4;
-            var startIndex = offset * zLayer;
-            var endIndex = startIndex + offset;
-            return InstallPixels(data[startIndex..endIndex], new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
+            
+            return InstallPixels(GetImageDataRange(data, mip, sizeX, sizeY, zLayer), new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
         }
 
         return null;
@@ -149,14 +146,21 @@ public static class TextureDecoder
         var offset = sizeX * sizeY * 4;
         for (var i = 0; i < mip.SizeZ; i++)
         {
-            var startIndex = offset * i;
-            var endIndex = startIndex + offset;
-            if (endIndex > data.Length) break;
-            bitmaps.Add(InstallPixels(data[startIndex..endIndex],
+            if (offset * (i + 1) > data.Length) break;
+            bitmaps.Add(InstallPixels(GetImageDataRange(data, mip, sizeX, sizeY, i),
                 new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul)));
         }
 
         return bitmaps.ToArray();
+    }
+
+    private static byte[] GetImageDataRange(byte[] data, FTexture2DMipMap mip, int sizeX, int sizeY, int zLayer)
+    {
+        var offset = sizeX * sizeY * 4;
+        var startIndex = offset * zLayer;
+        var endIndex = startIndex + offset;
+        
+        return endIndex > data.Length ? data : data[startIndex..endIndex];
     }
 
     public static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out SKColorType colorType)
