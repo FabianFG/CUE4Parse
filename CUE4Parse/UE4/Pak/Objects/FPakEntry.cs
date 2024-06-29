@@ -130,6 +130,9 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (reader.Info.Version < PakFile_Version_NoTimestamps)
                 Ar.Position += 8; // Timestamp
             Ar.Position += 20; // Hash
+
+            if (Ar.Game == GAME_InfinityNikki) Ar.Position += 20; // Second Hash
+
             if (reader.Info.Version >= PakFile_Version_CompressionEncryption)
             {
                 if (CompressionMethod != CompressionMethod.None)
@@ -259,7 +262,13 @@ namespace CUE4Parse.UE4.Pak.Objects
             // Take into account CompressionBlocks
             if (CompressionMethod != CompressionMethod.None)
                 StructSize += (int) (sizeof(int) + compressionBlocksCount * 2 * sizeof(long));
-            if (reader.Ar.Game == GAME_TorchlightInfinite) StructSize += 1;
+
+            StructSize += reader.Ar.Game switch
+            {
+                GAME_TorchlightInfinite => 1,
+                GAME_InfinityNikki => 20,
+                _ => 0
+            };
 
             // Handle building of the CompressionBlocks array.
             if (compressionBlocksCount == 1 && !IsEncrypted)
