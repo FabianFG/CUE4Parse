@@ -245,7 +245,8 @@ namespace CUE4Parse.UE4.IO
 
                 reader.Position = partitionOffset;
                 reader.Read(compressedBuffer, 0, (int) rawSize);
-                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
+                // FragPunk decided to encrypt the global utoc too.
+                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global")); 
 
                 byte[] src;
                 if (compressionBlock.CompressionMethodIndex == 0)
