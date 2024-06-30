@@ -209,7 +209,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bIsLODCookedOut = false;
-            if (Ar.Game != EGame.GAME_Splitgate && Ar.Game != EGame.GAME_FragPunk)
+            if (Ar.Game != EGame.GAME_Splitgate)
                 bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
 
