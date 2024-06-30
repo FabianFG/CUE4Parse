@@ -209,7 +209,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
             var bIsLODCookedOut = false;
-            if (Ar.Game != EGame.GAME_Splitgate)
+            if (Ar.Game != EGame.GAME_Splitgate && Ar.Game != EGame.GAME_FragPunk)
                 bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean();
 
@@ -225,7 +225,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
                 ActiveBoneIndices = Ar.ReadArray<short>();
 
-                if (Ar.Game == EGame.GAME_KenaBridgeofSpirits)
+                if (Ar.Game is EGame.GAME_KenaBridgeofSpirits or EGame.GAME_FragPunk)
                     Ar.ReadArray<byte>(); // EAssetType_array1
 
                 Ar.Position += 4; //var buffersSize = Ar.Read<uint>();

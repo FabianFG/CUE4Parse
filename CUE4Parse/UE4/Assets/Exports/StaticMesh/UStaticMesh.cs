@@ -60,8 +60,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 var bHasOccluderData = Ar.ReadBoolean();
                 if (bHasOccluderData)
                 {
-                    Ar.ReadArray<FVector>(); // Vertices
-                    Ar.ReadArray<ushort>();  // Indices
+                    if (Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean())
+                    {
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                    }
+                    else
+                    {
+                        Ar.ReadArray<FVector>(); // Vertices
+                        Ar.ReadArray<ushort>();  // Indices
+                    }
+
                 }
             }
 

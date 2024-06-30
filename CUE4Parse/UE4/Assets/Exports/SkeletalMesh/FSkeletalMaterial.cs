@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
 
-            if (Ar.Game == EGame.GAME_CalabiYau) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_CalabiYau or EGame.GAME_FragPunk) Ar.Position += 4;
         }
     }
 }

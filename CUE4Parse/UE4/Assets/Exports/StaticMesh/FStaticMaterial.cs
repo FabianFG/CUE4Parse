@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -21,6 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             MaterialSlotName = Ar.ReadFName();
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
+            if (Ar.Game is EGame.GAME_FragPunk) Ar.Position += 4;
         }
 
         public FStaticMaterial(FStructFallback fallback)
