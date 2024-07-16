@@ -23,8 +23,6 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-    private static readonly ArrayPool<byte> _shared = ArrayPool<byte>.Shared;
-
     public static SKBitmap? Decode(this UTexture2D texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetMipByMaxSize(maxMipSize), platform);
     public static SKBitmap? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
     public static SKBitmap? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
@@ -35,7 +33,6 @@ public static class TextureDecoder
             var tileSize = (int) vt.TileSize;
             var tileBorderSize = (int) vt.TileBorderSize;
             var tilePixelSize = (int) vt.GetPhysicalTileSize();
-            var tileCrop = new SKRect(tileBorderSize, tileBorderSize, tilePixelSize - tileBorderSize, tilePixelSize - tileBorderSize);
             var level = texture.PlatformData.FirstMipToSerialize;
 
             FVirtualTextureTileOffsetData tileOffsetData;
@@ -48,7 +45,10 @@ public static class TextureDecoder
                 var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
                 tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
             }
-            else tileOffsetData = vt.TileOffsetData[level];
+            else
+            {
+                tileOffsetData = vt.TileOffsetData[level];
+            }
 
             var bitmapWidth = (int) tileOffsetData.Width * tileSize;
             var bitmapHeight = (int) tileOffsetData.Height * tileSize;
@@ -66,9 +66,10 @@ public static class TextureDecoder
 
             var colorType = SKColorType.Unknown;
             void* pixelDataPtr = null;
-            var imageBytes = 0;
             var bytesPerPixel = 0;
             var rowBytes = 0;
+            var tileRowBytes = 0;
+            var result = Span<byte>.Empty;
 
             for (uint layer = 0; layer < vt.NumLayers; layer++)
             {
@@ -81,23 +82,24 @@ public static class TextureDecoder
                 var packedStride = tileWidthInBlocks * formatInfo.BlockBytes;
                 var packedOutputSize = packedStride * tileHeightInBlocks;
 
-                var layerData = _shared.Rent(packedOutputSize);
+                var layerData = ArrayPool<byte>.Shared.Rent(packedOutputSize);
+
                 for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
                 {
                     if (!vt.IsValidAddress(level, tileIndexInMip)) continue;
 
-                    var tileX = (int)MathUtils.ReverseMortonCode2(tileIndexInMip);
-                    var tileY = (int)MathUtils.ReverseMortonCode2(tileIndexInMip >> 1);
+                    var tileX = (int)MathUtils.ReverseMortonCode2(tileIndexInMip) * tileSize;
+                    var tileY = (int)MathUtils.ReverseMortonCode2(tileIndexInMip >> 1) * tileSize;
                     var (chunkIndex, tileStart, tileLength) = vt.GetTileData(level, tileIndexInMip, layer);
 
-                    switch (vt.Chunks[chunkIndex].CodecType[layer])
+                    if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.ZippedGPU_DEPRECATED)
                     {
-                        case EVirtualTextureCodec.ZippedGPU_DEPRECATED:
-                            Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data, (int) tileStart, (int) tileLength, layerData, 0, packedOutputSize, CompressionMethod.Zlib);
-                            break;
-                        default:
-                            Array.Copy(vt.Chunks[chunkIndex].BulkData.Data, tileStart, layerData, 0, packedOutputSize);
-                            break;
+                        Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data!, (int)tileStart, (int)tileLength,
+                            layerData, 0, packedOutputSize, CompressionMethod.Zlib);
+                    }
+                    else
+                    {
+                        Array.Copy(vt.Chunks[chunkIndex].BulkData.Data!, tileStart, layerData, 0, packedOutputSize);
                     }
 
                     DecodeBytes(layerData, tilePixelSize, tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var tileColorType);
@@ -106,31 +108,29 @@ public static class TextureDecoder
                     {
                         colorType = tileColorType;
                         var tempInfo = new SKImageInfo(bitmapWidth, bitmapHeight, colorType, SKAlphaType.Unpremul);
-                        imageBytes = tempInfo.BytesSize;
                         bytesPerPixel = tempInfo.BytesPerPixel;
                         rowBytes = tempInfo.RowBytes;
-                        pixelDataPtr = NativeMemory.Alloc((nuint)tempInfo.BytesSize);
+                        tileRowBytes = tileSize * bytesPerPixel;
+                        var imageBytes = tempInfo.BytesSize;
+                        pixelDataPtr = NativeMemory.Alloc((nuint)imageBytes);
+                        result = new Span<byte>(pixelDataPtr, imageBytes);
                     }
                     else if (colorType != tileColorType)
                     {
                         throw new NotSupportedException("multiple pixelformats/colortypes in a single virtual image is not supported");
                     }
 
-                    var x = tileX * tileSize;
-                    var y = tileY * tileSize;
-                    var tileRowBytes = tileSize * bytesPerPixel;
-                    var result = new Span<byte>(pixelDataPtr, imageBytes);
-
                     for (int i = 0; i < tileSize; i++)
                     {
                         var tileOffset = ((i + tileBorderSize) * tilePixelSize + tileBorderSize) * bytesPerPixel;
-                        var offset = x * bytesPerPixel + (y + i) * rowBytes;
+                        var offset = tileX * bytesPerPixel + (tileY + i) * rowBytes;
                         var srcSpan = data.AsSpan(tileOffset, tileRowBytes);
                         var destSpan = result.Slice(offset);
                         srcSpan.CopyTo(destSpan);
                     }
                 }
-                _shared.Return(layerData);
+
+                ArrayPool<byte>.Shared.Return(layerData);
             }
 
             var bitmap = new SKBitmap();
