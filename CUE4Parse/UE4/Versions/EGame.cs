@@ -100,6 +100,7 @@ namespace CUE4Parse.UE4.Versions
         GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
             GAME_MarvelRivals = GAME_UE5_3 + 1,
             GAME_WildAssault = GAME_UE5_3 + 2,
+            GAME_NobodyWantsToDie = GAME_UE5_3 + 3,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
         GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
 

@@ -91,7 +91,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
 
         public FVirtualTextureBuiltData(FAssetArchive Ar, int firstMip)
         {
-            bool bStripMips = firstMip > 0;
+            var bStripMips = firstMip > 0 && Ar.Game != EGame.GAME_NobodyWantsToDie;
             var bCooked = Ar.ReadBoolean();
 
             NumLayers = Ar.Read<uint>();
