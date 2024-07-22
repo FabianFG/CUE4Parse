@@ -115,18 +115,19 @@ public struct FGameplayTag
         return !TagName.IsNone;
     }
 
-    public static bool operator ==(FGameplayTag a, FGameplayTag b) {
-        return a.TagName == b.TagName;
+    public static bool operator ==(FGameplayTag a, FGameplayTag b) 
+    {
+        return a.TagName.CompareTo(b.TagName) == 0;
     }
 
     public static bool operator !=(FGameplayTag a, FGameplayTag b)
     {
-        return a.TagName != b.TagName;
+        return a.TagName.CompareTo(b.TagName) != 0;
     }
 
     public bool Equals(FGameplayTag other)
     {
-        return TagName.Equals(other.TagName);
+        return TagName.CompareTo(other.TagName) == 0;
     }
 
     public override bool Equals(object? obj)

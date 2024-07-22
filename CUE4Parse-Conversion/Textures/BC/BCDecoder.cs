@@ -5,23 +5,26 @@ namespace CUE4Parse_Conversion.Textures.BC
 {
     public static class BCDecoder
     {
-        public static byte[] BC4(byte[] inp, int sizeX, int sizeY)
+        public static byte[] BC4(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            byte[] ret = new byte[sizeX * sizeY * 4];
+            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4];
             unsafe
             {
                 fixed (byte* bytePtr = inp)
                 {
                     int index = 0;
                     byte* temp = bytePtr;
-                    for (int y = 0; y < sizeY / 4; y++)
+                    for (var z = 0; z < sizeZ; z++)
                     {
-                        for (int x = 0; x < sizeX / 4; x++)
+                        for (int y = 0; y < sizeY / 4; y++)
                         {
-                            var r_bytes = DecodeBCBlock(temp, ref index);
-                            for (int i = 0; i < 16; i++)
+                            for (int x = 0; x < sizeX / 4; x++)
                             {
-                                ret[GetPixelLoc(sizeX, x * 4 + (i % 4), y * 4 + (i / 4), 4, 0)] = r_bytes[i];
+                                var r_bytes = DecodeBCBlock(temp, ref index);
+                                for (int i = 0; i < 16; i++)
+                                {
+                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0)] = r_bytes[i];
+                                }
                             }
                         }
                     }
@@ -30,26 +33,29 @@ namespace CUE4Parse_Conversion.Textures.BC
             return ret;
         }
 
-        public static byte[] BC5(byte[] inp, int sizeX, int sizeY)
+        public static byte[] BC5(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            byte[] ret = new byte[sizeX * sizeY * 4];
+            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4];
             unsafe
             {
                 fixed (byte* bytePtr = inp)
                 {
                     int index = 0;
                     byte* temp = bytePtr;
-                    for (int y = 0; y < sizeY / 4; y++)
+                    for (var z = 0; z < sizeZ; z++)
                     {
-                        for (int x = 0; x < sizeX / 4; x++)
+                        for (int y = 0; y < sizeY / 4; y++)
                         {
-                            var r_bytes = DecodeBCBlock(temp, ref index);
-                            var g_bytes = DecodeBCBlock(temp, ref index);
-                            for (int i = 0; i < 16; i++)
+                            for (int x = 0; x < sizeX / 4; x++)
                             {
-                                ret[GetPixelLoc(sizeX, x * 4 + (i % 4), y * 4 + (i / 4), 4, 0)] = r_bytes[i];
-                                ret[GetPixelLoc(sizeX, x * 4 + (i % 4), y * 4 + (i / 4), 4, 1)] = g_bytes[i];
-                                ret[GetPixelLoc(sizeX, x * 4 + (i % 4), y * 4 + (i / 4), 4, 2)] = GetZNormal(r_bytes[i], g_bytes[i]);
+                                var r_bytes = DecodeBCBlock(temp, ref index);
+                                var g_bytes = DecodeBCBlock(temp, ref index);
+                                for (int i = 0; i < 16; i++)
+                                {
+                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0)] = r_bytes[i];
+                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 1)] = g_bytes[i];
+                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 2)] = GetZNormal(r_bytes[i], g_bytes[i]);
+                                }
                             }
                         }
                     }
@@ -59,7 +65,7 @@ namespace CUE4Parse_Conversion.Textures.BC
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetPixelLoc(int width, int x, int y, int bpp, int off) => (y * width + x) * bpp + off;
+        private static int GetPixelLoc(int width, int height, int x, int y, int z, int bpp, int off) => (z * width * height * bpp) + (y * width * bpp) + (x * bpp) + off;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte GetZNormal(byte x, byte y)
