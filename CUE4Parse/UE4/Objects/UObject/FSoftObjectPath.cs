@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException(Ar, $"Asset path \"{path}\" is in short form and is not supported, nor recommended");
             }
 
-            AssetPathName = Ar.Ver >= EUnrealEngineObjectUE5Version.FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES || Ar.Game == EGame.GAME_TheFirstDescendent ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName();
+            AssetPathName = Ar.Ver >= EUnrealEngineObjectUE5Version.FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES || Ar.Game == EGame.GAME_TheFirstDescendant ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName();
             SubPathString = Ar.ReadFString();
             Owner = Ar.Owner;
         }

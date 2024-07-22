@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             Type = new FAnimCurveType(Ar);
             LinkedBones = Ar.ReadArray(Ar.ReadFName);
 
-            if (Ar.Game == EGame.GAME_TheFirstDescendent) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 4;
 
             if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
             {

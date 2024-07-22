@@ -400,7 +400,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             NamesReferencedFromExportDataCount = FileVersionUE >= EUnrealEngineObjectUE5Version.NAMES_REFERENCED_FROM_EXPORT_DATA ? Ar.Read<int>() : NameCount;
             PayloadTocOffset = FileVersionUE >= EUnrealEngineObjectUE5Version.PAYLOAD_TOC ? Ar.Read<long>() : -1;
-            DataResourceOffset = FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || Ar.Game == EGame.GAME_TheFirstDescendent ? Ar.Read<int>() : -1;
+            DataResourceOffset = FileVersionUE >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || Ar.Game == EGame.GAME_TheFirstDescendant ? Ar.Read<int>() : -1;
 
             if (Tag == PACKAGE_FILE_TAG_ONE && Ar is FAssetArchive assetAr)
             {

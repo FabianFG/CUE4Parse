@@ -108,7 +108,7 @@ namespace CUE4Parse.UE4.Assets
                 }
 
                 BulkDataMap = [];
-                if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == EGame.GAME_TheFirstDescendent)
+                if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == EGame.GAME_TheFirstDescendant)
                 {
                     if (uassetAr.Game >= EGame.GAME_UE5_4)
                     {
