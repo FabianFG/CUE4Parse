@@ -128,6 +128,8 @@ public static class TextureDecoder
                         var destSpan = result.Slice(offset);
                         srcSpan.CopyTo(destSpan);
                     }
+
+                    TestSaveTile(tilePixelSize, tileColorType, tileIndexInMip, data);
                 }
 
                 ArrayPool<byte>.Shared.Return(layerData);
@@ -159,6 +161,25 @@ public static class TextureDecoder
         }
 
         return null;
+    }
+
+    private static unsafe void TestSaveTile(int tilePixelSize, SKColorType tileColorType, uint tileIndexInMip, Span<byte> pixelData)
+    {
+#if TEST_SAVE_TILES
+        using var tempBmp = new SKBitmap();
+        var tempImageInfo = new SKImageInfo(tilePixelSize, tilePixelSize, tileColorType, SKAlphaType.Unpremul);
+        var tempPixelBuffer = NativeMemory.Alloc((nuint)pixelData.Length);
+        var tempPixelSpan = new Span<byte>(tempPixelBuffer, pixelData.Length);
+        pixelData.CopyTo(tempPixelSpan);
+        tempBmp.InstallPixels(tempImageInfo, (nint)tempPixelBuffer, tempImageInfo.RowBytes,
+            (bmpPixelAddr, _) => NativeMemory.Free(bmpPixelAddr.ToPointer()));
+        using var tempData = tempBmp.Encode(ETextureFormat.Png, 100);
+        using var tempDataStream = tempData.AsStream(true);
+        var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        var testDir = Directory.CreateDirectory(Path.Combine(downloadsDir, "CUE4ParseTest"));
+        using var tempFs = File.Create(Path.Combine(testDir.FullName, $"test_tile_{tileIndexInMip}.png"));
+        tempDataStream.CopyTo(tempFs);
+#endif
     }
 
     public static SKBitmap[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
