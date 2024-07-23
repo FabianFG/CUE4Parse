@@ -53,7 +53,7 @@ public static class TextureDecoder
             var bitmapWidth = (int) tileOffsetData.Width * tileSize;
             var bitmapHeight = (int) tileOffsetData.Height * tileSize;
             var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
-            if (maxLevel == 0 || vt.IsLegacyData())
+            if (tileOffsetData.MaxAddress > 1 && (maxLevel == 0 || vt.IsLegacyData()))
             {
                 // if we are here that means the mip is tiled and so the bitmap size must be lowered by one-fourth
                 // if texture is legacy we must always lower the bitmap size because GetXXXXInTiles gives the number of tiles in mip 0
