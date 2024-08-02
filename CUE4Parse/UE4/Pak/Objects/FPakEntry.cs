@@ -67,6 +67,13 @@ namespace CUE4Parse.UE4.Pak.Objects
             UncompressedSize = Ar.Read<long>();
             Size = UncompressedSize;
 
+            if (Ar.Game == GAME_WildAssault)
+            {
+                Offset = (long) ((ulong) Offset ^ 0x87C36BFDD1C9A516) - 116;
+                CompressedSize = (long) ((ulong) CompressedSize ^ 0xF10DE7310B5FB852) - 18;
+                UncompressedSize = (long) ((ulong) UncompressedSize ^ 0xF06D48ADF2DCB93A) - 34;
+            }
+
             if (reader.Info.Version < PakFile_Version_FNameBasedCompressionMethod)
             {
                 var legacyCompressionMethod = Ar.Read<ECompressionFlags>();
@@ -139,6 +146,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                     CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
                 Flags = (uint) Ar.ReadByte();
                 CompressionBlockSize = Ar.Read<uint>();
+                if (Ar.Game == GAME_WildAssault)
+                    CompressionBlockSize = CompressionBlockSize ^ 0xD2AF47EF - 5;
             }
 
             if (Ar.Game == GAME_TEKKEN7) Flags = (uint) (Flags & ~Flag_Encrypted);
