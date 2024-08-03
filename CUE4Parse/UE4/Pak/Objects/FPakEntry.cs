@@ -276,6 +276,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 GAME_TorchlightInfinite => 1,
                 GAME_InfinityNikki => 20,
+                GAME_VisionsofMana => -3,
                 _ => 0
             };
 
