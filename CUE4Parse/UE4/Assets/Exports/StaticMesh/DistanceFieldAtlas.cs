@@ -67,7 +67,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 bMeshWasClosed = Ar.ReadBoolean();
                 bBuiltAsIfTwoSided = Ar.ReadBoolean();
                 bMeshWasPlane = Ar.ReadBoolean();
-                DistanceFieldVolume = new ushort[0];
+                DistanceFieldVolume = [];
             }
             else
             {
@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 bMeshWasClosed = Ar.ReadBoolean();
                 bBuiltAsIfTwoSided = Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN && Ar.ReadBoolean();
                 bMeshWasPlane = Ar.Ver >= EUnrealEngineObjectUE4Version.DEPRECATE_UMG_STYLE_ASSETS && Ar.ReadBoolean();
-                CompressedDistanceFieldVolume = new byte[0];
+                CompressedDistanceFieldVolume = [];
                 DistanceMinMax = new FVector2D(0f, 0f);
             }
         }
