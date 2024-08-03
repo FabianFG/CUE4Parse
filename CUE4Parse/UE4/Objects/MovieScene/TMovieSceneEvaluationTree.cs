@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+using System;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
@@ -11,6 +12,11 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         public TMovieSceneEvaluationTree(FArchive Ar) : base(Ar)
         {
             Data = new TEvaluationTreeEntryContainer<T>(Ar);
+        }
+
+        public TMovieSceneEvaluationTree(FArchive Ar, Func<T> getter) : base(Ar)
+        {
+            Data = new TEvaluationTreeEntryContainer<T>(Ar, getter);
         }
     }
 
@@ -25,6 +31,12 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         {
             Entries = Ar.ReadArray<FEntry>();
             Items = Ar.ReadArray<T>();
+        }
+
+        public TEvaluationTreeEntryContainer(FArchive Ar, Func<T> getter)
+        {
+            Entries = Ar.ReadArray<FEntry>();
+            Items = Ar.ReadArray(getter);
         }
     }
 
