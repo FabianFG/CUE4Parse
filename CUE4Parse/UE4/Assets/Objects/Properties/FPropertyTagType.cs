@@ -108,7 +108,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                 "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
                 "AssetClassProperty" => new AssetObjectProperty(Ar, type),
                 "BoolProperty" => new BoolProperty(Ar, tagData, type),
-                "ByteProperty" => tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)
+                "ByteProperty" => ((tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)) || (type == ReadType.MAP && Ar.TestReadFName()))
                     ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)
                     : new ByteProperty(Ar, type),
                 "ClassProperty" => new ClassProperty(Ar, type),

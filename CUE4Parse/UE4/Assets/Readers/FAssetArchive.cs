@@ -44,6 +44,17 @@ namespace CUE4Parse.UE4.Assets.Readers
             return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TestReadFName()
+        {
+            var savedPos = Position;
+            if (Position + sizeof(int) >= Length) return false;
+            var nameIndex = Read<int>();
+            Position = savedPos;
+            if (nameIndex < 0 || nameIndex >= Owner!.NameMap.Length) return false;
+            return true;
+        }
+
         // TODO not really optimal, there should be TryReadObject functions etc
         public virtual Lazy<T?> ReadObject<T>() where T : UObject
         {
