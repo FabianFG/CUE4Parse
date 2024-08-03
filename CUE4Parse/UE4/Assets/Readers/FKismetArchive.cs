@@ -144,9 +144,15 @@ public class FKismetArchive : FArchive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string XFERUNICODESTRING()
     {
-        var length = _data.AsSpan((int)Position).IndexOf(stackalloc byte[2]);
-        if (length == -1) throw new ParserException("Couldn't find end of the string");
-        if (length % 2 == 1) length++;
+        var pos = (int)Position;
+        var length = -1;
+        Span<byte> terminator = stackalloc byte[2];
+        do
+        {
+            length += _data.AsSpan(pos + length + 1).IndexOf(terminator) + 1;
+        }
+        while (length % 2 != 0 || length == -1);
+        if (length == -1) throw new ParserException("Couldn't find end of the unicode string");
         return Encoding.Unicode.GetString(ReadBytes(length));
     }
 
