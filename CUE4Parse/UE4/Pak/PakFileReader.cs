@@ -63,7 +63,7 @@ namespace CUE4Parse.UE4.Pak
 #if DEBUG
                 Log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
 #endif
-                if (Game is EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse) return NetEaseExtract(reader, pakEntry);
+                if (Game is EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse) return NetEaseCompressedExtract(reader, pakEntry);
                 if (Game is EGame.GAME_GameForPeace) return GameForPeaceExtract(reader, pakEntry);
 
                 var uncompressed = new byte[(int) pakEntry.UncompressedSize];
@@ -85,6 +85,8 @@ namespace CUE4Parse.UE4.Pak
 
                 return uncompressed;
             }
+
+            if (Game is EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse) return NetEaseExtract(reader, pakEntry);
 
             // Pak Entry is written before the file data,
             // but it's the same as the one from the index, just without a name

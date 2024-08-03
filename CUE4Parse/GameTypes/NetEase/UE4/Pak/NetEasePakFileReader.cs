@@ -19,7 +19,7 @@ public partial class PakFileReader
     /// <param name="reader">The pak reader</param>
     /// <param name="pakEntry">The entry to be extracted</param>
     /// <returns>The merged and decompressed/decrypted entry data</returns>
-    private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
+    private byte[] NetEaseCompressedExtract(FArchive reader, FPakEntry pakEntry)
     {
         var uncompressed = new byte[(int) pakEntry.UncompressedSize];
         var uncompressedOff = 0;
@@ -55,5 +55,20 @@ public partial class PakFileReader
         }
 
         return uncompressed;
+    }
+
+    private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
+    {
+        var limit = 0x1000;
+        reader.Position = pakEntry.Offset + pakEntry.StructSize;
+        var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
+        var encrypted = ReadAndDecrypt(size <= limit ? size : limit, reader, pakEntry.IsEncrypted);
+
+        if (size > limit)
+        {
+            var decrypted = reader.ReadBytes(size - limit);
+            return encrypted.Concat(decrypted).ToArray();
+        }
+        return encrypted;
     }
 }
