@@ -67,7 +67,7 @@ public partial class PakFileReader
 
         if (size > limit)
         {
-            var decrypted = reader.ReadBytes(size - limit);
+            var decrypted = reader.ReadBytes((int) pakEntry.UncompressedSize - limit);
             return encrypted.Concat(decrypted).ToArray();
         }
         return encrypted[..(int) pakEntry.UncompressedSize];
