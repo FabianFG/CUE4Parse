@@ -1,6 +1,7 @@
-﻿// ReSharper disable CheckNamespace
+// ReSharper disable CheckNamespace
 using System;
 using System.Linq;
+using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -23,7 +24,7 @@ public partial class PakFileReader
     {
         var uncompressed = new byte[(int) pakEntry.UncompressedSize];
         var uncompressedOff = 0;
-        var limit = 0x1000;
+        var limit = reader.Game == UE4.Versions.EGame.GAME_MarvelRivals ? CalculateEncryptedBytesCountForMarvelRivals(pakEntry) : 0x1000;
 
         Span<byte> compressedBuffer = stackalloc byte[pakEntry.CompressionBlocks.Max(block => (int) block.Size.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1))];
 
@@ -59,7 +60,7 @@ public partial class PakFileReader
 
     private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
     {
-        var limit = 0x1000;
+        var limit = reader.Game == UE4.Versions.EGame.GAME_MarvelRivals ? CalculateEncryptedBytesCountForMarvelRivals(pakEntry) : 0x1000;
         reader.Position = pakEntry.Offset + pakEntry.StructSize;
         var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
         var encrypted = ReadAndDecrypt(size <= limit ? size : limit, reader, pakEntry.IsEncrypted);
@@ -70,5 +71,26 @@ public partial class PakFileReader
             return encrypted.Concat(decrypted).ToArray();
         }
         return encrypted;
+    }
+
+    private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
+    {
+        using var hasher = Blake3.Hasher.New();
+
+        var initialSeedBytes = BitConverter.GetBytes(0x44332211);
+        hasher.Update(initialSeedBytes);
+
+        var mountPoint = pakEntry.Vfs.MountPoint;
+        var assetPath = (mountPoint.Length == 0 ? pakEntry.Path : pakEntry.Path.Substring(mountPoint.Length)).ToLower();
+        var assetPathBytes = Encoding.UTF8.GetBytes(assetPath);
+        hasher.Update(assetPathBytes);
+
+        var finalHash = hasher.Finalize().AsSpan();
+
+        var firstU64 = BitConverter.ToUInt64(finalHash);
+
+        var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
+
+        return (int)final;
     }
 }
