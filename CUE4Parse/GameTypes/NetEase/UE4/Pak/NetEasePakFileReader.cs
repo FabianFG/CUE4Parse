@@ -70,7 +70,7 @@ public partial class PakFileReader
             var decrypted = reader.ReadBytes(size - limit);
             return encrypted.Concat(decrypted).ToArray();
         }
-        return encrypted;
+        return encrypted[..(int) pakEntry.UncompressedSize];
     }
 
     private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
