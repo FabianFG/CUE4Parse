@@ -24,6 +24,8 @@ namespace CUE4Parse.UE4.Pak
         public readonly FArchive Ar;
         public readonly FPakInfo Info;
 
+        public readonly int ReadOrder = 0;
+
         public override string MountPoint { get; protected set; }
         public sealed override long Length { get; set; }
 
@@ -43,6 +45,20 @@ namespace CUE4Parse.UE4.Pak
                 Ar.Game != EGame.GAME_QQ && Ar.Game != EGame.GAME_DreamStar) // These games use version >= 12 to indicate their custom formats
             {
                 log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            }
+
+            if (Path.EndsWith("_P.pak"))
+            {
+                // Prioritize based on the chunk version number
+                // Default to version 1 for single patch system
+                var chunkVersionNumber = 1;
+                var versionString = Path.SubstringBeforeLast("_").SubstringAfterLast("_");
+                if (int.TryParse(versionString, out int chunkVersionSigned) && chunkVersionSigned >= 1)
+                {
+                    // Increment by one so that the first patch file still gets more priority than the base pak file
+                    chunkVersionNumber = chunkVersionSigned + 1;
+                }
+                ReadOrder += 100 * chunkVersionNumber;
             }
         }
 

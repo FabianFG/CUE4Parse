@@ -5,12 +5,14 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {
+        private readonly ConcurrentDictionary<string, GameFile> _byPath = new ();
         private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ();
         public IReadOnlyDictionary<FPackageId, GameFile> byId => _byId;
 
@@ -32,11 +34,27 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles)
         {
-            foreach (var file in newFiles.Values)
+            foreach (var (path, file) in newFiles)
             {
-                if (file is FIoStoreEntry {IsUE4Package: true} ioEntry)
+                if (file is FPakEntry pakEntry)
                 {
-                    _byId[ioEntry.ChunkId.AsPackageId()] = file;
+                    _byPath.AddOrUpdate(path, file, (_, existingFile) =>
+                    {
+                        if (existingFile is FPakEntry existingPakEntry &&
+                            existingPakEntry.PakFileReader.ReadOrder > pakEntry.PakFileReader.ReadOrder)
+                        {
+                            return existingFile;
+                        }
+                        return file;
+                    });
+                }
+                else
+                {
+                    _byPath[path] = file;
+                    if (file is FIoStoreEntry { IsUE4Package: true } ioEntry)
+                    {
+                        _byId[ioEntry.ChunkId.AsPackageId()] = file;
+                    }
                 }
             }
             _indicesBag.Add(newFiles);
@@ -54,13 +72,7 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             if (IsCaseInsensitive)
                 key = key.ToLowerInvariant();
-            foreach (var files in _indicesBag)
-            {
-                if (files.ContainsKey(key))
-                    return true;
-            }
-
-            return false;
+            return _byPath.ContainsKey(key);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,14 +80,7 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             if (IsCaseInsensitive)
                 key = key.ToLowerInvariant();
-            foreach (var files in _indicesBag)
-            {
-                if (files.TryGetValue(key, out value))
-                    return true;
-            }
-
-            value = default;
-            return false;
+            return _byPath.TryGetValue(key, out value);
         }
 
 
