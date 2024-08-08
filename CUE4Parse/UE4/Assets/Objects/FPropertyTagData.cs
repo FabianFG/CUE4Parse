@@ -12,10 +12,11 @@ namespace CUE4Parse.UE4.Assets.Objects
         public string? Name;
         public string Type;
         public string? StructType;
+        public string? Module;
         public FGuid? StructGuid;
         public bool? Bool;
         public string? EnumName;
-        public bool IsEnumAsByte;
+        //public bool IsEnumAsByte;
         public string? InnerType;
         public string? ValueType;
         public FPropertyTagData? InnerTypeData;
@@ -63,6 +64,53 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
+        internal FPropertyTagData(FPropertyTypeName typeName, string name = "")
+        {
+            Name = name;
+            Type = typeName.GetName;
+            switch (Type)
+            {
+                case "BoolProperty":
+                    Bool = false;
+                    break;
+                case "StructProperty":
+                    if (typeName.GetParameter(0) is { } structType)
+                    {
+                        StructType = structType.GetName;
+                        Module = structType.GetParameter(0)?.GetName;
+                        // doesn't use StructGuid anyway
+                        // if (typeName.GetParameter(1) is { } guid) StructGuid = new Guid(guid.GetName);
+                    }
+                    break;
+                case "ByteProperty":
+                case "EnumProperty":
+                    if (typeName.GetParameter(0) is { } enumType)
+                    {
+                        EnumName = enumType.GetName;
+                        Module = enumType.GetParameter(0)?.GetName;
+                    }
+                    break;
+                case "ArrayProperty":
+                case "SetProperty":
+                case "OptionalProperty":
+                    if (typeName.GetParameter(0) is { } innerType)
+                    {
+                        InnerType = innerType.GetName;
+                        InnerTypeData = InnerType != "None" && innerType.GetParameterCount() != 0 ? new FPropertyTagData(innerType, InnerType) : null;
+                    }
+                    break;
+                case "MapProperty":
+                    if (typeName.GetParameter(0) is { } keyType && typeName.GetParameter(1) is { } valueType)
+                    {
+                        InnerType = keyType.GetName;
+                        InnerTypeData = InnerType != "None" && keyType.GetParameterCount() != 0 ? new FPropertyTagData(keyType, InnerType) : null;
+                        ValueType = valueType.GetName;
+                        ValueTypeData = InnerType != "None" && valueType.GetParameterCount() != 0 ? new FPropertyTagData(valueType, ValueType) : null;
+                    }
+                    break;
+            }
+        }
+
         internal FPropertyTagData(PropertyType info)
         {
             Type = info.Type;
@@ -70,7 +118,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             StructGuid = null;
             Bool = info.Bool;
             EnumName = info.EnumName;
-            IsEnumAsByte = info.IsEnumAsByte == true;
+            //IsEnumAsByte = info.IsEnumAsByte == true;
             InnerTypeData = info.InnerType != null ? new FPropertyTagData(info.InnerType) : null;
             InnerType = InnerTypeData?.Type;
             ValueTypeData = info.ValueType != null ? new FPropertyTagData(info.ValueType) : null;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -33,6 +33,10 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
 
             if (Ar.HasUnversionedProperties)
+            {
+                InnerTagData = tagData.InnerTypeData;
+            }
+            else if (Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_COMPLETE_TYPE_NAME && InnerType == "StructProperty")
             {
                 InnerTagData = tagData.InnerTypeData;
             }
