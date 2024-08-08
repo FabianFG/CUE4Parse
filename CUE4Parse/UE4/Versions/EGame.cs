@@ -83,6 +83,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_SeekersofSkyveil = GAME_UE4_27 + 8,
             GAME_MortalKombat1 = GAME_UE4_27 + 9,
             GAME_VisionsofMana = GAME_UE4_27 + 10,
+            GAME_Spectre = GAME_UE4_27 + 11,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,

@@ -381,6 +381,11 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             if (HasClothData())
                 ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
 
+            if (Ar.Game == EGame.GAME_Spectre)
+            {
+                _ = new FMultisizeIndexContainer(Ar);
+            }
+            
             var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
 
             if (Ar.Versions["SkeletalMesh.HasRayTracingData"])
