@@ -181,6 +181,26 @@ namespace CUE4Parse.UE4.Versions
 
             EventSpawnsUpdateInitialAttributeValues, // Event spawns now optionally update Initial. attribute values. New default is true but old data is kept false to maintain existing behavior.
 
+            AddVariadicParametersToGPUFunctionInfo, // Adds list of variadic parameters to the information about GPU functions.
+
+            DynamicPinNodeFixup, // Some data fixup for NiagaraNodeWithDynamicPins.
+
+            RibbonRendererLinkOrderDefaultIsUniqueID,   // Ribbon renderer will default to unique ID rather than normalized age to make more things 'just work'
+
+            SubImageBlendEnabledByDefault,  // Renderer SubImage Blends are enabled by default
+
+            RibbonPlaneUseGeometryNormals,  // Ribbon renderer will use geometry normals by default rather than screen / facing aligned normals
+
+            InitialOwnerVelocityFromActor, // Actors velocity is used for the initial velocity before the component has any tracking, old assets use the old zero velocity
+
+            ParameterBindingWithValueRenameFixup, // FNiagaraParameterBindingWithValue wouldn't necessarily have the appropriate ResolvedParameter namespace when it comes to emitter merging
+
+            SimCache_BulkDataVersion1, // Sim Cache moved to bulk data by default
+
+            InheritanceUxRefactor, // Decoupling of 'Template' and 'Inheritance'
+
+            NDCSpawnGroupOverrideDisabledByDefault, // NDC Read DIs will not override spawn group by default when spawning particles. Old content will remain unchanged.
+
             // DO NOT ADD A NEW VERSION UNLESS YOU HAVE TALKED TO THE NIAGARA LEAD. Mismanagement of these versions can lead to data loss if it is adjusted in multiple streams simultaneously.
             // -----<new versions can be added above this line>  -------------------------------------------------
             VersionPlusOne,
@@ -206,6 +226,9 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE4_27 => Type.SignificanceHandlers,
                 < EGame.GAME_UE5_0 => Type.MoveDefaultValueFromFNiagaraVariableMetaDataToUNiagaraScriptVariable,
                 < EGame.GAME_UE5_1 => Type.StaticSwitchFunctionPinsUsePersistentGuids,
+                < EGame.GAME_UE5_2 => Type.EventSpawnsUpdateInitialAttributeValues,
+                < EGame.GAME_UE5_3 => Type.DynamicPinNodeFixup,
+                < EGame.GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
                 _ => Type.LatestVersion
             };
         }
