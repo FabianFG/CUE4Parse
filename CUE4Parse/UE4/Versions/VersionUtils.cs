@@ -22,7 +22,7 @@ public static class VersionUtils
         if (packageSummary is { bUnversioned: false })
         {
             var packageCustomVersion = packageSummary.CustomVersionContainer.GetVersion(key);
-            return packageCustomVersion != -1 ? packageCustomVersion : 0; // Explicitly set to BeforeCustomVersionWasAdded if not found
+            return packageCustomVersion; // proceed so we can guess version from engine version
         }
 
         return -1; // Determine by game
