@@ -136,7 +136,7 @@ namespace CUE4Parse.UE4.Versions
                     < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
                         EGame.GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
                     < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
-                    < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1011),
+                    < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                     _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 };
             }

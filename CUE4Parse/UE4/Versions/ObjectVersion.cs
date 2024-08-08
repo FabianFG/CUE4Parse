@@ -47,6 +47,9 @@ namespace CUE4Parse.UE4.Versions
         // Support for overridable logic in containers
         PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION,
 
+        // Added property tag complete type name and serialization type
+        PROPERTY_TAG_COMPLETE_TYPE_NAME,
+
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)
         AUTOMATIC_VERSION_PLUS_ONE,
