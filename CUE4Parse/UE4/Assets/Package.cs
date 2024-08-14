@@ -273,7 +273,12 @@ namespace CUE4Parse.UE4.Assets
             public override FName Name => _import.ObjectName;
             public override ResolvedObject? Outer => Package.ResolvePackageIndex(_import.OuterIndex);
             public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass(_import.ClassName.Text));
-            public override Lazy<UObject>? Object => _import.ClassName.Text == "Class" ? new(() => new UScriptClass(Name.Text)) : null;
+            public override Lazy<UObject>? Object => _import.ClassName.Text switch
+            {
+                "Class" => new(() => new UScriptClass(Name.Text)),
+                "SharpClass" => new(() => new USharpClass(Name.Text)),
+                _ => null
+            };
         }
 
         private class ExportLoader
