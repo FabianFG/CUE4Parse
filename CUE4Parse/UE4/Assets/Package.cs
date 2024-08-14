@@ -115,7 +115,7 @@ namespace CUE4Parse.UE4.Assets
                     export.ExportObject = new Lazy<UObject>(() =>
                     {
                         // Create
-                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct);
+                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct, this);
                         obj.Name = export.ObjectName.Text;
                         obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
                         obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
