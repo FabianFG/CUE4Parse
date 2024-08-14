@@ -7,63 +7,61 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh
+namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+
+public struct FPaintedVertex
 {
-    public struct FPaintedVertex
+    public FVector Position;
+    public FVector4 Normal;
+    public FColor Color;
+
+    public FPaintedVertex(FArchive Ar)
     {
-        public FVector Position;
-        public FVector4 Normal;
-        public FColor Color;
+        Position = new FVector(Ar);
 
-        public FPaintedVertex(FArchive Ar)
+        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
         {
-            Position = new FVector(Ar);
-
-            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
-            {
-                var temp = new FPackedNormal(Ar);
-                Normal = temp;
-            }
-            else
-            {
-                Normal = new FVector4(Ar);
-            }
-
-            Color = Ar.Read<FColor>();
+            Normal = new FPackedNormal(Ar);
         }
+        else
+        {
+            Normal = new FVector4(Ar);
+        }
+
+        Color = Ar.Read<FColor>();
     }
+}
 
-    [JsonConverter(typeof(FStaticMeshComponentLODInfoConverter))]
-    public class FStaticMeshComponentLODInfo
+[JsonConverter(typeof(FStaticMeshComponentLODInfoConverter))]
+public class FStaticMeshComponentLODInfo
+{
+    private const byte OverrideColorsStripFlag = 1;
+    public readonly FGuid MapBuildDataId;
+    public readonly FPaintedVertex[]? PaintedVertices;
+    public readonly FColorVertexBuffer? OverrideVertexColors;
+
+    public FStaticMeshComponentLODInfo(FArchive Ar)
     {
-        private const byte OverrideColorsStripFlag = 1;
-        public readonly FGuid MapBuildDataId;
-        public readonly FPaintedVertex[] PaintedVertices;
-        public readonly FColorVertexBuffer? OverrideVertexColors;
-
-        public FStaticMeshComponentLODInfo(FArchive Ar)
+        var stripFlags = new FStripDataFlags(Ar);
+        if (!stripFlags.IsDataStrippedForServer())
         {
-            var stripFlags = new FStripDataFlags(Ar);
-            if (!stripFlags.IsDataStrippedForServer())
-            {
-                MapBuildDataId = Ar.Read<FGuid>();
-            }
-
-            if (!stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
-            {
-                var bLoadVertexColorData = Ar.Read<byte>();
-                if (bLoadVertexColorData == 1)
-                {
-                    OverrideVertexColors = new FColorVertexBuffer(Ar);
-                }
-            }
-
-            if (!stripFlags.IsEditorDataStripped())
-            {
-                PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
-            }
-
-            if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 20;
+            MapBuildDataId = Ar.Read<FGuid>();
         }
+
+        if (!stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
+        {
+            var bLoadVertexColorData = Ar.Read<byte>();
+            if (bLoadVertexColorData == 1)
+            {
+                OverrideVertexColors = new FColorVertexBuffer(Ar);
+            }
+        }
+
+        if (!stripFlags.IsEditorDataStripped())
+        {
+            PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
+        }
+
+        if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 20;
     }
 }
