@@ -130,6 +130,8 @@ public class FStaticMeshRenderData
             return;
         }
 
+        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+
         ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
         for (var i = 0; i < ScreenSize.Length; ++i)
         {

@@ -134,6 +134,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             legacyFileVersion = Ar.Read<int>();
+            if (Ar.Game == EGame.GAME_DeltaForceHawkOps) legacyFileVersion /= 659;
 
             if (legacyFileVersion < 0) // means we have modern version numbers
             {
@@ -272,6 +273,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             Generations = Ar.ReadArray<FGenerationInfo>();
+
+            if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 16;
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ENGINE_VERSION_OBJECT)
             {

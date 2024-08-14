@@ -80,7 +80,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_Valorant = GAME_UE4_27 + 5,
             GAME_Gollum = GAME_UE4_27 + 6,
             GAME_Grounded = GAME_UE4_27 + 7,
-            GAME_SeekersofSkyveil = GAME_UE4_27 + 8,
+            GAME_DeltaForceHawkOps = GAME_UE4_27 + 8,
             GAME_MortalKombat1 = GAME_UE4_27 + 9,
             GAME_VisionsofMana = GAME_UE4_27 + 10,
             GAME_Spectre = GAME_UE4_27 + 11,
