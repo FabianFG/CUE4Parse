@@ -275,6 +275,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             StructSize += reader.Ar.Game switch
             {
                 GAME_TorchlightInfinite => 1,
+                GAME_BlackMythWukong => 1,
                 GAME_InfinityNikki => 20,
                 GAME_VisionsofMana => -3,
                 _ => 0

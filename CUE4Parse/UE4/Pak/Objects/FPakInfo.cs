@@ -134,6 +134,7 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
             if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 1;
+            if (Ar.Game == EGame.GAME_BlackMythWukong) Ar.Position += 2;
             IndexOffset = Ar.Read<long>();
             if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 8; // unknown long
             if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
@@ -240,6 +241,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
             Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
             Size9 = Size8a + 1, // UE4.25
+            SizeB1 = Size9 + 1, // UE4.25
             //Size10 = Size8a
 
             SizeFTT = Size + 4, // additional int for extra magic
@@ -289,6 +291,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                     EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
                     EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
+                    EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
