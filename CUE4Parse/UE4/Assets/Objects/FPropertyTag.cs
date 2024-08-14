@@ -11,7 +11,6 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
-
 public enum EPropertyTagSerializeType : byte
 {
     /** Tag was loaded from an older version or has not yet been saved. */
@@ -57,43 +56,22 @@ public struct FPropertyTypeNameNode(FAssetArchive Ar)
     public int InnerCount = Ar.Read<int>();
 }
 
-public class FPropertyTypeName
+public static class FPropertyTypeNameUtils
 {
-    public FPropertyTypeNameNode[] Nodes;
+    public static string GetName(this Span<FPropertyTypeNameNode> nodes) => nodes.IsEmpty ? "None" : nodes[0].Name.Text;
 
-    public FPropertyTypeName(FPropertyTypeNameNode[] nodes)
+    public static Span<FPropertyTypeNameNode> GetParameter(this Span<FPropertyTypeNameNode> nodes, int paramIndex)
     {
-        Nodes = nodes;
-    }
-
-    public FPropertyTypeName(FAssetArchive Ar)
-    {
-        var nodes = new List<FPropertyTypeNameNode>();
-        var remaining = 1;
-        do
-        {
-            var node = new FPropertyTypeNameNode(Ar);
-            nodes.Add(node);
-            remaining += node.InnerCount - 1;
-        }
-        while (remaining > 0);
-
-        Nodes = nodes.ToArray();
-    }
-
-    public int GetParameterCount() => Nodes.Length == 0 ? 0 : Nodes[0].InnerCount;
-    public string GetName => Nodes.Length > 0 ? Nodes[0].Name.Text : "None";
-
-    public FPropertyTypeName? GetParameter(int paramIndex)
-    {
-        if (paramIndex < 0 || paramIndex >= GetParameterCount()) return null;
+        if (nodes.IsEmpty) return [];
+        if (paramIndex < 0 || paramIndex >= nodes[0].InnerCount) return [];
 
         var param = 1;
         for (int skip = paramIndex; skip > 0; --skip, ++param)
         {
-            skip += Nodes[param].InnerCount;
+            skip += nodes[param].InnerCount;
         }
-        return new FPropertyTypeName(Nodes[param..]);
+
+        return nodes[param..];
     }
 }
 
@@ -139,20 +117,31 @@ public class FPropertyTag
 
     public FPropertyTag(FAssetArchive Ar, bool readData)
     {
+        Name = Ar.ReadFName();
+        if (Name.IsNone)
+            return;
+
         if (Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_COMPLETE_TYPE_NAME)
         {
-            Name = Ar.ReadFName();
-            if (Name.IsNone) return;
+            var nodes = new List<FPropertyTypeNameNode>();
+            var remaining = 1;
+            do
+            {
+                var node = new FPropertyTypeNameNode(Ar);
+                nodes.Add(node);
+                remaining += node.InnerCount - 1;
+            }
+            while (remaining > 0);
 
-            var TypeName = new FPropertyTypeName(Ar);
-            PropertyType = TypeName.GetName;
-            TagData = new FPropertyTagData(TypeName, Name.Text);
+            var typeName = nodes.ToArray().AsSpan();
+            PropertyType = typeName.GetName();
+            TagData = new FPropertyTagData(typeName, Name.Text);
 
             Size = Ar.Read<int>();
             PropertyTagFlags = (EPropertyTagFlags) Ar.ReadByte();
             if (PropertyTagFlags.HasFlag(EPropertyTagFlags.BoolTrue)) TagData.Bool = true;
-            HasPropertyGuid = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyGuid);
             ArrayIndex = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) ? Ar.Read<int>() : 0;
+            HasPropertyGuid = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyGuid);
             PropertyGuid = HasPropertyGuid ? Ar.Read<FGuid>() : null;
 
             if (PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyExtensions))
@@ -168,10 +157,6 @@ public class FPropertyTag
         }
         else
         {
-            Name = Ar.ReadFName();
-            if (Name.IsNone)
-                return;
-
             PropertyType = Ar.ReadFName();
 
             Size = Ar.Read<int>();
@@ -198,34 +183,33 @@ public class FPropertyTag
             }
         }
 
-        if (readData)
+        if (!readData) return;
+
+        var pos = Ar.Position;
+        var finalPos = pos + Size;
+        try
         {
-            var pos = Ar.Position;
-            var finalPos = pos + Size;
-            try
-            {
-                Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
+            Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
 #if DEBUG
-                if (finalPos != Ar.Position)
-                {
-                    Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
-                }
-#endif
-            }
-            catch (ParserException e)
+            if (finalPos != Ar.Position)
             {
+                Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
+            }
+#endif
+        }
+        catch (ParserException e)
+        {
 #if DEBUG
-                if (finalPos != Ar.Position)
-                {
-                    Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
-                }
-#endif
-            }
-            finally
+            if (finalPos != Ar.Position)
             {
-                // Always seek to calculated position, no need to crash
-                Ar.Position = finalPos;
+                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
             }
+#endif
+        }
+        finally
+        {
+            // Always seek to calculated position, no need to crash
+            Ar.Position = finalPos;
         }
     }
 
