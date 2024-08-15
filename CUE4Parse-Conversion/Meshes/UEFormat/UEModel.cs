@@ -24,7 +24,7 @@ public class UEModel : UEFormatExport
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            for (var lodIdx = 0; lodIdx < (options.LodFormat == ELodFormat.AllLods ? mesh.LODs.Count : 1); lodIdx++)
             {
                 var lod = mesh.LODs[lodIdx];
                 if (lod.SkipLod) continue;
