@@ -16,6 +16,7 @@ namespace CUE4Parse.UE4.IO.Objects
         ContainerId		= 6,
         AdditionalFiles	= 7,
         TagSets			= 8,
+        ContainerFlags	= 9,
 
         LatestPlusOne,
         Latest			= (LatestPlusOne - 1)

@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+﻿using System;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects
@@ -12,6 +13,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint[] BlockSizes;
         public readonly uint[] BlockHashes; // FIoBlockHash is just uint32
         public readonly FSHAHash UTocHash;
+        public readonly EOnDemandContainerFlags ContainerFlags;
 
         public FOnDemandTocContainerEntry(FArchive Ar, EOnDemandTocVersion version)
         {
@@ -26,6 +28,23 @@ namespace CUE4Parse.UE4.IO.Objects
             BlockSizes = Ar.ReadArray<uint>();
             BlockHashes = Ar.ReadArray<uint>();
             UTocHash = new FSHAHash(Ar);
+            
+            if (version >= EOnDemandTocVersion.ContainerFlags)
+            {
+                ContainerFlags = Ar.Read<EOnDemandContainerFlags>();
+            }
         }
+    }
+    
+    [Flags]
+    public enum EOnDemandContainerFlags : byte
+    {
+        None					= 0,
+        PendingEncryptionKey	= (1 << 0),
+        Mounted					= (1 << 1),
+        StreamOnDemand			= (1 << 2),
+        InstallOnDemand			= (1 << 3),
+        Encrypted				= (1 << 4),
+        Count
     }
 }
