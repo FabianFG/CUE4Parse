@@ -110,7 +110,7 @@ namespace CUE4Parse.UE4.Versions
             // Serialize LandscapeActorGuid in FLandscapeActorDesc sub class.
             WorldPartitionLandscapeActorDescSerializeLandscapeActorGuid,
 
-            // add inertia tensor and rotation of mass to convex 
+            // add inertia tensor and rotation of mass to convex
             AddedInertiaTensorAndRotationOfMassAddedToConvex,
 
             // Storing inertia tensor as vec3 instead of matrix.
@@ -179,6 +179,8 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                EGame.GAME_BlackMythWukong => Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format,
+
                 < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE5_1 => Type.SerializeFloatPinDefaultValuesAsSinglePrecision,
                 < EGame.GAME_UE5_3 => Type.LinkedAnimGraphMemberReference,

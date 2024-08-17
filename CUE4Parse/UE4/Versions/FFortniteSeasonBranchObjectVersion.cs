@@ -40,6 +40,14 @@ namespace CUE4Parse.UE4.Versions
             // Chaos GeometryCollection now saves levels attribute values
             ChaosGeometryCollectionSaveLevelsAttribute,
 
+            // Serialize actor transform for actor descriptors
+            WorldPartitionActorDescActorTransformSerialization,
+
+            // Changing Chaos::FImplicitObjectUnion to store an int32 vs a uint16 for NumLeafObjects.
+            ChaosImplicitObjectUnionLeafObjectsToInt32,
+
+            // Chaos Visual Debugger : Adding serialization for properties that were being recorded, but not serialized
+            CVDSerializationFixMissingSerializationProperties,
 
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
@@ -56,7 +64,9 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
-                < EGame.GAME_UE5_3 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE5_4 => Type.ChaosGeometryCollectionSaveLevelsAttribute,
+                < EGame.GAME_UE5_5 => Type.ChaosImplicitObjectUnionLeafObjectsToInt32,
                 _ => Type.LatestVersion
             };
         }

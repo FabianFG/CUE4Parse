@@ -65,6 +65,7 @@ public static class FRigVMObjectVersion
 
         return Ar.Game switch
         {
+            < EGame.GAME_UE5_2 => (Type) (-1),
             < EGame.GAME_UE5_3 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
             < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
