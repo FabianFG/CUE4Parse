@@ -99,15 +99,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadArray<T>(int length, Func<T> getter)
         {
+            if (length == 0) return [];
+
             var result = new T[length];
-
-            if (length == 0)
-            {
-                return result;
-            }
-
             ReadArray(result, getter);
-
             return result;
         }
 
