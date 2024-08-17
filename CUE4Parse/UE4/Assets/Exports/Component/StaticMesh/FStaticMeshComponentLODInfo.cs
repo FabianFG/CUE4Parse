@@ -36,6 +36,7 @@ public struct FPaintedVertex
 public class FStaticMeshComponentLODInfo
 {
     private const byte OverrideColorsStripFlag = 1;
+    public readonly FGuid OriginalMapBuildDataId;
     public readonly FGuid MapBuildDataId;
     public readonly FPaintedVertex[]? PaintedVertices;
     public readonly FColorVertexBuffer? OverrideVertexColors;
@@ -46,6 +47,10 @@ public class FStaticMeshComponentLODInfo
         if (!stripFlags.IsDataStrippedForServer())
         {
             MapBuildDataId = Ar.Read<FGuid>();
+            if (Ar.Game >= EGame.GAME_UE5_5)
+            {
+                OriginalMapBuildDataId = Ar.Read<FGuid>();
+            }
         }
 
         if (!stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
