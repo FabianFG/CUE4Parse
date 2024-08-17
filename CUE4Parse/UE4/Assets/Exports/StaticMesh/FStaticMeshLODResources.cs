@@ -63,6 +63,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
             {
+                if (Ar.Game >= EGame.GAME_UE5_5)
+                {
+                    var bHasRayTracingGeometry = Ar.ReadBoolean();
+                }
+                
                 if (bInlined)
                 {
                     SerializeBuffers(Ar);
