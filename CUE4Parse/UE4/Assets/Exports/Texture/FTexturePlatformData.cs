@@ -105,7 +105,8 @@ public class FTexturePlatformData
             var bIsVirtual = Ar.ReadBoolean();
             if (bIsVirtual)
             {
-                VTData = new FVirtualTextureBuiltData(Ar, FirstMipToSerialize);
+                var LODBias = Owner.GetOrDefault<int>("LODBias");
+                VTData = new FVirtualTextureBuiltData(Ar, FirstMipToSerialize - LODBias);
             }
         }
 
