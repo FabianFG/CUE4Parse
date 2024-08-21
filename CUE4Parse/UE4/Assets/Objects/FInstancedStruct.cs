@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -26,16 +26,23 @@ public class FInstancedStruct : IUStruct
             _ = Ar.Read<byte>(); // Old Version
         }
 
-        var struc = new FPackageIndex(Ar);
+        var strucindex = new FPackageIndex(Ar);
         var serialSize = Ar.Read<int>();
-
-        if (struc.IsNull && serialSize > 0)
+        var savedPos = Ar.Position;
+        if (strucindex.TryLoad<UStruct>(out var struc))
         {
-            Ar.Position += serialSize;
+            try
+            {
+                NonConstStruct = new FStructFallback(Ar, struc);
+            }
+            catch
+            {
+                Ar.Position = savedPos + serialSize;
+            }
         }
         else
         {
-            NonConstStruct = new FStructFallback(Ar, struc.Name);
+            Ar.Position += serialSize;
         }
     }
 }
