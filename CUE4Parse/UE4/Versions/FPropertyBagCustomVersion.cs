@@ -31,6 +31,7 @@ public static class FPropertyBagCustomVersion
 
         return Ar.Game switch
         {
+            EGame.GAME_BlackMythWukong => Type.NestedContainerTypes,
             < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE5_3 => Type.ContainerTypes,
             < EGame.GAME_UE5_4 => Type.NestedContainerTypes,
