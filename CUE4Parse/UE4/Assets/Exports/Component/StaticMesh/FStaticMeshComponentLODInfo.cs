@@ -17,7 +17,7 @@ public struct FPaintedVertex
 
     public FPaintedVertex(FArchive Ar)
     {
-        Position = new FVector(Ar);
+        Position = Ar.Read<FVector>();
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.IncreaseNormalPrecision)
         {
@@ -25,7 +25,7 @@ public struct FPaintedVertex
         }
         else
         {
-            Normal = new FVector4(Ar);
+            Normal = Ar.Read<FVector4>();
         }
 
         Color = Ar.Read<FColor>();

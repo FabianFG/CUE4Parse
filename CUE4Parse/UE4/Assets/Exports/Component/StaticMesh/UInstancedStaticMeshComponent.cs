@@ -33,6 +33,16 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         if (bCooked && (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
                         FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData))
         {
+            if (Ar.Game >= EGame.GAME_UE5_4)
+            {
+                var bHasCookedData = Ar.ReadBoolean();
+                if (!bHasCookedData) return;
+
+                Ar.SkipBulkArrayData();
+                Ar.SkipBulkArrayData();
+                return;
+            }
+
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
         }

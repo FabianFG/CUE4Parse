@@ -13,7 +13,9 @@ public class USceneComponent : UActorComponent
     {
         base.Deserialize(Ar, validPos);
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
-        if (bComputeBoundsOnceForGame && FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeSceneComponentStaticBounds)
+        var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
+        var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;
+        if (bComputeBounds && FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeSceneComponentStaticBounds)
         {
             Bounds = Ar.ReadBoolean() ? new FBoxSphereBounds(Ar) : null;
         }
