@@ -14,7 +14,7 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
         if (tagData.InnerType == null)
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
-        var version = Ar.Read<int>(); // TODO: version??
+        //var version = Ar.Read<int>(); // TODO: version??
 
         Value = type switch
         {
