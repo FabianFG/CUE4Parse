@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             // 4.25+
             if (Ar.Game >= EGame.GAME_UE4_25)
             {
-                CachedExpressionData = GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
+                CachedExpressionData ??= GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
                 if (CachedExpressionData != null && CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
                     ReferencedTextures.AddRange(referencedTextures);
 

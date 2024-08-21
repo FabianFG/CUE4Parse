@@ -55,9 +55,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         {
             base.WriteJson(writer, serializer);
 
-            if (LoadedMaterialResources.Count <= 0) return;
-            writer.WritePropertyName("LoadedMaterialResources");
-            serializer.Serialize(writer, LoadedMaterialResources);
+            if (LoadedMaterialResources is not null)
+            {
+                writer.WritePropertyName("LoadedMaterialResources");
+                serializer.Serialize(writer, LoadedMaterialResources);
+            }
+
+            if (CachedExpressionData is not null)
+            {
+                writer.WritePropertyName("CachedExpressionData");
+                serializer.Serialize(writer, CachedExpressionData);
+            }
+
         }
 
         public override void GetParams(CMaterialParams parameters)
