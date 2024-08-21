@@ -39,6 +39,7 @@ public class FKismetArchive : FArchive
             EExprToken.EX_JumpIfNot => new EX_JumpIfNot(this),
             EExprToken.EX_Assert => new EX_Assert(this),
             EExprToken.EX_Nothing => new EX_Nothing(),
+            EExprToken.EX_NothingInt32 => new EX_NothingInt32(this),
             EExprToken.EX_Let => new EX_Let(this),
             EExprToken.EX_ClassContext => new EX_ClassContext(this),
             EExprToken.EX_BitFieldConst => new EX_BitFieldConst(this),
@@ -127,7 +128,10 @@ public class FKismetArchive : FArchive
             EExprToken.EX_ArrayGetByRef => new EX_ArrayGetByRef(this),
             EExprToken.EX_ClassSparseDataVariable => new EX_ClassSparseDataVariable(this),
             EExprToken.EX_FieldPathConst => new EX_FieldPathConst(this),
-            _ => throw new ParserException("Unknown EExprToken")
+            EExprToken.EX_AutoRtfmStopTransact => new EX_AutoRtfmStopTransact(this),
+            EExprToken.EX_AutoRtfmTransact => new EX_AutoRtfmTransact(this),
+            EExprToken.EX_AutoRtfmAbortIfNot => new EX_AutoRtfmAbortIfNot(),
+            _ => throw new ParserException($"Unknown EExprToken {token}")
         };
         expression.StatementIndex = index;
         return expression;

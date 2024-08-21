@@ -168,3 +168,10 @@ public enum EBlueprintTextLiteralType : byte
     /** Text is from a string table. The bytecode will contain an object pointer (not used) and two strings - the table ID, and key - and should be found via FText::FromStringTable */
     StringTableEntry,
 };
+
+public enum EAutoRtfmStopTransactMode : byte
+{
+    GracefulExit,
+    AbortingExit,
+    AbortingExitAndAbortParent,
+};
