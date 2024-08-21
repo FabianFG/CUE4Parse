@@ -40,6 +40,11 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual byte[] ReadBytes(int length)
         {
+            if (Position + length > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than remaining archive length.");
+            }
+
             var result = new byte[length];
             Read(result, 0, length);
             return result;
@@ -61,9 +66,15 @@ namespace CUE4Parse.UE4.Readers
         public virtual T[] ReadArray<T>(int length)
         {
             var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * length);
+            var readLength = size * length;
+            if (Position + readLength > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than remaining archive length.");
+            }
+
+            var buffer = ReadBytes(readLength);
             var result = new T[length];
-            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
+            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
             return result;
         }
 
@@ -71,8 +82,13 @@ namespace CUE4Parse.UE4.Readers
         {
             if (array.Length == 0) return;
             var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * array.Length);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));
+            var readLength = size * array.Length;
+            if (Position + readLength > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than remaining archive length.");
+            }
+            var buffer = ReadBytes(readLength);
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(readLength));
         }
 
         protected FArchive(VersionContainer? versions = null)

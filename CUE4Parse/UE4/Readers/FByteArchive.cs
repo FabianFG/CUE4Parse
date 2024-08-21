@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -74,6 +75,10 @@ namespace CUE4Parse.UE4.Readers
         public override T[] ReadArray<T>(int length)
         {
             var size = length * Unsafe.SizeOf<T>();
+            if (Position + size > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than archive size.");
+            }
             var result = new T[length];
             if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref _data[Position], (uint) size);
             Position += size;
@@ -85,6 +90,10 @@ namespace CUE4Parse.UE4.Readers
         {
             if (array.Length == 0) return;
             var size = array.Length * Unsafe.SizeOf<T>();
+            if (Position + size > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than archive size.");
+            }
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref _data[Position], (uint) size);
             Position += size;
         }

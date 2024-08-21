@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -38,6 +39,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] ReadBytes(int length)
         {
+            if (Position + length > Length)
+            {
+                throw new ParserException(this, "Array size is bigger than remaining archive length.");
+            }
             var result = new byte[length];
             _baseStream.Read(result, 0, length);
             return result;
