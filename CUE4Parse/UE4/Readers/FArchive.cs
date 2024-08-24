@@ -40,10 +40,7 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual byte[] ReadBytes(int length)
         {
-            if (Position + length > Length)
-            {
-                throw new ParserException(this, "Array size is bigger than remaining archive length.");
-            }
+            CheckReadSize(length);
 
             var result = new byte[length];
             Read(result, 0, length);
@@ -67,10 +64,7 @@ namespace CUE4Parse.UE4.Readers
         {
             var size = Unsafe.SizeOf<T>();
             var readLength = size * length;
-            if (Position + readLength > Length)
-            {
-                throw new ParserException(this, "Array size is bigger than remaining archive length.");
-            }
+            CheckReadSize(readLength);
 
             var buffer = ReadBytes(readLength);
             var result = new T[length];
@@ -83,10 +77,8 @@ namespace CUE4Parse.UE4.Readers
             if (array.Length == 0) return;
             var size = Unsafe.SizeOf<T>();
             var readLength = size * array.Length;
-            if (Position + readLength > Length)
-            {
-                throw new ParserException(this, "Array size is bigger than remaining archive length.");
-            }
+            CheckReadSize(readLength);
+
             var buffer = ReadBytes(readLength);
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(readLength));
         }
@@ -506,6 +498,14 @@ namespace CUE4Parse.UE4.Readers
             value = ((value << 8) & 0xFF00FF00FF00FF00UL) | ((value >> 8) & 0x00FF00FF00FF00FFUL);
             value = ((value << 16) & 0xFFFF0000FFFF0000UL) | ((value >> 16) & 0x0000FFFF0000FFFFUL);
             return (value << 32) | (value >> 32);
+        }
+
+        public void CheckReadSize(int length)
+        {
+            if (Position + length > Length)
+            {
+                throw new ParserException(this, "Read size is bigger than remaining archive length.");
+            }
         }
 
         public abstract object Clone();

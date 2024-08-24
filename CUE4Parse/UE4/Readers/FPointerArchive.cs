@@ -73,10 +73,7 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] ReadBytes(int length)
         {
-            if (Position + length > Length)
-            {
-                throw new ParserException(this, "Array size is bigger than remaining archive length.");
-            }
+            CheckReadSize(length);
             var buffer = new byte[length];
             Read(buffer, 0, length);
             return buffer;
