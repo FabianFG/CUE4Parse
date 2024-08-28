@@ -144,6 +144,16 @@ public class FPropertyTag
             ArrayIndex = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) ? Ar.Read<int>() : 0;
             HasPropertyGuid = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyGuid);
             PropertyGuid = HasPropertyGuid ? Ar.Read<FGuid>() : null;
+
+            if (PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyExtensions))
+            {
+                var tagExtensions = Ar.Read<EPropertyTagExtension>();
+                if (tagExtensions.HasFlag(EPropertyTagExtension.OverridableInformation))
+                {
+                    var OverrideOperation = Ar.Read<byte>(); // EOverriddenPropertyOperation
+                    var bExperimentalOverridableLogic = Ar.ReadBoolean();
+                }
+            }
         }
         else
         {
@@ -160,15 +170,15 @@ public class FPropertyTag
                     PropertyGuid = Ar.Read<FGuid>();
                 }
             }
-        }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
-        {
-            var tagExtensions = Ar.Read<EPropertyTagExtension>();
-            if (tagExtensions.HasFlag(EPropertyTagExtension.OverridableInformation))
+            if (Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
             {
-                var OverrideOperation = Ar.Read<byte>(); // EOverriddenPropertyOperation
-                var bExperimentalOverridableLogic = Ar.ReadBoolean();
+                var tagExtensions = Ar.Read<EPropertyTagExtension>();
+                if (tagExtensions.HasFlag(EPropertyTagExtension.OverridableInformation))
+                {
+                    var OverrideOperation = Ar.Read<byte>(); // EOverriddenPropertyOperation
+                    var bExperimentalOverridableLogic = Ar.ReadBoolean();
+                }
             }
         }
 
