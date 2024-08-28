@@ -502,6 +502,10 @@ namespace CUE4Parse.UE4.Readers
 
         public void CheckReadSize(int length)
         {
+            if (length < 0)
+            {
+                throw new ParserException(this, "Read size is smaller than zero.");
+            }
             if (Position + length > Length)
             {
                 throw new ParserException(this, "Read size is bigger than remaining archive length.");
