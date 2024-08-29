@@ -354,7 +354,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 Key = Ar.ReadFString();
 
                 if (Ar.Owner.Provider!.TryLoadObject(TableId.Text, out UStringTable table) &&
-                    table.StringTable.KeysToMetaData.TryGetValue(Key, out var t))
+                    table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
                 {
                     SourceString = t;
                     LocalizedString = Ar.Owner.Provider!.GetLocalizedString(table.StringTable.TableNamespace, Key, t);
