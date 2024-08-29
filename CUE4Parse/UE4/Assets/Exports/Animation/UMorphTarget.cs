@@ -28,12 +28,19 @@ public class FMorphTargetDelta
         }
         SourceIdx = Ar.Read<uint>();
     }
+
+    public FMorphTargetDelta(FVector pos, FVector tan, uint index)
+    {
+        PositionDelta = pos;
+        TangentZDelta = tan;
+        SourceIdx = index;
+    }
 }
 
 public class FMorphTargetLODModel
 {
     /** vertex data for a single LOD morph mesh */
-    public readonly FMorphTargetDelta[] Vertices;
+    public FMorphTargetDelta[] Vertices;
     /** number of original verts in the base mesh */
     public readonly int NumBaseMeshVerts;
     /** list of sections this morph is used */
@@ -93,7 +100,7 @@ public class FMorphTargetLODModel
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCustomImport)
         {
             SourceFilename = Ar.ReadFString();
-        }   
+        }
     }
 }
 
