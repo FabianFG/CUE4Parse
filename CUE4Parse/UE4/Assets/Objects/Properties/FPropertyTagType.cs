@@ -140,6 +140,9 @@ public abstract class FPropertyTagType
             "UInt64Property" => new UInt64Property(Ar, type),
             "WeakObjectProperty" => new WeakObjectProperty(Ar, type),
             "OptionalProperty" => new OptionalProperty(Ar, tagData, type),
+            "VerseStringProperty" => new VerseStringProperty(Ar, type),
+            "VerseFunctionProperty" => null,
+            "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
             _ => null
         };
 #if DEBUG

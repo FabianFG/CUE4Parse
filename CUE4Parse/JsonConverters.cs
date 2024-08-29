@@ -694,6 +694,20 @@ public class StrPropertyConverter : JsonConverter<StrProperty>
     }
 }
 
+public class VerseStringPropertyConverter : JsonConverter<VerseStringProperty>
+{
+    public override void WriteJson(JsonWriter writer, VerseStringProperty value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.Value);
+    }
+
+    public override VerseStringProperty ReadJson(JsonReader reader, Type objectType, VerseStringProperty existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class StructPropertyConverter : JsonConverter<StructProperty>
 {
     public override void WriteJson(JsonWriter writer, StructProperty value, JsonSerializer serializer)
