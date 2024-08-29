@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
 
             for (var i = 0; i < Properties.Count; ++i)
             {
-                if (Properties[i].Tag?.GenericValue is UScriptStruct { StructType: FStructFallback fallback })
+                if (Properties[i].Tag?.GenericValue is FScriptStruct { StructType: FStructFallback fallback })
                 {
                     FloatCurves[i] = new FRichCurve(fallback);
                 }
