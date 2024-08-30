@@ -4,33 +4,32 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Objects.Engine.Curves
+namespace CUE4Parse.UE4.Objects.Engine.Curves;
+
+[JsonConverter(typeof(FCurveMetaDataConverter))]
+public class FCurveMetaData
 {
-    [JsonConverter(typeof(FCurveMetaDataConverter))]
-    public class FCurveMetaData
+    public readonly FAnimCurveType Type;
+    public readonly FName[] LinkedBones;
+    public readonly int MaxLOD;
+
+    public FCurveMetaData(FArchive Ar, FAnimPhysObjectVersion.Type FrwAniVer)
     {
-        public readonly FAnimCurveType Type;
-        public readonly FName[] LinkedBones;
-        public readonly int MaxLOD;
+        Type = new FAnimCurveType(Ar);
 
-        public FCurveMetaData(FArchive Ar, FAnimPhysObjectVersion.Type FrwAniVer)
+        if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 4;
+        LinkedBones = Ar.ReadArray(Ar.ReadFName);
+
+        if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
         {
-            Type = new FAnimCurveType(Ar);
-            LinkedBones = Ar.ReadArray(Ar.ReadFName);
+            MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
+        }
 
-            if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 4;
-
-            if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
-            {
-                MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
-            }
-
-            if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
-            {
-                // Cutscene mat replacements
-                var matAssetName = Ar.ReadFName();
-                var matName = Ar.ReadFName();
-            }
+        if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+        {
+            // Cutscene mat replacements
+            var matAssetName = Ar.ReadFName();
+            var matName = Ar.ReadFName();
         }
     }
 }

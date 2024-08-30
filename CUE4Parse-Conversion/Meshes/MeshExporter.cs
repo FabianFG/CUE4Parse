@@ -29,7 +29,7 @@ namespace CUE4Parse_Conversion.Meshes
                 Log.Logger.Warning($"Skeleton '{ExportName}' has no bone");
                 return;
             }
-            
+
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
@@ -37,7 +37,7 @@ namespace CUE4Parse_Conversion.Meshes
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
                 return;
             }
-            
+
             using var Ar = new FArchiveWriter();
             string ext;
             switch (Options.MeshFormat)
@@ -66,7 +66,7 @@ namespace CUE4Parse_Conversion.Meshes
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
-            
+
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
@@ -138,8 +138,10 @@ namespace CUE4Parse_Conversion.Meshes
                 }
             }
 
+            if (Options.ExportMorphTargets) originalMesh.PopulateMorphTargetVerticesData();
+
             if (Options.MeshFormat == EMeshFormat.UEFormat)
-            { 
+            {
                 using var ueModelArchive = new FArchiveWriter();
                 new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), []));
@@ -170,7 +172,8 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.Gltf2:
                         ext = "glb";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options,
-                            Options.ExportMorphTargets ? originalMesh.MorphTargets : null, lodIndex).Save(Options.MeshFormat, Ar);
+                            Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
+                            lodIndex).Save(Options.MeshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
