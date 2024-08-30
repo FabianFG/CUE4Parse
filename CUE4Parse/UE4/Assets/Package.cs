@@ -115,7 +115,7 @@ namespace CUE4Parse.UE4.Assets
                     export.ExportObject = new Lazy<UObject>(() =>
                     {
                         // Create
-                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct, this);
+                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct, this, (EObjectFlags) export.ObjectFlags);
                         obj.Name = export.ObjectName.Text;
                         obj.Outer = (ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject)?.Object.Value ?? this;
                         obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
@@ -386,7 +386,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 Trace.Assert(_phase == LoadPhase.Create);
                 _phase = LoadPhase.Serialize;
-                _object = ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct);
+                _object = ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct, _package, (EObjectFlags) _export.ObjectFlags);
                 _object.Name = _export.ObjectName.Text;
                 if (!_export.OuterIndex.IsNull)
                 {

@@ -34,7 +34,7 @@ public abstract class AbstractUePackage : UObject, IPackage
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
-    protected static UObject ConstructObject(UStruct? struc, IPackage? owner = null)
+    protected static UObject ConstructObject(UStruct? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
     {
         UObject? obj = null;
         var mappings = owner?.Mappings;
@@ -44,7 +44,7 @@ public abstract class AbstractUePackage : UObject, IPackage
             if (current is UClass scriptClass)
             {
                 // We know this is a class defined in code at this point
-                obj = scriptClass.ConstructObject();
+                obj = scriptClass.ConstructObject(flags);
                 if (obj != null)
                     break;
             }
