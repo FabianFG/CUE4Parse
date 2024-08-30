@@ -108,7 +108,7 @@ public abstract class FPropertyTagType
             "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
             "AssetClassProperty" => new AssetObjectProperty(Ar, type),
             "BoolProperty" => new BoolProperty(Ar, tagData, type),
-            "ByteProperty" => ((tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)) || (type == ReadType.MAP && Ar.TestReadFName()))
+            "ByteProperty" => (tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)) || (type is ReadType.ARRAY or ReadType.MAP && Ar.TestReadFName())
                 ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)
                 : new ByteProperty(Ar, type),
             "ClassProperty" => new ClassProperty(Ar, type),
