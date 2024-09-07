@@ -113,6 +113,7 @@ namespace CUE4Parse.UE4.Versions
             MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
             MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
             MapStructTypes["TrackSignatureToTrackIdentifier"] = new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
+            MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
 
             if (_mapStructTypesOverrides == null) return;
             foreach (var (key, value) in _mapStructTypesOverrides)

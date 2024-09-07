@@ -9,6 +9,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly int Y;
         public readonly int Z;
 
+        public static FIntVector Zero => new FIntVector(0, 0, 0);
+
         public FIntVector(int x, int y, int z)
         {
             X = x;
