@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
-public class FMorphTargetDelta
+public class FMorphTargetDelta : IComparable<FMorphTargetDelta>
 {
     public readonly FVector PositionDelta;
     public readonly FVector TangentZDelta;
@@ -36,6 +36,8 @@ public class FMorphTargetDelta
         TangentZDelta = tan;
         SourceIdx = index;
     }
+
+    public int CompareTo(FMorphTargetDelta other) => SourceIdx.CompareTo(other.SourceIdx);
 }
 
 public class FMorphTargetLODModel
@@ -76,6 +78,15 @@ public class FMorphTargetLODModel
         }
         else
         {
+            if (Ar.Game == EGame.GAME_TheCastingofFrankStone)
+            {
+                Ar.Position += 4; // NumVertices
+                Vertices = [];
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
             var bVerticesAreStrippedForCookedBuilds = false;
             if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
             {
@@ -98,6 +109,7 @@ public class FMorphTargetLODModel
             bGeneratedByEngine = Ar.ReadBoolean();
         }
 
+        Array.Sort(Vertices);
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCustomImport)
         {
             SourceFilename = Ar.ReadFString();
