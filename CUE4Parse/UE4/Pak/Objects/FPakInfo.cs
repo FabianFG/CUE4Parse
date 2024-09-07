@@ -183,6 +183,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     OffsetsToTry.Size8a => 5,
                     OffsetsToTry.SizeHotta => 5,
                     OffsetsToTry.SizeDbD => 5,
+                    OffsetsToTry.SizeRennsport => 5,
                     OffsetsToTry.Size8 => 4,
                     OffsetsToTry.Size8_1 => 1,
                     OffsetsToTry.Size8_2 => 2,
@@ -248,6 +249,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             SizeHotta = Size8a + 4, // additional int for custom pak version
             SizeFarlight = Size8a + 9, // additional long and byte
             SizeDreamStar = Size8a + 10,
+            SizeRennsport = Size8a + 16,
             SizeQQ = Size8a + 26,
             SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
@@ -292,6 +294,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
                     EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
                     EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
+                    EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
