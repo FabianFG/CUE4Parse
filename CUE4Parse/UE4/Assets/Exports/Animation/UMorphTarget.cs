@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
-public class FMorphTargetDelta : IComparable<FMorphTargetDelta>
+public class FMorphTargetDelta
 {
     public readonly FVector PositionDelta;
     public readonly FVector TangentZDelta;
@@ -36,8 +36,6 @@ public class FMorphTargetDelta : IComparable<FMorphTargetDelta>
         TangentZDelta = tan;
         SourceIdx = index;
     }
-
-    public int CompareTo(FMorphTargetDelta other) => SourceIdx.CompareTo(other.SourceIdx);
 }
 
 public class FMorphTargetLODModel
@@ -109,7 +107,6 @@ public class FMorphTargetLODModel
             bGeneratedByEngine = Ar.ReadBoolean();
         }
 
-        Array.Sort(Vertices);
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCustomImport)
         {
             SourceFilename = Ar.ReadFString();
