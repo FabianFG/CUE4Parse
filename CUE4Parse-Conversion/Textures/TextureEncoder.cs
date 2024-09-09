@@ -8,6 +8,7 @@ public static class TextureEncoder
     public static SKData Encode(this SKBitmap bitmap, ETextureFormat format, int quality)
     {
         if (format == ETextureFormat.Png) return bitmap.Encode(SKEncodedImageFormat.Png, quality);
+        if (format == ETextureFormat.Jpeg) return bitmap.Encode(ETextureFormat.Jpeg, quality);
 
         // TGA really doesn't support texture quality levels
         if (format == ETextureFormat.Tga)
