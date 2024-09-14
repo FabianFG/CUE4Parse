@@ -19,7 +19,7 @@ public class UMaterialExpressionQualitySwitch : UMaterialExpression
         var i = 0;
         foreach (var property in Properties)
         {
-            if (property.Tag?.GenericValue is UScriptStruct { StructType: FExpressionInput input } && property.Name.Text == "Inputs")
+            if (property.Tag?.GenericValue is FScriptStruct { StructType: FExpressionInput input } && property.Name.Text == "Inputs")
             {
                 Inputs[i] = input;
                 toRemove.Add(property);

@@ -40,6 +40,8 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual byte[] ReadBytes(int length)
         {
+            CheckReadSize(length);
+
             var result = new byte[length];
             Read(result, 0, length);
             return result;
@@ -61,9 +63,12 @@ namespace CUE4Parse.UE4.Readers
         public virtual T[] ReadArray<T>(int length)
         {
             var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * length);
+            var readLength = size * length;
+            CheckReadSize(readLength);
+
+            var buffer = ReadBytes(readLength);
             var result = new T[length];
-            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(length * size));
+            if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
             return result;
         }
 
@@ -71,8 +76,11 @@ namespace CUE4Parse.UE4.Readers
         {
             if (array.Length == 0) return;
             var size = Unsafe.SizeOf<T>();
-            var buffer = ReadBytes(size * array.Length);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(array.Length * size));
+            var readLength = size * array.Length;
+            CheckReadSize(readLength);
+
+            var buffer = ReadBytes(readLength);
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref array[0]), ref buffer[0], (uint)(readLength));
         }
 
         protected FArchive(VersionContainer? versions = null)
@@ -178,6 +186,25 @@ namespace CUE4Parse.UE4.Readers
             }
 
             return res;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(int length, Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
+        {
+            var res = new Dictionary<TKey, TValue>(length);
+            for (var i = 0; i < length; i++)
+            {
+                res[keyGetter()] = valueGetter();
+            }
+
+            return res;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
+        {
+            var length = Read<int>();
+            return ReadMap(length, keyGetter, valueGetter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -490,6 +517,18 @@ namespace CUE4Parse.UE4.Readers
             value = ((value << 8) & 0xFF00FF00FF00FF00UL) | ((value >> 8) & 0x00FF00FF00FF00FFUL);
             value = ((value << 16) & 0xFFFF0000FFFF0000UL) | ((value >> 16) & 0x0000FFFF0000FFFFUL);
             return (value << 32) | (value >> 32);
+        }
+
+        public void CheckReadSize(int length)
+        {
+            if (length < 0)
+            {
+                throw new ParserException(this, "Read size is smaller than zero.");
+            }
+            if (Position + length > Length)
+            {
+                throw new ParserException(this, "Read size is bigger than remaining archive length.");
+            }
         }
 
         public abstract object Clone();

@@ -1,4 +1,5 @@
 using System;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -28,6 +29,13 @@ public class FMorphTargetDelta
         }
         SourceIdx = Ar.Read<uint>();
     }
+
+    public FMorphTargetDelta(FVector pos, FVector tan, uint index)
+    {
+        PositionDelta = pos;
+        TangentZDelta = tan;
+        SourceIdx = index;
+    }
 }
 
 public class FMorphTargetLODModel
@@ -45,9 +53,9 @@ public class FMorphTargetLODModel
 
     public FMorphTargetLODModel()
     {
-        Vertices = Array.Empty<FMorphTargetDelta>();
+        Vertices = [];
         NumBaseMeshVerts = 0;
-        SectionIndices = Array.Empty<int>();
+        SectionIndices = [];
         bGeneratedByEngine = false;
     }
 
@@ -68,6 +76,15 @@ public class FMorphTargetLODModel
         }
         else
         {
+            if (Ar.Game == EGame.GAME_TheCastingofFrankStone)
+            {
+                Ar.Position += 4; // NumVertices
+                Vertices = [];
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
             var bVerticesAreStrippedForCookedBuilds = false;
             if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
             {
@@ -78,7 +95,7 @@ public class FMorphTargetLODModel
             if (bVerticesAreStrippedForCookedBuilds)
             {
                 Ar.Position += 4; // NumVertices
-                Vertices = Array.Empty<FMorphTargetDelta>();
+                Vertices = [];
             }
             else
             {
@@ -93,7 +110,44 @@ public class FMorphTargetLODModel
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCustomImport)
         {
             SourceFilename = Ar.ReadFString();
-        }   
+        }
+    }
+
+    public FMorphTargetLODModel(FMorphTargetVertexInfoBuffers buffer, int index, int[] sectionIndices)
+    {
+        var batchStartOffsetPerMorph = buffer.BatchStartOffsetPerMorph[index];
+        var batchesPerMorph = buffer.BatchesPerMorph[index];
+        var posPrecision = buffer.PositionPrecision;
+        var tanPrecision = buffer.TangentZPrecision;
+
+        var size = 0;
+        for (var j = 0; j < batchesPerMorph; j++)
+        {
+            var batch = buffer.MorphData[batchStartOffsetPerMorph + j];
+            size += (int)batch.NumElements;
+        }
+
+        Vertices = new FMorphTargetDelta[size];
+        NumBaseMeshVerts = size;
+        SectionIndices = sectionIndices;
+        bGeneratedByEngine = false;
+
+        var k = 0;
+        for (var j = 0; j < batchesPerMorph; j++)
+        {
+            var batch = buffer.MorphData[batchStartOffsetPerMorph + j];
+            var posMin = batch.PositionMin;
+            var tanMin = batch.TangentZMin;
+
+            foreach (var delta in batch.QuantizedDelta)
+            {
+                var pos = new FVector((posMin.X + delta.Position.X) * posPrecision,
+                    (posMin.Y + delta.Position.Y) * posPrecision, (posMin.Z + delta.Position.Z) * posPrecision);
+                var tan = new FVector((tanMin.X + delta.TangentZ.X) * tanPrecision,
+                    (tanMin.Y + delta.TangentZ.Y) * tanPrecision, (tanMin.Z + delta.TangentZ.Z) * tanPrecision);
+                Vertices[k++] = new FMorphTargetDelta(pos, tan, delta.Index);
+            }
+        }
     }
 }
 

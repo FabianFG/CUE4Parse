@@ -17,6 +17,7 @@ public class FRigVMRegister
     public readonly int ScriptStructIndex;
     public readonly bool bIsArray;
     public readonly bool bIsDynamic;
+    public object? View;
 
     public FRigVMRegister(FArchive Ar)
     {

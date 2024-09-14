@@ -21,6 +21,13 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly T Y;
         public readonly T Z;
 
+        public TIntVector3(T x, T y, T z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
         public override string ToString()
         {
             return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";

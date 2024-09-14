@@ -83,7 +83,7 @@ namespace CUE4Parse.FileProvider
                                 if (stringTable != null)
                                 {
                                     var keyName = g.Value.SubstringAfterLast(", \"").SubstringBeforeLast("\")"); // LOCTABLE("/Game/Narrative/LocalisedStrings/UI_Strings.UI_Strings", "23138_ui_pc_game_name_titlebar")
-                                    var stringTableEntry = stringTable.StringTable.KeysToMetaData;
+                                    var stringTableEntry = stringTable.StringTable.KeysToEntries;
                                     if (stringTableEntry.TryGetValue(keyName, out var value))
                                     {
                                         _gameDisplayName = value;

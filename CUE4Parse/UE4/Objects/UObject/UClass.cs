@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -78,9 +80,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassDefaultObject = new FPackageIndex(Ar);
         }
 
-        public Assets.Exports.UObject? ConstructObject()
+        public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
         {
             var type = ObjectTypeRegistry.Get(Name);
+            if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+                type = typeof(Assets.Exports.UObject);
             if (type != null)
             {
                 try

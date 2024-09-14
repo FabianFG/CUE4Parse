@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             if (string.IsNullOrEmpty(RowStructName))
             {
                 var ptr = GetOrDefault<FPackageIndex>("RowStruct");
-                if (!ptr.TryLoad<UStruct>(out rowStruct))
+                if (ptr is not null && !ptr.TryLoad<UStruct>(out rowStruct))
                     RowStructName = ptr.Name;
             }
 

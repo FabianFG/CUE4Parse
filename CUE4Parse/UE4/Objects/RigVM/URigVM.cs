@@ -47,6 +47,7 @@ public class URigVM : Assets.Exports.UObject
             {
                 WorkMemoryStorage = new FRigVMMemoryContainer(Ar);
                 LiteralMemoryStorageOld = new FRigVMMemoryContainer(Ar);
+                FunctionNamesStorage = Ar.ReadArray(Ar.ReadFName);
                 ByteCodeStorage = new FRigVMByteCode(Ar);
                 Parameters = Ar.ReadArray(() => new FRigVMParameter(Ar));
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -51,9 +51,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M30 = m30; M31 = m31; M32 = m32; M33 = m33;
         }
 
-        public FMatrix(FArchive Ar)
+        public FMatrix(FArchive Ar) : this(Ar, Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) { }
+
+        public FMatrix(FArchive Ar, bool readDouble)
         {
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+            if (readDouble)
             {
                 M00 = (float) Ar.Read<double>();
                 M01 = (float) Ar.Read<double>();
