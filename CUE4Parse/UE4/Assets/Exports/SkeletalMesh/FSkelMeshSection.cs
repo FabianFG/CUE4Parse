@@ -268,7 +268,7 @@ public class FSkelMeshSection
                 Ar.Position += 4;
                 break;
             case EGame.GAME_CalabiYau or EGame.GAME_FragPunk:
-                Ar.Position += 8;
+                Ar.Position += 14;
                 break;
             case EGame.GAME_MortalKombat1:
                 Ar.Position += 12;
