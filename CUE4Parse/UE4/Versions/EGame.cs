@@ -109,6 +109,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
             GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
+            GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
 
         GAME_UE5_LATEST = GAME_UE5_5
