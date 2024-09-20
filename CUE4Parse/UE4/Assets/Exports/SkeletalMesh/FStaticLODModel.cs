@@ -225,7 +225,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
 
                 ActiveBoneIndices = Ar.ReadArray<short>();
 
-                if (Ar.Game is EGame.GAME_KenaBridgeofSpirits or EGame.GAME_FragPunk)
+                if (Ar.Game is EGame.GAME_FragPunk)
                     Ar.ReadArray<byte>(); // EAssetType_array1
 
                 Ar.Position += 4; //var buffersSize = Ar.Read<uint>();
@@ -289,7 +289,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Game == EGame.GAME_ReadyOrNot)
+            if (Ar.Game == EGame.GAME_ReadyOrNot || Ar.Game == EGame.GAME_KenaBridgeofSpirits)
                 Ar.Position += 4;
         }
 

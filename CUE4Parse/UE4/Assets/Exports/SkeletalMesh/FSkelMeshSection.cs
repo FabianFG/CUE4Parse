@@ -236,6 +236,8 @@ public class FSkelMeshSection
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
         if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
+        if (Ar.Game == EGame.GAME_KenaBridgeofSpirits)
+            Ar.Position += 1;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
         BaseVertexIndex = Ar.Read<uint>();
