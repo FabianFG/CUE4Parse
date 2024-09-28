@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -10,15 +13,18 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.Wwise.Enums;
+
+using OffiUtils;
+
 using Serilog;
+
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
 
 namespace CUE4Parse.UE4.Readers
 {
-    public abstract class FArchive : Stream, ICloneable
+    public abstract class FArchive : Stream, ICloneable, IRandomAccessStream
     {
         public VersionContainer Versions;
         public EGame Game
@@ -38,12 +44,40 @@ namespace CUE4Parse.UE4.Readers
         }
         public abstract string Name { get; }
 
+        public virtual int ReadAt(long position, byte[] buffer, int offset, int count)
+        {
+            Position = position;
+            return Read(buffer, offset, count);
+        }
+
+        public virtual Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count,
+            CancellationToken cancellationToken)
+        {
+            Position = position;
+            return ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public virtual Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+        {
+            Position = position;
+            return ReadAsync(memory, cancellationToken).AsTask();
+        }
+
         public virtual byte[] ReadBytes(int length)
         {
             CheckReadSize(length);
 
             var result = new byte[length];
             Read(result, 0, length);
+            return result;
+        }
+
+        public virtual byte[] ReadBytesAt(long position, int length)
+        {
+            CheckReadSize(length);
+
+            var result = new byte[length];
+            ReadAt(position, result, 0, length);
             return result;
         }
 
