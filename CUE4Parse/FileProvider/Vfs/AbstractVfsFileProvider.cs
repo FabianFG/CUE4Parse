@@ -244,7 +244,7 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var onDemandFiles = new Dictionary<string, GameFile>();
             foreach (var (path, vfs) in _files)
-                if (vfs is StreamedGameFile)
+                if (vfs is StreamedGameFile) // || vfs is OsGameFile ??
                     onDemandFiles[path] = vfs;
 
             UnloadAllVfs();
