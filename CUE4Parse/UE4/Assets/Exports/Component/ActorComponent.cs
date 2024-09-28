@@ -8,15 +8,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Component;
 
 public class UActorComponent : UObject
 {
-    //[JsonIgnore] public FSimpleMemberReference[]? UCSModifiedProperties;
+    [JsonIgnore] public FSimpleMemberReference[]? UCSModifiedProperties;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Position == validPos) // i think after validpos all read default to dummy data 000000s
+            return;
         if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.ActorComponentUCSModifiedPropertiesSparseStorage)
         {
-            //UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
-            Ar.SkipFixedArray(28);
+            UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
         }
     }
 }
