@@ -1,5 +1,3 @@
-using System;
-using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -31,8 +29,8 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
         {
             PreInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
             PostInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
-            Times = Array.Empty<FFrameNumber>();
-            Values = Array.Empty<FMovieSceneValue<T>>();
+            Times = [];
+            Values = [];
             DefaultValue = default;
             bHasDefaultValue = false;
             TickResolution = default;
@@ -44,63 +42,11 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
         PreInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
         PostInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
 
-        var CurrentSerializedElementSize = Unsafe.SizeOf<FFrameNumber>();
         var SerializedElementSize = Ar.Read<int>();
+        Times = Ar.ReadArray<FFrameNumber>();
 
-        if (SerializedElementSize == CurrentSerializedElementSize)
-        {
-            Times = Ar.ReadArray<FFrameNumber>();
-        }
-        else
-        {
-            var ArrayNum = Ar.Read<int>();
-
-            if (ArrayNum > 0)
-            {
-                var padding = SerializedElementSize - CurrentSerializedElementSize;
-                Times = new FFrameNumber[ArrayNum];
-
-                for (var i = 0; i < ArrayNum; i++)
-                {
-                    Ar.Position += padding;
-                    Times[i] = Ar.Read<FFrameNumber>();
-                    //Ar.Position += padding; TODO check this
-                }
-            }
-            else
-            {
-                Times = Array.Empty<FFrameNumber>();
-            }
-        }
-
-        CurrentSerializedElementSize = Unsafe.SizeOf<FMovieSceneValue<T>>();
         SerializedElementSize = Ar.Read<int>();
-
-        if (SerializedElementSize == CurrentSerializedElementSize)
-        {
-            Values = Ar.ReadArray<FMovieSceneValue<T>>();
-        }
-        else
-        {
-            var ArrayNum = Ar.Read<int>();
-
-            if (ArrayNum > 0)
-            {
-                var padding = SerializedElementSize - CurrentSerializedElementSize;
-                Values = new FMovieSceneValue<T>[ArrayNum];
-
-                for (var i = 0; i < ArrayNum; i++)
-                {
-                    Ar.Position += padding;
-                    Values[i] = Ar.Read<FMovieSceneValue<T>>();
-                    //Ar.Position += padding; TODO check this
-                }
-            }
-            else
-            {
-                Values = Array.Empty<FMovieSceneValue<T>>();
-            }
-        }
+        Values = Ar.ReadArray(() => new FMovieSceneValue<T>(Ar, Ar.Read<T>()));
 
         DefaultValue = Ar.Read<T>();
         bHasDefaultValue = Ar.ReadBoolean();

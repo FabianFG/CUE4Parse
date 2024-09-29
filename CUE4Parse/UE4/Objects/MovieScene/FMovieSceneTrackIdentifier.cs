@@ -1,10 +1,9 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
-namespace CUE4Parse.UE4.Objects.MovieScene
+namespace CUE4Parse.UE4.Objects.MovieScene;
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FMovieSceneTrackIdentifier : IUStruct
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FMovieSceneTrackIdentifier : IUStruct
-    {
-        public readonly uint Value;
-    }
+    public readonly uint Value;
 }
