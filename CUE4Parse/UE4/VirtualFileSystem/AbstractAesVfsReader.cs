@@ -108,6 +108,9 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
             DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
 
+        protected byte[] ReadAndDecryptAt(long position, int length, FArchive reader, bool isEncrypted) =>
+            DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted);
+
         private static FAesKey ConvertSnowbreakAes(string name, FAesKey key)
         {
             var pakName = System.IO.Path.GetFileNameWithoutExtension(name).ToLower();

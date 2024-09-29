@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Exceptions;
@@ -14,6 +15,8 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
+
+using OffiUtils;
 
 namespace CUE4Parse.UE4.IO
 {
@@ -41,6 +44,11 @@ namespace CUE4Parse.UE4.IO
             : this(new FStreamArchive(tocPath, tocStream, versions), it => new FStreamArchive(it, casStream, versions), readOptions) { }
         public IoStoreReader(string tocPath, Stream tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
+
+        public IoStoreReader(string tocPath, IRandomAccessStream tocStream, IRandomAccessStream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FRandomAccessStreamArchive(tocPath, tocStream, versions), it => new FRandomAccessStreamArchive(it, casStream, versions), readOptions) { }
+        public IoStoreReader(string tocPath, IRandomAccessStream tocStream, Func<string, FRandomAccessStreamArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+            : this(new FRandomAccessStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
 
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex)
             : base(tocStream.Name, tocStream.Versions)
@@ -212,7 +220,7 @@ namespace CUE4Parse.UE4.IO
             var compressedBuffer = Array.Empty<byte>();
             var uncompressedBuffer = Array.Empty<byte>();
 
-            var clonedReaders = new FArchive?[ContainerStreams.Count];
+            FArchive?[]? clonedReaders = null;
 
             for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
             {
@@ -237,16 +245,16 @@ namespace CUE4Parse.UE4.IO
                 FArchive reader;
                 if (IsConcurrent)
                 {
+                    clonedReaders ??= new FArchive?[ContainerStreams.Count];
                     ref var clone = ref clonedReaders[partitionIndex];
                     clone ??= (FArchive) ContainerStreams[partitionIndex].Clone();
                     reader = clone;
                 }
                 else reader = ContainerStreams[partitionIndex];
 
-                reader.Position = partitionOffset;
-                reader.Read(compressedBuffer, 0, (int) rawSize);
+                reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
                 // FragPunk decided to encrypt the global utoc too.
-                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global")); 
+                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal)); 
 
                 byte[] src;
                 if (compressionBlock.CompressionMethodIndex == 0)
@@ -266,8 +274,6 @@ namespace CUE4Parse.UE4.IO
                 offsetInBlock = 0;
                 remainingSize -= sizeInBlock;
                 dstOffset += sizeInBlock;
-
-                reader.Position = 0;
             }
 
             return dst;

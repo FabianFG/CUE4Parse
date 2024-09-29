@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Exceptions;
@@ -17,6 +18,8 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
+
+using OffiUtils;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
@@ -56,6 +59,8 @@ namespace CUE4Parse.FileProvider.Vfs
         public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName, new Stream[] { file.OpenRead() });
         public void RegisterVfs(string file, Stream[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
             => RegisterVfs(new FStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+        public void RegisterVfs(string file, IRandomAccessStream[] stream, Func<string, FRandomAccessStreamArchive>? openContainerStreamFunc = null)
+            => RegisterVfs(new FRandomAccessStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
         public void RegisterVfs(FArchive archive, Stream? stream, Func<string, FArchive>? openContainerStreamFunc = null)
         {
             try
@@ -80,6 +85,30 @@ namespace CUE4Parse.FileProvider.Vfs
                 Log.Warning(e.ToString());
             }
         }
+        public void RegisterVfs(FRandomAccessStreamArchive archive, IRandomAccessStream? stream, Func<string, FRandomAccessStreamArchive>? openContainerStreamFunc = null)
+        {
+            try
+            {
+                AbstractAesVfsReader reader;
+                switch (archive.Name.SubstringAfterLast('.').ToUpper())
+                {
+                    case "PAK":
+                        reader = new PakFileReader(archive);
+                        break;
+                    case "UTOC":
+                        openContainerStreamFunc ??= it => new FRandomAccessStreamArchive(it, stream!, Versions);
+                        reader = new IoStoreReader(archive, openContainerStreamFunc);
+                        break;
+                    default:
+                        return;
+                }
+                PostLoadReader(reader, false);
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e.ToString());
+            }
+        }
         public async Task RegisterVfs(IoChunkToc chunkToc, IoStoreOnDemandOptions options)
         {
             var downloader = new IoStoreOnDemandDownloader(options);
@@ -91,13 +120,13 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
-        private void PostLoadReader(AbstractAesVfsReader reader)
+        private void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)
                 _requiredKeys.TryAdd(reader.EncryptionKeyGuid, null);
 
             _unloadedVfs[reader] = null;
-            reader.IsConcurrent = true;
+            reader.IsConcurrent = isConcurrent;
             reader.CustomEncryption = CustomEncryption;
             VfsRegistered?.Invoke(reader, _unloadedVfs.Count);
         }
