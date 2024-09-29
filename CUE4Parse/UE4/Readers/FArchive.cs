@@ -47,6 +47,8 @@ namespace CUE4Parse.UE4.Readers
         public virtual int ReadAt(long position, byte[] buffer, int offset, int count)
         {
             Position = position;
+            CheckReadSize(count);
+
             return Read(buffer, offset, count);
         }
 
@@ -54,12 +56,16 @@ namespace CUE4Parse.UE4.Readers
             CancellationToken cancellationToken)
         {
             Position = position;
+            CheckReadSize(count);
+
             return ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         public virtual Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
         {
             Position = position;
+            CheckReadSize(memory.Length);
+
             return ReadAsync(memory, cancellationToken).AsTask();
         }
 
@@ -74,8 +80,6 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual byte[] ReadBytesAt(long position, int length)
         {
-            CheckReadSize(length);
-
             var result = new byte[length];
             ReadAt(position, result, 0, length);
             return result;
