@@ -1,10 +1,11 @@
 using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Versions;
+
+using Microsoft.Win32.SafeHandles;
 
 using OffiUtils;
 
@@ -22,11 +23,9 @@ public class FStreamArchive : FArchive
 
     public override void Close() => _baseStream.Close();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int Read(byte[] buffer, int offset, int count)
         => _baseStream.Read(buffer, offset, count);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override long Seek(long offset, SeekOrigin origin)
         => _baseStream.Seek(offset, origin);
 
@@ -39,15 +38,6 @@ public class FStreamArchive : FArchive
     }
 
     public override string Name { get; }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override byte[] ReadBytes(int length)
-    {
-        CheckReadSize(length);
-        var result = new byte[length];
-        _baseStream.Read(result, 0, length);
-        return result;
-    }
 
     public override object Clone()
     {
@@ -70,9 +60,6 @@ public class FRandomAccessStreamArchive : FArchive
         Name = name;
     }
 
-    public override void Close() { }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int Read(byte[] buffer, int offset, int count)
         => _baseStream.Read(buffer, offset, count);
 
@@ -85,7 +72,6 @@ public class FRandomAccessStreamArchive : FArchive
     public override Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
         => _baseStream.ReadAtAsync(position, memory, cancellationToken);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override long Seek(long offset, SeekOrigin origin)
         => _baseStream.Seek(offset, origin);
 
@@ -99,14 +85,69 @@ public class FRandomAccessStreamArchive : FArchive
 
     public override string Name { get; }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override byte[] ReadBytes(int length)
+    public override object Clone() => new FRandomAccessStreamArchive(Name, _baseStream, Versions) {Position = Position};
+}
+
+public class FRandomAccessFileStreamArchive : FArchive
+{
+    private readonly SafeFileHandle _handle;
+
+    public FRandomAccessFileStreamArchive(string filePath, VersionContainer? versions = null)
+        : this(filePath, File.OpenHandle(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
+
+    public FRandomAccessFileStreamArchive(FileInfo fileInfo, VersionContainer? versions = null)
+        : this(fileInfo.FullName, File.OpenHandle(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
+
+    public FRandomAccessFileStreamArchive(string filePath, SafeFileHandle handle, VersionContainer? versions = null) : base(versions)
     {
-        CheckReadSize(length);
-        var result = new byte[length];
-        _baseStream.Read(result, 0, length);
-        return result;
+        Name = filePath;
+        _handle = handle;
+        Length = RandomAccess.GetLength(handle);
     }
 
-    public override object Clone() => new FRandomAccessStreamArchive(Name, _baseStream, Versions) {Position = Position};
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        var span = buffer.AsSpan(offset, count);
+        var bytesRead = RandomAccess.Read(_handle, span, Position);
+        Position += bytesRead;
+        return bytesRead;
+    }
+
+    public override int ReadAt(long position, byte[] buffer, int offset, int count)
+    {
+        var span = buffer.AsSpan(offset, count);
+        return RandomAccess.Read(_handle, span, position);
+    }
+
+    public override async Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        var memory = buffer.AsMemory(offset, count);
+        return await RandomAccess.ReadAsync(_handle, memory, position, cancellationToken).ConfigureAwait(false);
+    }
+
+    public override async Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+    {
+        return await RandomAccess.ReadAsync(_handle, memory, position, cancellationToken).ConfigureAwait(false);
+    }
+
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        Position = origin switch
+        {
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => Position + offset,
+            SeekOrigin.End => Length + offset,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        return Position;
+    }
+
+    public override bool CanSeek => true;
+
+    public override long Length { get; }
+    public override long Position { get; set; }
+
+    public override string Name { get; }
+
+    public override object Clone() => new FRandomAccessFileStreamArchive(Name, Versions) {Position = Position};
 }

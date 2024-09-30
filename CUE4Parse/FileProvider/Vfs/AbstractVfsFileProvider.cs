@@ -55,12 +55,31 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public abstract void Initialize();
 
-        public void RegisterVfs(string file) => RegisterVfs(new FileInfo(file));
-        public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName, new Stream[] { file.OpenRead() });
+        public void RegisterVfs(string file) => RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+        public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName);
+
+        public void RegisterVfs(string file, FRandomAccessFileStreamArchive[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
+            => RegisterRandomAccessVfs(stream[0], stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+        public void RegisterVfs(string file, FRandomAccessStreamArchive[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
+            => RegisterRandomAccessVfs(stream[0], stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+        public void RegisterVfs(string file, IRandomAccessStream[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
+            => RegisterRandomAccessVfs(new FRandomAccessStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+
         public void RegisterVfs(string file, Stream[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
             => RegisterVfs(new FStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
-        public void RegisterVfs(string file, IRandomAccessStream[] stream, Func<string, FRandomAccessStreamArchive>? openContainerStreamFunc = null)
-            => RegisterVfs(new FRandomAccessStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
+
+        public void RegisterVfs(string[] filePaths)
+            => RegisterRandomAccessVfs(
+                new FRandomAccessFileStreamArchive(filePaths[0], Versions),
+                filePaths.Length > 1 ? new FRandomAccessFileStreamArchive(filePaths[1], Versions) : null,
+                openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+
+        public void RegisterVfs(FileInfo[] fileInfos)
+            => RegisterRandomAccessVfs(
+                new FRandomAccessFileStreamArchive(fileInfos[0], Versions),
+                fileInfos.Length > 1 ? new FRandomAccessFileStreamArchive(fileInfos[1], Versions) : null,
+                openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+
         public void RegisterVfs(FArchive archive, Stream? stream, Func<string, FArchive>? openContainerStreamFunc = null)
         {
             try
@@ -85,19 +104,49 @@ namespace CUE4Parse.FileProvider.Vfs
                 Log.Warning(e.ToString());
             }
         }
-        public void RegisterVfs(FRandomAccessStreamArchive archive, IRandomAccessStream? stream, Func<string, FRandomAccessStreamArchive>? openContainerStreamFunc = null)
+        public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, FArchive? utocArchive, Func<string, FArchive>? openContainerStreamFunc = null)
         {
             try
             {
+                pakOrUtocArchive.Versions = Versions;
+                if (utocArchive is not null)
+                    utocArchive.Versions = Versions;
+
                 AbstractAesVfsReader reader;
-                switch (archive.Name.SubstringAfterLast('.').ToUpper())
+                switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
-                        reader = new PakFileReader(archive);
+                        reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
-                        openContainerStreamFunc ??= it => new FRandomAccessStreamArchive(it, stream!, Versions);
-                        reader = new IoStoreReader(archive, openContainerStreamFunc);
+                        openContainerStreamFunc ??= _ => utocArchive!;
+                        reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
+                        break;
+                    default:
+                        return;
+                }
+                PostLoadReader(reader, false);
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e.ToString());
+            }
+        }
+        public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, IRandomAccessStream? utocStream, Func<string, FArchive>? openContainerStreamFunc = null)
+        {
+            try
+            {
+                pakOrUtocArchive.Versions = Versions;
+
+                AbstractAesVfsReader reader;
+                switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
+                {
+                    case "PAK":
+                        reader = new PakFileReader(pakOrUtocArchive);
+                        break;
+                    case "UTOC":
+                        openContainerStreamFunc ??= it => new FRandomAccessStreamArchive(it, utocStream!, Versions);
+                        reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
                         break;
                     default:
                         return;
