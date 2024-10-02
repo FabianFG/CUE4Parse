@@ -113,6 +113,7 @@ public class FScriptStruct
             "StringAssetReference" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "SoftObjectPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
+            "TwoVectors" => type == ReadType.ZERO ? new FTwoVectors() : new FTwoVectors(Ar),
             "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
             "Vector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
             "Vector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
