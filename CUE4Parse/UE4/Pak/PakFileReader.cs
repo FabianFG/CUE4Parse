@@ -359,7 +359,8 @@ namespace CUE4Parse.UE4.Pak
         {
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             reader.Position = Info.IndexOffset;
-            return reader.ReadBytes((4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
+            var size = Math.Min((int) Info.IndexSize, 4 + MAX_MOUNTPOINT_TEST_LENGTH * 2);
+            return reader.ReadBytes(size.Align(Aes.ALIGN));
         }
 
         public override void Dispose()
