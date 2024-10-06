@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 
-public class UStaticMeshComponent : USceneComponent
+public class UStaticMeshComponent : UMeshComponent
 {
     public FStaticMeshComponentLODInfo[]? LODData;
 
@@ -40,6 +40,4 @@ public class UStaticMeshComponent : USceneComponent
     }
 }
 
-public class UAsyncStaticMeshComponent : UStaticMeshComponent;
 public class UBaseBuildingStaticMeshComponent : UStaticMeshComponent;
-public class USplineMeshComponent : UStaticMeshComponent;

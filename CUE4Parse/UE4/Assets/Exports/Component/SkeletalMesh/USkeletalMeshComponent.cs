@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 
 public class USkeletalMeshComponentBudgeted : USkeletalMeshComponent;
 
-public class USkeletalMeshComponent : USceneComponent
+public class USkeletalMeshComponent : USkinnedMeshComponent
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

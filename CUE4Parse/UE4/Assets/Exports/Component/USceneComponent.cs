@@ -30,14 +30,3 @@ public class USceneComponent : UActorComponent
         serializer.Serialize(writer, Bounds);
     }
 }
-
-public class UArrowComponent : USceneComponent;
-public class UAudioComponent : USceneComponent;
-public class UBillboardComponent : USceneComponent;
-public class UBoxComponent : USceneComponent;
-public class UBrushComponent : USceneComponent;
-public class UCameraComponent : USceneComponent;
-public class UCapsuleComponent : USceneComponent;
-public class UDecalComponent : USceneComponent;
-public class USplineComponent : USceneComponent;
-public class UTextRenderComponent : USceneComponent;
