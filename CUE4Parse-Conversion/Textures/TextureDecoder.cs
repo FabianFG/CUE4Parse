@@ -35,7 +35,7 @@ public static class TextureDecoder
             var tileSize = (int) vt.TileSize;
             var tileBorderSize = (int) vt.TileBorderSize;
             var tilePixelSize = (int) vt.GetPhysicalTileSize();
-            var level = texture.PlatformData.FirstMipToSerialize;
+            const int level = 0;
 
             FVirtualTextureTileOffsetData tileOffsetData;
             if (vt.IsLegacyData())
