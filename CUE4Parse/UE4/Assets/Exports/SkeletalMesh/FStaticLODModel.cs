@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
     [JsonConverter(typeof(FStaticLODModelConverter))]
     public class FStaticLODModel
     {
-        public FSkelMeshSection[] Sections;
+        public FSkelMeshSection[] Sections = [];
         public FMultisizeIndexContainer? Indices;
         public short[] ActiveBoneIndices;
         public FSkelMeshChunk[] Chunks;
