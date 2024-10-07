@@ -500,7 +500,7 @@ public struct FRigControlSettings
         }
 
         PreferredRotationOrder = EEulerRotationOrder.YZX;
-        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.PreferredEulerAnglesForControls)
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyControlPreferredRotationOrder)
         {
             PreferredRotationOrder = Ar.Read<EEulerRotationOrder>();
         }
@@ -579,9 +579,41 @@ public class FRigRigidBodyElement : FRigSingleParentElement
 
 public class FRigReferenceElement : FRigSingleParentElement;
 
+public enum EConnectorType : byte
+{
+    Primary, // Single primary connector, non-optional and always visible. When dropped on another element, this connector will resolve to that element.
+    Secondary, // Could be multiple, can auto-solve (visible if not solved), can be optional
+}
+
+public struct FRigConnectionRuleStash(FAssetArchive Ar)
+{
+    public string ScriptStructPath = Ar.ReadFString();
+    public string ExportedText = Ar.ReadFString();
+}
+
+public struct FRigConnectorSettings
+{
+    public string Description;
+    public EConnectorType Type = EConnectorType.Primary;
+    public bool bOptional = false;
+    public FRigConnectionRuleStash[] Rules;
+
+    public FRigConnectorSettings(FAssetArchive Ar)
+    {
+        Description = Ar.ReadFString();
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ConnectorsWithType)
+        {
+            Type = Ar.Read<EConnectorType>();
+            bOptional = Ar.ReadBoolean();
+        }
+
+        Rules = Ar.ReadArray(() => new FRigConnectionRuleStash(Ar));
+    }
+}
+
 public class FRigConnectorElement : FRigBaseElement
 {
-    public FRigRigidBodySettings Settings;
+    public FRigConnectorSettings Settings;
 
     public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
     {
@@ -589,7 +621,7 @@ public class FRigConnectorElement : FRigBaseElement
 
         if (serializationPhase != ESerializationPhase.StaticData) return;
 
-        Settings = new FRigRigidBodySettings(Ar);
+        Settings = new FRigConnectorSettings(Ar);
     }
 }
 
