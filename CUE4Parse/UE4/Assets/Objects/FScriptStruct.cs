@@ -22,6 +22,7 @@ using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
+using CUE4Parse.UE4.Objects.PCG;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
@@ -140,6 +141,8 @@ public class FScriptStruct
             "KeyHandleMap" => new FStructFallback(),
             "ShaderValueTypeHandle" => new FShaderValueTypeHandle(Ar),
             "AnimationAttributeIdentifier" => new FAnimationAttributeIdentifier(Ar),
+            "AttributeCurve" => new FAttributeCurve(Ar),
+            "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
