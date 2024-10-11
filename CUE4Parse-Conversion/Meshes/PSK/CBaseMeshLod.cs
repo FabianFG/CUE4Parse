@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using CUE4Parse_Conversion.Materials;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -17,7 +20,8 @@ public class CBaseMeshLod
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
     public Lazy<FRawStaticIndexBuffer> Indices;
-    public bool SkipLod => Sections.Value.Length < 1 || Indices.Value == null;
+    public bool SkipLod => !Sections.IsValueCreated || Sections.Value.Length < 1 ||
+                           !Indices.IsValueCreated || Indices.Value.Length < 1;
 
     public void AllocateUVBuffers()
     {
@@ -45,6 +49,21 @@ public class CBaseMeshLod
         }
 
         ExtraVertexColors = Array.Empty<CVertexColor>();
+    }
+
+    public List<MaterialExporter2> GetMaterials(ExporterOptions options)
+    {
+        if (SkipLod || !options.ExportMaterials) return [];
+
+        var materials = new List<MaterialExporter2>();
+        foreach (var section in Sections.Value)
+        {
+            if (section.Material?.Load<UMaterialInterface>() is { } material)
+            {
+                materials.Add(new MaterialExporter2(material, options));
+            }
+        }
+        return materials;
     }
 }
 
