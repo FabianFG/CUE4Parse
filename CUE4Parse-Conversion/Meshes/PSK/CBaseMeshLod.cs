@@ -20,8 +20,7 @@ public class CBaseMeshLod
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
     public Lazy<FRawStaticIndexBuffer> Indices;
-    public bool SkipLod => !Sections.IsValueCreated || Sections.Value.Length < 1 ||
-                           !Indices.IsValueCreated || Indices.Value.Length < 1;
+    public bool SkipLod => Sections.Value.Length < 1 || Indices.Value.Length < 1;
 
     public void AllocateUVBuffers()
     {
