@@ -30,13 +30,12 @@ public partial class PakFileReader
 
         foreach (var block in pakEntry.CompressionBlocks)
         {
-            reader.Position = block.CompressedStart;
             var blockSize = (int) block.Size;
             var srcSize = blockSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
 
             // Read the encrypted block
             var compressed = compressedBuffer[..srcSize];
-            ReadAndDecrypt(blockSize < limit && limit > 0 ? srcSize : limit, reader, pakEntry.IsEncrypted).CopyTo(compressed);
+            ReadAndDecryptAt(block.CompressedStart, blockSize < limit && limit > 0 ? srcSize : limit, reader, pakEntry.IsEncrypted).CopyTo(compressed);
 
             // Remaining size is unencrypted
             if (blockSize > limit)
@@ -61,9 +60,10 @@ public partial class PakFileReader
     private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
     {
         var limit = reader.Game == UE4.Versions.EGame.GAME_MarvelRivals ? CalculateEncryptedBytesCountForMarvelRivals(pakEntry) : 0x1000;
-        reader.Position = pakEntry.Offset + pakEntry.StructSize;
         var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
-        var encrypted = ReadAndDecrypt(size <= limit ? size : limit, reader, pakEntry.IsEncrypted);
+        var encrypted = ReadAndDecryptAt(
+            pakEntry.Offset + pakEntry.StructSize,
+            size <= limit ? size : limit, reader, pakEntry.IsEncrypted);
 
         if (size > limit)
         {
