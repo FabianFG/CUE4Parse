@@ -305,7 +305,7 @@ namespace CUE4Parse.UE4.Pak
         private void ReadFrozenIndex(bool caseInsensitive)
         {
             this.Ar.Position = Info.IndexOffset;
-            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)));
+            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)), 8);
 
             var mountPoint = Ar.ReadFString();
             ValidateMountPoint(ref mountPoint);

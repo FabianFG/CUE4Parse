@@ -41,10 +41,17 @@ public class FMemoryImageArchive : FArchive
 {
     public readonly FArchive InnerArchive;
     public IReadOnlyDictionary<int, (FName, bool)>? Names;
+    private readonly int ArrayAlign = 4;
 
     public FMemoryImageArchive(FArchive Ar) : base(Ar.Versions)
     {
         InnerArchive = Ar;
+    }
+
+    public FMemoryImageArchive(FArchive Ar, int arrayAlign) : base(Ar.Versions)
+    {
+        InnerArchive = Ar;
+        ArrayAlign = arrayAlign;
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -124,7 +131,7 @@ public class FMemoryImageArchive : FArchive
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = getter();
-            Position = Position.Align(4);
+            Position = Position.Align(ArrayAlign);
         }
         Position = continuePos;
         return data;

@@ -1134,14 +1134,14 @@ public class FPointerTableBase
 public class FTypeLayoutDesc
 {
     public readonly FName? Name;
-    public readonly string StringName;
+    public readonly string? StringName;
     public readonly FHashedName? NameHash;
     public readonly uint SavedLayoutSize;
     public readonly FSHAHash SavedLayoutHash;
 
     public FTypeLayoutDesc(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
     {
-        if (Ar.isGlobal)
+        if (Ar.isGlobal && bUseNewFormat)
         {
             StringName = Ar.ReadFString();
         }
