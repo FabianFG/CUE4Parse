@@ -13,7 +13,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         {
             LODs = new List<CStaticMeshLod>();
         }
-        
+
         public void FinalizeMesh()
         {
             foreach (var levelOfDetail in LODs)

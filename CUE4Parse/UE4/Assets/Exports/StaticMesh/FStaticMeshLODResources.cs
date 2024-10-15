@@ -136,6 +136,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                         _ = new FColorVertexBuffer(Ar);
                     }
                 }
+                else
+                {
+                    ColorVertexBuffer = new FColorVertexBuffer();
+                }
             }
             else
             {

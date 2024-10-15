@@ -138,8 +138,6 @@ namespace CUE4Parse.UE4.Pak.Objects
                 Ar.Position += 8; // Timestamp
             Ar.Position += 20; // Hash
 
-            if (Ar.Game == GAME_InfinityNikki) Ar.Position += 20; // Second Hash
-
             if (reader.Info.Version >= PakFile_Version_CompressionEncryption)
             {
                 if (CompressionMethod != CompressionMethod.None)

@@ -112,7 +112,9 @@ public struct FMetadataStorage
         MetadataMap = new Dictionary<FName, FRigBaseMetadata>(num);
         for (var i = 0; i < num; i++)
         {
-            MetadataMap[Ar.ReadFName()] = FRigBoolMetadata.Read(Ar);
+            FName MetadataName = Ar.ReadFName();
+            FName MetadataTypeName = Ar.ReadFName();
+            MetadataMap[MetadataName] = FRigBoolMetadata.Read(Ar);
         }
     }
 }

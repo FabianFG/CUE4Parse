@@ -26,6 +26,7 @@ public class USkeletalMeshComponent : USceneComponent
         var current = this;
         while (true)
         {
+            if (current is null) break;
             mesh = current.GetOrDefault(parameterName, new FPackageIndex());
             if (!mesh.IsNull || current.Template == null)
                 break;

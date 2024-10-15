@@ -20,6 +20,7 @@ public class UStaticMeshComponent : USceneComponent
         var current = this;
         while (true)
         {
+            if (current is null) break;
             mesh = current.GetOrDefault("StaticMesh", new FPackageIndex());
             if (!mesh.IsNull || current.Template == null)
                 break;

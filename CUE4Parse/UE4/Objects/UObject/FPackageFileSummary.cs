@@ -160,7 +160,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
-                CustomVersionContainer = legacyFileVersion <= -2 ? new FCustomVersionContainer(Ar) : new FCustomVersionContainer();
+                CustomVersionContainer = new FCustomVersionContainer(Ar, FCustomVersionContainer.DetermineSerializationFormat(legacyFileVersion));
 
                 if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Versions.Length > 0)
                 {
@@ -191,7 +191,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             TotalHeaderSize = Ar.Read<int>();
-            FolderName = Ar.ReadFString();
+            FolderName = Ar.ReadFString(); // PackageGroup
             PackageFlags = Ar.Read<EPackageFlags>();
 
             /*if (PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))

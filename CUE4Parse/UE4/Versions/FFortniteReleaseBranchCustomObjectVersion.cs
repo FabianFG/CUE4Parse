@@ -47,6 +47,15 @@ public static class FFortniteReleaseBranchCustomObjectVersion
         // Store game thread particles data in single precision
         SinglePrecisionParticleData,
 
+        // UPCGPoint custom serialization
+        PCGPointStructuredSerializer,
+
+        // Deprecation of Nav Movement Properties and moving them to a new struct
+        NavMovementComponentMovingPropertiesToStruct,
+
+        // Add bone serialization for dynamic mesh attributes
+        DynamicMeshAttributesSerializeBones,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -68,7 +77,7 @@ public static class FFortniteReleaseBranchCustomObjectVersion
             < EGame.GAME_UE5_2 => Type.ActorComponentUCSModifiedPropertiesSparseStorage,
             < EGame.GAME_UE5_3 => Type.RemoveUselessLandscapeMeshesCookedCollisionData,
             < EGame.GAME_UE5_4 => Type.NaniteMaterialOverrideUsesEditorOnly,
-            < EGame.GAME_UE5_5 => Type.SinglePrecisionParticleData,
+            < EGame.GAME_UE5_5 => Type.PCGPointStructuredSerializer,
             _ => Type.LatestVersion
         };
     }

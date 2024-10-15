@@ -16,8 +16,10 @@ public class FInstancedStaticMeshInstanceData
 
         if (Ar.Game == EGame.GAME_HogwartsLegacy)
             Ar.SkipFixedArray(sizeof(int));
-        if (Ar.Game is EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds)
+        if (Ar.Game is EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves)
             Ar.Position += 16; // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
+        if (Ar.Game == EGame.GAME_SilentHill2Remake)
+            Ar.Position += 32; // probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
         TransformData.SetFromMatrix(Transform);
     }
 

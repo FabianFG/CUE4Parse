@@ -274,7 +274,7 @@ public class FStructFallbackConverter : JsonConverter<FStructFallback>
 
         foreach (var property in value.Properties)
         {
-            writer.WritePropertyName(property.Name.Text);
+            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
             serializer.Serialize(writer, property.Tag);
         }
 

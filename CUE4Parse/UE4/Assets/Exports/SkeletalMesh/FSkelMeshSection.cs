@@ -266,7 +266,7 @@ public class FSkelMeshSection
             case EGame.GAME_OutlastTrials:
                 Ar.Position += 1;
                 break;
-            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED:
+            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters:
                 Ar.Position += 4;
                 break;
             case EGame.GAME_FragPunk:

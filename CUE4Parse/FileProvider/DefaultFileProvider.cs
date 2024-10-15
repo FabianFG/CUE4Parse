@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
@@ -73,7 +73,7 @@ namespace CUE4Parse.FileProvider
                 // Only load containers if .uproject file is not found
                 if (uproject == null && upperExt is "PAK" or "UTOC")
                 {
-                    RegisterVfs(file.FullName, new Stream[] { file.OpenRead() }, it => new FStreamArchive(it, File.OpenRead(it), Versions));
+                    RegisterVfs(file);
                     continue;
                 }
 

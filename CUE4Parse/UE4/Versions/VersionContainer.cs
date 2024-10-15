@@ -73,6 +73,9 @@ namespace CUE4Parse.UE4.Versions
             // objects
             Options["MorphTarget"] = true;
 
+            // structs
+            Options["Vector_NetQuantize_AsStruct"] = false;
+
             // fields
             Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25;
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
