@@ -15,7 +15,7 @@ namespace CUE4Parse.Example
         private const string _aesKey = "0x6B80868E9345C839D8B10CE00179763E15E5FDA976E499D6CFBEDB41AC0FAD36";
 
         private const string _mapping = "./mappings.usmap";
-        private const string _objectPath = "FortniteGame/Plugins/GameFeatures/BRCosmetics/Content/Athena/Items/Cosmetics/Characters/CID_A_112_Athena_Commando_M_Ruckus.uasset";
+        private const string _objectPath = "FortniteGame/Plugins/GameFeatures/BRCosmetics/Content/Athena/Items/Cosmetics/Characters/CID_A_112_Athena_Commando_M_Ruckus";
         private const string _objectName = "FortCosmeticCharacterPartVariant_0";
 
         // Rick has 2 exports as of today
