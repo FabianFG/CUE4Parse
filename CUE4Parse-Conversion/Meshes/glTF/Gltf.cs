@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -17,6 +17,7 @@ using SharpGLTF.IO;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse_Conversion.Meshes.glTF
 {
@@ -83,6 +84,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             var armatureNodeBuilder = new NodeBuilder(name+".ao");
 
             var armature = CreateGltfSkeleton(bones, armatureNodeBuilder);
+
             sceneBuilder.AddSkinnedMesh(mesh, Matrix4x4.Identity, armature);
 
             Model = sceneBuilder.ToGltf2();
@@ -128,7 +130,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 if (root.ParentIndex != -1) continue;
 
                 var rootCopy = (CSkelMeshBone)root.Clone(); // we don't want to modify the original skeleton
-                // rootCopy.Orientation = FQuat.Conjugate(root.Orientation);
+
                 result.AddRange(CreateBonesRecursive(rootCopy, armatureNode, skeleton, i));
             }
 
@@ -140,7 +142,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             var res = new List<NodeBuilder>();
 
             var bonePos = SwapYZ(bone.Position*0.01f);
-            var boneRot = SwapYZ(bone.Orientation);
+            var boneRot = ConvertRotation(bone.Orientation);
             var node = parent.CreateNode(bone.Name.ToString())
                 .WithLocalRotation(boneRot.ToQuaternion())
                 .WithLocalTranslation(bonePos);
@@ -284,7 +286,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         private static (VERTEX, VERTEX, VERTEX) PrepareTris(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3)
         {
-            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position*0.01f),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
+            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position*0.01f), SwapYZAndNormalize((FVector)vert1.Normal), SwapYZAndNormalize((Vector4)vert1.Tangent));
             var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position*0.01f), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
             var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position*0.01f), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
 
@@ -305,6 +307,13 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         }
 
         public static FQuat SwapYZ(FQuat quat) => new (quat.X, quat.Z, quat.Y, quat.W);
+
+        public static FQuat ConvertRotation(FQuat quat)
+        {
+           quat.Normalize();
+           var res = new FQuat(-quat.X, -quat.Z, -quat.Y, quat.W);
+           return res;
+        }
 
         public static Vector4 SwapYZAndNormalize(Vector4 vec)
         {
