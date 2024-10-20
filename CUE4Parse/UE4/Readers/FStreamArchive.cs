@@ -93,10 +93,10 @@ public class FRandomAccessFileStreamArchive : FArchive
     private readonly SafeFileHandle _handle;
 
     public FRandomAccessFileStreamArchive(string filePath, VersionContainer? versions = null)
-        : this(filePath, File.OpenHandle(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
+        : this(filePath, File.OpenHandle(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, FileOptions.Asynchronous), versions) { }
 
     public FRandomAccessFileStreamArchive(FileInfo fileInfo, VersionContainer? versions = null)
-        : this(fileInfo.FullName, File.OpenHandle(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
+        : this(fileInfo.FullName, File.OpenHandle(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, FileOptions.Asynchronous), versions) { }
 
     public FRandomAccessFileStreamArchive(string filePath, SafeFileHandle handle, VersionContainer? versions = null) : base(versions)
     {
