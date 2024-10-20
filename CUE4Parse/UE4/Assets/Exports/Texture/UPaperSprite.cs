@@ -8,8 +8,8 @@ public class UPaperSprite : UObject
 {
     public FVector2D BakedSourceUV;
     public FVector2D BakedSourceDimension;
-    public FPackageIndex BakedSourceTexture;
-    public FPackageIndex DefaultMaterial;
+    public FPackageIndex? BakedSourceTexture;
+    public FPackageIndex? DefaultMaterial;
     public float PixelsPerUnrealUnit;
     public FVector4[] BakedRenderData;
 
