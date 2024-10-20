@@ -291,7 +291,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Game == EGame.GAME_ReadyOrNot)
+            if (Ar.Game == EGame.GAME_ReadyOrNot || Ar.Game == EGame.GAME_KenaBridgeofSpirits)
                 Ar.Position += 4;
         }
 
