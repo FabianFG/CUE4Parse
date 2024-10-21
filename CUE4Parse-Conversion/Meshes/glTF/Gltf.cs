@@ -169,7 +169,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
-            else materialName = $"material_{index}";
+            else materialName = sect.MaterialName ?? $"material_{index}";
 
             var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
@@ -204,7 +204,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
-            else materialName = $"material_{index}";
+            else materialName = sect.MaterialName ?? $"material_{index}";
 
             var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
