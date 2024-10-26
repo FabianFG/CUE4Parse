@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -14,7 +15,7 @@ namespace CUE4Parse.Example
     public static class Program
     {
         private const string GameDirectory = @"D:\Games\Fortnite\FortniteGame\Content\Paks"; // Change game directory path to the one you have.
-        private const string AesKey = "0xF271F4B1EA375C42D3676058BAE8FBA295CB61F773070A706A48EAD7C6F98CDB";
+        private const string AesKey = "0x6B80868E9345C839D8B10CE00179763E15E5FDA976E499D6CFBEDB41AC0FAD36";
 
         private const string MappingsFile = @"D:\Leaking Tools\FModel\Output\.data\++Fortnite+Release-31.40-CL-36874825-Windows_oo.usmap";
         private const string ObjectPath = "FortniteGame/Content/Athena/Items/Cosmetics/Characters/CID_A_112_Athena_Commando_M_Ruckus";
@@ -30,6 +31,8 @@ namespace CUE4Parse.Example
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
 
+            InitOodle();
+            
             var provider = new DefaultFileProvider(GameDirectory, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE5_5));
             provider.MappingsContainer = new FileUsmapTypeMappingsProvider(MappingsFile);
 
@@ -48,6 +51,13 @@ namespace CUE4Parse.Example
             var variantJson = JsonConvert.SerializeObject(variantExport, Formatting.Indented);
 
             Console.WriteLine(variantJson); // Outputs the variantJson.
+        }
+
+        public static void InitOodle()
+        {
+            var oodlePath = Path.Combine(Environment.CurrentDirectory, OodleHelper.OODLE_DLL_NAME);
+            if (!File.Exists(oodlePath)) OodleHelper.DownloadOodleDll(oodlePath);
+            OodleHelper.Initialize(oodlePath);
         }
     }
 }

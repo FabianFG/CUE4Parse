@@ -1,36 +1,119 @@
-﻿using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
+﻿using CUE4Parse.MappingsProvider.Usmap;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class UCustomizableObject : UObject
 {
-    // private const int CurrentVersion = 414;
+	public ECustomizableObjectVersions Version;
+	public Model Model;
 
-    public FMorphTargetInfo[] ContributingMorphTargetsInfo;
-    public FMorphTargetVertexData[] MorphTargetReconstructionData;
-    public FCustomizableObjectMeshToMeshVertData[] ClothMeshToMeshVertData;
-    public FCustomizableObjectClothingAssetData[] ContributingClothingAssetsData;
-    public FCustomizableObjectClothConfigData[] ClothSharedConfigsData;
-    
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
+	public override void Deserialize(FAssetArchive Ar, long validPos)
+	{
+		base.Deserialize(Ar, validPos);
 
-        var version = Ar.Read<int>();
+		Version = Ar.Read<ECustomizableObjectVersions>();
+		Model = new Model(Ar);
+	}
+}
 
-        // if (CurrentVersion == version)
-        {
-            ContributingMorphTargetsInfo = Ar.ReadArray<FMorphTargetInfo>();
-            MorphTargetReconstructionData = Ar.ReadArray<FMorphTargetVertexData>();
-        }
+public enum ECustomizableObjectVersions
+{
+    FirstEnumeratedVersion = 450,
 
-        {
-            ClothMeshToMeshVertData = Ar.ReadBulkArray(() => new FCustomizableObjectMeshToMeshVertData(Ar));
-            ContributingClothingAssetsData = Ar.ReadArray(() => new FCustomizableObjectClothingAssetData(Ar));
-            ClothSharedConfigsData = Ar.ReadArray(() => new FCustomizableObjectClothConfigData(Ar));
-        }
+    DeterminisiticMeshVertexIds,
 
-        var model = new Model(Ar);
-    }
+    NumRuntimeReferencedTextures,
+		
+    DeterminisiticLayoutBlockIds,
+
+    BackoutDeterminisiticLayoutBlockIds,
+
+    FixWrappingProjectorLayoutBlockId,
+
+    MeshReferenceSupport,
+
+    ImproveMemoryUsageForStreamableBlocks,
+
+    FixClipMeshWithMeshCrash,
+
+    SkeletalMeshLODSettingsSupport,
+
+    RemoveCustomCurve,
+
+    AddEditorGamePlayTags,
+
+    AddedParameterThumbnailsToEditor,
+
+    ComponentsLODsRedesign,
+
+    ComponentsLODsRedesign2,
+
+    LayoutToPOD,
+
+    AddedRomFlags,
+
+    LayoutNodeCleanup,
+
+    AddSurfaceAndMeshMetadata,
+
+    TablesPropertyNameBug,
+
+    DataTablesParamTrackingForCompileOnlySelected,
+
+    CompilationOptimizationsMeshFormat,
+
+    ModelStreamableBulkData,
+
+    LayoutBlocksAsInt32,
+		
+    IntParameterOptionDataTable,
+
+    RemoveLODCountLimit,
+
+    IntParameterOptionDataTablePartialBackout,
+
+    IntParameterOptionDataTablePartialRestore,
+
+    CorrectlySerializeTableToParamNames,
+		
+    AddMaterialSlotNameIndexToSurfaceMetadata,
+
+    NodeComponentMesh,
+		
+    MoveEditNodesToModifiers,
+
+    DerivedDataCache,
+
+    ComponentsArray,
+
+    FixComponentNames,
+
+    AddedFaceCullStrategyToSomeOperations,
+
+    DDCParticipatingObjects,
+
+    GroupRomsBySource,
+		
+    RemovedGroupRomsBySource,
+
+    ReGroupRomsBySource,
+
+    UIMetadataGameplayTags,
+
+    TransformInMeshModifier,
+		
+    SurfaceMetadataSlotNameIndexToName,
+
+    BulkDataFilesNumFilesLimit,
+
+    RemoveModifiersHack,
+
+    SurfaceMetadataSerialized,
+
+    FixesForMeshSectionMultipleOutputs,
+
+    // -----<new versions can be added above this line>--------
+    LastCustomizableObjectVersion
 }

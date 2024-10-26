@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -136,6 +137,11 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
         public FRichCurve(FStructFallback data) : base(data)
         {
             Keys = data.GetOrDefault(nameof(Keys), Array.Empty<FRichCurveKey>());
+        }
+
+        public FRichCurve(FAssetArchive Ar)
+        {
+            Keys = Ar.ReadArray<FRichCurveKey>();
         }
 
         public override void RemapTimeValue(ref float inTime, ref float cycleValueOffset)
