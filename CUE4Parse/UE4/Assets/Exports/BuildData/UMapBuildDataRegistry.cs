@@ -491,6 +491,8 @@ public class FLightMap2D : FLightMap
                 VirtualTextures[0] = new FPackageIndex(Ar);
             }
         }
+
+        if (Ar.Game == EGame.GAME_RacingMaster) Ar.Position += 20;
     }
 }
 

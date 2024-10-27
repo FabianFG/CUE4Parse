@@ -40,6 +40,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_FridayThe13th = 0x65617441;
         public const uint PAK_FILE_MAGIC_DreamStar = 0x1B6A32F1;
         public const uint PAK_FILE_MAGIC_GameForPeace = 0xff67ff70;
+        public const uint PAK_FILE_MAGIC_KartRiderDrift = 0x81c4b35b;
+        public const uint PAK_FILE_MAGIC_RacingMaster = 0x9a51da3f;
 
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -90,6 +92,20 @@ namespace CUE4Parse.UE4.Pak.Objects
                 return;
             }
 
+            if (Ar.Game == EGame.GAME_RacingMaster)
+            {
+                EncryptedIndex = Ar.ReadFlag();
+                EncryptionKeyGuid = Ar.Read<FGuid>();
+                CustomEncryptionData = Ar.ReadBytes(4);
+                Magic = Ar.Read<uint>();
+                if (Magic != PAK_FILE_MAGIC_RacingMaster) return;
+                IndexSize = Ar.Read<long>();
+                IndexHash = new FSHAHash(Ar);
+                Version = Ar.Read<EPakFileVersion>();
+                IndexOffset = Ar.Read<long>();
+                goto beforeCompression;
+            }
+
             // New FPakInfo fields.
             EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
             EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
@@ -103,7 +119,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                     Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault ||
                     Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                     Ar.Game == EGame.GAME_FridayThe13th && Magic == PAK_FILE_MAGIC_FridayThe13th ||
-                    Ar.Game == EGame.GAME_DreamStar && Magic == PAK_FILE_MAGIC_DreamStar)
+                    Ar.Game == EGame.GAME_DreamStar && Magic == PAK_FILE_MAGIC_DreamStar ||
+                    Ar.Game == EGame.GAME_KartRiderDrift && Magic == PAK_FILE_MAGIC_KartRiderDrift)
                     goto afterMagic;
                 // Stop immediately when magic is wrong
                 return;
@@ -115,6 +132,11 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 Version &= (EPakFileVersion) 0xFFFF;
+            }
+
+            if (Ar.Game == EGame.GAME_KartRiderDrift)
+            {
+                Version &= (EPakFileVersion) 0x0F;
             }
 
             if (Ar.Game == EGame.GAME_FridayThe13th)
@@ -169,6 +191,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 IndexIsFrozen = Ar.Read<byte>() != 0;
             }
 
+            beforeCompression:
             if (Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
             {
                 CompressionMethods = new List<CompressionMethod>
@@ -245,6 +268,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             SizeB1 = Size9 + 1, // UE4.25
             //Size10 = Size8a
 
+            SiseRacingMaster = Size8 + 4, // additional int
             SizeFTT = Size + 4, // additional int for extra magic
             SizeHotta = Size8a + 4, // additional int for custom pak version
             SizeFarlight = Size8a + 9, // additional long and byte
@@ -295,6 +319,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
                     EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                     EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
+                    EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)
@@ -308,7 +333,9 @@ namespace CUE4Parse.UE4.Pak.Objects
                         Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                         Ar.Game == EGame.GAME_FridayThe13th && info.Magic == PAK_FILE_MAGIC_FridayThe13th ||
                         Ar.Game == EGame.GAME_DreamStar && info.Magic == PAK_FILE_MAGIC_DreamStar ||
-                        Ar.Game == EGame.GAME_GameForPeace && info.Magic == PAK_FILE_MAGIC_GameForPeace)
+                        Ar.Game == EGame.GAME_GameForPeace && info.Magic == PAK_FILE_MAGIC_GameForPeace ||
+                        Ar.Game == EGame.GAME_KartRiderDrift && info.Magic == PAK_FILE_MAGIC_KartRiderDrift ||
+                        Ar.Game == EGame.GAME_RacingMaster && info.Magic == PAK_FILE_MAGIC_RacingMaster)
                         return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {
