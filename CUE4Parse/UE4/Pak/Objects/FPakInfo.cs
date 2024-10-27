@@ -176,8 +176,8 @@ namespace CUE4Parse.UE4.Pak.Objects
             if (Ar.Game == EGame.GAME_WildAssault)
             {
                 EncryptionKeyGuid = default;
-                IndexOffset = (long) ((ulong) IndexOffset ^ 0xE36CC9FA0F542EC9) - 69;
-                IndexSize = (long) ((ulong) IndexSize ^ 0xDAE3F23058AA20D2) - 5;
+                IndexOffset = (long) ((ulong) IndexOffset ^ 0xD5B9B05CE8143A3C) - 0xAA;
+                IndexSize = (long) ((ulong) IndexSize ^ 0x6DB425B4BC084B4B) - 0xA8;
             }
 
             if (Ar.Game == EGame.GAME_DeadByDaylight)
