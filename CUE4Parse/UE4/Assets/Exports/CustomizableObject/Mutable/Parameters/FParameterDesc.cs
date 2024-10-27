@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -34,7 +35,7 @@ public class FParameterDesc
             EParameterType.Float => Ar.Read<float>(),
             EParameterType.Color => Ar.Read<FVector4>(),
             EParameterType.Projector => new FProjector(Ar),
-            EParameterType.Image => Ar.ReadMutableFString(),
+            EParameterType.Image => new FName(Ar.ReadMutableFString()),
             EParameterType.String => Ar.ReadMutableFString(),
             EParameterType.Matrix => Ar.Read<FMatrix>(),
             _ => throw new ParserException(Ar, $"Unknown EParameterType value '{Type}'")
