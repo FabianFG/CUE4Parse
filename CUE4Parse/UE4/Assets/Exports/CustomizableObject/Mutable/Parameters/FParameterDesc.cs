@@ -34,7 +34,7 @@ public class FParameterDesc
             EParameterType.Float => Ar.Read<float>(),
             EParameterType.Color => Ar.Read<FVector4>(),
             EParameterType.Projector => new FProjector(Ar),
-            EParameterType.Image => Ar.ReadFName(),
+            EParameterType.Image => Ar.ReadMutableFString(),
             EParameterType.String => Ar.ReadMutableFString(),
             EParameterType.Matrix => Ar.Read<FMatrix>(),
             _ => throw new ParserException(Ar, $"Unknown EParameterType value '{Type}'")
