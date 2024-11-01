@@ -290,6 +290,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 PackageName = Ar.ReadFName();
             }
 
+            if (Ar.Game == EGame.GAME_RacingMaster) Ar.Position += 1;
+                
             ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }
     }
