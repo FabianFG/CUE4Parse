@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Meshes;
 
@@ -10,7 +11,7 @@ public class FMeshBufferChannel
     public ushort Offset;
     public ushort ComponentCount;
 
-    public FMeshBufferChannel(FAssetArchive Ar)
+    public FMeshBufferChannel(FArchive Ar)
     {
         Semantic = Ar.Read<EMeshBufferSemantic>();
         Format = Ar.Read<EMeshBufferFormat>();

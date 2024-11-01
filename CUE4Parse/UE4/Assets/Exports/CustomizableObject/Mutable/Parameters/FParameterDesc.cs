@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -17,7 +18,7 @@ public class FParameterDesc
     public uint[] Ranges;
     public FIntValueDesc[] PossibleValues;
 
-    public FParameterDesc(FAssetArchive Ar)
+    public FParameterDesc(FArchive Ar)
     {
         Version = Ar.Read<int>();
         if (Version > 10)

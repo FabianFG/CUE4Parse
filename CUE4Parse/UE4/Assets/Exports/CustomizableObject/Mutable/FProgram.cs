@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine.Curves;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
@@ -33,7 +34,7 @@ public class FProgram
     public FRangeDesc[] Ranges;
     public ushort[][] ParameterLists;
     
-    public FProgram(FAssetArchive Ar)
+    public FProgram(FArchive Ar)
     {
         OpAddress = Ar.ReadArray<uint>();
         ByteCode = Ar.ReadArray<byte>();

@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 using FIntVector2 = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<int>;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layouts;
@@ -13,7 +14,7 @@ public class Layout : IMutablePtr
     
     public bool IsBroken { get; set; }
     
-    public Layout(FAssetArchive Ar)
+    public Layout(FArchive Ar)
     {
         Size = Ar.Read<FIntVector2>();
         Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));

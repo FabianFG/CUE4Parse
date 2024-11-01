@@ -1,9 +1,15 @@
 using System;
 using System.IO;
+using System.Linq;
+using CUE4Parse_Conversion.Textures;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Meshes;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -14,7 +20,7 @@ namespace CUE4Parse.Example
 {
     public static class Program
     {
-        private const string GameDirectory = @"D:\Games\Fortnite\FortniteGame\Content\Paks"; // Change game directory path to the one you have.
+        private const string GameDirectory = @"D:\Fortnite\FortniteGame\Content\Paks"; // Change game directory path to the one you have.
         private const string AesKey = "0x6B80868E9345C839D8B10CE00179763E15E5FDA976E499D6CFBEDB41AC0FAD36";
 
         private const string MappingsFile = @"D:\Leaking Tools\FModel\Output\.data\++Fortnite+Release-31.40-CL-36874825-Windows_oo.usmap";
@@ -41,16 +47,23 @@ namespace CUE4Parse.Example
 
             provider.LoadLocalization(); // explicit enough
 
-            // these 2 lines will load all exports the asset has and transform them in a single Json string
-            var allExports = provider.LoadAllObjects(ObjectPath);
-            var fullJson = JsonConvert.SerializeObject(allExports, Formatting.Indented);
-
-            // each export has a name, these 2 lines will load only one export the asset has
-            // you must use "LoadObject" and provide the full path followed by a dot followed by the export name
-            var variantExport = provider.LoadObject(ObjectPath + "." + ObjectName);
-            var variantJson = JsonConvert.SerializeObject(variantExport, Formatting.Indented);
-
-            Console.WriteLine(variantJson); // Outputs the variantJson.
+            var customizableObject = provider.LoadObject<UCustomizableObject>("FortniteGame/Plugins/GameFeatures/MeshCosmetics/Content/Jumpsuit/F_MED_Jumpsuit_Scrap/CO/CO_F_MED_Jumpsuit_Scrap.CO_F_MED_Jumpsuit_Scrap");
+            var evaluator = new MutableEvaluator(provider, customizableObject);
+            
+            evaluator.LoadModelStreamable();
+            Mesh mesh;
+            for (int i = 0; i < customizableObject.Model.Program.Roms.Length; i++)
+            {
+                var rom = customizableObject.Model.Program.Roms[i];
+                if (rom.ResourceType == DataType.DT_IMAGE)
+                    continue;
+                
+                mesh = evaluator.LoadResource((int) rom.ResourceIndex);
+                if (mesh.IsBroken == false)
+                    return;
+            }
+            
+            evaluator.ReadByteCode();
         }
 
         public static void InitOodle()
@@ -58,6 +71,15 @@ namespace CUE4Parse.Example
             var oodlePath = Path.Combine(Environment.CurrentDirectory, OodleHelper.OODLE_DLL_NAME);
             if (!File.Exists(oodlePath)) OodleHelper.DownloadOodleDll(oodlePath);
             OodleHelper.Initialize(oodlePath);
+        }
+
+        public static void ExportImage(Image image)
+        {
+            var path = Path.Combine(Environment.CurrentDirectory, "Exports", "export.png");
+            var bitmap = image.Decode();
+            var encoded = bitmap.Encode(ETextureFormat.Png, 100);
+            File.WriteAllBytes(path, encoded.ToArray());
+            Console.WriteLine(path);
         }
     }
 }

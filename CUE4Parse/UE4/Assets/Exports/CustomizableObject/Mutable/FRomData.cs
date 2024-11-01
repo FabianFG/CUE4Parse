@@ -1,20 +1,19 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
 public class FRomData
 {
     public uint Id;
-    //public uint SourceId; https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Plugins/Mutable/Source/MutableRuntime/Internal/MuR/ModelPrivate.h#L36
     public uint Size;
     public uint ResourceIndex;
     public DataType ResourceType;
     public ERomFlags Flags;
     
-    public FRomData(FAssetArchive Ar)
+    public FRomData(FArchive Ar)
     {
         Id = Ar.Read<uint>();
-        //SourceId = Ar.Read<uint>();
         Size = Ar.Read<uint>();
         ResourceIndex = Ar.Read<uint>();
         ResourceType = Ar.Read<DataType>();

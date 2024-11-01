@@ -1,5 +1,6 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 using FImageSize = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<ushort>;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
@@ -11,7 +12,7 @@ public class Image : IMutablePtr
     
     public bool IsBroken { get; set; }
 
-    public Image(FAssetArchive Ar)
+    public Image(FArchive Ar)
     {
         Version = Ar.Read<int>();
 

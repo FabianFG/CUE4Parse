@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
@@ -11,7 +12,7 @@ public class FState
     public uint[] UpdateCache;
     public KeyValuePair<uint, ulong>[] DynamicResources;
 
-    public FState(FAssetArchive Ar)
+    public FState(FArchive Ar)
     {
         Name = Ar.ReadMutableFString();
         Root = Ar.Read<uint>();

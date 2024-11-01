@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -139,7 +140,7 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             Keys = data.GetOrDefault(nameof(Keys), Array.Empty<FRichCurveKey>());
         }
 
-        public FRichCurve(FAssetArchive Ar)
+        public FRichCurve(FArchive Ar)
         {
             Keys = Ar.ReadArray<FRichCurveKey>();
         }

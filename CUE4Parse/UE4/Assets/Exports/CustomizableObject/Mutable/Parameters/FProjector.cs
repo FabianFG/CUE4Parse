@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -12,7 +13,7 @@ public class FProjector
     public FVector Scale;
     public float ProjectionAngle;
     
-    public FProjector(FAssetArchive Ar)
+    public FProjector(FArchive Ar)
     {
         Type = Ar.Read<EProjectorType>();
         Position = Ar.Read<FVector>();

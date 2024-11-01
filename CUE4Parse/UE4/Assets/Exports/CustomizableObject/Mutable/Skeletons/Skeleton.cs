@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
 
@@ -13,7 +14,7 @@ public class Skeleton : IMutablePtr
 
     public bool IsBroken { get; set; }
 
-    public Skeleton(FAssetArchive Ar)
+    public Skeleton(FArchive Ar)
     {
         Version = Ar.Read<int>();
 

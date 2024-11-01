@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
 
@@ -9,7 +10,7 @@ public class FBonePose
     public EBoneUsageFlags BoneUsageFlags;
     public FTransform BoneTransform;
 
-    public FBonePose(FAssetArchive Ar)
+    public FBonePose(FArchive Ar)
     {
         BoneId = new FBoneName(Ar);
         BoneUsageFlags = Ar.Read<EBoneUsageFlags>();

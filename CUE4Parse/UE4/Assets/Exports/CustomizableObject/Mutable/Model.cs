@@ -1,15 +1,17 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
 // Handler for UCustomizableObject .mut files
 public class Model
 {
+    public int Version;
     public FProgram Program;
 
-    public Model(FAssetArchive Ar)
+    public Model(FArchive Ar)
     {
-        Ar.Position += 4;
+        Version = Ar.Read<int>();
         Program = new FProgram(Ar);
     }
 }

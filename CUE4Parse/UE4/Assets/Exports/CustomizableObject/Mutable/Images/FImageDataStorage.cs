@@ -1,6 +1,6 @@
 ﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Readers;
 using FImageSize = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<ushort>;
 using FImageArray = byte[];
 
@@ -18,7 +18,7 @@ public class FImageDataStorage
     private const int NumLODsInCompactedTail = 7;
 
     public FImageDataStorage() { }
-    public FImageDataStorage(FAssetArchive Ar)
+    public FImageDataStorage(FArchive Ar)
     {
         Version = Ar.Read<int>();
         if (Version > 0)

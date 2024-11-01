@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -11,7 +12,7 @@ public class FShape
     public FVector Size;
     public Type Type;
 
-    public FShape(FAssetArchive Ar)
+    public FShape(FArchive Ar)
     {
         Position = Ar.Read<FVector>();
         Up = Ar.Read<FVector>();
