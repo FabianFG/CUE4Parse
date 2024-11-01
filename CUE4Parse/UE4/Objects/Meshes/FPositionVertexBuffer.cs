@@ -14,11 +14,12 @@ namespace CUE4Parse.UE4.Objects.Meshes
 
         public FPositionVertexBuffer(FArchive Ar)
         {
-            if (Ar.Game == EGame.GAME_Undawn)
+            if (Ar.Game is EGame.GAME_Undawn or EGame.GAME_RacingMaster)
             {
-                bool bUseFullPrecisionPositions = Ar.ReadBoolean();
+                bool bUseFullPrecisionPositions = Ar.Game == EGame.GAME_Undawn && Ar.ReadBoolean();
                 Stride = Ar.Read<int>();
                 NumVertices = Ar.Read<int>();
+                bUseFullPrecisionPositions = Ar.Game == EGame.GAME_RacingMaster && Stride == 12;
                 Verts = bUseFullPrecisionPositions ? Ar.ReadBulkArray<FVector>() : Ar.ReadBulkArray<FVector>(() => Ar.Read<FVector3UnsignedShort>());
                 return;
             }

@@ -74,6 +74,7 @@ public enum EGame
         GAME_DreamStar = GAME_UE4_26 + 12,
         GAME_MidnightSuns = GAME_UE4_26 + 13,
         GAME_FragPunk = GAME_UE4_26 + 14,
+        GAME_RacingMaster = GAME_UE4_26 + 15,
     GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
@@ -86,6 +87,7 @@ public enum EGame
         GAME_MortalKombat1 = GAME_UE4_27 + 9,
         GAME_VisionsofMana = GAME_UE4_27 + 10,
         GAME_Spectre = GAME_UE4_27 + 11,
+        GAME_KartRiderDrift = GAME_UE4_27 + 12,
     GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
     GAME_UE4_LATEST = GAME_UE4_28,

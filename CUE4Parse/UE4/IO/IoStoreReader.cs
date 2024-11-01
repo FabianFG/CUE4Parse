@@ -254,7 +254,7 @@ namespace CUE4Parse.UE4.IO
 
                 reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
                 // FragPunk decided to encrypt the global utoc too.
-                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal)); 
+                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
                 byte[] src;
                 if (compressionBlock.CompressionMethodIndex == 0)
@@ -264,7 +264,7 @@ namespace CUE4Parse.UE4.IO
                 else
                 {
                     var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
-                    Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0,
+                    Compression.Compression.Decompress(compressedBuffer, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
                         (int) uncompressedSize, compressionMethod, reader);
                     src = uncompressedBuffer;
                 }
