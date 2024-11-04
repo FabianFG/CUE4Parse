@@ -2,7 +2,7 @@ using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
-using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -176,6 +176,9 @@ public class FScriptStruct
 
             // Lego 2K Drive
             "LegoGraphPartInstance" => type == ReadType.ZERO ? new FLegoGraphPartInstance() : new FLegoGraphPartInstance(Ar),
+
+            // Splitgate2
+            "Core1047ReleaseFlag" => new FCore1047ReleaseFlag(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
