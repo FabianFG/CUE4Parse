@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -28,6 +29,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int NameCount;
     }
 
+    [JsonConverter(typeof(FPackageFileSummaryConverter))]
     public class FPackageFileSummary
     {
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
@@ -43,16 +45,16 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int TotalHeaderSize;
         public readonly string FolderName;
         public int NameCount;
-        public readonly int NameOffset;
+        public int NameOffset;
         public readonly int SoftObjectPathsCount;
         public readonly int SoftObjectPathsOffset;
         public readonly string? LocalizationId;
         public readonly int GatherableTextDataCount;
         public readonly int GatherableTextDataOffset;
         public int ExportCount;
-        public readonly int ExportOffset;
+        public int ExportOffset;
         public int ImportCount;
-        public readonly int ImportOffset;
+        public int ImportOffset;
         public readonly int DependsOffset;
         public readonly int SoftPackageReferencesCount;
         public readonly int SoftPackageReferencesOffset;
