@@ -1,19 +1,20 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
 public class FRomData
 {
     public uint Id;
+    public uint SourceId;
     public uint Size;
     public uint ResourceIndex;
     public DataType ResourceType;
     public ERomFlags Flags;
-    
+
     public FRomData(FArchive Ar)
     {
         Id = Ar.Read<uint>();
+        SourceId = Ar.Read<uint>();
         Size = Ar.Read<uint>();
         ResourceIndex = Ar.Read<uint>();
         ResourceType = Ar.Read<DataType>();
@@ -52,6 +53,6 @@ public enum DataType : ushort
     DT_CURVE,
     DT_SKELETON,
     DT_PHYSICS_ASSET,
-		
+
     DT_COUNT
 }

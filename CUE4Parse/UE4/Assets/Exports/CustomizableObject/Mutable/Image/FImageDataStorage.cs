@@ -1,14 +1,12 @@
-﻿using System;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using FImageSize = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<ushort>;
 using FImageArray = byte[];
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Image;
 
 public class FImageDataStorage
 {
-    public int Version;
     public FImageSize ImageSize;
     public EImageFormat ImageFormat;
     public byte NumLODs;
@@ -17,31 +15,28 @@ public class FImageDataStorage
 
     private const int NumLODsInCompactedTail = 7;
 
-    public FImageDataStorage() { }
     public FImageDataStorage(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version > 0)
-            throw new NotSupportedException($"Mutable Version FImageDataStorage '{Version}' is currently not supported.");
+        var version = Ar.Read<int>();
 
         ImageSize = Ar.Read<FImageSize>();
         ImageFormat = Ar.Read<EImageFormat>();
         NumLODs = Ar.Read<byte>();
 
         Ar.Position += 3;
-        
+
         var buffersNum = Ar.Read<int>();
         Buffers = new FImageArray[buffersNum];
 
-        for (var i = 0; i < buffersNum; i++)
+        for (var i = 0; i < Buffers.Length; i++)
         {
             Buffers[i] = Ar.ReadArray<byte>();
         }
-        
+
         var numTailOffsets = Ar.Read<int>();
         if (numTailOffsets != NumLODsInCompactedTail)
             throw new ParserException(Ar, "numTailOffsets != NumLODsInCompactedTail");
-        
+
         CompactedTailOffsets = Ar.ReadArray<ushort>(numTailOffsets);
     }
 }

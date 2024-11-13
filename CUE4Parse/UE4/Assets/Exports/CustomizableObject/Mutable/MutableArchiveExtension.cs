@@ -31,7 +31,7 @@ public static class MutableArchiveExtension
             var item = getter();
             if (item.IsBroken)
                 continue;
-            
+
             result.Add(item);
         }
 

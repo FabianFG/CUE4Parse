@@ -1,6 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -10,7 +8,6 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
 public class FParameterDesc
 {
-    public int Version;
     public string Name;
     public FGuid Uid;
     public EParameterType Type;
@@ -20,9 +17,7 @@ public class FParameterDesc
 
     public FParameterDesc(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version > 10)
-            throw new NotSupportedException($"Mutable FParameterDesc Version '{Version}' is currently not supported");
+        var version = Ar.Read<int>();
 
         Name = Ar.ReadMutableFString();
         Uid = Ar.Read<FGuid>();
@@ -40,9 +35,9 @@ public class FParameterDesc
             EParameterType.String => Ar.ReadMutableFString(),
             EParameterType.Matrix => Ar.Read<FMatrix>(),
             _ => throw new ParserException(Ar, $"Unknown EParameterType value '{Type}'")
-            
+
         };
-        
+
         Ranges = Ar.ReadArray<uint>();
         PossibleValues = Ar.ReadArray(() => new FIntValueDesc(Ar));
     }

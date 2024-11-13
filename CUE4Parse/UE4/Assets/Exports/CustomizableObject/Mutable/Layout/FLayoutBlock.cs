@@ -2,7 +2,7 @@
 using CUE4Parse.UE4.Readers;
 using FIntVector2 = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<int>;
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layouts;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layout;
 
 public class FLayoutBlock
 {
@@ -12,7 +12,7 @@ public class FLayoutBlock
     public int Priority;
     public bool bReduceBothAxes;
     public bool bReduceByTwo;
-    
+
     public FLayoutBlock(FArchive Ar)
     {
         Min = Ar.Read<FIntVector2>();

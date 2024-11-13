@@ -1,8 +1,7 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeleton;
 
 public class FBonePose
 {
@@ -28,5 +27,5 @@ public enum EBoneUsageFlags : uint
     PhysicsParent  = 1 << 5,
     Deform         = 1 << 6,
     DeformParent   = 1 << 7,
-    Reshaped       = 1 << 8	
+    Reshaped       = 1 << 8
 }

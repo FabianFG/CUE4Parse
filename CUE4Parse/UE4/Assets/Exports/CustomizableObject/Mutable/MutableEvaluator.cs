@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.FileProvider;
-using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
-using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Meshes;
-using CUE4Parse.UE4.Assets.Objects;
-using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -34,10 +30,10 @@ public class MutableEvaluator
 	    ModelStreamables = modelStreamableData!.StreamingData.ModelStreamables.ToDictionary();
     }
 
-    public Mesh LoadResource(int resourceIndex)
+    public FMesh LoadResource(int resourceIndex)
     {
 	    var dataType = DataType.DT_MESH;
-	    
+
 	    var rom = Program.Roms.First(rom => rom.ResourceIndex == resourceIndex && rom.ResourceType == dataType);
 	    var block = ModelStreamables[rom.Id];
 	    if (!BulkReaders.TryGetValue(block.FileId, out var reader))
@@ -45,11 +41,11 @@ public class MutableEvaluator
 		    reader = Provider.CreateReader(GetMutableBulkDataPath(block.FileId));
 		    BulkReaders[block.FileId] = reader;
 	    }
-	    
+
 	    reader.Position = (long) block.Offset;
-	    return new Mesh(reader);
+	    return new FMesh(reader);
     }
-    
+
     public void ReadByteCode()
     {
 	    var bytecodeReader = new FByteArchive("Mutable ByteCode", Program.ByteCode);
@@ -61,7 +57,7 @@ public class MutableEvaluator
 		    Log.Information(opcodeType.ToString());
 	    }
     }
-    
+
     private string GetMutableBulkDataPath(ulong fileId)
     {
 	    var coPath = CustomizableObject.GetPathName();
@@ -186,13 +182,13 @@ public enum OP_TYPE : ushort
         // Image operations
         //-----------------------------------------------------------------------------------------
 
-        //! Combine an image on top of another one using a specific effect (Blend, SoftLight, 
+        //! Combine an image on top of another one using a specific effect (Blend, SoftLight,
 		//! Hardlight, Burn...). And optionally a mask.
         IM_LAYER,
 
-        //! Apply a colour on top of an image using a specific effect (Blend, SoftLight, 
+        //! Apply a colour on top of an image using a specific effect (Blend, SoftLight,
 		//! Hardlight, Burn...), optionally using a mask.
-        IM_LAYERCOLOUR,        
+        IM_LAYERCOLOUR,
 
         //! Convert between pixel formats
         IM_PIXELFORMAT,
@@ -278,7 +274,7 @@ public enum OP_TYPE : ushort
         //! The meshes must have the same topology, etc.
         ME_DIFFERENCE,
 
-        //! Apply a one morphs on a base. 
+        //! Apply a one morphs on a base.
         ME_MORPH,
 
         //! Merge a mesh to a mesh
@@ -337,7 +333,7 @@ public enum OP_TYPE : ushort
 
 		//! Clip Deform using bind data.
 		ME_CLIPDEFORM,
-	
+
         //! Mesh morph with Skeleton Reshape based on the morphed mesh.
         ME_MORPHRESHAPE,
 

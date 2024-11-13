@@ -1,5 +1,4 @@
-﻿using CUE4Parse.MappingsProvider.Usmap;
-using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
+﻿using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
@@ -7,25 +6,25 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 public class UCustomizableObject : UObject
 {
 	public ECustomizableObjectVersions Version;
-	public Model Model;
+	public FModel Model;
 
 	public override void Deserialize(FAssetArchive Ar, long validPos)
 	{
 		base.Deserialize(Ar, validPos);
 
 		Version = Ar.Read<ECustomizableObjectVersions>();
-		Model = new Model(Ar);
+		Model = new FModel(Ar);
 	}
 }
 
-public enum ECustomizableObjectVersions
+public enum ECustomizableObjectVersions : int
 {
     FirstEnumeratedVersion = 450,
 
     DeterminisiticMeshVertexIds,
 
     NumRuntimeReferencedTextures,
-		
+
     DeterminisiticLayoutBlockIds,
 
     BackoutDeterminisiticLayoutBlockIds,
@@ -67,7 +66,7 @@ public enum ECustomizableObjectVersions
     ModelStreamableBulkData,
 
     LayoutBlocksAsInt32,
-		
+
     IntParameterOptionDataTable,
 
     RemoveLODCountLimit,
@@ -77,11 +76,11 @@ public enum ECustomizableObjectVersions
     IntParameterOptionDataTablePartialRestore,
 
     CorrectlySerializeTableToParamNames,
-		
+
     AddMaterialSlotNameIndexToSurfaceMetadata,
 
     NodeComponentMesh,
-		
+
     MoveEditNodesToModifiers,
 
     DerivedDataCache,
@@ -95,7 +94,7 @@ public enum ECustomizableObjectVersions
     DDCParticipatingObjects,
 
     GroupRomsBySource,
-		
+
     RemovedGroupRomsBySource,
 
     ReGroupRomsBySource,
@@ -103,7 +102,7 @@ public enum ECustomizableObjectVersions
     UIMetadataGameplayTags,
 
     TransformInMeshModifier,
-		
+
     SurfaceMetadataSlotNameIndexToName,
 
     BulkDataFilesNumFilesLimit,
@@ -113,6 +112,10 @@ public enum ECustomizableObjectVersions
     SurfaceMetadataSerialized,
 
     FixesForMeshSectionMultipleOutputs,
+
+    ImageParametersInServerBuilds,
+
+    RemovedUnnecessarySerializationVersioning,
 
     // -----<new versions can be added above this line>--------
     LastCustomizableObjectVersion

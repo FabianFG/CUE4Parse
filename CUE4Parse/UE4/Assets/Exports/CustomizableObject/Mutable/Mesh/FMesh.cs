@@ -1,66 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layouts;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layout;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Physics;
-using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeleton;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Surfaces;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Meshes;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh;
 
-public class Mesh : IMutablePtr
+public class FMesh : IMutablePtr
 {
-    public int Version;
     public FMeshBufferSet IndexBuffers;
     public FMeshBufferSet VertexBuffers;
     public KeyValuePair<EMeshBufferType, FMeshBufferSet>[] AdditionalBuffers;
-    public Layout[] Layouts;
+    public FLayout[] Layouts;
     public uint[] SkeletonIDs;
-    public Skeleton Skeleton;
-    public PhysicsBody PhysicsBody;
+    public FSkeleton Skeleton;
+    public FPhysicsBody PhysicsBody;
     public EMeshFlags Flags;
     public FMeshSurface[] Surfaces;
     public string[] Tags;
     public ulong[] StreamedResources;
     public FBonePose[] BonePoses;
     public FBoneName[] BoneMap;
-    public PhysicsBody[] AdditionalPhysicsBodies;
+    public FPhysicsBody[] AdditionalPhysicsBodies;
     public uint MeshIDPrefix;
     public uint ReferenceID;
-    
+
     public bool IsBroken { get; set; }
 
-    public Mesh(FArchive Ar)
+    public FMesh(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-
-        if (Version == -1)
+        var version = Ar.Read<int>();
+        if (version == -1)
         {
             IsBroken = true;
             return;
         }
 
-        if (Version > 23)
-            throw new NotSupportedException($"Mutable Mesh Version '{Version}' is currently not supported");
-
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);
         AdditionalBuffers = Ar.ReadArray(() => new KeyValuePair<EMeshBufferType, FMeshBufferSet>(Ar.Read<EMeshBufferType>(), new FMeshBufferSet(Ar)));
-        Layouts = Ar.ReadMutableArray(() => new Layout(Ar));
+        Layouts = Ar.ReadMutableArray(() => new FLayout(Ar));
         SkeletonIDs = Ar.ReadArray<uint>();
-        Skeleton = new Skeleton(Ar);
-        PhysicsBody = new PhysicsBody(Ar);
+        Skeleton = new FSkeleton(Ar);
+        PhysicsBody = new FPhysicsBody(Ar);
         Flags = Ar.Read<EMeshFlags>();
         Surfaces = Ar.ReadArray(() => new FMeshSurface(Ar));
         Tags = Ar.ReadArray(Ar.ReadMutableFString);
         StreamedResources = Ar.ReadArray<ulong>();
         BonePoses = Ar.ReadArray(() => new FBonePose(Ar));
         BoneMap = Ar.ReadArray(() => new FBoneName(Ar));
-        AdditionalPhysicsBodies = Ar.ReadArray(() => new PhysicsBody(Ar));
+        AdditionalPhysicsBodies = Ar.ReadArray(() => new FPhysicsBody(Ar));
         MeshIDPrefix = Ar.Read<uint>();
         ReferenceID = Ar.Read<uint>();
-    } 
+    }
 }
 
 public enum EMeshBufferType

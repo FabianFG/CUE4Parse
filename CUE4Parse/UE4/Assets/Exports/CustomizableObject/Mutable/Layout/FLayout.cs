@@ -1,20 +1,19 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 using FIntVector2 = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<int>;
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layouts;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layout;
 
-public class Layout : IMutablePtr
+public class FLayout : IMutablePtr
 {
     public FIntVector2 Size;
     public FLayoutBlock[] Blocks;
     public FIntVector2 MaxSize;
     public EPackStrategy Strategy;
     public EReductionMethod ReductionMethod;
-    
+
     public bool IsBroken { get; set; }
-    
-    public Layout(FArchive Ar)
+
+    public FLayout(FArchive Ar)
     {
         Size = Ar.Read<FIntVector2>();
         Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
@@ -34,5 +33,5 @@ public enum EPackStrategy : uint
 public enum EReductionMethod : uint
 {
     Halve,	// Divide axis by 2
-    Unitary	// Reduces 1 block the axis 
+    Unitary	// Reduces 1 block the axis
 }

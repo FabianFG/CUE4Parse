@@ -1,8 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Image;
 
 public class FImageLODRange
 {
@@ -12,7 +10,7 @@ public class FImageLODRange
     public ushort Padding;
     public byte LODCount;
     public EImageFormat ImageFormat;
-    
+
     public FImageLODRange(FArchive Ar)
     {
         FirstIndex = Ar.Read<int>();
