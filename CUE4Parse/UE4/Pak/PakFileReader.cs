@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
@@ -14,7 +15,11 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
+
+using OffiUtils;
+
 using Serilog;
+
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
 
@@ -53,6 +58,8 @@ namespace CUE4Parse.UE4.Pak
             : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) {}
         public PakFileReader(string filePath, Stream stream, VersionContainer? versions = null)
             : this(new FStreamArchive(filePath, stream, versions)) {}
+        public PakFileReader(string filePath, IRandomAccessStream stream, VersionContainer? versions = null)
+            : this(new FRandomAccessStreamArchive(filePath, stream, versions)) {}
 
         public override byte[] Extract(VfsEntry entry)
         {
@@ -78,11 +85,10 @@ namespace CUE4Parse.UE4.Pak
                 var uncompressedOff = 0;
                 foreach (var block in pakEntry.CompressionBlocks)
                 {
-                    reader.Position = block.CompressedStart;
                     var blockSize = (int) block.Size;
                     var srcSize = blockSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
                     // Read the compressed block
-                    var compressed = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
+                    var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,
                     // its either just the compression block size,
                     // or if it's the last block, it's the remaining data size
@@ -105,9 +111,9 @@ namespace CUE4Parse.UE4.Pak
             // Pak Entry is written before the file data,
             // but it's the same as the one from the index, just without a name
             // We don't need to serialize that again so + file.StructSize
-            reader.Position = pakEntry.Offset + pakEntry.StructSize; // Doesn't seem to be the case with older pak versions
             var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
-            var data = ReadAndDecrypt(size, reader, pakEntry.IsEncrypted);
+            var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize /* Doesn't seem to be the case with older pak versions */,
+                size, reader, pakEntry.IsEncrypted);
             return size != pakEntry.UncompressedSize ? data.SubByteArray((int) pakEntry.UncompressedSize) : data;
         }
 
@@ -299,7 +305,7 @@ namespace CUE4Parse.UE4.Pak
         private void ReadFrozenIndex(bool caseInsensitive)
         {
             this.Ar.Position = Info.IndexOffset;
-            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)));
+            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)), 8);
 
             var mountPoint = Ar.ReadFString();
             ValidateMountPoint(ref mountPoint);
@@ -353,7 +359,8 @@ namespace CUE4Parse.UE4.Pak
         {
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             reader.Position = Info.IndexOffset;
-            return reader.ReadBytes((4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
+            var size = Math.Min((int) Info.IndexSize, 4 + MAX_MOUNTPOINT_TEST_LENGTH * 2);
+            return reader.ReadBytes(size.Align(Aes.ALIGN));
         }
 
         public override void Dispose()

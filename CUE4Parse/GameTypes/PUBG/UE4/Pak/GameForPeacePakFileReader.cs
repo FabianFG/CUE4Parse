@@ -35,11 +35,10 @@ public partial class PakFileReader
         var uncompressedOff = 0;
         foreach (var block in pakEntry.CompressionBlocks)
         {
-            reader.Position = block.CompressedStart;
             var blockSize = (int) block.Size;
             var srcSize = blockSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
             // Read the compressed block
-            var compressed = ReadAndDecrypt(srcSize, reader, pakEntry.IsEncrypted);
+            var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
             // Calculate the uncompressed size,
             // its either just the compression block size,
             // or if it's the last block, it's the remaining data size

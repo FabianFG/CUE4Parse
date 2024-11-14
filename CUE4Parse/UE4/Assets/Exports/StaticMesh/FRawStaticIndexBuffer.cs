@@ -60,7 +60,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     return Indices32.Length;
                 if (Indices16.Length > 0)
                     return Indices16.Length;
-                return -1;
+                return 0;
             }
         }
 

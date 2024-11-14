@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();
             if (Ar.Game is EGame.GAME_Dauntless or EGame.GAME_Grounded) Ar.Position += 8;
             bAffectDistanceFieldLighting = Ar.Game >= EGame.GAME_UE5_1 && Ar.ReadBoolean();
-            if (Ar.Game is EGame.GAME_RogueCompany or EGame.GAME_Grounded) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_RogueCompany or EGame.GAME_Grounded or EGame.GAME_RacingMaster) Ar.Position += 4;
         }
     }
 }

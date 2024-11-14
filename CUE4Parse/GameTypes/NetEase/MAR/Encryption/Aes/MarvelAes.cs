@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
@@ -82,7 +82,7 @@ public static class MarvelAes
         0xb0b0b0b0U, 0x54545454U, 0xbbbbbbbbU, 0x16161616U
     ];
 
-    private static readonly uint[] Td0 =
+    public static readonly uint[] Td0 =
     [
         0x51f4a750U, 0x7e416553U, 0x1a17a4c3U, 0x3a275e96U,
         0x3bab6bcbU, 0x1f9d45f1U, 0xacfa58abU, 0x4be30393U,
@@ -150,7 +150,7 @@ public static class MarvelAes
         0x7bcb8461U, 0xd532b670U, 0x486c5c74U, 0xd0b85742U
     ];
 
-    private static readonly uint[] Td1 =
+    public static readonly uint[] Td1 =
     [
         0x5051f4a7U, 0x537e4165U, 0xc31a17a4U, 0x963a275eU,
         0xcb3bab6bU, 0xf11f9d45U, 0xabacfa58U, 0x934be303U,
@@ -218,7 +218,7 @@ public static class MarvelAes
         0x617bcb84U, 0x70d532b6U, 0x74486c5cU, 0x42d0b857U
     ];
 
-    private static readonly uint[] Td2 =
+    public static readonly uint[] Td2 =
     [
         0xa75051f4U, 0x65537e41U, 0xa4c31a17U, 0x5e963a27U,
         0x6bcb3babU, 0x45f11f9dU, 0x58abacfaU, 0x03934be3U,
@@ -286,7 +286,7 @@ public static class MarvelAes
         0x84617bcbU, 0xb670d532U, 0x5c74486cU, 0x5742d0b8U
     ];
 
-    private static readonly uint[] Td3 =
+    public static readonly uint[] Td3 =
     [
         0xf4a75051U, 0x4165537eU, 0x17a4c31aU, 0x275e963aU,
         0xab6bcb3bU, 0x9d45f11fU, 0xfa58abacU, 0xe303934bU,
@@ -354,7 +354,7 @@ public static class MarvelAes
         0xcb84617bU, 0x32b670d5U, 0x6c5c7448U, 0xb85742d0U
     ];
 
-    private static readonly uint[] Td4 =
+    public static readonly uint[] Td4 =
     [
         0x52525252U, 0x09090909U, 0x6a6a6a6aU, 0xd5d5d5d5U,
         0x30303030U, 0x36363636U, 0xa5a5a5a5U, 0x38383838U,

@@ -274,7 +274,7 @@ public class FStructFallbackConverter : JsonConverter<FStructFallback>
 
         foreach (var property in value.Properties)
         {
-            writer.WritePropertyName(property.Name.Text);
+            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
             serializer.Serialize(writer, property.Tag);
         }
 
@@ -818,6 +818,150 @@ public class UObjectConverter : JsonConverter<UObject>
     }
 
     public override UObject ReadJson(JsonReader reader, Type objectType, UObject existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
+{
+    public override void WriteJson(JsonWriter writer, FPackageFileSummary value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Tag));
+        writer.WriteValue(value.Tag.ToString("X8"));
+
+        writer.WritePropertyName(nameof(value.PackageFlags));
+        writer.WriteValue(value.PackageFlags.ToStringBitfield());
+
+        writer.WritePropertyName(nameof(value.TotalHeaderSize));
+        writer.WriteValue(value.TotalHeaderSize);
+
+        writer.WritePropertyName(nameof(value.NameOffset));
+        writer.WriteValue(value.NameOffset);
+
+        writer.WritePropertyName(nameof(value.NameCount));
+        writer.WriteValue(value.NameCount);
+
+        writer.WritePropertyName(nameof(value.ImportOffset));
+        writer.WriteValue(value.ImportOffset);
+
+        writer.WritePropertyName(nameof(value.ImportCount));
+        writer.WriteValue(value.ImportCount);
+
+        writer.WritePropertyName(nameof(value.ExportOffset));
+        writer.WriteValue(value.ExportOffset);
+
+        writer.WritePropertyName(nameof(value.ExportCount));
+        writer.WriteValue(value.ExportCount);
+
+        writer.WritePropertyName(nameof(value.BulkDataStartOffset));
+        writer.WriteValue(value.BulkDataStartOffset);
+
+        writer.WritePropertyName(nameof(value.FileVersionUE));
+        writer.WriteValue(value.FileVersionUE.ToString());
+
+        writer.WritePropertyName(nameof(value.FileVersionLicenseeUE));
+        writer.WriteValue(value.FileVersionLicenseeUE.ToStringBitfield());
+
+        writer.WritePropertyName("CustomVersions");
+        serializer.Serialize(writer, value.CustomVersionContainer.Versions);
+
+        writer.WritePropertyName(nameof(value.bUnversioned));
+        writer.WriteValue(value.bUnversioned);
+
+        writer.WriteEndObject();
+    }
+
+    public override FPackageFileSummary ReadJson(JsonReader reader, Type objectType, FPackageFileSummary existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class PackageConverter : JsonConverter<Package>
+{
+    public override void WriteJson(JsonWriter writer, Package value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Summary));
+        serializer.Serialize(writer, value.Summary);
+
+        writer.WritePropertyName(nameof(value.NameMap));
+        writer.WriteStartArray();
+        foreach (var name in value.NameMap)
+        {
+            writer.WriteValue(name.Name);
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.ImportMap));
+        writer.WriteStartArray();
+        for (var i = 0; i < value.ImportMap.Length; i++)
+        {
+            serializer.Serialize(writer, new FPackageIndex(value, -i - 1));
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.ExportMap));
+        writer.WriteStartArray();
+        for (var i = 0; i < value.ExportMap.Length; i++)
+        {
+            serializer.Serialize(writer, new FPackageIndex(value, i + 1));
+        }
+        writer.WriteEndArray();
+
+        writer.WriteEndObject();
+    }
+
+    public override Package ReadJson(JsonReader reader, Type objectType, Package existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class IoPackageConverter : JsonConverter<IoPackage>
+{
+    public override void WriteJson(JsonWriter writer, IoPackage value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Summary));
+        serializer.Serialize(writer, value.Summary);
+
+        writer.WritePropertyName(nameof(value.NameMap));
+        writer.WriteStartArray();
+        foreach (var name in value.NameMap)
+        {
+            writer.WriteValue(name.Name);
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.ImportMap));
+        writer.WriteStartArray();
+        for (var i = 0; i < value.ImportMap.Length; i++)
+        {
+            serializer.Serialize(writer, new FPackageIndex(value, -i - 1));
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.ExportMap));
+        writer.WriteStartArray();
+        for (var i = 0; i < value.ExportMap.Length; i++)
+        {
+            serializer.Serialize(writer, new FPackageIndex(value, i + 1));
+        }
+        writer.WriteEndArray();
+
+        writer.WriteEndObject();
+    }
+
+    public override IoPackage ReadJson(JsonReader reader, Type objectType, IoPackage existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
