@@ -842,11 +842,20 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
         writer.WritePropertyName(nameof(value.NameOffset));
         writer.WriteValue(value.NameOffset);
 
+        writer.WritePropertyName(nameof(value.NameCount));
+        writer.WriteValue(value.NameCount);
+
         writer.WritePropertyName(nameof(value.ImportOffset));
         writer.WriteValue(value.ImportOffset);
 
+        writer.WritePropertyName(nameof(value.ImportCount));
+        writer.WriteValue(value.ImportCount);
+
         writer.WritePropertyName(nameof(value.ExportOffset));
         writer.WriteValue(value.ExportOffset);
+
+        writer.WritePropertyName(nameof(value.ExportCount));
+        writer.WriteValue(value.ExportCount);
 
         writer.WritePropertyName(nameof(value.BulkDataStartOffset));
         writer.WriteValue(value.BulkDataStartOffset);

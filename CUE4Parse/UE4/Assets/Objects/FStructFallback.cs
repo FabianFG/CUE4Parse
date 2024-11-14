@@ -59,9 +59,8 @@ namespace CUE4Parse.UE4.Assets.Objects
         {
             foreach (string name in names)
             {
-                if (GetOrDefault<T>(name, comparisonType: StringComparison.OrdinalIgnoreCase) is { } ret/* && !ret.Equals(default(T))*/)
+                if (this.TryGet<T>(name, out obj, comparisonType: StringComparison.OrdinalIgnoreCase))
                 {
-                    obj = ret;
                     return true;
                 }
             }
