@@ -7,25 +7,25 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class FModelStreamableBulkData
 {
-    public KeyValuePair<uint, FMutableStreamableBlock>[] ModelStreamables;
-    public KeyValuePair<uint, FClothingStreamable>[] ClothingStreamables;
-    public KeyValuePair<uint, FRealTimeMorphStreamable>[] RealTimeMorphStreamables;
-    public FByteBulkData[] HashToBulkData;
+    public Dictionary<uint, FMutableStreamableBlock> ModelStreamables;
+    public Dictionary<uint, FClothingStreamable> ClothingStreamables;
+    public Dictionary<uint, FRealTimeMorphStreamable> RealTimeMorphStreamables;
+    public FByteBulkData[] StreamableBulkData;
 
     public FModelStreamableBulkData(FAssetArchive Ar, bool bCooked)
     {
-        ModelStreamables = Ar.ReadArray(() => new KeyValuePair<uint, FMutableStreamableBlock>(Ar.Read<uint>(), new FMutableStreamableBlock(Ar)));
-        ClothingStreamables = Ar.ReadArray(() => new KeyValuePair<uint, FClothingStreamable>(Ar.Read<uint>(), new FClothingStreamable(Ar)));
-        RealTimeMorphStreamables = Ar.ReadArray(() => new KeyValuePair<uint, FRealTimeMorphStreamable>(Ar.Read<uint>(), new FRealTimeMorphStreamable(Ar)));
+        ModelStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FMutableStreamableBlock(Ar)));
+        ClothingStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FClothingStreamable(Ar)));
+        RealTimeMorphStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FRealTimeMorphStreamable(Ar)));
 
         if (bCooked)
         {
             var numBulkDatas = Ar.Read<int>();
-            HashToBulkData = new FByteBulkData[numBulkDatas];
+            StreamableBulkData = new FByteBulkData[numBulkDatas];
 
-            for (int i = 0; i < HashToBulkData.Length; i++)
+            for (int i = 0; i < StreamableBulkData.Length; i++)
             {
-                HashToBulkData[i] = new FByteBulkData(Ar);
+                StreamableBulkData[i] = new FByteBulkData(Ar);
             }
         }
     }

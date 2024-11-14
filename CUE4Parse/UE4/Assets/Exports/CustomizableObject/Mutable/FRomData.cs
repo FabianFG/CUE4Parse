@@ -20,6 +20,8 @@ public class FRomData
         ResourceType = Ar.Read<DataType>();
         Flags = Ar.Read<ERomFlags>();
     }
+
+    public override string ToString() => $"Id:{Id} | Size:{Size} | {ResourceType} ({Flags})";
 }
 
 public enum ERomFlags : ushort

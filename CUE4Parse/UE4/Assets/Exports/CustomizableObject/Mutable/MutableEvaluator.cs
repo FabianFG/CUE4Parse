@@ -12,9 +12,10 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 public class MutableEvaluator
 {
     public UCustomizableObject CustomizableObject;
+    public FModelStreamableBulkData? ModelStreamableData;
     public IFileProvider Provider;
+
     private FProgram Program => CustomizableObject.Model.Program;
-    private Dictionary<uint, FMutableStreamableBlock> ModelStreamables = [];
     private Dictionary<uint, FArchive> BulkReaders = [];
 
     public MutableEvaluator(IFileProvider provider, UCustomizableObject customizableObject)
@@ -26,8 +27,7 @@ public class MutableEvaluator
     public void LoadModelStreamable()
     {
 	    var customizableObjectPrivate = CustomizableObject.Get<FPackageIndex>("Private").Load();
-	    var modelStreamableData = customizableObjectPrivate?.Get<FPackageIndex>("ModelStreamableData").Load() as UModelStreamableData;
-	    ModelStreamables = modelStreamableData!.StreamingData.ModelStreamables.ToDictionary();
+        ModelStreamableData = customizableObjectPrivate?.Get<FPackageIndex>("ModelStreamableData").Load<UModelStreamableData>()?.StreamingData;
     }
 
     public FMesh LoadResource(int resourceIndex)
@@ -35,11 +35,11 @@ public class MutableEvaluator
 	    var dataType = DataType.DT_MESH;
 
 	    var rom = Program.Roms.First(rom => rom.ResourceIndex == resourceIndex && rom.ResourceType == dataType);
-	    var block = ModelStreamables[rom.Id];
+        var block = ModelStreamableData.ModelStreamables[rom.Id];
 	    if (!BulkReaders.TryGetValue(block.FileId, out var reader))
-	    {
-		    reader = Provider.CreateReader(GetMutableBulkDataPath(block.FileId));
-		    BulkReaders[block.FileId] = reader;
+        {
+            reader = new FByteArchive("Mutable BulkData", ModelStreamableData.StreamableBulkData[block.FileId].Data);
+		    BulkReaders[block.FileId] = (FArchive) reader.Clone();
 	    }
 
 	    reader.Position = (long) block.Offset;
