@@ -420,6 +420,7 @@ public class FLightMap2D : FLightMap
         }
 
         if (Ar.Game == EGame.GAME_RacingMaster) Ar.Position += 20;
+        if (Ar.Game == EGame.GAME_MetroAwakening) Ar.Position += 4;
     }
 }
 

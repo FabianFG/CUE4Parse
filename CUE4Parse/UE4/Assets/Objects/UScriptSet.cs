@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -26,6 +27,14 @@ public class UScriptSet
             if (tagData.Name is "AnimSequenceInstances" or "PostProcessInstances")
             {
                 tagData.InnerTypeData = new FPropertyTagData("Guid");
+            }
+            if (Ar.Game == EGame.GAME_ThroneAndLiberty && tagData.Name is "ExcludeMeshes" or "IncludeMeshes")
+            {
+                tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
+            }
+            if (Ar.Game == EGame.GAME_MetroAwakening && tagData.Name is "SoundscapePaletteCollection")
+            {
+                tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
             }
         }
 

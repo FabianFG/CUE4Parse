@@ -59,7 +59,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassFlags = Ar.Read<EClassFlags>();
 
             // Variables.
-            if (Ar.Game == EGame.GAME_StarWarsJediFallenOrder || Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor or EGame.GAME_AshesOfCreation) Ar.Position += 4;
             ClassWithin = new FPackageIndex(Ar);
             ClassConfigName = Ar.ReadFName();
 

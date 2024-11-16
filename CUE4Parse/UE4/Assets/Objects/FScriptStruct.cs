@@ -1,8 +1,11 @@
 using CUE4Parse.GameTypes.FN.Objects;
+using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
+using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -74,7 +77,7 @@ public class FScriptStruct
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
-            "NiagaraVariableBase" => new FNiagaraVariableBase(Ar),
+            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar),
             "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
             "NiagaraDataInterfaceGPUParamInfo" => new FNiagaraDataInterfaceGPUParamInfo(Ar),
             "MaterialOverrideNanite" => type == ReadType.ZERO ? new FMaterialOverrideNanite() : new FMaterialOverrideNanite(Ar),
@@ -106,6 +109,7 @@ public class FScriptStruct
             "Rotator" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar),
             "Rotator3f" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>()),
             "Rotator3d" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<double>(), Ar.Read<double>(), Ar.Read<double>()),
+            "RawAnimSequenceTrack" => new FRawAnimSequenceTrack(Ar),
             "Sphere" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar),
             "Sphere3f" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<float>>(), Ar.Read<float>()),
             "Sphere3d" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<double>>(), Ar.Read<double>()),
@@ -176,6 +180,15 @@ public class FScriptStruct
 
             // Lego 2K Drive
             "LegoGraphPartInstance" => type == ReadType.ZERO ? new FLegoGraphPartInstance() : new FLegoGraphPartInstance(Ar),
+
+            // ThroneAndLiberty
+            "TLJsonGuid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+            "TLJsonVector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
+            "TLJsonVector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
+            "SceneFaceDefSeamline" => new FSceneFaceDefSeamline(Ar),
+
+            // Metro:Awakening
+            "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
