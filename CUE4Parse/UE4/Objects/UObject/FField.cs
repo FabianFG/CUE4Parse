@@ -65,7 +65,7 @@ public class FField
         "UInt16Property" => new FUInt16Property(),
         "UInt32Property" => new FUInt32Property(),
         "UInt64Property" => new FUInt64Property(),
-        // "WeakObjectProperty" => new FWeakObjectProperty(),
+        "WeakObjectProperty" => new FWeakObjectProperty(),
         "OptionalProperty" => new FOptionalProperty(),
         "VerseStringProperty" => new FVerseStringProperty(),
         "VerseFunctionProperty" => new FVerseFunctionProperty(),

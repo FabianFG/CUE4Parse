@@ -29,55 +29,24 @@ public class UMapBuildDataRegistry : UObject
 
         if (!stripFlags.IsDataStrippedForServer())
         {
-            var numEntries = Ar.Read<int>();
-            MeshBuildData = new Dictionary<FGuid, FMeshMapBuildData>(numEntries);
-            for (var i = 0; i < numEntries; ++i)
-            {
-                MeshBuildData[Ar.Read<FGuid>()] = new FMeshMapBuildData(Ar);
-            }
 
-            numEntries = Ar.Read<int>();
-            LevelPrecomputedLightVolumeBuildData = new Dictionary<FGuid, FPrecomputedLightVolumeData>(numEntries);
-            for (var i = 0; i < numEntries; ++i)
-            {
-                LevelPrecomputedLightVolumeBuildData[Ar.Read<FGuid>()] = new FPrecomputedLightVolumeData(Ar);
-            }
+            MeshBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FMeshMapBuildData(Ar));
+            LevelPrecomputedLightVolumeBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FPrecomputedLightVolumeData(Ar));
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VolumetricLightmaps)
             {
-                numEntries = Ar.Read<int>();
-                LevelPrecomputedVolumetricLightmapBuildData = new Dictionary<FGuid, FPrecomputedVolumetricLightmapData>(numEntries);
-                for (var i = 0; i < numEntries; ++i)
-                {
-                    LevelPrecomputedVolumetricLightmapBuildData[Ar.Read<FGuid>()] = new FPrecomputedVolumetricLightmapData(Ar);
-                }
+                LevelPrecomputedVolumetricLightmapBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FPrecomputedVolumetricLightmapData(Ar));
             }
 
-            numEntries = Ar.Read<int>();
-            LightBuildData = new Dictionary<FGuid, FLightComponentMapBuildData>(numEntries);
-            for (var i = 0; i < numEntries; ++i)
-            {
-                LightBuildData[Ar.Read<FGuid>()] = new FLightComponentMapBuildData(Ar);
-            }
-
+            LightBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FLightComponentMapBuildData(Ar));
             if (FReflectionCaptureObjectVersion.Get(Ar) >= FReflectionCaptureObjectVersion.Type.MoveReflectionCaptureDataToMapBuildData)
             {
-                numEntries = Ar.Read<int>();
-                ReflectionCaptureBuildData = new Dictionary<FGuid, FReflectionCaptureMapBuildData>(numEntries);
-                for (var i = 0; i < numEntries; ++i)
-                {
-                    ReflectionCaptureBuildData[Ar.Read<FGuid>()] = new FReflectionCaptureMapBuildData(Ar);
-                }
+                ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.SkyAtmosphereStaticLightingVersioning)
             {
-                numEntries = Ar.Read<int>();
-                SkyAtmosphereBuildData = new Dictionary<FGuid, FSkyAtmosphereMapBuildData>(numEntries);
-                for (var i = 0; i < numEntries; ++i)
-                {
-                    SkyAtmosphereBuildData[Ar.Read<FGuid>()] = new FSkyAtmosphereMapBuildData(Ar);
-                }
+                SkyAtmosphereBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FSkyAtmosphereMapBuildData(Ar));
             }
         }
     }
@@ -178,50 +147,27 @@ public class FReflectionCaptureData
     }
 }
 
-public class FLightComponentMapBuildData
+public class FLightComponentMapBuildData(FArchive Ar)
 {
-    public int ShadowMapChannel;
-    public FStaticShadowDepthMapData DepthMap;
-
-    public FLightComponentMapBuildData(FArchive Ar)
-    {
-        ShadowMapChannel = Ar.Read<int>();
-        DepthMap = new FStaticShadowDepthMapData(Ar);
-    }
+    public int ShadowMapChannel = Ar.Read<int>();
+    public FStaticShadowDepthMapData DepthMap = new FStaticShadowDepthMapData(Ar);
 }
 
-public class FStaticShadowDepthMapData
+public class FStaticShadowDepthMapData(FArchive Ar)
 {
-    public FMatrix WorldToLight;
-    public int ShadowMapSizeX;
-    public int ShadowMapSizeY;
-    public FFloat16[]? DepthSamples;
-
-    public FStaticShadowDepthMapData(FArchive Ar)
-    {
-        WorldToLight = new FMatrix(Ar);
-        ShadowMapSizeX = Ar.Read<int>();
-        ShadowMapSizeY = Ar.Read<int>();
-        DepthSamples = Ar.ReadArray(() => new FFloat16(Ar));
-    }
+    public FMatrix WorldToLight = new FMatrix(Ar);
+    public int ShadowMapSizeX = Ar.Read<int>();
+    public int ShadowMapSizeY = Ar.Read<int>();
+    public FFloat16[] DepthSamples = Ar.ReadArray(() => new FFloat16(Ar));
 }
 
-public class FVolumeLightingSample
+public class FVolumeLightingSample(FAssetArchive Ar)
 {
-    public FVector Position;
-    public float Radius;
-    public float[][] Lighting;
-    public FColor PackedSkyBentNormal;
-    public float DirectionalLightShadowing;
-
-    public FVolumeLightingSample(FAssetArchive Ar)
-    {
-        Position = Ar.Read<FVector>();
-        Radius = Ar.Read<float>();
-        Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(9));
-        PackedSkyBentNormal = Ar.Read<FColor>();
-        DirectionalLightShadowing = Ar.Read<float>();
-    }
+    public FVector Position = Ar.Read<FVector>();
+    public float Radius = Ar.Read<float>();
+    public float[][] Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(9));
+    public FColor PackedSkyBentNormal = Ar.Read<FColor>();
+    public float DirectionalLightShadowing = Ar.Read<float>();
 }
 
 public class FPrecomputedLightVolumeData
@@ -332,16 +278,10 @@ public class FVolumetricLightmapBrickLayer : FVolumetricLightmapBasicBrickDataLa
     public FVolumetricLightmapDataLayer? LQLightDirection;
 }
 
-public class FVolumetricLightmapDataLayer
+public class FVolumetricLightmapDataLayer(FArchive Ar)
 {
-    public byte[] Data;
-    public string PixelFormatString;
-
-    public FVolumetricLightmapDataLayer(FArchive Ar)
-    {
-        Data = Ar.ReadArray<byte>();
-        PixelFormatString = Ar.ReadFString();
-    }
+    public byte[] Data = Ar.ReadArray<byte>();
+    public string PixelFormatString = Ar.ReadFString();
 }
 
 [JsonConverter(typeof(FMeshMapBuildDataConverter))]
@@ -354,30 +294,19 @@ public class FMeshMapBuildData
 
     public FMeshMapBuildData(FAssetArchive Ar)
     {
-        var LightMapType = Ar.Read<ELightMapType>();
-        switch (LightMapType)
+        LightMap = Ar.Read<ELightMapType>() switch
         {
-            case ELightMapType.LMT_None:
-                LightMap = null;
-                break;
-            case ELightMapType.LMT_1D:
-                LightMap = new FLegacyLightMap1D(Ar);
-                break;
-            case ELightMapType.LMT_2D:
-                LightMap = new FLightMap2D(Ar);
-                break;
-        }
+            ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+            ELightMapType.LMT_2D => new FLightMap2D(Ar),
+            _ => null
+        };
 
-        var ShadowMapType = Ar.Read<EShadowMapType>();
-        switch (ShadowMapType)
+            
+        ShadowMap = Ar.Read<EShadowMapType>() switch
         {
-            case EShadowMapType.SMT_None:
-                ShadowMap = null;
-                break;
-            case EShadowMapType.SMT_2D:
-                ShadowMap = new FShadowMap2D(Ar);
-                break;
-        }
+            EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+            _ => null
+        };
 
         IrrelevantLights = Ar.ReadArray<FGuid>();
         PerInstanceLightmapData = Ar.ReadBulkArray<FPerInstanceLightmapData>();
@@ -389,16 +318,13 @@ public enum ELightMapType : uint
     LMT_None = 0,
     LMT_1D = 1,
     LMT_2D = 2,
-};
-public class FLightMap
-{
-    public readonly FGuid[] LightGuids;
-
-    public FLightMap(FAssetArchive Ar)
-    {
-        LightGuids = Ar.ReadArray<FGuid>();
-    }
 }
+
+public class FLightMap(FAssetArchive Ar)
+{
+    public FGuid[] LightGuids = Ar.ReadArray<FGuid>();
+}
+
 public class FLegacyLightMap1D : FLightMap
 {
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
@@ -463,6 +389,7 @@ public class FLightMap2D : FLightMap
                 AddVectors[CoefficientIndex] = Ar.Read<FVector4>();
             }
         }
+
         CoordinateScale = new FVector2D(Ar);
         CoordinateBias = new FVector2D(Ar);
 
@@ -500,15 +427,11 @@ public enum EShadowMapType : uint
 {
     SMT_None = 0,
     SMT_2D = 2,
-};
-public class FShadowMap
-{
-    public readonly FGuid[] LightGuids;
+}
 
-    public FShadowMap(FAssetArchive Ar)
-    {
-        LightGuids = Ar.ReadArray<FGuid>();
-    }
+public class FShadowMap(FAssetArchive Ar)
+{
+    public readonly FGuid[] LightGuids = Ar.ReadArray<FGuid>();
 }
 
 public class FShadowMap2D : FShadowMap
@@ -533,7 +456,7 @@ public class FShadowMap2D : FShadowMap
         else
         {
             const float LegacyValue = 1.0f / .05f;
-            InvUniformPenumbraSize = new FVector4(LegacyValue, LegacyValue, LegacyValue, LegacyValue);
+            InvUniformPenumbraSize = new FVector4(LegacyValue);
         }
     }
 }

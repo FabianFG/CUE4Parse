@@ -11,6 +11,7 @@ public class UStaticMeshComponent : USceneComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Game == Versions.EGame.GAME_Borderlands3) Ar.ReadBoolean();
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
     }
 
