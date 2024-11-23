@@ -87,11 +87,6 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
-        public override Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin)
         {
