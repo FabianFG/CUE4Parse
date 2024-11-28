@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
+using CUE4Parse.Encryption.Aes;
+using System.Text;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -36,6 +38,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
+        private const uint PACKAGE_FILE_TAG_NTE = 0xD5A8D56E;
 
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
@@ -118,6 +121,31 @@ namespace CUE4Parse.UE4.Objects.UObject
                 FolderName = "None";
                 PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
                 goto afterPackageFlags;
+            }
+
+            if (Tag == PACKAGE_FILE_TAG_NTE && Ar.Game == EGame.GAME_NevernessToEverness)
+            {
+                var keyData = Ar.Read<FGuid>();
+                var decryptedDataLength = Ar.Read<int>();
+                _ = Ar.Read<int>(); // paddedEncryptedDataLength
+                var encryptedData = Ar.ReadArray<byte>();
+                var isKeyObfuscated = Ar.ReadBoolean();
+
+                if (isKeyObfuscated)
+                {
+                    keyData = new FGuid(
+                        keyData.A ^ keyData.D,
+                        keyData.B ^ keyData.C,
+                        keyData.B,
+                        keyData.A);
+                }
+
+                var key = new FAesKey(Encoding.UTF8.GetBytes(keyData.ToString()));
+                var paddedDecryptedData = encryptedData.Decrypt(key);
+                var decryptedData = paddedDecryptedData[..decryptedDataLength];
+
+                Ar = new FByteArchive("NTE - Decrypted FPackageFileSummary", decryptedData, Ar.Versions);
+                Tag = Ar.Read<uint>();
             }
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
