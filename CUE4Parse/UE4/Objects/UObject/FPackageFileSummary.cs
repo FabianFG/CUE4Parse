@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.Encryption.Aes;
 using System.Text;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
