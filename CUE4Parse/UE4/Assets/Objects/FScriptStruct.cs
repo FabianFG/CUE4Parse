@@ -4,7 +4,7 @@ using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
-using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -180,6 +180,9 @@ public class FScriptStruct
 
             // Lego 2K Drive
             "LegoGraphPartInstance" => type == ReadType.ZERO ? new FLegoGraphPartInstance() : new FLegoGraphPartInstance(Ar),
+
+            // Splitgate2
+            "Core1047ReleaseFlag" => new FCore1047ReleaseFlag(Ar),
 
             // ThroneAndLiberty
             "TLJsonGuid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
