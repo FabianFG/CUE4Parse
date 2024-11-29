@@ -727,6 +727,8 @@ public class FUInt32Property : FNumericProperty;
 
 public class FUInt64Property : FNumericProperty;
 
+public class FWeakObjectProperty : FObjectProperty;
+
 public class FOptionalProperty : FProperty
 {
     public FProperty? ValueProperty;

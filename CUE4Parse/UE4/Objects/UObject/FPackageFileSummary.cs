@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -7,6 +9,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -28,12 +31,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int NameCount;
     }
 
+    [JsonConverter(typeof(FPackageFileSummaryConverter))]
     public class FPackageFileSummary
     {
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
+        private const uint PACKAGE_FILE_TAG_NTE = 0xD5A8D56E;
 
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
@@ -43,16 +48,16 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int TotalHeaderSize;
         public readonly string FolderName;
         public int NameCount;
-        public readonly int NameOffset;
+        public int NameOffset;
         public readonly int SoftObjectPathsCount;
         public readonly int SoftObjectPathsOffset;
         public readonly string? LocalizationId;
         public readonly int GatherableTextDataCount;
         public readonly int GatherableTextDataOffset;
         public int ExportCount;
-        public readonly int ExportOffset;
+        public int ExportOffset;
         public int ImportCount;
-        public readonly int ImportOffset;
+        public int ImportOffset;
         public readonly int DependsOffset;
         public readonly int SoftPackageReferencesCount;
         public readonly int SoftPackageReferencesOffset;
@@ -116,6 +121,31 @@ namespace CUE4Parse.UE4.Objects.UObject
                 FolderName = "None";
                 PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
                 goto afterPackageFlags;
+            }
+
+            if (Tag == PACKAGE_FILE_TAG_NTE && Ar.Game == EGame.GAME_NevernessToEverness)
+            {
+                var keyData = Ar.Read<FGuid>();
+                var decryptedDataLength = Ar.Read<int>();
+                _ = Ar.Read<int>(); // paddedEncryptedDataLength
+                var encryptedData = Ar.ReadArray<byte>();
+                var isKeyObfuscated = Ar.ReadBoolean();
+
+                if (isKeyObfuscated)
+                {
+                    keyData = new FGuid(
+                        keyData.A ^ keyData.D,
+                        keyData.B ^ keyData.C,
+                        keyData.B,
+                        keyData.A);
+                }
+
+                var key = new FAesKey(Encoding.UTF8.GetBytes(keyData.ToString()));
+                var paddedDecryptedData = encryptedData.Decrypt(key);
+                var decryptedData = paddedDecryptedData[..decryptedDataLength];
+
+                Ar = new FByteArchive("NTE - Decrypted FPackageFileSummary", decryptedData, Ar.Versions);
+                Tag = Ar.Read<uint>();
             }
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)

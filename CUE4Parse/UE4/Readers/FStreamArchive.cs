@@ -21,8 +21,6 @@ public class FStreamArchive : FArchive
         Name = name;
     }
 
-    public override void Close() => _baseStream.Close();
-
     public override int Read(byte[] buffer, int offset, int count)
         => _baseStream.Read(buffer, offset, count);
 
@@ -48,13 +46,26 @@ public class FStreamArchive : FArchive
             _ => new FStreamArchive(Name, _baseStream, Versions) {Position = Position}
         };
     }
+
+    public override void Close()
+    {
+        _baseStream.Close();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _baseStream.Dispose();
+        }
+    }
 }
 
 public class FRandomAccessStreamArchive : FArchive
 {
-    private readonly IRandomAccessStream _baseStream;
+    private readonly RandomAccessStream _baseStream;
 
-    public FRandomAccessStreamArchive(string name, IRandomAccessStream baseStream, VersionContainer? versions = null) : base(versions)
+    public FRandomAccessStreamArchive(string name, RandomAccessStream baseStream, VersionContainer? versions = null) : base(versions)
     {
         _baseStream = baseStream;
         Name = name;
@@ -66,10 +77,10 @@ public class FRandomAccessStreamArchive : FArchive
     public override int ReadAt(long position, byte[] buffer, int offset, int count)
         => _baseStream.ReadAt(position, buffer, offset, count);
 
-    public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         => _baseStream.ReadAtAsync(position, buffer, offset, count, cancellationToken);
 
-    public override Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+    public override ValueTask<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
         => _baseStream.ReadAtAsync(position, memory, cancellationToken);
 
     public override long Seek(long offset, SeekOrigin origin)
@@ -86,11 +97,24 @@ public class FRandomAccessStreamArchive : FArchive
     public override string Name { get; }
 
     public override object Clone() => new FRandomAccessStreamArchive(Name, _baseStream, Versions) {Position = Position};
+
+    public override void Close()
+    {
+        _baseStream.Close();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _baseStream.Dispose();
+        }
+    }
 }
 
 public class FRandomAccessFileStreamArchive : FArchive
 {
-    private readonly SafeFileHandle _handle;
+    private readonly SafeFileHandle _fileHandle;
 
     public FRandomAccessFileStreamArchive(string filePath, VersionContainer? versions = null)
         : this(filePath, File.OpenHandle(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
@@ -98,36 +122,44 @@ public class FRandomAccessFileStreamArchive : FArchive
     public FRandomAccessFileStreamArchive(FileInfo fileInfo, VersionContainer? versions = null)
         : this(fileInfo.FullName, File.OpenHandle(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.Asynchronous), versions) { }
 
-    public FRandomAccessFileStreamArchive(string filePath, SafeFileHandle handle, VersionContainer? versions = null) : base(versions)
+    public FRandomAccessFileStreamArchive(string filePath, SafeFileHandle fileHandle, VersionContainer? versions = null) : base(versions)
     {
         Name = filePath;
-        _handle = handle;
-        Length = RandomAccess.GetLength(handle);
+        _fileHandle = fileHandle;
+        Length = RandomAccess.GetLength(fileHandle);
     }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        var span = buffer.AsSpan(offset, count);
-        var bytesRead = RandomAccess.Read(_handle, span, Position);
+        return Read(buffer.AsSpan(offset, count));
+    }
+
+    public override int Read(Span<byte> buffer)
+    {
+        var bytesRead = RandomAccess.Read(_fileHandle, buffer, Position);
         Position += bytesRead;
         return bytesRead;
     }
 
     public override int ReadAt(long position, byte[] buffer, int offset, int count)
     {
-        var span = buffer.AsSpan(offset, count);
-        return RandomAccess.Read(_handle, span, position);
+        return ReadAt(position, buffer.AsSpan(offset, count));
     }
 
-    public override async Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override int ReadAt(long position, Span<byte> buffer)
+    {
+        return RandomAccess.Read(_fileHandle, buffer, position);
+    }
+
+    public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
     {
         var memory = buffer.AsMemory(offset, count);
-        return await RandomAccess.ReadAsync(_handle, memory, position, cancellationToken).ConfigureAwait(false);
+        return ReadAtAsync(position, memory, cancellationToken).AsTask();
     }
 
-    public override async Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+    public override ValueTask<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return await RandomAccess.ReadAsync(_handle, memory, position, cancellationToken).ConfigureAwait(false);
+        return RandomAccess.ReadAsync(_fileHandle, memory, position, cancellationToken);
     }
 
     public override long Seek(long offset, SeekOrigin origin)
@@ -150,4 +182,17 @@ public class FRandomAccessFileStreamArchive : FArchive
     public override string Name { get; }
 
     public override object Clone() => new FRandomAccessFileStreamArchive(Name, Versions) {Position = Position};
+
+    public override void Close()
+    {
+        _fileHandle.Close();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_fileHandle.IsClosed)
+        {
+            _fileHandle.Dispose();
+        }
+    }
 }
