@@ -45,9 +45,9 @@ namespace CUE4Parse.UE4.IO
         public IoStoreReader(string tocPath, Stream tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
 
-        public IoStoreReader(string tocPath, IRandomAccessStream tocStream, IRandomAccessStream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+        public IoStoreReader(string tocPath, RandomAccessStream tocStream, RandomAccessStream casStream, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FRandomAccessStreamArchive(tocPath, tocStream, versions), it => new FRandomAccessStreamArchive(it, casStream, versions), readOptions) { }
-        public IoStoreReader(string tocPath, IRandomAccessStream tocStream, Func<string, FRandomAccessStreamArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
+        public IoStoreReader(string tocPath, RandomAccessStream tocStream, Func<string, FRandomAccessStreamArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FRandomAccessStreamArchive(tocPath, tocStream, versions), openContainerStreamFunc, readOptions) { }
 
         public IoStoreReader(FArchive tocStream, Func<string, FArchive> openContainerStreamFunc, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex)

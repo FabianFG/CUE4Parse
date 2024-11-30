@@ -23,7 +23,7 @@
     <PackageReference Include="AssetRipper.TextureDecoder" Version="2.2.1" />
     <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0023" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0023" />
-    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
   </ItemGroup>
 
   <ItemGroup>
