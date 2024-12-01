@@ -148,9 +148,9 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override int ReadAt(long position, byte[] buffer, int offset, int count)
             => _baseArchive.ReadAt(position, buffer, offset, count);
-        public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
             => _baseArchive.ReadAtAsync(position, buffer, offset, count, cancellationToken);
-        public override Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+        public override ValueTask<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
             => _baseArchive.ReadAtAsync(position, memory, cancellationToken);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
