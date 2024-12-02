@@ -40,15 +40,17 @@ public class FStaticMeshRayTracingProxyLOD
             SerializeBuffers(Ar);
 
             if (Ar.Game >= EGame.GAME_UE5_6)
+            {
                 SerializeRayTracingGeometry(Ar);
+                SerializeMetaData(Ar);
+            }
         }
         else
         {
             StreamableData = new FByteBulkData(Ar);
+            if (Ar.Game >= EGame.GAME_UE5_6)
+                SerializeMetaData(Ar);
         }
-
-        if (Ar.Game >= EGame.GAME_UE5_6)
-            SerializeMetaData(Ar);
     }
 
     private void SerializeBuffers(FAssetArchive Ar)
@@ -85,9 +87,10 @@ public class FStaticMeshRayTracingProxyLOD
 
     private void SerializeRayTracingGeometry(FAssetArchive Ar)
     {
-        if (!bOwnsRayTracingGeometry) return;
-
-        var rawDataNum = Ar.Read<uint>();
-        Ar.Position += rawDataNum * sizeof(byte);
+        if (bOwnsRayTracingGeometry)
+        {
+            var rawDataNum = Ar.Read<uint>();
+            Ar.Position += rawDataNum * sizeof(byte);
+        }
     }
 }
