@@ -21,14 +21,10 @@ public class FStaticMeshRenderData
     public readonly bool bLODsShareStaticLighting;
     public readonly float[]? ScreenSize;
 
-    public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
+    public FStaticMeshRenderData(FAssetArchive Ar)
     {
-        if (!bCooked) return;
-
         if (Ar.Versions["StaticMesh.KeepMobileMinLODSettingOnDesktop"])
-        {
-            var minMobileLODIdx = Ar.Read<int>();
-        }
+            _ = Ar.Read<int>(); // minMobileLODIdx
 
         if (Ar.Game == EGame.GAME_HYENAS) Ar.Position += 1;
 
@@ -67,7 +63,7 @@ public class FStaticMeshRenderData
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
             NaniteResources = new FNaniteResources(Ar);
-            
+
             if (Ar.Game >= EGame.GAME_UE5_5)
             {
                 var bHasRayTracingProxy = Ar.ReadBoolean();
@@ -76,7 +72,7 @@ public class FStaticMeshRenderData
                     var rayTracingProxy = new FStaticMeshRayTracingProxy(Ar);
                 }
             }
-            
+
             SerializeInlineDataRepresentations(Ar);
         }
 
