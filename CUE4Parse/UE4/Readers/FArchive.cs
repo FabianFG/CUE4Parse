@@ -181,7 +181,7 @@ namespace CUE4Parse.UE4.Readers
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
-                return Array.Empty<T>();
+                return [];
 
             var pos = Position;
             T[] array = ReadArray<T>(elementCount);
