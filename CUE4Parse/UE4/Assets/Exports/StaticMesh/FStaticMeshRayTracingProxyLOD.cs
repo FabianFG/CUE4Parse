@@ -9,10 +9,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 public class FStaticMeshRayTracingProxyLOD
 {
     public bool bBuffersInlined = false;
-    
+
     public bool bOwnsBuffers;
     public bool bOwnsRayTracingGeometry;
-    
+
     public FStaticMeshSection[] Sections;
     public FPositionVertexBuffer PositionVertexBuffer;
     public FStaticMeshVertexBuffer VertexBuffer;
@@ -20,7 +20,7 @@ public class FStaticMeshRayTracingProxyLOD
     public FRawStaticIndexBuffer IndexBuffer;
 
     public FByteBulkData StreamableData;
-    
+
     public FStaticMeshRayTracingProxyLOD(FAssetArchive Ar)
     {
         bOwnsBuffers = Ar.ReadBoolean();
@@ -32,18 +32,27 @@ public class FStaticMeshRayTracingProxyLOD
 
         bOwnsRayTracingGeometry = Ar.ReadBoolean();
 
+        if (Ar.Game >= EGame.GAME_UE5_6)
+            bBuffersInlined = Ar.ReadBoolean(); // always false ???
 
-        if (bBuffersInlined) // always false ???
+        if (bBuffersInlined)
         {
             SerializeBuffers(Ar);
+
+            if (Ar.Game >= EGame.GAME_UE5_6)
+                SerializeMetaData(Ar);
         }
         else
         {
-            StreamableData = new FByteBulkData(Ar);
+            if (Ar.Game >= EGame.GAME_UE5_6)
+                SerializeMetaData(Ar);
+
+            if (Ar.Game <= EGame.GAME_UE5_5)
+                StreamableData = new FByteBulkData(Ar);
         }
     }
 
-    public void SerializeBuffers(FAssetArchive Ar)
+    private void SerializeBuffers(FAssetArchive Ar)
     {
         if (bOwnsBuffers)
         {
@@ -55,9 +64,24 @@ public class FStaticMeshRayTracingProxyLOD
         }
 
         if (bOwnsRayTracingGeometry)
+            _ = Ar.ReadBulkArray<byte>(); // rayTracingBulkData
+    }
+
+    private void SerializeMetaData(FAssetArchive Ar)
+    {
+        if (bOwnsBuffers)
         {
-            var rayTracingBulkData = Ar.ReadBulkArray<byte>();
+            Ar.Position += sizeof(uint); // BuffersSize
+            Ar.Position += 2 * sizeof(uint); // PositionVertexBuffer
+            Ar.Position += 2 * sizeof(uint) + 2 * sizeof(int); // StaticMeshVertexBuffer
+            Ar.Position += 2 * sizeof(uint); // ColorVertexBuffer
+            Ar.Position += 2 * sizeof(int); // IndexBuffer
         }
 
+        if (bOwnsRayTracingGeometry)
+        {
+            Ar.Position += 3 * sizeof(uint); // OfflineBVHOffset + OfflineBVHSize + an additional bool
+            _ = Ar.ReadArray<int>(6); // RawDataHeader
+        }
     }
 }
