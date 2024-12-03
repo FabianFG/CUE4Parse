@@ -76,7 +76,7 @@ public class FSkelMeshSection
             var dummyChunkIndex = Ar.Read<ushort>();
         }
 
-        if (!stripDataFlags.IsDataStrippedForServer())
+        if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
             NumTriangles = Ar.Read<int>();
@@ -118,7 +118,7 @@ public class FSkelMeshSection
 
         if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
             {
                 BaseVertexIndex = Ar.Read<uint>();
             }

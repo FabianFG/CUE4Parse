@@ -368,6 +368,12 @@ namespace CUE4Parse.UE4.Versions
             // Cloth collection single lod schema
             ClothCollectionSingleLodSchema,
 
+            // Visual Logger format now includes a WorldTimeStamp in addition to TimeStamp for easier debugging between multiple instances.
+            VisualLoggerAddedSeparateWorldTime,
+
+            // Added support for InstanceDataManagerSerialization and changed format for the instances to FTransform3f
+            AnimBankInstanceDataSerializationV2,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -389,6 +395,8 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_1 => Type.TextureDoScaleMipsForAlphaCoverage,
                 < EGame.GAME_UE5_2 => Type.WorldPartitionActorDescActorAndClassPaths,
                 < EGame.GAME_UE5_3 => Type.RigVMGeneratedClass,
+                < EGame.GAME_UE5_4 => Type.ClothCollectionSingleLodSchema,
+                < EGame.GAME_UE5_6 => Type.VisualLoggerAddedSeparateWorldTime,
                 _ => Type.LatestVersion
             };
         }

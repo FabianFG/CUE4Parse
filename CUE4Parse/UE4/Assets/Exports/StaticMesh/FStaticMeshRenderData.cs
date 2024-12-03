@@ -82,7 +82,7 @@ public class FStaticMeshRenderData
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_WIDGET_VISIBILITY)
             {
                 var stripDataFlags = Ar.Read<FStripDataFlags>();
-                stripped = stripDataFlags.IsDataStrippedForServer();
+                stripped = stripDataFlags.IsAudioVisualDataStripped();
                 if (Ar.Game >= EGame.GAME_UE4_21)
                 {
                     stripped |= stripDataFlags.IsClassDataStripped(0x01);
@@ -171,7 +171,7 @@ public class FStaticMeshRenderData
         const byte CardRepresentationDataStripFlag = 2;
 
         var stripFlags = new FStripDataFlags(Ar);
-        if (!stripFlags.IsDataStrippedForServer() && !stripFlags.IsClassDataStripped(CardRepresentationDataStripFlag))
+        if (!stripFlags.IsAudioVisualDataStripped() && !stripFlags.IsClassDataStripped(CardRepresentationDataStripFlag))
         {
             foreach (var lod in LODs ?? [])
             {

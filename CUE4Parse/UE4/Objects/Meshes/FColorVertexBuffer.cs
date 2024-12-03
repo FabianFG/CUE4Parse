@@ -25,7 +25,7 @@ public class FColorVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
-        if (!stripDataFlags.IsDataStrippedForServer() & NumVertices > 0)
+        if (!stripDataFlags.IsAudioVisualDataStripped() & NumVertices > 0)
         {
             Data = Ar.ReadBulkArray<FColor>();
         }

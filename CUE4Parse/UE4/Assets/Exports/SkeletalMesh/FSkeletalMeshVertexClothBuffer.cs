@@ -11,7 +11,7 @@ public class FSkeletalMeshVertexClothBuffer
     public FSkeletalMeshVertexClothBuffer(FArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
-        if (stripDataFlags.IsDataStrippedForServer()) return;
+        if (stripDataFlags.IsAudioVisualDataStripped()) return;
 
         Ar.SkipBulkArrayData();
         if (FSkeletalMeshCustomVersion.Get(Ar) >= FSkeletalMeshCustomVersion.Type.CompactClothVertexBuffer)

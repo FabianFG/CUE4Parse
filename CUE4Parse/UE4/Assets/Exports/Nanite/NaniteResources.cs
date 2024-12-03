@@ -349,7 +349,7 @@ public class FNaniteResources
     public FNaniteResources(FAssetArchive Ar)
     {
         var stripFlags = new FStripDataFlags(Ar);
-        if (!stripFlags.IsDataStrippedForServer())
+        if (!stripFlags.IsAudioVisualDataStripped())
         {
             ResourceFlags = Ar.Read<uint>();
             StreamablePages = new FByteBulkData(Ar);

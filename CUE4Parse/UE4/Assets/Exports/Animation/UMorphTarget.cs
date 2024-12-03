@@ -168,7 +168,7 @@ public class UMorphTarget : UObject
         }
 
         var stripData = Ar.Read<FStripDataFlags>();
-        if (!stripData.IsDataStrippedForServer())
+        if (!stripData.IsAudioVisualDataStripped())
         {
             MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
         }

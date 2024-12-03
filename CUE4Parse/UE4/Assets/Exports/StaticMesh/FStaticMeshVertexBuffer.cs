@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             UseFullPrecisionUVs = Ar.ReadBoolean();
             UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 && Ar.ReadBoolean();
 
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
             {
                 if (Ar.Game < EGame.GAME_UE4_19)
                 {

@@ -13,8 +13,9 @@ public class UActorComponent : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Position == validPos) // i think after validpos all read default to dummy data 000000s
+        if (Ar.Position == validPos) // I think after validpos all read default to dummy data 000000s
             return;
+
         if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.ActorComponentUCSModifiedPropertiesSparseStorage)
         {
             UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
