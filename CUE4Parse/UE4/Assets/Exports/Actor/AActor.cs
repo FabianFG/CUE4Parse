@@ -14,14 +14,14 @@ public class AActor : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game >= EGame.GAME_UE5_0 && FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
+        if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
         {
             bIsCooked = Ar.ReadBoolean();
             if (bIsCooked)
                 ActorLabel = Ar.ReadFString();
         }
 
-        if (Ar.Game >= EGame.GAME_UE5_5 && FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.LevelInstanceStaticLightingSupport)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.LevelInstanceStaticLightingSupport)
         {
             ActorInstanceGuid = new FActorInstanceGuid(Ar);
         }

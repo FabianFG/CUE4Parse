@@ -16,10 +16,10 @@ public class UStaticMeshComponent : USceneComponent
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game == Versions.EGame.GAME_Borderlands3) Ar.ReadBoolean();
+        if (Ar.Game == EGame.GAME_Borderlands3) Ar.ReadBoolean();
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
 
-        if (Ar.Game >= EGame.GAME_UE5_5 && FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshPaintTextureUsesEditorOnly)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshPaintTextureUsesEditorOnly)
         {
             bSerializeAsCookedData = Ar.ReadBoolean();
 

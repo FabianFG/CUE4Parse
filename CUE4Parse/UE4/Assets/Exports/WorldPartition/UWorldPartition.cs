@@ -13,7 +13,7 @@ public class UWorldPartition : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game >= EGame.GAME_UE5_1 && FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.WorldPartitionSerializeStreamingPolicyOnCook)
+        if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.WorldPartitionSerializeStreamingPolicyOnCook)
         {
             bCooked = Ar.ReadBoolean();
             if (bCooked)
