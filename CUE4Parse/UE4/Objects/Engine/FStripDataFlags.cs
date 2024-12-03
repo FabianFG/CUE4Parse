@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         }
 
         public bool IsEditorDataStripped() => (GlobalStripFlags & 1) != 0;
-        public bool IsDataStrippedForServer() => (GlobalStripFlags & 2) != 0;
+        public bool IsAudioVisualDataStripped() => (GlobalStripFlags & 2) != 0;
         public bool IsDataNeededForCookingStripped() => (GlobalStripFlags & 4) != 0;
         public bool IsClassDataStripped(byte flag) => (ClassStripFlags & flag) != 0;
     }

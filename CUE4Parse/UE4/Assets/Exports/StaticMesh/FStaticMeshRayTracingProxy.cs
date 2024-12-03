@@ -14,7 +14,7 @@ public class FStaticMeshRayTracingProxy
 
         var bUsingRenderingLODs = Ar.ReadBoolean();
 
-        if (!stripFlags.IsDataStrippedForServer())
+        if (!stripFlags.IsAudioVisualDataStripped())
         {
             LODs = Ar.ReadArray(() => new FStaticMeshRayTracingProxyLOD(Ar));
         }

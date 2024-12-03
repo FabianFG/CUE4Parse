@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
             {
-                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+                if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
                 {
                     SerializeBuffersLegacy(Ar, stripDataFlags);
                 }
@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
 
-            if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
             {
                 if (Ar.Game >= EGame.GAME_UE5_5)
                     _ = Ar.ReadBoolean(); // bHasRayTracingGeometry

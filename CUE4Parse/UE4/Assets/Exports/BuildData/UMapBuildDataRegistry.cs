@@ -27,7 +27,7 @@ public class UMapBuildDataRegistry : UObject
 
         var stripFlags = new FStripDataFlags(Ar);
 
-        if (!stripFlags.IsDataStrippedForServer())
+        if (!stripFlags.IsAudioVisualDataStripped())
         {
 
             MeshBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FMeshMapBuildData(Ar));

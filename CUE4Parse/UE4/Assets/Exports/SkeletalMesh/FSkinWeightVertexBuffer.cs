@@ -66,7 +66,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             #endregion
 
             byte[] newData = Array.Empty<byte>();
-            if (!dataStripFlags.IsDataStrippedForServer())
+            if (!dataStripFlags.IsAudioVisualDataStripped())
             {
                 if (!bNewWeightFormat)
                 {
@@ -90,7 +90,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 var lookupStripFlags = Ar.Read<FStripDataFlags>();
                 var numLookupVertices = Ar.Read<int>();
 
-                if (!lookupStripFlags.IsDataStrippedForServer())
+                if (!lookupStripFlags.IsAudioVisualDataStripped())
                 {
                     LookupData = Ar.ReadBulkArray<uint>();
                 }
