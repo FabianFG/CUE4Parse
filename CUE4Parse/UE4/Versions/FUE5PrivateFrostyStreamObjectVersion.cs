@@ -51,8 +51,6 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
-                < EGame.GAME_UE5_1 => Type.ChaosClothRemoveKinematicTethers,
-                < EGame.GAME_UE5_3 => Type.StripMorphTargetSourceDataForCookedBuilds,
                 _ => Type.LatestVersion
             };
         }
