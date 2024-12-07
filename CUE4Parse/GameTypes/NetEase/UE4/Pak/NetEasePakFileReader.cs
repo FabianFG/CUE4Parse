@@ -1,8 +1,6 @@
 // ReSharper disable CheckNamespace
 
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
@@ -79,45 +77,20 @@ public partial class PakFileReader
 
     private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
     {
-        var filePath = System.IO.Path.Combine(Globals.FModelDataFolder, "CUE4Parse.MR.exe");
-        if (!File.Exists(filePath)) throw new FileNotFoundException("CUE4Parse.MR.exe not found");
+        using var hasher = Blake3.Hasher.New();
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = filePath,
-            Arguments = $"\"{pakEntry.Path}\" {pakEntry.Path.Length}",
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
+        var initialSeedBytes = BitConverter.GetBytes(0x44332211);
+        hasher.Update(initialSeedBytes);
 
-        using var process = new Process();
-        process.StartInfo = startInfo;
-        process.Start();
-        var output = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
+        var assetPathBytes = Encoding.UTF8.GetBytes(pakEntry.Path.ToLower());
+        hasher.Update(assetPathBytes);
 
-        return int.Parse(output);
+        var finalHash = hasher.Finalize().AsSpan();
+
+        var firstU64 = BitConverter.ToUInt64(finalHash);
+
+        var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
+
+        return (int) final;
     }
-
-    // private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
-    // {
-    //     using var hasher = Blake3.Hasher.New();
-    //
-    //     var initialSeedBytes = BitConverter.GetBytes(0x44332211);
-    //     hasher.Update(initialSeedBytes);
-    //
-    //     var mountPoint = pakEntry.Vfs.MountPoint;
-    //     var assetPath = (mountPoint.Length == 0 ? pakEntry.Path : pakEntry.Path.Substring(mountPoint.Length)).ToLower();
-    //     var assetPathBytes = Encoding.UTF8.GetBytes(assetPath);
-    //     hasher.Update(assetPathBytes);
-    //
-    //     var finalHash = hasher.Finalize().AsSpan();
-    //
-    //     var firstU64 = BitConverter.ToUInt64(finalHash);
-    //
-    //     var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
-    //
-    //     return (int) final;
-    // }
 }
