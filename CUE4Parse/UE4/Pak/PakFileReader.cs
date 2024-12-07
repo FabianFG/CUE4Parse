@@ -58,7 +58,7 @@ namespace CUE4Parse.UE4.Pak
             : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) {}
         public PakFileReader(string filePath, Stream stream, VersionContainer? versions = null)
             : this(new FStreamArchive(filePath, stream, versions)) {}
-        public PakFileReader(string filePath, IRandomAccessStream stream, VersionContainer? versions = null)
+        public PakFileReader(string filePath, RandomAccessStream stream, VersionContainer? versions = null)
             : this(new FRandomAccessStreamArchive(filePath, stream, versions)) {}
 
         public override byte[] Extract(VfsEntry entry)

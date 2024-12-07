@@ -76,7 +76,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             Size = Ar.Read<int>();
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
                 NumVertices = Ar.Read<int>();
 
             RequiredBones = Ar.ReadArray<short>();
@@ -89,7 +89,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 MaxImportVertex = Ar.Read<int>();
             }
 
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
             {
                 NumTexCoords = Ar.Read<int>();
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
@@ -214,7 +214,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             var bInlined = Ar.ReadBoolean();
 
             RequiredBones = Ar.ReadArray<short>();
-            if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
             {
                 Sections = new FSkelMeshSection[Ar.Read<int>()];
                 for (var i = 0; i < Sections.Length; i++)
@@ -312,7 +312,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             ActiveBoneIndices = Ar.ReadArray<short>();
             RequiredBones = Ar.ReadArray<short>();
 
-            if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
             {
                 var positionVertexBuffer = new FPositionVertexBuffer(Ar);
                 var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
