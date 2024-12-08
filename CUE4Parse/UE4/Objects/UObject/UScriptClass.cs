@@ -13,4 +13,8 @@ public class UScriptClass : UClass
 }
 
 [SkipObjectRegistration]
-public class USharpClass(string className) : UScriptClass(className) { }
+public class USharpClass(string className) : UScriptClass(className);
+
+[SkipObjectRegistration]
+public class UPythonClass(string className) : UScriptClass(className);
+

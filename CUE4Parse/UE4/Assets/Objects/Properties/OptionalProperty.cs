@@ -15,7 +15,11 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
         if (tagData.InnerType == null)
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
-        if (Ar.Game is >= EGame.GAME_UE5_4 and < EGame.GAME_UE5_5) _ = Ar.Read<int>();
+        if (!Ar.ReadBoolean())
+        {
+            Value = default;
+            return;
+        }
 
         Value = type switch
         {

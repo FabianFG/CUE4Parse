@@ -150,11 +150,11 @@ public static class TextureDecoder
             var sizeY = mip.SizeY;
             var sizeZ = mip.SizeZ;
 
-            if (!UseAssetRipperTextureDecoder && texture.Format == EPixelFormat.PF_BC7)
+            if (texture.Format == EPixelFormat.PF_BC7)
             {
-                sizeX = (sizeX + 3) / 4 * 4;
-                sizeY = (sizeY + 3) / 4 * 4;
-                sizeZ = (sizeZ + 3) / 4 * 4;
+                sizeX = sizeX.Align(4);
+                sizeY = sizeY.Align(4);
+                sizeZ = sizeZ.Align(4);
             }
 
             DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
@@ -194,11 +194,11 @@ public static class TextureDecoder
         var sizeY = mip.SizeY;
         var sizeZ = mip.SizeZ;
 
-        if (!UseAssetRipperTextureDecoder && texture.Format == EPixelFormat.PF_BC7)
+        if (texture.Format == EPixelFormat.PF_BC7)
         {
-            sizeX = (sizeX + 3) / 4 * 4;
-            sizeY = (sizeY + 3) / 4 * 4;
-            sizeZ = (sizeZ + 3) / 4 * 4;
+            sizeX = sizeX.Align(4);
+            sizeY = sizeY.Align(4);
+            sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data,
