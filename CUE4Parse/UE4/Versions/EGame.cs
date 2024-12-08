@@ -101,6 +101,7 @@ public enum EGame
         GAME_BlackMythWukong = GAME_UE5_0 + 2,
     GAME_UE5_1 = GameUtils.GameUe5Base + 1 << 4,
         GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
+        GAME_Stalker2 = GAME_UE5_1 + 2,
         GAME_TheCastingofFrankStone = GAME_UE5_1 + 3,
         GAME_SilentHill2Remake = GAME_UE5_1 + 4,
     GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
