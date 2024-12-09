@@ -210,7 +210,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ObjectName = Ar.ReadFName();
             ObjectFlags = Ar.Read<uint>();
 
-            if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES && !Ar.Versions["UObject.Use32Bit"])
             {
                 SerialSize = Ar.Read<int>();
                 SerialOffset = Ar.Read<int>();
