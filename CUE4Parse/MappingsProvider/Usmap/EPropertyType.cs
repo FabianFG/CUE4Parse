@@ -31,6 +31,8 @@
         EnumProperty,
         FieldPathProperty,
         OptionalProperty,
+        Utf8StrProperty,
+        AnsiStrProperty,
 
         Unknown = 0xFF
     }
