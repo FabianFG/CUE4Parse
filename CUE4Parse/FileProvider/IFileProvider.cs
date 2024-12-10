@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.MappingsProvider;
@@ -64,7 +64,12 @@ namespace CUE4Parse.FileProvider
         /// Whether UStructs serialized by this file provider should read the script data
         /// </summary>
         public bool ReadScriptData { get; set; }
-        
+
+        /// <summary>
+        /// Whether UMaterials by this file provider should read the inlined shader maps
+        /// </summary>
+        public bool ReadShaderMaps { get; set; }
+
         /// <summary>
         /// Whether UMaterial loading should skip loading ReferencedTextures
         /// </summary>

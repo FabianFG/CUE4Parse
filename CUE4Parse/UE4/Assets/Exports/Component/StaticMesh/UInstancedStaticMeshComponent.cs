@@ -24,31 +24,37 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
         if (bHasSkipSerializationPropertiesData)
         {
-            if (Ar.Game != EGame.GAME_ThroneAndLiberty)
+            switch (Ar.Game)
             {
-                PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
-            }
-            else
-            {
-                var elementSize = Ar.Read<int>();
-                var elementCount = Ar.Read<int>();
-                Ar.Position -= 2 * sizeof(int);
-                switch (elementSize)
-                {
-                    case 16:
-                        Ar.SkipBulkArrayData();// looks like half floats, but values doesn't make sense
-                        if (elementCount > 0) Ar.Position += 24;
-                        break;
-                    case 40:
-                        PerInstanceSMData = Ar.ReadArray(() => new FInstancedStaticMeshInstanceData(Ar));
-                        break;
-                    case 64:
-                        Ar.SkipBulkArrayData();
-                        break;
-                    default:
-                        throw new ParserException(Ar, $"Unknown element size {elementSize}");
-                }
-            }
+                case EGame.GAME_Stalker2:
+                    Ar.Position += 4;
+                    PerInstanceSMData = Ar.ReadBulkArray(128, Ar.Read<int>(), () => new FInstancedStaticMeshInstanceData(Ar));
+                    break;
+                case EGame.GAME_ThroneAndLiberty:
+                    var elementSize = Ar.Read<int>();
+                    var elementCount = Ar.Read<int>();
+                    Ar.Position -= 2 * sizeof(int);
+                    switch (elementSize)
+                    {
+                        case 16:
+                            Ar.SkipBulkArrayData();// looks like half floats, but values doesn't make sense
+                            if (elementCount > 0)
+                                Ar.Position += 24;
+                            break;
+                        case 40:
+                            PerInstanceSMData = Ar.ReadArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                            break;
+                        case 64:
+                            Ar.SkipBulkArrayData();
+                            break;
+                        default:
+                            throw new ParserException(Ar, $"Unknown element size {elementSize}");
+                    }
+                    break;
+                default:
+                    PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                    break;
+            };
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData)
             {
