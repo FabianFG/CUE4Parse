@@ -228,7 +228,7 @@ public class UEModel : UEFormatExport
         
         if (morphTargets is {Length: > 0})
         {
-            using var morphTargetsChunk = new FDataChunk("MORPHTARGETS", morphTargets.Length);
+            using var morphTargetsChunk = new FDataChunk("MORPHTARGETS");
             foreach (var morphTarget in morphTargets)
             {
                 var morph = morphTarget.Load<UMorphTarget>();
@@ -238,6 +238,7 @@ public class UEModel : UEFormatExport
             
                 var morphData = new FMorphTarget(morph.Name, morphLod);
                 morphData.Serialize(morphTargetsChunk);
+                morphTargetsChunk.Count++;
             }
             morphTargetsChunk.Serialize(archive);
         }
