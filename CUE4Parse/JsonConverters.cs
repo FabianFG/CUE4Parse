@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -274,7 +275,7 @@ public class FStructFallbackConverter : JsonConverter<FStructFallback>
 
         foreach (var property in value.Properties)
         {
-            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
+            writer.WritePropertyName(property.Name.Text);
             serializer.Serialize(writer, property.Tag);
         }
 
