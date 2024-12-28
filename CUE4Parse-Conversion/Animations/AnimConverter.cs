@@ -522,9 +522,18 @@ namespace CUE4Parse_Conversion.Animations
             var transKeys = compressedData.CompressedTrackOffsets[trackIndex * 4 + 1];
             var rotOffset = compressedData.CompressedTrackOffsets[trackIndex * 4 + 2];
             var rotKeys = compressedData.CompressedTrackOffsets[trackIndex * 4 + 3];
+            var scaleOffset = 0;
+            var scaleKeys = 0;
+
+            if (compressedData.CompressedScaleOffsets.IsValid())
+            {
+                scaleOffset = compressedData.CompressedScaleOffsets.OffsetData[trackIndex * 2];
+                scaleKeys = compressedData.CompressedScaleOffsets.OffsetData[trackIndex * 2 + 1];
+            }
 
             track.KeyPos = new FVector[transKeys];
             track.KeyQuat = new FQuat[rotKeys];
+            track.KeyScale = new FVector[scaleKeys];
 
             var mins = FVector.ZeroVector;
             var ranges = FVector.ZeroVector;
@@ -565,6 +574,44 @@ namespace CUE4Parse_Conversion.Animations
             {
                 // A.KeyPos.Add(FVector.ZeroVector);
                 // appNotify("No translation keys!");
+            }
+
+            // read translation keys
+            if (scaleKeys > 0 && scaleOffset > 0)
+            {
+                reader.Position = scaleOffset;
+                var scaleCompressionFormat = compressedData.ScaleCompressionFormat;
+                if (scaleKeys == 1)
+                    scaleCompressionFormat = ACF_None; // single key is stored without compression
+                // read mins/ranges
+                if (scaleCompressionFormat == ACF_IntervalFixed32NoW)
+                {
+                    mins = reader.Read<FVector>();
+                    ranges = reader.Read<FVector>();
+                }
+
+                for (var keyIndex = 0; keyIndex < scaleKeys; keyIndex++)
+                {
+                    track.KeyScale[keyIndex] = scaleCompressionFormat switch
+                    {
+                        ACF_None => reader.Read<FVector>(),
+                        ACF_Float96NoW => reader.Read<FVector>(),
+                        ACF_IntervalFixed32NoW => reader.ReadVectorIntervalFixed32(mins, ranges),
+                        ACF_Fixed48NoW => reader.ReadVectorFixed48(),
+                        ACF_Identity => FVector.ZeroVector,
+                        _ => throw new ParserException($"Unknown scale compression method: {(int) scaleCompressionFormat} ({scaleCompressionFormat})")
+                    };
+                }
+
+                // align to 4 bytes
+                reader.Position = reader.Position.Align(4);
+                if (hasTimeTracks)
+                    ReadTimeArray(reader, scaleKeys, out track.KeyScaleTime, animSequence.NumFrames);
+            }
+            else
+            {
+                // A.KeyScale.Add(FVector.ZeroVector);
+                // appNotify("No scale keys!");
             }
 
             // read rotation keys
