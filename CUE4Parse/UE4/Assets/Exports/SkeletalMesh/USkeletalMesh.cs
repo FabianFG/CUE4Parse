@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
@@ -28,7 +29,7 @@ public class USkeletalMesh : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Materials = Array.Empty<ResolvedObject>();
+        Materials = [];
 
         bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
         NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
@@ -81,6 +82,18 @@ public class USkeletalMesh : UObject
                     {
                         LODModels[i].SerializeRenderItem_Legacy(Ar, bHasVertexColors, NumVertexColorChannels);
                     }
+                }
+
+                if (Ar.Game == EGame.GAME_Stalker2)
+                {
+                    var fallbackLODModels = new FStaticLODModel[Ar.Read<int>()];
+                    for (var i = 0; i < fallbackLODModels.Length; i++)
+                    {
+                        fallbackLODModels[i] = new FStaticLODModel();
+                        fallbackLODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
+                    }
+
+                    LODModels = LODModels.Concat(fallbackLODModels).ToArray();
                 }
 
                 if (Ar.Game >= EGame.GAME_UE5_5)

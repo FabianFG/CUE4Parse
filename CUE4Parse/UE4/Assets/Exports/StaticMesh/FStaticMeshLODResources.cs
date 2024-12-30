@@ -48,7 +48,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
             {
-                if (!stripDataFlags.IsDataStrippedForServer() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+                if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
                 {
                     SerializeBuffersLegacy(Ar, stripDataFlags);
                 }
@@ -61,13 +61,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 bIsLODCookedOut = Ar.ReadBoolean();
             var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
 
-            if (!stripDataFlags.IsDataStrippedForServer() && !bIsLODCookedOut)
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
             {
                 if (Ar.Game >= EGame.GAME_UE5_5)
-                {
-                    var bHasRayTracingGeometry = Ar.ReadBoolean();
-                }
-                
+                    _ = Ar.ReadBoolean(); // bHasRayTracingGeometry
+
                 if (bInlined)
                 {
                     SerializeBuffers(Ar);
@@ -102,10 +100,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                                 // DepthOnlyIndexBuffer
                                 // ReversedDepthOnlyIndexBuffer
                                 // WireframeIndexBuffer
+
                     if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation)
                     {
                         Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                     }
+
+                    if (Ar.Game >= EGame.GAME_UE5_6)
+                        Ar.Position += 6 * 4; // RawDataHeader = 6x uint32
+
                     if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4; // bDropNormals
                 }
 
@@ -220,6 +223,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
             if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
             {
+                if (Ar.Game >= EGame.GAME_UE5_6)
+                    Ar.Position += 6 * sizeof(uint); // RawDataHeader = 6x uint32
+
                 _ = Ar.ReadBulkArray<byte>(); // rayTracingGeometry
             }
 

@@ -1,4 +1,5 @@
 // ReSharper disable CheckNamespace
+
 using System;
 using System.Linq;
 using System.Text;
@@ -70,6 +71,7 @@ public partial class PakFileReader
             var decrypted = reader.ReadBytesAt(pakEntry.Offset + pakEntry.StructSize + bytesToRead, (int) pakEntry.UncompressedSize - limit);
             return encrypted.Concat(decrypted).ToArray();
         }
+
         return encrypted[..(int) pakEntry.UncompressedSize];
     }
 
@@ -80,9 +82,7 @@ public partial class PakFileReader
         var initialSeedBytes = BitConverter.GetBytes(0x44332211);
         hasher.Update(initialSeedBytes);
 
-        var mountPoint = pakEntry.Vfs.MountPoint;
-        var assetPath = (mountPoint.Length == 0 ? pakEntry.Path : pakEntry.Path.Substring(mountPoint.Length)).ToLower();
-        var assetPathBytes = Encoding.UTF8.GetBytes(assetPath);
+        var assetPathBytes = Encoding.UTF8.GetBytes(pakEntry.Path.ToLower());
         hasher.Update(assetPathBytes);
 
         var finalHash = hasher.Finalize().AsSpan();
@@ -91,6 +91,6 @@ public partial class PakFileReader
 
         var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
 
-        return (int)final;
+        return (int) final;
     }
 }

@@ -1,5 +1,6 @@
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
+using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
@@ -85,6 +86,7 @@ public class FScriptStruct
             "MovieSceneEvalTemplatePtr" => new FMovieSceneEvalTemplatePtr(Ar),
             "MovieSceneEvaluationFieldEntityTree" => new FMovieSceneEvaluationFieldEntityTree(Ar),
             "MovieSceneEvaluationKey" => type == ReadType.ZERO ? new FMovieSceneEvaluationKey() : Ar.Read<FMovieSceneEvaluationKey>(),
+            "MovieSceneEventParameters" => type == ReadType.ZERO ? new FMovieSceneEventParameters() : new FMovieSceneEventParameters(Ar),
             "MovieSceneFloatChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<float>() : new FMovieSceneChannel<float>(Ar),
             "MovieSceneDoubleChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<double>() : new FMovieSceneChannel<double>(Ar),
             "MovieSceneFloatValue" => type == ReadType.ZERO ? new FMovieSceneValue<float>() : new FMovieSceneValue<float>(Ar, Ar.Read<float>()),
@@ -119,6 +121,7 @@ public class FScriptStruct
             "StringAssetReference" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "SoftObjectPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
+            "Transform3f" => type == ReadType.ZERO ? new FTransform() : Ar.Read<FTransform>(),
             "TwoVectors" => type == ReadType.ZERO ? new FTwoVectors() : new FTwoVectors(Ar),
             "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
             "Vector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
@@ -192,6 +195,9 @@ public class FScriptStruct
 
             // Metro:Awakening
             "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
+
+            // Marvel Rivals
+            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
