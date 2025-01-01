@@ -343,11 +343,28 @@ public class UObject : IPropertyHolder
         {
             writer.WritePropertyName("Properties");
             writer.WriteStartObject();
-            foreach (var property in Properties)
+
+            var properties = Properties.GroupBy(p => p.Name.Text).ToDictionary(p => p.Key, p => p.ToList());
+
+            foreach (var (name, props) in properties)
             {
-                writer.WritePropertyName(property.Name.Text);
-                serializer.Serialize(writer, property.Tag);
+                writer.WritePropertyName(name);
+
+                if (props[0].PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) || props.Count > 1)
+                {
+                    writer.WriteStartArray();
+                    foreach (var prop in props.OrderBy(p => p.ArrayIndex))
+                    {
+                        serializer.Serialize(writer, prop.Tag);
+                    }
+                    writer.WriteEndArray();
+                }
+                else
+                {
+                    serializer.Serialize(writer, props[0].Tag);
+                }
             }
+
             writer.WriteEndObject();
         }
 
