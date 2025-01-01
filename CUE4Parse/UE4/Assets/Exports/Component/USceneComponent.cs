@@ -13,6 +13,7 @@ public class USceneComponent : UActorComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;
