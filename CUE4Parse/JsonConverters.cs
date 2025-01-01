@@ -273,24 +273,34 @@ public class FStructFallbackConverter : JsonConverter<FStructFallback>
     {
         writer.WriteStartObject();
 
-        var properties = value.Properties.GroupBy(p => p.Name.Text).ToDictionary(p => p.Key, p => p.ToList());
+        var properties = value.Properties.GroupBy(p => p.Name.Text).ToDictionary(p => p.Key, p => p.ToDictionary(pp => pp.ArrayIndex));
 
         foreach (var (name, props) in properties)
         {
             writer.WritePropertyName(name);
 
-            if (props[0].PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) || props.Count > 1)
+            var firstProp = props.Values.First();
+
+            if (firstProp.PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) || props.Count > 1)
             {
+                var maxIndex = props.Keys.Max();
                 writer.WriteStartArray();
-                foreach (var prop in props.OrderBy(p => p.ArrayIndex))
+                for (var i = 0; i <= maxIndex; i++)
                 {
-                    serializer.Serialize(writer, prop.Tag);
+                    if (!props.TryGetValue(i, out var prop))
+                    {
+                        writer.WriteNull();
+                    }
+                    else
+                    {
+                        serializer.Serialize(writer, prop.Tag);
+                    }
                 }
                 writer.WriteEndArray();
             }
             else
             {
-                serializer.Serialize(writer, props[0].Tag);
+                serializer.Serialize(writer, firstProp.Tag);
             }
         }
 
