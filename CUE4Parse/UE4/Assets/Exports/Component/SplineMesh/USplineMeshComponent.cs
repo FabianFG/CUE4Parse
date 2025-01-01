@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 
 public class USplineMeshComponent : UStaticMeshComponent
 {
-    public FSplineMeshParams SplineParams;
+    public FSplineMeshParams? SplineParams;
     public FGuid CachedMeshBodySetupGuid;
     public FPackageIndex? StaticMesh;
     public FPackageIndex[] OverrideMaterials;
@@ -18,12 +18,9 @@ public class USplineMeshComponent : UStaticMeshComponent
     {
         base.Deserialize(Ar, validPos);
 
+        SplineParams = GetOrDefault<FSplineMeshParams>(nameof(SplineParams));
         CachedMeshBodySetupGuid = GetOrDefault<FGuid>(nameof(CachedMeshBodySetupGuid));
         StaticMesh = GetOrDefault<FPackageIndex>(nameof(StaticMesh));
-
-        if (TryGetValue(out FStructFallback fallback, nameof(SplineParams)))
-            SplineParams = new FSplineMeshParams(fallback);
-
         OverrideMaterials = GetOrDefault<FPackageIndex[]>(nameof(OverrideMaterials), []);
     }
 }
