@@ -173,6 +173,12 @@ namespace CUE4Parse.UE4.Pak.Objects
             var bitfield = *(uint*) data;
             data += sizeof(uint);
 
+            if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
+            {
+                bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 | (bitfield & 0x0FC00000) << 1 | bitfield & 0xE0000000;
+                data += sizeof(byte);
+            }
+
             uint compressionBlockSize;
             if ((bitfield & 0x3f) == 0x3f) // flag value to load a field
             {
@@ -219,6 +225,11 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 UncompressedSize = *(long*) data; // Should be ulong
                 data += sizeof(long);
+            }
+
+            if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
+            {
+                (Offset, UncompressedSize) = (UncompressedSize, Offset);
             }
 
             Size = UncompressedSize;
