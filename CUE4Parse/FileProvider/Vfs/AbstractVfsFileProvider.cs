@@ -279,21 +279,13 @@ namespace CUE4Parse.FileProvider.Vfs
             var workingAes = LoadIniConfigs();
             if (workingAes) return;
 
-            var vfsToVerify = _mountedVfs.Keys
-                    .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
-                    .GroupBy(it => it.EncryptionKeyGuid);
+            var vfsToVerify = _mountedVfs.Keys.Where(it => it is { IsEncrypted: false, EncryptedFileCount: > 0, AesKey: null or { IsDefault: true } });
 
-            foreach (var group in vfsToVerify)
+            foreach (var reader in vfsToVerify)
             {
-                if (group.Key != DefaultGame.EncryptionKeyGuid) continue;
-                foreach (var reader in group)
-                {
-                    _mountedVfs.TryRemove(reader, out _);
-                    _unloadedVfs[reader] = null;
-                    VfsUnmounted?.Invoke(reader, _unloadedVfs.Count);
-                }
-                _keys.TryRemove(group.Key, out _);
-                _requiredKeys[group.Key] = null;
+                _mountedVfs.TryRemove(reader, out _);
+                _unloadedVfs[reader] = null;
+                VfsUnmounted?.Invoke(reader, _unloadedVfs.Count);
             }
         }
 
