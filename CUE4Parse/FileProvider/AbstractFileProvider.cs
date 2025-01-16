@@ -30,7 +30,7 @@ namespace CUE4Parse.FileProvider
 {
     public class CustomConfigIni : ConfigIni
     {
-        public FGuid EncryptionKeyGuid { get; set; }
+        public FGuid? EncryptionKeyGuid { get; set; }
 
         public CustomConfigIni(string name) : base(name) { }
     }
