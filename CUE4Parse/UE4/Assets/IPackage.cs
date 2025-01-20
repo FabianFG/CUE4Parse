@@ -29,6 +29,7 @@ public interface IPackage
     public UObject GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal);
     public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject;
     public Lazy<UObject>? FindObject(FPackageIndex? index);
+    public Lazy<T>? FindObject<T>(FPackageIndex? index) where T : UObject => FindObject(index) as Lazy<T>;
     public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
     public UObject? GetExport(int index);
     public IEnumerable<UObject> GetExports();
