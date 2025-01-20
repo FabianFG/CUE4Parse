@@ -21,6 +21,8 @@ public abstract class AbstractUePackage : UObject, IPackage
     public TypeMappings? Mappings { get; }
     public abstract FPackageFileSummary Summary { get; }
     public abstract FNameEntrySerialized[] NameMap { get; }
+    public abstract int ImportMapLength { get; }
+    public abstract int ExportMapLength { get; }
     public abstract Lazy<UObject>[] ExportsLazy { get; }
     public abstract bool IsFullyLoaded { get; }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
@@ -20,13 +19,16 @@ using Serilog;
 namespace CUE4Parse.UE4.Assets
 {
     [SkipObjectRegistration]
-    [JsonConverter(typeof(IoPackageConverter))]
+    [JsonConverter(typeof(PackageConverter))]
     public sealed class IoPackage : AbstractUePackage
     {
         public readonly IoGlobalData GlobalData;
 
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
+        public override int ImportMapLength => ImportMap.Length;
+        public override int ExportMapLength => ExportMap.Length;
+
         public readonly ulong[]? ImportedPublicExportHashes;
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
