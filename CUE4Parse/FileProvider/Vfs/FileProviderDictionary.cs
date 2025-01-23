@@ -52,9 +52,8 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(string key)
         {
-            if (IsCaseInsensitive)
-                key = key.ToLowerInvariant();
-            foreach (var files in _indicesBag.OrderByDescending(kvp => kvp.Key))
+            if (IsCaseInsensitive) key = key.ToLowerInvariant();
+            foreach (var files in _indicesBag)
             {
                 if (files.Value.ContainsKey(key))
                     return true;
@@ -66,8 +65,7 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(string key, out GameFile value)
         {
-            if (IsCaseInsensitive)
-                key = key.ToLowerInvariant();
+            if (IsCaseInsensitive) key = key.ToLowerInvariant();
             foreach (var files in _indicesBag.OrderByDescending(kvp => kvp.Key))
             {
                 if (files.Value.TryGetValue(key, out value))
@@ -84,9 +82,8 @@ namespace CUE4Parse.FileProvider.Vfs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (TryGetValue(path, out var file))
-                    return file;
-                if (TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
+                if (TryGetValue(path, out var file) ||
+                    TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
                     return file;
 
                 throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
