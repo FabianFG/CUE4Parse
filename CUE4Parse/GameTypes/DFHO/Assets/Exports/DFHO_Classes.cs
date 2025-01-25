@@ -8,4 +8,5 @@ namespace CUE4Parse.GameTypes.DFHO.Assets.Exports;
 public class UVirtualMaterialInstanceConstant : UMaterialInstanceConstant;
 public class UStaticLabelMesh : UStaticMesh;
 public class USMBlueprintGeneratedClass : UBlueprintGeneratedClass;
+public class USMNodeBlueprintGeneratedClass : UBlueprintGeneratedClass;
 public class ULightMapVirtualTexture2D : UTexture2D;

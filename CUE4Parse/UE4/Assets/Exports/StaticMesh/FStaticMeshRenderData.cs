@@ -125,20 +125,16 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game == EGame.GAME_FragPunk)
-        {
-            ScreenSize = new float[16];
-            for (var i = 0; i < 16; i++)
-            {
-                var bFloatCooked = Ar.ReadBoolean();
-                ScreenSize[i] = Ar.Read<float>();
-            }
-            return;
-        }
-
         if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
 
-        ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
+        var screenSizeLength = Ar.Game switch
+        {
+            EGame.GAME_FragPunk => 16,
+            EGame.GAME_Stalker2 => 14,
+            >= EGame.GAME_UE4_9 => MAX_STATIC_LODS_UE4,
+            _ => 4
+        };
+        ScreenSize = new float[screenSizeLength];
         for (var i = 0; i < ScreenSize.Length; ++i)
         {
             if (Ar.Game >= EGame.GAME_UE4_20) // FPerPlatformProperty
