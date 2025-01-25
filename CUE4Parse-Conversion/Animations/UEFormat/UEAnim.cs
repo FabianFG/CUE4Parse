@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.UEFormat;
@@ -9,7 +11,7 @@ namespace CUE4Parse_Conversion.Animations.UEFormat;
 public class UEAnim : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEANIM";
-    
+
     public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
@@ -24,10 +26,10 @@ public class UEAnim : UEFormatExport
             {
                 var boneName = refSkeleton.FinalRefBoneInfo[i].Name.Text;
                 trackChunk.WriteFString(boneName);
-                
+
                 var track = sequence.Tracks[i];
                 var boneTransform = refSkeleton.FinalRefBonePose[i];
-                
+
                 var positionKeys = new List<FVectorKey>();
                 var rotationKeys = new List<FQuatKey>();
                 var scaleKeys = new List<FVectorKey>();
@@ -43,36 +45,48 @@ public class UEAnim : UEFormatExport
                     {
                         track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
-                    
+
                     rotation.Y = -rotation.Y;
                     rotation.W = -rotation.W;
                     translation.Y = -translation.Y;
 
                     // dupe key reduction, could be better but it works for now
-                    if (prevPos is null || prevPos != translation)
+                    if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))
                     {
+                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevPos != null)
+                        {
+                            positionKeys.Add(new FVectorKey(frame - 1, (FVector)prevPos));
+                        }
                         positionKeys.Add(new FVectorKey(frame, translation));
                         prevPos = translation;
                     }
-                    
-                    if (prevRot is null || prevRot != rotation)
+
+                    if (prevRot is null || (prevRot != rotation && track.KeyQuatTime.Contains(frame)))
                     {
+                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevRot != null)
+                        {
+                            rotationKeys.Add(new FQuatKey(frame - 1, (FQuat)prevRot));
+                        }
                         rotationKeys.Add(new FQuatKey(frame, rotation));
                         prevRot = rotation;
                     }
-                    
-                    if (prevScale is null || prevScale != scale)
+
+                    if (prevScale is null || (prevScale != scale && track.KeyScaleTime.Contains(frame)))
                     {
+                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevScale != null)
+                        {
+                            scaleKeys.Add(new FVectorKey(frame - 1, (FVector)prevScale));
+                        }
                         scaleKeys.Add(new FVectorKey(frame, scale));
                         prevScale = scale;
                     }
                 }
-                
+
                 trackChunk.WriteArray(positionKeys);
                 trackChunk.WriteArray(rotationKeys);
                 trackChunk.WriteArray(scaleKeys);
             }
-            
+
             trackChunk.Serialize(Ar);
         }
 
@@ -80,7 +94,7 @@ public class UEAnim : UEFormatExport
         if (floatCurves is not null)
         {
             using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
-            
+
             foreach (var floatCurve in floatCurves)
             {
                 // TODO serialize more data for better accuracy
@@ -92,9 +106,9 @@ public class UEAnim : UEFormatExport
                     key.Serialize(curveChunk);
                 }
             }
-            
+
             curveChunk.Serialize(Ar);
         }
-        
+
     }
 }
