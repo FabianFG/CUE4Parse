@@ -41,7 +41,7 @@ public class UEAnim : UEFormatExport
                     var translation = boneTransform.Translation;
                     var rotation = boneTransform.Rotation;
                     var scale = boneTransform.Scale3D;
-                    if (sequence.OriginalSequence.FindTrackForBoneIndex(i) >= 0)
+                    if (originalSequence.FindTrackForBoneIndex(i) >= 0)
                     {
                         track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
@@ -51,32 +51,20 @@ public class UEAnim : UEFormatExport
                     translation.Y = -translation.Y;
 
                     // dupe key reduction, could be better but it works for now
-                    if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))
+                    if (prevPos is null || prevPos != translation)
                     {
-                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevPos != null)
-                        {
-                            positionKeys.Add(new FVectorKey(frame - 1, (FVector)prevPos));
-                        }
                         positionKeys.Add(new FVectorKey(frame, translation));
                         prevPos = translation;
                     }
 
-                    if (prevRot is null || (prevRot != rotation && track.KeyQuatTime.Contains(frame)))
+                    if (prevRot is null || prevRot != rotation)
                     {
-                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevRot != null)
-                        {
-                            rotationKeys.Add(new FQuatKey(frame - 1, (FQuat)prevRot));
-                        }
                         rotationKeys.Add(new FQuatKey(frame, rotation));
                         prevRot = rotation;
                     }
 
-                    if (prevScale is null || (prevScale != scale && track.KeyScaleTime.Contains(frame)))
+                    if (prevScale is null || prevScale != scale)
                     {
-                        if (originalSequence.BoneCompressionCodec?.GetType() == typeof(UAnimCompress_Constant) && prevScale != null)
-                        {
-                            scaleKeys.Add(new FVectorKey(frame - 1, (FVector)prevScale));
-                        }
                         scaleKeys.Add(new FVectorKey(frame, scale));
                         prevScale = scale;
                     }

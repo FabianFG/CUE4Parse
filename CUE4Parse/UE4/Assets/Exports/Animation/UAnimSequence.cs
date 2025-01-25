@@ -42,6 +42,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public int RefFrameIndex;
         public FName RetargetSource;
         public FTransform[]? RetargetSourceAssetReferencePose;
+        public EAnimInterpolationType Interpolation;
 
         public bool bUseRawDataOnly;
         public bool EnsuredCurveData;
@@ -59,6 +60,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             RefFrameIndex = GetOrDefault(nameof(RefFrameIndex), 0);
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
+            Interpolation = GetOrDefault<EAnimInterpolationType>(nameof(Interpolation));
 
             if (BoneCompressionSettings == null && Ar.Game == EGame.GAME_RogueCompany)
             {
