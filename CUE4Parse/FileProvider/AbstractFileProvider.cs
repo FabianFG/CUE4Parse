@@ -40,8 +40,8 @@ namespace CUE4Parse.FileProvider
         protected static readonly ILogger Log = Serilog.Log.ForContext<IFileProvider>();
 
         public VersionContainer Versions { get; set; }
-        public CustomConfigIni DefaultGame { get; set; }
-        public CustomConfigIni DefaultEngine { get; set; }
+        public CustomConfigIni DefaultGame { get; }
+        public CustomConfigIni DefaultEngine { get; }
         public virtual ITypeMappingsProvider? MappingsContainer { get; set; }
         public virtual TypeMappings? MappingsForGame => MappingsContainer?.MappingsForGame;
         public virtual IDictionary<string, IDictionary<string, string>> LocalizedResources { get; } = new Dictionary<string, IDictionary<string, string>>();

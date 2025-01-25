@@ -10,6 +10,11 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public FGuid EncryptionKeyGuid { get; }
         public long Length { get; set; }
 
+        /// <summary>
+        /// Custom encryption delegate for AES decryption
+        /// It is automatically set based on the game version
+        /// But can be overridden if needed
+        /// </summary>
         public CustomEncryptionDelegate? CustomEncryption { get; set; }
         public FAesKey? AesKey { get; set; }
 

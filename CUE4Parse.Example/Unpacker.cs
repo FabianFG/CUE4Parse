@@ -1,0 +1,66 @@
+﻿using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using CUE4Parse.Compression;
+using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider;
+using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+
+namespace CUE4Parse.Example;
+
+public static class Unpacker
+{
+    private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
+    private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
+
+    private const string _exportDirectory = "./exports";
+
+    public static void Unpack()
+    {
+        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+
+        var version = new VersionContainer(EGame.GAME_UE5_6);
+        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version)
+        {
+            ReadScriptData = false,
+            ReadShaderMaps = false,
+            SkipReferencedTextures = true,
+            UseLazySerialization = true
+        };
+        provider.Initialize();
+        provider.SubmitKey(new FGuid(), new FAesKey(_aesKey));
+
+        OodleHelper.DownloadOodleDll();
+        OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
+
+        var files = provider.Files.Values
+            .GroupBy(it => it.Path.SubstringBeforeLast('/'))
+            .ToDictionary(it => it.Key, it => it.ToArray());
+
+        var watch = new Stopwatch();
+        watch.Start();
+
+        foreach (var (folder, packages) in files)
+        {
+            var length = packages.Length;
+            Log.Information("unpacking {Folder} ({Count} packages)", folder, length);
+
+            Parallel.For(0, length, i =>
+            {
+                var data = provider.SavePackage(packages[i]);
+                foreach (var (path, bytes) in data)
+                {
+                    Directory.CreateDirectory(Path.Combine(_exportDirectory, folder));
+                    File.WriteAllBytesAsync(Path.Combine(_exportDirectory, path), bytes);
+                }
+            });
+        }
+        watch.Stop();
+        Log.Information("done in {Time}", watch.Elapsed);
+    }
+}
