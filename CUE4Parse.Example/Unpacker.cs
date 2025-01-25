@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,13 +38,13 @@ public static class Unpacker
         OodleHelper.DownloadOodleDll();
         OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
 
-        var files = provider.Files.Values
+        var archive = provider.MountedVfs.First(x => x.Name.Equals("pakchunk0-Windows.pak"));
+        var files = archive.Files.Values // provider.Files.Values for all files in all archives
             .GroupBy(it => it.Path.SubstringBeforeLast('/'))
             .ToDictionary(it => it.Key, it => it.ToArray());
 
         var watch = new Stopwatch();
         watch.Start();
-
         foreach (var (folder, packages) in files)
         {
             var length = packages.Length;
@@ -61,6 +61,10 @@ public static class Unpacker
             });
         }
         watch.Stop();
-        Log.Information("done in {Time}", watch.Elapsed);
+
+        Log.Information("unpacked {PackageCount} packages in {FolderCount} folders in {Time}",
+            files.Values.Sum(it => it.Length),
+            files.Count,
+            watch.Elapsed);
     }
 }
