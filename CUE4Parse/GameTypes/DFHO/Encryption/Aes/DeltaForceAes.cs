@@ -19,7 +19,7 @@ public static class DeltaForceAes
 
         for (var i = 0; i < count; i++)
         {
-            output[i] ^= 0xED;
+            output[i] ^= 0x7F;
         }
 
         return output;

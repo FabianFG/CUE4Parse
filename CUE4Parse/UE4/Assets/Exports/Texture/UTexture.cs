@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -79,7 +79,7 @@ public abstract class UTexture : UUnrealMaterial
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this);
 
-                if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
+                if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
