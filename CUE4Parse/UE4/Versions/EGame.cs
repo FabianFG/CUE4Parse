@@ -54,7 +54,7 @@ public enum EGame
         GAME_RogueCompany = GAME_UE4_25 + 2,
         GAME_DeadIsland2 = GAME_UE4_25 + 3,
         GAME_KenaBridgeofSpirits = GAME_UE4_25 + 4,
-        GAME_CalabiYau = GAME_UE4_25 + 5,
+        GAME_Strinova = GAME_UE4_25 + 5,
         GAME_SYNCED = GAME_UE4_25 + 6,
         GAME_OperationApocalypse = GAME_UE4_25 + 7,
         GAME_Farlight84 = GAME_UE4_25 + 8,

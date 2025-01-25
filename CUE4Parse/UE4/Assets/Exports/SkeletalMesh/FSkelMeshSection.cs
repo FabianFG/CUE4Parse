@@ -267,8 +267,11 @@ public class FSkelMeshSection
             case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters:
                 Ar.Position += 4;
                 break;
-            case EGame.GAME_CalabiYau or EGame.GAME_FragPunk:
+            case EGame.GAME_FragPunk:
                 Ar.Position += 8;
+                break;
+            case EGame.GAME_Strinova:
+                Ar.Position += 14;
                 break;
             case EGame.GAME_MortalKombat1:
                 Ar.Position += 12;
