@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Pak
             if (pakEntry.IsCompressed)
             {
 #if DEBUG
-                Log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
+                log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
 #endif
                 switch (Game)
                 {

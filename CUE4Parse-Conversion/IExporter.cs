@@ -66,7 +66,7 @@ namespace CUE4Parse_Conversion
         protected ExporterBase(UObject export, ExporterOptions options)
         {
             var p = export.GetPathName();
-            PackagePath = (export.Owner?.Provider?.FixPath(p) ?? p).SubstringBeforeLast('.');
+            PackagePath = (export.Owner?.Provider?.FixPath(p, StringComparison.Ordinal) ?? p).SubstringBeforeLast('.');
             ExportName = p.SubstringAfterLast('.');
             Options = options;
         }

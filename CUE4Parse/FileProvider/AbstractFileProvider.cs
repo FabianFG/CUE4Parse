@@ -413,8 +413,8 @@ namespace CUE4Parse.FileProvider
             return Files.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file);
         }
 
-        public virtual string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-        public virtual string FixPath(string path, StringComparison comparisonType)
+        public string FixPath(string path) => FixPath(path, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        public string FixPath(string path, StringComparison comparisonType)
         {
             path = path.Replace('\\', '/');
             if (path[0] == '/')
