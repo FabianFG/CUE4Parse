@@ -8,13 +8,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterialExpressionQualitySwitch : UMaterialExpression
 {
-    public readonly FExpressionInput[] Inputs = new FExpressionInput[(int) EMaterialQualityLevel.Num];
+    public FExpressionInput[] Inputs = new FExpressionInput[(int) EMaterialQualityLevel.Num];
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
         var toRemove = new List<FPropertyTag>();
+
+        if (Ar.Game == Versions.EGame.GAME_DeltaForceHawkOps) Inputs = new FExpressionInput[(int) EMaterialQualityLevel.Num + 1];
 
         var i = 0;
         foreach (var property in Properties)

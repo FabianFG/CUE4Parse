@@ -199,6 +199,9 @@ public class FScriptStruct
             // Marvel Rivals
             "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
 
+            // Wuthering Waves
+            "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
+
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
     }

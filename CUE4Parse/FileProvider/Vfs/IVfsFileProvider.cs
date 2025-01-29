@@ -25,11 +25,15 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyDictionary<FGuid, FAesKey> Keys { get; }
         public IReadOnlyCollection<FGuid> RequiredKeys { get; }
 
+        /// <inheritdoc cref="IAesVfsReader.CustomEncryption"/>
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public event EventHandler<int>? VfsRegistered;
         public event EventHandler<int>? VfsMounted;
         public event EventHandler<int>? VfsUnmounted;
 
+        /// <summary>
+        /// Scan the given directory for archives to register
+        /// </summary>
         public void Initialize();
 
         public void RegisterVfs(string file);

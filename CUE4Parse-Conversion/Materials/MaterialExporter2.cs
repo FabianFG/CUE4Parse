@@ -48,10 +48,9 @@ namespace CUE4Parse_Conversion.Materials
         {
             label = string.Empty;
             savedFilePath = string.Empty;
-            if (!baseDirectory.Exists) return false;
 
             savedFilePath = FixAndCreatePath(baseDirectory, _internalFilePath, "json");
-            File.WriteAllText(savedFilePath, JsonConvert.SerializeObject(_materialData, Formatting.Indented));
+            File.WriteAllTextAsync(savedFilePath, JsonConvert.SerializeObject(_materialData, Formatting.Indented));
             label = Path.GetFileName(savedFilePath);
 
             Parallel.ForEach(_materialData.Parameters.Textures.Values, texture =>
@@ -67,7 +66,7 @@ namespace CUE4Parse_Conversion.Materials
                         ETextureFormat.Dds => "dds",
                         _ => "png"
                     };
-                    
+
                     var texturePath = FixAndCreatePath(baseDirectory, t.Owner?.Name ?? t.Name, ext);
                     using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                     using var data = bitmap.Encode(Options.TextureFormat, 100);

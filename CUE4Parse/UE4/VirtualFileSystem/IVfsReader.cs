@@ -10,6 +10,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
     {
         public string Path { get; }
         public string Name { get; }
+        public long ReadOrder { get; }
 
         public IReadOnlyDictionary<string, GameFile> Files { get; }
         public int FileCount { get; }

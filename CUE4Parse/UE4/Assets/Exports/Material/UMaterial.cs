@@ -57,7 +57,7 @@ public class UMaterial : UMaterialInterface
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
         {
-            if (Ar.Game >= EGame.GAME_UE4_25 && Ar.Owner?.Provider?.ReadShaderMaps == true)
+            if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
             {
                 try
                 {

@@ -298,6 +298,7 @@ namespace CUE4Parse.UE4.IO
                     sb.Append($" ({EncryptedFileCount} encrypted)");
                 if (MountPoint.Contains("/"))
                     sb.Append($", mount point: \"{MountPoint}\"");
+                sb.Append($", order {ReadOrder}");
                 sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
                 log.Information(sb.ToString());
             }

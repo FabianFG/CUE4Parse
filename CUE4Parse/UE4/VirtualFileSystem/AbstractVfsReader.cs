@@ -15,6 +15,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 
         public string Path { get; }
         public string Name { get; }
+        public long ReadOrder { get; private set; }
+
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
         public virtual int FileCount => Files.Count;
 
@@ -66,7 +68,58 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 mountPoint = "/";
             }
 
-            mountPoint = mountPoint.Substring(1);
+            mountPoint = mountPoint[1..];
+            VerifyReadOrder();
+        }
+
+        private void VerifyReadOrder()
+        {
+            ReadOrder = GetPakOrderFromPakFilePath();
+            if (!Name.EndsWith("_P.pak") && !Name.EndsWith("_P.utoc") && !Name.EndsWith("_P.o.utoc"))
+                return;
+
+            var chunkVersionNumber = 1u;
+            var versionEndIndex = Name.LastIndexOf('_');
+            if (versionEndIndex != -1 && versionEndIndex > 0)
+            {
+                var versionStartIndex = Name.LastIndexOf('_', versionEndIndex - 1);
+                if (versionStartIndex != -1)
+                {
+                    versionStartIndex++;
+                    var versionString = Name.Substring(versionStartIndex, versionEndIndex - versionStartIndex);
+                    if (int.TryParse(versionString, out var chunkVersionSigned) && chunkVersionSigned >= 1)
+                    {
+                        // Increment by one so that the first patch file still gets more priority than the base pak file
+                        chunkVersionNumber = (uint)chunkVersionSigned + 1;
+                    }
+                }
+            }
+            ReadOrder += 100 * chunkVersionNumber;
+        }
+
+        private int GetPakOrderFromPakFilePath()
+        {
+            // if (Path.StartsWith($"{FPaths.ProjectContentDir()}Paks/{FApp.GetProjectName()}-"))
+            // {
+            //     // ProjectName/Content/Paks/ProjectName-
+            //     return 4;
+            // }
+            // if (Path.StartsWith(FPaths.ProjectContentDir()))
+            // {
+            //     // ProjectName/Content/
+            //     return 3;
+            // }
+            // if (Path.StartsWith(FPaths.EngineContentDir()))
+            // {
+            //     // Engine/Content/
+            //     return 2;
+            // }
+            // if (Path.StartsWith(FPaths.ProjectSavedDir()))
+            // {
+            //     // %LocalAppData%/ProjectName/Saved/
+            //     return 1;
+            // }
+            return 3;
         }
 
         protected const int MAX_MOUNTPOINT_TEST_LENGTH = 128;

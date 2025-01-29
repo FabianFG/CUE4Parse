@@ -39,6 +39,12 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
             return;
         }
 
+        if (Ar.Game == EGame.GAME_DeltaForceHawkOps)
+        {
+            StructFallback = new FStructFallback(Ar, "MovieSceneChannel");
+            return;
+        }
+
         PreInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
         PostInfinityExtrap = Ar.Read<ERichCurveExtrapolation>();
 

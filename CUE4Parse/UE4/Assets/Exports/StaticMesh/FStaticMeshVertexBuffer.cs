@@ -28,6 +28,8 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             NumVertices = Ar.Read<int>();
             UseFullPrecisionUVs = Ar.ReadBoolean();
             UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 && Ar.ReadBoolean();
+            if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+
 
             if (!stripDataFlags.IsAudioVisualDataStripped())
             {

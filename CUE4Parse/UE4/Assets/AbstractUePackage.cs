@@ -15,18 +15,21 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets;
 
+[JsonConverter(typeof(PackageConverter))]
 public abstract class AbstractUePackage : UObject, IPackage
 {
     public IFileProvider? Provider { get; }
     public TypeMappings? Mappings { get; }
     public abstract FPackageFileSummary Summary { get; }
     public abstract FNameEntrySerialized[] NameMap { get; }
+    public abstract int ImportMapLength { get; }
+    public abstract int ExportMapLength { get; }
     public abstract Lazy<UObject>[] ExportsLazy { get; }
     public abstract bool IsFullyLoaded { get; }
 
     public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
 
-    public AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
+    protected AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
     {
         Name = name;
         Provider = provider;
@@ -34,7 +37,7 @@ public abstract class AbstractUePackage : UObject, IPackage
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
-    protected static UObject ConstructObject(UStruct? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
+    public UObject ConstructObject(UStruct? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
     {
         UObject? obj = null;
         var mappings = owner?.Mappings;
@@ -67,7 +70,7 @@ public abstract class AbstractUePackage : UObject, IPackage
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void DeserializeObject(UObject obj, FAssetArchive Ar, long serialSize)
+    protected void DeserializeObject(UObject obj, FAssetArchive Ar, long serialSize)
     {
         var serialOffset = Ar.Position;
         var validPos = serialOffset + serialSize;

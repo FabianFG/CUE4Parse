@@ -378,7 +378,10 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             }
 
             if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
-                AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
+            {
+                if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition)
+                    AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
+            }
 
             if (HasClothData())
                 ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);

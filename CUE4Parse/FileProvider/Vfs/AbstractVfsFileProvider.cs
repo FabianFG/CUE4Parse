@@ -9,6 +9,19 @@ using System.Threading.Tasks;
 
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
+using CUE4Parse.GameTypes.DBD.Encryption.Aes;
+using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
+using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
+using CUE4Parse.GameTypes.FSR.Encryption.Aes;
+using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
+using CUE4Parse.GameTypes.MJS.Encryption.Aes;
+using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
+using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
+using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
+using CUE4Parse.GameTypes.THPS.Encryption.Aes;
+using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
@@ -51,6 +64,24 @@ namespace CUE4Parse.FileProvider.Vfs
         protected AbstractVfsFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
         {
             _files = new FileProviderDictionary(isCaseInsensitive);
+
+            CustomEncryption = versions?.Game switch
+            {
+                EGame.GAME_ApexLegendsMobile => ApexLegendsMobileAes.DecryptApexMobile,
+                EGame.GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
+                EGame.GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
+                EGame.GAME_Undawn => ToaaAes.ToaaDecrypt,
+                EGame.GAME_DeadByDaylight => DBDAes.DbDDecrypt,
+                EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
+                EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
+                EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
+                EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
+                EGame.GAME_MonsterJamShowdown => MonsterJamShowdownAes.MonsterJamShowdownDecrypt,
+                EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
+                EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
+                EGame.GAME_TonyHawkProSkater12 => THPS12Aes.THPS12Decrypt,
+                _ => null
+            };
         }
 
         public abstract void Initialize();
@@ -274,14 +305,19 @@ namespace CUE4Parse.FileProvider.Vfs
             return countNewMounts;
         }
 
+        /// <summary>
+        /// load .ini files and verify the validity of the main encryption key against them
+        /// in cases where archives are not encrypted, but their packages are, that is one way to tell if the key is correct
+        /// if the key is not correct, archives will be removed from the pool of mounted archives no matter how many encrypted packages they have
+        /// </summary>
         public void PostMount()
         {
             var workingAes = LoadIniConfigs();
-            if (workingAes) return;
+            if (workingAes || DefaultGame.EncryptionKeyGuid is null) return;
 
             var vfsToVerify = _mountedVfs.Keys
-                    .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
-                    .GroupBy(it => it.EncryptionKeyGuid);
+                .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
+                .GroupBy(it => it.EncryptionKeyGuid);
 
             foreach (var group in vfsToVerify)
             {

@@ -18,10 +18,10 @@ namespace CUE4Parse_Conversion.Animations
         {
             label = string.Empty;
             savedFilePath = string.Empty;
-            if (!baseDirectory.Exists || FileData.Length <= 0) return false;
+            if (FileData.Length <= 0) return false;
 
             savedFilePath = FixAndCreatePath(baseDirectory, FileName);
-            File.WriteAllBytes(savedFilePath, FileData);
+            File.WriteAllBytesAsync(savedFilePath, FileData);
             label = Path.GetFileName(savedFilePath);
             return File.Exists(savedFilePath);
         }

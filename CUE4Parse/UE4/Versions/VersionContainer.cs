@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.Versions
             Options["Vector_NetQuantize_AsStruct"] = false;
 
             // fields
-            Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25;
+            Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25 && Game != GAME_DeltaForceHawkOps;
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
             Options["SkeletalMesh.UseNewCookedFormat"] = Game >= GAME_UE4_24;
             Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus;
