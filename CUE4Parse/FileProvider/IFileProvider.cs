@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Objects;
@@ -105,6 +106,9 @@ namespace CUE4Parse.FileProvider
         /// <param name="path">The file path to be fixed</param>
         /// <returns>The file path translated into the correct format</returns>
         public string FixPath(string path);
+
+        /// <inheritdoc cref="FixPath(string)"/>
+        public string FixPath(string path, StringComparison comparisonType);
 
         /// <summary>
         /// Loads asset data of the file with the passed path into byte[].

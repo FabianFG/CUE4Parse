@@ -390,7 +390,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             {
                 _ = new FMultisizeIndexContainer(Ar);
             }
-            
+
             var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
 
             if (Ar.Versions["SkeletalMesh.HasRayTracingData"])
