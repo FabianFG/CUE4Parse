@@ -1,0 +1,33 @@
+# yoinked from Marlon
+name: NuGet Push
+
+on:
+  push:
+    branches: [ master ]
+
+defaults:
+  run:
+    working-directory: src
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message matches '\sv[0-9]+(?:\.[0-9])+$'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build & Pack NuGet Package(s)
+        run: dotnet pack -c Release --output ~/nuget-packages
+
+      - name: Upload Build Artifact(s)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ~/nuget-packages
+
+      - name: Push NuGet Package(s)
+        run: dotnet nuget push ~/nuget-packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
