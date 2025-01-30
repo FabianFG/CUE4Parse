@@ -1,7 +1,9 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -29,20 +31,29 @@ public class FInstancedStruct : IUStruct
         var strucindex = new FPackageIndex(Ar);
         var serialSize = Ar.Read<int>();
         var savedPos = Ar.Position;
-        if (strucindex.TryLoad<UStruct>(out var struc))
+
+        try
         {
-            try
+            if (strucindex.TryLoad<UStruct>(out var struc))
             {
                 NonConstStruct = new FStructFallback(Ar, struc);
             }
-            catch
+            else if (strucindex.ResolvedObject is { } obj)
             {
-                Ar.Position = savedPos + serialSize;
+                NonConstStruct = new FStructFallback(Ar, obj.Name.ToString());
+            }
+            else
+            {
+                Log.Warning("Failed to read FInstancedStruct of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
             }
         }
-        else
+        catch (ParserException e)
         {
-            Ar.Position += serialSize;
+            Log.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
+        }
+        finally
+        {
+            Ar.Position = savedPos + serialSize;
         }
     }
 }
