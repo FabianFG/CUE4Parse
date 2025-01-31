@@ -116,6 +116,24 @@ public enum ECustomizableObjectVersions : int
     ImageParametersInServerBuilds,
 
     RemovedUnnecessarySerializationVersioning,
+    
+    // AddTextureCompressionSettingCompilationInfo,
+    //
+    // RestructureConstantImageData,
+    //
+    // RestructureConstantMeshData,
+    //
+    // RestructureRomData,
+    //
+    // RestructureRomDataRemovingRomHash,
+    //
+    // ModifiedRomCompiledDataSerialization,
+    //
+    // ModelResourcesExtensionData,
+    //
+    // LODsPerComponent,
+    //
+    // LODsPerComponentTypeMismatch,
 
     // -----<new versions can be added above this line>--------
     LastCustomizableObjectVersion
