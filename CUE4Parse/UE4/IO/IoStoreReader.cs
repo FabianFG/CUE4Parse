@@ -373,7 +373,7 @@ namespace CUE4Parse.UE4.IO
         }
 
         public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
-        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("Io Store can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
+        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("IoStore can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
 
         public override void Dispose()
         {
