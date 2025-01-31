@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
+    <NeutralLanguage>en</NeutralLanguage>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,12 +9,17 @@
     <Platforms>AnyCPU</Platforms>
     <Description>C# Parser for Unreal Engine packages &amp; assets</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <Version>1.2.0</Version>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+    <Version>1.2.1</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
