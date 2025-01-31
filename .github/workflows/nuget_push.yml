@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Build & Pack NuGet Package(s)
-        run: dotnet pack -c Release --output ~/nuget-packages
+        run: dotnet pack -c Release -o "./nuget-packages"
 
       - name: Upload Build Artifact(s)
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages
-          path: ~/nuget-packages
+          path: ./nuget-packages
 
       - name: Push NuGet Package(s)
-        run: dotnet nuget push ~/nuget-packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        run: dotnet nuget push ./nuget-packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
