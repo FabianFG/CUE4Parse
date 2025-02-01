@@ -29,13 +29,7 @@ public static class Unpacker
         OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
 
         var version = new VersionContainer(EGame.GAME_UE5_6);
-        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version)
-        {
-            ReadScriptData = false,
-            ReadShaderMaps = false,
-            SkipReferencedTextures = true,
-            UseLazySerialization = true
-        };
+        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version);
         provider.Initialize();
         provider.SubmitKey(new FGuid(), new FAesKey(_aesKey));
 

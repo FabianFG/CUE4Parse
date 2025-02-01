@@ -61,11 +61,7 @@ public static class Exporter
         var version = new VersionContainer(EGame.GAME_UE5_6, ETexturePlatform.DesktopMobile);
         var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version)
         {
-            MappingsContainer = new FileUsmapTypeMappingsProvider(_mapping),
-            ReadScriptData = false,
-            ReadShaderMaps = false,
-            SkipReferencedTextures = true,
-            UseLazySerialization = true
+            MappingsContainer = new FileUsmapTypeMappingsProvider(_mapping)
         };
         provider.Initialize();
         provider.SubmitKey(new FGuid(), new FAesKey(_aesKey));
