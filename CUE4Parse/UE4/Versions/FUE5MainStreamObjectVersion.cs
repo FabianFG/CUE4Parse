@@ -372,7 +372,10 @@ namespace CUE4Parse.UE4.Versions
             VisualLoggerAddedSeparateWorldTime,
 
             // Added support for InstanceDataManagerSerialization and changed format for the instances to FTransform3f
-            AnimBankInstanceDataSerializationV2,
+            SkinnedMeshInstanceDataSerializationV2,
+
+            // Added new material compilation validation for runtime virtual textures
+            RuntimeVirtualTextureMaterialValidation,
 
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,

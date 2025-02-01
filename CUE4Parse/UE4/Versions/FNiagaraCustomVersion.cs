@@ -201,6 +201,14 @@ namespace CUE4Parse.UE4.Versions
 
             NDCSpawnGroupOverrideDisabledByDefault, // NDC Read DIs will not override spawn group by default when spawning particles. Old content will remain unchanged.
 
+            CustomSortingBindingToAge, // Before it was normalized age which can introduce flickering with sorting and random lifetimes
+
+            StatelessInitialMeshOrientationV1,  // Update Initial Mesh Orientation Module
+
+            HierarchyEditorScriptSupport, // Hierarchy Editor was implemented
+
+            EmitterStateAddLoopDelayEnabled,	// Added loop delay enabled to emitter state
+
             // DO NOT ADD A NEW VERSION UNLESS YOU HAVE TALKED TO THE NIAGARA LEAD. Mismanagement of these versions can lead to data loss if it is adjusted in multiple streams simultaneously.
             // -----<new versions can be added above this line>  -------------------------------------------------
             VersionPlusOne,
@@ -229,6 +237,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_2 => Type.EventSpawnsUpdateInitialAttributeValues,
                 < EGame.GAME_UE5_3 => Type.DynamicPinNodeFixup,
                 < EGame.GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
+                < EGame.GAME_UE5_5 => Type.NDCSpawnGroupOverrideDisabledByDefault,
                 _ => Type.LatestVersion
             };
         }
