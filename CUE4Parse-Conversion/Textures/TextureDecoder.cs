@@ -14,7 +14,7 @@ using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
-
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Image;
 using SkiaSharp;
 
 using static CUE4Parse.Utils.TypeConversionUtils;
@@ -249,6 +249,248 @@ public static class TextureDecoder
         else if (isNX) bytes = PlatformDeswizzlers.GetDeswizzledData(bytes, mip, formatInfo);
 
         DecodeBytes(bytes, sizeX, sizeY, sizeZ, formatInfo, isNormalMap, out data, out colorType);
+    }
+    
+    public static SKBitmap Decode(this FImage image)
+    {
+        var dataStorage = image.DataStorage;
+
+        var size = dataStorage.ImageSize;
+        
+        var rawBytes = dataStorage.Buffers.SelectMany(buffer => buffer).ToArray();
+        
+        //if (rawBytes.Length < size.X * size.Y) return null;
+        
+        var decodedBytes = dataStorage.ImageFormat switch
+        {
+            EImageFormat.BC5 => BCDecoder.BC5(rawBytes, size.X, size.Y, 1),
+            EImageFormat.BC4 => BCDecoder.BC4(rawBytes, size.X, size.Y, 1),
+            EImageFormat.BC3 => DXTDecoder.DXT5(rawBytes, size.X, size.Y, 1),
+            EImageFormat.BC1 => DXTDecoder.DXT1(rawBytes, size.X, size.Y, 1),
+            EImageFormat.L_UByte => rawBytes,
+            EImageFormat.L_UByteRLE => UncompressRLE_L(size.X, size.Y, rawBytes),
+            _ => throw new NotImplementedException($"Mutable image format not supported: {dataStorage.ImageFormat}")
+        };
+        
+        var imageFormat = dataStorage.ImageFormat switch
+        {
+            EImageFormat.BC5 => SKColorType.Rgb888x,
+            EImageFormat.BC4 => SKColorType.Gray8,
+            EImageFormat.BC3 => SKColorType.Rgba8888,
+            EImageFormat.BC1 => SKColorType.Rgba8888,
+            EImageFormat.L_UByte => SKColorType.Gray8,
+            EImageFormat.L_UByteRLE => SKColorType.Gray8,
+            _ => SKColorType.Gray8
+            // _ => throw new NotImplementedException($"Mutable image format not supported: {dataStorage.ImageFormat}")
+        };
+
+        var imageInfo = new SKImageInfo(size.X, size.Y, imageFormat);
+        return InstallPixels(decodedBytes, imageInfo);
+    } 
+    
+    public static byte[] UncompressRLE_L(int width, int rows, byte[] baseData)
+    {
+        byte[] destData = new byte[width * rows];
+        int baseDataOffset = sizeof(uint); // Total mip size
+        baseDataOffset += rows * sizeof(uint); // Size of each row
+        int destDataOffset = 0;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            int destRowEnd = destDataOffset + width;
+
+            while (destDataOffset != destRowEnd)
+            {
+                // Decode header
+                ushort equal = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                byte different = baseData[baseDataOffset];
+                baseDataOffset++;
+
+                byte equalPixel = baseData[baseDataOffset];
+                baseDataOffset++;
+
+                if (equal > 0)
+                {
+                    Array.Fill(destData, equalPixel, destDataOffset, equal);
+                    destDataOffset += equal;
+                }
+
+                if (different > 0)
+                {
+                    Buffer.BlockCopy(baseData, baseDataOffset, destData, destDataOffset, different);
+                    destDataOffset += different;
+                    baseDataOffset += different;
+                }
+            }
+        }
+
+        uint totalSize = (uint)(baseDataOffset);
+        uint expectedSize = BitConverter.ToUInt32(baseData, 0);
+
+        if (totalSize != expectedSize)
+        {
+            throw new InvalidOperationException("Data size mismatch.");
+        }
+
+        return destData;
+    }
+    
+    public static byte[] UncompressRLE_L1(int width, int rows, byte[] baseData)
+    {
+        int baseDataOffset = sizeof(uint); // Skip total mip size
+        baseDataOffset += rows * sizeof(uint); // Skip size of each row
+
+        // Create the destination array to hold uncompressed data (width * rows).
+        byte[] destData = new byte[width * rows];
+        int destDataOffset = 0;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            int destRowEnd = destDataOffset + width;
+
+            while (destDataOffset != destRowEnd)
+            {
+                // Decode header
+                ushort zeroPixels = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                ushort onePixels = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                if (zeroPixels > 0)
+                {
+                    Array.Clear(destData, destDataOffset, zeroPixels); // Fill with 0
+                    destDataOffset += zeroPixels;
+                }
+
+                if (onePixels > 0)
+                {
+                    Array.Fill(destData, (byte)255, destDataOffset, onePixels); // Fill with 255
+                    destDataOffset += onePixels;
+                }
+            }
+        }
+
+        uint totalSize = (uint)(baseDataOffset);
+        uint expectedSize = BitConverter.ToUInt32(baseData, 0);
+
+        if (totalSize != expectedSize)
+        {
+            throw new InvalidOperationException("Data size mismatch.");
+        }
+
+        return destData; // Return the uncompressed data array
+    }
+    
+    public static byte[] UncompressRLE_RGBA(int width, int rows, byte[] baseData)
+    {
+        // Create the destination byte array to hold uncompressed RGBA data (4 bytes per pixel).
+        byte[] destData = new byte[width * rows * 4];
+        int baseDataOffset = rows * sizeof(uint); // Skip the row sizes
+        int destDataOffset = 0;
+
+        int pendingPixels = width * rows;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            int destRowEnd = destDataOffset + (width * 4); // End of the current row in bytes
+
+            while (destDataOffset != destRowEnd)
+            {
+                // Decode header
+                ushort equal = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                ushort different = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                uint equalPixel = BitConverter.ToUInt32(baseData, baseDataOffset);
+                baseDataOffset += 4;
+
+                // Ensure we don't exceed pending pixels
+                if ((equal + different) * 4 > pendingPixels)
+                {
+                    throw new InvalidOperationException("Pixel count mismatch.");
+                }
+
+                // Write equal pixels
+                for (int e = 0; e < equal; ++e)
+                {
+                    Buffer.BlockCopy(BitConverter.GetBytes(equalPixel), 0, destData, destDataOffset, 4);
+                    destDataOffset += 4;
+                    pendingPixels--;
+                }
+
+                // Write different pixels, if any
+                if (different > 0)
+                {
+                    // Make sure we are not exceeding the row length
+                    int pixelsToCopy = Math.Min(different * 4, destRowEnd - destDataOffset);
+
+                    Buffer.BlockCopy(baseData, baseDataOffset, destData, destDataOffset, pixelsToCopy);
+                    destDataOffset += pixelsToCopy;
+                    baseDataOffset += pixelsToCopy;
+                    pendingPixels -= pixelsToCopy / 4;
+                }
+            }
+        }
+
+        if (pendingPixels != 0)
+        {
+            throw new InvalidOperationException("Pending pixel count mismatch.");
+        }
+
+        return destData; // Return the uncompressed RGBA byte array
+    }
+    
+    public static byte[] UncompressRLE_RGB(int width, int rows, byte[] baseData)
+    {
+        // Create the destination byte array to hold uncompressed RGB data (3 bytes per pixel).
+        byte[] destData = new byte[width * rows * 3];
+        int baseDataOffset = rows * sizeof(uint); // Skip the row sizes
+        int destDataOffset = 0;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            int destRowEnd = destDataOffset + (width * 3); // End of the current row in bytes (3 bytes per pixel)
+
+            while (destDataOffset != destRowEnd)
+            {
+                // Decode header
+                ushort equal = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                ushort different = BitConverter.ToUInt16(baseData, baseDataOffset);
+                baseDataOffset += 2;
+
+                // Read the 3-byte (RGB) equal pixel
+                byte[] equalPixel = new byte[3];
+                Buffer.BlockCopy(baseData, baseDataOffset, equalPixel, 0, 3);
+                baseDataOffset += 3;
+
+                // Write equal pixels
+                for (int e = 0; e < equal; ++e)
+                {
+                    Buffer.BlockCopy(equalPixel, 0, destData, destDataOffset, 3);
+                    destDataOffset += 3;
+                }
+
+                // Write different pixels, if any
+                if (different > 0)
+                {
+                    // Make sure we are not exceeding the row length
+                    int pixelsToCopy = Math.Min(different * 3, destRowEnd - destDataOffset);
+
+                    Buffer.BlockCopy(baseData, baseDataOffset, destData, destDataOffset, pixelsToCopy);
+                    destDataOffset += pixelsToCopy;
+                    baseDataOffset += pixelsToCopy;
+                }
+            }
+        }
+
+        return destData; // Return the uncompressed RGB byte array
     }
 
     private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out SKColorType colorType)

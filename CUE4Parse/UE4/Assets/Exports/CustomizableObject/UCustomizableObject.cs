@@ -5,32 +5,136 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class UCustomizableObject : UObject
 {
-    // private const int CurrentVersion = 414;
+	public ECustomizableObjectVersions Version;
+	public FModel Model;
 
-    public FMorphTargetInfo[] ContributingMorphTargetsInfo;
-    public FMorphTargetVertexData[] MorphTargetReconstructionData;
-    public FCustomizableObjectMeshToMeshVertData[] ClothMeshToMeshVertData;
-    public FCustomizableObjectClothingAssetData[] ContributingClothingAssetsData;
-    public FCustomizableObjectClothConfigData[] ClothSharedConfigsData;
+	public override void Deserialize(FAssetArchive Ar, long validPos)
+	{
+		base.Deserialize(Ar, validPos);
+
+		Version = Ar.Read<ECustomizableObjectVersions>();
+		Model = new FModel(Ar);
+	}
+}
+
+public enum ECustomizableObjectVersions : int
+{
+    FirstEnumeratedVersion = 450,
+
+    DeterminisiticMeshVertexIds,
+
+    NumRuntimeReferencedTextures,
+
+    DeterminisiticLayoutBlockIds,
+
+    BackoutDeterminisiticLayoutBlockIds,
+
+    FixWrappingProjectorLayoutBlockId,
+
+    MeshReferenceSupport,
+
+    ImproveMemoryUsageForStreamableBlocks,
+
+    FixClipMeshWithMeshCrash,
+
+    SkeletalMeshLODSettingsSupport,
+
+    RemoveCustomCurve,
+
+    AddEditorGamePlayTags,
+
+    AddedParameterThumbnailsToEditor,
+
+    ComponentsLODsRedesign,
+
+    ComponentsLODsRedesign2,
+
+    LayoutToPOD,
+
+    AddedRomFlags,
+
+    LayoutNodeCleanup,
+
+    AddSurfaceAndMeshMetadata,
+
+    TablesPropertyNameBug,
+
+    DataTablesParamTrackingForCompileOnlySelected,
+
+    CompilationOptimizationsMeshFormat,
+
+    ModelStreamableBulkData,
+
+    LayoutBlocksAsInt32,
+
+    IntParameterOptionDataTable,
+
+    RemoveLODCountLimit,
+
+    IntParameterOptionDataTablePartialBackout,
+
+    IntParameterOptionDataTablePartialRestore,
+
+    CorrectlySerializeTableToParamNames,
+
+    AddMaterialSlotNameIndexToSurfaceMetadata,
+
+    NodeComponentMesh,
+
+    MoveEditNodesToModifiers,
+
+    DerivedDataCache,
+
+    ComponentsArray,
+
+    FixComponentNames,
+
+    AddedFaceCullStrategyToSomeOperations,
+
+    DDCParticipatingObjects,
+
+    GroupRomsBySource,
+
+    RemovedGroupRomsBySource,
+
+    ReGroupRomsBySource,
+
+    UIMetadataGameplayTags,
+
+    TransformInMeshModifier,
+
+    SurfaceMetadataSlotNameIndexToName,
+
+    BulkDataFilesNumFilesLimit,
+
+    RemoveModifiersHack,
+
+    SurfaceMetadataSerialized,
+
+    FixesForMeshSectionMultipleOutputs,
+
+    ImageParametersInServerBuilds,
+
+    RemovedUnnecessarySerializationVersioning,
     
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
+    // AddTextureCompressionSettingCompilationInfo,
+    //
+    // RestructureConstantImageData,
+    //
+    // RestructureConstantMeshData,
+    //
+    // RestructureRomData,
+    //
+    // RestructureRomDataRemovingRomHash,
+    //
+    // ModifiedRomCompiledDataSerialization,
+    //
+    // ModelResourcesExtensionData,
+    //
+    // LODsPerComponent,
+    //
+    // LODsPerComponentTypeMismatch,
 
-        var version = Ar.Read<int>();
-
-        // if (CurrentVersion == version)
-        {
-            ContributingMorphTargetsInfo = Ar.ReadArray<FMorphTargetInfo>();
-            MorphTargetReconstructionData = Ar.ReadArray<FMorphTargetVertexData>();
-        }
-
-        {
-            ClothMeshToMeshVertData = Ar.ReadBulkArray(() => new FCustomizableObjectMeshToMeshVertData(Ar));
-            ContributingClothingAssetsData = Ar.ReadArray(() => new FCustomizableObjectClothingAssetData(Ar));
-            ClothSharedConfigsData = Ar.ReadArray(() => new FCustomizableObjectClothConfigData(Ar));
-        }
-
-        var model = new Model(Ar);
-    }
+    // -----<new versions can be added above this line>--------
+    LastCustomizableObjectVersion
 }

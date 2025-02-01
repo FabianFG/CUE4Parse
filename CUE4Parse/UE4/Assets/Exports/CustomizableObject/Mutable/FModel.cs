@@ -2,15 +2,14 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
-// Handler for UCustomizableObject .mut files
-public class Model
+public class FModel
 {
-    public int Version;
+    public uint Version;
     public FProgram Program;
 
-    public Model(FArchive Ar)
+    public FModel(FArchive Ar)
     {
-        Version = Ar.Read<int>();
+        Version = Ar.Read<uint>();
         Program = new FProgram(Ar);
     }
 }
