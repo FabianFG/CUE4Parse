@@ -64,7 +64,7 @@ public enum EGame
         GAME_ReadyOrNot = GAME_UE4_26 + 2,
         GAME_BladeAndSoul = GAME_UE4_26 + 3,
         GAME_TowerOfFantasy = GAME_UE4_26 + 4,
-        GAME_Dauntless = GAME_UE4_26 + 5,
+        GAME_FinalFantasy7Rebirth = GAME_UE4_26 + 5,
         GAME_TheDivisionResurgence = GAME_UE4_26 + 6,
         GAME_StarWarsJediSurvivor = GAME_UE4_26 + 7,
         GAME_Snowbreak = GAME_UE4_26 + 8,

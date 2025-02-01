@@ -44,6 +44,12 @@ public class UMapBuildDataRegistry : UObject
                 ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
+            if (Ar.Game == EGame.GAME_HogwartsLegacy)
+            {
+                Ar.SkipFixedArray(1);
+                return;
+            }
+
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.SkyAtmosphereStaticLightingVersioning)
             {
                 SkyAtmosphereBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FSkyAtmosphereMapBuildData(Ar));

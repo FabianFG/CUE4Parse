@@ -46,7 +46,16 @@ public class FStaticMeshComponentLODInfo
         var stripFlags = new FStripDataFlags(Ar);
         if (!stripFlags.IsAudioVisualDataStripped())
         {
-            MapBuildDataId = Ar.Read<FGuid>();
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
+            {
+                var lightMaps = Ar.ReadArray<FGuid>();
+                var shadowMaps = Ar.ReadArray<FGuid>();
+            }
+            else
+            {
+                MapBuildDataId = Ar.Read<FGuid>();
+            }
+
             if (Ar.Game >= EGame.GAME_UE5_5)
             {
                 OriginalMapBuildDataId = Ar.Read<FGuid>();
