@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -11,8 +12,8 @@ public struct FKey(FMemoryImageArchive Ar)
 {
     public FName Name = Ar.ReadFName();
     public int Index = Ar.Read<int>();
-    public int type = Ar.Read<int>();
-    public int idk = Ar.Read<int>();
+    public int NextIndex = Ar.Read<int>();
+    public int Priority = Ar.Read<int>();
 }
 
 public struct FF7Property(FMemoryImageArchive Ar)
@@ -29,8 +30,9 @@ public class UEndDataObjectBase : UMemoryMappedAsset
     {
         base.Deserialize(Ar, validPos);
 
-        var keys = InnerArchive.ReadArray(() => new FKey(InnerArchive));
-        InnerArchive.Position += 40; // Some weird struct, looks like Array, -1, 0, ptr, int flags, 0
+        var keys = InnerArchive.ReadTSparseArray(() => new FKey(InnerArchive), 20).ToArray();
+
+        var Indexes = InnerArchive.ReadArray<int>();
         var structDefinition = InnerArchive.ReadArray(() => new FF7Property(InnerArchive));
         var values = InnerArchive.ReadArray(() => InnerArchive.DeserializeProperties(structDefinition));
         for (var i = 0; i < keys.Length; i++)

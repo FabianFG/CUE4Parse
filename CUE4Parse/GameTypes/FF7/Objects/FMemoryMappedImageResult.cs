@@ -10,14 +10,14 @@ public class FMemoryMappedImageResult : FMemoryImageResult
         var frozenSize = Ar.Read<uint>();
         var size = Ar.Read<uint>();
         var idk = Ar.Read<ushort>();
-        var flags = Ar.Read<ushort>();
-        Ar.Position += 8; // maybe PointerTable.LoadFromArchive(Ar, true);
+        var padding = Ar.Read<ushort>();
+        Ar.Position += padding;
         FrozenObject = Ar.ReadBytes((int) frozenSize);
 
         var numVTables = Ar.Read<int>();
         var numScriptNames = Ar.Read<int>();
         var numMinimalNames = Ar.Read<int>();
-        VTables = Ar.ReadArray(numVTables, () => new FMemoryImageResult.FMemoryImageVTable(Ar));
+        VTables = Ar.ReadArray(numVTables, () => new FMemoryImageVTable(Ar));
         ScriptNames = Ar.ReadArray(numScriptNames, () => new FMemoryImageName(Ar));
         MinimalNames = Ar.ReadArray(numMinimalNames, () => new FMemoryImageName(Ar));
     }

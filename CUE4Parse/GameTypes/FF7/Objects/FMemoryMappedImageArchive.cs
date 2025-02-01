@@ -28,16 +28,8 @@ public class FMemoryMappedImageArchive(FArchive Ar) : FMemoryImageArchive(Ar)
         var properties = new List<FPropertyTagType>();
         foreach (var prop in structProperties)
         {
-            if (prop.Name.Text.EndsWith("_Array"))
-            {
-                var tag = new FF7ArrayProperty(this, prop.UnderlyingType);
-                properties.Add(tag);
-            }
-            else
-            {
-                var tag = ReadPropertyTagType(prop.UnderlyingType);
-                properties.Add(tag);
-            }
+            var tag = prop.Name.Text.EndsWith("_Array") ? new FF7ArrayProperty(this, prop.UnderlyingType) : ReadPropertyTagType(prop.UnderlyingType);
+            properties.Add(tag);
         }
 
         return new FF7StructProperty(properties, structProperties);
@@ -60,6 +52,24 @@ public class FMemoryMappedImageArchive(FArchive Ar) : FMemoryImageArchive(Ar)
             FF7propertyType.NameProperty => new FF7NameProperty(this),
             _ => throw new ParserException(this, $"Unknown property type {underlyingType}")
         };
+    }
+
+    public override T[] ReadArray<T>()
+    {
+        var initialPos = Position;
+        var dataPtr = new FFrozenMemoryImagePtr(this);
+        var arrayNum = Read<int>();
+        var arrayMax = Read<int>();
+        if (arrayNum == 0)
+        {
+            return [];
+        }
+
+        var continuePos = Position;
+        Position = initialPos + dataPtr.OffsetFromThis;
+        var data = InnerArchive.ReadArray<T>(arrayNum);
+        Position = continuePos;
+        return data;
     }
 
     public override T[] ReadArray<T>(Func<T> getter)
@@ -112,6 +122,38 @@ public class FMemoryMappedImageArchive(FArchive Ar) : FMemoryImageArchive(Ar)
             data[i] = getter();
             Position = Position.Align(align);
         }
+        Position = continuePos;
+        return data;
+    }
+
+    public new IEnumerable<ElementType> ReadTSparseArray<ElementType>(Func<ElementType> elementGetter, int elementStructSize)
+    {
+        var initialPos = Position;
+        var dataPtr = new FFrozenMemoryImagePtr(this);
+        var dataNum = Read<int>();
+        var dataMax = Read<int>();
+        var allocationFlags = ReadTBitArray();
+        var FirstFreeIndex = Read<int>();
+        var NumFreeIndices = Read<int>();
+
+        if (dataNum == 0)
+        {
+            return new List<ElementType>();
+        }
+
+        var continuePos = Position;
+        Position = initialPos + dataPtr.OffsetFromThis;
+        var data = new List<ElementType>(dataNum);
+        for (var i = 0; i < dataNum; ++i)
+        {
+            var start = Position;
+            if (allocationFlags[i])
+            {
+                data.Add(elementGetter());
+            }
+            Position = start + elementStructSize;
+        }
+
         Position = continuePos;
         return data;
     }
