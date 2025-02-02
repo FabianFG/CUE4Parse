@@ -317,6 +317,31 @@ namespace CUE4Parse.FileProvider.Vfs
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IPackage LoadPackage(string path, IAesVfsReader archive)
+        {
+            path = FixPath(path);
+
+            if (archive.Files.TryGetValue(path, out var file) ||
+                archive.Files.TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
+            {
+                return LoadPackage(file);
+            }
+            throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
+        {
+            var c = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
+            var archive = MountedVfs.FirstOrDefault(c) ?? UnloadedVfs.FirstOrDefault(c);
+            if (archive != null)
+            {
+                return LoadPackage(path, archive);
+            }
+            throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
+        }
+
         /// <summary>
         /// load .ini files and verify the validity of the main encryption key against them
         /// in cases where archives are not encrypted, but their packages are, that is one way to tell if the key is correct

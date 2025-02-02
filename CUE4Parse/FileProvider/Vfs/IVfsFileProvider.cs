@@ -73,5 +73,24 @@ namespace CUE4Parse.FileProvider.Vfs
         /// <param name="ioPackage">The parsed package content if it could be parsed; default otherwise</param>
         /// <returns>The parsed package content</returns>
         public bool TryLoadPackage(FPackageId id, [MaybeNullWhen(false)] out IoPackage ioPackage);
+
+        /// <summary>
+        /// Loads and parses a Package from the passed archive.
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="path">The package file path</param>
+        /// <param name="archive">The archive to read from</param>
+        /// <returns>The parsed package content</returns>
+        public IPackage LoadPackage(string path, IAesVfsReader archive);
+
+        /// <summary>
+        /// Loads and parses a Package from the passed archive.
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="path">The package file path</param>
+        /// <param name="archiveName">The archive to read from</param>
+        /// <param name="comparison">The comparison to use for finding the archive</param>
+        /// <returns>The parsed package content</returns>
+        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
     }
 }
