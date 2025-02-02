@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Vfs
@@ -25,8 +27,31 @@ namespace CUE4Parse.FileProvider.Vfs
         public FileProviderDictionary(bool isCaseInsensitive)
         {
             IsCaseInsensitive = isCaseInsensitive;
+
             _keys = new KeyEnumerable(this);
             _values = new ValueEnumerable(this);
+        }
+
+        public void FindPayloads(GameFile file, out GameFile? uexp, out GameFile? ubulk, out GameFile? uptnl)
+        {
+            uexp = ubulk = uptnl = null;
+            if (!file.IsUE4Package) throw new ArgumentException("cannot find payloads for non-UE4 package", nameof(file));
+
+            var path = file.PathWithoutExtension;
+            if (IsCaseInsensitive) path = path.ToLowerInvariant();
+
+            // file comes from a specific archive
+            // this ensure that its payloads are also from the same archive
+            // this is useful with patched archives
+            if (file is VfsEntry {Vfs: { } vfs})
+            {
+                vfs.Files.TryGetValue(path + ".uexp", out uexp);
+                vfs.Files.TryGetValue(path + ".ubulk", out ubulk);
+            }
+
+            if (uexp == null) TryGetValue(path + ".uexp", out uexp);
+            if (ubulk == null) TryGetValue(path + ".ubulk", out ubulk);
+            TryGetValue(path + ".uptnl", out uptnl);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

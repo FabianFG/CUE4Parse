@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace CUE4Parse.FileProvider.Objects
         public static readonly string[] Ue4KnownExtensions =
         [
             ..Ue4PackageExtensions, "uexp", "ubulk", "uptnl",
-            "bin", "ini", "uplugin", "upluginmanifest", "LOCRES"
+            "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
         ];
 
         protected GameFile() { }
@@ -41,55 +42,62 @@ namespace CUE4Parse.FileProvider.Objects
         public abstract FArchive CreateReader();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual bool TryRead(out byte[] data)
+        public bool TryRead([MaybeNullWhen(false)] out byte[] data)
         {
             try
             {
                 data = Read();
-                return true;
             }
-            catch
+            catch (Exception e)
             {
-#pragma warning disable 8625
-                data = default;
-#pragma warning restore 8625
-                return false;
+                Log.Error(e, $"Couldn't read GameFile {this}");
+                data = null;
             }
+            return data != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual bool TryCreateReader(out FArchive? reader)
+        public bool TryCreateReader([MaybeNullWhen(false)] out FArchive reader)
         {
             try
             {
                 reader = CreateReader();
-                return true;
             }
             catch (Exception e)
             {
-                Log.Warning(e, "Couldn't create GameFile reader");
-                reader = default;
-                return false;
+                Log.Error(e, $"Couldn't create reader for GameFile {this}");
+                reader = null;
             }
+            return reader != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<byte[]> ReadAsync() => await Task.Run(Read); // No ConfigureAwait(false) here since the context is needed handling exceptions
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<FArchive> CreateReaderAsync() => await Task.Run(CreateReader);  // No ConfigureAwait(false) here since the context is needed handling exceptions
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<byte[]?> TryReadAsync() => await Task.Run(() =>
+        public byte[]? SafeRead()
         {
             TryRead(out var data);
             return data;
-        }).ConfigureAwait(false);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<FArchive?> TryCreateReaderAsync() => await Task.Run(() =>
+        public FArchive? SafeCreateReader()
         {
             TryCreateReader(out var reader);
             return reader;
-        }).ConfigureAwait(false);
+        }
+
+        // No ConfigureAwait(false) here since the context is needed handling exceptions
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<byte[]> ReadAsync() => await Task.Run(Read);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<FArchive> CreateReaderAsync() => await Task.Run(CreateReader);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<byte[]?> SafeReadAsync() => await Task.Run(SafeRead);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<FArchive?> SafeCreateReaderAsync() => await Task.Run(SafeCreateReader);
 
         public override string ToString() => Path;
     }

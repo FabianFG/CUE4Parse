@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public FPackageFileVersion Ver { get; set; }
 
         public IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
-        public void MountTo(FileProviderDictionary files, bool caseInsensitive, EventHandler<int>? vfsMounted = null);
+        public void MountTo(FileProviderDictionary files, EventHandler<int>? vfsMounted = null);
 
         public abstract byte[] Extract(VfsEntry entry);
     }

@@ -83,6 +83,6 @@ public class ApkFileProvider : DefaultFileProvider
             }
         }
 
-        _files.AddFiles(osFiles);
+        Files.AddFiles(osFiles);
     }
 }

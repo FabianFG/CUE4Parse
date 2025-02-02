@@ -120,18 +120,21 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport Load(IFileProvider provider) => provider.LoadObject(AssetPathName.Text);
+        public UExport Load(IFileProvider provider) => provider.LoadPackageObject(AssetPathName.Text);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoad(IFileProvider provider, out UExport export) =>
-            provider.TryLoadObject(AssetPathName.Text, out export);
+            provider.TryLoadPackageObject(AssetPathName.Text, out export);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport> LoadAsync(IFileProvider provider) => await provider.LoadObjectAsync(AssetPathName.Text);
+        public async Task<UExport> LoadAsync(IFileProvider provider) => await provider.LoadPackageObjectAsync(AssetPathName.Text);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport?> TryLoadAsync(IFileProvider provider) =>
-            await provider.TryLoadObjectAsync(AssetPathName.Text);
+        public async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            // TODO: this aint a "Try"
+            return await provider.LoadPackageObjectAsync(AssetPathName.Text);
+        }
         #endregion
 
         public override string ToString() => string.IsNullOrEmpty(SubPathString)

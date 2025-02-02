@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,21 +17,29 @@ namespace CUE4Parse.UE4.Assets;
 public abstract class AbstractUePackage : UObject, IPackage
 {
     public IFileProvider? Provider { get; }
-    public TypeMappings? Mappings { get; }
+    public TypeMappings? Mappings => Provider?.MappingsForGame;
+
     public abstract FPackageFileSummary Summary { get; }
     public abstract FNameEntrySerialized[] NameMap { get; }
     public abstract int ImportMapLength { get; }
     public abstract int ExportMapLength { get; }
     public abstract Lazy<UObject>[] ExportsLazy { get; }
-    public abstract bool IsFullyLoaded { get; }
 
-    public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
+    public bool IsFullyLoaded { get; protected init; }
+    public bool CanDeserialize
+    {
+        get
+        {
+            if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && Mappings is null)
+                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
+            return true;
+        }
+    }
 
-    protected AbstractUePackage(string name, IFileProvider? provider, TypeMappings? mappings)
+    protected AbstractUePackage(string name, IFileProvider? provider)
     {
         Name = name;
         Provider = provider;
-        Mappings = mappings;
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
@@ -100,66 +106,17 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 throw new ParserException($"Could not read {obj.ExportType} correctly", e);
             }
-
             Log.Error(e, "Could not read {0} correctly", obj.ExportType);
         }
     }
 
+    public override bool IsNameStableForNetworking() => true;   // For now, assume all packages have stable net names
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasFlags(EPackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
 
-    /*[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T? GetExportOfTypeOrNull<T>() where T : UObject
-    {
-        var export = ExportMap.FirstOrDefault(it => typeof(T).IsAssignableFrom(it.ExportType));
-        try
-        {
-            return export?.ExportObject.Value as T;
-        }
-        catch (Exception e)
-        {
-            Log.Debug(e, "Failed to get export object");
-            return null;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetExportOfType<T>() where T : UObject =>
-        GetExportOfTypeOrNull<T>() ??
-        throw new NullReferenceException($"Package '{Name}' does not have an export of type {typeof(T).Name}");*/
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public abstract UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal)
-        where T : UObject => GetExportOrNull(name, comparisonType) as T;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UObject GetExport(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-        GetExportOrNull(name, comparisonType) ??
-        throw new NullReferenceException(
-            $"Package '{Name}' does not have an export with the name '{name}'");
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetExport<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject =>
-        GetExportOrNull<T>(name, comparisonType) ??
-        throw new NullReferenceException(
-            $"Package '{Name}' does not have an export with the name '{name} and type {typeof(T).Name}'");
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UObject? GetExport(int index) => index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerable<UObject> GetExports() => ExportsLazy.Select(x => x.Value);
-
-    public Lazy<UObject>? FindObject(FPackageIndex? index)
-    {
-        if (index == null || index.IsNull) return null;
-        if (index.IsImport) return ResolvePackageIndex(index)?.Object;
-        return ExportsLazy[index.Index - 1];
-    }
-
     public abstract ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
 
     public override string ToString() => Name;

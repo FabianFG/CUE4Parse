@@ -353,7 +353,8 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 TableId = Ar.ReadFName();
                 Key = Ar.ReadFString();
 
-                if (Ar.Owner.Provider!.TryLoadObject(TableId.Text, out UStringTable table) &&
+                if (Ar.Owner?.Provider is not null &&
+                    Ar.Owner.Provider.TryLoadPackageObject<UStringTable>(TableId.Text, out var table) &&
                     table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
                 {
                     SourceString = t;

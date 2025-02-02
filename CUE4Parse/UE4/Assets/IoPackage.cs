@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using CUE4Parse.FileProvider;
-using CUE4Parse.MappingsProvider;
+using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -20,28 +19,39 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class IoPackage : AbstractUePackage
     {
-        public readonly IoGlobalData GlobalData;
+        private readonly IoGlobalData _globalData;
 
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
         public override int ExportMapLength => ExportMap.Length;
+        public override Lazy<UObject>[] ExportsLazy { get; }
 
         public readonly ulong[]? ImportedPublicExportHashes;
         public readonly FPackageObjectIndex[] ImportMap;
         public readonly FExportMapEntry[] ExportMap;
         public readonly FBulkDataMapEntry[] BulkDataMap;
-
         public readonly Lazy<IoPackage?[]> ImportedPackages;
-        public override Lazy<UObject>[] ExportsLazy { get; }
-        public override bool IsFullyLoaded { get; }
+
+        public IoPackage(FArchive uasset, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IVfsFileProvider? provider = null)
+            : this(
+                uasset,
+                containerHeader,
+                ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
+                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null,
+                provider)
+        { }
 
         public IoPackage(
-            FArchive uasset, IoGlobalData globalData, FIoContainerHeader? containerHeader = null,
-            Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null,
-            IFileProvider? provider = null, TypeMappings? mappings = null) : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
+            FArchive uasset,
+            FIoContainerHeader? containerHeader = null,
+            Lazy<FArchive?>? ubulk = null,
+            Lazy<FArchive?>? uptnl = null,
+            IVfsFileProvider? provider = null)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider)
         {
-            GlobalData = globalData;
+            _globalData = provider?.GlobalData ?? throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
+
             var uassetAr = new FAssetArchive(uasset, this);
 
             FExportBundleHeader[]? exportBundleHeaders;
@@ -201,7 +211,7 @@ namespace CUE4Parse.UE4.Assets
             }
 
             // Preload dependencies
-            ImportedPackages = new Lazy<IoPackage?[]>(provider != null ? () =>
+            ImportedPackages = new Lazy<IoPackage?[]>(() =>
             {
                 var packages = new IoPackage?[importedPackageIds.Length];
                 for (var i = 0; i < importedPackageIds.Length; i++)
@@ -209,14 +219,13 @@ namespace CUE4Parse.UE4.Assets
                     provider.TryLoadPackage(importedPackageIds[i], out packages[i]);
                 }
                 return packages;
-            } : Array.Empty<IoPackage?>);
+            });
+
+            if (!CanDeserialize) return;
 
             // Attach ubulk and uptnl
             if (ubulk != null) uassetAr.AddPayload(PayloadType.UBULK, Summary.BulkDataStartOffset, ubulk);
             if (uptnl != null) uassetAr.AddPayload(PayloadType.UPTNL, Summary.BulkDataStartOffset, uptnl);
-
-            if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && mappings == null)
-                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
 
             // Populate lazy exports
             int ProcessEntry(FExportBundleEntry entry, int pos, bool newPos)
@@ -268,12 +277,9 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
-        public IoPackage(FArchive uasset, IoGlobalData globalData, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null)
-            : this(uasset, globalData, containerHeader, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null, uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings) { }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FName CreateFNameFromMappedName(FMappedName mappedName) =>
-            new(mappedName, mappedName.IsGlobal ? GlobalData.GlobalNameMap : NameMap);
+            new(mappedName, mappedName.IsGlobal ? _globalData.GlobalNameMap : NameMap);
 
         private void LoadExportBundles(FArchive Ar, int graphDataSize, out FExportBundleHeader[] bundleHeadersArray, out FExportBundleEntry[] bundleEntriesArray)
         {
@@ -318,8 +324,7 @@ namespace CUE4Parse.UE4.Assets
         {
             for (var i = 0; i < ExportMap.Length; i++)
             {
-                var export = ExportMap[i];
-                if (CreateFNameFromMappedName(export.ObjectName).Text.Equals(name, comparisonType))
+                if (CreateFNameFromMappedName(ExportMap[i].ObjectName).Text.Equals(name, comparisonType))
                 {
                     return ExportsLazy[i].Value;
                 }
@@ -353,7 +358,7 @@ namespace CUE4Parse.UE4.Assets
 
             if (index.IsScriptImport)
             {
-                if (GlobalData.ScriptObjectEntriesMap.TryGetValue(index, out var scriptObjectEntry))
+                if (_globalData.ScriptObjectEntriesMap.TryGetValue(index, out var scriptObjectEntry))
                 {
                     return new ResolvedScriptObject(scriptObjectEntry, this);
                 }

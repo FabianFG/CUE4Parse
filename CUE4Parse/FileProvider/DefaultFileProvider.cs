@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Versions;
@@ -19,7 +18,7 @@ namespace CUE4Parse.FileProvider
         public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
             : this(new DirectoryInfo(directory), searchOption, isCaseInsensitive, versions) { }
         public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
-            : this(directory, Array.Empty<DirectoryInfo>(), searchOption, isCaseInsensitive, versions) { }
+            : this(directory, [], searchOption, isCaseInsensitive, versions) { }
         public DefaultFileProvider(DirectoryInfo directory, DirectoryInfo[] extraDirectories, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
             : base(isCaseInsensitive, versions)
         {
@@ -41,7 +40,7 @@ namespace CUE4Parse.FileProvider
 
             foreach (var osFiles in availableFiles)
             {
-                _files.AddFiles(osFiles);
+                Files.AddFiles(osFiles);
             }
         }
 
@@ -82,7 +81,7 @@ namespace CUE4Parse.FileProvider
                     continue;
 
                 var osFile = new OsGameFile(_workingDirectory, file, mountPoint, Versions);
-                if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
+                if (Files.IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
                 else osFiles[osFile.Path] = osFile;
             }
 

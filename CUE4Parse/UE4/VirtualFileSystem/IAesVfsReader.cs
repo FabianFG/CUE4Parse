@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public bool TestAesKey(FAesKey key);
         public byte[] MountPointCheckBytes();
 
-        public void MountTo(FileProviderDictionary files, bool caseInsensitive, FAesKey? key, EventHandler<int>? vfsMounted = null);
+        public void MountTo(FileProviderDictionary files, FAesKey? key, EventHandler<int>? vfsMounted = null);
 
         public delegate byte[] CustomEncryptionDelegate(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader);
     }

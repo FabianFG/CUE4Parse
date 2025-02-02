@@ -64,7 +64,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (BoneCompressionSettings == null && Ar.Game == EGame.GAME_RogueCompany)
             {
-                BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
+                BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
             }
 
             var stripFlags = new FStripDataFlags(Ar);

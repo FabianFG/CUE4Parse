@@ -1,22 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.IO;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
-    public interface IVfsFileProvider : IFileProvider, IDisposable
+    public interface IVfsFileProvider : IFileProvider
     {
         /// <summary>
         /// Global data from global io store
         /// Will only be used if the game uses io stores (.utoc and .ucas files)
         /// </summary>
         public IoGlobalData? GlobalData { get; }
+
+        /// <summary>
+        /// The files available in this provider by the FPackageId from an io store reader
+        /// It only contains the id's for files from io store readers
+        /// </summary>
+        public IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
 
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs { get; }
         public IReadOnlyCollection<IAesVfsReader> MountedVfs { get; }
@@ -46,5 +56,22 @@ namespace CUE4Parse.FileProvider.Vfs
         public Task<int> SubmitKeyAsync(FGuid guid, FAesKey key);
         public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys);
         public Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys);
+
+        /// <summary>
+        /// Loads and parses an I/O Store Package from the passed package ID.
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <returns>The parsed package content</returns>
+        public IoPackage LoadPackage(FPackageId id);
+
+        /// <summary>
+        /// Loads and parses an I/O Store Package from the passed package ID.
+        /// Can throw various exceptions
+        /// </summary>
+        /// <param name="id">The package ID</param>
+        /// <param name="ioPackage">The parsed package content if it could be parsed; default otherwise</param>
+        /// <returns>The parsed package content</returns>
+        public bool TryLoadPackage(FPackageId id, [MaybeNullWhen(false)] out IoPackage ioPackage);
     }
 }
