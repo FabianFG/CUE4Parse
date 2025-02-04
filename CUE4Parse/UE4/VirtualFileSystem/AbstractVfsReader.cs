@@ -25,7 +25,6 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public abstract bool HasDirectoryIndex { get; }
 
         public bool IsConcurrent { get; set; } = false;
-        public bool IsMounted { get; } = false;
 
         public VersionContainer Versions { get; set; }
         public EGame Game

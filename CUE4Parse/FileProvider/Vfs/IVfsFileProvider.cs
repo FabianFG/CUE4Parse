@@ -57,6 +57,21 @@ namespace CUE4Parse.FileProvider.Vfs
         public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys);
         public Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys);
 
+        public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal);
+        public bool TryGetArchive(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal);
+
+        public GameFile this[string path, string archiveName] { get; }
+        public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] { get; }
+        public GameFile this[string path, IAesVfsReader archive] { get; }
+
+        public bool TryFindGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal);
+
+        public byte[] SaveAsset(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
+        public byte[] SaveAsset(string path, IAesVfsReader archive);
+
+        public FArchive CreateReader(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
+        public FArchive CreateReader(string path, IAesVfsReader archive);
+
         /// <summary>
         /// Loads and parses an I/O Store Package from the passed package ID.
         /// Can throw various exceptions
@@ -79,18 +94,21 @@ namespace CUE4Parse.FileProvider.Vfs
         /// Can throw various exceptions
         /// </summary>
         /// <param name="path">The package file path</param>
-        /// <param name="archive">The archive to read from</param>
+        /// <param name="archiveName">The archive to read from</param>
+        /// <param name="comparison">The comparison to use for finding the archive</param>
         /// <returns>The parsed package content</returns>
-        public IPackage LoadPackage(string path, IAesVfsReader archive);
+        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
 
         /// <summary>
         /// Loads and parses a Package from the passed archive.
         /// Can throw various exceptions
         /// </summary>
         /// <param name="path">The package file path</param>
-        /// <param name="archiveName">The archive to read from</param>
-        /// <param name="comparison">The comparison to use for finding the archive</param>
+        /// <param name="archive">The archive to read from</param>
         /// <returns>The parsed package content</returns>
-        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
+        public IPackage LoadPackage(string path, IAesVfsReader archive);
+
+        public IReadOnlyDictionary<string, byte[]> SavePackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
+        public IReadOnlyDictionary<string, byte[]> SavePackage(string path, IAesVfsReader archive);
     }
 }

@@ -302,6 +302,75 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal)
+        {
+            var c = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
+            return MountedVfs.FirstOrDefault(c) ??
+                   UnloadedVfs.FirstOrDefault(c) ??
+                   throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetArchive(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal)
+        {
+            try
+            {
+                archive = GetArchive(archiveName, comparison);
+            }
+            catch
+            {
+                archive = null;
+            }
+            return archive != null;
+        }
+
+        public GameFile this[string path, string archiveName] => this[path, archiveName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal];
+        public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] => this[path, GetArchive(archiveName, comparison)];
+        public GameFile this[string path, IAesVfsReader archive]
+        {
+            get
+            {
+                var fixedPath = FixPath(path);
+                if (archive.Files.TryGetValue(fixedPath, out var file) || // any extension
+                    archive.Files.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file) || // umap
+                    archive.Files.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file)) // in case FixPath broke something
+                {
+                    return file;
+                }
+
+                throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryFindGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
+        {
+            try
+            {
+                file = this[path, archiveName, comparison];
+            }
+            catch
+            {
+                file = null;
+            }
+            return file != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] SaveAsset(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
+            => SaveAsset(path, GetArchive(archiveName, comparison));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] SaveAsset(string path, IAesVfsReader archive) => SaveAsset(this[path, archive]);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FArchive CreateReader(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
+            => CreateReader(path, GetArchive(archiveName, comparison));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FArchive CreateReader(string path, IAesVfsReader archive) => this[path, archive].CreateReader();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IoPackage LoadPackage(FPackageId id) => (IoPackage) LoadPackage(FilesById[id]);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -318,29 +387,19 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IPackage LoadPackage(string path, IAesVfsReader archive)
-        {
-            path = FixPath(path);
-
-            if (archive.Files.TryGetValue(path, out var file) ||
-                archive.Files.TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
-            {
-                return LoadPackage(file);
-            }
-            throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
-        }
+        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
+            => LoadPackage(path, GetArchive(archiveName, comparison));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IPackage LoadPackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
-        {
-            var c = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
-            var archive = MountedVfs.FirstOrDefault(c) ?? UnloadedVfs.FirstOrDefault(c);
-            if (archive != null)
-            {
-                return LoadPackage(path, archive);
-            }
-            throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
-        }
+        public IPackage LoadPackage(string path, IAesVfsReader archive) => LoadPackage(this[path, archive]);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IReadOnlyDictionary<string, byte[]> SavePackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal)
+            => SavePackage(path, GetArchive(archiveName, comparison));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IReadOnlyDictionary<string, byte[]> SavePackage(string path, IAesVfsReader archive)
+            => SavePackage(this[path, archive]);
 
         /// <summary>
         /// load .ini files and verify the validity of the main encryption key against them

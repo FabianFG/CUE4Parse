@@ -101,7 +101,6 @@ namespace CUE4Parse.FileProvider.Vfs
             return false;
         }
 
-
         public GameFile this[string path]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
