@@ -110,5 +110,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path, IAesVfsReader archive);
+
+        public bool TrySavePackage(string path, string archiveName, [MaybeNullWhen(false)] out IReadOnlyDictionary<string, byte[]> data, StringComparison comparison = StringComparison.Ordinal);
     }
 }

@@ -390,6 +390,18 @@ namespace CUE4Parse.FileProvider.Vfs
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path, IAesVfsReader archive)
             => SavePackage(this[path, archive]);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TrySavePackage(string path, string archiveName, [MaybeNullWhen(false)] out IReadOnlyDictionary<string, byte[]> data, StringComparison comparison = StringComparison.Ordinal)
+        {
+            if (TryFindGameFile(path, archiveName, out var file, comparison))
+            {
+                return TrySavePackage(file, out data);
+            }
+
+            data = null;
+            return false;
+        }
+
         /// <summary>
         /// load .ini files and verify the validity of the main encryption key against them
         /// in cases where archives are not encrypted, but their packages are, that is one way to tell if the key is correct
