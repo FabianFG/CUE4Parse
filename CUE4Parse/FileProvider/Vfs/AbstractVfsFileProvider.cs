@@ -327,20 +327,9 @@ namespace CUE4Parse.FileProvider.Vfs
         public GameFile this[string path, string archiveName] => this[path, archiveName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal];
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] => this[path, GetArchive(archiveName, comparison)];
         public GameFile this[string path, IAesVfsReader archive]
-        {
-            get
-            {
-                var fixedPath = FixPath(path);
-                if (archive.Files.TryGetValue(fixedPath, out var file) || // any extension
-                    archive.Files.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file) || // umap
-                    archive.Files.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file)) // in case FixPath broke something
-                {
-                    return file;
-                }
-
-                throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
-            }
-        }
+            => TryGetGameFile(path, archive.Files, out var file)
+                ? file
+                : throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryFindGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)

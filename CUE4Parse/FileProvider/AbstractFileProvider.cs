@@ -140,7 +140,26 @@ namespace CUE4Parse.FileProvider
             }
         }
 
-        public GameFile this[string path] => Files[FixPath(path)];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool TryGetGameFile(string path, IReadOnlyDictionary<string, GameFile> collection, [MaybeNullWhen(false)] out GameFile file)
+        {
+            var fixedPath = FixPath(path);
+            if (!collection.TryGetValue(fixedPath, out file) && // any extension
+                !collection.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file) && // umap
+                !collection.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file)) // in case FixPath broke something
+            {
+                file = null;
+            }
+
+            return file != null;
+        }
+
+        public GameFile this[string path]
+            => TryGetGameFile(path, Files, out var file)
+                ? file
+                : throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryFindGameFile(string path, [MaybeNullWhen(false)] out GameFile file)
         {
             try

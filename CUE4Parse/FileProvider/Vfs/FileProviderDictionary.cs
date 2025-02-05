@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
@@ -35,7 +36,7 @@ namespace CUE4Parse.FileProvider.Vfs
         public void FindPayloads(GameFile file, out GameFile? uexp, out GameFile? ubulk, out GameFile? uptnl)
         {
             uexp = ubulk = uptnl = null;
-            if (!file.IsUE4Package) throw new ArgumentException("cannot find payloads for non-UE4 package", nameof(file));
+            if (!file.IsUE4Package) return;
 
             var path = file.PathWithoutExtension;
             if (IsCaseInsensitive) path = path.ToLowerInvariant();
@@ -88,7 +89,7 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetValue(string key, out GameFile value)
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out GameFile value)
         {
             if (IsCaseInsensitive) key = key.ToLowerInvariant();
             foreach (var files in _indicesBag.OrderByDescending(kvp => kvp.Key))
@@ -97,22 +98,11 @@ namespace CUE4Parse.FileProvider.Vfs
                     return true;
             }
 
-            value = default;
+            value = null;
             return false;
         }
 
-        public GameFile this[string path]
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                if (TryGetValue(path, out var file) ||
-                    TryGetValue(path.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file))
-                    return file;
-
-                throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
-            }
-        }
+        public GameFile this[string path] => TryGetValue(path, out var value) ? value : throw new KeyNotFoundException();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<KeyValuePair<string, GameFile>> GetEnumerator()
