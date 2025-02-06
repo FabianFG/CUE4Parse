@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public long ReadOrder { get; private set; }
 
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
-        public virtual int FileCount => Files.Count;
+        public int FileCount => Files.Count;
 
 
         public abstract string MountPoint { get; protected set; }
