@@ -339,7 +339,8 @@ namespace CUE4Parse.UE4.Pak
 
                     var entry = entries[fileIndex];
                     entry.Path = path;
-                    if (entry.IsDeleted && entry.Size == 0)
+
+                    if (entry is { IsDeleted: true, Size: 0 })
                         continue;
                     if (entry.IsEncrypted)
                         EncryptedFileCount++;

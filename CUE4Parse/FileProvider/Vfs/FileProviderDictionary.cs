@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,7 +7,6 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.VirtualFileSystem;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
@@ -36,7 +34,7 @@ namespace CUE4Parse.FileProvider.Vfs
         public void FindPayloads(GameFile file, out GameFile? uexp, out GameFile? ubulk, out GameFile? uptnl)
         {
             uexp = ubulk = uptnl = null;
-            if (!file.IsUE4Package) return;
+            if (!file.IsUePackage) return;
 
             var path = file.PathWithoutExtension;
             if (IsCaseInsensitive) path = path.ToLowerInvariant();
@@ -60,7 +58,7 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             foreach (var file in newFiles.Values)
             {
-                if (file is FIoStoreEntry {IsUE4Package: true} ioEntry)
+                if (file is FIoStoreEntry ioEntry)
                 {
                     _byId[ioEntry.ChunkId.AsPackageId()] = file;
                 }

@@ -145,7 +145,7 @@ namespace CUE4Parse.FileProvider
         {
             var fixedPath = FixPath(path);
             if (!collection.TryGetValue(fixedPath, out file) && // any extension
-                !collection.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.Ue4PackageExtensions[1], out file) && // umap
+                !collection.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.UePackageExtensions[1], out file) && // umap
                 !collection.TryGetValue(IsCaseInsensitive ? path.ToLowerInvariant() : path, out file)) // in case FixPath broke something
             {
                 file = null;
@@ -452,7 +452,7 @@ namespace CUE4Parse.FileProvider
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeWithLast('/'), lastPart.SubstringBefore('.'));
             if (path[^1] != '/' && !lastPart.Contains('.'))
-                path += "." + GameFile.Ue4PackageExtensions[0];
+                path += "." + GameFile.UePackageExtensions[0]; // uasset
 
             var ret = path;
             var root = path.SubstringBefore('/');
@@ -554,6 +554,7 @@ namespace CUE4Parse.FileProvider
 
         public async Task<IPackage> LoadPackageAsync(GameFile file)
         {
+            if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulk, out var uptnl);
 
             var uasset = await file.CreateReaderAsync().ConfigureAwait(false);

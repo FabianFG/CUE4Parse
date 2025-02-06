@@ -4,11 +4,10 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract class VfsEntry : GameFile
     {
-        public readonly IVfsReader Vfs;
+        public IVfsReader Vfs { get; }
+        public long Offset { get; protected init; }
 
-        public long Offset { get; protected set; }
-
-        protected VfsEntry(IVfsReader vfs, string path, long size) : base(path, size)
+        protected VfsEntry(IVfsReader vfs, string path, long size = 0) : base(path, size)
         {
             Vfs = vfs;
         }

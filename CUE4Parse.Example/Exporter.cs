@@ -94,8 +94,7 @@ public static class Exporter
 
             Parallel.ForEach(packages, package =>
             {
-                if (!package.IsUE4Package) return;
-                var pkg = provider.LoadPackage(package);
+                if (!provider.TryLoadPackage(package, out var pkg)) return;
 
                 // optimized way of checking for exports type without loading most of them
                 for (var i = 0; i < pkg.ExportMapLength; i++)

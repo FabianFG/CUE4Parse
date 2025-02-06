@@ -77,7 +77,7 @@ namespace CUE4Parse.FileProvider
                 }
 
                 // Register local file only if it has a known extension, we don't need every file
-                if (!GameFile.Ue4KnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
+                if (!GameFile.UeKnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
                     continue;
 
                 var osFile = new OsGameFile(_workingDirectory, file, mountPoint, Versions);

@@ -21,9 +21,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly uint TocEntryIndex;
         public FIoChunkId ChunkId => IoStoreReader.TocResource.ChunkIds[TocEntryIndex];
 
-        public FIoStoreEntry(IoStoreReader reader, string path, uint tocEntryIndex) : base(reader)
+        public FIoStoreEntry(IoStoreReader reader, string path, uint tocEntryIndex) : base(reader, path)
         {
-            Path = path;
             TocEntryIndex = tocEntryIndex;
             ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];
             Offset = (long) offsetLength.Offset;
