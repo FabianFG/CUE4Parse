@@ -116,7 +116,11 @@ public abstract class AbstractUePackage : UObject, IPackage
     public bool HasFlags(EPackageFlags flags) => Summary.PackageFlags.HasFlag(flags);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public abstract UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal);
+
     public abstract ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
 
     public override string ToString() => Name;

@@ -320,17 +320,23 @@ namespace CUE4Parse.UE4.Assets
             return packageIds;
         }
 
-        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             for (var i = 0; i < ExportMap.Length; i++)
             {
                 if (CreateFNameFromMappedName(ExportMap[i].ObjectName).Text.Equals(name, comparisonType))
                 {
-                    return ExportsLazy[i].Value;
+                    return i;
                 }
             }
 
-            return null;
+            return -1;
+        }
+
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            var index = GetExportIndex(name, comparisonType);
+            return index != -1 ? ExportsLazy[index].Value : null;
         }
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)

@@ -172,17 +172,23 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
-        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            foreach (var export in ExportMap)
+            for (var i = 0; i < ExportMap.Length; i++)
             {
-                if (export.ObjectName.Text.Equals(name, comparisonType))
+                if (ExportMap[i].ObjectName.Text.Equals(name, comparisonType))
                 {
-                    return export.ExportObject.Value;
+                    return i;
                 }
             }
 
-            return null;
+            return -1;
+        }
+
+        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            var index = GetExportIndex(name, comparisonType);
+            return index == -1 ? null : ExportMap[index].ExportObject.Value;
         }
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
