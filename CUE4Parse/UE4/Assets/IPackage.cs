@@ -29,7 +29,9 @@ public interface IPackage
     public int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal);
     public ResolvedObject? ResolvePackageIndex(FPackageIndex? index);
 
-    public UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal); // => GetExport(GetExportIndex(name, comparisonType));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        => GetExport(GetExportIndex(name, comparisonType));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T? GetExportOrNull<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) where T : UObject
@@ -53,6 +55,9 @@ public interface IPackage
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UObject? GetExport(int index) => index >= 0 && index < ExportsLazy.Length ? ExportsLazy[index].Value : null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<UObject> GetExports(int start, int count) => ExportsLazy.Skip(start).Take(count).Select(export => export.Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<UObject> GetExports() => ExportsLazy.Select(export => export.Value);

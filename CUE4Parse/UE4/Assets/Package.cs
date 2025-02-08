@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.UE4.Assets.Exports;
@@ -29,7 +28,7 @@ namespace CUE4Parse.UE4.Assets
         public FPackageIndex[][]? DependsMap { get; }
         public FPackageIndex[]? PreloadDependencies { get; }
         public FObjectDataResource[]? DataResourceMap { get; }
-        public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
+
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
         public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, bool useLazySerialization = true)
@@ -86,6 +85,7 @@ namespace CUE4Parse.UE4.Assets
 
             uassetAr.SeekAbsolute(Summary.ExportOffset, SeekOrigin.Begin);
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
+            ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
             if (!useLazySerialization && Summary is { DependsOffset: > 0, ExportCount: > 0 })
@@ -137,9 +137,10 @@ namespace CUE4Parse.UE4.Assets
 
             if (useLazySerialization)
             {
-                foreach (var export in ExportMap)
+                for (var i = 0; i < ExportsLazy.Length; i++)
                 {
-                    export.ExportObject = new Lazy<UObject>(() =>
+                    var export = ExportMap[i];
+                    ExportsLazy[i] = new Lazy<UObject>(() =>
                     {
                         // Create
                         var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct, this, (EObjectFlags) export.ObjectFlags);
@@ -165,7 +166,7 @@ namespace CUE4Parse.UE4.Assets
                 _exportLoaders = new ExportLoader[ExportMap.Length];
                 for (var i = 0; i < ExportMap.Length; i++)
                 {
-                    _exportLoaders[i] = new(this, ExportMap[i], uexpAr);
+                    _exportLoaders[i] = new(this, i, uexpAr);
                 }
             }
 
@@ -183,12 +184,6 @@ namespace CUE4Parse.UE4.Assets
             }
 
             return -1;
-        }
-
-        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
-        {
-            var index = GetExportIndex(name, comparisonType);
-            return index == -1 ? null : ExportMap[index].ExportObject.Value;
         }
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
@@ -278,7 +273,6 @@ namespace CUE4Parse.UE4.Assets
             public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
             public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
-            public override Lazy<UObject> Object => _export.ExportObject;
         }
 
         /** Fallback if we cannot resolve the export in another package */
@@ -313,17 +307,17 @@ namespace CUE4Parse.UE4.Assets
             private LoadPhase _phase = LoadPhase.Create;
             public Lazy<UObject> Lazy;
 
-            public ExportLoader(Package package, FObjectExport export, FAssetArchive archive)
+            public ExportLoader(Package package, int index, FAssetArchive archive)
             {
                 _package = package;
-                _export = export;
+                _export = package.ExportMap[index];
                 _archive = archive;
                 Lazy = new(() =>
                 {
                     Fire(LoadPhase.Serialize);
                     return _object;
                 });
-                export.ExportObject = Lazy;
+                package.ExportsLazy[index] = Lazy;
             }
 
             private void EnsureDependencies()
