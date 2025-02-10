@@ -103,7 +103,7 @@ namespace CUE4Parse.FileProvider
         /// <param name="path">The path of the game file</param>
         /// <param name="file">The file if it was found; otherwise the default value</param>
         /// <returns>true if the file could be found; false otherwise</returns>
-        public bool TryFindGameFile(string path, [MaybeNullWhen(false)] out GameFile file);
+        public bool TryGetGameFile(string path, [MaybeNullWhen(false)] out GameFile file);
 
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default);
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -100,13 +101,17 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override UObject? ReadUObject() => ReadObject<UObject>().Value;
 
-        public bool TryGetPayload(PayloadType type, out FAssetArchive? ar)
+        public bool TryGetPayload(PayloadType type, [MaybeNullWhen(false)] out FAssetArchive ar)
         {
-            ar = null;
-            if (!_payloads.TryGetValue(type, out var ret)) return false;
-
-            ar = ret.Value;
-            return true;
+            try
+            {
+                ar = GetPayload(type);
+            }
+            catch
+            {
+                ar = null;
+            }
+            return ar != null;
         }
 
         public FAssetArchive GetPayload(PayloadType type)

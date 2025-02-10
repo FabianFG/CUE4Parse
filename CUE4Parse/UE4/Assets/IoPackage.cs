@@ -363,7 +363,7 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
 
-            if (index.IsPackageImport && Provider != null)
+            if (index.IsPackageImport)
             {
                 if (ImportedPublicExportHashes != null)
                 {
@@ -384,17 +384,14 @@ namespace CUE4Parse.UE4.Assets
                         }
                     }
                 }
-                else
+                else foreach (var pkg in ImportedPackages.Value)
                 {
-                    foreach (var pkg in ImportedPackages.Value)
+                    if (pkg == null) continue;
+                    for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                     {
-                        if (pkg == null) continue;
-                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
                         {
-                            if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
-                            {
-                                return new ResolvedExportObject(exportIndex, pkg);
-                            }
+                            return new ResolvedExportObject(exportIndex, pkg);
                         }
                     }
                 }

@@ -11,6 +11,27 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly ulong DuplicateSerialOffset;
         public readonly ulong SerialSize;
         public readonly uint Flags;
-        public readonly uint Pad;
+        public readonly FBulkDataCookedIndex CookedIndex; // https://github.com/EpicGames/UnrealEngine/commit/6e7f2558611221cfdf413106900caf947e3c17c5
+        public readonly short _pad0;
+        public readonly byte _pad1;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct FBulkDataCookedIndex
+    {
+        public static FBulkDataCookedIndex Default => new(0);
+
+        public readonly byte Value;
+
+        public bool IsDefault => Value == 0;
+
+        public FBulkDataCookedIndex(byte value)
+        {
+            Value = value;
+        }
+
+        public string GetAsExtension() => IsDefault ? string.Empty : Value.ToString("D3");
+
+        public override string ToString() => GetAsExtension();
     }
 }

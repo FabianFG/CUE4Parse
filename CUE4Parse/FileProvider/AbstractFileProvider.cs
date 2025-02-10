@@ -163,7 +163,7 @@ namespace CUE4Parse.FileProvider
                 : throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryFindGameFile(string path, [MaybeNullWhen(false)] out GameFile file)
+        public bool TryGetGameFile(string path, [MaybeNullWhen(false)] out GameFile file)
         {
             try
             {
@@ -414,13 +414,13 @@ namespace CUE4Parse.FileProvider
 
         protected bool LoadIniConfigs()
         {
-            if (TryFindGameFile("/Game/Config/DefaultGame.ini", out var defaultGame))
+            if (TryGetGameFile("/Game/Config/DefaultGame.ini", out var defaultGame))
             {
                 if (defaultGame is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultGame.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
                 if (defaultGame.TryCreateReader(out var gameAr)) DefaultGame.Read(new StreamReader(gameAr));
                 gameAr?.Dispose();
             }
-            if (TryFindGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
+            if (TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
                 if (defaultEngine is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultEngine.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
                 if (defaultEngine.TryCreateReader(out var engineAr)) DefaultEngine.Read(new StreamReader(engineAr));
@@ -507,7 +507,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySaveAsset(string path, [MaybeNullWhen(false)] out byte[] data)
         {
-            if (TryFindGameFile(path, out var file))
+            if (TryGetGameFile(path, out var file))
             {
                 return TrySaveAsset(file, out data);
             }
@@ -535,7 +535,7 @@ namespace CUE4Parse.FileProvider
         public bool TryCreateReader(string path, [MaybeNullWhen(false)] out FArchive reader)
         {
             reader = null;
-            if (TryFindGameFile(path, out var file))
+            if (TryGetGameFile(path, out var file))
             {
                 reader = file.SafeCreateReader();
             }
@@ -578,7 +578,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoadPackage(string path, [MaybeNullWhen(false)] out IPackage package)
         {
-            if (TryFindGameFile(path, out var file))
+            if (TryGetGameFile(path, out var file))
             {
                 return TryLoadPackage(file, out package);
             }
@@ -628,7 +628,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySavePackage(string path, [MaybeNullWhen(false)] out IReadOnlyDictionary<string, byte[]> data)
         {
-            if (TryFindGameFile(path, out var file))
+            if (TryGetGameFile(path, out var file))
             {
                 return TrySavePackage(file, out data);
             }

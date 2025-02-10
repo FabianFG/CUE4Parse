@@ -63,7 +63,7 @@ namespace CUE4Parse.FileProvider.Vfs
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] { get; }
         public GameFile this[string path, IAesVfsReader archive] { get; }
 
-        public bool TryFindGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal);
+        public bool TryGetGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal);
 
         public byte[] SaveAsset(string path, string archiveName, StringComparison comparison = StringComparison.Ordinal);
         public byte[] SaveAsset(string path, IAesVfsReader archive);

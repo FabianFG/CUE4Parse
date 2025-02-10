@@ -331,7 +331,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 : throw new KeyNotFoundException($"There is no game file with the path \"{path}\" in \"{archive.Name}\"");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryFindGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
+        public bool TryGetGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
         {
             try
             {
@@ -392,7 +392,7 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySavePackage(string path, string archiveName, [MaybeNullWhen(false)] out IReadOnlyDictionary<string, byte[]> data, StringComparison comparison = StringComparison.Ordinal)
         {
-            if (TryFindGameFile(path, archiveName, out var file, comparison))
+            if (TryGetGameFile(path, archiveName, out var file, comparison))
             {
                 return TrySavePackage(file, out data);
             }

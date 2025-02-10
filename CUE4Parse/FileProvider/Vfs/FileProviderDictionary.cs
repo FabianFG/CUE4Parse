@@ -37,7 +37,7 @@ namespace CUE4Parse.FileProvider.Vfs
             // file comes from a specific archive
             // this ensure that its payloads are also from the same archive
             // this is useful with patched archives
-
+            // TODO: doesn't support cooked index bulk data
             var path = file.PathWithoutExtension;
             if (file is VfsEntry {Vfs: { } vfs})
             {
