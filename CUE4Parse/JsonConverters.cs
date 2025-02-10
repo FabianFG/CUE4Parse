@@ -2314,6 +2314,12 @@ public class FByteBulkDataHeaderConverter : JsonConverter<FByteBulkDataHeader>
         writer.WritePropertyName("OffsetInFile");
         writer.WriteValue($"0x{value.OffsetInFile:X}");
 
+        if (!value.CookedIndex.IsDefault)
+        {
+            writer.WritePropertyName("CookedIndex");
+            writer.WriteValue(value.CookedIndex.ToString());
+        }
+
         writer.WriteEndObject();
     }
 
