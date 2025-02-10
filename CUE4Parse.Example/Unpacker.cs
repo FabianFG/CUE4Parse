@@ -29,12 +29,11 @@ public static class Unpacker
         OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
 
         var version = new VersionContainer(EGame.GAME_UE5_6);
-        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version);
+        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, version);
         provider.Initialize();
         provider.SubmitKey(new FGuid(), new FAesKey(_aesKey));
 
-        var archive = provider.MountedVfs.First(x => x.Name.Equals("pakchunk0-Windows.pak"));
-        var files = archive.Files.Values // provider.Files.Values for all files in all archives
+        var files = provider.GetArchive("pakchunk0-Windows.pak").Files.Values // provider.Files.Values for all files in all archives
             .GroupBy(it => it.Path.SubstringBeforeLast('/'))
             .ToDictionary(it => it.Key, it => it.ToArray());
 

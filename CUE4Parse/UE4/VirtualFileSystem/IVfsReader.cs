@@ -15,16 +15,16 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public IReadOnlyDictionary<string, GameFile> Files { get; }
         public int FileCount { get; }
 
-        public bool HasDirectoryIndex { get; }
         public string MountPoint { get; }
+        public bool HasDirectoryIndex { get; }
         public bool IsConcurrent { get; set; }
 
         public VersionContainer Versions { get; set; }
         public EGame Game { get; set; }
         public FPackageFileVersion Ver { get; set; }
 
-        public IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false);
-        public void MountTo(FileProviderDictionary files, EventHandler<int>? vfsMounted = null);
+        public void Mount(StringComparer pathComparer);
+        public void MountTo(FileProviderDictionary files, StringComparer pathComparer, EventHandler<int>? vfsMounted = null);
 
         public abstract byte[] Extract(VfsEntry entry);
     }

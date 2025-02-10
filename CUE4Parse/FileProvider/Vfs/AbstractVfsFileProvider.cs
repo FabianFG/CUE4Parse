@@ -52,14 +52,14 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public IoGlobalData? GlobalData { get; private set; }
 
-        public IReadOnlyDictionary<FPackageId, GameFile> FilesById => Files.byId;
+        public IReadOnlyDictionary<FPackageId, GameFile> FilesById => Files.ById;
 
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public event EventHandler<int>? VfsRegistered;
         public event EventHandler<int>? VfsMounted;
         public event EventHandler<int>? VfsUnmounted;
 
-        protected AbstractVfsFileProvider(bool isCaseInsensitive = false, VersionContainer? versions = null) : base(isCaseInsensitive, versions)
+        protected AbstractVfsFileProvider(VersionContainer? versions = null, StringComparer? pathComparer = null) : base(versions, pathComparer)
         {
             CustomEncryption = versions?.Game switch
             {
@@ -223,7 +223,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 {
                     try
                     {
-                        reader.MountTo(Files, VfsMounted);
+                        reader.MountTo(Files, PathComparer, VfsMounted);
                         _unloadedVfs.TryRemove(reader, out _);
                         _mountedVfs[reader] = null;
                         Interlocked.Increment(ref countNewMounts);
@@ -270,7 +270,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     {
                         try
                         {
-                            reader.MountTo(Files, key, VfsMounted);
+                            reader.MountTo(Files, PathComparer, key, VfsMounted);
                             _unloadedVfs.TryRemove(reader, out _);
                             _mountedVfs[reader] = null;
                             Interlocked.Increment(ref countNewMounts);
@@ -324,7 +324,6 @@ namespace CUE4Parse.FileProvider.Vfs
             return archive != null;
         }
 
-        public GameFile this[string path, string archiveName] => this[path, archiveName, IsCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal];
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] => this[path, GetArchive(archiveName, comparison)];
         public GameFile this[string path, IAesVfsReader archive]
             => TryGetGameFile(path, archive.Files, out var file)

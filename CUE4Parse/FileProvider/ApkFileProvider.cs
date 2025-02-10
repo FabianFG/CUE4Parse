@@ -15,10 +15,16 @@ public class ApkFileProvider : DefaultFileProvider
 {
     private readonly FileInfo _apkFile;
 
-    public ApkFileProvider(string file, bool isCaseInsensitive = false, VersionContainer? versions = null)
-        : this(new FileInfo(file), isCaseInsensitive, versions) { }
-    public ApkFileProvider(FileInfo apkFile, bool isCaseInsensitive = false, VersionContainer? versions = null)
-        : base(apkFile.Directory ?? new DirectoryInfo(""), SearchOption.TopDirectoryOnly, isCaseInsensitive, versions)
+    public ApkFileProvider(
+        string file,
+        VersionContainer? versions = null,
+        StringComparer? pathComparer = null)
+        : this(new FileInfo(file), versions, pathComparer) { }
+    public ApkFileProvider(
+        FileInfo apkFile,
+        VersionContainer? versions = null,
+        StringComparer? pathComparer = null)
+        : base(apkFile.Directory ?? new DirectoryInfo(""), SearchOption.TopDirectoryOnly, versions, pathComparer)
     {
         _apkFile = apkFile;
     }
@@ -28,7 +34,7 @@ public class ApkFileProvider : DefaultFileProvider
         if (!_apkFile.Exists)
             throw new FileNotFoundException("Given APK file must exist");
 
-        var osFiles = new Dictionary<string, GameFile>();
+        var osFiles = new Dictionary<string, GameFile>(PathComparer);
         using var apkFs = File.OpenRead(_apkFile.FullName);
         using var zipFile = new ZipArchive(apkFs, ZipArchiveMode.Read);
         foreach (var pngEntry in zipFile.Entries.Where(x => x.FullName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase)))
@@ -78,8 +84,7 @@ public class ApkFileProvider : DefaultFileProvider
                     continue;
 
                 var osFile = new StreamedGameFile(fileEntry.Name, streams[0], Versions);
-                if (IsCaseInsensitive) osFiles[osFile.Path.ToLowerInvariant()] = osFile;
-                else osFiles[osFile.Path] = osFile;
+                osFiles[osFile.Path] = osFile;
             }
         }
 

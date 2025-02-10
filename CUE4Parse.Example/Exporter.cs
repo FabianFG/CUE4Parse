@@ -59,7 +59,7 @@ public static class Exporter
         OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
 
         var version = new VersionContainer(EGame.GAME_UE5_6, ETexturePlatform.DesktopMobile);
-        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, false, version)
+        var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, version)
         {
             MappingsContainer = new FileUsmapTypeMappingsProvider(_mapping)
         };

@@ -23,7 +23,6 @@ namespace CUE4Parse.FileProvider
 
         /// <summary>
         /// The files available in this provider in dictionary with their full path as key.
-        /// If <see cref="IsCaseInsensitive"/> is set those keys are in lower case while the Path property of a <see cref="GameFile"/> remains in proper case
         /// </summary>
         public FileProviderDictionary Files { get; }
 
@@ -73,11 +72,11 @@ namespace CUE4Parse.FileProvider
         public TypeMappings? MappingsForGame { get; }
 
         /// <summary>
-        /// Whether this file provider supports case-insensitive file lookups.
-        /// Has influence to the behaviour of <see cref="Files"/> and <see cref="FixPath"/>
-        /// TODO: refactor this crappy ToLower workaround
+        /// Comparison method used for file lookups
+        /// Individual archive readers may use their own comparison methods if provided during mounting
+        /// Has influence on <see cref="this"/>
         /// </summary>
-        public bool IsCaseInsensitive { get; }
+        public StringComparer PathComparer { get; }
 
         /// <summary>
         /// the name of the unreal project
@@ -117,14 +116,10 @@ namespace CUE4Parse.FileProvider
 
         /// <summary>
         /// Attempts to bring the passed path into the correct format.
-        /// If the <see cref="IsCaseInsensitive"/> flag is set the result will be in lowercase.
         /// </summary>
         /// <param name="path">The file path to be fixed</param>
         /// <returns>The file path translated into the correct format</returns>
         public string FixPath(string path);
-
-        /// <inheritdoc cref="FixPath(string)"/>
-        public string FixPath(string path, StringComparison comparisonType);
 
         #region SaveAsset Methods
         /// <summary>

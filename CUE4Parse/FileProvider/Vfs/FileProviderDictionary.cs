@@ -12,21 +12,19 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {
-        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ();
-        public IReadOnlyDictionary<FPackageId, GameFile> byId => _byId;
-
-        private readonly KeyEnumerable _keys;
-        private readonly ValueEnumerable _values;
         private readonly ConcurrentBag<KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>> _indicesBag = new ();
 
-        public readonly bool IsCaseInsensitive;
+        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ();
+        public IReadOnlyDictionary<FPackageId, GameFile> ById => _byId;
+
+        private readonly KeyEnumerable _keys;
         public IEnumerable<string> Keys => _keys;
+
+        private readonly ValueEnumerable _values;
         public IEnumerable<GameFile> Values => _values;
 
-        public FileProviderDictionary(bool isCaseInsensitive)
+        public FileProviderDictionary()
         {
-            IsCaseInsensitive = isCaseInsensitive;
-
             _keys = new KeyEnumerable(this);
             _values = new ValueEnumerable(this);
         }
@@ -36,12 +34,11 @@ namespace CUE4Parse.FileProvider.Vfs
             uexp = ubulk = uptnl = null;
             if (!file.IsUePackage) return;
 
-            var path = file.PathWithoutExtension;
-            if (IsCaseInsensitive) path = path.ToLowerInvariant();
-
             // file comes from a specific archive
             // this ensure that its payloads are also from the same archive
             // this is useful with patched archives
+
+            var path = file.PathWithoutExtension;
             if (file is VfsEntry {Vfs: { } vfs})
             {
                 vfs.Files.TryGetValue(path + ".uexp", out uexp);
@@ -76,7 +73,6 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(string key)
         {
-            if (IsCaseInsensitive) key = key.ToLowerInvariant();
             foreach (var files in _indicesBag)
             {
                 if (files.Value.ContainsKey(key))
@@ -89,7 +85,6 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out GameFile value)
         {
-            if (IsCaseInsensitive) key = key.ToLowerInvariant();
             foreach (var files in _indicesBag.OrderByDescending(kvp => kvp.Key))
             {
                 if (files.Value.TryGetValue(key, out value))

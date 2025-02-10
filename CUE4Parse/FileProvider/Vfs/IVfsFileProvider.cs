@@ -60,7 +60,6 @@ namespace CUE4Parse.FileProvider.Vfs
         public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal);
         public bool TryGetArchive(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal);
 
-        public GameFile this[string path, string archiveName] { get; }
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] { get; }
         public GameFile this[string path, IAesVfsReader archive] { get; }
 
