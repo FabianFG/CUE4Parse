@@ -15,6 +15,16 @@ namespace CUE4Parse.FileProvider
         private readonly DirectoryInfo[] _extraDirectories;
         private readonly SearchOption _searchOption;
 
+        [Obsolete("Use the other constructors with explicit StringComparer")]
+        public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : this(new DirectoryInfo(directory), searchOption, isCaseInsensitive, versions) { }
+        [Obsolete("Use the other constructors with explicit StringComparer")]
+        public DefaultFileProvider(DirectoryInfo directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : this(directory, [], searchOption, isCaseInsensitive, versions) { }
+        [Obsolete("Use the other constructors with explicit StringComparer")]
+        public DefaultFileProvider(DirectoryInfo directory, DirectoryInfo[] extraDirectories, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : this(directory, extraDirectories, searchOption, versions, isCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal) { }
+
         public DefaultFileProvider(
             string directory,
             SearchOption searchOption,

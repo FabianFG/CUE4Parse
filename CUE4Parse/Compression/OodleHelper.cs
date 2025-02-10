@@ -34,7 +34,8 @@ public static class OodleHelper
     public static void Initialize(string path)
     {
         Instance?.Dispose();
-        Instance = new Oodle(path);
+        if (File.Exists(path))
+            Instance = new Oodle(path);
     }
 
     public static void Initialize(Oodle instance)

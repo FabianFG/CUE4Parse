@@ -377,7 +377,8 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
             }
 
-            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation &&
+                !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
             {
                 if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition)
                     AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);

@@ -218,8 +218,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
-                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation &&
+                !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            {
+                if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition)
+                    AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            }
 
             if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
             {

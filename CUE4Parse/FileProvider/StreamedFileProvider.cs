@@ -8,6 +8,9 @@ namespace CUE4Parse.FileProvider
     {
         public string LiveGame { get; }
 
+        [Obsolete("Use the other constructors with explicit StringComparer")]
+        public StreamedFileProvider(string liveGame, bool isCaseInsensitive = false, VersionContainer? versions = null)
+            : this(liveGame, versions, isCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal) { }
         public StreamedFileProvider(string liveGame, VersionContainer? versions = null, StringComparer? pathComparer = null) : base(versions, pathComparer)
         {
             LiveGame = liveGame;

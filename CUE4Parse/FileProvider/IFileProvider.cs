@@ -72,9 +72,10 @@ namespace CUE4Parse.FileProvider
         public TypeMappings? MappingsForGame { get; }
 
         /// <summary>
-        /// Comparison method used for file lookups
-        /// Individual archive readers may use their own comparison methods if provided during mounting
-        /// Has influence on <see cref="this"/>
+        /// Comparison method used for file lookups<br/>
+        /// Individual archive readers may use their own comparison methods if provided during mounting<br/>
+        /// Has influence on <see cref="this"/> and <see cref="TryFindGameFile"/> and basically every other method that uses paths<br/>
+        /// It is <see cref="StringComparer.Ordinal"/> (case-sensitive) by default
         /// </summary>
         public StringComparer PathComparer { get; }
 

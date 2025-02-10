@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
@@ -43,6 +44,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             Path = path;
             Name = path.Replace('\\', '/').SubstringAfterLast('/');
             Versions = versions;
+            Files = new Dictionary<string, GameFile>();
         }
 
         public abstract void Mount(StringComparer pathComparer);

@@ -15,6 +15,13 @@ public class ApkFileProvider : DefaultFileProvider
 {
     private readonly FileInfo _apkFile;
 
+    [Obsolete("Use the other constructors with explicit StringComparer")]
+    public ApkFileProvider(string file, bool isCaseInsensitive = false, VersionContainer? versions = null)
+        : this(new FileInfo(file), isCaseInsensitive, versions) { }
+    [Obsolete("Use the other constructors with explicit StringComparer")]
+    public ApkFileProvider(FileInfo apkFile, bool isCaseInsensitive = false, VersionContainer? versions = null)
+        : this(apkFile, versions, isCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal) { }
+
     public ApkFileProvider(
         string file,
         VersionContainer? versions = null,

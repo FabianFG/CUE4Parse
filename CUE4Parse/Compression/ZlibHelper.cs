@@ -28,7 +28,8 @@ public static class ZlibHelper
     public static void Initialize(string path)
     {
         Instance?.Dispose();
-        Instance = new Zlibng(path);
+        if (File.Exists(path))
+            Instance = new Zlibng(path);
     }
 
     public static void Initialize(Zlibng instance)
