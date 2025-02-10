@@ -27,6 +27,18 @@ namespace CUE4Parse.UE4.Shaders
 
             switch (archiveVersion)
             {
+                case 2 when Ar.Game == EGame.GAME_MarvelRivals:
+                {
+                    var shaders = new FSerializedShaderArchive_MarvelRivals(Ar);
+                    ShaderCode = new byte[shaders.ShaderEntries.Length][];
+                    for (var i = 0; i < shaders.ShaderEntries.Length; i++)
+                    {
+                        ShaderCode[i] = Ar.ReadBytes((int) shaders.ShaderEntries[i].Size);
+                    }
+
+                    SerializedShaders = shaders;
+                    break;
+                }
                 case 2:
                 {
                     var shaders = new FSerializedShaderArchive(Ar);
