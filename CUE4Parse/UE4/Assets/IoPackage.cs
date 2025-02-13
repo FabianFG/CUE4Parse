@@ -161,7 +161,7 @@ namespace CUE4Parse.UE4.Assets
                 }
                 else exportBundleHeaders = null;
 
-                importedPackageIds = storeEntry?.ImportedPackages ?? Array.Empty<FPackageId>();
+                importedPackageIds = storeEntry?.ImportedPackages ?? [];
 
                 cookedHeaderSize = (int) summary.CookedHeaderSize;
                 allExportDataOffset = (int) summary.HeaderSize;
