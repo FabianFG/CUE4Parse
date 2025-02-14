@@ -116,6 +116,7 @@ public enum EGame
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_AshesOfCreation = GAME_UE5_3 + 6,
+        GAME_Avowed = GAME_UE5_3 + 7,
     GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
