@@ -2502,11 +2502,13 @@ public class FEndTextResourceStringsConverter : JsonConverter<FEndTextResourceSt
     public override void WriteJson(JsonWriter writer, FEndTextResourceStrings value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
+        writer.WritePropertyName(nameof(value.Text));
+        serializer.Serialize(writer, value.Text);
 
-        if (value.Entries?.Count > 0)
+        if (value.MetaData.Count > 0)
         {
-            writer.WritePropertyName("Entries");
-            serializer.Serialize(writer, value.Entries);
+            writer.WritePropertyName(nameof(value.MetaData));
+            serializer.Serialize(writer, value.MetaData);
         }
 
         writer.WriteEndObject();

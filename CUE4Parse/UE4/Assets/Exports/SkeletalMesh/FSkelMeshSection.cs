@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
@@ -54,11 +53,11 @@ public class FSkelMeshSection
         bCastShadow = true;
         bVisibleInRayTracing = true;
         CorrespondClothSectionIndex = -1;
-        SoftVertices = Array.Empty<FSoftVertex>();
-        ClothMappingDataLODs = Array.Empty<FMeshToMeshVertData[]>();
-        BoneMap = Array.Empty<ushort>();
+        SoftVertices = [];
+        ClothMappingDataLODs = [];
+        BoneMap = [];
         MaxBoneInfluences = 4;
-        OverlappingVertices = new Dictionary<int, int[]>();
+        OverlappingVertices = [];
         GenerateUpToLodIndex = -1;
         OriginalDataSectionIndex = -1;
         ChunkedParentSectionIndex = -1;
@@ -246,7 +245,7 @@ public class FSkelMeshSection
         MaxBoneInfluences = Ar.Read<int>();
         CorrespondClothAssetIndex = Ar.Read<short>();
         ClothingData = Ar.Read<FClothingSectionData>();
-
+        
         if (Ar.Game == EGame.GAME_Paragon) return;
 
         if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
