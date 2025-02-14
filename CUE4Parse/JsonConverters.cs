@@ -158,6 +158,55 @@ public class FACLDatabaseCompressedAnimDataConverter : JsonConverter<FACLDatabas
     }
 }
 
+public class FSerializedShaderArchiveConverter_MarvelRivals : JsonConverter<FSerializedShaderArchive_MarvelRivals>
+{
+    public override void WriteJson(JsonWriter writer, FSerializedShaderArchive_MarvelRivals value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("ShaderMapHashes");
+        writer.WriteStartArray();
+        foreach (var shaderMapHash in value.ShaderMapHashes)
+        {
+            serializer.Serialize(writer, shaderMapHash.Hash);
+        }
+
+        writer.WriteEndArray();
+
+        writer.WritePropertyName("ShaderHashes");
+        writer.WriteStartArray();
+        foreach (var shaderHash in value.ShaderHashes)
+        {
+            serializer.Serialize(writer, shaderHash.Hash);
+        }
+
+        writer.WriteEndArray();
+
+        writer.WritePropertyName("Unk");
+        serializer.Serialize(writer, value.Unk);
+
+        writer.WritePropertyName("ShaderMapEntries");
+        serializer.Serialize(writer, value.ShaderMapEntries);
+
+        writer.WritePropertyName("ShaderEntries");
+        serializer.Serialize(writer, value.ShaderEntries);
+
+        writer.WritePropertyName("PreloadEntries");
+        serializer.Serialize(writer, value.PreloadEntries);
+
+        writer.WritePropertyName("ShaderIndices");
+        serializer.Serialize(writer, value.ShaderIndices);
+
+        writer.WriteEndObject();
+    }
+
+    public override FSerializedShaderArchive_MarvelRivals ReadJson(JsonReader reader, Type objectType, FSerializedShaderArchive_MarvelRivals existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class FSerializedShaderArchiveConverter : JsonConverter<FSerializedShaderArchive>
 {
     public override void WriteJson(JsonWriter writer, FSerializedShaderArchive value, JsonSerializer serializer)
