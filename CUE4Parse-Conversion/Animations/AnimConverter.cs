@@ -222,7 +222,7 @@ namespace CUE4Parse_Conversion.Animations
                     break;
                 }
                 default:
-                    throw new ArgumentOutOfRangeException("Unsupported compressed data type " + animSequence.CompressedDataStructure.GetType().Name);
+                    throw new ArgumentOutOfRangeException("Unsupported compressed data type " + animSequence.CompressedDataStructure?.GetType().Name);
             }
 
             // ok?

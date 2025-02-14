@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
         public byte[]? CompressedCurveByteStream;
         public FRawCurveTracks CompressedCurveData; // disappeared in 4.23
-        public ICompressedAnimData CompressedDataStructure;
+        public ICompressedAnimData? CompressedDataStructure;
         public UAnimBoneCompressionCodec? BoneCompressionCodec;
         public UAnimCurveCompressionCodec? CurveCompressionCodec;
         public int CompressedRawDataSize;
@@ -100,9 +100,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
 
                 // Fix layout of "byte swapped" data (workaround for UE4 bug)
-                if (compressedData.KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && compressedData.CompressedScaleOffsets.OffsetData.Length > 0)
+                if (compressedData is { KeyEncodingFormat: AnimationKeyFormat.AKF_PerTrackCompression, CompressedScaleOffsets.OffsetData.Length: > 0 })
                 {
-                    compressedData.CompressedByteStream = TransferPerTrackData(compressedData.CompressedByteStream);
+                    compressedData.CompressedByteStream = TransferPerTrackData(compressedData);
                 }
             }
             else
@@ -240,9 +240,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 compressedData.CompressedNumberOfFrames = Ar.Read<int>();
             }
 
-            var nameIndex = Ar.Read<int>();//ACL thing - KeyEncodingFormat FName
+            var nameIndex = Ar.Read<int>(); //ACL thing - KeyEncodingFormat FName
             Ar.Position -= 4;
-            if (nameIndex >= 0 && nameIndex < Ar.Owner.NameMap.Length)
+            if (nameIndex >= 0 && nameIndex < Ar.Owner?.NameMap.Length)
             {
                 var format = Ar.ReadFName();
                 if ("AKF_" + format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;
@@ -267,9 +267,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             // Fix layout of "byte swapped" data (workaround for UE4 bug)
-            if (compressedData.KeyEncodingFormat == AnimationKeyFormat.AKF_PerTrackCompression && compressedData.CompressedScaleOffsets.OffsetData.Length > 0 && Ar.Game < EGame.GAME_UE4_23)
+            if (compressedData is { KeyEncodingFormat: AnimationKeyFormat.AKF_PerTrackCompression, CompressedScaleOffsets.OffsetData.Length: > 0 } && Ar.Game < EGame.GAME_UE4_23)
             {
-                compressedData.CompressedByteStream = TransferPerTrackData(compressedData.CompressedByteStream);
+                compressedData.CompressedByteStream = TransferPerTrackData(compressedData);
             }
         }
 
@@ -391,11 +391,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         private static readonly int[] NumComponentsPerMask = { 3, 1, 1, 2, 1, 2, 2, 3 }; // number of identity bits in value, 0 == all bits
 
-        private byte[] TransferPerTrackData(byte[] src)
+        private byte[] TransferPerTrackData(FUECompressedAnimData compressedData)
         {
-            var dst = new byte[src.Length];
+            var dst = new byte[compressedData.CompressedByteStream.Length];
 
-            var compressedData = (FUECompressedAnimData) CompressedDataStructure;
             var compressedTrackOffsets = compressedData.CompressedTrackOffsets;
             var compressedScaleOffsets = compressedData.CompressedScaleOffsets;
 
@@ -433,13 +432,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     void Copy(int size)
                     {
-                        Buffer.BlockCopy(src, srcOffset, dst, dstOffset, size);
+                        Buffer.BlockCopy(compressedData.CompressedByteStream, srcOffset, dst, dstOffset, size);
                         srcOffset += size;
                         dstOffset += size;
                     }
 
                     // Decode animation header
-                    var packedInfo = BitConverter.ToUInt32(src, srcOffset);
+                    var packedInfo = BitConverter.ToUInt32(compressedData.CompressedByteStream, srcOffset);
                     Copy(sizeof(uint));
 
                     var keyFormat = (AnimationCompressionFormat) (packedInfo >> 28);
