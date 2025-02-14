@@ -55,9 +55,9 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             foreach (var file in newFiles.Values)
             {
-                // packages and their payload share the same id
-                // only load the package in this dict for later use by IoPackage.ImportedPackages
-                if (file is FIoStoreEntry { IsUePackage: true } ioEntry)
+                // packages, their optional variant and their respective payloads share the same id
+                // only load the normal package in this dict for later use by IoPackage.ImportedPackages
+                if (file is FIoStoreEntry { IsUePackage: true } ioEntry && !file.NameWithoutExtension.EndsWith(".o"))
                 {
                     _byId[ioEntry.ChunkId.AsPackageId()] = file;
                 }
