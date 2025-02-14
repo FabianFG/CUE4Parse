@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -69,8 +69,11 @@ namespace CUE4Parse.UE4.IO.Objects
                 var namesPos = Ar.Position;
                 var nameHashesSize = Ar.Read<int>();
                 var continuePos = Ar.Position + nameHashesSize;
-                Ar.Position = namesPos;
-                ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar, nameHashesSize / sizeof(ulong) - 1);
+                if (namesSize > 0 && nameHashesSize > 0)
+                {
+                    Ar.Position = namesPos;
+                    ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar, nameHashesSize / sizeof(ulong) - 1);
+                }
                 Ar.Position = continuePos;
             }
 
