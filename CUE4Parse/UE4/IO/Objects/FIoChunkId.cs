@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -46,7 +45,9 @@ namespace CUE4Parse.UE4.IO.Objects
         ShaderCode = 9,
         PackageStoreEntry = 10,
         DerivedData = 11,
-        EditorDerivedData = 12
+        EditorDerivedData = 12,
+        PackageResource = 13,
+        MAX
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

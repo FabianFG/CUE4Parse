@@ -304,9 +304,9 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal)
         {
-            var c = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
-            return MountedVfs.FirstOrDefault(c) ??
-                   UnloadedVfs.FirstOrDefault(c) ??
+            var predicate = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
+            return MountedVfs.FirstOrDefault(predicate) ??
+                   UnloadedVfs.FirstOrDefault(predicate) ??
                    throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
         }
 

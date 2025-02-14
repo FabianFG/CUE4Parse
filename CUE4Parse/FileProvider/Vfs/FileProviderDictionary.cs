@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -29,25 +30,51 @@ namespace CUE4Parse.FileProvider.Vfs
             _values = new ValueEnumerable(this);
         }
 
-        public void FindPayloads(GameFile file, out GameFile? uexp, out GameFile? ubulk, out GameFile? uptnl)
+        public void FindPayloads(GameFile file, out GameFile? uexp, out IReadOnlyList<GameFile> ubulks, out IReadOnlyList<GameFile> uptnls)
         {
-            uexp = ubulk = uptnl = null;
+            uexp = null;
+            ubulks = uptnls = new List<GameFile>().AsReadOnly();
             if (!file.IsUePackage) return;
 
-            // file comes from a specific archive
-            // this ensure that its payloads are also from the same archive
-            // this is useful with patched archives
-            // TODO: doesn't support cooked index bulk data
+            var ubulkList = new List<GameFile>();
+            var uptnlList = new List<GameFile>();
+
             var path = file.PathWithoutExtension;
-            if (file is VfsEntry {Vfs: { } vfs})
+            if (file is FIoStoreEntry { IsUePackage: true } entry)
             {
+                // dedicated to FBulkDataCookedIndex payloads
+                // if we are here we already know there will be no uexp
+                foreach (var payload in entry.IoStoreReader.Files.Values.Where(x => x.IsUePackagePayload && x is FIoStoreEntry y && y.ChunkId.ChunkId == entry.ChunkId.ChunkId))
+                {
+                    switch (payload.Extension)
+                    {
+                        case "ubulk":
+                            ubulkList.Add(payload);
+                            break;
+                        case "uptnl":
+                            uptnlList.Add(payload);
+                            break;
+                    }
+                }
+            }
+            else if (file is VfsEntry {Vfs: { } vfs})
+            {
+                // file comes from a specific archive
+                // this ensure that its payloads are also from the same archive
+                // this is useful with patched archives
                 vfs.Files.TryGetValue(path + ".uexp", out uexp);
-                vfs.Files.TryGetValue(path + ".ubulk", out ubulk);
+                if (vfs.Files.TryGetValue(path + ".ubulk", out var ubulkVfs))
+                    ubulkList.Add(ubulkVfs);
             }
 
             if (uexp == null) TryGetValue(path + ".uexp", out uexp);
-            if (ubulk == null) TryGetValue(path + ".ubulk", out ubulk);
-            TryGetValue(path + ".uptnl", out uptnl);
+            if (ubulkList.Count < 1 && TryGetValue(path + ".ubulk", out var ubulk))
+                ubulkList.Add(ubulk);
+            if (uptnlList.Count < 1 && TryGetValue(path + ".uptnl", out var uptnl))
+                uptnlList.Add(uptnl);
+
+            ubulks = ubulkList.AsReadOnly();
+            uptnls = uptnlList.AsReadOnly();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

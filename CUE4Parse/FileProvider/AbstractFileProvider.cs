@@ -557,11 +557,11 @@ namespace CUE4Parse.FileProvider
         public async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
-            Files.FindPayloads(file, out var uexp, out var ubulk, out var uptnl);
+            Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
             var uasset = await file.CreateReaderAsync().ConfigureAwait(false);
-            var lazyUbulk = ubulk != null ? new Lazy<FArchive?>(() => ubulk.TryCreateReader(out var reader) ? reader : null) : null;
-            var lazyUptnl = uptnl != null ? new Lazy<FArchive?>(() => uptnl.TryCreateReader(out var reader) ? reader : null) : null;
+            var lazyUbulk = ubulks.Count > 0 ? new Lazy<FArchive?>(() => ubulks[0].TryCreateReader(out var reader) ? reader : null) : null;
+            var lazyUptnl = uptnls.Count > 0 ? new Lazy<FArchive?>(() => uptnls[0].TryCreateReader(out var reader) ? reader : null) : null;
 
             switch (file)
             {
@@ -615,12 +615,18 @@ namespace CUE4Parse.FileProvider
 
         public async Task<IReadOnlyDictionary<string, byte[]>> SavePackageAsync(GameFile file)
         {
-            Files.FindPayloads(file, out var uexp, out var ubulk, out var uptnl);
+            Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
             var dict = new Dictionary<string, byte[]> { { file.Path, await file.ReadAsync().ConfigureAwait(false) } };
             if (uexp != null && uexp.TryRead(out var uexpData)) dict[uexp.Path] = uexpData;
-            if (ubulk != null && ubulk.TryRead(out var ubulkData)) dict[ubulk.Path] = ubulkData;
-            if (uptnl != null && uptnl.TryRead(out var uptnlData)) dict[uptnl.Path] = uptnlData;
+
+            foreach (var ubulk in ubulks)
+                if (ubulk.TryRead(out var ubulkData))
+                    dict[ubulk.Path] = ubulkData;
+
+            foreach (var uptnl in uptnls)
+                if (uptnl.TryRead(out var uptnlData))
+                    dict[uptnl.Path] = uptnlData;
 
             return dict;
         }
