@@ -615,7 +615,7 @@ namespace CUE4Parse.FileProvider
 
         public async Task<IReadOnlyDictionary<string, byte[]>> SavePackageAsync(GameFile file)
         {
-            Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
+            Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls, true);
 
             var dict = new Dictionary<string, byte[]> { { file.Path, await file.ReadAsync().ConfigureAwait(false) } };
             if (uexp != null && uexp.TryRead(out var uexpData)) dict[uexp.Path] = uexpData;

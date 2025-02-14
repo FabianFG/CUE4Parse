@@ -30,7 +30,7 @@ namespace CUE4Parse.FileProvider.Vfs
             _values = new ValueEnumerable(this);
         }
 
-        public void FindPayloads(GameFile file, out GameFile? uexp, out IReadOnlyList<GameFile> ubulks, out IReadOnlyList<GameFile> uptnls)
+        public void FindPayloads(GameFile file, out GameFile? uexp, out IReadOnlyList<GameFile> ubulks, out IReadOnlyList<GameFile> uptnls, bool cookedIndexLookup = false)
         {
             uexp = null;
             ubulks = uptnls = new List<GameFile>().AsReadOnly();
@@ -40,10 +40,10 @@ namespace CUE4Parse.FileProvider.Vfs
             var uptnlList = new List<GameFile>();
 
             var path = file.PathWithoutExtension;
-            if (file is FIoStoreEntry { IsUePackage: true } entry)
+            if (cookedIndexLookup && file is FIoStoreEntry { IsUePackage: true } entry)
             {
-                // dedicated to FBulkDataCookedIndex payloads
-                // if we are here we already know there will be no uexp
+                // dedicated to FBulkDataCookedIndex payloads but should work fine for anything coming from IoStore
+                // hitting IoStore Files like that is quite slow, but it's the only way to get the correct payloads
                 foreach (var payload in entry.IoStoreReader.Files.Values.Where(x => x.IsUePackagePayload && x is FIoStoreEntry y && y.ChunkId.ChunkId == entry.ChunkId.ChunkId))
                 {
                     switch (payload.Extension)
