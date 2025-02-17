@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using CUE4Parse.GameTypes.MK1.Assets.Objects;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -41,6 +42,8 @@ public class FStaticLODModel
     public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
     public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
     public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
+    // Game specific data
+    public object? AdditionalBuffer; 
 
     public FStaticLODModel()
     {
@@ -247,14 +250,7 @@ public class FStaticLODModel
 
                 if (Ar.Game == EGame.GAME_MortalKombat1 && Ar.ReadBoolean())
                 {
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    Ar.Position += 8;
+                    AdditionalBuffer = new FMorphTargetVertexInfoBufferMK1(Ar);
                 }
             }
             else
@@ -386,7 +382,7 @@ public class FStaticLODModel
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation &&
             !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
         {
-            if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition)
+            if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != EGame.GAME_FinalFantasy7Rebirth)
                 AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
         }
 
