@@ -694,6 +694,39 @@ namespace CUE4Parse.FileProvider
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UObject?> SafeLoadPackageObjectAsync(string path) =>
+            await SafeLoadPackageObjectAsync<UObject>(path).ConfigureAwait(false);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T?> SafeLoadPackageObjectAsync<T>(string path) where T : UObject
+        {
+            try
+            {
+                return await LoadPackageObjectAsync<T>(path).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<UObject?> SafeLoadPackageObjectAsync(string path, string objectName)
+            => await SafeLoadPackageObjectAsync<UObject>(path, objectName).ConfigureAwait(false);
+
+        public async Task<T?> SafeLoadPackageObjectAsync<T>(string path, string objectName) where T : UObject
+        {
+            try
+            {
+                return await LoadPackageObjectAsync<T>(path, objectName).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoadPackageObject(string path, [MaybeNullWhen(false)] out UObject export)
             => TryLoadPackageObject<UObject>(path, out export);
 
