@@ -97,6 +97,7 @@ namespace CUE4Parse.UE4.Versions
 
             // defaults
             Options["StripAdditiveRefPose"] = false;
+            Options["UObject.Use32Bit"] = false;
             Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = false;
             Options["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = false;
 
