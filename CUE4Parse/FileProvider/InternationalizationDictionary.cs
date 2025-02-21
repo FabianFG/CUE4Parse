@@ -122,6 +122,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
                 {
                     foreach (var entry in entries.Value)
                     {
+                        // TODO: we ignore the value priority here
                         dictionary[entry.Key.Str] = entry.Value.LocalizedString;
                     }
                 }

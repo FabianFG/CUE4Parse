@@ -74,7 +74,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Couldn't read GameFile {this}");
+            Log.Error(e, $"Could not read GameFile {this}");
             data = null;
         }
         return data != null;
@@ -89,7 +89,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Couldn't create reader for GameFile {this}");
+            Log.Error(e, $"Could not create reader for GameFile {this}");
             reader = null;
         }
         return reader != null;

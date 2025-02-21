@@ -302,6 +302,10 @@ namespace CUE4Parse.FileProvider
         /// <returns>The loaded object of type T</returns>
         public T LoadPackageObject<T>(string path) where T : UObject;
 
+        public UObject LoadPackageObject(string path, string objectName);
+
+        public T LoadPackageObject<T>(string path, string objectName) where T : UObject;
+
         /// <summary>
         /// Asynchronously loads an object from the Package at the passed path
         /// </summary>
@@ -319,6 +323,22 @@ namespace CUE4Parse.FileProvider
         public Task<UObject> LoadPackageObjectAsync(string path, string objectName);
 
         public Task<T> LoadPackageObjectAsync<T>(string path, string objectName) where T : UObject;
+
+        public UObject? SafeLoadPackageObject(string path);
+
+        public T? SafeLoadPackageObject<T>(string path) where T : UObject;
+
+        public UObject? SafeLoadPackageObject(string path, string objectName);
+
+        public T? SafeLoadPackageObject<T>(string path, string objectName) where T : UObject;
+
+        public Task<UObject?> SafeLoadPackageObjectAsync(string path);
+
+        public Task<T?> SafeLoadPackageObjectAsync<T>(string path) where T : UObject;
+
+        public Task<UObject?> SafeLoadPackageObjectAsync(string path, string objectName);
+
+        public Task<T?> SafeLoadPackageObjectAsync<T>(string path, string objectName) where T : UObject;
 
         /// <summary>
         /// Attempts to load an object from the Package at the passed path

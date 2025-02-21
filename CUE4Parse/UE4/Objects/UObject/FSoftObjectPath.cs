@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -46,12 +47,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(out UExport export)
+        public bool TryLoad([MaybeNullWhen(false)] out UExport export)
         {
             var provider = Owner?.Provider;
             if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
-                export = default;
+                export = null;
                 return false;
             }
             return TryLoad(provider, out export);
@@ -62,12 +63,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(out T export) where T : UExport
+        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
         {
             var provider = Owner?.Provider;
             if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
-                export = default;
+                export = null;
                 return false;
             }
             return TryLoad(provider, out export);
@@ -100,11 +101,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load(provider) as T ?? throw new ParserException("Loaded SoftObjectProperty but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(IFileProvider provider, out T export) where T : UExport
+        public bool TryLoad<T>(IFileProvider provider, [MaybeNullWhen(false)] out T export) where T : UExport
         {
             if (!TryLoad(provider, out var genericExport) || !(genericExport is T cast))
             {
-                export = default;
+                export = null;
                 return false;
             }
 
@@ -123,7 +124,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public UExport Load(IFileProvider provider) => provider.LoadPackageObject(AssetPathName.Text);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(IFileProvider provider, out UExport export) =>
+        public bool TryLoad(IFileProvider provider, [MaybeNullWhen(false)] out UExport export) =>
             provider.TryLoadPackageObject(AssetPathName.Text, out export);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,7 +139,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         #endregion
 
         public override string ToString() => string.IsNullOrEmpty(SubPathString)
-            ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
+            ? AssetPathName.IsNone ? "" : AssetPathName.Text
             : $"{AssetPathName.Text}:{SubPathString}";
     }
 }
