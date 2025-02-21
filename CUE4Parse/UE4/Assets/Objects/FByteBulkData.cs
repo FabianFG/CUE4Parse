@@ -52,16 +52,13 @@ namespace CUE4Parse.UE4.Assets.Objects
                 _data = new Lazy<byte[]?>(() =>
                 {
                     var data = new byte[Header.ElementCount];
-                    if (ReadBulkDataInto(data))
-                        return data;
-                    return null;
+                    return ReadBulkDataInto(data) ? data : null;
                 });
             }
-            else {
+            else
+            {
                 var data = new byte[Header.ElementCount];
-                if (!ReadBulkDataInto(data))
-                    throw new ParserException(Ar, "Failed to read bulk data");
-                _data = new Lazy<byte[]?>(() => data);
+                if (ReadBulkDataInto(data)) _data = new Lazy<byte[]?>(() => data);
             }
         }
 

@@ -53,7 +53,7 @@ namespace CUE4Parse.FileProvider
         public override void Initialize()
         {
             if (!_workingDirectory.Exists)
-                throw new DirectoryNotFoundException("Given working directory must exist");
+                throw new DirectoryNotFoundException("The game directory could not be found.");
 
             var availableFiles = new List<Dictionary<string, GameFile>> {IterateFiles(_workingDirectory, _searchOption)};
             if (_extraDirectories is {Length: > 0})

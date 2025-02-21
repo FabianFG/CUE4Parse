@@ -181,7 +181,7 @@ namespace CUE4Parse.FileProvider
         [Obsolete("use Provider.ChangeCulture instead")]
         public int LoadLocalization(string culture, CancellationToken cancellationToken = default)
         {
-            Internationalization.ChangeCulture(culture, Files);
+            ChangeCulture(culture);
             return Internationalization.Count;
         }
 
