@@ -335,6 +335,8 @@ public class FNaniteResources
     public uint[] HierarchyRootOffsets;
     public FPageStreamingState[] PageStreamingStates;
     public uint[] PageDependencies;
+    public FMatrix3x4[] AssemblyTransforms;
+    public FBoxSphereBounds MeshBounds; // FBoxSphereBounds3f
     public int NumRootPages = 0;
     public int PositionPrecision = 0;
     public int NormalPrecision = 0;
@@ -360,14 +362,22 @@ public class FNaniteResources
             HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
             HierarchyRootOffsets = Ar.ReadArray<uint>();
             PageDependencies = Ar.ReadArray<uint>();
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                AssemblyTransforms = Ar.ReadArray<FMatrix3x4>();
+                MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
+            }
             ImposterAtlas = Ar.ReadArray<ushort>();
             NumRootPages = Ar.Read<int>();
             PositionPrecision = Ar.Read<int>();
             if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();
             NumInputTriangles = Ar.Read<uint>();
             NumInputVertices = Ar.Read<uint>();
-            NumInputMeshes = Ar.Read<ushort>();
-            NumInputTexCoords = Ar.Read<ushort>();
+            if (Ar.Game < EGame.GAME_UE5_6)
+            {
+                NumInputMeshes = Ar.Read<ushort>();
+                NumInputTexCoords = Ar.Read<ushort>();
+            }
             if (Ar.Game >= EGame.GAME_UE5_1) NumClusters = Ar.Read<uint>();
 
             if (PageStreamingStates.Length > 0)
