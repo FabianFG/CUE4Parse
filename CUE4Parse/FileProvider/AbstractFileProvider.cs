@@ -14,7 +14,6 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.IO.Objects;
-using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Plugins;
@@ -46,8 +45,8 @@ namespace CUE4Parse.FileProvider
         public StringComparer PathComparer { get; }
 
         public FileProviderDictionary Files { get; }
+        public InternationalizationDictionary Internationalization { get; }
         public IDictionary<string, string> VirtualPaths { get; }
-        public IDictionary<string, IDictionary<string, string>> LocalizedResources { get; }
         public CustomConfigIni DefaultGame { get; }
         public CustomConfigIni DefaultEngine { get; }
 
@@ -65,8 +64,8 @@ namespace CUE4Parse.FileProvider
             PathComparer = pathComparer ?? StringComparer.Ordinal;
 
             Files = new FileProviderDictionary();
+            Internationalization = new InternationalizationDictionary(PathComparer);
             VirtualPaths = new Dictionary<string, string>(PathComparer);
-            LocalizedResources = new Dictionary<string, IDictionary<string, string>>(PathComparer);
             DefaultGame = new CustomConfigIni(nameof(DefaultGame));
             DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }
@@ -177,42 +176,33 @@ namespace CUE4Parse.FileProvider
         }
 
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
-        {
-            var regex = new Regex($"^{ProjectName}/.+/{GetLanguageCode(language)}/.+.locres$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            LocalizedResources.Clear();
+            => LoadLocalization(GetLanguageCode(language), cancellationToken);
 
-            var i = 0;
-            foreach (var file in Files.Where(x => regex.IsMatch(x.Key)))
+        [Obsolete("use Provider.ChangeCulture instead")]
+        public int LoadLocalization(string culture, CancellationToken cancellationToken = default)
+        {
+            Internationalization.ChangeCulture(culture, Files);
+            return Internationalization.Count;
+        }
+
+        public void ChangeCulture(string culture) => Internationalization.ChangeCulture(culture, Files);
+
+        public bool TryChangeCulture(string culture)
+        {
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!file.Value.TryCreateReader(out var archive)) continue;
-
-                var locres = new FTextLocalizationResource(archive);
-                foreach (var entries in locres.Entries)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!LocalizedResources.ContainsKey(entries.Key.Str))
-                        LocalizedResources[entries.Key.Str] = new Dictionary<string, string>();
-
-                    foreach (var keyValue in entries.Value)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        LocalizedResources[entries.Key.Str][keyValue.Key.Str] = keyValue.Value.LocalizedString;
-                        i++;
-                    }
-                }
+                ChangeCulture(culture);
+                return true;
             }
-            return i;
+            catch
+            {
+                return false;
+            }
         }
 
+        [Obsolete("use Internationalization.SafeGet instead")]
         public string GetLocalizedString(string @namespace, string key, string? defaultValue)
-        {
-            if (LocalizedResources.TryGetValue(@namespace, out var keyValue) &&
-                keyValue.TryGetValue(key, out var localizedResource))
-                return localizedResource;
-
-            return defaultValue ?? string.Empty;
-        }
+            => Internationalization.SafeGet(@namespace, key, defaultValue);
 
         /// <summary>
         /// TODO: get rid of this
@@ -419,6 +409,8 @@ namespace CUE4Parse.FileProvider
                 if (defaultGame is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultGame.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
                 if (defaultGame.TryCreateReader(out var gameAr)) DefaultGame.Read(new StreamReader(gameAr));
                 gameAr?.Dispose();
+
+                Internationalization.InitFromIni(DefaultGame);
             }
             if (TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
@@ -736,7 +728,7 @@ namespace CUE4Parse.FileProvider
         {
             Files.Clear();
             VirtualPaths.Clear();
-            LocalizedResources.Clear();
+            Internationalization.Clear();
         }
     }
 }

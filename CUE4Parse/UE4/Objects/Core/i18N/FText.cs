@@ -182,15 +182,15 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
 
             public Base(FAssetArchive Ar)
             {
-                Namespace = Ar.ReadFString() ?? string.Empty;
-                Key = Ar.ReadFString() ?? string.Empty;
+                Namespace = Ar.ReadFString();
+                Key = Ar.ReadFString();
                 SourceString = Ar.ReadFString();
-                LocalizedString = Ar.Owner.Provider?.GetLocalizedString(Namespace, Key, SourceString) ?? string.Empty;
+                LocalizedString = Ar.Owner?.Provider?.Internationalization.SafeGet(Namespace, Key, SourceString) ?? string.Empty;
             }
 
-            public Base(string namespacee, string key, string sourceString, string localizedString = "")
+            public Base(string @namespace, string key, string sourceString, string localizedString = "")
             {
-                Namespace = namespacee;
+                Namespace = @namespace;
                 Key = key;
                 SourceString = sourceString;
                 LocalizedString = string.IsNullOrEmpty(localizedString) ? sourceString : localizedString;
@@ -358,7 +358,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                     table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
                 {
                     SourceString = t;
-                    LocalizedString = Ar.Owner.Provider!.GetLocalizedString(table.StringTable.TableNamespace, Key, t);
+                    LocalizedString = Ar.Owner.Provider.Internationalization.SafeGet(table.StringTable.TableNamespace, Key, t);
                 }
             }
         }

@@ -38,14 +38,7 @@ namespace CUE4Parse.UE4.Localization
             NativeCulture = Ar.ReadFString();
             NativeLocRes = Ar.ReadFString();
 
-            if (versionNumber >= ELocMetaVersion.AddedCompiledCultures)
-            {
-                CompiledCultures = Ar.ReadArray(Ar.ReadFString);
-            }
-            else
-            {
-                CompiledCultures = null;
-            }
+            CompiledCultures = versionNumber >= ELocMetaVersion.AddedCompiledCultures ? Ar.ReadArray(Ar.ReadFString) : null;
         }
     }
 }
