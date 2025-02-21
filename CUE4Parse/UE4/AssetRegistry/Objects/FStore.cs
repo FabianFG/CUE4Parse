@@ -24,9 +24,9 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly FNumberlessExportPath[] NumberlessExportPaths;
         public readonly FAssetRegistryExportPath[] ExportPaths;
         public readonly string[] Texts;
-        
+
         public readonly FNameEntrySerialized[] NameMap;
-        
+
         public FStore(FAssetRegistryReader Ar)
         {
             NameMap = Ar.NameMap;
@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             WideStringOffsets = Ar.ReadArray(nums[6], Ar.Read<uint>);
             AnsiStrings = Ar.ReadBytes(nums[7]);
             WideStrings = Ar.ReadBytes(nums[8] * 2);
-            
+
             NumberlessPairs = Ar.ReadArray(nums[9], () => new FNumberlessPair(Ar));
             Pairs = Ar.ReadArray(nums[10], () => new FNumberedPair(Ar));
 
@@ -68,7 +68,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             while (AnsiStrings[offset + length] != 0) ++length;
             return Encoding.UTF8.GetString(AnsiStrings, (int)offset, length);
         }
-        
+
         public string GetWideString(int index)
         {
             var offset = WideStringOffsets[index];
@@ -87,7 +87,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             };
         }
     }
-    
+
     public static class FPartialMapHandle
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,7 +103,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly FStore Store;
         public readonly ushort Num;
         public readonly uint PairBegin;
-        
+
         public FMapHandle(bool hasNumberlessKeys, FStore store, ushort num, uint pairBegin)
         {
             bHasNumberlessKeys = hasNumberlessKeys;
