@@ -119,6 +119,8 @@ namespace CUE4Parse.UE4.Assets
                             Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
                         }
                     }
+
+                    // SoftPackageReferences = containerHeader.SoftPackageReferences.PackageIds;
                 }
 
                 BulkDataMap = [];

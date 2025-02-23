@@ -100,6 +100,12 @@ namespace CUE4Parse.UE4.Assets
                 PreloadDependencies = uassetAr.ReadArray(Summary.PreloadDependencyCount, () => new FPackageIndex(uassetAr));
             }
 
+            // if (Summary.SoftPackageReferencesCount > 0)
+            // {
+            //     uassetAr.SeekAbsolute(Summary.SoftPackageReferencesOffset, SeekOrigin.Begin);
+            //     SoftPackageReferences = uassetAr.ReadArray(Summary.SoftPackageReferencesCount, () => FPackageId.FromName(uassetAr.ReadFName()));
+            // }
+
             if (Summary.DataResourceOffset > 0)
             {
                 uassetAr.SeekAbsolute(Summary.DataResourceOffset, SeekOrigin.Begin);

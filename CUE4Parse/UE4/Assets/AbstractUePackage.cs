@@ -26,7 +26,6 @@ public abstract class AbstractUePackage : UObject, IPackage
 
     public Lazy<UObject>[] ExportsLazy { get; protected init; }
     public bool IsFullyLoaded { get; protected init; }
-
     public bool CanDeserialize
     {
         get

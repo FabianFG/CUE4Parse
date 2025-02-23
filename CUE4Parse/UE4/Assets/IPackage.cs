@@ -19,8 +19,8 @@ public interface IPackage
     public FNameEntrySerialized[] NameMap { get; }
     public int ImportMapLength { get; }
     public int ExportMapLength { get; }
-    public Lazy<UObject>[] ExportsLazy { get; }
 
+    public Lazy<UObject>[] ExportsLazy { get; }
     public bool IsFullyLoaded { get; }
     public bool CanDeserialize { get; }
 

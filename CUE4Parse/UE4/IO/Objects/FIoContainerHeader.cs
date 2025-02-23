@@ -21,6 +21,28 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly FMappedName SourcePackageName;
     }
 
+    public readonly struct FIoContainerHeaderSoftPackageReferences
+    {
+        public readonly FPackageId[] PackageIds;
+        public readonly byte[] PackageIndices;
+        public readonly bool bContainsSoftPackageReferences;
+
+        public FIoContainerHeaderSoftPackageReferences(FArchive Ar)
+        {
+            bContainsSoftPackageReferences = Ar.ReadBoolean();
+            if (bContainsSoftPackageReferences)
+            {
+                PackageIds = Ar.ReadArray<FPackageId>();
+                PackageIndices = Ar.ReadArray<byte>();
+            }
+            else
+            {
+                PackageIds = [];
+                PackageIndices = [];
+            }
+        }
+    }
+
     public enum EIoContainerHeaderVersion // : uint
     {
         BeforeVersionWasAdded = -1, // Custom constant to indicate pre-UE5 data
@@ -28,6 +50,7 @@ namespace CUE4Parse.UE4.IO.Objects
         LocalizedPackages = 1,
         OptionalSegmentPackages = 2,
         NoExportInfo = 3,
+        SoftPackageReferences = 4,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
@@ -36,7 +59,8 @@ namespace CUE4Parse.UE4.IO.Objects
     public class FIoContainerHeader
     {
         private const int Signature = 0x496f436e;
-        public FIoContainerId ContainerId;
+        public readonly EIoContainerHeaderVersion Version;
+        public readonly FIoContainerId ContainerId;
 
         public FPackageId[] PackageIds;
         public FFilePackageStoreEntry[] StoreEntries;
@@ -44,13 +68,14 @@ namespace CUE4Parse.UE4.IO.Objects
         public FPackageId[] OptionalSegmentPackageIds;
 
         public FNameEntrySerialized[]? ContainerNameMap; // RedirectsNameMap
-        // public FIoContainerHeaderLocalizedPackage[]? LocalizedPackages;
-        // public FIoContainerHeaderPackageRedirect[] PackageRedirects;
+        public FIoContainerHeaderLocalizedPackage[]? LocalizedPackages;
+        public FIoContainerHeaderPackageRedirect[] PackageRedirects;
+        public FIoContainerHeaderSoftPackageReferences SoftPackageReferences;
 
         public FIoContainerHeader(FArchive Ar)
         {
-            var version = Ar.Game >= EGame.GAME_UE5_0 ? EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
-            if (version == EIoContainerHeaderVersion.Initial)
+            Version = Ar.Game >= EGame.GAME_UE5_0 ? EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
+            if (Version == EIoContainerHeaderVersion.Initial)
             {
                 var signature = Ar.Read<uint>();
                 if (signature != Signature)
@@ -58,12 +83,12 @@ namespace CUE4Parse.UE4.IO.Objects
                     throw new ParserException(Ar, $"Invalid container header signature: 0x{signature:X8} != 0x{Signature:X8}");
                 }
 
-                version = Ar.Read<EIoContainerHeaderVersion>();
+                Version = Ar.Read<EIoContainerHeaderVersion>();
             }
 
             ContainerId = Ar.Read<FIoContainerId>();
-            var packageCount = version < EIoContainerHeaderVersion.OptionalSegmentPackages ? Ar.Read<uint>() : 0;
-            if (version == EIoContainerHeaderVersion.BeforeVersionWasAdded)
+            var packageCount = Version < EIoContainerHeaderVersion.OptionalSegmentPackages ? Ar.Read<uint>() : 0;
+            if (Version == EIoContainerHeaderVersion.BeforeVersionWasAdded)
             {
                 var namesSize = Ar.Read<int>();
                 var namesPos = Ar.Position;
@@ -77,29 +102,33 @@ namespace CUE4Parse.UE4.IO.Objects
                 Ar.Position = continuePos;
             }
 
-            ReadPackageIdsAndEntries(Ar, out PackageIds, out StoreEntries, version);
+            ReadPackageIdsAndEntries(Ar, out PackageIds, out StoreEntries);
 
-            if (version >= EIoContainerHeaderVersion.OptionalSegmentPackages)
+            if (Version >= EIoContainerHeaderVersion.OptionalSegmentPackages)
             {
-                ReadPackageIdsAndEntries(Ar, out OptionalSegmentPackageIds, out OptionalSegmentStoreEntries, version);
+                ReadPackageIdsAndEntries(Ar, out OptionalSegmentPackageIds, out OptionalSegmentStoreEntries);
             }
-            if (version >= EIoContainerHeaderVersion.Initial)
+            if (Version >= EIoContainerHeaderVersion.Initial)
             {
                 ContainerNameMap = FNameEntrySerialized.LoadNameBatch(Ar);
             }
-            // if (version >= EIoContainerHeaderVersion.LocalizedPackages)
-            // {
-            //     LocalizedPackages = Ar.ReadArray<FIoContainerHeaderLocalizedPackage>();
-            // }
-            // PackageRedirects = Ar.ReadArray<FIoContainerHeaderPackageRedirect>();
+            if (Version >= EIoContainerHeaderVersion.LocalizedPackages)
+            {
+                LocalizedPackages = Ar.ReadArray<FIoContainerHeaderLocalizedPackage>();
+            }
+            PackageRedirects = Ar.ReadArray<FIoContainerHeaderPackageRedirect>();
+            if (Version >= EIoContainerHeaderVersion.SoftPackageReferences)
+            {
+                SoftPackageReferences = new FIoContainerHeaderSoftPackageReferences(Ar);
+            }
         }
 
-        private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries, EIoContainerHeaderVersion version)
+        private void ReadPackageIdsAndEntries(FArchive Ar, out FPackageId[] packageIds, out FFilePackageStoreEntry[] storeEntries)
         {
             packageIds = Ar.ReadArray<FPackageId>();
             var storeEntriesSize = Ar.Read<int>();
             var storeEntriesEnd = Ar.Position + storeEntriesSize;
-            storeEntries = Ar.ReadArray(packageIds.Length, () => new FFilePackageStoreEntry(Ar, version));
+            storeEntries = Ar.ReadArray(packageIds.Length, () => new FFilePackageStoreEntry(Ar, Version));
             Ar.Position = storeEntriesEnd;
         }
     }
