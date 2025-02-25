@@ -121,6 +121,7 @@ public enum EGame
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
         GAME_NevernessToEverness = GAME_UE5_4 + 3,
+        GAME_Gothic1Remake = GAME_UE5_4 + 4,
     GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
     GAME_UE5_6 = GameUtils.GameUe5Base + 6 << 4,
 

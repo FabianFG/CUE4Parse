@@ -1,18 +1,8 @@
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using static CUE4Parse.Utils.TypeConversionUtils;
 
 namespace CUE4Parse.GameTypes.MK1.Assets.Objects;
-
-public struct FHalfVector(ushort x, ushort y, ushort z)
-{
-    public ushort X = x;
-    public ushort Y = y;
-    public ushort Z = z;
-
-    public static implicit operator FVector(FHalfVector halfVector) => new(HalfToFloat(halfVector.X), HalfToFloat(halfVector.Y), HalfToFloat(halfVector.Z));
-}
 
 public struct FMorphTargetDeltaMK1
 {

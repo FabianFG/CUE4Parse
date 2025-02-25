@@ -43,6 +43,14 @@ public class FPositionVertexBuffer
                 return;
             }
         }
+        if (Ar.Game == EGame.GAME_Gothic1Remake && Stride == 8)
+        {
+            var vertsHalf = Ar.ReadBulkArray<FHalfVector4>();
+            Verts = new FVector[vertsHalf.Length];
+            for (int i = 0; i < vertsHalf.Length; i++)
+                Verts[i] = vertsHalf[i];
+            return;
+        }
         if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
         Verts = Ar.ReadBulkArray<FVector>();
     }
