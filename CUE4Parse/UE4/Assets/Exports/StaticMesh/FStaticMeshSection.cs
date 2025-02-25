@@ -7,16 +7,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshSectionConverter))]
 public class FStaticMeshSection
 {
-    public readonly int MaterialIndex;
-    public readonly int FirstIndex;
-    public readonly int NumTriangles;
-    public readonly int MinVertexIndex;
-    public readonly int MaxVertexIndex;
-    public readonly bool bEnableCollision;
-    public readonly bool bCastShadow;
-    public readonly bool bForceOpaque;
-    public readonly bool bVisibleInRayTracing;
-    public readonly bool bAffectDistanceFieldLighting;
+    public int MaterialIndex;
+    public int FirstIndex;
+    public int NumTriangles;
+    public int MinVertexIndex;
+    public int MaxVertexIndex;
+    public bool bEnableCollision;
+    public bool bCastShadow;
+    public bool bForceOpaque;
+    public bool bVisibleInRayTracing;
+    public bool bAffectDistanceFieldLighting;
 
     public FStaticMeshSection(FArchive Ar)
     {
