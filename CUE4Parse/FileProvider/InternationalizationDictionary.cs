@@ -36,6 +36,10 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
 
     internal void InitFromIni(CustomConfigIni ini)
     {
+        _availableCultures.Clear();
+        _cultureMappings.Clear();
+        _localizationPaths.Clear();
+
         var instructions = new List<InstructionToken>();
         ini.FindPropertyInstructions("/Script/UnrealEd.ProjectPackagingSettings", "CulturesToStage", instructions);
         foreach (var instruction in instructions.Where(x => x.InstructionType == InstructionType.Add))
