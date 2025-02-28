@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
     <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
