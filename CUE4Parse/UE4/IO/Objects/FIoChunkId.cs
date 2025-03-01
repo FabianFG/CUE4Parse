@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -71,6 +73,24 @@ namespace CUE4Parse.UE4.IO.Objects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPackageId AsPackageId() => new(ChunkId);
+
+        public string GetExtension(IAesVfsReader reader)
+        {
+            var type = reader.Game >= EGame.GAME_UE5_0 ? typeof(EIoChunkType5) : typeof(EIoChunkType);
+            if (Enum.ToObject(type, ChunkType).ToString() is not { } chunkType)
+                return ChunkType.ToString();
+
+            return chunkType switch
+            {
+                "ExportBundleData" when reader is IoStoreReader => "uasset",
+                "ExportBundleData" => "uexp",
+                "BulkData" => "ubulk",
+                "OptionalBulkData" => "uptnl",
+                "MemoryMappedBulkData" => "m.ubulk",
+                "ShaderCode" => "dxbc",
+                _ => chunkType
+            };
+        }
 
         public unsafe ulong HashWithSeed(int seed)
         {
