@@ -54,7 +54,7 @@ public class UEModel : UEFormatExport
 
     }
 
-    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, FPackageIndex physicsAssetLazy, ExporterOptions options) : base(name, options)
+    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, FPackageIndex skeletonLazy, FPackageIndex physicsAssetLazy, ExporterOptions options) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
@@ -78,7 +78,7 @@ public class UEModel : UEFormatExport
 
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, mesh.RefSkeleton, sockets, []);
+            SerializeSkeletonData(skeletonChunk, skeletonLazy.Load<USkeleton>(), mesh.RefSkeleton, sockets, []);
 
             skeletonChunk.Serialize(Ar);
         }
@@ -93,11 +93,11 @@ public class UEModel : UEFormatExport
         }*/
     }
 
-    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones, ExporterOptions options) : base(name, options)
+    public UEModel(string name, USkeleton skeleton, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones, ExporterOptions options) : base(name, options)
     {
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
-            SerializeSkeletonData(skeletonChunk, bones, sockets, virtualBones);
+            SerializeSkeletonData(skeletonChunk, skeleton, bones, sockets, virtualBones);
 
             skeletonChunk.Serialize(Ar);
         }
@@ -113,7 +113,6 @@ public class UEModel : UEFormatExport
         foreach (var vert in verts)
         {
             var position = vert.Position;
-            position.Y = -position.Y;
             position.Serialize(vertexChunk);
 
             var normalSign = vert.Normal.W;
@@ -121,12 +120,10 @@ public class UEModel : UEFormatExport
 
             var normal = (FVector) vert.Normal;
             normal /= MathF.Sqrt(normal | normal);
-            normal.Y = -normal.Y;
             normal.Serialize(normalsChunk);
 
             var tangent = (FVector) vert.Tangent;
             tangent.Normalize();
-            tangent.Y = -tangent.Y;
             tangent.Serialize(tangentsChunk);
 
             var uv = vert.UV;
@@ -143,7 +140,6 @@ public class UEModel : UEFormatExport
             {
                 texCoordsChunk.WriteArray(uvSet, uv =>
                 {
-                    uv.V = 1 - uv.V;
                     uv.Serialize(texCoordsChunk);
                 });
 
@@ -198,6 +194,10 @@ public class UEModel : UEFormatExport
             {
                 var materialName = section.Material?.Name.Text ?? section.MaterialName ?? string.Empty;
                 materialChunk.WriteFString(materialName);
+
+                var materialPath = section.Material?.GetPathName() ?? string.Empty;
+                materialChunk.WriteFString(materialPath);
+                
                 materialChunk.Write(section.FirstIndex);
                 materialChunk.Write(section.NumFaces);
             }
@@ -244,8 +244,14 @@ public class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
+    private void SerializeSkeletonData(FArchiveWriter archive, USkeleton? skeleton, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
     {
+        using (var metaDataChunk = new FDataChunk("METADATA"))
+        {
+            metaDataChunk.WriteFString(skeleton?.GetPathName() ?? string.Empty);
+            metaDataChunk.Serialize(Ar);
+        }
+        
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
             foreach (var bone in bones)
@@ -256,12 +262,9 @@ public class UEModel : UEFormatExport
                 boneChunk.Write(bone.ParentIndex);
 
                 var bonePos = bone.Position;
-                bonePos.Y = -bonePos.Y;
                 bonePos.Serialize(boneChunk);
 
                 var boneRot = bone.Orientation;
-                boneRot.Y = -boneRot.Y;
-                boneRot.W = -boneRot.W;
                 boneRot.Serialize(boneChunk);
             }
             boneChunk.Serialize(archive);
@@ -278,16 +281,12 @@ public class UEModel : UEFormatExport
                 socketChunk.WriteFString(socket.BoneName.Text);
 
                 var bonePos = socket.RelativeLocation;
-                bonePos.Y = -bonePos.Y;
                 bonePos.Serialize(socketChunk);
 
                 var boneRot = socket.RelativeRotation.Quaternion();
-                boneRot.Y = -boneRot.Y;
-                boneRot.W = -boneRot.W;
                 boneRot.Serialize(socketChunk);
 
                 var boneScale = socket.RelativeScale;
-                boneScale.Y = -boneScale.Y;
                 boneScale.Serialize(socketChunk);
             }
 

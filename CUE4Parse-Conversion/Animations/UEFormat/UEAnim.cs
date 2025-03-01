@@ -16,8 +16,21 @@ public class UEAnim : UEFormatExport
     {
         var sequence = animSet.Sequences[sequenceIndex];
         var originalSequence = sequence.OriginalSequence;
-        Ar.Write(sequence.NumFrames);
-        Ar.Write(sequence.FramesPerSecond);
+
+        using (var metaDataChunk = new FDataChunk("METADATA", 1))
+        {
+            metaDataChunk.Write(sequence.NumFrames);
+            metaDataChunk.Write(sequence.FramesPerSecond);
+            
+            var referencePath = originalSequence.RefPoseSeq?.GetPathName() ?? string.Empty;
+            metaDataChunk.WriteFString(referencePath);
+            
+            metaDataChunk.Write((byte) originalSequence.AdditiveAnimType); // EAdditiveAnimationType
+            metaDataChunk.Write((byte) originalSequence.RefPoseType); // EAdditiveBasePoseType
+            metaDataChunk.Write(originalSequence.RefFrameIndex);
+            
+            metaDataChunk.Serialize(Ar);
+        }
 
         var refSkeleton = animSet.Skeleton.ReferenceSkeleton;
         using (var trackChunk = new FDataChunk("TRACKS", sequence.Tracks.Count))
@@ -45,10 +58,6 @@ public class UEAnim : UEFormatExport
                     {
                         track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
-
-                    rotation.Y = -rotation.Y;
-                    rotation.W = -rotation.W;
-                    translation.Y = -translation.Y;
 
                     // dupe key reduction, could be better but it works for now
                     if (prevPos is null || prevPos != translation)

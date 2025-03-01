@@ -9,6 +9,7 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -40,7 +41,7 @@ namespace CUE4Parse_Conversion.Meshes
                     break;
                 case EMeshFormat.UEFormat:
                     ext = "uemodel";
-                    new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
+                    new UEModel(originalSkeleton.Name, originalSkeleton, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
                     break;
                 case EMeshFormat.Gltf2:
                     throw new NotImplementedException();
@@ -139,7 +140,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
+                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
