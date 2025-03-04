@@ -124,6 +124,8 @@ public enum EGame
         GAME_NevernessToEverness = GAME_UE5_4 + 3,
         GAME_Gothic1Remake = GAME_UE5_4 + 4,
     GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
+        GAME_Brickadia = GAME_UE5_5 + 1,
+        GAME_Splitgate2 = GAME_UE5_5 + 2,
     GAME_UE5_6 = GameUtils.GameUe5Base + 6 << 4,
 
     GAME_UE5_LATEST = GAME_UE5_6
