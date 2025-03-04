@@ -109,6 +109,7 @@ public enum EGame
         GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_TheFirstDescendant = GAME_UE5_2 + 3,
         GAME_MetroAwakening = GAME_UE5_2 + 4,
+        GAME_ARKSurvivalAscended = GAME_UE5_2 + 5,
     GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_WildAssault = GAME_UE5_3 + 2,
