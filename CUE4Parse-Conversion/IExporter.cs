@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -74,6 +75,19 @@ namespace CUE4Parse_Conversion
         public abstract bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath);
         public abstract bool TryWriteToZip(out byte[] zipFile);
         public abstract void AppendToZip();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected string GetExportSavePath() 
+        {
+            return GetExportSavePath(PackagePath, ExportName);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetExportSavePath(string packagePath, string exportName) 
+        {
+            var path = packagePath.SubstringAfterLast('/').Equals(exportName, StringComparison.InvariantCulture) ? packagePath : packagePath + '/' + exportName;
+            return path[0] == '/' ? path[1..] : path;
+        }
 
         protected string FixAndCreatePath(DirectoryInfo baseDirectory, string fullPath, string? ext = null)
         {

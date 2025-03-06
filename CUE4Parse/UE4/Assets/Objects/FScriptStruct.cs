@@ -211,5 +211,10 @@ public class FScriptStruct
         };
     }
 
+    public FScriptStruct(IUStruct structType)
+    {
+        StructType = structType;
+    }
+
     public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
 }

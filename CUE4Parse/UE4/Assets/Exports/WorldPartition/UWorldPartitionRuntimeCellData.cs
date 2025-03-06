@@ -13,3 +13,5 @@ public class UWorldPartitionRuntimeCellData : UObject
         DebugName = Ar.ReadFString();
     }
 }
+
+public class UWorldPartitionRuntimeCell : UObject { }

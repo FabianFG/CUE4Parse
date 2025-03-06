@@ -59,6 +59,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M30 = m30; M31 = m31; M32 = m32; M33 = m33;
         }
 
+        public FMatrix(FVector inX, FVector inY, FVector inZ, FVector inW)
+        {
+            M00 = inX.X; M01 = inX.Y; M02 = inX.Z; M03 = 0.0f;
+            M10 = inY.X; M11 = inY.Y; M12 = inY.Z; M13 = 0.0f;
+            M20 = inZ.X; M21 = inZ.Y; M22 = inZ.Z; M23 = 0.0f;
+            M30 = inW.X; M31 = inW.Y; M32 = inW.Z; M33 = 1.0f;
+        }
+
         public FMatrix(FArchive Ar) : this(Ar, Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) { }
 
         public FMatrix(FArchive Ar, bool readDouble)

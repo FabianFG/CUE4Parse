@@ -15,6 +15,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Plugins;
 using CUE4Parse.UE4.Readers;
@@ -49,6 +50,8 @@ namespace CUE4Parse.FileProvider
         public IDictionary<string, string> VirtualPaths { get; }
         public CustomConfigIni DefaultGame { get; }
         public CustomConfigIni DefaultEngine { get; }
+
+        public ELightUnits DefaultLightUnit { get; set; } = ELightUnits.Unitless;
 
         public ITypeMappingsProvider? MappingsContainer { get; set; }
         public bool ReadScriptData { get; set; }
@@ -430,6 +433,16 @@ namespace CUE4Parse.FileProvider
                         case "r.SkeletalMesh.KeepMobileMinLODSettingOnDesktop":
                             Versions[it.Key[2..]] = boolValue;
                             continue;
+                    }
+                }
+
+                foreach (ConfigIniSection section in DefaultEngine.Sections)
+                {
+                    if (section.Name != "/Script/Engine.RendererSettings") continue;
+
+                    if (section.Tokens.FirstOrDefault(tk => tk is InstructionToken it && it.Key == "r.DefaultFeature.LightUnits") is InstructionToken lightUnits && int.TryParse(lightUnits.Value, out int unit))
+                    {
+                        DefaultLightUnit = (ELightUnits)unit;
                     }
                 }
             }

@@ -89,6 +89,7 @@ public enum EGame
         GAME_Spectre = GAME_UE4_27 + 11,
         GAME_KartRiderDrift = GAME_UE4_27 + 12,
         GAME_ThroneAndLiberty = GAME_UE4_27 + 13,
+        GAME_MotoGP24 = GAME_UE4_27 + 14,
     GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
     GAME_UE4_LATEST = GAME_UE4_28,

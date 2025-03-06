@@ -10,6 +10,7 @@ using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -54,13 +55,15 @@ namespace CUE4Parse_Conversion.Meshes
             MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), new List<MaterialExporter2>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
+        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : this(originalMesh, null, options){}
+       
+        public MeshExporter(UStaticMesh originalMesh, USplineMeshComponent? splineMeshComponent, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh) || convertedMesh.LODs.Count == 0)
             {
-                Log.Warning($"Mesh '{ExportName}' has no LODs");
+                Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 
@@ -108,10 +111,8 @@ namespace CUE4Parse_Conversion.Meshes
                     MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
                     break;
                 }
-                else
-                {
-                    MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
-                }
+
+                MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
             }
         }
 

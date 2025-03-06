@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -20,7 +21,7 @@ public struct FVector4 : IUStruct
     public static readonly FVector4 ZeroVector = new(0, 0, 0, 0);
     public static readonly FVector4 OneVector = new(1, 1, 1, 1);
 
-    public FVector4(float x, float y, float z, float w)
+    public FVector4(float x, float y, float z, float w) 
     {
         X = x;
         Y = y;
@@ -28,19 +29,18 @@ public struct FVector4 : IUStruct
         W = w;
     }
 
-    public FVector4(float x) : this(x, x, x, x) { }
-
-    public FVector4(FArchive Ar)
+    public FVector4(float x) : this(x, x, x, x) 
     {
-        if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-        {
-            X = (float) Ar.Read<double>();
-            Y = (float) Ar.Read<double>();
-            Z = (float) Ar.Read<double>();
-            W = (float) Ar.Read<double>();
+    }
+
+    public FVector4(FArchive Ar) {
+        if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) {
+            X = (float)Ar.Read<double>();
+            Y = (float)Ar.Read<double>();
+            Z = (float)Ar.Read<double>();
+            W = (float)Ar.Read<double>();
         }
-        else
-        {
+        else {
             X = Ar.Read<float>();
             Y = Ar.Read<float>();
             Z = Ar.Read<float>();
@@ -58,6 +58,8 @@ public struct FVector4 : IUStruct
     public FVector4(FLinearColor color) : this(color.R, color.G, color.B, color.A) { }
 
     public static explicit operator FVector(FVector4 v) => new FVector(v.X, v.Y, v.Z);
+
+    public static ref FVector AsFVector(ref FVector4 v) => ref Unsafe.As<FVector4, FVector>(ref v);
 
     public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3} W={W,3:F3}";
 }
