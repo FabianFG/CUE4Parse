@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -11,10 +12,34 @@ public struct FOptTexturePlatformData
     public uint NumMipsInTail;
 }
 
+public struct FSharedImage
+{
+    public readonly int SizeX;
+    public readonly int SizeY;
+    public readonly int SizeZ;
+    public readonly EPixelFormat Format;
+    public readonly byte GammaSpace;
+    public readonly FTexture2DMipMap Mip;
+
+    public FSharedImage(FAssetArchive Ar)
+    {
+        SizeX = Ar.Read<int>();
+        SizeY = Ar.Read<int>();
+        SizeZ = Ar.Read<int>();
+        Format = Ar.Read<EPixelFormat>();
+        GammaSpace = Ar.Read<byte>();
+        var RawData = Ar.ReadArray<byte>((int)Ar.Read<long>());
+
+        var bulkdata = new FByteBulkData(RawData);
+        Mip = new FTexture2DMipMap(bulkdata, SizeX, SizeY, this.SizeZ);
+    }
+}
+
 public class FTexturePlatformData
 {
     private const uint BitMask_CubeMap = 1u << 31;
     private const uint BitMask_HasOptData = 1u << 30;
+    private const uint BitMask_HasCpuCopy = 1u << 29;
     private const uint BitMask_NumSlices = BitMask_HasOptData - 1u;
 
     public readonly int SizeX;
@@ -25,6 +50,7 @@ public class FTexturePlatformData
     public readonly int FirstMipToSerialize;
     public readonly FTexture2DMipMap[] Mips;
     public readonly FVirtualTextureBuiltData? VTData;
+    public readonly FSharedImage? CPUCopy;
 
     public FTexturePlatformData()
     {
@@ -75,6 +101,11 @@ public class FTexturePlatformData
             OptData = Ar.Read<FOptTexturePlatformData>();
         }
 
+        if (HasCpuCopy()) // 5.4+
+        {
+            CPUCopy = new FSharedImage(Ar);
+        }
+
         FirstMipToSerialize = Ar.Read<int>(); // only for cooked, but we don't read FTexturePlatformData for non-cooked textures
 
         var mipCount = Ar.Read<int>();
@@ -101,7 +132,6 @@ public class FTexturePlatformData
                 Mips[i].SizeY *= GetNumSlices();
                 Mips[i].SizeZ = Mips[i].SizeZ == GetNumSlices() ? 1 : Mips[i].SizeZ;
             }
-
         }
 
         if (Ar.Versions["VirtualTextures"])
@@ -128,6 +158,9 @@ public class FTexturePlatformData
             SizeY = (int) VTData.Height;
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasCpuCopy() => (PackedData & BitMask_HasCpuCopy) == BitMask_HasCpuCopy;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasOptData() => (PackedData & BitMask_HasOptData) == BitMask_HasOptData;

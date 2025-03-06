@@ -26,6 +26,11 @@ namespace CUE4Parse.UE4.Assets.Objects
         private readonly FAssetArchive _savedAr;
         private readonly long _dataPosition;
 
+        public FByteBulkData(byte[] data)
+        {
+            _data = new Lazy<byte[]>(data);
+        }
+
         public FByteBulkData(FAssetArchive Ar)
         {
             Header = new FByteBulkDataHeader(Ar);
