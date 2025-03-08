@@ -349,8 +349,8 @@ public class LandscapeExporter : ExporterBase
                     {
                         var vert = landscapeLod.Verts[baseVertIndex + vertIndex];
                         vert.Position = position;
-                        vert.Normal = new FPackedNormal(normal); // this might be broken
-                        vert.Tangent = new FPackedNormal(tangentX);
+                        vert.Normal = new FVector4(normal); // this might be broken
+                        vert.Tangent = tangentX;
                         vert.UV = (FMeshUVFloat)textureUv;
 
                         landscapeLod.ExtraUV.Value[0][baseVertIndex + vertIndex] = (FMeshUVFloat)weightmapUv;

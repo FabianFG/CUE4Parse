@@ -7,8 +7,8 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     public class CMeshVertex
     {
         public FVector Position;
-        public FPackedNormal Normal;
-        public FPackedNormal Tangent;
+        public FVector4 Normal;
+        public FVector4 Tangent;
         public FMeshUVFloat UV;
 
         public CMeshVertex(FVector position, FPackedNormal normal, FPackedNormal tangent, FMeshUVFloat uv)
