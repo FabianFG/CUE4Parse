@@ -23,13 +23,14 @@ git clone https://github.com/FabianFG/CUE4Parse.git --recursive
 
 #### Example
 ```csharp
-var provider = new DefaultFileProvider(ARCHIVE_DIRECTORY_HERE, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE4_27));
+// the Engine version depends on the Game's one.
+var provider = new DefaultFileProvider(ARCHIVE_DIRECTORY_HERE, SearchOption.AllDirectories, new VersionContainer(EGame.GAME_UE4_27), StringComparer.OrdinalIgnoreCase);
 provider.Initialize(); // will scan the archive directory for supported file extensions
 
-var allObjects = provider.LoadAllObjects(PACKAGE_PATH_HERE); // {GAME}/Content/Folder1/Folder2/PackageName.uasset
+var allObjects = provider.LoadPackageObjects(PACKAGE_PATH_HERE); // {GAME}/Content/Folder1/Folder2/PackageName
 var fullJson = JsonConvert.SerializeObject(allExports, Formatting.Indented);
 
-var obj = provider.LoadObject(OBJECT_PATH_HERE); // {GAME}/Content/Folder1/Folder2/PackageName.ObjectName
+var obj = provider.LoadPackageObject(OBJECT_PATH_HERE); // {GAME}/Content/Folder1/Folder2/PackageName.ObjectName
 var objJson = JsonConvert.SerializeObject(objectExport, Formatting.Indented);
 
 switch (obj)
