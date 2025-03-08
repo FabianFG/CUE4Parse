@@ -82,11 +82,12 @@ namespace CUE4Parse.UE4.IO.Objects
 
             return chunkType switch
             {
-                "ExportBundleData" when reader is IoStoreReader => "uasset",
+                "ExportBundleData" when reader is IoStoreReader => "uasset", // umap
                 "ExportBundleData" => "uexp",
                 "BulkData" => "ubulk",
                 "OptionalBulkData" => "uptnl",
                 "MemoryMappedBulkData" => "m.ubulk",
+                "ShaderCodeLibrary" => "ushaderbytecode",
                 "ShaderCode" => "dxbc",
                 _ => chunkType
             };

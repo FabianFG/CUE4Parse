@@ -2,6 +2,7 @@
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
@@ -75,10 +76,12 @@ namespace CUE4Parse.UE4.IO.Objects
             }
 
             // Compression blocks
+            var isFragPunk = archive.Game == EGame.GAME_FragPunk;
             CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
             for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
             {
                 CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
+                if (isFragPunk) archive.Position += 4;
             }
 
             // Compression methods
