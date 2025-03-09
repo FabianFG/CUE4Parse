@@ -67,6 +67,11 @@ namespace CUE4Parse_Conversion.Meshes
                 return;
             }
 
+            var path = GetExportSavePath();
+            if (splineMeshComponent != null) {
+                path += string.Concat("-", splineMeshComponent.GetMeshId().AsSpan(0, 6));
+            }
+
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
@@ -108,11 +113,11 @@ namespace CUE4Parse_Conversion.Meshes
 
                 if (Options.LodFormat == ELodFormat.FirstLod)
                 {
-                    MeshLods.Add(new Mesh($"{GetExportSavePath()}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    MeshLods.Add(new Mesh($"{path}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
                     break;
                 }
 
-                MeshLods.Add(new Mesh($"{GetExportSavePath()}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                MeshLods.Add(new Mesh($"{path}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
             }
         }
 
