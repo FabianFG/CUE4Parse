@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// array index will be (-FPackageIndex - 1)
     /// </summary>
     [JsonConverter(typeof(FPackageIndexConverter))]
-    public class FPackageIndex
+    public class FPackageIndex : IEquatable<FPackageIndex>
     {
         /// <summary>
         /// Values greater than zero indicate that this is an index into the ExportMap.  The
@@ -34,13 +34,35 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
-        public ResolvedObject? ResolvedObject => Owner?.ResolvePackageIndex(this);
+        private WeakReference<ResolvedObject?>? _resolvedObject;
+        public ResolvedObject? ResolvedObject {
+            get {
+                var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
+                if (resolvedObject == null) 
+                {
+                    if (Owner == null) return null;
+                    resolvedObject = Owner.ResolvePackageIndex(this);
+                    _resolvedObject = new(resolvedObject);
+                }
+                return resolvedObject;
+            }
+        }
 
+        public ResolvedObject? ResolvedObjectNoCache {
+            get {
+                if (Owner == null) return null;
+                var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
+                if (resolvedObject != null) return resolvedObject;
+                return Owner.ResolvePackageIndex(this);
+            }
+        }
+        
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
 
-        public string Name => ResolvedObject?.Name.Text ?? "None";
+        private string? _name;
+        public string Name => _name ?? (_name = ResolvedObject?.Name.Text ?? "None");
 
         public FPackageIndex(FAssetArchive Ar, int index)
         {
@@ -95,7 +117,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public T? Load<T>() where T : UExport => Owner?.FindObject(this)?.Value as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(out T export) where T : UExport
+        public bool TryLoad<T>(out T? export) where T : UExport
         {
             if (!TryLoad(out var genericExport) || genericExport is not T cast)
             {
@@ -147,8 +169,19 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             return null;
         }
-
         #endregion
+        
+        public bool Equals(FPackageIndex? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Index == other.Index && Owner != null && Owner.Equals(other.Owner);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Index, Owner);
+        }
     }
 
 
