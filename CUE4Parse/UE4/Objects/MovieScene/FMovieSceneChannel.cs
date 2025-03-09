@@ -53,10 +53,11 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
 
         SerializedElementSize = Ar.Read<int>();
         Values = Ar.ReadArray(() => new FMovieSceneValue<T>(Ar, Ar.Read<T>()));
-
+        if (Ar.Game == EGame.GAME_SplitFiction) Ar.SkipBulkArrayData(); // Duplicated Values array
         DefaultValue = Ar.Read<T>();
         bHasDefaultValue = Ar.ReadBoolean();
         TickResolution = Ar.Read<FFrameRate>();
         bShowCurve = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeFloatChannelShowCurve && Ar.ReadBoolean(); // bShowCurve should still only be assigned while in editor
+        if (Ar.Game == EGame.GAME_SplitFiction) Ar.Position += 4;
     }
 }

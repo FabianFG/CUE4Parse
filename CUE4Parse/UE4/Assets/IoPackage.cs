@@ -439,5 +439,13 @@ namespace CUE4Parse.UE4.Assets
             public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass("Class"));
             public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
         }
+
+        public static string GetIoPackageName(FArchive uasset)
+        {
+            var uassetAr = new FAssetArchive(uasset, null);
+            var summary = new FZenPackageSummary(uassetAr);
+            var nameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
+            return new FName(summary.Name, nameMap).Text[1..];
+        }
     }
 }

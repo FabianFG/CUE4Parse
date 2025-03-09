@@ -18,7 +18,8 @@ public enum ReadType : byte
     ZERO,
     NORMAL,
     MAP,
-    ARRAY
+    ARRAY,
+    OPTIONAL
 }
 
 public abstract class FPropertyTagType<T> : FPropertyTagType

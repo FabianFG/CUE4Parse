@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -128,6 +128,8 @@ namespace CUE4Parse.UE4.IO.Objects
                 else
                     archive.Position += Header.DirectoryIndexSize;
             }
+
+            if (Ar.Game == EGame.GAME_Brickadia && !Ar.Name.EndsWith("global.utoc")) DirectoryIndexBuffer = [];
 
             // Meta
             if (readOptions.HasFlag(EIoStoreTocReadOptions.ReadTocMeta))
