@@ -76,7 +76,7 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 using var ueModelArchive = new FArchiveWriter();
                 new UEModel(originalMesh.Name, convertedMesh, originalMesh.BodySetup, Options).Save(ueModelArchive);
-                MeshLods.Add(new Mesh($"{GetExportSavePath()}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
+                MeshLods.Add(new Mesh($"{path}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
 
@@ -207,7 +207,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             var b = false;
             label = string.Empty;
-            savedFilePath = GetExportSavePath();
+            savedFilePath = string.Empty;
             if (MeshLods.Count == 0) return b;
 
             var outText = "LOD ";
