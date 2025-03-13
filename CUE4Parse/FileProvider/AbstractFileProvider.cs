@@ -410,7 +410,11 @@ namespace CUE4Parse.FileProvider
             if (TryGetGameFile("/Game/Config/DefaultGame.ini", out var defaultGame))
             {
                 if (defaultGame is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultGame.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
-                if (defaultGame.TryCreateReader(out var gameAr)) DefaultGame.Read(new StreamReader(gameAr));
+                if (defaultGame.TryCreateReader(out var gameAr))
+                {
+                    DefaultGame.Sections.Clear();
+                    DefaultGame.Read(new StreamReader(gameAr));
+                }
                 gameAr?.Dispose();
 
                 Internationalization.InitFromIni(DefaultGame);
@@ -418,7 +422,11 @@ namespace CUE4Parse.FileProvider
             if (TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
                 if (defaultEngine is VfsEntry { Vfs: IAesVfsReader aesVfsReader }) DefaultEngine.EncryptionKeyGuid = aesVfsReader.EncryptionKeyGuid;
-                if (defaultEngine.TryCreateReader(out var engineAr)) DefaultEngine.Read(new StreamReader(engineAr));
+                if (defaultEngine.TryCreateReader(out var engineAr))
+                {
+                    DefaultEngine.Sections.Clear();
+                    DefaultEngine.Read(new StreamReader(engineAr));
+                }
                 engineAr?.Dispose();
 
                 foreach (var token in DefaultEngine.Sections.FirstOrDefault(s => s.Name == "ConsoleVariables")?.Tokens ?? [])
