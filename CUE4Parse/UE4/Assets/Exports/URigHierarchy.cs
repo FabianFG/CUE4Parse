@@ -14,6 +14,7 @@ public class URigHierarchy : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        bool bAllocateStoragePerElement = FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RigHierarchyIndirectElementStorage;
         var ElementCount = Ar.Read<int>();
         Elements = new FRigBaseElement[ElementCount];
         for (var ElementIndex = 0; ElementIndex < ElementCount; ElementIndex++)
@@ -32,8 +33,20 @@ public class URigHierarchy : UObject
                 _ => new FRigBaseElement()
             };
 
-            element.Load(Ar, this, ESerializationPhase.StaticData);
+            if (bAllocateStoragePerElement)
+            {
+                element.Load(Ar, this, ESerializationPhase.StaticData);
+            }
+
             Elements[ElementIndex] = element;
+        }
+
+        if (!bAllocateStoragePerElement)
+        {
+            for (var ElementIndex = 0; ElementIndex < ElementCount; ElementIndex++)
+            {
+                Elements[ElementIndex].Load(Ar, this, ESerializationPhase.StaticData);
+            }
         }
 
         foreach (var element in Elements)

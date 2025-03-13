@@ -555,6 +555,21 @@ namespace CUE4Parse.UE4.Versions
             // Added PreprocessedFontGeometry to FFontFaceData
             AddedPreprocessedFontGeometry,
 
+            // Added Dynamic Mesh Sculpt Layer serialization
+            DynamicMeshSerializeSculptLayers,
+
+            // Fix reachable garbage object warnings from some legacy ASpatialHashRuntimeGridInfo actors
+            SpatialHashRuntimeGridInfoSpriteFixup,
+
+            // Removed UAnimSequence::bUseRawDataOnly flag alongside compression refactor
+            AnimSequenceRawDataOnlyFlagRemoval,
+
+            // HLOD relevancy of Level Instances was previously ignored, now taken into account. Reset to the default behavior.
+            ResetLevelInstanceHLODRelevancy,
+
+            // Updated default scene capture post-processing settings to reflect the underlying implementation overrides
+            SceneCaptureDefaultSettings,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1

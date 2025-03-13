@@ -104,6 +104,27 @@ public static class FControlRigObjectVersion
         // Physics solvers stored on hierarchy
         ControlRigStoresPhysicsSolvers,
 
+        // Moved the element storage into separate buffers
+        RigHierarchyIndirectElementStorage,
+
+        // Compress the rig hierarchy when storing to disk
+        RigHierarchyCompressElements,
+
+        // Added the notion of components to the rig hierarchy
+        RigHierarchyStoresComponents,
+
+        // Improve transform compactness when serializing the hierarchy
+        RigHierarchyCompactTransformSerialization,
+
+        // Connectors to support arrays
+        RigHierarchyArrayConnectors,
+
+        // Parent constraints offering a display label
+        RigHierarchyParentContraintWithLabel,
+
+        // Previous name and parent maps serialized as FRigHierarchyKey
+        RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
@@ -128,6 +149,7 @@ public static class FControlRigObjectVersion
             < EGame.GAME_UE5_3 => Type.RigHierarchyStoringPreviousNames,
             < EGame.GAME_UE5_4 => Type.RigHierarchyControlPreferredRotationOrderFlag,
             < EGame.GAME_UE5_5 => Type.RigPoseWithParentKey,
+            < EGame.GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
             _ => Type.LatestVersion
         };
     }

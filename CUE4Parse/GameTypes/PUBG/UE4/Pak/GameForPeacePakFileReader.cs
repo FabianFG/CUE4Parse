@@ -19,7 +19,7 @@ public partial class PakFileReader
         0x35, 0x36, 0x37, 0x38, 0x39, 0x31, 0x32, 0x33, 0x34,
         0x36, 0x37, 0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35,
         0x37, 0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
-        0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 
+        0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
         0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
     ];
     /// <summary>
@@ -56,13 +56,15 @@ public partial class PakFileReader
         return uncompressed;
     }
 
-    private void GameForPeaceReadIndex(bool caseInsensitive, FByteArchive index)
+    private void GameForPeaceReadIndex(StringComparer pathComparer, FByteArchive index)
     {
         var saved = index.Position;
-        var pakentries = index.ReadArray(() => new FPakEntry(this, "", index, Game));
+
+        var entries = index.ReadArray(() => new FPakEntry(this, "", index, Game));
+        var files = new Dictionary<string, GameFile>(entries.Length, pathComparer);
+
         var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) Ar.Read<long>()));
-        var fileCount = pakentries.Length;
-        var files = new Dictionary<string, GameFile>(pakentries.Length);
+
         var directoryIndexLength = (int) directoryIndex.Read<long>();
         index.Position = saved + 4;
         for (var i = 0; i < directoryIndexLength; i++)
@@ -81,10 +83,11 @@ public partial class PakFileReader
 
                 var indexf = directoryIndex.Read<int>();
 
-                pakentries[indexf].Path = path;
-                files[caseInsensitive ? path.ToLowerInvariant() : path] = pakentries[indexf];
+                entries[indexf].Path = path;
+                files[path] = entries[indexf];
             }
         }
+
         Files = files;
     }
 }

@@ -11,11 +11,7 @@ public readonly struct FConvexMeshCollision(FKConvexElem ConvexElem) : ISerializ
     public void Serialize(FArchiveWriter Ar)
     {
         Ar.WriteFString(ConvexElem.Name.Text);
-        Ar.WriteArray(ConvexElem.VertexData, (writer, vector) =>
-        {
-            vector.Y = -vector.Y;
-            vector.Serialize(writer);
-        });
+        Ar.WriteArray(ConvexElem.VertexData, (writer, vector) => vector.Serialize(writer));
         Ar.WriteArray(ConvexElem.IndexData, (writer, index) => writer.Write(index));
     }
 }

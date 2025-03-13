@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.PhysicsEngine;
 
@@ -30,6 +31,21 @@ public class UPhysicsAsset : Assets.Exports.UObject
             CollisionDisableTable[rowKey] = Ar.ReadBoolean();
         }
     }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+
+        writer.WritePropertyName("CollisionDisableTable");
+        writer.WriteStartArray();
+
+        foreach (var Table in CollisionDisableTable)
+        {
+            serializer.Serialize(writer, Table);
+        }
+
+        writer.WriteEndArray();
+    }
 }
 
 public class FRigidBodyIndexPair
@@ -41,4 +57,4 @@ public class FRigidBodyIndexPair
         Indices[0] = Ar.Read<int>();
         Indices[1] = Ar.Read<int>();
     }
-}
+};

@@ -35,6 +35,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         RemoveAssetPathFNames,              // Asset bundles are serialized as FTopLevelAssetPath instead of FSoftObjectPath, deprecated FAssetData::ObjectPath
         AddedHeader,                        // Added header with bFilterEditorOnlyData flag
         AssetPackageDataHasExtension,		// Added Extension to AssetPackageData.
+        AssetPackageDataHasPackageLocation,	// Added PackageLocation to AssetPackageData.
+        MarshalledTextAsUTF8String,			// Replaced 2 byte wide string with UTF8 String
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

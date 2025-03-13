@@ -1115,7 +1115,11 @@ public class FMemoryImageName
 
     public FMemoryImageName(FArchive Ar)
     {
-        Name = Ar is FMaterialResourceProxyReader proxy && proxy.isGlobal ? Ar.ReadFString() : Ar.ReadFName();
+        Name = Ar switch
+        {
+            FMaterialResourceProxyReader proxy when proxy.isGlobal => Ar.ReadFString(),
+            _ => Ar.ReadFName()
+        };
         Patches = Ar.ReadArray<FMemoryImageNamePatch>();
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Utils;
 
@@ -39,6 +40,24 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
             var res = x - intPortion;
             return res.Clamp(-absY, absY);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CountBits(ulong bits)
+        {
+            // https://en.wikipedia.org/wiki/Hamming_weight
+            bits -= (bits >> 1) & 0x5555555555555555ul;
+            bits = (bits & 0x3333333333333333ul) + ((bits >> 2) & 0x3333333333333333ul);
+            bits = (bits + (bits >> 4)) & 0x0f0f0f0f0f0f0f0ful;
+            return (int)((bits * 0x0101010101010101) >> 56);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Lerp<T>(T a, T b, float alpha) where T : 
+            IMultiplyOperators<T,float,T>, IMultiplyOperators<T,T,T>, 
+            ISubtractionOperators<T,T,T>, IAdditionOperators<T,T,T> // welp
+        {
+            return a + (b - a) * alpha;
         }
     }
 }

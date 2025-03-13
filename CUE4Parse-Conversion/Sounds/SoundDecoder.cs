@@ -92,6 +92,8 @@ public static class SoundDecoder
         }
         else if (audioFormat.Equals("BINKA", StringComparison.OrdinalIgnoreCase))
             return input;
+        else if (audioFormat.Equals("RADA", StringComparison.OrdinalIgnoreCase))
+            return input;
         else if (audioFormat.Equals("OPUS", StringComparison.OrdinalIgnoreCase))
             return input;
         else if (audioFormat.Equals("WEM", StringComparison.OrdinalIgnoreCase))

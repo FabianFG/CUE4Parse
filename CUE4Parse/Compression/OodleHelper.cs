@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
@@ -31,10 +32,31 @@ public static class OodleHelper
 
     public static Oodle? Instance { get; private set; }
 
+    public static void Initialize()
+    {
+        if (Instance is not null) return;
+        if (CUE4ParseNatives.IsFeatureAvailable("Oodle")) {
+        
+            Instance = new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName));
+        }
+        else
+        {
+            if (DownloadOodleDll())
+            {
+                Instance = new Oodle(OODLE_DLL_NAME);
+            }
+            else
+            {
+                Log.Warning("Oodle decompression failed: unable to download oodle dll");
+            }   
+        }
+    }
+
     public static void Initialize(string path)
     {
         Instance?.Dispose();
-        Instance = new Oodle(path);
+        if (File.Exists(path))
+            Instance = new Oodle(path);
     }
 
     public static void Initialize(Oodle instance)

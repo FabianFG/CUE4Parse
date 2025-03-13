@@ -36,11 +36,7 @@ public readonly struct FMorphData : ISerializable
     public FMorphData(FVector positionDelta, FVector tangentZDelta, uint vertexIndex)
     {
         PositionDelta = positionDelta;
-        PositionDelta.Y = -PositionDelta.Y;
-        
         TangentZDelta = tangentZDelta;
-        TangentZDelta.Y = -TangentZDelta.Y;
-        
         VertexIndex = vertexIndex;
     }
     

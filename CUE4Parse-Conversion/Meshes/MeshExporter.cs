@@ -9,6 +9,8 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
+using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -26,7 +28,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalSkeleton.TryConvert(out var bones, out _) || bones.Count == 0)
             {
-                Log.Logger.Warning($"Skeleton '{ExportName}' has no bone");
+                Log.Warning($"Skeleton '{ExportName}' has no bone");
                 return;
             }
 
@@ -40,7 +42,7 @@ namespace CUE4Parse_Conversion.Meshes
                     break;
                 case EMeshFormat.UEFormat:
                     ext = "uemodel";
-                    new UEModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
+                    new UEModel(originalSkeleton.Name, originalSkeleton, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
                     break;
                 case EMeshFormat.Gltf2:
                     throw new NotImplementedException();
@@ -50,24 +52,31 @@ namespace CUE4Parse_Conversion.Meshes
                     throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
             }
 
-            MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), new List<MaterialExporter2>()));
+            MeshLods.Add(new Mesh($"{GetExportSavePath()}.{ext}", Ar.GetBuffer(), new List<MaterialExporter2>()));
         }
 
-        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : base(originalMesh, options)
+        public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : this(originalMesh, null, options){}
+       
+        public MeshExporter(UStaticMesh originalMesh, USplineMeshComponent? splineMeshComponent, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh) || convertedMesh.LODs.Count == 0)
             {
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
+            }
+
+            var path = GetExportSavePath();
+            if (splineMeshComponent != null) {
+                path += string.Concat("-", splineMeshComponent.GetMeshId().AsSpan(0, 6));
             }
 
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
                 new UEModel(originalMesh.Name, convertedMesh, originalMesh.BodySetup, Options).Save(ueModelArchive);
-                MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
+                MeshLods.Add(new Mesh($"{path}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
 
@@ -77,7 +86,7 @@ namespace CUE4Parse_Conversion.Meshes
                 i++;
                 if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
+                    Log.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
                     continue;
                 }
 
@@ -104,13 +113,11 @@ namespace CUE4Parse_Conversion.Meshes
 
                 if (Options.LodFormat == ELodFormat.FirstLod)
                 {
-                    MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    MeshLods.Add(new Mesh($"{path}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
                     break;
                 }
-                else
-                {
-                    MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
-                }
+
+                MeshLods.Add(new Mesh($"{path}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
             }
         }
 
@@ -120,7 +127,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
             {
-                Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
+                Log.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 
@@ -139,8 +146,8 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
-                MeshLods.Add(new Mesh($"{PackagePath}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
+                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
+                MeshLods.Add(new Mesh($"{GetExportSavePath()}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
 
@@ -150,7 +157,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var lod = convertedMesh.LODs[lodIndex];
                 if (lod.SkipLod)
                 {
-                    Log.Logger.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
+                    Log.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
                     continue;
                 }
 
@@ -181,12 +188,12 @@ namespace CUE4Parse_Conversion.Meshes
 
                 if (Options.LodFormat == ELodFormat.FirstLod)
                 {
-                    MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    MeshLods.Add(new Mesh($"{GetExportSavePath()}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
                     break;
                 }
                 else
                 {
-                    MeshLods.Add(new Mesh($"{PackagePath}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
+                    MeshLods.Add(new Mesh($"{GetExportSavePath()}_LOD{i}.{ext}", Ar.GetBuffer(), materialExports ?? new List<MaterialExporter2>()));
                 }
                 i++;
             }
@@ -200,7 +207,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             var b = false;
             label = string.Empty;
-            savedFilePath = PackagePath;
+            savedFilePath = string.Empty;
             if (MeshLods.Count == 0) return b;
 
             var outText = "LOD ";

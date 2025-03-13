@@ -56,7 +56,6 @@ public class UVoiceManager : UObject { }
 public class UWeaponClone : UObject { }
 public class UXBoxRichPresenceObserver : UObject { }
 public class UAppearanceCustomizationBuilder : UObject { }
-public class UAsyncStaticMeshComponent : UStaticMeshComponent { }
 public class UTslLaserPointerAttachment : UAsyncStaticMeshComponent { }
 public class UCameraSettings : UObject { }
 public class UCoherentCommonBinder : UObject { }

@@ -8,10 +8,10 @@ public class FOnDemandTocAdditionalFile
     public FSHAHash Hash;
     public string Filename;
     public ulong FileSize;
-    
+
     public FOnDemandTocAdditionalFile(FArchive Ar)
     {
-        Hash = Ar.Read<FSHAHash>();
+        Hash = new FSHAHash(Ar);
         Filename = Ar.ReadFString();
         FileSize = Ar.Read<ulong>();
     }

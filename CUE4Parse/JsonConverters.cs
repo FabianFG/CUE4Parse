@@ -908,9 +908,9 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
     }
 }
 
-public class PackageConverter : JsonConverter<Package>
+public class PackageConverter : JsonConverter<IPackage>
 {
-    public override void WriteJson(JsonWriter writer, Package value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, IPackage value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
@@ -925,17 +925,17 @@ public class PackageConverter : JsonConverter<Package>
         }
         writer.WriteEndArray();
 
-        writer.WritePropertyName(nameof(value.ImportMap));
+        writer.WritePropertyName("ImportMap");
         writer.WriteStartArray();
-        for (var i = 0; i < value.ImportMap.Length; i++)
+        for (var i = 0; i < value.ImportMapLength; i++)
         {
             serializer.Serialize(writer, new FPackageIndex(value, -i - 1));
         }
         writer.WriteEndArray();
 
-        writer.WritePropertyName(nameof(value.ExportMap));
+        writer.WritePropertyName("ExportMap");
         writer.WriteStartArray();
-        for (var i = 0; i < value.ExportMap.Length; i++)
+        for (var i = 0; i < value.ExportMapLength; i++)
         {
             serializer.Serialize(writer, new FPackageIndex(value, i + 1));
         }
@@ -944,50 +944,7 @@ public class PackageConverter : JsonConverter<Package>
         writer.WriteEndObject();
     }
 
-    public override Package ReadJson(JsonReader reader, Type objectType, Package existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class IoPackageConverter : JsonConverter<IoPackage>
-{
-    public override void WriteJson(JsonWriter writer, IoPackage value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName(nameof(value.Summary));
-        serializer.Serialize(writer, value.Summary);
-
-        writer.WritePropertyName(nameof(value.NameMap));
-        writer.WriteStartArray();
-        foreach (var name in value.NameMap)
-        {
-            writer.WriteValue(name.Name);
-        }
-        writer.WriteEndArray();
-
-        writer.WritePropertyName(nameof(value.ImportMap));
-        writer.WriteStartArray();
-        for (var i = 0; i < value.ImportMap.Length; i++)
-        {
-            serializer.Serialize(writer, new FPackageIndex(value, -i - 1));
-        }
-        writer.WriteEndArray();
-
-        writer.WritePropertyName(nameof(value.ExportMap));
-        writer.WriteStartArray();
-        for (var i = 0; i < value.ExportMap.Length; i++)
-        {
-            serializer.Serialize(writer, new FPackageIndex(value, i + 1));
-        }
-        writer.WriteEndArray();
-
-        writer.WriteEndObject();
-    }
-
-    public override IoPackage ReadJson(JsonReader reader, Type objectType, IoPackage existingValue, bool hasExistingValue,
+    public override IPackage ReadJson(JsonReader reader, Type objectType, IPackage existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
@@ -2383,6 +2340,12 @@ public class FByteBulkDataHeaderConverter : JsonConverter<FByteBulkDataHeader>
         writer.WritePropertyName("OffsetInFile");
         writer.WriteValue($"0x{value.OffsetInFile:X}");
 
+        if (!value.CookedIndex.IsDefault)
+        {
+            writer.WritePropertyName("CookedIndex");
+            writer.WriteValue(value.CookedIndex.ToString());
+        }
+
         writer.WriteEndObject();
     }
 
@@ -2565,11 +2528,13 @@ public class FEndTextResourceStringsConverter : JsonConverter<FEndTextResourceSt
     public override void WriteJson(JsonWriter writer, FEndTextResourceStrings value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
+        writer.WritePropertyName(nameof(value.Text));
+        serializer.Serialize(writer, value.Text);
 
-        if (value.Entries?.Count > 0)
+        if (value.MetaData.Count > 0)
         {
-            writer.WritePropertyName("Entries");
-            serializer.Serialize(writer, value.Entries);
+            writer.WritePropertyName(nameof(value.MetaData));
+            serializer.Serialize(writer, value.MetaData);
         }
 
         writer.WriteEndObject();

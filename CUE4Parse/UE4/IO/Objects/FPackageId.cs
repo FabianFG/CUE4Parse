@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using CUE4Parse.UE4.Objects.UObject;
 using static CUE4Parse.Utils.CityHash;
 
 namespace CUE4Parse.UE4.IO.Objects;
@@ -28,6 +29,7 @@ public readonly struct FPackageId : IEquatable<FPackageId>
 
     public override string ToString() => id.ToString();
 
+    public static FPackageId FromName(FName name) => FromName(name.Text);
     public static FPackageId FromName(string name)
     {
         Span<char> result = name.Length < 256 ? stackalloc char[name.Length] : new char[name.Length].AsSpan();

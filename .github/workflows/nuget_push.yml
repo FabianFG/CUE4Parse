@@ -1,0 +1,34 @@
+# yoinked from Marlon
+name: NuGet Push
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: GIT Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build & Pack NuGet Package(s)
+        run: dotnet pack -c Release -o "./nuget-packages"
+
+      - name: Upload Build Artifact(s)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nuget-packages
+
+      - name: Push NuGet Package(s)
+        working-directory: ./nuget-packages
+        run: dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate

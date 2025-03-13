@@ -19,11 +19,9 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     public int EncryptedFileCount { get; protected set; }
     public bool bDecrypted { get; protected set; }
 
-    private static EGame _game;
-
     protected AbstractAesVfsReader(string path, VersionContainer versions) : base(path, versions)
     {
-        _game = Game;
+        // yes
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

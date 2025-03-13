@@ -16,6 +16,11 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             Hash = Ar.ReadBytes(SIZE);
         }
 
+        public FSHAHash(FArchive Ar, int customSize)
+        {
+            Hash = Ar.ReadBytes(customSize);
+        }
+
         public FSHAHash(FIoChunkHash InChunkHash)
         {
             Hash = new byte[SIZE];
@@ -26,7 +31,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public override string ToString()
         {
-            unsafe { fixed (byte* ptr = Hash) { return UnsafePrint.BytesToHex(ptr, SIZE); } }
+            unsafe { fixed (byte* ptr = Hash) { return UnsafePrint.BytesToHex(ptr, (uint) Hash.Length); } }
         }
     }
 }

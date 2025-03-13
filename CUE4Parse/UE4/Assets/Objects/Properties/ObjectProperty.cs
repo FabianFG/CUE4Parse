@@ -15,5 +15,10 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                 _ => new FPackageIndex(Ar)
             };
         }
+
+        public ObjectProperty(FPackageIndex value)
+        {
+            Value = value;
+        }
     }
 }

@@ -211,6 +211,18 @@ public class FPropertyTag
             Ar.Position = finalPos;
         }
     }
+    
+    public FPropertyTag(FName name, FName propertyType, int size, int arrayIndex, FPropertyTagData? tagData, bool hasPropertyGuid, FGuid? propertyGuid, FPropertyTagType? tag)
+    {
+        Name = name;
+        PropertyType = propertyType;
+        Size = size;
+        ArrayIndex = arrayIndex;
+        TagData = tagData;
+        HasPropertyGuid = hasPropertyGuid;
+        PropertyGuid = propertyGuid;
+        Tag = tag;
+    }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";
 }

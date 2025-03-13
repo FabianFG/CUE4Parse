@@ -31,9 +31,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader, path)
         {
-            Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
@@ -165,10 +164,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader)
+        public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader, path)
         {
-            Path = path;
-
             // UE4 reference: FPakFile::DecodePakEntry()
             var bitfield = *(uint*) data;
             data += sizeof(uint);
@@ -361,9 +358,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader, path)
         {
-            Path = path;
             var startOffset = Ar.Position;
 
             if (game == GAME_GameForPeace)

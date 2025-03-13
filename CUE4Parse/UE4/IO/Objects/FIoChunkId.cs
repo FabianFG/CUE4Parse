@@ -1,7 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CUE4Parse.Utils;
+using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -46,7 +47,9 @@ namespace CUE4Parse.UE4.IO.Objects
         ShaderCode = 9,
         PackageStoreEntry = 10,
         DerivedData = 11,
-        EditorDerivedData = 12
+        EditorDerivedData = 12,
+        PackageResource = 13,
+        MAX
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -70,6 +73,25 @@ namespace CUE4Parse.UE4.IO.Objects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPackageId AsPackageId() => new(ChunkId);
+
+        public string GetExtension(IAesVfsReader reader)
+        {
+            var type = reader.Game >= EGame.GAME_UE5_0 ? typeof(EIoChunkType5) : typeof(EIoChunkType);
+            if (Enum.ToObject(type, ChunkType).ToString() is not { } chunkType)
+                return ChunkType.ToString();
+
+            return chunkType switch
+            {
+                "ExportBundleData" when reader is IoStoreReader => "uasset", // umap
+                "ExportBundleData" => "uexp",
+                "BulkData" => "ubulk",
+                "OptionalBulkData" => "uptnl",
+                "MemoryMappedBulkData" => "m.ubulk",
+                "ShaderCodeLibrary" => "ushaderbytecode",
+                "ShaderCode" => "dxbc",
+                _ => chunkType
+            };
+        }
 
         public unsafe ulong HashWithSeed(int seed)
         {

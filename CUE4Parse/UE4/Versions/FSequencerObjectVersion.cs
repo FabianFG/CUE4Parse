@@ -65,6 +65,8 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
+                EGame.GAME_DeltaForceHawkOps => Type.ModifyLinearKeysForOldInterp,
+
                 < EGame.GAME_UE4_14 => Type.BeforeCustomVersionWasAdded,
                 < EGame.GAME_UE4_15 => Type.RenameMediaSourcePlatformPlayers,
                 < EGame.GAME_UE4_16 => Type.ConvertMultipleRowsToTracks,

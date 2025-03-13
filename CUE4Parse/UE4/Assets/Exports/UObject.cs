@@ -44,16 +44,67 @@ public interface IPropertyHolder
     public bool TryGetAllValues<T>(out T[] obj, string name);
 }
 
+public abstract class AbstractPropertyHolder : IPropertyHolder
+{
+    public List<FPropertyTag> Properties { get; protected set; } = new();
+
+    public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
+
+    public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
+
+    public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.Get<T>(this, name, comparisonType);
+
+    public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetLazy<T>(this, name, comparisonType);
+
+    public T GetByIndex<T>(int index) => PropertyUtil.GetByIndex<T>(this, index);
+
+    public bool TryGetValue<T>(out T obj, params string[] names)
+    {
+        foreach (string name in names)
+        {
+            if (this.TryGet<T>(name, out obj, comparisonType: StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        obj = default!;
+        return false;
+    }
+
+    public bool TryGetAllValues<T>(out T[] obj, string name)
+    {
+        var maxIndex = -1;
+        var collected = new List<FPropertyTag>();
+        foreach (var prop in Properties)
+        {
+            if (prop.Name.Text != name) continue;
+            collected.Add(prop);
+            maxIndex = Math.Max(maxIndex, prop.ArrayIndex);
+        }
+
+        obj = new T[maxIndex + 1];
+        foreach (var prop in collected) {
+            obj[prop.ArrayIndex] = (T)prop.Tag?.GetValue(typeof(T))!;
+        }
+
+        return obj.Length > 0;
+    }
+}
+
 [JsonConverter(typeof(UObjectConverter))]
 [SkipObjectRegistration]
-public class UObject : IPropertyHolder
+public class UObject : AbstractPropertyHolder
 {
     public string Name { get; set; } = null!;
     public UObject? Outer;
     public UStruct? Class;
     public ResolvedObject? Super;
     public ResolvedObject? Template;
-    public List<FPropertyTag> Properties { get; private set; }
     public FGuid? ObjectGuid { get; private set; }
     public EObjectFlags Flags;
     public UStruct? SerializedSparseClassDataStruct;
@@ -83,7 +134,7 @@ public class UObject : IPropertyHolder
 
     public UObject()
     {
-        Properties = new List<FPropertyTag>();
+        Properties = [];
     }
 
     public UObject(List<FPropertyTag> properties)
@@ -388,53 +439,6 @@ public class UObject : IPropertyHolder
         }
     }
 
-    public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
-        PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
-
-    public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
-        PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
-
-    public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-        PropertyUtil.Get<T>(this, name, comparisonType);
-
-    public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
-        PropertyUtil.GetLazy<T>(this, name, comparisonType);
-
-    public T GetByIndex<T>(int index) => PropertyUtil.GetByIndex<T>(this, index);
-
-    public bool TryGetValue<T>(out T obj, params string[] names)
-    {
-        foreach (string name in names)
-        {
-            if (this.TryGet<T>(name, out obj, comparisonType: StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        obj = default!;
-        return false;
-    }
-
-    public bool TryGetAllValues<T>(out T[] obj, string name)
-    {
-        var maxIndex = -1;
-        var collected = new List<FPropertyTag>();
-        foreach (var prop in Properties)
-        {
-            if (prop.Name.Text != name) continue;
-            collected.Add(prop);
-            maxIndex = Math.Max(maxIndex, prop.ArrayIndex);
-        }
-
-        obj = new T[maxIndex + 1];
-        foreach (var prop in collected) {
-            obj[prop.ArrayIndex] = (T)prop.Tag?.GetValue(typeof(T))!;
-        }
-
-        return obj.Length > 0;
-    }
-
     // Just ignore it for the parser
     /*-----------------------------------------------------------------------------
             Replication.
@@ -568,6 +572,46 @@ public static class PropertyUtil
         }
 
         throw new NullReferenceException($"Couldn't get property of type {typeof(T).Name} at index '{index}' in {holder.GetType().Name}");
+    }
+
+    public static void Set<T>(IPropertyHolder holder, string name, T value, StringComparison comparisonType = StringComparison.Ordinal)
+    {
+        FPropertyTag? tag = null;
+        int foundIndex = -1;
+        for (var i = 0; i < holder.Properties.Count; i++) {
+            var prop = holder.Properties[i];
+            if (prop.Name.Text.Equals(name, comparisonType)) {
+                if (prop.Tag != null) {
+                    if (prop.Tag is ObjectProperty tagData && value is FPackageIndex idx) {
+                        tagData.Value = idx;
+                        return;
+                    }
+                }
+
+                tag = prop;
+                foundIndex = i;
+                break;
+            }
+        }
+
+        var tag2 = tag ?? new FPropertyTag(name, typeof(T).Name, 0, 0, null, false, null, null);
+
+        tag.Tag = value switch
+        {
+            FPackageIndex idx => new ObjectProperty(idx),
+            IUStruct uStruct => new StructProperty(new FScriptStruct(uStruct)),
+            FPropertyTagType propType => propType,
+            _ => throw new NotImplementedException($"Setting properties of type {typeof(T).Name} is not implemented yet")
+        };
+
+        if (foundIndex != -1)
+        {
+            holder.Properties[foundIndex] = tag2;
+        }
+        else
+        {
+            holder.Properties.Add(tag2);
+        }
     }
 }
 

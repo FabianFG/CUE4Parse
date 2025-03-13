@@ -15,16 +15,12 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
         if (tagData.InnerType == null)
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
-        if (!Ar.ReadBoolean())
+        if (type == ReadType.ZERO || !Ar.ReadBoolean())
         {
             Value = default;
             return;
         }
 
-        Value = type switch
-        {
-            ReadType.ZERO => default,
-            _ => ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, type) ?? default
-        };
+        Value = ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.OPTIONAL) ?? default;
     }
 }
