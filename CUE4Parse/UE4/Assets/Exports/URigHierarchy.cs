@@ -2,15 +2,16 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.ControlRig;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports;
 
 public class URigHierarchy : UObject
 {
     public FRigBaseElement[] Elements;
-    Dictionary<FRigElementKey, FRigElementKey> PreviousNameMap = [];
-    Dictionary<FRigElementKey, FRigElementKey> PreviousParentMap = [];
-    Dictionary<FRigElementKey, FMetadataStorage> LoadedElementMetadata = [];
+    public Dictionary<FRigElementKey, FRigElementKey> PreviousNameMap = [];
+    public Dictionary<FRigElementKey, FRigElementKey> PreviousParentMap = [];
+    public Dictionary<FRigElementKey, FMetadataStorage> LoadedElementMetadata = [];
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -56,26 +57,24 @@ public class URigHierarchy : UObject
 
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyStoringPreviousNames)
         {
-            var num = Ar.Read<int>();
-            for (var i = 0; i < num; i++)
-            {
-                PreviousNameMap[new FRigElementKey(Ar)] = new FRigElementKey(Ar);
-            }
-
-            num = Ar.Read<int>();
-            for (var i = 0; i < num; i++)
-            {
-                PreviousParentMap[new FRigElementKey(Ar)] = new FRigElementKey(Ar);
-            }
+            PreviousNameMap = Ar.ReadMap(() => new FRigElementKey(Ar), () => new FRigElementKey(Ar));
+            PreviousParentMap = Ar.ReadMap(() => new FRigElementKey(Ar), () => new FRigElementKey(Ar));
         }
 
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyStoresElementMetadata)
         {
-            var num = Ar.Read<int>();
-            for (var i = 0; i < num; i++)
-            {
-                LoadedElementMetadata[new FRigElementKey(Ar)] = new FMetadataStorage(Ar);
-            }
+            LoadedElementMetadata = Ar.ReadMap(() => new FRigElementKey(Ar), () => new FMetadataStorage(Ar));
+        }
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+
+        if (Elements?.Length > 0)
+        {
+            writer.WritePropertyName(nameof(Elements));
+            serializer.Serialize(writer, Elements);
         }
     }
 }

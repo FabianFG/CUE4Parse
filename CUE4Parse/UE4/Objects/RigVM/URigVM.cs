@@ -28,7 +28,6 @@ public class URigVM : Assets.Exports.UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
-        //base.Deserialize(Ar, validPos); //maybe
 
         if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.BeforeCustomVersionWasAdded)
         {
@@ -55,12 +54,7 @@ public class URigVM : Assets.Exports.UObject
 
                 if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
                 {
-                    var num = Ar.Read<int>();
-                    OperandToDebugRegisters = [];
-                    for (var i = 0; i < num; i++)
-                    {
-                        OperandToDebugRegisters[Ar.Read<FRigVMOperand>()] = Ar.ReadArray(Ar.Read<FRigVMOperand>);
-                    }
+                    OperandToDebugRegisters = Ar.ReadMap(Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<FRigVMOperand>));
                 }
             }
 
@@ -80,34 +74,19 @@ public class URigVM : Assets.Exports.UObject
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData ||
             FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
         {
-            var num = Ar.Read<int>();
-            OperandToDebugRegisters = [];
-            for (var i = 0; i < num; i++)
-            {
-                OperandToDebugRegisters[Ar.Read<FRigVMOperand>()] = Ar.ReadArray(Ar.Read<FRigVMOperand>);
-            }
+            OperandToDebugRegisters = Ar.ReadMap(Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<FRigVMOperand>));
         }
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMStoringUserDefinedStructMap &&
             FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.HostStoringUserDefinedData)
         {
-            UserDefinedStructGuidToPathName = [];
-            int num = Ar.Read<int>();
-            for (var i = 0; i < num; i++)
-            {
-                UserDefinedStructGuidToPathName[Ar.ReadFString()] = Ar.Read<FSoftObjectPath>();
-            }
+            UserDefinedStructGuidToPathName = Ar.ReadMap(Ar.ReadFString, () => new FSoftObjectPath(Ar));
         }
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMMemoryStorageStructSerialized &&
             FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.HostStoringUserDefinedData)
         {
-            UserDefinedEnumToPathName = [];
-            int num = Ar.Read<int>();
-            for (var i = 0; i < num; i++)
-            {
-                UserDefinedEnumToPathName[Ar.ReadFString()] = Ar.Read<FSoftObjectPath>();
-            }
+            UserDefinedEnumToPathName = Ar.ReadMap(Ar.ReadFString, () => new FSoftObjectPath(Ar));
         }
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMMemoryStorageStructSerialized)
@@ -126,16 +105,97 @@ public class URigVM : Assets.Exports.UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("WorkMemoryStorage");
-        serializer.Serialize(writer, WorkMemoryStorage);
+        writer.WritePropertyName(nameof(CachedVMHash));
+        writer.WriteValue(CachedVMHash);
 
-        writer.WritePropertyName("LiteralMemoryStorage");
-        serializer.Serialize(writer, LiteralMemoryStorage);
+        if (ExecuteContextPath != null)
+        {
+            writer.WritePropertyName(nameof(ExecuteContextPath));
+            writer.WriteValue(ExecuteContextPath);
+        }
 
-        writer.WritePropertyName("ByteCodeStorage");
-        serializer.Serialize(writer, ByteCodeStorage);
+        if (ExternalPropertyPathDescriptions != null)
+        {
+            writer.WritePropertyName(nameof(ExternalPropertyPathDescriptions));
+            serializer.Serialize(writer, ExternalPropertyPathDescriptions);
+        }
 
-        writer.WritePropertyName("Parameters");
-        serializer.Serialize(writer, Parameters);
+        if (FunctionNamesStorage != null)
+        {
+            writer.WritePropertyName(nameof(FunctionNamesStorage));
+            serializer.Serialize(writer, FunctionNamesStorage);
+        }
+
+        if (ByteCodeStorage != null)
+        {
+            writer.WritePropertyName(nameof(ByteCodeStorage));
+            serializer.Serialize(writer, ByteCodeStorage);
+        }
+
+        if (Parameters != null)
+        {
+            writer.WritePropertyName(nameof(Parameters));
+            serializer.Serialize(writer, Parameters);
+        }
+
+        if (OperandToDebugRegisters != null)
+        {
+            writer.WritePropertyName(nameof(OperandToDebugRegisters));
+            serializer.Serialize(writer, OperandToDebugRegisters);
+        }
+
+        if (UserDefinedStructGuidToPathName != null)
+        {
+            writer.WritePropertyName(nameof(UserDefinedStructGuidToPathName));
+            serializer.Serialize(writer, UserDefinedStructGuidToPathName);
+        }
+
+        if (UserDefinedEnumToPathName != null)
+        {
+            writer.WritePropertyName(nameof(UserDefinedEnumToPathName));
+            serializer.Serialize(writer, UserDefinedEnumToPathName);
+        }
+
+        if (WorkMemoryStorage != null)
+        {
+            writer.WritePropertyName(nameof(WorkMemoryStorage));
+            serializer.Serialize(writer, WorkMemoryStorage);
+        }
+
+        if (LiteralMemoryStorage != null)
+        {
+            writer.WritePropertyName(nameof(LiteralMemoryStorage));
+            serializer.Serialize(writer, LiteralMemoryStorage);
+        }
+
+        if (DefaultWorkMemoryStorage != null)
+        {
+            writer.WritePropertyName(nameof(DefaultWorkMemoryStorage));
+            serializer.Serialize(writer, DefaultWorkMemoryStorage);
+        }
+
+        if (DefaultDebugMemoryStorage != null)
+        {
+            writer.WritePropertyName(nameof(DefaultDebugMemoryStorage));
+            serializer.Serialize(writer, DefaultDebugMemoryStorage);
+        }
+
+        if (LiteralMemoryStorageOld != null)
+        {
+            writer.WritePropertyName(nameof(LiteralMemoryStorageOld));
+            serializer.Serialize(writer, LiteralMemoryStorageOld);
+        }
+
+        if (DefaultWorkMemoryStorageOld != null)
+        {
+            writer.WritePropertyName(nameof(DefaultWorkMemoryStorageOld));
+            serializer.Serialize(writer, DefaultWorkMemoryStorageOld);
+        }
+
+        if (DefaultDebugMemoryStorageOld != null)
+        {
+            writer.WritePropertyName(nameof(DefaultDebugMemoryStorageOld));
+            serializer.Serialize(writer, DefaultDebugMemoryStorageOld);
+        }
     }
 }
