@@ -15,6 +15,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         Z,
     }
 
+    public readonly struct FMatrix3x4 : IUStruct
+    {
+        public readonly float M00, M01, M02;
+        public readonly float M10, M11, M12;
+        public readonly float M20, M21, M22;
+        public readonly float M30, M31, M32;
+    }
+
     public class FMatrix : IUStruct
     {
         public static FMatrix Identity => new(
@@ -49,6 +57,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M10 = m10; M11 = m11; M12 = m12; M13 = m13;
             M20 = m20; M21 = m21; M22 = m22; M23 = m23;
             M30 = m30; M31 = m31; M32 = m32; M33 = m33;
+        }
+
+        public FMatrix(FVector inX, FVector inY, FVector inZ, FVector inW)
+        {
+            M00 = inX.X; M01 = inX.Y; M02 = inX.Z; M03 = 0.0f;
+            M10 = inY.X; M11 = inY.Y; M12 = inY.Z; M13 = 0.0f;
+            M20 = inZ.X; M21 = inZ.Y; M22 = inZ.Z; M23 = 0.0f;
+            M30 = inW.X; M31 = inW.Y; M32 = inW.Z; M33 = 1.0f;
         }
 
         public FMatrix(FArchive Ar) : this(Ar, Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) { }

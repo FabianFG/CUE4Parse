@@ -1,5 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects.Properties;
@@ -14,12 +15,12 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
         if (tagData.InnerType == null)
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
-        //var version = Ar.Read<int>(); // TODO: version??
-
-        Value = type switch
+        if (type == ReadType.ZERO || !Ar.ReadBoolean())
         {
-            ReadType.ZERO => default,
-            _ => ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, type) ?? default
-        };
+            Value = default;
+            return;
+        }
+
+        Value = ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.OPTIONAL) ?? default;
     }
 }

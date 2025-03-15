@@ -10,7 +10,6 @@ using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
-using static CUE4Parse.UE4.Assets.Exports.Material.FMemoryImageResult;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -30,6 +29,8 @@ public class FMaterial
         {
             LoadedShaderMap = new FMaterialShaderMap();
             LoadedShaderMap.Deserialize(Ar);
+
+            if (Ar.Game == EGame.GAME_Stalker2) Ar.Position += 8;
         }
         else
         {
@@ -141,11 +142,13 @@ public class FShaderMapContent
         {
             var shaderPlatform = Ar.ReadFName();
             Enum.TryParse("SP_" + shaderPlatform.PlainText, out ShaderPlatform);
+
+            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 8;
         }
         else
         {
             ShaderPlatform = Ar.Read<EShaderPlatform>();
-            Ar.Position += 7;
+            Ar.Position = Ar.Position.Align(8);
         }
     }
 }
@@ -239,7 +242,7 @@ public class FShaderParameterBindings
 
         StructureLayoutHash = Ar.Read<uint>();
         RootParameterBufferIndex = Ar.Read<ushort>();
-        Ar.Position += 2;
+        Ar.Position = Ar.Position.Align(4);
     }
 
     public struct FParameter
@@ -271,7 +274,6 @@ public class FShaderParameterBindings
             BaseIndex = (byte)Ar.Read<ushort>();
             ByteOffset = Ar.Read<ushort>();
         }
-
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 8)]
@@ -327,7 +329,7 @@ public class FShaderLooseParameterBufferInfo
     {
         BaseIndex = Ar.Read<ushort>();
         Size = Ar.Read<ushort>();
-        Ar.Position += 4;
+        Ar.Position = Ar.Position.Align(8);
         Parameters = Ar.ReadArray<FShaderLooseParameterInfo>();
     }
 }
@@ -446,12 +448,24 @@ public class FMaterialShaderMapContent : FShaderMapContent
     public FMeshMaterialShaderMap[] OrderedMeshShaderMaps;
     public FMaterialCompilationOutput MaterialCompilationOutput;
     public FSHAHash ShaderContentHash;
+    public FName UserSceneTextureOutput;
+    public int UserTextureDivisorX = 0;
+    public int UserTextureDivisorY = 0;
+    public FName ResolutionRelativeToInput;
 
     public FMaterialShaderMapContent(FMemoryImageArchive Ar) : base(Ar)
     {
         OrderedMeshShaderMaps = Ar.ReadArrayOfPtrs(() => new FMeshMaterialShaderMap(Ar));
         MaterialCompilationOutput = new FMaterialCompilationOutput(Ar);
         ShaderContentHash = new FSHAHash(Ar);
+
+        if (Ar.Game >= EGame.GAME_UE5_5)
+        {
+            UserSceneTextureOutput = Ar.ReadFName();
+            UserTextureDivisorX = Ar.Read<int>();
+            UserTextureDivisorY = Ar.Read<int>();
+            ResolutionRelativeToInput = Ar.ReadFName();
+        }
     }
 }
 
@@ -513,7 +527,7 @@ public class FMaterialCompilationOutput
     public FMaterialCompilationOutput(FMemoryImageArchive Ar)
     {
         UniformExpressionSet = new FUniformExpressionSet(Ar);
-        UserSceneTextureInputs = Ar.Game >= EGame.GAME_UE5_5 ? Ar.ReadArray(() => Ar.ReadFName()) : [];
+        UserSceneTextureInputs = Ar.Game >= EGame.GAME_UE5_5 ? Ar.ReadArray(Ar.ReadFName) : [];
         UsedSceneTextures = Ar.Read<uint>();
         UsedPathTracingBufferTextures = Ar.Game >= EGame.GAME_UE5_3 ? Ar.Read<byte>() : (byte)0;
         if (Ar.Game >= EGame.GAME_UE5_3)
@@ -530,8 +544,6 @@ public class FMaterialCompilationOutput
     }
 }
 
-
-
 public class FUniformExpressionSet
 {
     public FMaterialUniformPreshaderHeader[] UniformVectorPreshaders = [];
@@ -539,11 +551,13 @@ public class FUniformExpressionSet
     public FMaterialScalarParameterInfo[] UniformScalarParameters = [];
     public FMaterialVectorParameterInfo[] UniformVectorParameters = [];
 
+    public FMaterialUniformParameterEvaluation[] UniformParameterEvaluations = [];
     public FMaterialUniformPreshaderHeader[] UniformPreshaders = [];
     public FMaterialUniformPreshaderField[]? UniformPreshaderFields;
     public FMaterialNumericParameterInfo[] UniformNumericParameters = [];
     public FMaterialTextureParameterInfo[][] UniformTextureParameters;
     public FMaterialExternalTextureParameterInfo[] UniformExternalTextureParameters;
+    public FMaterialTextureCollectionParameterInfo[] UniformTextureCollectionParameters;
     public uint UniformPreshaderBufferSize;
     public FMaterialPreshaderData UniformPreshaderData;
     public byte[]? DefaultValues;
@@ -562,14 +576,21 @@ public class FUniformExpressionSet
         UniformTextureParameters = new FMaterialTextureParameterInfo[EMaterialTextureParameterTypeCount][];
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
-
+            // if (Ar.Game >= EGame.GAME_UE5_6)
+            // {
+            //     UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
+            // }
             UniformPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
             UniformPreshaderFields = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : [];
             UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
+            if (Ar.Game >= EGame.GAME_UE5_5)
+            {
+                UniformTextureCollectionParameters = Ar.ReadArray(() => new FMaterialTextureCollectionParameterInfo(Ar));
+            }
             UniformPreshaderBufferSize = Ar.Read<uint>();
-            Ar.Position += 4;
+            Ar.Position = Ar.Position.Align(8);
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
             DefaultValues = Ar.ReadArray<byte>();
             var dv = new FByteArchive("DefaultValues", DefaultValues, Ar.Versions);
@@ -605,6 +626,13 @@ public class FUniformExpressionSet
     }
 }
 
+[StructLayout(LayoutKind.Sequential, Size = 4)]
+public struct FMaterialUniformParameterEvaluation
+{
+    public ushort ParameterIndex;
+    public ushort BufferOffset;
+}
+
 public class FHashedMaterialParameterInfo
 {
     public FHashedName Name;
@@ -617,8 +645,14 @@ public class FHashedMaterialParameterInfo
         Name = Ar.Read<FHashedName>();
         Index = Ar.Read<int>();
         Association = Ar.Read<EMaterialParameterAssociation>();
-        Ar.Position += 3;
+        Ar.Position = Ar.Position.Align(4);
     }
+}
+
+public class FMaterialTextureCollectionParameterInfo(FMemoryImageArchive Ar)
+{
+    public FHashedMaterialParameterInfo ParameterInfo = new(Ar);
+    public int TextureCollectionIndex = Ar.Read<int>();
 }
 
 public class FMemoryImageMaterialParameterInfo
@@ -633,7 +667,7 @@ public class FMemoryImageMaterialParameterInfo
         Name = Ar.ReadFName();
         Index = Ar.Read<int>();
         Association = Ar.Read<EMaterialParameterAssociation>();
-        Ar.Position += 3;
+        Ar.Position = Ar.Position.Align(4);
     }
 }
 
@@ -664,7 +698,7 @@ public class FMaterialScalarParameterInfo : FMaterialBaseParameterInfo
     public FMaterialScalarParameterInfo(FMemoryImageArchive Ar) : base(Ar)
     {
         DefaultValue = Ar.Read<float>();
-        Ar.Position += 4;
+        Ar.Position = Ar.Position.Align(8);
     }
 }
 
@@ -690,7 +724,7 @@ public class FMaterialTextureParameterInfo : FMaterialBaseParameterInfo
         TextureIndex = Ar.Read<int>();
         SamplerSource = Ar.Read<ESamplerSourceMode>();
         VirtualTextureLayerIndex = Ar.Read<byte>();
-        Ar.Position += 2;
+        Ar.Position = Ar.Position.Align(4);
     }
 }
 
@@ -715,7 +749,7 @@ public class FMaterialUniformPreshaderHeader
             BufferOffset = Ar.Read<uint>();
             ComponentType = Ar.Read<EValueComponentType>();
             NumComponents = Ar.Read<byte>();
-            Ar.Position += 2;
+            Ar.Position = Ar.Position.Align(4);
         }
         else if (Ar.Game >= EGame.GAME_UE5_1)
         {
@@ -793,7 +827,7 @@ public class FMaterialNumericParameterInfo
     {
         ParameterInfo = new FMemoryImageMaterialParameterInfo(Ar);
         ParameterType = Ar.Read<EMaterialParameterType>();
-        Ar.Position += 3;
+        Ar.Position = Ar.Position.Align(4);
         DefaultValueOffset = Ar.Read<uint>();
     }
 }
@@ -937,10 +971,10 @@ public class FRHIUniformBufferLayoutInitializer
         {
             ConstantBufferSize = Ar.Read<uint>();
             StaticSlot = Ar.Read<byte>();
-            Ar.Position +=1;
+            Ar.Position += 1;
             RenderTargetsOffset = Ar.Read<ushort>();
             bHasNonGraphOutputs = Ar.ReadFlag();
-            Ar.Position +=7;
+            Ar.Position = Ar.Position.Align(8);
             Resources = Ar.ReadArray<FRHIUniformBufferResource>();
             GraphResources = Ar.ReadArray<FRHIUniformBufferResource>();
             GraphTextures = Ar.ReadArray<FRHIUniformBufferResource>();
@@ -948,22 +982,22 @@ public class FRHIUniformBufferLayoutInitializer
             GraphUniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
             UniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
             uint NumUsesForDebugging = Ar.Read<uint>();
-            Ar.Position += 4;
+            Ar.Position = Ar.Position.Align(8);
             Name = Ar.ReadFString();
             Hash = Ar.Read<uint>();
-            Ar.Position += 4;
+            Ar.Position = Ar.Position.Align(8);
         }
         else//4.25
         {
             ConstantBufferSize = Ar.Read<uint>();
             StaticSlot = Ar.Read<byte>();
-            Ar.Position += 3;
+            Ar.Position = Ar.Position.Align(4);
             Resources = Ar.ReadArray<FRHIUniformBufferResource>();
             uint NumUsesForDebugging = Ar.Read<uint>();
-            Ar.Position += 4;
+            Ar.Position = Ar.Position.Align(8);
             Name = Ar.ReadFString();
             Hash = Ar.Read<uint>();
-            Ar.Position += 4;
+            Ar.Position = Ar.Position.Align(8);
         }
     }
 }
@@ -1081,7 +1115,11 @@ public class FMemoryImageName
 
     public FMemoryImageName(FArchive Ar)
     {
-        Name = Ar is FMaterialResourceProxyReader proxy && proxy.isGlobal ? Ar.ReadFString() : Ar.ReadFName();
+        Name = Ar switch
+        {
+            FMaterialResourceProxyReader proxy when proxy.isGlobal => Ar.ReadFString(),
+            _ => Ar.ReadFName()
+        };
         Patches = Ar.ReadArray<FMemoryImageNamePatch>();
     }
 
@@ -1134,14 +1172,14 @@ public class FPointerTableBase
 public class FTypeLayoutDesc
 {
     public readonly FName? Name;
-    public readonly string StringName;
+    public readonly string? StringName;
     public readonly FHashedName? NameHash;
     public readonly uint SavedLayoutSize;
     public readonly FSHAHash SavedLayoutHash;
 
     public FTypeLayoutDesc(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
     {
-        if (Ar.isGlobal)
+        if (Ar.isGlobal && bUseNewFormat)
         {
             StringName = Ar.ReadFString();
         }

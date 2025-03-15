@@ -19,7 +19,7 @@ public class ActorXMesh
 {
     private FArchiveWriter Ar;
     private readonly ExporterOptions Options;
-    
+
     public ActorXMesh(ExporterOptions options)
     {
         Options = options;
@@ -34,22 +34,22 @@ public class ActorXMesh
         ExportSkeletalSockets(sockets, bones);
         ExportSkeletonData(bones);
     }
-    
+
     public ActorXMesh(CStaticMeshLod lod, List<MaterialExporter2>? materialExports, FPackageIndex[] sockets, ExporterOptions options) : this(options)
     {
         ExportStaticMeshLods(lod, materialExports, sockets);
     }
-    
+
     public ActorXMesh(CSkelMeshLod lod, List<CSkelMeshBone> refSkeleton, List<MaterialExporter2>? materialExports, FPackageIndex[]? morphTargets,  FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : this(options)
     {
         ExportSkeletalMeshLod(lod, refSkeleton, materialExports, morphTargets, sockets, lodIndex);
     }
-    
+
     public void Save(FArchiveWriter archive)
     {
         archive.Write(Ar.GetBuffer());
     }
-    
+
     private void ExportStaticMeshLods(CStaticMeshLod lod, List<MaterialExporter2>? materialExports, FPackageIndex[] sockets)
     {
         var share = new CVertexShare();
@@ -226,7 +226,7 @@ public class ActorXMesh
                 materialName = tex.Name;
                 materialExports?.Add(new MaterialExporter2(tex, Options));
             }
-            else materialName = $"material_{i}";
+            else materialName = sections[i].MaterialName ?? $"material_{i}";
 
             new VMaterial(materialName, i, 0u, 0, 0u, 0, 0).Serialize(Ar);
         }
@@ -465,5 +465,5 @@ public class ActorXMesh
 
         return -1;
     }
-    
+
 }

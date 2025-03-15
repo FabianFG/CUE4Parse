@@ -6,18 +6,20 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract partial class AbstractVfsReader
     {
-        public void MountTo(FileProviderDictionary files, bool caseInsensitive, EventHandler<int>? vfsMounted = null)
+        public void MountTo(FileProviderDictionary files, StringComparer pathComparer, EventHandler<int>? vfsMounted = null)
         {
-            files.AddFiles(Mount(caseInsensitive));
+            Mount(pathComparer);
+
+            files.AddFiles(Files, ReadOrder);
             vfsMounted?.Invoke(this, files.Count);
         }
     }
     public abstract partial class AbstractAesVfsReader
     {
-        public void MountTo(FileProviderDictionary files, bool caseInsensitive, FAesKey? key, EventHandler<int>? vfsMounted = null)
+        public void MountTo(FileProviderDictionary files, StringComparer pathComparer, FAesKey? key, EventHandler<int>? vfsMounted = null)
         {
             AesKey = key;
-            MountTo(files, caseInsensitive, vfsMounted);
+            MountTo(files, pathComparer, vfsMounted);
         }
     }
 }

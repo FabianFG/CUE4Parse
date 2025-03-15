@@ -28,7 +28,8 @@ public static class ZlibHelper
     public static void Initialize(string path)
     {
         Instance?.Dispose();
-        Instance = new Zlibng(path);
+        if (File.Exists(path))
+            Instance = new Zlibng(path);
     }
 
     public static void Initialize(Zlibng instance)
@@ -73,7 +74,7 @@ public static class ZlibHelper
     public static async Task<bool> DownloadDllAsync(string? path, string? url = null)
     {
         using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false, UseCookies = false });
-        client.Timeout = TimeSpan.FromSeconds(5);
+        client.Timeout = TimeSpan.FromSeconds(20);
         try
         {
             var dllPath = path ?? DLL_NAME;

@@ -169,7 +169,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
-            else materialName = $"material_{index}";
+            else materialName = sect.MaterialName ?? $"material_{index}";
 
             var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
@@ -204,7 +204,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 var materialExporter = new MaterialExporter2(tex, options);
                 materialExports?.Add(materialExporter);
             }
-            else materialName = $"material_{index}";
+            else materialName = sect.MaterialName ?? $"material_{index}";
 
             var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
             mat.Name = materialName;
@@ -269,14 +269,14 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, int[] indices)
         {
-            var uvs1 = new List<Vector2>() { vert1.UV };
-            var uvs2 = new List<Vector2>() { vert2.UV };
-            var uvs3 = new List<Vector2>() { vert3.UV };
+            var uvs1 = new List<Vector2>() { (Vector2)vert1.UV };
+            var uvs2 = new List<Vector2>() { (Vector2)vert2.UV };
+            var uvs3 = new List<Vector2>() { (Vector2)vert3.UV };
             foreach (var uv in uvs)
             {
-                uvs1.Add(uv[indices[0]]);
-                uvs2.Add(uv[indices[1]]);
-                uvs3.Add(uv[indices[2]]);
+                uvs1.Add((Vector2)uv[indices[0]]);
+                uvs2.Add((Vector2)uv[indices[1]]);
+                uvs3.Add((Vector2)uv[indices[2]]);
             }
 
             return (uvs1, uvs2, uvs3);

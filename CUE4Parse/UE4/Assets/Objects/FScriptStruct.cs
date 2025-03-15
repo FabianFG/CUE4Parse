@@ -1,8 +1,14 @@
+using CUE4Parse.GameTypes.Brickadia.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
+using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
+using CUE4Parse.GameTypes.MA.Objects;
+using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
+using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
-using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.GameTypes.SG2.Objects;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -13,6 +19,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Ai;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse.UE4.Objects.Engine.ComputeFramework;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.Engine.Material;
@@ -21,6 +28,7 @@ using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
+using CUE4Parse.UE4.Objects.PCG;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
@@ -66,13 +74,13 @@ public class FScriptStruct
             "PerQualityLevelInt" => type == ReadType.ZERO ? new FPerQualityLevelInt() : new FPerQualityLevelInt(Ar),
             "PerQualityLevelFloat" => type == ReadType.ZERO ? new FPerQualityLevelFloat() : new FPerQualityLevelFloat(Ar),
             "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
-            "IntPoint" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
+            "IntPoint" or "Int32Point" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
             "IntVector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
-            "NiagaraVariableBase" => new FNiagaraVariableBase(Ar),
+            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar),
             "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
             "NiagaraDataInterfaceGPUParamInfo" => new FNiagaraDataInterfaceGPUParamInfo(Ar),
             "MaterialOverrideNanite" => type == ReadType.ZERO ? new FMaterialOverrideNanite() : new FMaterialOverrideNanite(Ar),
@@ -80,6 +88,7 @@ public class FScriptStruct
             "MovieSceneEvalTemplatePtr" => new FMovieSceneEvalTemplatePtr(Ar),
             "MovieSceneEvaluationFieldEntityTree" => new FMovieSceneEvaluationFieldEntityTree(Ar),
             "MovieSceneEvaluationKey" => type == ReadType.ZERO ? new FMovieSceneEvaluationKey() : Ar.Read<FMovieSceneEvaluationKey>(),
+            "MovieSceneEventParameters" => type == ReadType.ZERO ? new FMovieSceneEventParameters() : new FMovieSceneEventParameters(Ar),
             "MovieSceneFloatChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<float>() : new FMovieSceneChannel<float>(Ar),
             "MovieSceneDoubleChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<double>() : new FMovieSceneChannel<double>(Ar),
             "MovieSceneFloatValue" => type == ReadType.ZERO ? new FMovieSceneValue<float>() : new FMovieSceneValue<float>(Ar, Ar.Read<float>()),
@@ -104,6 +113,7 @@ public class FScriptStruct
             "Rotator" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar),
             "Rotator3f" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>()),
             "Rotator3d" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<double>(), Ar.Read<double>(), Ar.Read<double>()),
+            "RawAnimSequenceTrack" => new FRawAnimSequenceTrack(Ar),
             "Sphere" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar),
             "Sphere3f" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<float>>(), Ar.Read<float>()),
             "Sphere3d" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<double>>(), Ar.Read<double>()),
@@ -113,6 +123,7 @@ public class FScriptStruct
             "StringAssetReference" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "SoftObjectPath" => type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar),
             "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
+            "Transform3f" => type == ReadType.ZERO ? new FTransform() : Ar.Read<FTransform>(),
             "TwoVectors" => type == ReadType.ZERO ? new FTwoVectors() : new FTwoVectors(Ar),
             "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
             "Vector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
@@ -137,6 +148,10 @@ public class FScriptStruct
             "WorldConditionQueryDefinition" => new FWorldConditionQueryDefinition(Ar),
             "UniversalObjectLocatorFragment" => type == ReadType.ZERO ? new FUniversalObjectLocatorFragment() : new FUniversalObjectLocatorFragment(Ar),
             "KeyHandleMap" => new FStructFallback(),
+            "ShaderValueTypeHandle" => new FShaderValueTypeHandle(Ar),
+            "AnimationAttributeIdentifier" => new FAnimationAttributeIdentifier(Ar),
+            "AttributeCurve" => new FAttributeCurve(Ar),
+            "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
@@ -171,8 +186,39 @@ public class FScriptStruct
             // Lego 2K Drive
             "LegoGraphPartInstance" => type == ReadType.ZERO ? new FLegoGraphPartInstance() : new FLegoGraphPartInstance(Ar),
 
+            // Splitgate2
+            "Core1047ReleaseFlag" => new FCore1047ReleaseFlag(Ar),
+
+            // ThroneAndLiberty
+            "TLJsonGuid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+            "TLJsonVector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
+            "TLJsonVector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
+            "SceneFaceDefSeamline" => new FSceneFaceDefSeamline(Ar),
+
+            // Metro:Awakening
+            "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
+
+            // Marvel Rivals
+            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
+
+            // Wuthering Waves
+            "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
+
+            // Gothic 1 Remake
+            "WaynetNode" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetNode(Ar),
+            "WaynetPath" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetPath(Ar),
+
+            // Brickadia
+            "BrickStudGroup" when Ar.Game == EGame.GAME_Brickadia => new FBrickStudGroup(Ar),
+            "BRGuid" when Ar.Game == EGame.GAME_Brickadia => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
+    }
+
+    public FScriptStruct(IUStruct structType)
+    {
+        StructType = structType;
     }
 
     public override string ToString() => $"{StructType} ({StructType.GetType().Name})";

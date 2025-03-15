@@ -24,7 +24,7 @@ using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
 
 namespace CUE4Parse.UE4.Readers
 {
-    public abstract class FArchive : Stream, ICloneable, IRandomAccessStream
+    public abstract class FArchive : RandomAccessStream, ICloneable
     {
         public VersionContainer Versions;
         public EGame Game
@@ -44,7 +44,7 @@ namespace CUE4Parse.UE4.Readers
         }
         public abstract string Name { get; }
 
-        public virtual int ReadAt(long position, byte[] buffer, int offset, int count)
+        public override int ReadAt(long position, byte[] buffer, int offset, int count)
         {
             Position = position;
             CheckReadSize(count);
@@ -52,8 +52,8 @@ namespace CUE4Parse.UE4.Readers
             return Read(buffer, offset, count);
         }
 
-        public virtual Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count,
-            CancellationToken cancellationToken)
+        public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count,
+            CancellationToken cancellationToken = default)
         {
             Position = position;
             CheckReadSize(count);
@@ -61,12 +61,12 @@ namespace CUE4Parse.UE4.Readers
             return ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public virtual Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+        public override ValueTask<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
         {
             Position = position;
             CheckReadSize(memory.Length);
 
-            return ReadAsync(memory, cancellationToken).AsTask();
+            return ReadAsync(memory, cancellationToken);
         }
 
         public virtual byte[] ReadBytes(int length)
@@ -181,7 +181,7 @@ namespace CUE4Parse.UE4.Readers
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
-                return Array.Empty<T>();
+                return [];
 
             var pos = Position;
             T[] array = ReadArray<T>(elementCount);

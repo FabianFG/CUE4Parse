@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
         {
             var stripDataFlags = Ar.Read<FStripDataFlags>();
 
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
                 BaseVertexIndex = Ar.Read<int>();
 
             if (!stripDataFlags.IsEditorDataStripped())

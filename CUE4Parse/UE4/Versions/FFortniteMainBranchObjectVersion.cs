@@ -519,6 +519,57 @@ namespace CUE4Parse.UE4.Versions
             // Multiple changes to AnimNext modules, variables etc.
             AnimNextModuleRefactor,
 
+            // Subsurface profile now has a guid to be able to select one of many in a Substrate material.
+            SubsurfaceProfileGuid,
+
+            // Added support for to record the new solver iteration settings in CVD
+            SolverIterationsDataSupportInChaosVisualDebugger,
+
+            // Updated FColorMaterialInput to use FLinearColor instead of FColor
+            MaterialInputUsesLinearColor,
+
+            // Updated editor only AFunctionalTest running logic to run tests editor world if the actors don't support PIE
+            FunctionalTestCanRunInEditorWorld,
+
+            // Added support for display name in the Visual Logger
+            VisualLoggerSupportDisplayName,
+
+            // Added support for the GyroscopicTorque flag in CVD
+            GyroscopicTorquesSupportInChaosVisualDebugger,
+
+            // Added managed array property serialization
+            AddManagedArrayCollectionPropertySerialization,
+
+            // Landscape texture patches in Texture Asset source mode now use proper resolution when calculating transform
+            LandscapeTexturePatchUsesTextureAssetResolution,
+
+            // Added support for relative transform in WorldPartitionActorDesc
+            WorldPartitionActorDescSerializeRelativeTransform,
+
+            // Make sure scene graph entities are not public by default
+            SceneGraphEntitiesPrivateByDefault,
+
+            // Added debug color for physical materials
+            DebugColorForPhysicalMaterials,
+
+            // Added PreprocessedFontGeometry to FFontFaceData
+            AddedPreprocessedFontGeometry,
+
+            // Added Dynamic Mesh Sculpt Layer serialization
+            DynamicMeshSerializeSculptLayers,
+
+            // Fix reachable garbage object warnings from some legacy ASpatialHashRuntimeGridInfo actors
+            SpatialHashRuntimeGridInfoSpriteFixup,
+
+            // Removed UAnimSequence::bUseRawDataOnly flag alongside compression refactor
+            AnimSequenceRawDataOnlyFlagRemoval,
+
+            // HLOD relevancy of Level Instances was previously ignored, now taken into account. Reset to the default behavior.
+            ResetLevelInstanceHLODRelevancy,
+
+            // Updated default scene capture post-processing settings to reflect the underlying implementation overrides
+            SceneCaptureDefaultSettings,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -547,6 +598,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_3 => Type.WorldPartitionHLODActorUseSourceCellGuid,
                 < EGame.GAME_UE5_4 => Type.WaterBodyStaticMeshFixup,
                 < EGame.GAME_UE5_5 => Type.SkeletalHalfEdgeData,
+                < EGame.GAME_UE5_6 => Type.SolverIterationsDataSupportInChaosVisualDebugger,
                 _ => Type.LatestVersion
             };
         }

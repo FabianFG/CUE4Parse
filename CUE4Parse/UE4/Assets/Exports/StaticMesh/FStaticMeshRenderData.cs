@@ -21,14 +21,10 @@ public class FStaticMeshRenderData
     public readonly bool bLODsShareStaticLighting;
     public readonly float[]? ScreenSize;
 
-    public FStaticMeshRenderData(FAssetArchive Ar, bool bCooked)
+    public FStaticMeshRenderData(FAssetArchive Ar)
     {
-        if (!bCooked) return;
-
         if (Ar.Versions["StaticMesh.KeepMobileMinLODSettingOnDesktop"])
-        {
-            var minMobileLODIdx = Ar.Read<int>();
-        }
+            _ = Ar.Read<int>(); // minMobileLODIdx
 
         if (Ar.Game == EGame.GAME_HYENAS) Ar.Position += 1;
 
@@ -67,7 +63,7 @@ public class FStaticMeshRenderData
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
             NaniteResources = new FNaniteResources(Ar);
-            
+
             if (Ar.Game >= EGame.GAME_UE5_5)
             {
                 var bHasRayTracingProxy = Ar.ReadBoolean();
@@ -76,7 +72,7 @@ public class FStaticMeshRenderData
                     var rayTracingProxy = new FStaticMeshRayTracingProxy(Ar);
                 }
             }
-            
+
             SerializeInlineDataRepresentations(Ar);
         }
 
@@ -86,7 +82,7 @@ public class FStaticMeshRenderData
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_WIDGET_VISIBILITY)
             {
                 var stripDataFlags = Ar.Read<FStripDataFlags>();
-                stripped = stripDataFlags.IsDataStrippedForServer();
+                stripped = stripDataFlags.IsAudioVisualDataStripped();
                 if (Ar.Game >= EGame.GAME_UE4_21)
                 {
                     stripped |= stripDataFlags.IsClassDataStripped(0x01);
@@ -129,20 +125,16 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game == EGame.GAME_FragPunk)
-        {
-            ScreenSize = new float[16];
-            for (var i = 0; i < 16; i++)
-            {
-                var bFloatCooked = Ar.ReadBoolean();
-                ScreenSize[i] = Ar.Read<float>();
-            }
-            return;
-        }
-
         if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
 
-        ScreenSize = new float[Ar.Game >= EGame.GAME_UE4_9 ? MAX_STATIC_LODS_UE4 : 4];
+        var screenSizeLength = Ar.Game switch
+        {
+            EGame.GAME_FragPunk => 16,
+            EGame.GAME_Stalker2 => 14,
+            >= EGame.GAME_UE4_9 => MAX_STATIC_LODS_UE4,
+            _ => 4
+        };
+        ScreenSize = new float[screenSizeLength];
         for (var i = 0; i < ScreenSize.Length; ++i)
         {
             if (Ar.Game >= EGame.GAME_UE4_20) // FPerPlatformProperty
@@ -175,7 +167,7 @@ public class FStaticMeshRenderData
         const byte CardRepresentationDataStripFlag = 2;
 
         var stripFlags = new FStripDataFlags(Ar);
-        if (!stripFlags.IsDataStrippedForServer() && !stripFlags.IsClassDataStripped(CardRepresentationDataStripFlag))
+        if (!stripFlags.IsAudioVisualDataStripped() && !stripFlags.IsClassDataStripped(CardRepresentationDataStripFlag))
         {
             foreach (var lod in LODs ?? [])
             {

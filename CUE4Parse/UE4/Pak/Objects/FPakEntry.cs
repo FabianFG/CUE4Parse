@@ -31,9 +31,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader, path)
         {
-            Path = path;
             // FPakEntry is duplicated before each stored file, without a filename. So,
             // remember the serialized size of this structure to avoid recomputation later.
             var startOffset = Ar.Position;
@@ -69,9 +68,9 @@ namespace CUE4Parse.UE4.Pak.Objects
 
             if (Ar.Game == GAME_WildAssault)
             {
-                Offset = (long) ((ulong) Offset ^ 0x87C36BFDD1C9A516) - 116;
-                CompressedSize = (long) ((ulong) CompressedSize ^ 0xF10DE7310B5FB852) - 18;
-                UncompressedSize = (long) ((ulong) UncompressedSize ^ 0xF06D48ADF2DCB93A) - 34;
+                Offset = (long) ((ulong) Offset ^ 0xA7CE6A55B275BB25) - 0x7A;
+                CompressedSize = (long) ((ulong) CompressedSize ^ 0xF00DF9C13B6B54B0) - 0xDF;
+                UncompressedSize = (long) ((ulong) UncompressedSize ^ 0x1604EC5A1949330D) - 0x6F;
             }
 
             if (reader.Info.Version < PakFile_Version_FNameBasedCompressionMethod)
@@ -138,8 +137,6 @@ namespace CUE4Parse.UE4.Pak.Objects
                 Ar.Position += 8; // Timestamp
             Ar.Position += 20; // Hash
 
-            if (Ar.Game == GAME_InfinityNikki) Ar.Position += 20; // Second Hash
-
             if (reader.Info.Version >= PakFile_Version_CompressionEncryption)
             {
                 if (CompressionMethod != CompressionMethod.None)
@@ -147,7 +144,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                 Flags = (uint) Ar.ReadByte();
                 CompressionBlockSize = Ar.Read<uint>();
                 if (Ar.Game == GAME_WildAssault)
-                    CompressionBlockSize = CompressionBlockSize ^ 0xD2AF47EF - 5;
+                    CompressionBlockSize = CompressionBlockSize ^ 0x6431032B - 0x81;
             }
 
             if (Ar.Game == GAME_TEKKEN7) Flags = (uint) (Flags & ~Flag_Encrypted);
@@ -167,13 +164,17 @@ namespace CUE4Parse.UE4.Pak.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader)
+        public unsafe FPakEntry(PakFileReader reader, string path, byte* data) : base(reader, path)
         {
-            Path = path;
-
             // UE4 reference: FPakFile::DecodePakEntry()
             var bitfield = *(uint*) data;
             data += sizeof(uint);
+
+            if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
+            {
+                bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 | (bitfield & 0x0FC00000) << 1 | bitfield & 0xE0000000;
+                data += sizeof(byte);
+            }
 
             uint compressionBlockSize;
             if ((bitfield & 0x3f) == 0x3f) // flag value to load a field
@@ -221,6 +222,11 @@ namespace CUE4Parse.UE4.Pak.Objects
             {
                 UncompressedSize = *(long*) data; // Should be ulong
                 data += sizeof(long);
+            }
+
+            if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
+            {
+                (Offset, UncompressedSize) = (UncompressedSize, Offset);
             }
 
             Size = UncompressedSize;
@@ -352,9 +358,8 @@ namespace CUE4Parse.UE4.Pak.Objects
         public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader)
+        public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader, path)
         {
-            Path = path;
             var startOffset = Ar.Position;
 
             if (game == GAME_GameForPeace)

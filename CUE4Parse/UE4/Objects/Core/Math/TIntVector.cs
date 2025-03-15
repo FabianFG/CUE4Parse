@@ -8,6 +8,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly T X;
         public readonly T Y;
 
+        public TIntVector2(T x, T y)
+        {
+            X = x;
+            Y = y;
+        }
+
         public override string ToString()
         {
             return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";

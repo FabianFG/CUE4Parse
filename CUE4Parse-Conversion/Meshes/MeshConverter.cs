@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 
 namespace CUE4Parse_Conversion.Meshes
 {
@@ -38,7 +39,23 @@ namespace CUE4Parse_Conversion.Meshes
             return true;
         }
 
-        public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh)
+        public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh) 
+        {
+            var originalMesh = spline?.GetStaticMesh().Load<UStaticMesh>();
+            if (originalMesh == null)
+            {
+                convertedMesh = new CStaticMesh();
+                return false;
+            }
+            return TryConvert(originalMesh, spline, out convertedMesh);
+        }
+        
+        public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh) 
+        {
+            return TryConvert(originalMesh, null, out convertedMesh);
+        }
+
+        public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline, out CStaticMesh convertedMesh)
         {
             convertedMesh = new CStaticMesh();
             if (originalMesh.RenderData == null)
@@ -103,7 +120,16 @@ namespace CUE4Parse_Conversion.Meshes
                     if (suv.Normal[1].Data != 0)
                         throw new ParserException("Not implemented: should only be used in UE3");
 
-                    staticMeshLod.Verts[j].Position = srcLod.PositionVertexBuffer.Verts[j];
+                    var pos = srcLod.PositionVertexBuffer.Verts[j];
+                    if (spline != null) // TODO normals
+                    {
+                        var distanceAlong = USplineMeshComponent.GetAxisValueRef(ref pos, spline.ForwardAxis);
+                        var sliceTransform = spline.CalcSliceTransform(distanceAlong);
+                        USplineMeshComponent.SetAxisValueRef(ref pos, spline.ForwardAxis, 0f);
+                        pos = sliceTransform.TransformPosition(pos);
+                    }
+
+                    staticMeshLod.Verts[j].Position = pos;
                     UnpackNormals(suv.Normal, staticMeshLod.Verts[j]);
                     staticMeshLod.Verts[j].UV.U = suv.UV[0].U;
                     staticMeshLod.Verts[j].UV.V = suv.UV[0].V;

@@ -80,10 +80,10 @@ namespace CUE4Parse_Conversion.Materials
         {
             label = string.Empty;
             savedFilePath = string.Empty;
-            if (!baseDirectory.Exists || string.IsNullOrEmpty(_fileData)) return false;
+            if (string.IsNullOrEmpty(_fileData)) return false;
 
             savedFilePath = FixAndCreatePath(baseDirectory, _internalFilePath, "mat");
-            File.WriteAllText(savedFilePath, _fileData);
+            File.WriteAllTextAsync(savedFilePath, _fileData);
             label = Path.GetFileName(savedFilePath);
 
             foreach (var (name, bitmap) in _textures)

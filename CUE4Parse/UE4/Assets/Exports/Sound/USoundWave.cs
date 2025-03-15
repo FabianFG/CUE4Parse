@@ -31,7 +31,11 @@ public class USoundWave : USoundBase
         if (TryGetValue(out bool s, nameof(bStreaming))) // will return false if not found
             bStreaming = s;
         else if (TryGetValue(out FName loadingBehavior, "LoadingBehavior"))
+        {
             bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
+            if (Ar.Game == EGame.GAME_Stray && bStreaming)
+                bStreaming = loadingBehavior.Text != "ESoundWaveLoadingBehavior::RetainOnLoad";
+        }
 
         var flags = Ar.Read<ESoundWaveFlag>();
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SOUND_COMPRESSION_TYPE_ADDED && FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveSoundWaveCompressionName)

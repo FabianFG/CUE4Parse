@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets;
@@ -46,12 +47,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(out UExport export)
+        public bool TryLoad([MaybeNullWhen(false)] out UExport export)
         {
             var provider = Owner?.Provider;
             if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
-                export = default;
+                export = null;
                 return false;
             }
             return TryLoad(provider, out export);
@@ -62,12 +63,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load<T>(Owner?.Provider ?? throw new ParserException("Package was loaded without a IFileProvider"));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(out T export) where T : UExport
+        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
         {
             var provider = Owner?.Provider;
             if (provider == null || AssetPathName.IsNone || string.IsNullOrEmpty(AssetPathName.Text))
             {
-                export = default;
+                export = null;
                 return false;
             }
             return TryLoad(provider, out export);
@@ -100,11 +101,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             Load(provider) as T ?? throw new ParserException("Loaded SoftObjectProperty but it was of wrong type");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(IFileProvider provider, out T export) where T : UExport
+        public bool TryLoad<T>(IFileProvider provider, [MaybeNullWhen(false)] out T export) where T : UExport
         {
             if (!TryLoad(provider, out var genericExport) || !(genericExport is T cast))
             {
-                export = default;
+                export = null;
                 return false;
             }
 
@@ -120,22 +121,25 @@ namespace CUE4Parse.UE4.Objects.UObject
         public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UExport Load(IFileProvider provider) => provider.LoadObject(AssetPathName.Text);
+        public UExport Load(IFileProvider provider) => provider.LoadPackageObject(AssetPathName.Text);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(IFileProvider provider, out UExport export) =>
-            provider.TryLoadObject(AssetPathName.Text, out export);
+        public bool TryLoad(IFileProvider provider, [MaybeNullWhen(false)] out UExport export) =>
+            provider.TryLoadPackageObject(AssetPathName.Text, out export);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport> LoadAsync(IFileProvider provider) => await provider.LoadObjectAsync(AssetPathName.Text);
+        public async Task<UExport> LoadAsync(IFileProvider provider) => await provider.LoadPackageObjectAsync(AssetPathName.Text);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<UExport?> TryLoadAsync(IFileProvider provider) =>
-            await provider.TryLoadObjectAsync(AssetPathName.Text);
+        public async Task<UExport?> TryLoadAsync(IFileProvider provider)
+        {
+            // TODO: this aint a "Try"
+            return await provider.LoadPackageObjectAsync(AssetPathName.Text);
+        }
         #endregion
 
         public override string ToString() => string.IsNullOrEmpty(SubPathString)
-            ? (AssetPathName.IsNone ? "" : AssetPathName.Text)
+            ? AssetPathName.IsNone ? "" : AssetPathName.Text
             : $"{AssetPathName.Text}:{SubPathString}";
     }
 }

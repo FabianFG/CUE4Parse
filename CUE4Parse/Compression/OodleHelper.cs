@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
@@ -29,10 +32,31 @@ public static class OodleHelper
 
     public static Oodle? Instance { get; private set; }
 
+    public static void Initialize()
+    {
+        if (Instance is not null) return;
+        if (CUE4ParseNatives.IsFeatureAvailable("Oodle")) {
+        
+            Instance = new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName));
+        }
+        else
+        {
+            if (DownloadOodleDll())
+            {
+                Instance = new Oodle(OODLE_DLL_NAME);
+            }
+            else
+            {
+                Log.Warning("Oodle decompression failed: unable to download oodle dll");
+            }   
+        }
+    }
+
     public static void Initialize(string path)
     {
         Instance?.Dispose();
-        Instance = new Oodle(path);
+        if (File.Exists(path))
+            Instance = new Oodle(path);
     }
 
     public static void Initialize(Oodle instance)
@@ -76,11 +100,20 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllAsync(string? path)
     {
-        using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false, UseCookies = false });
-        client.Timeout = TimeSpan.FromSeconds(5);
+        path ??= OODLE_DLL_NAME;
+
+        using var client = new HttpClient(new SocketsHttpHandler
+        {
+            UseProxy = false,
+            UseCookies = false,
+            AutomaticDecompression = DecompressionMethods.All
+        });
+        client.Timeout = TimeSpan.FromSeconds(20);
+
         try
         {
             using var indexResponse = await client.GetAsync(WARFRAME_INDEX_URL).ConfigureAwait(false);
+            indexResponse.EnsureSuccessStatusCode();
             await using var indexLzmaStream = await indexResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
             var indexStream = new MemoryStream();
 
@@ -113,17 +146,46 @@ public static class OodleHelper
             Lzma.Decompress(dllLzmaStream, dllStream);
             dllStream.Position = 0;
 
-            var dllPath = path ?? OODLE_DLL_NAME;
             {
-                await using var dllFs = File.Create(dllPath);
+                await using var dllFs = File.Create(path);
                 await dllStream.CopyToAsync(dllFs).ConfigureAwait(false);
             }
-            Log.Information($"Successfully downloaded oodle dll at \"{dllPath}\"");
+
+            Log.Information($"Successfully downloaded oodle dll at \"{path}\"");
             return true;
         }
         catch (Exception e)
         {
             Log.Warning(e, "Uncaught exception while downloading oodle dll");
+        }
+
+        Log.Information("Downloading oodle from alternative source");
+
+        var altResult = await DownloadOodleDllFromOodleUEAsync(client, path).ConfigureAwait(false);
+        return altResult;
+    }
+
+    public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path)
+    {
+        const string url = "https://github.com/WorkingRobot/OodleUE/releases/download/2024-11-01-726/msvc.zip"; // 2.9.13
+        const string entryName = "bin/Release/oodle-data-shared.dll";
+
+        try
+        {
+            using var response = await client.GetAsync(url).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var zip = new ZipArchive(responseStream, ZipArchiveMode.Read);
+            var entry = zip.GetEntry(entryName);
+            ArgumentNullException.ThrowIfNull(entry, "oodle entry in zip not found");
+            await using var entryStream = entry.Open();
+            await using var fs = File.Create(path);
+            await entryStream.CopyToAsync(fs).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log.Warning(e, "Uncaught exception while downloading oodle dll from OodleUE");
         }
         return false;
     }

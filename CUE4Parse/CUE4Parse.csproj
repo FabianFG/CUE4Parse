@@ -1,39 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
+    <NeutralLanguage>en</NeutralLanguage>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFramework>net8.0</TargetFramework>
     <IsPublishable>false</IsPublishable>
     <Platforms>AnyCPU</Platforms>
     <Description>C# Parser for Unreal Engine packages &amp; assets</Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <Version>1.1.1</Version>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+    <Version>1.2.2</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blake3" Version="1.1.0" />
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="Blake3" Version="2.0.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.0" />
     <PackageReference Include="Infrablack.UE4Config" Version="0.7.2.97" />
     <PackageReference Include="LZMA-SDK" Version="22.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="OffiUtils" Version="1.2.0" />
-    <PackageReference Include="Oodle.NET" Version="2.0.2" />
-    <PackageReference Include="Serilog" Version="4.0.2" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="OffiUtils" Version="2.0.1" />
+    <PackageReference Include="Oodle.NET" Version="2.1.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.8" />
-    <PackageReference Include="Zlib-ng.NET" Version="1.0.1" />
-    <PackageReference Include="ZstdSharp.Port" Version="0.8.1" />
+    <PackageReference Include="Zlib-ng.NET" Version="1.1.1" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.4" />
   </ItemGroup>
 
   <ItemGroup>

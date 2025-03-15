@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Localization
                 for (var j = 0; j < keyCount; j++)
                 {
                     var key = new FTextKey(Ar, versionNumber);
-                    FEntry newEntry = new(Ar) {SourceStringHash = Ar.Read<uint>()};
+                    FEntry newEntry = new(Ar);
                     if (versionNumber >= ELocResVersion.Compact)
                     {
                         var localizedStringIndex = Ar.Read<int>();

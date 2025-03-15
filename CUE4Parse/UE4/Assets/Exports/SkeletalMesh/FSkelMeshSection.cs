@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
@@ -54,11 +53,11 @@ public class FSkelMeshSection
         bCastShadow = true;
         bVisibleInRayTracing = true;
         CorrespondClothSectionIndex = -1;
-        SoftVertices = Array.Empty<FSoftVertex>();
-        ClothMappingDataLODs = Array.Empty<FMeshToMeshVertData[]>();
-        BoneMap = Array.Empty<ushort>();
+        SoftVertices = [];
+        ClothMappingDataLODs = [];
+        BoneMap = [];
         MaxBoneInfluences = 4;
-        OverlappingVertices = new Dictionary<int, int[]>();
+        OverlappingVertices = [];
         GenerateUpToLodIndex = -1;
         OriginalDataSectionIndex = -1;
         ChunkedParentSectionIndex = -1;
@@ -76,7 +75,7 @@ public class FSkelMeshSection
             var dummyChunkIndex = Ar.Read<ushort>();
         }
 
-        if (!stripDataFlags.IsDataStrippedForServer())
+        if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
             NumTriangles = Ar.Read<int>();
@@ -118,7 +117,7 @@ public class FSkelMeshSection
 
         if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
             {
                 BaseVertexIndex = Ar.Read<uint>();
             }
@@ -237,15 +236,16 @@ public class FSkelMeshSection
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
         if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
+        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy) Ar.Position += 4;
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
         BaseVertexIndex = Ar.Read<uint>();
-        ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? new[] { Ar.ReadArray(() => new FMeshToMeshVertData(Ar)) } : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
+        ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
         BoneMap = Ar.ReadArray<ushort>();
         NumVertices = Ar.Read<int>();
         MaxBoneInfluences = Ar.Read<int>();
         CorrespondClothAssetIndex = Ar.Read<short>();
         ClothingData = Ar.Read<FClothingSectionData>();
-
+        
         if (Ar.Game == EGame.GAME_Paragon) return;
 
         if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
@@ -264,11 +264,14 @@ public class FSkelMeshSection
             case EGame.GAME_OutlastTrials:
                 Ar.Position += 1;
                 break;
-            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED:
+            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters:
                 Ar.Position += 4;
                 break;
-            case EGame.GAME_CalabiYau or EGame.GAME_FragPunk:
+            case EGame.GAME_FragPunk:
                 Ar.Position += 8;
+                break;
+            case EGame.GAME_Strinova:
+                Ar.Position += 14;
                 break;
             case EGame.GAME_MortalKombat1:
                 Ar.Position += 12;

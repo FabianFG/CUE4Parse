@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Readers
@@ -102,20 +101,24 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override UObject? ReadUObject() => ReadObject<UObject>().Value;
 
-        public bool TryGetPayload(PayloadType type, out FAssetArchive? ar)
+        public bool TryGetPayload(PayloadType type, [MaybeNullWhen(false)] out FAssetArchive ar)
         {
-            ar = null;
-            if (!_payloads.TryGetValue(type, out var ret)) return false;
-
-            ar = ret.Value;
-            return true;
+            try
+            {
+                ar = GetPayload(type);
+            }
+            catch
+            {
+                ar = null;
+            }
+            return ar != null;
         }
 
         public FAssetArchive GetPayload(PayloadType type)
         {
             _payloads.TryGetValue(type, out var ret);
             var reader = ret?.Value;
-            return reader ?? throw new ParserException(this, $"{type} is needed to parse the current package");
+            return reader ?? throw new ParserException(this, $"Requested payload of type {type} was not found");
         }
 
         public void AddPayload(PayloadType type, FAssetArchive payload)
@@ -148,9 +151,9 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override int ReadAt(long position, byte[] buffer, int offset, int count)
             => _baseArchive.ReadAt(position, buffer, offset, count);
-        public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override Task<int> ReadAtAsync(long position, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
             => _baseArchive.ReadAtAsync(position, buffer, offset, count, cancellationToken);
-        public override Task<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken)
+        public override ValueTask<int> ReadAtAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
             => _baseArchive.ReadAtAsync(position, memory, cancellationToken);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -69,7 +69,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             return new Lazy<T?>(() =>
             {
                 Debug.Assert(Owner.Provider != null, "Owner.Provider != null");
-                return Owner.Provider.TryLoadObject<T>(path, out var obj) ? obj : null;
+                return Owner.Provider.TryLoadPackageObject<T>(path, out var obj) ? obj : null;
             });
         }
     }

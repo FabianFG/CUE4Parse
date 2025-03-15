@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
@@ -26,6 +27,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material.Parameters
             A = Ar.ReadBoolean();
             bOverride = Ar.ReadBoolean();
             ExpressionGuid = Ar.Read<FGuid>();
+        }
+
+        public FLinearColor ToFLinearColor() 
+        {
+            return new FLinearColor(R ? 1f : 0, G ? 1f : 0, B ? 1f : 0, A ? 1f : 0);
         }
     }
 }

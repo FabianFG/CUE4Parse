@@ -8,7 +8,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     public class CVertexShare
     {
         public List<FVector> Points;
-        public List<FPackedNormal> Normals;
+        public List<FVector4> Normals;
         public List<uint> ExtraInfos;
         public List<int> WedgeToVert;
         public Lazy<int[]> VertToWedge;
@@ -25,7 +25,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 
             WedgeIndex = 0;
             Points = new List<FVector>();
-            Normals = new List<FPackedNormal>();
+            Normals = new List<FVector4>();
             ExtraInfos = new List<uint>();
             WedgeToVert = new List<int>();
             VertToWedge = new Lazy<int[]>(new int[numVerts]);
@@ -55,10 +55,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             });
         }
 
-        public int AddVertex(FVector position, FPackedNormal normal, uint extraInfo = 0)
+        public int AddVertex(FVector position, FVector4 normal, uint extraInfo = 0)
         {
             var pointIndex = -1;
-            normal.Data &= 0xFFFFFFu;
+            // normal.Data &= 0xFFFFFFu;
 
             var h = (int)Math.Floor(((position[0] - Mins[0]) / Extents.Value[0] + (position[1] - Mins[1]) / Extents.Value[1] + (position[2] - Mins[2]) / Extents.Value[2]) * (Constants.MESH_HASH_SIZE / 3.0f * 16)) % Constants.MESH_HASH_SIZE;
             pointIndex = Hash[h];

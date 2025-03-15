@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Shaders
@@ -20,7 +21,10 @@ namespace CUE4Parse.UE4.Shaders
         public FSerializedShaderArchive(FArchive Ar)
         {
             ShaderMapHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-            ShaderHashes = Ar.ReadArray(() => new FSHAHash(Ar));
+            ShaderHashes = Ar.Game == EGame.GAME_MarvelRivals
+                ? Ar.ReadArray(() => new FSHAHash(Ar, 28))
+                : Ar.ReadArray(() => new FSHAHash(Ar));
+            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4; // unknown
             ShaderMapEntries = Ar.ReadArray<FShaderMapEntry>();
             ShaderEntries = Ar.ReadArray<FShaderCodeEntry>();
             PreloadEntries = Ar.ReadArray<FFileCachePreloadEntry>();
