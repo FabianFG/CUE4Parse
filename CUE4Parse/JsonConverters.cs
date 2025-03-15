@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
@@ -2965,6 +2966,22 @@ public class FScriptTextConverter : JsonConverter<FScriptText>
     public override FScriptText? ReadJson(JsonReader reader, Type objectType, FScriptText? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
+    }
+}
+
+public class FGameplayTagContainerConverter : JsonConverter<FGameplayTagContainer>
+{
+    public override void WriteJson(JsonWriter writer, FGameplayTagContainer value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value.GameplayTags);
+    }
+
+    public override FGameplayTagContainer ReadJson(JsonReader reader, Type objectType, FGameplayTagContainer existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        var names = serializer.Deserialize<string[]>(reader);
+        var tags = names?.Select(name => new FGameplayTag(new FName(name))).ToArray() ?? [];
+        return new FGameplayTagContainer(tags);
     }
 }
 

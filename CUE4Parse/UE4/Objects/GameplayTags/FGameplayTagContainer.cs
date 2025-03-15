@@ -12,6 +12,7 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags;
 
+[JsonConverter(typeof(FGameplayTagContainerConverter))]
 public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTag>
 {
     public readonly FGameplayTag[] GameplayTags;
