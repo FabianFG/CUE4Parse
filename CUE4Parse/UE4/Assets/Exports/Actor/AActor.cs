@@ -115,7 +115,6 @@ public class ADatasmithImportedSequencesActor : AActor;
 public class ADatasmithSceneActor : AActor;
 public class ADebugCameraController : APlayerController;
 public class ADebugCameraHUD : AHUD;
-public class ADecalActor : AActor;
 public class ADefaultPawn : APawn;
 public class ADefaultPhysicsVolume : APhysicsVolume;
 public class ADetourCrowdAIController : AAIController;
