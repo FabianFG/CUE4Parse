@@ -126,7 +126,7 @@ public abstract class AbstractUePackage : UObject, IPackage
 [JsonConverter(typeof(ResolvedObjectConverter))]
 public abstract class ResolvedObject : IObject
 {
-    protected readonly IPackage Package;
+    public readonly IPackage Package;
 
     public ResolvedObject(IPackage package, int exportIndex = -1)
     {

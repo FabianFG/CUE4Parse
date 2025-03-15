@@ -20,7 +20,7 @@ using OffiUtils;
 
 namespace CUE4Parse.UE4.IO
 {
-    public class IoStoreReader : AbstractAesVfsReader
+    public partial class IoStoreReader : AbstractAesVfsReader
     {
         public readonly IReadOnlyList<FArchive> ContainerStreams;
 
@@ -306,6 +306,12 @@ namespace CUE4Parse.UE4.IO
         private void ProcessIndex(StringComparer pathComparer)
         {
             if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
+            if (Game == EGame.GAME_Brickadia)
+            {
+                GenerateBrickadiaIndex(pathComparer);
+                return;
+            }
+
             var directoryIndex = new FByteArchive(Path, DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
 
             string mountPoint;

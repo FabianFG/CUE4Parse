@@ -94,7 +94,7 @@ public readonly struct FPrecomputedVolumeDistanceField : IUStruct
 
 public class ULevel : Assets.Exports.UObject
 {
-    public FPackageIndex[] Actors { get; private set; }
+    public FPackageIndex?[] Actors { get; private set; }
     public FURL URL { get; private set; }
     public FPackageIndex Model { get; private set; }
     public FPackageIndex[] ModelComponents { get; private set; }

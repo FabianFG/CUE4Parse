@@ -276,6 +276,7 @@ namespace CUE4Parse.UE4.Pak.Objects
             SizeRennsport = Size8a + 16,
             SizeQQ = Size8a + 26,
             SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
+            ARKSurvivalAscended = Size8a + 8, // additional 8 bytes 
 
             SizeLast,
             SizeMax = SizeLast - 1
@@ -320,6 +321,7 @@ namespace CUE4Parse.UE4.Pak.Objects
                     EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                     EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                     EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
+                    EGame.GAME_ARKSurvivalAscended => [OffsetsToTry.ARKSurvivalAscended],
                     _ => _offsetsToTry
                 };
                 foreach (var offset in offsetsToTry)

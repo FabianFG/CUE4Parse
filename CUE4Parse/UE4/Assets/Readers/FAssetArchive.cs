@@ -118,7 +118,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         {
             _payloads.TryGetValue(type, out var ret);
             var reader = ret?.Value;
-            return reader ?? throw new ParserException(this, $"{type} is needed to parse the current package");
+            return reader ?? throw new ParserException(this, $"Requested payload of type {type} was not found");
         }
 
         public void AddPayload(PayloadType type, FAssetArchive payload)

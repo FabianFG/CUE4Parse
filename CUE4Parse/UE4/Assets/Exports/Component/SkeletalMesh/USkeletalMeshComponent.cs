@@ -19,7 +19,7 @@ public class USkeletalMeshComponent : USceneComponent
         
         return skeletalMesh;
     }
-    
+
     public FPackageIndex GetSkeletalMesh(string parameterName)
     {
         var mesh = new FPackageIndex();
@@ -34,5 +34,20 @@ public class USkeletalMeshComponent : USceneComponent
         }
 
         return mesh;
+    }
+
+    public bool SetSkeletalMeshIfNull(FPackageIndex mesh)
+    {
+        if (GetSkeletalMesh().IsNull)
+        {
+            SetSkeletalMesh(mesh);
+            return true;
+        }
+        return false;
+    }
+    
+    public void SetSkeletalMesh(FPackageIndex mesh)
+    {
+        PropertyUtil.Set(this, "SkeletalMesh", mesh);
     }
 }

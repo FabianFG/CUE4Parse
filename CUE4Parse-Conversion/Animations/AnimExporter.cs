@@ -41,7 +41,8 @@ namespace CUE4Parse_Conversion.Animations
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
-            
+
+                // use GetExportSavePath()?
                 AnimSequences.Add(sequenceIndex > 0
                     ? new Anim($"{PackagePath}_SEQ{sequenceIndex}.{ext}", Ar.GetBuffer())
                     : new Anim($"{PackagePath}.{ext}", Ar.GetBuffer()));

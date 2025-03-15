@@ -8,6 +8,7 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -45,6 +46,12 @@ namespace CUE4Parse.FileProvider
         /// DefaultEngine.ini file from the game
         /// </summary>
         public CustomConfigIni DefaultEngine { get; }
+
+        /// <summary>
+        ///  Light units used if not specified in the asset
+        ///  Located here in UE Projects DefaultEngine.ini[/Script/Engine.RendererSettings]->r.DefaultFeature.LightUnits
+        /// </summary>
+        public ELightUnits DefaultLightUnit { get; set; }
 
         /// <summary>
         /// Type Mappings that should be used for unversioned property serialization

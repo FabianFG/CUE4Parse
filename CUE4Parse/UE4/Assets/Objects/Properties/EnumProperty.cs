@@ -36,6 +36,11 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
             }
         }
 
+        public EnumProperty(FName value)
+        {
+            Value = value;
+        }
+
         private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, int index)
         {
             var enumName = tagData?.EnumName;

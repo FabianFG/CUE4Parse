@@ -546,6 +546,46 @@ public static class PropertyUtil
 
         throw new NullReferenceException($"Couldn't get property of type {typeof(T).Name} at index '{index}' in {holder.GetType().Name}");
     }
+
+    public static void Set<T>(IPropertyHolder holder, string name, T value, StringComparison comparisonType = StringComparison.Ordinal)
+    {
+        FPropertyTag? tag = null;
+        int foundIndex = -1;
+        for (var i = 0; i < holder.Properties.Count; i++) {
+            var prop = holder.Properties[i];
+            if (prop.Name.Text.Equals(name, comparisonType)) {
+                if (prop.Tag != null) {
+                    if (prop.Tag is ObjectProperty tagData && value is FPackageIndex idx) {
+                        tagData.Value = idx;
+                        return;
+                    }
+                }
+
+                tag = prop;
+                foundIndex = i;
+                break;
+            }
+        }
+
+        var tag2 = tag ?? new FPropertyTag(name, typeof(T).Name, 0, 0, null, false, null, null);
+
+        tag.Tag = value switch
+        {
+            FPackageIndex idx => new ObjectProperty(idx),
+            IUStruct uStruct => new StructProperty(new FScriptStruct(uStruct)),
+            FPropertyTagType propType => propType,
+            _ => throw new NotImplementedException($"Setting properties of type {typeof(T).Name} is not implemented yet")
+        };
+
+        if (foundIndex != -1)
+        {
+            holder.Properties[foundIndex] = tag2;
+        }
+        else
+        {
+            holder.Properties.Add(tag2);
+        }
+    }
 }
 
 // ~Fabian: Please just ignore that, needed it in a different project

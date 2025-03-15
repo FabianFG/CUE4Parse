@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Landscape;
+namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
 public class FLandscapeComponentGrassData
 {

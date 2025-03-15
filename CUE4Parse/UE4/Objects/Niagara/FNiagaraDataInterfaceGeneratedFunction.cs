@@ -33,4 +33,8 @@ public class FNiagaraDataInterfaceGeneratedFunction
     }
 }
 
-public class FNiagaraVariableCommonReference(FAssetArchive Ar) : FStructFallback(Ar, "NiagaraVariableCommonReference") { }
+public class FNiagaraVariableCommonReference(FAssetArchive Ar) : IUStruct
+{
+    public FName Name = Ar.ReadFName();
+    public FPackageIndex UnderlyingType = new FPackageIndex(Ar);
+}

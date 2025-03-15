@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -18,6 +19,18 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         // {
         //     return Vector128.Create(x, y, z, w);
         // }
+
+        // RoundToInt32
+        public static int RoundToInt(float val)
+        {
+            if (!Sse.IsSupported)
+            {
+                return (int)MathF.Floor((val * 2.0f) + 0.5f) >> 1;
+            }
+
+            Vector128<float> vec = Vector128.Create(val * 2.0f + 0.5f);
+            return Sse.ConvertToInt32(vec) >> 1;
+        }
 
         public static Vector128<float> VectorReplicate(Vector128<float> vec, byte elementIndex)
         {

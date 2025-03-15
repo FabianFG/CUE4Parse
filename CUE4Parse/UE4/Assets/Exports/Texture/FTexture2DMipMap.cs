@@ -13,6 +13,14 @@ public class FTexture2DMipMap
     public int SizeY;
     public int SizeZ;
 
+    public FTexture2DMipMap(FByteBulkData bulkData, int sizeX, int sizeY, int sizeZ)
+    {
+        BulkData = bulkData;
+        SizeX = sizeX;
+        SizeY = sizeY;
+        SizeZ = sizeZ;
+    }
+
     public FTexture2DMipMap(FAssetArchive Ar)
     {
         var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;

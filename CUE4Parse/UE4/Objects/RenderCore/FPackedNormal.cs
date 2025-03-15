@@ -11,10 +11,10 @@ namespace CUE4Parse.UE4.Objects.RenderCore
     public class FPackedNormal
     {
         public uint Data;
-        public float X => (Data & 0xFF) / (float) 127.5 - 1;
-        public float Y => ((Data >> 8) & 0xFF) / (float) 127.5 - 1;
-        public float Z => ((Data >> 16) & 0xFF) / (float) 127.5 - 1;
-        public float W => ((Data >> 24) & 0xFF) / (float) 127.5 - 1;
+        public float X => (Data & 0xFF) / 127.5f - 1; // // Rescale [0..255] range to [-1..1]
+        public float Y => ((Data >> 8) & 0xFF) / 127.5f - 1;
+        public float Z => ((Data >> 16) & 0xFF) / 127.5f - 1;
+        public float W => ((Data >> 24) & 0xFF) / 127.5f - 1;
 
         public FPackedNormal(FArchive Ar)
         {

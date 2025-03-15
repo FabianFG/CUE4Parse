@@ -129,6 +129,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
                 _ => new FTextHistory.None(Ar)
             };
+            if (Ar.Game == EGame.GAME_Splitgate2) Ar.Position += 4;
         }
 
         public FText(string sourceString, string localizedString = "") : this("", "", sourceString, localizedString) { }

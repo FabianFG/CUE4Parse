@@ -89,6 +89,8 @@ public enum EGame
         GAME_Spectre = GAME_UE4_27 + 11,
         GAME_KartRiderDrift = GAME_UE4_27 + 12,
         GAME_ThroneAndLiberty = GAME_UE4_27 + 13,
+        GAME_MotoGP24 = GAME_UE4_27 + 14,
+        GAME_Stray = GAME_UE4_27 + 15,
     GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -109,9 +111,9 @@ public enum EGame
         GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_TheFirstDescendant = GAME_UE5_2 + 3,
         GAME_MetroAwakening = GAME_UE5_2 + 4,
+        GAME_ARKSurvivalAscended = GAME_UE5_2 + 5,
     GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
         GAME_MarvelRivals = GAME_UE5_3 + 1,
-        GAME_WildAssault = GAME_UE5_3 + 2,
         GAME_NobodyWantsToDie = GAME_UE5_3 + 3,
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Rennsport = GAME_UE5_3 + 5,
@@ -122,7 +124,11 @@ public enum EGame
         GAME_InfinityNikki = GAME_UE5_4 + 2,
         GAME_NevernessToEverness = GAME_UE5_4 + 3,
         GAME_Gothic1Remake = GAME_UE5_4 + 4,
+        GAME_SplitFiction = GAME_UE5_4 + 5,
+        GAME_WildAssault = GAME_UE5_4 + 6,
     GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
+        GAME_Brickadia = GAME_UE5_5 + 1,
+        GAME_Splitgate2 = GAME_UE5_5 + 2,
     GAME_UE5_6 = GameUtils.GameUe5Base + 6 << 4,
 
     GAME_UE5_LATEST = GAME_UE5_6
