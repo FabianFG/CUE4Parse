@@ -183,6 +183,12 @@ namespace CUE4Parse.UE4.Pak
 
         private void ReadIndexUpdated(StringComparer pathComparer)
         {
+            if (Ar.Game == EGame.GAME_CrystalOfAtlan)
+            {
+                CoAReadIndexUpdated(pathComparer);
+                return;
+            }
+
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
             FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
