@@ -45,6 +45,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                     ElementCount = (int) metaData.RawSize;
                     OffsetInFile = metaData.SerialOffset;
                     SizeOnDisk = (uint) metaData.SerialSize;
+                    CookedIndex = metaData.CookedIndex;
                     return;
                 }
                 Ar.Position -= 4;

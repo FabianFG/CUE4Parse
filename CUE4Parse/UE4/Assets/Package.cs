@@ -112,7 +112,7 @@ namespace CUE4Parse.UE4.Assets
                 var dataResourceVersion = (EObjectDataResourceVersion) uassetAr.Read<uint>();
                 if (dataResourceVersion is > EObjectDataResourceVersion.Invalid and <= EObjectDataResourceVersion.Latest)
                 {
-                    DataResourceMap = uassetAr.ReadArray(() => new FObjectDataResource(uassetAr));
+                    DataResourceMap = uassetAr.ReadArray(() => new FObjectDataResource(uassetAr, dataResourceVersion));
                 }
             }
 

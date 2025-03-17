@@ -431,7 +431,7 @@ namespace CUE4Parse.FileProvider
 
                 foreach (var token in DefaultEngine.Sections.FirstOrDefault(s => s.Name == "ConsoleVariables")?.Tokens ?? [])
                 {
-                    if (token is not InstructionToken it) continue;
+                    if (token is not InstructionToken { InstructionType: InstructionType.Set } it) continue;
                     var boolValue = it.Value.Equals("1");
 
                     switch (it.Key)

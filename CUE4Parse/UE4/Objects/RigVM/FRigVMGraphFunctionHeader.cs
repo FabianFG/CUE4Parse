@@ -20,6 +20,7 @@ public struct FRigVMGraphFunctionHeader
     public FRigVMGraphFunctionArgument[] Arguments = [];
     public Dictionary<FRigVMGraphFunctionIdentifier, uint> Dependencies = [];
     public FRigVMExternalVariable[] ExternalVariables = [];
+    public FRigVMNodeLayout Layout;
 
     public FRigVMGraphFunctionHeader(FAssetArchive Ar)
     {
@@ -40,11 +41,12 @@ public struct FRigVMGraphFunctionHeader
         Category = Ar.ReadFString();
         Keywords = Ar.ReadFString();
         Arguments = Ar.ReadArray(() => new FRigVMGraphFunctionArgument(Ar));
-        var num = Ar.Read<int>();
-        for (var i = 0; i < num; i++)
-        {
-            Dependencies[new FRigVMGraphFunctionIdentifier(Ar)] = Ar.Read<uint>();
-        }
+        Dependencies = Ar.ReadMap(() => new FRigVMGraphFunctionIdentifier(Ar), Ar.Read<uint>);
         ExternalVariables = Ar.ReadArray(() => new FRigVMExternalVariable(Ar));
+
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.FunctionHeaderStoresLayout)
+        {
+            Layout = new FRigVMNodeLayout(Ar);
+        }
     }
 }

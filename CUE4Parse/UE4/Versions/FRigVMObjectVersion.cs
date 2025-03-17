@@ -38,6 +38,9 @@ public static class FRigVMObjectVersion
         // Removing unused tooltip property from frunction header
         VMRemoveTooltipFromFunctionHeader,
 
+        // Removing library node FSoftObjectPath from FRigVMGraphFunctionIdentifier
+        RemoveLibraryNodeReferenceFromFunctionIdentifier,
+
         // Adding variant to every RigVM asset
         AddVariantToRigVMAssets,
 
@@ -60,7 +63,7 @@ public static class FRigVMObjectVersion
     public static Type Get(FArchive Ar)
     {
         var ver = Ar.CustomVer(GUID);
-        if (ver >= 0)
+        if (ver != -1)
             return (Type) ver;
 
         return Ar.Game switch

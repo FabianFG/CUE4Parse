@@ -40,7 +40,7 @@ public class USceneComponent : UActorComponent
                 Bounds = new FBoxSphereBounds(Ar);
         }
     }
-    
+
     public FTransform GetAbsoluteTransform()
     {
         var newTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
@@ -52,7 +52,7 @@ public class USceneComponent : UActorComponent
         }
         return newTransform;
     }
-    
+
     private FTransform GetComponentToWorld()
     {
         var relativeTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
@@ -87,17 +87,17 @@ public class USceneComponent : UActorComponent
     {
         return GetComponentToWorld();
     }
-    
+
     public FVector GetRelativeLocation()
     {
         return GetOrDefault<FVector>("RelativeLocation");
     }
-    
+
     public FRotator GetRelativeRotation()
     {
         return GetOrDefault("RelativeRotation", FRotator.ZeroRotator);
     }
-    
+
     public FVector GetRelativeScale3D()
     {
         return GetOrDefault("RelativeScale3D", FVector.OneVector);
@@ -112,13 +112,3 @@ public class USceneComponent : UActorComponent
         serializer.Serialize(writer, Bounds);
     }
 }
-
-public class UArrowComponent : USceneComponent;
-public class UAudioComponent : USceneComponent;
-public class UBillboardComponent : USceneComponent;
-public class UBoxComponent : USceneComponent;
-public class UBrushComponent : USceneComponent;
-public class UCameraComponent : USceneComponent;
-public class UCapsuleComponent : USceneComponent;
-public class USplineComponent : UPrimitiveComponent;
-public class UTextRenderComponent : USceneComponent;

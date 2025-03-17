@@ -42,6 +42,7 @@ namespace CUE4Parse.UE4.Pak.Objects
         public const uint PAK_FILE_MAGIC_GameForPeace = 0xff67ff70;
         public const uint PAK_FILE_MAGIC_KartRiderDrift = 0x81c4b35b;
         public const uint PAK_FILE_MAGIC_RacingMaster = 0x9a51da3f;
+        public const uint PAK_FILE_MAGIC_CrystalOfAtlan = 0x22ce976a;
 
         public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -103,6 +104,20 @@ namespace CUE4Parse.UE4.Pak.Objects
                 IndexHash = new FSHAHash(Ar);
                 Version = Ar.Read<EPakFileVersion>();
                 IndexOffset = Ar.Read<long>();
+                goto beforeCompression;
+            }
+
+            if (Ar.Game == EGame.GAME_CrystalOfAtlan)
+            {
+                EncryptedIndex = Ar.ReadFlag();
+                Version = Ar.Read<EPakFileVersion>();
+                IndexSize = Ar.Read<long>();
+                IndexHash = new FSHAHash(Ar);
+                IndexOffset = Ar.Read<long>();
+                Magic = Ar.Read<uint>();
+                if (Magic != PAK_FILE_MAGIC_CrystalOfAtlan)
+                    return;
+                EncryptionKeyGuid = Ar.Read<FGuid>();
                 goto beforeCompression;
             }
 
@@ -337,7 +352,8 @@ namespace CUE4Parse.UE4.Pak.Objects
                         Ar.Game == EGame.GAME_DreamStar && info.Magic == PAK_FILE_MAGIC_DreamStar ||
                         Ar.Game == EGame.GAME_GameForPeace && info.Magic == PAK_FILE_MAGIC_GameForPeace ||
                         Ar.Game == EGame.GAME_KartRiderDrift && info.Magic == PAK_FILE_MAGIC_KartRiderDrift ||
-                        Ar.Game == EGame.GAME_RacingMaster && info.Magic == PAK_FILE_MAGIC_RacingMaster)
+                        Ar.Game == EGame.GAME_RacingMaster && info.Magic == PAK_FILE_MAGIC_RacingMaster ||
+                        Ar.Game == EGame.GAME_CrystalOfAtlan && info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan)
                         return info;
                     if (info.Magic == PAK_FILE_MAGIC)
                     {

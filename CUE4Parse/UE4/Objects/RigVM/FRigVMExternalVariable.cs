@@ -6,9 +6,8 @@ namespace CUE4Parse.UE4.Objects.RigVM;
 public struct FRigVMExternalVariable
 {
     public FName Name;
-    public FProperty Property;
     public FName TypeName;
-    public FPackageIndex TypeObject;
+    public FSoftObjectPath TypeObjectPath;
     public bool bIsArray;
     public bool bIsPublic;
     public bool bIsReadOnly;
@@ -17,10 +16,8 @@ public struct FRigVMExternalVariable
     public FRigVMExternalVariable(FAssetArchive Ar)
     {
         Name = Ar.ReadFName();
-        Property = new FProperty();
-        Property.Deserialize(Ar);
         TypeName = Ar.ReadFName();
-        TypeObject = new FPackageIndex(Ar);
+        TypeObjectPath = new FSoftObjectPath(Ar);
         bIsArray = Ar.ReadBoolean();
         bIsPublic = Ar.ReadBoolean();
         bIsReadOnly = Ar.ReadBoolean();

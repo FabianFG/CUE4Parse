@@ -10,7 +10,6 @@ public struct FRigVMGraphFunctionArgument
     public FName Name;
     public FName DisplayName;
     public FName CPPType;
-    //public TSoftObjectPtr<UObject> CPPTypeObject;
     public FSoftObjectPath CPPTypeObject;
     public bool bIsArray;
     public ERigVMPinDirection Direction;
@@ -23,16 +22,11 @@ public struct FRigVMGraphFunctionArgument
         Name = Ar.ReadFName();
         DisplayName = Ar.ReadFName();
         CPPType = Ar.ReadFName();
-        CPPTypeObject = new FSoftObjectPath(Ar); // idk what type this is
+        CPPTypeObject = new FSoftObjectPath(Ar);
         bIsArray = Ar.ReadBoolean();
         Direction = Ar.Read<ERigVMPinDirection>();
         DefaultValue = Ar.ReadFString();
         bIsConst = Ar.ReadBoolean();
-        var num = Ar.Read<int>();
-        PathToTooltip = [];
-        for (var i = 0; i < num; i++)
-        {
-            PathToTooltip[Ar.ReadFString()] = new FText(Ar);
-        }
+        PathToTooltip = Ar.ReadMap(Ar.ReadFString, () => new FText(Ar));
     }
 }

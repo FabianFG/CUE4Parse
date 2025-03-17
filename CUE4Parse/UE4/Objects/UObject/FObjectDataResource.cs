@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.IO.Objects;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
@@ -17,6 +18,8 @@ namespace CUE4Parse.UE4.Objects.UObject
     {
         Invalid,
         Initial,
+        AddedCookedIndex,
+
         LatestPlusOne,
         Latest = LatestPlusOne - 1
     };
@@ -24,6 +27,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     public readonly struct FObjectDataResource
     {
         public readonly EObjectDataResourceFlags Flags = EObjectDataResourceFlags.None;
+        public readonly FBulkDataCookedIndex CookedIndex;
         public readonly long SerialOffset = -1;
         public readonly long DuplicateSerialOffset = -1;
         public readonly long SerialSize = -1;
@@ -31,9 +35,13 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly FPackageIndex OuterIndex;
         public readonly uint LegacyBulkDataFlags = 0;
 
-        public FObjectDataResource(FAssetArchive Ar)
+        public FObjectDataResource(FAssetArchive Ar, EObjectDataResourceVersion version)
         {
             Flags = (EObjectDataResourceFlags) Ar.Read<uint>();
+            if (version >= EObjectDataResourceVersion.AddedCookedIndex)
+            {
+                CookedIndex = Ar.Read<FBulkDataCookedIndex>();
+            }
             SerialOffset = Ar.Read<long>();
             DuplicateSerialOffset = Ar.Read<long>();
             SerialSize = Ar.Read<long>();
