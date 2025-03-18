@@ -58,19 +58,21 @@ public partial class PakFileReader
 
         string FixCoAPackagePath(string path, StringComparer PathComparer)
         {
-            var root = path.SubstringBefore('/');
-            var tree = path.SubstringAfter('/');
-            if (PathComparer.Equals(root, "Game"))
+            var span = path.AsSpan()[1..];
+            var index = span.IndexOf('/');
+            var root = span[..index];
+            var tree = span[(index + 1)..];
+            if (root.Equals("Game", StringComparison.OrdinalIgnoreCase))
             {
                 return string.Concat("Seria/Content/", tree);
             }
-            else if (PathComparer.Equals(root, "Engine"))
+            else if (root.Equals("Engine", StringComparison.OrdinalIgnoreCase))
             {
-                return path;
+                return string.Concat("Engine/Content/", tree);
             }
             else
             {
-                return string.Concat("Seria/Plugins/", path);
+                return string.Concat("Seria/Plugins/", span);
             }
         };
 
@@ -88,29 +90,71 @@ public partial class PakFileReader
 
                 var entry = new FPakEntry(this, hash.ToString(), encodedEntries, offset);
 
-                if (!entry.TryCreateReader(out var reader) || reader.Read<uint>() != FPackageFileSummary.PACKAGE_FILE_TAG) continue;
+                if (!entry.TryCreateReader(out var reader)) continue;
+
+                var magic = reader.Read<uint>();
+                switch (magic)
+                {
+                    case 0x61754c1b:
+                        reader.Position += 29;
+                        if (MountPoint == "")
+                            mountPoint = "Seria/Content/Seria/";
+                        var luapath = string.Concat(mountPoint, reader.ReadString())[..^1];
+                        entry.Path = luapath;
+                        if (entry.IsEncrypted)
+                            EncryptedFileCount++;
+                        files[luapath] = entry;
+                        used.Add(hash);
+                        continue;
+                    case FPackageFileSummary.PACKAGE_FILE_TAG:
+                        break;
+                    default:
+                        continue;
+                };
 
                 reader.Seek(0, SeekOrigin.Begin);
                 var package = new Package(reader, null, new Lazy<FArchive?>());
 
                 var exports = package.ExportMap.Where(export => export.IsAsset).ToList();
-                var assetname = exports.Count == 1 ? exports[0].ObjectName.Text : exports.FirstOrDefault(exp => (exp.ObjectFlags & 2) == 2)?.ObjectName.Text;
-                if (assetname is null)
+                FObjectExport? mainExport;
+                if (exports.Count == 1)
                 {
-                    Log.Warning("Can't find package name for {0} pathhash", hash);
-                    continue;
+                    mainExport = exports[0];
+                }
+                else
+                {
+                    mainExport = exports.FirstOrDefault(exp => (exp.ObjectFlags & 2) == 2);
+                    if (mainExport is null)
+                    {
+                        Log.Warning("Can't find package name for {0} pathhash", hash);
+                        continue;
+                    }
                 }
 
-                if (assetname.EndsWith("_C")) assetname = assetname[..^2];
+                (string assetname, int number) = (mainExport.ObjectName.PlainText, mainExport.ObjectName.Number);
+                if (assetname.EndsWith("_C") && mainExport.ClassName.EndsWith("BlueprintGeneratedClass", StringComparison.OrdinalIgnoreCase)) assetname = assetname[..^2];
+                if (assetname.EndsWith("-atlas") && mainExport.ClassName.EndsWith("AtlasAsset", StringComparison.OrdinalIgnoreCase) && exports.Count > 1) assetname = assetname[..^6];
+
+                var numberIndex = assetname.LastIndexOf('_');
+                if (number == 0 && numberIndex != -1 && numberIndex > 0)
+                {
+                    if (numberIndex < assetname.Length - 1) numberIndex++;
+                    
+                    if (assetname[numberIndex] != '0' && int.TryParse(assetname.AsSpan()[numberIndex..], out number) && number >= 0)
+                    {
+                        number++;
+                        assetname = assetname[..(numberIndex-1)];
+                    }
+                }
+
                 var name = package.NameMap.FirstOrDefault(name => pathComparer.Equals(name.Name.SubstringAfterLast('/'), assetname) && name.Name.StartsWith('/'));
                 if (name.Name is null)
                 {
                     Log.Warning("Can't find package name for {0} pathhash", hash);
                     continue;
                 }
-
-                var packageName = FixCoAPackagePath(name.Name[1..], pathComparer);
-                var hashpath = packageName.Replace(MountPoint, "");
+                var packageName = FixCoAPackagePath(number == 0 ? name.Name : $"{name.Name}_{number-1}" , pathComparer);
+                var hashpath = MountPoint == "" ? packageName : packageName.Replace(MountPoint, "");
                 var path = string.Concat(MountPoint, hashpath, ".uasset");
                 entry.Path = path;
                 if (entry.IsEncrypted)
@@ -145,6 +189,8 @@ public partial class PakFileReader
                 FindPayload(encodedEntries, "uptnl");
             }
 
+            if (MountPoint == "")
+                mountPoint = "Seria/Content/";
             foreach (var hash in pathHashIndex.Keys.Except(used))
             {
                 var name = hash.ToString();

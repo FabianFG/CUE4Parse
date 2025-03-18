@@ -95,6 +95,7 @@ public enum EGame : uint
         GAME_MotoGP24 = GAME_UE4_27 + 14,
         GAME_Stray = GAME_UE4_27 + 15,
         GAME_CrystalOfAtlan = GAME_UE4_27 + 16,
+        GAME_PromiseMascotAgency = GAME_UE4_27 + 17,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -118,7 +119,8 @@ public enum EGame : uint
         GAME_ARKSurvivalAscended = GAME_UE5_2 + 5,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
-        GAME_NobodyWantsToDie = GAME_UE5_3 + 3,
+        GAME_Placeholder = GAME_UE5_3 + 2, // Placeholder for a game that hasn't been added yet
+        GAME_NobodyWantsToDie = GAME_UE5_3 + 3, // no use
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_AshesOfCreation = GAME_UE5_3 + 6,
