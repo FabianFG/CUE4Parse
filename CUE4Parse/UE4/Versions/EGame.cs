@@ -220,6 +220,11 @@ public class EGameConverter : JsonConverter<EGame>
             uint value = Convert.ToUInt32(reader.Value);
             return value > 0xFFFFFFF ? (EGame) ((value >> 28) + 3 << 24 | ((value >> 4) & 0xFF) << 16 | value & 0xF) : (EGame) value;
         }
+        else if (reader is { TokenType: JsonToken.String, Value: string str })
+        {
+            return Enum.Parse<EGame>(str);
+        }
+
         return EGame.GAME_UE4_LATEST;
     }
 }
