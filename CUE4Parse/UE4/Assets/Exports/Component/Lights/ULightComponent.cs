@@ -150,3 +150,9 @@ public class URectLightComponent : ULocalLightComponent
         return LightUtils.ConvertToIntensityToNits(Intensity, areaInSqMeters, angle, IntensityUnits);
     }
 }
+
+public class UDirectionalLightComponent : ULightComponent {
+    public override double GetNitIntensity() {
+        throw new NotImplementedException();
+    }
+}
