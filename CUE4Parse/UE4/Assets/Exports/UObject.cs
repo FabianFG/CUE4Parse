@@ -472,12 +472,31 @@ public class UObject : AbstractPropertyHolder
 
 public static class PropertyUtil
 {
+    public static bool SearchPropertyInTemplate = false;
+
     private static bool TryGet(this IPropertyHolder holder, string name, out FPropertyTag? tag, StringComparison comparisonType = StringComparison.Ordinal)
     {
         foreach (var prop in holder.Properties.Where(prop => prop.Name.Text.Equals(name, comparisonType)))
         {
             tag = prop;
             return true;
+        }
+
+        if (SearchPropertyInTemplate && holder is UObject obj)
+        {
+            // if not here then in look in template
+            var temp = obj?.Template?.Object?.Value;
+            if (temp != null && temp.TryGet(name, out tag, comparisonType))
+            {
+                return true;
+            }
+
+            // if not here then in look in class ..? // not sure about this one
+            temp = obj?.Class;
+            if (temp != null && temp.TryGet(name, out tag, comparisonType))
+            {
+                return true;
+            }
         }
 
         tag = null;

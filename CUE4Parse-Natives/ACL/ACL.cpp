@@ -10,7 +10,7 @@ DLLEXPORT void nDeallocate(void* ptr, size_t size) { ACLAllocatorImpl.deallocate
 
 // ACL compressed tracks
 DLLEXPORT const char* nCompressedTracks_IsValid(acl::compressed_tracks* tracks, bool checkHash) { return tracks->is_valid(checkHash).c_str(); }
-DLLEXPORT void nTracksHeader_SetDefaultScale(acl::acl_impl::tracks_header* header, float defaultScale) { header->set_default_scale(defaultScale); }
+DLLEXPORT void nTracksHeader_SetDefaultScale(acl::acl_impl::tracks_header* header, uint32_t defaultScale) { header->set_default_scale(defaultScale); }
 
 DLLEXPORT void nReadACLData(const acl::compressed_tracks& tracks, FTransform* inRefPoses, FTrackToSkeletonMap* inTrackToSkeletonMap, FTransform* outAtom)
 {
