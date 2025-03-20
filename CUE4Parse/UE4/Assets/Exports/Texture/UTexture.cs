@@ -30,6 +30,10 @@ public abstract class UTexture : UUnrealMaterial
         TextureCompressionSettings.TC_HalfFloat or
         TextureCompressionSettings.TC_SingleFloat;
 
+    public virtual TextureAddress GetTextureAddressX() => TextureAddress.TA_Wrap;
+    public virtual TextureAddress GetTextureAddressY() => TextureAddress.TA_Wrap;
+    public virtual TextureAddress GetTextureAddressZ() => TextureAddress.TA_Wrap;
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
