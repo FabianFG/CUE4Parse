@@ -124,7 +124,7 @@ public enum EExprToken : byte
 public enum ECastToken : byte
 {
     CST_ObjectToInterface		= 0x00,
-    CST_ObjectToBool			= 0x01,//idk if this is used or 0x47 is used
+    CST_ObjectToBool			= 0x01,
     CST_InterfaceToBool			= 0x02,
     CST_DoubleToFloat			= 0x03,
     CST_FloatToDouble			= 0x04,
