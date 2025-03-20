@@ -12,10 +12,19 @@ public class UTexture2D : UTexture
 {
     public FIntPoint ImportedSize { get; private set; }
 
+    public TextureAddress AddressX { get; private set; }
+    public TextureAddress AddressY { get; private set; }
+
+    public override TextureAddress GetTextureAddressX() => AddressX;
+    public override TextureAddress GetTextureAddressY() => AddressY;
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
+
+        AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
+        AddressY = GetOrDefault<TextureAddress>(nameof(AddressY));
 
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
