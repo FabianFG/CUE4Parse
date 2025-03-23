@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
     [JsonConverter(typeof(FGuidConverter))]
     [StructLayout(LayoutKind.Sequential)]
 #pragma warning disable 660,661
-    public struct FGuid : IUStruct
+    public struct FGuid : IUStruct, IEquatable<FGuid>
 #pragma warning restore 660,661
     {
         public readonly uint A;
@@ -116,5 +116,17 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
         public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
 
         public static implicit operator FGuid(Guid g) => new(g.ToString().Replace("-", ""));
+
+        public bool Equals(FGuid other)
+        {
+            return A == other.A && B == other.B && C == other.C && D == other.D;
+        }
+
+#pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
+        public override bool Equals(object? obj)
+#pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
+        {
+            return obj is FGuid other && Equals(other);
+        }
     }
 }
