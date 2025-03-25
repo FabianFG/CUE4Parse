@@ -106,11 +106,10 @@ public class CTexture
     {
         // e.g. shadow maps
         var inpU16 = MemoryMarshal.Cast<byte, ushort>(inp);
-        int srcPitch = width * 2;
         var retSpan = MemoryUtils.NativeAlloc<FColor>(width * height, out var retPtr);
         for (int y = 0; y < height; y++)
         {
-            var srcSpan = inpU16.Slice(y * srcPitch);
+            var srcSpan = inpU16.Slice(y * width);
             var destOffset = y * width;
             for (int x = 0; x < width; x++)
             {
