@@ -12,6 +12,7 @@ public class CTexture
 
     public bool IsFloat => PixelFormat is EPixelFormat.PF_FloatRGB
                                         or EPixelFormat.PF_FloatRGBA
+                                        or EPixelFormat.PF_R32_FLOAT
                                         or EPixelFormat.PF_R32G32B32F
                                         or EPixelFormat.PF_A32B32G32R32F;
 
