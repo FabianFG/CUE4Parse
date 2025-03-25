@@ -2,15 +2,11 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-
 using AssetRipper.TextureDecoder.Bc;
-
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
-
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
@@ -91,7 +87,7 @@ public static class TextureDecoder
             bitmapHeight /= factor;
         }
 
-        var colorType = PixelFormat.PF_MAX;
+        var colorType = EPixelFormat.PF_Unknown;
         var bytesPerPixel = 0;
         var rowBytes = 0;
         var tileRowBytes = 0;
@@ -129,7 +125,7 @@ public static class TextureDecoder
 
                 DecodeBytes(layerData, tilePixelSize, tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var tileColorType);
 
-                if (colorType == PixelFormat.PF_MAX)
+                if (colorType == EPixelFormat.PF_Unknown)
                 {
                     colorType = tileColorType;
                     bytesPerPixel = formatInfo.BlockBytes;
@@ -189,7 +185,7 @@ public static class TextureDecoder
         return bitmaps.ToArray();
     }
 
-    private static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out PixelFormat colorType)
+    private static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType)
     {
         if (mip?.BulkData.Data is not { Length: > 0 })
             throw new ParserException("Supplied MipMap is null or has empty data!");
@@ -220,8 +216,12 @@ public static class TextureDecoder
         DecodeBytes(bytes, sizeX, sizeY, sizeZ, formatInfo, isNormalMap, out data, out colorType);
     }
 
-    private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out PixelFormat colorType)
+    private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out EPixelFormat colorType)
     {
+        //default return the original data and Format
+        data = bytes;
+        colorType = formatInfo.UnrealFormat;
+
         switch (formatInfo.UnrealFormat)
         {
             case EPixelFormat.PF_DXT1:
@@ -229,12 +229,12 @@ public static class TextureDecoder
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc1.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = PixelFormat.PF_RGBA8;
+                    colorType = EPixelFormat.PF_R8G8B8A8;
                 }
                 else
                 {
                     data = DXTDecoder.DXT1(bytes, sizeX, sizeY, sizeZ);
-                    colorType = PixelFormat.PF_RGBA8;
+                    colorType = EPixelFormat.PF_R8G8B8A8;
                 }
                 break;
             }
@@ -242,12 +242,12 @@ public static class TextureDecoder
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc3.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = PixelFormat.PF_BGRA8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
                 {
                     data = DXTDecoder.DXT5(bytes, sizeX, sizeY, sizeZ);
-                    colorType = PixelFormat.PF_RGBA8;
+                    colorType = EPixelFormat.PF_R8G8B8A8;
                 }
                 break;
             case EPixelFormat.PF_ASTC_4x4:
@@ -256,7 +256,7 @@ public static class TextureDecoder
             case EPixelFormat.PF_ASTC_10x10:
             case EPixelFormat.PF_ASTC_12x12:
                 data = ASTCDecoder.RGBA8888(bytes, formatInfo.BlockSizeX, formatInfo.BlockSizeY, formatInfo.BlockSizeZ, sizeX, sizeY, sizeZ);
-                colorType = PixelFormat.PF_RGBA8;
+                colorType = EPixelFormat.PF_R8G8B8A8;
 
                 if (isNormalMap)
                 {
@@ -280,126 +280,90 @@ public static class TextureDecoder
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc4.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = PixelFormat.PF_BGRA8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
                 {
                     data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);
-                    colorType = PixelFormat.PF_RGBx8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 break;
             case EPixelFormat.PF_BC5:
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc5.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = PixelFormat.PF_BGRA8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
                 {
                     data = BCDecoder.BC5(bytes, sizeX, sizeY, sizeZ);
-                    colorType = PixelFormat.PF_RGBx8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 break;
             case EPixelFormat.PF_BC6H:
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc6h.Decompress(bytes, sizeX, sizeY, false, out data);
-                    colorType = PixelFormat.PF_BGRA8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
                 {
                     // BC6H doesn't work no matter the pixel format, the closest we can get is either
                     // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
-                    data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, true, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT, DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
-                    colorType = PixelFormat.PF_BGRA8; // TODO SKColorType.Rgb565;
+                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, true, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT, DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
+                    colorType = EPixelFormat.PF_FloatRGBA; //TODO idk
                 }
                 break;
             case EPixelFormat.PF_BC7:
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc7.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = PixelFormat.PF_BGRA8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
                 {
-                    data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
-                    colorType = PixelFormat.PF_RGBA8;
+                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 break;
             case EPixelFormat.PF_ETC1:
-                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1, DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
-                colorType = PixelFormat.PF_RGBA8;
+                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC2_RGB:
-                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2, DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
-                colorType = PixelFormat.PF_RGBA8;
+                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC2_RGBA:
-                data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
-                colorType = PixelFormat.PF_RGBA8;
+                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
+
+            //SECTION: raw formats. Do nothing, we return original format and data
             case EPixelFormat.PF_B8G8R8A8:
-                data = bytes;
-                colorType = PixelFormat.PF_BGRA8;
-                break;
             case EPixelFormat.PF_G8:
-                data = bytes;
-                colorType = PixelFormat.PF_R8;
-                break;
-            case EPixelFormat.PF_G16:
-                data = bytes;
-                colorType = PixelFormat.PF_R16;
-                break;
-            case EPixelFormat.PF_R32G32B32F:
-                data = bytes;
-                colorType = PixelFormat.PF_RGB32F;
-                break;
-            case EPixelFormat.PF_R16F:
-            case EPixelFormat.PF_R16F_FILTER:
-                data = bytes;
-                unsafe
-                {
-                    fixed (byte* d = bytes) //Convert Unreal 16bit half float to 32bit float
-                        data = ConvertHalfToFloat(sizeX, sizeY, sizeZ, d, 1);
-                }
-                colorType = PixelFormat.PF_R32F;
-                break;
+            case EPixelFormat.PF_A32B32G32R32F:
+            case EPixelFormat.PF_FloatRGB:
             case EPixelFormat.PF_FloatRGBA:
-                unsafe
-                {
-                    fixed (byte* d = bytes) //Convert Unreal 16bit half float to 32bit float
-                        data = ConvertHalfToFloat(sizeX, sizeY, sizeZ, d, 4);
-                }
-                colorType = PixelFormat.PF_RGBA32F;
+            case EPixelFormat.PF_R32_FLOAT:
+            case EPixelFormat.PF_G16R16F:
+            case EPixelFormat.PF_G16R16:
+            case EPixelFormat.PF_G32R32F:
+            case EPixelFormat.PF_A16B16G16R16:
+            case EPixelFormat.PF_R16F:
+            case EPixelFormat.PF_G16:
+            case EPixelFormat.PF_R32G32B32F:
                 break;
-            default: throw new NotImplementedException($"Unknown pixel format: {formatInfo.UnrealFormat}");
+
+            case EPixelFormat.PF_R16F_FILTER:
+                colorType = EPixelFormat.PF_R16F;
+                break;
+            case EPixelFormat.PF_G16R16F_FILTER:
+                colorType = EPixelFormat.PF_G16R16F;
+                break;
+
+            default:
+                throw new NotImplementedException($"Unknown pixel format: {formatInfo.UnrealFormat}");
         }
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe byte[] ConvertHalfToFloat(int width, int height, int depth, byte* inp, int channels)
-    {
-        int srcPitch = width * channels * sizeof(ushort); // channels * 2 bytes (16-bit per channel)
-
-        int totalSize = width * height * depth * channels * sizeof(float); // channels * 4 bytes (32-bit per channel)
-        byte[] ret = new byte[totalSize];
-
-        fixed (byte* outPtr = ret)
-        {
-            for (var z = 0; z < depth; z++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Half* srcRowPtr = (Half*)(inp + z * height * srcPitch + y * srcPitch);
-                    float* destRowPtr = (float*)(outPtr + z * height * width * channels * sizeof(float) + y * width * channels * sizeof(float));
-
-                    for (int x = 0; x < width; x++)
-                        for (int c = 0; c < channels; c++)
-                            *destRowPtr++ = (float)*srcRowPtr++;
-                }
-            }
-        }
-        return ret;
-    }
-
 }

@@ -21,6 +21,4 @@ public class Constants
     public const int VSocket_SIZE = 64 + 64 + 3 * 4 + 4 * 4 + 3 * 4;
 
     public const int DXT_BITS_PER_PIXEL = 4;
-
-    public const string DETEX_DLL_NAME = "Detex.dll";
 }

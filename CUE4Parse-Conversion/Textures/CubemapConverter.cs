@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Textures
@@ -78,7 +78,7 @@ namespace CUE4Parse_Conversion.Textures
                 }
             }
 
-            return new CTexture(panoramaWidth, panoramaHeight, PixelFormat.PF_RGBA32F, panoramaData);
+            return new CTexture(panoramaWidth, panoramaHeight, EPixelFormat.PF_A32B32G32R32F, panoramaData);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,16 +88,50 @@ namespace CUE4Parse_Conversion.Textures
 
             *(FLinearColor*)(dataPtr + offset) = color;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe FLinearColor GetColorFromCubeMap(byte* cubeDataPtr, CTexture cubeMap, int x, int y)
         {
-            int offset = (y * cubeMap.Width + x) * 16; // 16 bytes per pixel (FLinearColor / 4 floats)
+            int pixelOffset = (y * cubeMap.Width + x) * 4; // 4 components per pixel
 
-            var color = *(FLinearColor*)(cubeDataPtr + offset);
+            switch (cubeMap.PixelFormat)
+            {
+                case EPixelFormat.PF_A32B32G32R32F:
+                    pixelOffset *= 4; // 16 bytes per pixel (4x float32)
+                    float aF = *(float*) (cubeDataPtr + pixelOffset);
+                    float bF = *(float*) (cubeDataPtr + pixelOffset + 4);
+                    float gF = *(float*) (cubeDataPtr + pixelOffset + 8);
+                    float rF = *(float*) (cubeDataPtr + pixelOffset + 12);
+                    return new FLinearColor(aF, bF, gF, rF); // ABGR format
 
-            return color.WithAlpha(1.0f); //TODO handle alpha channel
+                case EPixelFormat.PF_R32G32B32F:
+                    pixelOffset *= 4; // 12 bytes per pixel (3x float32)
+                    float rRGB = *(float*) (cubeDataPtr + pixelOffset);
+                    float gRGB = *(float*) (cubeDataPtr + pixelOffset + 4);
+                    float bRGB = *(float*) (cubeDataPtr + pixelOffset + 8);
+                    return new FLinearColor(1.0f, bRGB, gRGB, rRGB); // ABGR format, Alpha = 1.0
+
+                case EPixelFormat.PF_FloatRGBA:
+                case EPixelFormat.PF_A16B16G16R16:
+                    pixelOffset *= 2; // 8 bytes per pixel (4x half16)
+                    float rHalf = (float) *(Half*) (cubeDataPtr + pixelOffset);
+                    float gHalf = (float) *(Half*) (cubeDataPtr + pixelOffset + 2);
+                    float bHalf = (float) *(Half*) (cubeDataPtr + pixelOffset + 4);
+                    float aHalf = (float) *(Half*) (cubeDataPtr + pixelOffset + 6);
+                    return new FLinearColor(aHalf, bHalf, gHalf, rHalf); // ABGR format
+
+                case EPixelFormat.PF_FloatRGB:
+                    pixelOffset *= 2; // 6 bytes per pixel (3x half16)
+                    float rFloatRGB = (float) *(Half*) (cubeDataPtr + pixelOffset);
+                    float gFloatRGB = (float) *(Half*) (cubeDataPtr + pixelOffset + 2);
+                    float bFloatRGB = (float) *(Half*) (cubeDataPtr + pixelOffset + 4);
+                    return new FLinearColor(1.0f, bFloatRGB, gFloatRGB, rFloatRGB); // ABGR format, Alpha = 1.0
+
+                default:
+                    throw new NotImplementedException($"Unsupported pixel format: {cubeMap.PixelFormat}");
+            }
         }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static FLinearColor InterpolateColor(FLinearColor color00, FLinearColor color01, FLinearColor color10, FLinearColor color11, double weightX, double weightY)
