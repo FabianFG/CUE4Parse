@@ -1,31 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
+
 using CUE4Parse.UE4.Objects.Core.Math;
+
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
     public enum EGuidFormats
     {
-		Digits, // "00000000000000000000000000000000"
-		DigitsWithHyphens, // 00000000-0000-0000-0000-000000000000
-		DigitsWithHyphensInBraces, // {00000000-0000-0000-0000-000000000000}
-		DigitsWithHyphensInParentheses, // (00000000-0000-0000-0000-000000000000)
-		HexValuesInBraces, // {0x00000000,0x0000,0x0000,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}}
-		UniqueObjectGuid, // 00000000-00000000-00000000-00000000
-		Short, // AQsMCQ0PAAUKCgQEBAgADQ
+        Digits, // "00000000000000000000000000000000"
+        DigitsWithHyphens, // 00000000-0000-0000-0000-000000000000
+        DigitsWithHyphensInBraces, // {00000000-0000-0000-0000-000000000000}
+        DigitsWithHyphensInParentheses, // (00000000-0000-0000-0000-000000000000)
+        HexValuesInBraces, // {0x00000000,0x0000,0x0000,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}}
+        UniqueObjectGuid, // 00000000-00000000-00000000-00000000
+        Short, // AQsMCQ0PAAUKCgQEBAgADQ
         Base36Encoded, // 1DPF6ARFCM4XH5RMWPU8TGR0J
-    };
+    }
 
     [JsonConverter(typeof(FGuidConverter))]
     [StructLayout(LayoutKind.Sequential)]
-#pragma warning disable 660,661
-    public struct FGuid : IUStruct, IEquatable<FGuid>
-#pragma warning restore 660,661
+    public readonly struct FGuid : IUStruct, IEquatable<FGuid>
     {
+        public const int Size = sizeof(uint) * 4;
+
         public readonly uint A;
         public readonly uint B;
         public readonly uint C;
@@ -44,17 +47,35 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             D = d;
         }
 
-        public FGuid(string hexString)
+        public FGuid(string hexString) : this(hexString.AsSpan()) { }
+
+        public FGuid(ReadOnlySpan<char> hexString)
         {
-            A = Convert.ToUInt32(hexString.Substring(0, 8), 16);
-            B = Convert.ToUInt32(hexString.Substring(8, 8), 16);
-            C = Convert.ToUInt32(hexString.Substring(16, 8), 16);
-            D = Convert.ToUInt32(hexString.Substring(24, 8), 16);
+            A = uint.Parse(hexString.Slice(0, 8), NumberStyles.HexNumber);
+            B = uint.Parse(hexString.Slice(8, 8), NumberStyles.HexNumber);
+            C = uint.Parse(hexString.Slice(16, 8), NumberStyles.HexNumber);
+            D = uint.Parse(hexString.Slice(24, 8), NumberStyles.HexNumber);
+        }
+
+        public static FGuid Random()
+        {
+            Unsafe.SkipInit(out FGuid result);
+            RandomNumberGenerator.Fill(result.GetSpan());
+            return result;
         }
 
         public bool IsValid() => (A | B | C | D) != 0;
 
-        public readonly string ToString(EGuidFormats guidFormat)
+        public ReadOnlySpan<byte> AsByteSpan() =>
+            MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<uint, byte>(ref Unsafe.AsRef(in A)), Size);
+
+        public ReadOnlySpan<uint> AsSpan() =>
+            MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in A), 4);
+
+        internal Span<byte> GetSpan() =>
+            MemoryMarshal.CreateSpan(ref Unsafe.As<uint, byte>(ref Unsafe.AsRef(in A)), Size);
+
+        public string ToString(EGuidFormats guidFormat)
         {
             switch (guidFormat)
             {
@@ -68,9 +89,9 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
                     $"{{0x{A:X8},0x{B >> 16:X4},0x{B & 0xFFFF:X4},{{0x{C >> 24:X2},0x{(C >> 16) & 0xFF:X2},0x{(C >> 8) & 0xFF:X2},0x{C & 0XFF:X2},0x{D >> 24:X2},0x{(D >> 16) & 0XFF:X2},0x{(D >> 8) & 0XFF:X2},0x{D & 0XFF:X2}}}}}";
                 case EGuidFormats.UniqueObjectGuid: return $"{A:X8}-{B:X8}-{C:X8}-{D:X8}";
                 case EGuidFormats.Short:
-                    {
-                        IEnumerable<byte> data = BitConverter.GetBytes(A).Concat(BitConverter.GetBytes(B)).Concat(BitConverter.GetBytes(C)).Concat(BitConverter.GetBytes(D));
-                        string result = Convert.ToBase64String(data.ToArray()).Replace('+', '-').Replace('/', '_');
+                {
+                        var data = AsByteSpan();
+                        string result = Convert.ToBase64String(data).Replace('+', '-').Replace('/', '_');
                         if (result.Length == 24) // Remove trailing '=' base64 padding
                             result = result.Substring(0, result.Length - 2);
 
@@ -107,26 +128,27 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             }
         }
 
+        public static implicit operator FGuid(Guid g) => new(g.ToString().Replace("-", ""));
+
         public override string ToString()
         {
             return ToString(EGuidFormats.Digits);
         }
-
-        public static bool operator ==(FGuid one, FGuid two) => one.A == two.A && one.B == two.B && one.C == two.C && one.D == two.D;
-        public static bool operator !=(FGuid one, FGuid two) => one.A != two.A || one.B != two.B || one.C != two.C || one.D != two.D;
-
-        public static implicit operator FGuid(Guid g) => new(g.ToString().Replace("-", ""));
 
         public bool Equals(FGuid other)
         {
             return A == other.A && B == other.B && C == other.C && D == other.D;
         }
 
-#pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
         public override bool Equals(object? obj)
-#pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
         {
             return obj is FGuid other && Equals(other);
         }
+
+        public override int GetHashCode() => HashCode.Combine(A, B, C, D);
+
+        public static bool operator ==(FGuid left, FGuid right) => left.Equals(right);
+
+        public static bool operator !=(FGuid left, FGuid right) => !left.Equals(right);
     }
 }
