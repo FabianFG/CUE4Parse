@@ -109,8 +109,8 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
             }
 
             var linearColor = hsvColor.HSVToLinearRGB();
-            linearColor.A = MathUtils.Lerp(AdjustMinAlpha, AdjustMaxAlpha, originalColor.A);
-            return linearColor;
+            var newAlpha = MathUtils.Lerp(AdjustMinAlpha, AdjustMaxAlpha, originalColor.A);
+            return linearColor.WithAlpha(newAlpha);
         }
     }
 }
