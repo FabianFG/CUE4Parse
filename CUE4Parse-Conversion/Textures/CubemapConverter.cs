@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using System.Runtime.CompilerServices;
+
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Textures
@@ -76,32 +78,28 @@ namespace CUE4Parse_Conversion.Textures
                 }
             }
 
-            return  new CTexture(panoramaWidth, panoramaHeight, PixelFormat.PF_RGBA32F, panoramaData);
+            return new CTexture(panoramaWidth, panoramaHeight, PixelFormat.PF_RGBA32F, panoramaData);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe void SetPixel(byte* dataPtr, int x, int y, int width, FLinearColor color)
         {
+            int offset = (y * width + x) * 16; // 16 bytes per pixel (FLinearColor / 4 floats)
 
-            int offset = (y * width + x) * 16;  // 16 bytes per pixel (4 floats)
-
-            *(float*)(dataPtr + offset) = color.R;
-            *(float*)(dataPtr + offset + 4) = color.G;
-            *(float*)(dataPtr + offset + 8) = color.B;
-            *(float*)(dataPtr + offset + 12) = color.A;
+            *(FLinearColor*)(dataPtr + offset) = color;
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe FLinearColor GetColorFromCubeMap(byte* cubeDataPtr, CTexture cubeMap, int x, int y)
         {
-            int offset = (y * cubeMap.Width + x) * 16;  // 16 bytes per pixel (4 floats)
+            int offset = (y * cubeMap.Width + x) * 16; // 16 bytes per pixel (FLinearColor / 4 floats)
 
-            float r = *(float*)(cubeDataPtr + offset);
-            float g = *(float*)(cubeDataPtr + offset + 4);
-            float b = *(float*)(cubeDataPtr + offset + 8);
-            float a = *(float*)(cubeDataPtr + offset + 12);
+            var color = *(FLinearColor*)(cubeDataPtr + offset);
 
-            return new FLinearColor(r, g, b, 1.0f); //TODO handle alpha channel
+            return color.WithAlpha(1.0f); //TODO handle alpha channel
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static FLinearColor InterpolateColor(FLinearColor color00, FLinearColor color01, FLinearColor color10, FLinearColor color11, double weightX, double weightY)
         {
             var r = (float)((color00.R * (1 - weightX) * (1 - weightY)) + (color01.R * (1 - weightX) * weightY) +
@@ -119,7 +117,8 @@ namespace CUE4Parse_Conversion.Textures
             return new FLinearColor(r, g, b, a);
         }
 
-        static bool IsCloseToVerticalEdge(double value, float boundary)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsCloseToVerticalEdge(double value, float boundary)
         {
             for (var i = 0; i <= 6; i++)
             {
@@ -132,6 +131,7 @@ namespace CUE4Parse_Conversion.Textures
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void MapCartesianToUv(double x, double y, double z, out double u, out double v)
         {
             double a = Math.Max(Math.Max(Math.Abs(x), Math.Abs(y)), Math.Abs(z));

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using SkiaSharp;
@@ -19,25 +19,32 @@ public static class TextureEncoder
         switch (format)
         {
             case ETextureFormat.Png:
+            {
                 ext = "png";
-                return bitmap.ToSkBitmap().Encode(SKEncodedImageFormat.Png, 100).ToArray();
-
+                using var bmp = bitmap.ToSkBitmap();
+                using var data = bmp.Encode(SKEncodedImageFormat.Png, 100);
+                return data.ToArray();
+            }
             case ETextureFormat.Jpeg:
+            {
                 ext = "jpg";
-                return bitmap.ToSkBitmap().Encode(SKEncodedImageFormat.Jpeg, 100).ToArray();
-
+                using var bmp = bitmap.ToSkBitmap();
+                using var data = bmp.Encode(SKEncodedImageFormat.Jpeg, 100);
+                return data.ToArray();
+            }
             case ETextureFormat.Tga:
                 ext = "tga";
                 return EncodeTga(bitmap);
             default:
-                ext = "unknown";
-                return null;
+                ext = "unk";
+                return [];
+            //TODO: ETextureFormat.Dds
         }
     }
 
     private static byte[] EncodeTga(CTexture bitmap)
     {
-        var skBitmap = bitmap.ToSkBitmap();
+        using var skBitmap = bitmap.ToSkBitmap();
         int width = skBitmap.Width;
         int height = skBitmap.Height;
         int pixelDataSize = width * height * 4;
@@ -82,10 +89,10 @@ public static class TextureEncoder
 
         // Radiance HDR Header
         string header = "#?RADIANCE\n# Written by CUE4Parse\nFORMAT=32-bit_rle_rgbe\n";
-        stream.Write(Encoding.ASCII.GetBytes(header), 0, header.Length);
-        stream.Write("\n"u8.ToArray(), 0, 1);
+        stream.Write(Encoding.ASCII.GetBytes(header));
+        stream.Write("\n"u8);
         string resolutionLine = $"-Y {bitmap.Height} +X {bitmap.Width}\n";
-        stream.Write(Encoding.ASCII.GetBytes(resolutionLine), 0, resolutionLine.Length);
+        stream.Write(Encoding.ASCII.GetBytes(resolutionLine));
 
         unsafe
         {
@@ -132,7 +139,7 @@ public static class TextureEncoder
                             }
 
                             // Scale RGB components based on the exponent
-                            float scaleFactor = (float)(256.0 / Math.Pow(2, exponent));
+                            float scaleFactor = 256.0f / MathF.Pow(2, exponent);
                             rByte = (byte)(r * scaleFactor);
                             gByte = (byte)(g * scaleFactor);
                             bByte = (byte)(b * scaleFactor);

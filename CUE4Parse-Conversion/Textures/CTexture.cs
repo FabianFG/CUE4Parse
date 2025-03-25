@@ -1,8 +1,11 @@
-﻿using SkiaSharp;
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
 using CUE4Parse.UE4.Objects.Core.Math;
+
+using OffiUtils;
+
+using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Textures;
 
@@ -23,11 +26,10 @@ public class CTexture
 {
     public int Width { get; }
     public int Height { get; }
-
-    private readonly PixelFormat PixelFormat;
     public byte[] Data { get; }
+    public PixelFormat PixelFormat { get; }
 
-    public bool IsFloat => PixelFormat == PixelFormat.PF_R32F || PixelFormat == PixelFormat.PF_RGB32F || PixelFormat == PixelFormat.PF_RGBA32F;
+    public bool IsFloat => PixelFormat is PixelFormat.PF_R32F or PixelFormat.PF_RGB32F or PixelFormat.PF_RGBA32F;
 
     public CTexture(int width, int height, PixelFormat pixelFormat, byte[] data)
     {
@@ -39,61 +41,43 @@ public class CTexture
 
     public SKBitmap ToSkBitmap()
     {
-        var convertedData = Data;
+        var dataSpan = new ReadOnlySpan<byte>(Data);
+        var convertedData = nint.Zero;
 
         switch (PixelFormat)
         {
             case PixelFormat.PF_R32F:
-                unsafe
-                {
-                    fixed (byte* d = Data) //Convert 32bit float to 8bit
-                        convertedData = Convert32FTo8(Width, Height, d, 1);
-                }
+                convertedData = Convert32FTo8(Width, Height, dataSpan, 1);
                 break;
             case PixelFormat.PF_RGB32F:
-                unsafe
-                {
-                    fixed (byte* d = Data) //Convert 32bit float to 8bit
-                        convertedData = Convert32FTo8(Width, Height, d, 3);
-                }
+                convertedData = Convert32FTo8(Width, Height, dataSpan, 3);
                 break;
             case PixelFormat.PF_RGBA32F:
-                unsafe
-                {
-                    fixed (byte* d = Data) //Convert 32bit float to 8bit
-                        convertedData = Convert32FTo8(Width, Height, d, 4);
-                }
+                convertedData = Convert32FTo8(Width, Height, dataSpan, 4);
                 break;
             case PixelFormat.PF_R16:
-                unsafe
-                {
-                    fixed (byte* d = Data) //Convert R16 to RGB888X
-                        convertedData = ConvertRawR16DataToRGB888X(Width, Height, d);
-                }
+                convertedData = ConvertRawR16DataToRGB888X(Width, Height, dataSpan);
                 break;
         }
 
         var info = new SKImageInfo(Width, Height, GetSkColorType(PixelFormat), SKAlphaType.Premul);
-        return InstallPixels(convertedData, info);
+        return InstallPixels(dataSpan, convertedData, info);
     }
 
-    private static SKColorType GetSkColorType(PixelFormat pixelFormat)
+    private static SKColorType GetSkColorType(PixelFormat pixelFormat) => pixelFormat switch
     {
-        return pixelFormat switch
-        {
-            PixelFormat.PF_R8 => SKColorType.Gray8,
-            PixelFormat.PF_R16 => SKColorType.Rgb888x,
-            PixelFormat.PF_R32F => SKColorType.Rgba8888,
-            PixelFormat.PF_RGB32F => SKColorType.Rgba8888,
-            PixelFormat.PF_RGBx8 => SKColorType.Rgb888x,
-            PixelFormat.PF_RGBA8 => SKColorType.Rgba8888,
-            PixelFormat.PF_BGRA8 => SKColorType.Bgra8888,
-            PixelFormat.PF_RGBA32F => SKColorType.Rgba8888,
-            _ => throw new NotSupportedException($"Unsupported pixel format: {pixelFormat}")
-        };
-    }
+        PixelFormat.PF_R8 => SKColorType.Gray8,
+        PixelFormat.PF_R16 => SKColorType.Rgb888x,
+        PixelFormat.PF_R32F => SKColorType.Rgba8888,
+        PixelFormat.PF_RGB32F => SKColorType.Rgba8888,
+        PixelFormat.PF_RGBx8 => SKColorType.Rgb888x,
+        PixelFormat.PF_RGBA8 => SKColorType.Rgba8888,
+        PixelFormat.PF_BGRA8 => SKColorType.Bgra8888,
+        PixelFormat.PF_RGBA32F => SKColorType.Rgba8888,
+        _ => throw new NotSupportedException($"Unsupported pixel format: {pixelFormat}")
+    };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //TODO: can be removed if span overload is valid
     private static unsafe byte[] ConvertRawR16DataToRGB888X(int width, int height, byte* inp)
     {
         int srcPitch = width * 2;
@@ -118,7 +102,28 @@ public class CTexture
         return ret;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nint ConvertRawR16DataToRGB888X(int width, int height, ReadOnlySpan<byte> inp)
+    {
+        // e.g. shadow maps
+        var inpU16 = MemoryMarshal.Cast<byte, ushort>(inp);
+        int srcPitch = width * 2;
+        var retSpan = MemoryUtils.NativeAlloc<FColor>(width * height, out var retPtr);
+        for (int y = 0; y < height; y++)
+        {
+            var srcSpan = inpU16.Slice(y * srcPitch);
+            var destOffset = y * width;
+            for (int x = 0; x < width; x++)
+            {
+                var value16 = srcSpan[x];
+                var value = FColor.Requantize16to8(value16);
+                retSpan[destOffset + x] = new FColor(value, value, value, byte.MaxValue);
+            }
+        }
+
+        return retPtr;
+    }
+
+    //TODO: can be removed if span overload is valid
     private static unsafe byte[] Convert32FTo8(int width, int height, byte* inp, int channelCount)
     {
         int totalSize = width * height * channelCount;
@@ -146,20 +151,39 @@ public class CTexture
         return ret;
     }
 
+    private static nint Convert32FTo8(int width, int height, ReadOnlySpan<byte> inp, int channelCount)
+    {
+        int totalSize = width * height * channelCount;
+        var retSpan = MemoryUtils.NativeAlloc<byte>(totalSize, out var retPtr);
 
-    private static SKBitmap InstallPixels(byte[] data, SKImageInfo info)
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                var pixelOffset = (y * width + x) * channelCount * sizeof(float);
+
+                for (int c = 0; c < channelCount; c++)
+                {
+                    float value = MemoryMarshal.Read<float>(inp.Slice(pixelOffset + c * sizeof(float)));
+                    byte value8 = (byte)Math.Clamp(value * 255.0f, 0, 255);
+                    int idx = (y * width + x) * channelCount + c;
+                    retSpan[idx] = value8;
+                }
+            }
+        }
+
+        return retPtr;
+    }
+
+    private static SKBitmap InstallPixels(ReadOnlySpan<byte> data, nint pixelsPtr, SKImageInfo info)
     {
         var bitmap = new SKBitmap();
-        unsafe
+        if (pixelsPtr == nint.Zero)
         {
-            var pixelsPtr = NativeMemory.Alloc((nuint) data.Length);
-            fixed (byte* p = data)
-            {
-                Unsafe.CopyBlockUnaligned(pixelsPtr, p, (uint) data.Length);
-            }
-
-            bitmap.InstallPixels(info, new IntPtr(pixelsPtr), info.RowBytes, (address, _) => NativeMemory.Free(address.ToPointer()));
+            var pixelsSpan = MemoryUtils.NativeAlloc<byte>(data.Length, out pixelsPtr);
+            data.CopyTo(pixelsSpan);
         }
+        bitmap.InstallPixels(info, pixelsPtr, info.RowBytes, static (address, _) => MemoryUtils.NativeFree(address));
         return bitmap;
     }
 }
