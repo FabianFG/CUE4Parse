@@ -3,21 +3,23 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+
 using AssetRipper.TextureDecoder.Bc;
+
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
+
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
-using static CUE4Parse.Utils.TypeConversionUtils;
 
 namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-    public static bool UseAssetRipperTextureDecoder = false;
+    public static bool UseAssetRipperTextureDecoder { get; set; } = false;
 
     public static CTexture? Decode(this UTexture2D texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetMipByMaxSize(maxMipSize), platform);
     public static CTexture? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
@@ -388,12 +390,12 @@ public static class TextureDecoder
             {
                 for (int y = 0; y < height; y++)
                 {
-                    ushort* srcRowPtr = (ushort*)(inp + z * height * srcPitch + y * srcPitch);
+                    Half* srcRowPtr = (Half*)(inp + z * height * srcPitch + y * srcPitch);
                     float* destRowPtr = (float*)(outPtr + z * height * width * channels * sizeof(float) + y * width * channels * sizeof(float));
 
                     for (int x = 0; x < width; x++)
                         for (int c = 0; c < channels; c++)
-                            *destRowPtr++ = HalfToFloat(*srcRowPtr++);
+                            *destRowPtr++ = (float)*srcRowPtr++;
                 }
             }
         }
