@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <RootNamespace>CUE4Parse_Conversion</RootNamespace>
-    <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFramework>net8.0</TargetFramework>
