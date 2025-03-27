@@ -4,6 +4,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public static class PixelFormatUtils
 {
+    //Pixelformat.h IsHDR
+    public static bool IsHDR(EPixelFormat pixelFormat) => pixelFormat is EPixelFormat.PF_FloatRGBA
+                                                                        or EPixelFormat.PF_BC6H
+                                                                        or EPixelFormat.PF_R16F
+                                                                        or EPixelFormat.PF_R32_FLOAT
+                                                                        or EPixelFormat.PF_A32B32G32R32F
+                                                                        or EPixelFormat.PF_ASTC_4x4_HDR
+                                                                        or EPixelFormat.PF_ASTC_6x6_HDR
+                                                                        or EPixelFormat.PF_ASTC_8x8_HDR
+                                                                        or EPixelFormat.PF_ASTC_10x10_HDR
+                                                                        or EPixelFormat.PF_ASTC_12x12_HDR;
+
     public static FPixelFormatInfo[] PixelFormats = new FPixelFormatInfo[/*(int) EPixelFormat.PF_MAX*/]
     {
         //        Pixel Format                     Name               BlockSizeX  BlockSizeY  BlockSizeZ  BlockBytes  NumComponents  Supported by CUE4Parse

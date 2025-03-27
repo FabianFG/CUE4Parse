@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using AssetRipper.TextureDecoder.Bc;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -10,6 +11,7 @@ using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
+using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Textures;
 
@@ -23,137 +25,150 @@ public static class TextureDecoder
     public static CTexture? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
-        {
             return DecodeVT(texture, vt);
-        }
 
-        if (mip != null)
+        if (mip == null)
+            return null;
+
+        var sizeX = mip.SizeX;
+        var sizeY = mip.SizeY;
+        var sizeZ = mip.SizeZ;
+
+        if (texture.Format == EPixelFormat.PF_BC7)
         {
-            var sizeX = mip.SizeX;
-            var sizeY = mip.SizeY;
-            var sizeZ = mip.SizeZ;
-
-            if (texture.Format == EPixelFormat.PF_BC7)
-            {
-                sizeX = sizeX.Align(4);
-                sizeY = sizeY.Align(4);
-                sizeZ = sizeZ.Align(4);
-            }
-
-            DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
-            return new CTexture( sizeX, sizeY, colorType, data);
+            sizeX = sizeX.Align(4);
+            sizeY = sizeY.Align(4);
+            sizeZ = sizeZ.Align(4);
         }
 
-        return null;
+        DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
+        return new CTexture( sizeX, sizeY, colorType, data);
+
     }
 
-    private static byte[] GetSliceData(byte[] data, int sizeX, int sizeY, int zLayer = 0)
+    private static unsafe Span<byte> GetSliceData(byte* data, int sizeX, int sizeY, int bytesPerPixel, int zLayer = 0)
     {
-        var offset = sizeX * sizeY * 4;
+        var offset = sizeX * sizeY * bytesPerPixel;
         var startIndex = offset * zLayer;
-        var endIndex = startIndex + offset;
-
-        return endIndex > data.Length ? data : data[startIndex..endIndex];
+        return new Span<byte>(data + startIndex, offset);
     }
 
     private static CTexture DecodeVT(UTexture texture, FVirtualTextureBuiltData vt)
     {
-        var tileSize = (int)vt.TileSize;
-        var tileBorderSize = (int)vt.TileBorderSize;
-        var tilePixelSize = (int)vt.GetPhysicalTileSize();
-        const int level = 0;
-
-        FVirtualTextureTileOffsetData tileOffsetData;
-        if (vt.IsLegacyData())
+        unsafe
         {
-            var blockWidthInTiles = vt.GetWidthInTiles();
-            var blockHeightInTiles = vt.GetHeightInTiles();
-            var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
-            tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
-        }
-        else
-        {
-            tileOffsetData = vt.TileOffsetData[level];
-        }
+            uint tileSize = vt.TileSize;
+            uint tileBorderSize = vt.TileBorderSize;
+            uint tilePixelSize = vt.GetPhysicalTileSize();
+            const int level = 0;
 
-        var bitmapWidth = (int)tileOffsetData.Width * tileSize;
-        var bitmapHeight = (int)tileOffsetData.Height * tileSize;
-        var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
-        if (tileOffsetData.MaxAddress > 1 && (maxLevel == 0 || vt.IsLegacyData()))
-        {
-            var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
-            var factor = Convert.ToInt32(Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1));
-            bitmapWidth /= factor;
-            bitmapHeight /= factor;
-        }
-
-        var colorType = EPixelFormat.PF_Unknown;
-        var bytesPerPixel = 0;
-        var rowBytes = 0;
-        var tileRowBytes = 0;
-        var result = new byte[bitmapWidth * bitmapHeight * 4];
-
-        for (uint layer = 0; layer < vt.NumLayers; layer++)
-        {
-            var layerFormat = vt.LayerTypes[layer];
-            if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)layerFormat) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0)
-                throw new NotImplementedException($"The supplied pixel format {layerFormat} is not supported!");
-
-            var tileWidthInBlocks = tilePixelSize.DivideAndRoundUp(formatInfo.BlockSizeX);
-            var tileHeightInBlocks = tilePixelSize.DivideAndRoundUp(formatInfo.BlockSizeY);
-            var packedStride = tileWidthInBlocks * formatInfo.BlockBytes;
-            var packedOutputSize = packedStride * tileHeightInBlocks;
-
-            var layerData = ArrayPool<byte>.Shared.Rent(packedOutputSize);
-
-            for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
+            // Get the Tile Offset Data
+            FVirtualTextureTileOffsetData tileOffsetData;
+            if (vt.IsLegacyData())
             {
-                if (!vt.IsValidAddress(level, tileIndexInMip)) continue;
-
-                var tileX = (int)MathUtils.ReverseMortonCode2(tileIndexInMip) * tileSize;
-                var tileY = (int)MathUtils.ReverseMortonCode2(tileIndexInMip >> 1) * tileSize;
-                var (chunkIndex, tileStart, tileLength) = vt.GetTileData(level, tileIndexInMip, layer);
-
-                if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.ZippedGPU_DEPRECATED)
-                {
-                    Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data!, (int)tileStart, (int)tileLength, layerData, 0, packedOutputSize, CompressionMethod.Zlib);
-                }
-                else
-                {
-                    Array.Copy(vt.Chunks[chunkIndex].BulkData.Data!, tileStart, layerData, 0, packedOutputSize);
-                }
-
-                DecodeBytes(layerData, tilePixelSize, tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var tileColorType);
-
-                if (colorType == EPixelFormat.PF_Unknown)
-                {
-                    colorType = tileColorType;
-                    bytesPerPixel = formatInfo.BlockBytes;
-                    rowBytes = bitmapWidth * bytesPerPixel;
-                    tileRowBytes = tilePixelSize * bytesPerPixel;
-                }
-                else if (colorType != tileColorType)
-                {
-                    throw new NotSupportedException("multiple pixelformats/colortypes in a single virtual image is not supported");
-                }
-
-                for (int i = 0; i < tileSize; i++)
-                {
-                    var tileOffset = ((i + tileBorderSize) * tilePixelSize + tileBorderSize) * bytesPerPixel;
-                    var offset = tileX * bytesPerPixel + (tileY + i) * rowBytes;
-                    var srcSpan = data.AsSpan(tileOffset, tileRowBytes);
-                    var destSpan = result.AsSpan(offset, tileRowBytes);
-                    srcSpan.CopyTo(destSpan);
-                }
+                var blockWidthInTiles = vt.GetWidthInTiles();
+                var blockHeightInTiles = vt.GetHeightInTiles();
+                var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
+                tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
+            }
+            else
+            {
+                tileOffsetData = vt.TileOffsetData[level];
             }
 
-            ArrayPool<byte>.Shared.Return(layerData);
-        }
+            // Compute final image size
+            var bitmapWidth = tileOffsetData.Width * tileSize;
+            var bitmapHeight = tileOffsetData.Height * tileSize;
+            var maxLevel = Math.Ceiling(Math.Log2(Math.Max(tileOffsetData.Width, tileOffsetData.Height)));
 
-        return new CTexture(bitmapWidth, bitmapHeight, colorType, GetSliceData(result, bitmapWidth, bitmapHeight));
+            if (tileOffsetData.MaxAddress > 1 && (maxLevel == 0 || vt.IsLegacyData()))
+            {
+                var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
+                uint factor = (uint)Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1);
+                bitmapWidth /= factor;
+                bitmapHeight /= factor;
+            }
+
+            var colorType = EPixelFormat.PF_Unknown;
+            void* pixelDataPtr = null;
+            var bytesPerPixel = 0;
+            var rowBytes = 0;
+            var tileRowBytes = 0;
+            var result = Span<byte>.Empty;
+
+            for (uint layer = 0; layer < vt.NumLayers; layer++)
+            {
+                var layerFormat = vt.LayerTypes[layer];
+
+                if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)layerFormat) is not { Supported: true } formatInfo || formatInfo.BlockBytes == 0)
+                    throw new NotImplementedException($"Unsupported pixel format {layerFormat}!");
+
+                var tileWidthInBlocks = tilePixelSize.DivideAndRoundUp((uint)formatInfo.BlockSizeX);
+                var tileHeightInBlocks = tilePixelSize.DivideAndRoundUp((uint)formatInfo.BlockSizeY);
+                var packedStride = tileWidthInBlocks * formatInfo.BlockBytes;
+                var packedOutputSize = packedStride * tileHeightInBlocks;
+
+                var layerData = ArrayPool<byte>.Shared.Rent((int)packedOutputSize);
+
+                for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
+                {
+                    if (!vt.IsValidAddress(level, tileIndexInMip))
+                        continue;
+
+                    var tileX = (int)MathUtils.ReverseMortonCode2(tileIndexInMip) * tileSize;
+                    var tileY = (int)MathUtils.ReverseMortonCode2(tileIndexInMip >> 1) * tileSize;
+                    var (chunkIndex, tileStart, tileLength) = vt.GetTileData(level, tileIndexInMip, layer);
+
+                    //compressed textures
+                    if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.ZippedGPU_DEPRECATED)
+                        Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data!, (int)tileStart, (int)tileLength, layerData, 0, (int)packedOutputSize, CompressionMethod.Zlib);
+                    else
+                        Array.Copy(vt.Chunks[chunkIndex].BulkData.Data!, tileStart, layerData, 0, packedOutputSize);
+
+                    DecodeBytes(layerData, (int)tilePixelSize, (int)tilePixelSize, 1, formatInfo, texture.IsNormalMap, out var data, out var tileColorType);
+
+                    if (pixelDataPtr is null)
+                    {
+                        colorType = tileColorType;
+                        bytesPerPixel = formatInfo.BlockBytes;
+
+                        if (formatInfo.BlockSizeX == 1 && formatInfo.BlockSizeY == 1)
+                        {
+                            rowBytes = (int)bitmapWidth * bytesPerPixel; // Uncompressed
+                        }
+                        else
+                        {
+                            rowBytes = (int)((bitmapWidth + formatInfo.BlockSizeX - 1) / formatInfo.BlockSizeX * formatInfo.BlockBytes);
+                        }
+
+                        tileRowBytes = (int)tileSize * bytesPerPixel;
+                        var imageBytes = (int)(bitmapWidth * bitmapHeight * bytesPerPixel);
+
+                        pixelDataPtr = NativeMemory.Alloc((nuint)imageBytes);
+                        result = new Span<byte>(pixelDataPtr, imageBytes);
+                    }
+
+                    else if (colorType != tileColorType)
+                        throw new NotSupportedException("Multiple pixel formats in a single VT are not supported.");
+
+                    for (int i = 0; i < tileSize; i++)
+                    {
+                        var tileOffset = ((i + tileBorderSize) * tilePixelSize + tileBorderSize) * bytesPerPixel;
+                        var offset = tileX * bytesPerPixel + (tileY + i) * rowBytes;
+
+                        data.AsSpan((int)tileOffset, tileRowBytes).CopyTo(result.Slice((int)offset));
+                    }
+                }
+
+                ArrayPool<byte>.Shared.Return(layerData);
+            }
+
+            return new CTexture((int)bitmapWidth, (int)bitmapHeight, colorType, GetSliceData((byte*)pixelDataPtr, (int)bitmapWidth, (int)bitmapHeight, bytesPerPixel).ToArray());
+        }
     }
 
-    public static CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
         var mip = texture.GetFirstMip();
 
@@ -173,16 +188,21 @@ public static class TextureDecoder
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
-        var bitmaps = new List<CTexture>();
+        var bitmaps = new CTexture[sizeZ];
         var offset = sizeX * sizeY * 4;
-        for (var i = 0; i < sizeZ; i++)
-        {
-            if (offset * (i + 1) > data.Length)
-                break;
-            bitmaps.Add(new CTexture(sizeX, sizeY, colorType, GetSliceData(data, sizeX, sizeY, i)));
-        }
 
-        return bitmaps.ToArray();
+        // Pin the byte array to get a pointer
+        fixed (byte* dataPtr = data)
+        {
+            for (var i = 0; i < sizeZ; i++)
+            {
+                if (offset * (i + 1) > data.Length)
+                    break;  // Prevent out-of-bounds access
+
+                bitmaps[i] = new CTexture(sizeX, sizeY, colorType, GetSliceData(dataPtr, sizeX, sizeY, 4, i).ToArray());
+            }
+        }
+        return bitmaps;
     }
 
     private static void DecodeTexture(FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, EPixelFormat format, bool isNormalMap, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType)
