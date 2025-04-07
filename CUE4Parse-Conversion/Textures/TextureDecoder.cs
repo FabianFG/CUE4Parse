@@ -329,6 +329,11 @@ public static class TextureDecoder
                 {
                     Bc5.Decompress(bytes, sizeX, sizeY, out data);
                     colorType = SKColorType.Bgra8888;
+                    
+                    for (var i = 0; i < sizeX * sizeY; i++)
+                    {
+                        data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
+                    }
                 }
                 else
                 {
