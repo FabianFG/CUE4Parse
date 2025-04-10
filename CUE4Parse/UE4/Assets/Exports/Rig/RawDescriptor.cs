@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
 [JsonConverter(typeof(RawDescriptorConverter))]
-public class RawDescriptor
+public class RawDescriptor : IRawBase
 {
     public string Name;
     public EArchetype Archetype;

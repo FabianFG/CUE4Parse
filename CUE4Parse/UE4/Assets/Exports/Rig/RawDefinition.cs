@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-public class RawDefinition
+public class RawDefinition : IRawBase
 {
     public RawLODMapping LodJointMapping;
     public RawLODMapping LodBlendShapeMapping;

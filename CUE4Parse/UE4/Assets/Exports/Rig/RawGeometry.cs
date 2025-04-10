@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-public class RawGeometry
+public class RawGeometry : IRawBase
 {
     public RawMesh[] Meshes;
 

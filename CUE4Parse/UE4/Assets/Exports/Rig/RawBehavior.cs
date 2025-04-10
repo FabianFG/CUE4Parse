@@ -2,7 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-public class RawBehavior
+public class RawBehavior : IRawBase
 {
     public RawControls Controls;
     public RawJoints Joints;
@@ -21,6 +21,14 @@ public class RawBehavior
         BlendShapeChannels = new RawBlendShapeChannels(Ar);
 
         Ar.Position = startPos + sections.AnimatedMaps;
+        AnimatedMaps = new RawAnimatedMaps(Ar);
+    }
+
+    public RawBehavior(FArchiveBigEndian Ar)
+    {
+        Controls = new RawControls(Ar);
+        Joints = new RawJoints(Ar);
+        BlendShapeChannels = new RawBlendShapeChannels(Ar);
         AnimatedMaps = new RawAnimatedMaps(Ar);
     }
 }

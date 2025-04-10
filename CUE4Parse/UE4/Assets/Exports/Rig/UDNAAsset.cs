@@ -1,9 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
@@ -15,6 +18,8 @@ public class UDNAAsset : UObject
     public RawDefinition Definition;
     public RawBehavior Behavior;
     public RawGeometry Geometry;
+    public IndexTable IndexTable;
+    public Dictionary<string, IRawBase> Layers;
 
     private readonly byte[] _signature = "DNA"u8.ToArray();
     private readonly byte[] _eof = "AND"u8.ToArray();
@@ -28,7 +33,7 @@ public class UDNAAsset : UObject
             var startPos = Ar.Position;
             var endianAr = new FArchiveBigEndian(Ar);
 
-            var signature = Ar.ReadBytes(3);
+            var signature = endianAr.ReadBytes(3);
             if (!signature.SequenceEqual(_signature))
                 throw new InvalidDataException("Invalid file start signature");
 
@@ -51,24 +56,41 @@ public class UDNAAsset : UObject
             if (!eof.SequenceEqual(_eof))
                 throw new InvalidDataException("Invalid end of file signature");
 
-            // Layers
-            signature = Ar.ReadBytes(3);
+            startPos = endianAr.Position;
+
+            signature = endianAr.ReadBytes(3);
             if (!signature.SequenceEqual(_signature))
-                throw new InvalidDataException("Invalid layers start signature");
+                throw new InvalidDataException("Invalid layer start signature");
 
-            var fileVersion = new DNAVersion(endianAr);
-            endianAr.Position += 4; // seems to have a fixed value of 9
-//
-            var desc = endianAr.ReadBytes(4);
-            var sig = new char[desc.Length];
-            for (var i = 0; i < desc.Length; i++)
+            Version = new DNAVersion(endianAr);
+            IndexTable = new IndexTable(endianAr);
+
+            Layers = [];
+            foreach (var entry in IndexTable.Entries)
             {
-                sig[i] = (char)desc[i];
-            }
-//
-            var ver = new DNAVersion(endianAr);
+                endianAr.Position = startPos + entry.Offset;
+                var layerStartPos = endianAr.Position;
 
-            Ar.Position = validPos;
+                Layers[entry.Id] = entry.Id switch
+                {
+                    "desc" => new RawDescriptor(endianAr),
+                    "defn" => new RawDefinition(endianAr),
+                    "bhvr" => new RawBehavior(endianAr),
+                    "geom" => new RawGeometry(endianAr),
+                    "mlbh" => new RawMachineLearnedBehavior(endianAr),
+                    "rbfb" => new RawRBFBehavior(endianAr),
+                    "rbfe" => new RawRBFBehaviorExt(endianAr),
+                    "jbmd" => new RawJointBehaviorMetadata(endianAr),
+                    "twsw" => new RawTwistSwingBehavior(endianAr),
+                    _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
+                };
+
+                var readSize = Ar.Position - layerStartPos;
+                var remaining = entry.Size - readSize;
+
+                if (remaining != 0)
+                    Log.Debug("Did not read layer '{0}' correctly", entry.Id);
+            }
         }
     }
 
@@ -90,5 +112,11 @@ public class UDNAAsset : UObject
 
         writer.WritePropertyName("Geometry");
         serializer.Serialize(writer, Geometry);
+
+        writer.WritePropertyName("IndexTable");
+        serializer.Serialize(writer, IndexTable);
+
+        writer.WritePropertyName("Layers");
+        serializer.Serialize(writer, Layers);
     }
 }
