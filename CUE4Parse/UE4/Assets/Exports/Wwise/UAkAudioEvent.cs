@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 public class UAkAudioEvent : UAkAudioType
 {
-    public FWwiseLocalizedEventCookedData EventCookedData { get; private set; }
+    public FWwiseLocalizedEventCookedData? EventCookedData { get; private set; }
     public float MaximumDuration { get; private set; }
     public float MinimumDuration { get; private set; }
     public bool IsInfinite { get; private set; }
