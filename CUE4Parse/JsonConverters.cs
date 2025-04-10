@@ -3064,3 +3064,54 @@ public class FGameplayTagConverter : JsonConverter<FGameplayTag>
         throw new NotImplementedException();
     }
 }
+
+public class EnumConverter<T> : JsonConverter<T> where T : Enum
+{
+    public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value.ToStringBitfield(true));
+    }
+
+    public override T ReadJson(JsonReader reader, Type objectType, T existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocalizedEventCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedEventCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("EventLanguageMap");
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.EventLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName("DebugName");
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName("EventId");
+        writer.WriteValue(value.EventId);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedEventCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedEventCookedData existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
