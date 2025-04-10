@@ -49,8 +49,5 @@ public class FArchiveBigEndian : FArchive
         set => _baseArchive.Position = value;
     }
 
-    public override object Clone()
-    {
-        throw new System.NotImplementedException();
-    }
+    public override object Clone() => new FArchiveBigEndian(_baseArchive);
 }

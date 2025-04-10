@@ -88,8 +88,15 @@ public class UDNAAsset : UObject
                 var readSize = Ar.Position - layerStartPos;
                 var remaining = entry.Size - readSize;
 
-                if (remaining != 0)
-                    Log.Debug("Did not read layer '{0}' correctly", entry.Id);
+                switch (remaining)
+                {
+                    case > 0:
+                        Log.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
+                        break;
+                    case < 0:
+                        Log.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
+                        break;
+                }
             }
         }
     }
