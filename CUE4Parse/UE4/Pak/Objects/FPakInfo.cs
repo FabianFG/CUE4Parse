@@ -30,7 +30,7 @@ public enum EPakFileVersion
     PakFile_Version_Latest = PakFile_Version_Last - 1
 }
 
-public class FPakInfo
+public partial class FPakInfo
 {
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
@@ -226,10 +226,10 @@ public class FPakInfo
         beforeCompression:
         if (Version < EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod)
         {
-            CompressionMethods = new List<CompressionMethod>
-            {
+            CompressionMethods =
+            [
                 CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4, CompressionMethod.Zstd
-            };
+            ];
         }
         else
         {
@@ -344,6 +344,11 @@ public class FPakInfo
             Ar.Seek(-maxOffset, SeekOrigin.End);
             var buffer = stackalloc byte[(int) maxOffset];
             Ar.Serialize(buffer, (int) maxOffset);
+
+            if (Ar.Game == EGame.GAME_InZOI)
+            {
+                DecryptInZOIFPakInfo(Ar, maxOffset, buffer);
+            }
 
             var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 

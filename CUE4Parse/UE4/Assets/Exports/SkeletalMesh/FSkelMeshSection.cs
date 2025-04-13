@@ -235,6 +235,7 @@ public class FSkelMeshSection
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
         if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
+        if (Ar.Game == EGame.GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy) Ar.Position += 4;
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
