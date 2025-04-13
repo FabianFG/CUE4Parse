@@ -27,28 +27,6 @@ namespace CUE4Parse_Conversion.Textures.BC
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] DecodeDetexLinearLayered(byte[] inp, int layerWidth, int layerHeight, int depth, bool isFloat, DetexTextureFormat inputFormat, DetexPixelFormat outputPixelFormat)
-        {
-            var bytesPerPixel = isFloat ? 16 : 4;
-            var layerSize = layerWidth * layerHeight * bytesPerPixel;
-
-            var height = layerHeight * depth;
-            var dst = new byte[layerWidth * height * bytesPerPixel];
-            DecodeDetexLinear(inp, dst, layerWidth, height, inputFormat, outputPixelFormat);
-
-            var combinedData = new byte[dst.Length * depth];
-            for (var z = 0; z < depth; z++)
-            {
-                var srcStartIndex = z * layerWidth * layerHeight * bytesPerPixel;
-                var dstStartIndex = z * layerSize;
-
-                Array.Copy(dst, srcStartIndex, combinedData, dstStartIndex, layerSize);
-            }
-
-            return combinedData;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] DecodeDetexLinear(byte[] inp, int width, int height, bool isFloat, DetexTextureFormat inputFormat, DetexPixelFormat outputPixelFormat)
         {
             var dst = new byte[width * height * (isFloat ? 16 : 4)];

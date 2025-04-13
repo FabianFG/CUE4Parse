@@ -366,7 +366,7 @@ public static class TextureDecoder
                 }
                 else
                 {
-                    data = Detex.DecodeDetexLinearLayered(bytes, sizeX, sizeY, sizeZ, false,
+                    data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY * sizeZ, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
