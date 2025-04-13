@@ -310,10 +310,11 @@ public class FPakInfo
         SizeRennsport = Size8a + 16,
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
-        SizeKartRiderDrift = 397,
 
         SizeLast,
-        SizeMax = SizeLast - 1
+        SizeMax = SizeLast - 1,
+
+        SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
     }
 
     private static readonly OffsetsToTry[] _offsetsToTry =
@@ -333,7 +334,9 @@ public class FPakInfo
         unsafe
         {
             var length = Ar.Length;
-            const long maxOffset = (long) OffsetsToTry.SizeMax;
+            var maxOffset = (long) OffsetsToTry.SizeMax;
+            if (Ar.Game == EGame.GAME_KartRiderDrift) maxOffset = (long) OffsetsToTry.SizeKartRiderDrift;
+
             if (length < maxOffset)
             {
                 throw new ParserException($"File {Ar.Name} is too small to be a pak file");
