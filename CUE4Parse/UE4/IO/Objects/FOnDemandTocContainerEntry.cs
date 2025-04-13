@@ -12,6 +12,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly FOnDemandTocEntry[] Entries;
         public readonly uint[] BlockSizes;
         public readonly uint[] BlockHashes; // FIoBlockHash is just uint32
+        public readonly byte[] Header;
         public readonly FSHAHash UTocHash;
         public readonly EOnDemandContainerFlags ContainerFlags;
 
@@ -21,21 +22,26 @@ namespace CUE4Parse.UE4.IO.Objects
             {
                 ContainerId = Ar.Read<FIoContainerId>();
             }
-            
+
             ContainerName = Ar.ReadFString();
             EncryptionKeyGuid = Ar.ReadFString();
             Entries = Ar.ReadArray(() => new FOnDemandTocEntry(Ar));
             BlockSizes = Ar.ReadArray<uint>();
             BlockHashes = Ar.ReadArray<uint>();
             UTocHash = new FSHAHash(Ar);
-            
+
             if (version >= EOnDemandTocVersion.ContainerFlags)
             {
                 ContainerFlags = Ar.Read<EOnDemandContainerFlags>();
             }
+
+            if (version >= EOnDemandTocVersion.ContainerHeader)
+            {
+                Header = Ar.ReadArray<byte>();
+            }
         }
     }
-    
+
     [Flags]
     public enum EOnDemandContainerFlags : byte
     {

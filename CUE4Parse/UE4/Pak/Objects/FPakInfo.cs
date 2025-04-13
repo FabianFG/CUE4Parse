@@ -191,6 +191,7 @@ public class FPakInfo
         IndexOffset = Ar.Read<long>();
         if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
+        if (Ar.Game == EGame.GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
@@ -247,7 +248,8 @@ public class FPakInfo
 
             unsafe
             {
-                var bufferSize = COMPRESSION_METHOD_NAME_LEN * maxNumCompressionMethods;
+                var length = Ar.Game == EGame.GAME_KartRiderDrift ? 48 : COMPRESSION_METHOD_NAME_LEN;
+                var bufferSize = length * maxNumCompressionMethods;
                 var buffer = stackalloc byte[bufferSize];
                 Ar.Serialize(buffer, bufferSize);
                 CompressionMethods = new List<CompressionMethod>(maxNumCompressionMethods + 1)
@@ -256,7 +258,7 @@ public class FPakInfo
                 };
                 for (var i = 0; i < maxNumCompressionMethods; i++)
                 {
-                    var name = new string((sbyte*) buffer + i * COMPRESSION_METHOD_NAME_LEN, 0, COMPRESSION_METHOD_NAME_LEN).TrimEnd('\0');
+                    var name = new string((sbyte*) buffer + i * length, 0, length).TrimEnd('\0');
                     if (string.IsNullOrEmpty(name))
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
@@ -302,12 +304,13 @@ public class FPakInfo
         SiseRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
-        Size_ARKSurvivalAscended = Size8a + 8, // additional 8 bytes 
+        Size_ARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
+        SizeKartRiderDrift = 397,
 
         SizeLast,
         SizeMax = SizeLast - 1
@@ -353,6 +356,7 @@ public class FPakInfo
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
                 EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.Size_ARKSurvivalAscended],
+                EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 _ => _offsetsToTry
             };
             foreach (var offset in offsetsToTry)

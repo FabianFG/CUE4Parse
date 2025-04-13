@@ -159,7 +159,7 @@ public static class TextureDecoder
 
             DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
 
-            return InstallPixels(GetImageDataRange(data, mip, sizeX, sizeY, zLayer), new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
+            return InstallPixels(GetImageDataRange(data, sizeX, sizeY, zLayer), new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul));
         }
 
         return null;
@@ -198,7 +198,7 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            sizeZ = sizeZ.Align(4);
+            // sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data,
@@ -208,15 +208,16 @@ public static class TextureDecoder
         var offset = sizeX * sizeY * 4;
         for (var i = 0; i < sizeZ; i++)
         {
-            if (offset * (i + 1) > data.Length) break;
-            bitmaps.Add(InstallPixels(GetImageDataRange(data, mip, sizeX, sizeY, i),
+            bitmaps.Add(InstallPixels(GetImageDataRange(data, sizeX, sizeY, i),
                 new SKImageInfo(sizeX, sizeY, colorType, SKAlphaType.Unpremul)));
+
+            if (offset * (i + 1) > data.Length) break;
         }
 
         return bitmaps.ToArray();
     }
 
-    private static byte[] GetImageDataRange(byte[] data, FTexture2DMipMap mip, int sizeX, int sizeY, int zLayer)
+    private static byte[] GetImageDataRange(byte[] data, int sizeX, int sizeY, int zLayer)
     {
         var offset = sizeX * sizeY * 4;
         var startIndex = offset * zLayer;
@@ -329,7 +330,7 @@ public static class TextureDecoder
                 {
                     Bc5.Decompress(bytes, sizeX, sizeY, out data);
                     colorType = SKColorType.Bgra8888;
-                    
+
                     for (var i = 0; i < sizeX * sizeY; i++)
                     {
                         data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
@@ -365,7 +366,7 @@ public static class TextureDecoder
                 }
                 else
                 {
-                    data = Detex.DecodeDetexLinear(bytes, sizeX, sizeY, false,
+                    data = Detex.DecodeDetexLinearLayered(bytes, sizeX, sizeY, sizeZ, false,
                         DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC,
                         DetexPixelFormat.DETEX_PIXEL_FORMAT_RGBA8);
                     colorType = SKColorType.Rgba8888;
