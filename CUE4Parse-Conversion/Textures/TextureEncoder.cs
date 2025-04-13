@@ -123,10 +123,7 @@ public static class TextureEncoder
 
         //Process each scanline directly from convertedDataPtr
         for (int y = 0; y < texture.Height; y++)
-        {
-            int rowOffset = y * texture.Width * 4;
-            WriteScanlineRLE(stream, convertedDataPtr, texture.Width, rowOffset);
-        }
+            WriteScanlineRLE(stream, convertedDataPtr, texture.Width, y * texture.Width * 4);
 
         // Free allocated native memory
         MemoryUtils.NativeFree(convertedDataPtr);
@@ -156,11 +153,10 @@ public static class TextureEncoder
 
                 float r = 0, g = 0, b = 0;
 
+                // If there's only 1 channel, we just take that value for r, g, and b
                 if (channelCount == 1)
-                {
-                    // If there's only 1 channel, we just take that value for r, g, and b
                     r = g = b = *(float*)(inpPtr + pixelOffset);
-                }
+
                 else
                 {
                     for (int c = 0; c < channelCount; c++)
@@ -182,9 +178,8 @@ public static class TextureEncoder
 
                 byte rByte, gByte, bByte, exponentByte;
                 if (maxValue < 1e-32f)
-                {
                     rByte = gByte = bByte = exponentByte = 0;
-                }
+
                 else
                 {
                     int exponent = (int)Math.Floor(Math.Log2(maxValue)) + 1;
@@ -224,11 +219,10 @@ public static class TextureEncoder
 
                 float r = 0, g = 0, b = 0;
 
+                // If there's only 1 channel, we just take that value for r, g, and b
                 if (channelCount == 1)
-                {
-                    // If there's only 1 channel, we just take that value for r, g, and b
                     r = g = b = (float)*(Half*)(inpPtr + pixelOffset);
-                }
+
                 else
                 {
                     for (int c = 0; c < channelCount; c++)
@@ -286,9 +280,7 @@ public static class TextureEncoder
 
         // Process each channel (RGBA) separately
         for (int channel = 0; channel < 4; channel++)
-        {
             WriteChannelRLE(stream, dataPtr, scanlineWidth, rowOffset, channel);
-        }
     }
 
     private static void WriteChannelRLE(MemoryStream stream, nint dataPtr, int scanlineWidth, int rowOffset, int channel)
@@ -307,9 +299,7 @@ public static class TextureEncoder
 
                 // Check for identical values in the current channel
                 while (current + runLength < scanlineWidth && runLength < 127 && *(pixelPtr) == *(pixelPtr + (runLength * 4)))
-                {
                     runLength++;
-                }
 
                 // If we found a run of 4 or more identical values, encode the run using RLE
                 if (runLength >= 4)
@@ -325,11 +315,8 @@ public static class TextureEncoder
                     while (current + nonRunLength < scanlineWidth && nonRunLength < 128)
                     {
                         int nextRun = 1;
-                        while (current + nonRunLength + nextRun < scanlineWidth && nextRun < 127 &&
-                               *(pixelPtr + (nonRunLength * 4)) == *(pixelPtr + ((nonRunLength + nextRun) * 4)))
-                        {
+                        while (current + nonRunLength + nextRun < scanlineWidth && nextRun < 127 && *(pixelPtr + (nonRunLength * 4)) == *(pixelPtr + ((nonRunLength + nextRun) * 4)))
                             nextRun++;
-                        }
 
                         // Break early if a run is detected
                         if (nextRun >= 4)
@@ -341,9 +328,8 @@ public static class TextureEncoder
                     // Write the non-run length values
                     stream.WriteByte((byte)nonRunLength);
                     for (int i = 0; i < nonRunLength; i++)
-                    {
                         stream.WriteByte(*(pixelPtr + (i * 4)));
-                    }
+
                     current += nonRunLength;
                 }
             }
@@ -368,11 +354,10 @@ public static class TextureEncoder
                 skColorType = SKColorType.Bgra8888;
                 break;
             case EPixelFormat.PF_R8:
+            case EPixelFormat.PF_G8:
                 skColorType = SKColorType.Gray8;
                 break;
             case EPixelFormat.PF_FloatRGB:
-                convertedData = ConvertHalfTo8(texture.PixelFormat, texture.Width, texture.Height, dataSpan);
-                break;
             case EPixelFormat.PF_FloatRGBA:
                 convertedData = ConvertHalfTo8(texture.PixelFormat, texture.Width, texture.Height, dataSpan);
                 break;
@@ -442,7 +427,6 @@ public static class TextureEncoder
             byte* outPtr = (byte*)retPtr;
 
             for (int y = 0; y < height; y++)
-            {
                 for (int x = 0; x < width; x++)
                 {
                     int pixelOffset = (y * width + x) * channelCount * sizeof(float);
@@ -455,7 +439,6 @@ public static class TextureEncoder
                     }
                     FillMissingChannels(outPtr, channelCount);
                 }
-            }
         }
         return retPtr;
     }
@@ -472,7 +455,6 @@ public static class TextureEncoder
             byte* outPtr = (byte*)retPtr;
 
             for (int y = 0; y < height; y++)
-            {
                 for (int x = 0; x < width; x++)
                 {
                     int pixelOffset = (y * width + x) * channelCount * sizeof(Half);
@@ -485,7 +467,6 @@ public static class TextureEncoder
                     }
                     FillMissingChannels(outPtr, channelCount);
                 }
-            }
         }
         return retPtr;
     }
