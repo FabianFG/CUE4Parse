@@ -1,17 +1,16 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Wwise
+namespace CUE4Parse.UE4.Assets.Exports.Wwise;
+
+public class UAkAssetPlatformData : UObject
 {
-    public class UAkAssetPlatformData : UObject
+    public FPackageIndex? CurrentAssetData;
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        public FPackageIndex? CurrentAssetData;
+        base.Deserialize(Ar, validPos);
 
-        public override void Deserialize(FAssetArchive Ar, long validPos)
-        {
-            base.Deserialize(Ar, validPos);
-
-            CurrentAssetData = new FPackageIndex(Ar);
-        }
+        CurrentAssetData = new FPackageIndex(Ar);
     }
 }

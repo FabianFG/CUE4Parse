@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
@@ -16,6 +16,8 @@ public class UAkAudioEvent : UAkAudioType
     {
         base.Deserialize(Ar, validPos);
 
+        if (Ar.Position >= validPos) return;
+
         EventCookedData = new FWwiseLocalizedEventCookedData(new FStructFallback(Ar, "WwiseLocalizedEventCookedData"));
         MaximumDuration = Ar.Read<float>();
         MinimumDuration = Ar.Read<float>();
@@ -26,6 +28,8 @@ public class UAkAudioEvent : UAkAudioType
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
+
+        if (EventCookedData is null) return;
 
         writer.WritePropertyName("EventCookedData");
         serializer.Serialize(writer, EventCookedData);
