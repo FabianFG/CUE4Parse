@@ -32,6 +32,12 @@ public class FInstancedStruct : IUStruct
         var serialSize = Ar.Read<int>();
         var savedPos = Ar.Position;
 
+        if (strucindex.IsNull)
+        {
+            Ar.Position = savedPos + serialSize;
+            return;
+        }
+
         try
         {
             if (strucindex.TryLoad<UStruct>(out var struc))

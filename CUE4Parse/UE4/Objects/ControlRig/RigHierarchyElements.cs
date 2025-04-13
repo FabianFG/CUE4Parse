@@ -638,7 +638,10 @@ public enum ERigElementType : byte
     Control = 4,
     Curve = 8,
     RigidBody = 16,
+    Physics = 16,
     Reference = 32,
     Connector = 64,
-    Socket = 128
+    Socket = 128,
+
+    All = Bone | Null | Control | Curve | Physics | Reference | Connector | Socket,
 }

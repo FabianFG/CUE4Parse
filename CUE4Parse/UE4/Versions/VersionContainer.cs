@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Versions
             Options["MorphTarget"] = true;
 
             // structs
-            Options["Vector_NetQuantize_AsStruct"] = false;
+            Options["Vector_NetQuantize_AsStruct"] = Game >= GAME_UE5_0;
 
             // fields
             Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25 && Game != GAME_DeltaForceHawkOps;

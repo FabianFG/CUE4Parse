@@ -42,7 +42,7 @@ public class FMorphTargetDelta
 public class FMorphTargetLODModel
 {
     /** vertex data for a single LOD morph mesh */
-    public FMorphTargetDelta[] Vertices;
+    [JsonIgnore] public FMorphTargetDelta[] Vertices;
     /** number of original verts in the base mesh */
     public int NumBaseMeshVerts;
     /** list of sections this morph is used */
