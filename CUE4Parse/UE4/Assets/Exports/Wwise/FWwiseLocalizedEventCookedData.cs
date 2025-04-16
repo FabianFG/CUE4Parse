@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
@@ -23,6 +23,6 @@ public readonly struct FWwiseLocalizedEventCookedData
         }
 
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
-        EventId = fallback.GetOrDefault<int>(nameof(EventId));
+        EventId = fallback.GetOrDefault<int>("eventID");
     }
 }
