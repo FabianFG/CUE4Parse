@@ -358,7 +358,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             !float.IsFinite(Z) ||
             !float.IsFinite(W);
 
-        public override string ToString() => $"X={X:F9} Y={Y:F9} Z={Z:F9} W={W:F9}";
+        public override string ToString() => $"X={X:F3} Y={Y:F3} Z={Z:F3} W={W:F3}";
 
         public void Serialize(FArchiveWriter Ar)
         {

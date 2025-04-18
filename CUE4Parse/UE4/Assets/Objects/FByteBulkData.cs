@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -141,6 +141,11 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
+            else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable))
+            {
+                CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
+            }
+
             Ar.Dispose();
             return true;
         }

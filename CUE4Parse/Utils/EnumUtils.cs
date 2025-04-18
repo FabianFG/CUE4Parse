@@ -7,7 +7,7 @@ namespace CUE4Parse.Utils;
 public static class EnumUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ToStringBitfield<T>(this T inEnum) where T : Enum
+    public static string ToStringBitfield<T>(this T inEnum, bool prefixed = false) where T : Enum
     {
         var outValues = new List<T>();
         foreach (var enumValue in (T[]) Enum.GetValues(typeof(T)))
@@ -17,7 +17,9 @@ public static class EnumUtils
                 outValues.Add(enumValue);
             }
         }
-        return outValues.Count > 0 ? string.Join(" | ", outValues) : "0";
+
+        var c = outValues.Count;
+        return c > 0 ? c == 1 && prefixed ? $"{inEnum.GetType().Name}::{outValues[0]}" : string.Join(" | ", outValues) : "0";
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

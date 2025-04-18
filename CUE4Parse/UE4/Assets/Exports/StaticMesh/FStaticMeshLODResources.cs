@@ -48,6 +48,8 @@ public class FStaticMeshLODResources
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
         MaxDeviation = Ar.Read<float>();
 
+        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
+
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
             if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
@@ -204,6 +206,7 @@ public class FStaticMeshLODResources
         {
             _ = new FColorVertexBuffer(Ar);
         }
+        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 20;
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 

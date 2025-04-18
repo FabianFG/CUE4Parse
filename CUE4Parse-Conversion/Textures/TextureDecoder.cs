@@ -172,7 +172,7 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            sizeZ = sizeZ.Align(4);
+            // sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
@@ -299,7 +299,12 @@ public static class TextureDecoder
                 if (UseAssetRipperTextureDecoder)
                 {
                     Bc5.Decompress(bytes, sizeX, sizeY, out data);
-                    colorType = EPixelFormat.PF_B8G8R8A8;
+                    colorType = SKColorType.Bgra8888;
+
+                    for (var i = 0; i < sizeX * sizeY; i++)
+                    {
+                        data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
+                    }
                 }
                 else
                 {
