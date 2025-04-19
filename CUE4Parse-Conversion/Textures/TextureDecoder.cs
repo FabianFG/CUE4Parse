@@ -278,17 +278,18 @@ public static class TextureDecoder
                     Bc4.Decompress(bytes, sizeX, sizeY, out data);
                 else
                     data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);
+
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC5:
                 if (UseAssetRipperTextureDecoder)
-                {
                     Bc5.Decompress(bytes, sizeX, sizeY, out data);
-                    for (var i = 0; i < sizeX * sizeY; i++)
-                        data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
-                }
                 else
                     data = BCDecoder.BC5(bytes, sizeX, sizeY, sizeZ);
+
+                for (var i = 0; i < sizeX * sizeY; i++)
+                    data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
+
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC6H:
@@ -310,6 +311,7 @@ public static class TextureDecoder
                     Bc7.Decompress(bytes, sizeX, sizeY, out data);
                 else
                     data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY * sizeZ, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC1:
