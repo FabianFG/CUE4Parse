@@ -141,7 +141,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
-            else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable))
+            else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable) || BulkDataFlags.HasFlag(BULKDATA_None))
             {
                 CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
             }
