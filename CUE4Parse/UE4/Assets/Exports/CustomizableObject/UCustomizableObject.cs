@@ -12,25 +12,25 @@ public class UCustomizableObject : UObject
     public FCustomizableObjectMeshToMeshVertData[] ClothMeshToMeshVertData;
     public FCustomizableObjectClothingAssetData[] ContributingClothingAssetsData;
     public FCustomizableObjectClothConfigData[] ClothSharedConfigsData;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
         var version = Ar.Read<int>();
 
-        // if (CurrentVersion == version)
-        {
-            ContributingMorphTargetsInfo = Ar.ReadArray<FMorphTargetInfo>();
-            MorphTargetReconstructionData = Ar.ReadArray<FMorphTargetVertexData>();
-        }
+        // // if (CurrentVersion == version)
+        // {
+        //     ContributingMorphTargetsInfo = Ar.ReadArray<FMorphTargetInfo>();
+        //     MorphTargetReconstructionData = Ar.ReadArray<FMorphTargetVertexData>();
+        // }
 
-        {
-            ClothMeshToMeshVertData = Ar.ReadBulkArray(() => new FCustomizableObjectMeshToMeshVertData(Ar));
-            ContributingClothingAssetsData = Ar.ReadArray(() => new FCustomizableObjectClothingAssetData(Ar));
-            ClothSharedConfigsData = Ar.ReadArray(() => new FCustomizableObjectClothConfigData(Ar));
-        }
+        // {
+        //     ClothMeshToMeshVertData = Ar.ReadBulkArray(() => new FCustomizableObjectMeshToMeshVertData(Ar));
+        //     ContributingClothingAssetsData = Ar.ReadArray(() => new FCustomizableObjectClothingAssetData(Ar));
+        //     ClothSharedConfigsData = Ar.ReadArray(() => new FCustomizableObjectClothConfigData(Ar));
+        // }
 
-        var model = new Model(Ar);
+        // var model = new Model(Ar);
     }
 }

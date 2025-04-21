@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -18,6 +17,7 @@ public class UDNAAsset : UObject
     public RawDefinition Definition;
     public RawBehavior Behavior;
     public RawGeometry Geometry;
+    public DNAVersion LayerVersion;
     public IndexTable IndexTable;
     public Dictionary<string, IRawBase> Layers;
 
@@ -52,7 +52,7 @@ public class UDNAAsset : UObject
             endianAr.Position = startPos + Sections.Geometry;
             Geometry = new RawGeometry(endianAr);
 
-            var eof = Ar.ReadBytes(3);
+            var eof = endianAr.ReadBytes(3);
             if (!eof.SequenceEqual(_eof))
                 throw new InvalidDataException("Invalid end of file signature");
 
@@ -62,7 +62,7 @@ public class UDNAAsset : UObject
             if (!signature.SequenceEqual(_signature))
                 throw new InvalidDataException("Invalid layer start signature");
 
-            Version = new DNAVersion(endianAr);
+            LayerVersion = new DNAVersion(endianAr);
             IndexTable = new IndexTable(endianAr);
 
             Layers = [];
@@ -85,7 +85,7 @@ public class UDNAAsset : UObject
                     _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
                 };
 
-                var readSize = Ar.Position - layerStartPos;
+                var readSize = endianAr.Position - layerStartPos;
                 var remaining = entry.Size - readSize;
 
                 switch (remaining)
@@ -119,6 +119,9 @@ public class UDNAAsset : UObject
 
         writer.WritePropertyName("Geometry");
         serializer.Serialize(writer, Geometry);
+
+        writer.WritePropertyName("LayerVersion");
+        serializer.Serialize(writer, LayerVersion);
 
         writer.WritePropertyName("IndexTable");
         serializer.Serialize(writer, IndexTable);
