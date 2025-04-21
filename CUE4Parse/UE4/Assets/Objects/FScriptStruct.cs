@@ -31,6 +31,7 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.PCG;
+using CUE4Parse.UE4.Objects.StateTree;
 using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
@@ -146,6 +147,7 @@ public class FScriptStruct
             "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
             "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
             "Matrix" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar),
+            "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar, false),
             "InstancedStruct" => new FInstancedStruct(Ar),
             "InstancedStructContainer" => new FInstancedStructContainer(Ar),
             "InstancedPropertyBag" => new FInstancedPropertyBag(Ar),
@@ -157,6 +159,7 @@ public class FScriptStruct
             "AttributeCurve" => new FAttributeCurve(Ar),
             "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
+            "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
@@ -219,6 +222,11 @@ public class FScriptStruct
 
             // Deadside
             "SoundAttenuationPluginSettingsWithOverride" => new FSoundAttenuationPluginSettingsWithOverride(Ar),
+
+            // Tempest Rising
+            "OffsetCoords" when Ar.Game == EGame.GAME_TempestRising => type == ReadType.ZERO ? new TIntVector2<float>() : Ar.Read<TIntVector2<float>>(),
+            "TedInstancedStruct" => new FInstancedStruct(Ar),
+            "TedMarkerHandle" or "FoWAgentHandle" => type == ReadType.ZERO ? new TIntVector1<int>() : Ar.Read<TIntVector1<int>>(),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };

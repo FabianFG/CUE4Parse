@@ -135,6 +135,7 @@ public enum EGame : uint
         GAME_SplitFiction = GAME_UE5_4 + 5,
         GAME_WildAssault = GAME_UE5_4 + 6,
         GAME_InZOI = GAME_UE5_4 + 7,
+        GAME_TempestRising = GAME_UE5_4 + 8,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,

@@ -12,6 +12,7 @@ using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Landscape;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.PoseAsset;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse.UE4.Assets.Exports.Actor;
@@ -23,6 +24,7 @@ namespace CUE4Parse_Conversion
         public ELodFormat LodFormat;
         public EMeshFormat MeshFormat;
         public EAnimFormat AnimFormat;
+        public EPoseFormat PoseFormat;
         public EMaterialFormat MaterialFormat;
         public ETextureFormat TextureFormat;
         public EFileCompressionFormat CompressionFormat;

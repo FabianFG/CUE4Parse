@@ -34,11 +34,25 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
     {
         public FTransform[] LocalSpacePose;
         public float[] CurveData;
+        public Dictionary<int, int> TrackToBufferIndex = [];
 
         public FPoseData(FStructFallback fallback)
         {
             LocalSpacePose = fallback.GetOrDefault<FTransform[]>(nameof(LocalSpacePose));
             CurveData = fallback.GetOrDefault<float[]>(nameof(CurveData));
+            
+            if (fallback.GetOrDefault<UScriptMap?>("TrackToBufferIndex") is { } trackToBufferIndexMap)
+            {
+                foreach (var (key, value) in trackToBufferIndexMap.Properties)
+                {
+                    if (value is null) continue;
+                    
+                    var trackIndex = key.GetValue<int>();
+                    var bufferIndex = value.GetValue<int>();
+                
+                    TrackToBufferIndex[trackIndex] = bufferIndex;
+                }
+            }
         }
     }
 
@@ -72,18 +86,18 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
         public FSmartName[]? PoseNames_DEPRECATED;
         public FName[]? PoseFNames;
         public FName[] Tracks;
-        public FPoseAssetInfluences[] TrackPoseInfluenceIndices;
-        public FPoseData[] Poses;
+        public FPoseAssetInfluences?[] TrackPoseInfluenceIndices;
+        public FPoseData[]? Poses;
         public FAnimCurveBase[] Curves;
 
         public FPoseDataContainer(FStructFallback fallback)
         {
             PoseNames_DEPRECATED = fallback.GetOrDefault<FSmartName[]>("PoseNames"); // FUE5MainStreamObjectVersion.Type.AnimationRemoveSmartNames
             PoseFNames = fallback.GetOrDefault<FName[]>(nameof(PoseFNames));
-            Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks));
-            TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices));
-            Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses));
-            Curves = fallback.GetOrDefault<FAnimCurveBase[]>(nameof(Curves));
+            Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks), []);
+            TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices), []);
+            Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses), []);
+            Curves = fallback.GetOrDefault<FAnimCurveBase[]>(nameof(Curves), []);
         }
 
         public IEnumerable<string> GetPoseNames()
