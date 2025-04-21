@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public string Hex => A is byte.MaxValue or byte.MinValue ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
-        public FColor(byte b) : this(b,b, b,byte.MaxValue) { }
+        public FColor(byte b) : this(b, b, b, byte.MaxValue) { }
         public FColor(byte r, byte g, byte b) : this(r, g, b, byte.MaxValue) { }
         public FColor(byte r, byte g, byte b, byte a)
         {

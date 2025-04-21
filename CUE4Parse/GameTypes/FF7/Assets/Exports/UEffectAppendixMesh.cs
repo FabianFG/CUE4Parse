@@ -1,9 +1,12 @@
+using System;
+using System.Runtime.CompilerServices;
+
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+
 using Newtonsoft.Json;
-using static CUE4Parse.Utils.TypeConversionUtils;
 
 namespace CUE4Parse.GameTypes.FF7.Assets.Exports;
 
@@ -34,13 +37,13 @@ public class UEffectAppendixMesh : UObject
         TrianglesCount = Ar.Read<int>();
         VerticesCount = Ar.Read<int>();
         var masked = Ar.Read<ushort>();
-        Offset = HalfToFloat((ushort)(masked & 0x3FFF));
-        TotalTime = HalfToFloat(Ar.Read<ushort>());
+        Offset = (float)Unsafe.BitCast<ushort, Half>((ushort)(masked & 0x3FFF));
+        TotalTime = (float)Ar.Read<Half>();
 
         SplinePath = Ar.ReadArray<ushort>(SplinePathLength);
-        Times = Ar.ReadArray(TrianglesCount, () => HalfToFloat(Ar.Read<ushort>()));
-        Scale1 = HalfToFloat(Ar.Read<ushort>()); // 1.0f maybe max time or a scale
-        Scale2 = HalfToFloat(Ar.Read<ushort>()); // 1.0f maybe max time or a scale
+        Times = Ar.ReadArray(TrianglesCount, () => (float)Ar.Read<Half>());
+        Scale1 = (float)Ar.Read<Half>(); // 1.0f maybe max time or a scale
+        Scale2 = (float)Ar.Read<Half>(); // 1.0f maybe max time or a scale
         Ar.Position = meshOffset;
 
         var bufferLength = Ar.Read<int>();
