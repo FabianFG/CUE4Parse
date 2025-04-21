@@ -588,6 +588,15 @@ public static class MeshConverter
         meshIndices.Clear();
 
         convertedMesh = new CStaticMesh();
+
+        FVector min = new(minX, minY, 0);
+        FVector max = new(maxX + 1, maxY + 1, Math.Max(maxX - minX, maxY - minY));
+
+        convertedMesh.BoundingBox = new FBox(min, max);
+
+        FVector extent = (max - min) * 0.5f;
+        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, extent.Size());
+
         convertedMesh.LODs.Add(landscapeLod);
         return true;
     }
