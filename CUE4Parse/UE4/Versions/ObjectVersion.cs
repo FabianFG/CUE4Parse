@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Versions
         METADATA_SERIALIZATION_OFFSET,
 
         // Added VCells to the object graph
-        VERSE_CELLS, // TODO
+        VERSE_CELLS,
 
         // Changed PackageFileSummary to write FIoHash PackageSavedHash instead of FGuid Guid
         PACKAGE_SAVED_HASH,

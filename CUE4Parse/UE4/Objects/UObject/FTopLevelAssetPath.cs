@@ -1,5 +1,6 @@
 using System.Text;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -20,6 +21,12 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             PackageName = packageName;
             AssetName = assetName;
+        }
+
+        public FTopLevelAssetPath(string path)
+        {
+            AssetName = path.SubstringAfterLast('.');
+            PackageName = path.SubstringBeforeLast('.');
         }
 
         public override string ToString()

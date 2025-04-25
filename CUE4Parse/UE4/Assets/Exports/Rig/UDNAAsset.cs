@@ -29,7 +29,7 @@ public class UDNAAsset : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (FDNAAssetCustomVersion.Get(Ar) >= FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+        if (FDNAAssetCustomVersion.Get(Ar) > FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {
             var startPos = Ar.Position;
             var endianAr = new FArchiveBigEndian(Ar);

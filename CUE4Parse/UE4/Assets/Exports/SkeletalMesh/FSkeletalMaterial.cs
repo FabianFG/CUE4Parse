@@ -14,6 +14,7 @@ public class FSkeletalMaterial
     public FName MaterialSlotName;
     public FName? ImportedMaterialSlotName;
     public FMeshUVChannelInfo? UVChannelData;
+    public FPackageIndex OverlayMaterialInterface;
 
     public FSkeletalMaterial(FAssetArchive Ar)
     {
@@ -44,6 +45,9 @@ public class FSkeletalMaterial
         }
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
+
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+            OverlayMaterialInterface = new FPackageIndex(Ar);
 
         switch (Ar.Game)
         {

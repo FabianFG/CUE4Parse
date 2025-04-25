@@ -47,19 +47,12 @@ namespace CUE4Parse.UE4.Versions
 
     public static class FAssetRegistryVersion
     {
-        private static readonly FGuid _GUID = new(0x717F9EE7, 0xE9B0493A, 0x88B39132, 0x1B388107);
+        private static readonly FGuid GUID = new(0x717F9EE7, 0xE9B0493A, 0x88B39132, 0x1B388107);
 
-        public static bool TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
+        public static void TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
         {
             var guid = Ar.Read<FGuid>();
-            if (guid == _GUID)
-            {
-                version = Ar.Read<FAssetRegistryVersionType>();
-                return true;
-            }
-
-            version = FAssetRegistryVersionType.LatestVersion;
-            return false;
+            version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.LatestVersion;
         }
     }
 }

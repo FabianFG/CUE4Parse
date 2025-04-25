@@ -570,6 +570,72 @@ namespace CUE4Parse.UE4.Versions
             // Updated default scene capture post-processing settings to reflect the underlying implementation overrides
             SceneCaptureDefaultSettings,
 
+            // Add Cloth Asset Base class serialization
+            AddClothAssetBase,
+
+            // Add inline constant default values to the PCG graph nodes.
+            PCGInlineConstantDefaultValues,
+
+            // Add MaterialSubstrateSubsurfaceType type to UMaterialExpressionSubstrateSlabBSDF for replacing bUseSSSDifffusion
+            AddMaterialSubstrateSubsurfaceType,
+
+            // Added option to visualize runtime virtual textures' streamed mips only in PIE
+            AddedRuntimeVirtualTextureUseStreamingMipsInEditorMode,
+
+            // Media plate holdout composite components have been replaced by a checkbox
+            MediaPlateHoldoutComponentRemoval,
+
+            // Changed PCG landscape cache default from "serialize at cook" to "never serialize"
+            PCGLandscapeCacheDefaultSerializationChanged,
+
+            // FSoftObjectPath::SubPathString changed to FUtf8String
+            SoftObjectPathUtf8SubPaths,
+
+            // FSoftObjectPath::SubPathString could be saved with trailing NULs and need truncating
+            SoftObjectPathTrailingNULsMaintained,
+
+            // Water body components no longer need to maintain their own PhysicalMaterial property since they are primitive components. After this version, leverage that one instead.
+            WaterBodyPhysicalMaterialPropertyRemoval,
+
+            // PCG fixed attribute set -> point conversion passing through empty point data as-is and violating output pin type.
+            PCGAttributeSetToPointAlwaysConverts,
+
+            // Add per material slot overlay material data
+            MeshMaterialSlotOverlayMaterialAdded,
+
+            // Convert Sustrate glint density properly
+            ConvertGlintDensity,
+
+            // Introduced skinweight validation to avoid render crashes and disappearing simulation meshes
+            ClothAssetSkinweightsValidation,
+
+            // Switching verse from right handed to left handed
+            VerseRightToLeftHandedness,
+
+            // Added additional data required to record and represent particle data from the game thread (Kinematic targets, and SQ rejection reasons)
+            AdditionalGameThreadDataSupportInChaosVisualDebugger,
+
+            // Upgrade UMG widget blueprints using legacy animation API
+            UpgradeWidgetBlueprintLegacySequencePlayer,
+
+            // Changed clockwise detection algorithm for PCGSplineDirection node with the correct one, but add a version to not break previous nodes.
+            PCGSplineDirectionClockwiseFix,
+
+            // Rect Lights set in EV units had the wrong intensity (older files need a flag set to keep the old look)
+            RectLightFixedEVUnitConversion,
+
+            // Add particle bounds to data exported to CVD
+            ParticleInflatedBoundsInChaosVisualDebugger,
+
+            // Migrate properties from FLandscapeLayer to ULandscapeEditLayer
+            MigrateLandscapeEditLayerProperties,
+
+            // Added more context data to CVD's traced shapes so we can play it back at the solver stage level (not just game thread frames)
+            ThreadContextDataInChaosVisualDebuggerDebugDrawData,
+
+            // Changed default grid mode in surface sampler to a version that's more intuitive and less error-prone
+            PCGChangedSurfaceSamplerDefaultGridCreationMode,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1

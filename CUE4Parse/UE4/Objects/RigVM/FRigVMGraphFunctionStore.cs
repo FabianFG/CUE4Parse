@@ -8,6 +8,7 @@ public struct FRigVMGraphFunctionData
     public FRigVMGraphFunctionHeader Header;
     public FRigVMFunctionCompilationData CompilationData;
     public string? SerializedCollapsedNode;
+    public FRigVMObjectArchive? CollapseNodeArchive;
 
     public FRigVMGraphFunctionData(FAssetArchive Ar)
     {
@@ -16,7 +17,13 @@ public struct FRigVMGraphFunctionData
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMSaveSerializedGraphInGraphFunctionData)
             return;
+
         SerializedCollapsedNode = Ar.ReadFString();
+
+        if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.RigVMSaveSerializedGraphInGraphFunctionDataAsByteArray)
+            return;
+
+        CollapseNodeArchive = new FRigVMObjectArchive(Ar);
     }
 }
 

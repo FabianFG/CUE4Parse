@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Versions
             ThumbnailSceneInfoAndAssetImportDataAreTransactional,
             // Enabled clothing masks rather than painting parameters directly
             AddedClothingMaskWorkflow,
-            // Remove UID from smart name serialize, it just breaks determinism 
+            // Remove UID from smart name serialize, it just breaks determinism
             RemoveUIDFromSmartNameSerialize,
             // Convert FName Socket to FSocketReference and added TargetReference that support bone and socket
             CreateTargetReference,
@@ -40,10 +40,11 @@ namespace CUE4Parse.UE4.Versions
             AllowMultipleAudioPluginSettings,
             // Change RetargetSource reference to SoftObjectPtr
             ChangeRetargetSourceReferenceToSoftObjectPtr,
-            // Save editor only full pose for pose asset 
+            // Save editor only full pose for pose asset
             SaveEditorOnlyFullPoseForPoseAsset,
             // Asset change and cleanup to facilitate new streaming system
             GeometryCacheAssetDeprecation,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1,
