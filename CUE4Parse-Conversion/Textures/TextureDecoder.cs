@@ -36,7 +36,6 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
@@ -171,7 +170,6 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            // sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
