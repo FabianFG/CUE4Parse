@@ -70,7 +70,7 @@ namespace CUE4Parse_Conversion.Textures.BC
                                     byte red = r_bytes[i];
                                     byte green = g_bytes[i];
 
-                                    ret[pixelLoc] = 0xFF; // Blue channel (fully opaque)
+                                    ret[pixelLoc] = 0xFF; // Blue channel (calculated later on using red and green channels)
                                     ret[pixelLoc + 1] = green; // Green channel
                                     ret[pixelLoc + 2] = red; // Red channel
                                     ret[pixelLoc + 3] = 0xFF; // Alpha (fully opaque)
