@@ -19,13 +19,23 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public readonly int FileVersionLicenseeUE = -1;
         public readonly FCustomVersionContainer? CustomVersions;
         public readonly uint Flags;
+        public readonly FSHAHash PackageSavedHash;
         public readonly string? ExtensionText;
 
         public FAssetPackageData(FAssetRegistryArchive Ar)
         {
             PackageName = Ar.ReadFName();
             DiskSize = Ar.Read<long>();
-            PackageGuid = Ar.Read<FGuid>();
+
+            if (Ar.Header.Version < FAssetRegistryVersionType.PackageSavedHash)
+            {
+                PackageGuid = Ar.Read<FGuid>();
+            }
+            else
+            {
+                PackageSavedHash = new FSHAHash(Ar);
+            }
+
             if (Ar.Header.Version >= FAssetRegistryVersionType.AddedCookedMD5Hash)
             {
                 CookedHash = new FMD5Hash(Ar);

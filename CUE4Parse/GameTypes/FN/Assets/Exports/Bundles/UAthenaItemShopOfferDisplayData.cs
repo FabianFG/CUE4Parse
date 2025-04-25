@@ -6,11 +6,13 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports.Bundles;
 public class UAthenaItemShopOfferDisplayData : UPrimaryDataAsset
 {
     public FContextualPresentation[] ContextualPresentations;
+    public FThreeDPreviewOverrideData[] OverridePreviews;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
         ContextualPresentations = GetOrDefault<FContextualPresentation[]>(nameof(ContextualPresentations), []);
+        OverridePreviews = GetOrDefault<FThreeDPreviewOverrideData[]>(nameof(OverridePreviews), []);
     }
 }

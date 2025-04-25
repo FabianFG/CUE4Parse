@@ -71,10 +71,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public static FNameEntrySerialized[] LoadNameBatch(FArchive Ar)
         {
             var num = Ar.Read<int>();
-            if (num == 0)
-            {
-                return Array.Empty<FNameEntrySerialized>();
-            }
+            if (num == 0) return [];
 
             Ar.Position += sizeof(uint); // var numStringBytes = Ar.Read<uint>();
             Ar.Position += sizeof(ulong); // var hashVersion = Ar.Read<ulong>();

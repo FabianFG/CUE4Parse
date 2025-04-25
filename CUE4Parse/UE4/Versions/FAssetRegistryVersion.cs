@@ -1,7 +1,7 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.AssetRegistry.Objects
+namespace CUE4Parse.UE4.Versions
 {
     /** Version used for serializing asset registry caches, both runtime and editor */
     public enum FAssetRegistryVersionType
@@ -37,6 +37,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         AssetPackageDataHasExtension,		// Added Extension to AssetPackageData.
         AssetPackageDataHasPackageLocation,	// Added PackageLocation to AssetPackageData.
         MarshalledTextAsUTF8String,			// Replaced 2 byte wide string with UTF8 String
+        PackageSavedHash,					// Replaced FAssetPackageData::PackageGuid with PackageSavedHash
+        ExternalActorToWorldIsEditorOnly,   // FPackageDependencyData::LoadDependenciesFromPackageHeader changed how it calculates PackageDependencies
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

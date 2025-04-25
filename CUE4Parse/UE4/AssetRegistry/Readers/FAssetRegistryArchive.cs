@@ -4,6 +4,7 @@ using System.Text;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.AssetRegistry.Readers
 {

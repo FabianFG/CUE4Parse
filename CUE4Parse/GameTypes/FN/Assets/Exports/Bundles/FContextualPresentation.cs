@@ -11,11 +11,13 @@ public class FContextualPresentation
     public FGameplayTag ProductTag;
     public FSoftObjectPath RenderImage;
     public FSoftObjectPath OverrideImageMaterial;
+    public string PoseTestGroup;
 
     public FContextualPresentation(FStructFallback fallback)
     {
         ProductTag = fallback.GetOrDefault<FGameplayTag>(nameof(ProductTag));
         RenderImage = fallback.GetOrDefault<FSoftObjectPath>(nameof(RenderImage));
         OverrideImageMaterial = fallback.GetOrDefault<FSoftObjectPath>(nameof(OverrideImageMaterial));
+        PoseTestGroup = fallback.GetOrDefault(nameof(PoseTestGroup), string.Empty);
     }
 }

@@ -50,6 +50,21 @@ namespace CUE4Parse.UE4.Versions
         // Added property tag complete type name and serialization type
         PROPERTY_TAG_COMPLETE_TYPE_NAME,
 
+        // Changed UE::AssetRegistry::WritePackageData to include PackageBuildDependencies
+        ASSETREGISTRY_PACKAGEBUILDDEPENDENCIES,
+
+        // Added meta data serialization offset to for saved, versioned packages
+        METADATA_SERIALIZATION_OFFSET,
+
+        // Added VCells to the object graph
+        VERSE_CELLS, // TODO
+
+        // Changed PackageFileSummary to write FIoHash PackageSavedHash instead of FGuid Guid
+        PACKAGE_SAVED_HASH,
+
+        // OS shadow serialization of subobjects
+        OS_SUB_OBJECT_SHADOW_SERIALIZATION,
+
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)
         AUTOMATIC_VERSION_PLUS_ONE,

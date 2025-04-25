@@ -51,6 +51,7 @@ namespace CUE4Parse.UE4.IO.Objects
         OptionalSegmentPackages = 2,
         NoExportInfo = 3,
         SoftPackageReferences = 4,
+        SoftPackageReferencesOffset  = 5,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
@@ -70,6 +71,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public FNameEntrySerialized[]? ContainerNameMap; // RedirectsNameMap
         public FIoContainerHeaderLocalizedPackage[]? LocalizedPackages;
         public FIoContainerHeaderPackageRedirect[] PackageRedirects;
+        public FIoContainerHeaderSerialInfo SoftPackageReferencesSerialInfo;
         public FIoContainerHeaderSoftPackageReferences SoftPackageReferences;
 
         public FIoContainerHeader(FArchive Ar)
@@ -117,9 +119,13 @@ namespace CUE4Parse.UE4.IO.Objects
                 LocalizedPackages = Ar.ReadArray<FIoContainerHeaderLocalizedPackage>();
             }
             PackageRedirects = Ar.ReadArray<FIoContainerHeaderPackageRedirect>();
-            if (Version >= EIoContainerHeaderVersion.SoftPackageReferences)
+            if (Version == EIoContainerHeaderVersion.SoftPackageReferences)
             {
                 SoftPackageReferences = new FIoContainerHeaderSoftPackageReferences(Ar);
+            }
+            else if (Version >= EIoContainerHeaderVersion.SoftPackageReferencesOffset)
+            {
+                SoftPackageReferencesSerialInfo = new FIoContainerHeaderSerialInfo(Ar);
             }
         }
 
