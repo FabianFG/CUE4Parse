@@ -24,12 +24,11 @@ namespace CUE4Parse.UE4.Wwise.Objects
             //ushort company = Ar.Read<ushort>(); // company
             byte streamType = Ar.Read<byte>(); // StreamType
 
-            // Now AkMediaInformation
             SourceId = Ar.Read<uint>(); // sourceID
 
             // For now, ignore SoundConversion, SoundSource
-            SoundConversion = ESoundConversion.Vorbis; // default/fake
-            SoundSource = ESoundSource.Embedded; // assume Embedded for streamType 0x00?
+            SoundConversion = ESoundConversion.Vorbis;
+            SoundSource = ESoundSource.Embedded;
 
             if (SoundSource == ESoundSource.Embedded)
             {

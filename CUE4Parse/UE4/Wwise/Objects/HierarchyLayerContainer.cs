@@ -42,17 +42,15 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Ar.Read<byte>();
             Ar.Read<byte>();
 
-            // OverrideBusId and DirectParentID
+            // OverrideBusId
             Ar.Read<uint>();
             DirectParentID = Ar.Read<uint>();
 
-            // Priority/MIDI flags
             var midiFlags = Ar.Read<EPriorityMidi>();
 
             Props = Ar.ReadProps();
             PropRanges = Ar.ReadPropRanges();
 
-            // PositioningParams
             var positioningBits = Ar.Read<EBitsPositioning>();
             if (positioningBits.IsEmitter() || positioningBits.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
                 Ar.Read<byte>(); // 3D flags
@@ -86,14 +84,12 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 }
             }
 
-            // AuxParams
             AuxParams = Ar.Read<EAuxParams>();
             if (AuxParams.HasFlag(EAuxParams.HasAux))
                 for (int i = 0; i < 4; i++)
                     AuxIds.Add(Ar.Read<uint>());
             ReflectionsAuxBus = Ar.Read<uint>();
 
-            // AdvSettingsParams
             var advFlags = Ar.Read<EAdvSettings>();
             var virtualQueueBehavior = Ar.Read<byte>();
             var maxNumInstances = Ar.Read<ushort>();

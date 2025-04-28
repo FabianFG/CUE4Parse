@@ -37,7 +37,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly EAuxParams auxParamsBitVector;
         public readonly uint reflectionsAuxBus;
 
-        // Advanced Settings
         public readonly EAdvSettings AdvSettingsParams;
         public readonly byte eVirtualQueueBehavior;
         public readonly ushort u16MaxNumInstance;
@@ -47,26 +46,19 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public List<AkStateGroup> StateGroups { get; private set; }
         public List<AkRTPC> RTPCs { get; private set; }
 
-        // StateChunk
         public readonly uint ulNumStateProps;
         public readonly uint ulNumStateGroups;
 
-        // InitialRTPC
-        public readonly ushort uNumCurves;
-
-        // SwitchContainerGroup
         public readonly byte eGroupType;
         public readonly uint ulGroupID;
         public readonly uint ulDefaultSwitch;
         public readonly byte bIsContinuousValidation;
 
-        // Children
         public readonly uint ulNumChilds;
         public readonly List<uint> ChildIDs = new();
 
         public HierarchySwitchContainer(FArchive Ar) : base(Ar)
         {
-            // --- NodeInitialFxParams ---
             byte bOverrideFx = Ar.Read<byte>();
             byte uNumFx = Ar.Read<byte>();
             if (bOverrideFx != 0)
@@ -81,7 +73,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 }
             }
 
-            // --- Metadata override ---
             Ar.Read<byte>(); // bIsOverrideParentMetadata
             Ar.Read<byte>(); // uNumFx (metadata)
 
@@ -90,11 +81,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
             BitVectorSwitch = Ar.Read<ESwitchContainer>();
 
-            // NodeInitialParams: first PropBundle
             Props = Ar.ReadProps();
             PropRanges = Ar.ReadPropRanges();
 
-            // PositioningParams
             BitsPositioning = Ar.Read<EBitsPositioning>();
             var pannerType = BitsPositioning.GetPannerType();
             if (BitsPositioning.IsEmitter() || BitsPositioning.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
@@ -142,12 +131,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
             u16MaxNumInstance = Ar.Read<ushort>();
             eBelowThresholdBehavior = Ar.Read<byte>();
             hdrEnvelopeBitVector = Ar.Read<byte>();
-
-            //// StateChunk
-            //WwiseReader.ReadStateChunk(Ar);
-
-            //// InitialRTPC
-            //WwiseReader.ReadRTPCList(Ar);
 
             StateGroups = Ar.ReadStateChunk();
             RTPCs = Ar.ReadRTPCList();

@@ -52,7 +52,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
         public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
         {
-            // --- NodeInitialFxParams ---
             byte bOverrideFx = Ar.Read<byte>();
             byte uNumFx = Ar.Read<byte>();
             if (bOverrideFx != 0 && uNumFx != 0)
@@ -78,10 +77,9 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Props = Ar.ReadProps();
             PropRanges = Ar.ReadPropRanges();
 
-            // --- PositioningParams ---
             BitsPositioning = Ar.Read<EBitsPositioning>();
             if (BitsPositioning.IsEmitter() || BitsPositioning.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
-                Ar.Read<byte>(); // read 3d flags only when applicable
+                Ar.Read<byte>(); // 3D flags
 
             if (BitsPositioning.HasFlag(EBitsPositioning.PositioningInfoOverrideParent) && BitsPositioning.IsEmitter())
             {
@@ -112,27 +110,21 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 }
             }
 
-            // --- AuxParams ---
             AuxParams = Ar.Read<EAuxParams>();
             if (AuxParams.HasFlag(EAuxParams.HasAux))
                 for (int i = 0; i < 4; i++)
                     AuxIds.Add(Ar.Read<uint>());
-            ReflectionsAuxBus = Ar.Read<uint>(); // reflectionsAuxBus
+            ReflectionsAuxBus = Ar.Read<uint>();
 
-            // --- AdvSettingsParams ---
             AdvSettingsParams = Ar.Read<EAdvSettings>();
-            VirtualQueueBehavior = Ar.Read<byte>();   // eVirtualQueueBehavior
-            MaxNumInstance = Ar.Read<ushort>(); // u16MaxNumInstance
-            BelowThresholdBehavior = Ar.Read<byte>();   // eBelowThresholdBehavior
+            VirtualQueueBehavior = Ar.Read<byte>();
+            MaxNumInstance = Ar.Read<ushort>();
+            BelowThresholdBehavior = Ar.Read<byte>();
             Ar.Read<byte>();   // hdrEnvelopeFlags
 
-            // --- StateChunk & RTPCList ---
             StateGroups = Ar.ReadStateChunk();
             RTPCs= Ar.ReadRTPCList();
-            //WwiseReader.ReadStateChunk(Ar);
-            //WwiseReader.ReadRTPCList(Ar);
 
-            // --- Loop/Transition fields ---
             LoopCount = Ar.Read<ushort>(); // sLoopCount
             LoopModMin = Ar.Read<ushort>(); // sLoopModMin
             LoopModMax = Ar.Read<ushort>(); // sLoopModMax
@@ -145,13 +137,11 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Mode = Ar.Read<byte>();   // eMode
             SequenceFlags = Ar.Read<ERandomSequence>();
 
-            // --- Children ---
             var numChildren = Ar.Read<uint>();
             ChildIDs = new uint[numChildren];
             for (uint i = 0; i < numChildren; i++)
                 ChildIDs[i] = Ar.Read<uint>();
 
-            // --- Playlist items ---
             //var listCount = Ar.Read<ushort>();                   // ulPlayListItem
             //int itemCount = Ar.Read7BitEncodedInt();             // pItems list header
             //PlayList = new AkPlaylistItem[itemCount];

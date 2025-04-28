@@ -3115,3 +3115,41 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
         throw new NotImplementedException();
     }
 }
+
+public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseLocalizedSoundBankCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedSoundBankCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("SoundBankLanguageMap");
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.SoundBankLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName("DebugName");
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName("SoundBankId");
+        writer.WriteValue(value.SoundBankId);
+
+        writer.WritePropertyName("IncludedEventNames");
+        serializer.Serialize(writer, value.IncludedEventNames);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedSoundBankCookedData? ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedSoundBankCookedData? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        => throw new NotImplementedException("Deserialization not implemented");
+}
