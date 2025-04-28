@@ -131,7 +131,8 @@ public class WwiseReader
             {
                 foreach (var entry in folder.Entries)
                 {
-                    if (entry.IsSoundBank || entry.Data == null) continue;
+                    if (entry.IsSoundBank || entry.Data == null)
+                        continue;
                     WwiseEncodedMedias[IdToString.TryGetValue(entry.NameHash, out var k) ? k : $"{entry.Path.ToUpper()}_{entry.NameHash}"] = entry.Data;
                 }
             }
@@ -142,20 +143,20 @@ public class WwiseReader
             // that hierarchy will give other hierarchy ids and so on until the end sound data
             // but not everything is currently getting parsed so that's not possible
 
-            // foreach (var hierarchy in Hierarchies)
-            // {
-            //     switch (hierarchy.Type)
-            //     {
-            //         case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice
-            //         {
-            //             SoundSource: ESoundSource.Embedded
-            //         } sfxVoice:
-            //             WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
-            //             break;
-            //         default:
-            //             break;
-            //     }
-            // }
+            //foreach (var hierarchy in Hierarchies)
+            //{
+            //    switch (hierarchy.Type)
+            //    {
+            //        case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice sfxVoice:
+            //            // Directly checking the StreamType and mapping it to ESoundSource
+
+            //                WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
+                        
+            //            break;
+            //        default:
+            //            break;
+            //    }
+            //}
         }
     }
 
@@ -171,5 +172,70 @@ public class WwiseReader
             bytes.Add(b);
         }
         return Encoding.UTF8.GetString(bytes.ToArray());
+    }
+
+    public static void ReadStateChunk(FArchive Ar)
+    {
+        int propCount = Ar.Read7BitEncodedInt();
+        for (int i = 0; i < propCount; i++)
+        {
+            Ar.Read7BitEncodedInt();
+            Ar.Read<byte>();
+            Ar.Read<byte>();
+        }
+        int groupCount = Ar.Read7BitEncodedInt();
+        for (int g = 0; g < groupCount; g++)
+        {
+            Ar.Read<uint>();
+            Ar.Read<byte>();
+            int stateCount = Ar.Read7BitEncodedInt();
+            for (int s = 0; s < stateCount; s++)
+            {
+                Ar.Read<uint>();
+                ushort cProps = Ar.Read<ushort>();
+                for (int k = 0; k < cProps; k++)
+                {
+                    Ar.Read<ushort>();
+                    Ar.Read<float>();
+                }
+            }
+        }
+    }
+
+    public static void ReadRTPCList(FArchive Ar)
+    {
+        ushort numCurves = Ar.Read<ushort>();
+        for (int i = 0; i < numCurves; i++)
+        {
+            Ar.Read<uint>();
+            Ar.Read<byte>();
+            Ar.Read<byte>();
+            Ar.Read7BitEncodedInt();
+            Ar.Read<uint>();
+            Ar.Read<byte>();
+            ushort points = Ar.Read<ushort>();
+            for (int j = 0; j < points; j++)
+            {
+                Ar.Read<float>();
+                Ar.Read<float>();
+                Ar.Read<uint>();
+            }
+        }
+    }
+
+    public static void ReadPropBundle(FArchive Ar, bool isRange)
+    {
+        int count = Ar.Read<byte>();
+        for (int i = 0; i < count; i++)
+        {
+            Ar.Read<byte>();
+            if (isRange)
+            {
+                Ar.Read<float>();
+                Ar.Read<float>();
+            }
+            else
+                Ar.Read<float>();
+        }
     }
 }

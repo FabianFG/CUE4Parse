@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Wwise.Enums
         SwitchContainer,
         ActorMixer,
         AudioBus,
-        BlendContainer,
+        LayerContainer,
         MusicSegment,
         MusicTrack,
         MusicSwitchContainer,

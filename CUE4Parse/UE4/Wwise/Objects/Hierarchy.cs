@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 EHierarchyObjectType.SwitchContainer => new HierarchySwitchContainer(Ar),
                 EHierarchyObjectType.ActorMixer => new HierarchyActorMixer(Ar),
                 EHierarchyObjectType.AudioBus => new HierarchyAudioBus(Ar),
-                EHierarchyObjectType.BlendContainer => new HierarchyBlendContainer(Ar),
+                EHierarchyObjectType.LayerContainer => new HierarchyLayerContainer(Ar),
                 EHierarchyObjectType.MusicSegment => new HierarchyMusicSegment(Ar),
                 EHierarchyObjectType.MusicTrack => new HierarchyMusicTrack(Ar),
                 EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar),

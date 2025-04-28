@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly ESoundConversion SoundConversion;
         public readonly ESoundSource SoundSource;
         public readonly ESoundType SoundType;
-        public readonly uint SoundId;
+        //public readonly uint SoundId;
         public readonly uint SourceId;
         public readonly uint? WemOffset;
         public readonly uint? WemLength;
@@ -19,11 +19,17 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
         public HierarchySoundSfxVoice(FArchive Ar) : base(Ar)
         {
-            SoundConversion = Ar.Read<ESoundConversion>();
-            //Ar.Position += 4;
-            SoundSource = Ar.Read<ESoundSource>();
-            SoundId = Ar.Read<uint>();
-            SourceId = Ar.Read<uint>();
+            uint pluginId = Ar.Read<uint>(); // ulPluginID
+            //ushort type = Ar.Read<ushort>(); // type
+            //ushort company = Ar.Read<ushort>(); // company
+            byte streamType = Ar.Read<byte>(); // StreamType
+
+            // Now AkMediaInformation
+            SourceId = Ar.Read<uint>(); // sourceID
+
+            // For now, ignore SoundConversion, SoundSource
+            SoundConversion = ESoundConversion.Vorbis; // default/fake
+            SoundSource = ESoundSource.Embedded; // assume Embedded for streamType 0x00?
 
             if (SoundSource == ESoundSource.Embedded)
             {
@@ -47,8 +53,8 @@ namespace CUE4Parse.UE4.Wwise.Objects
             writer.WritePropertyName("SoundSource");
             writer.WriteValue(SoundSource.ToString());
 
-            writer.WritePropertyName("SoundId");
-            writer.WriteValue(SoundId);
+            //writer.WritePropertyName("SoundId");
+            //writer.WriteValue(SoundId);
 
             writer.WritePropertyName("SourceId");
             writer.WriteValue(SourceId);

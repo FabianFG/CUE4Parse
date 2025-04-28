@@ -18,8 +18,8 @@ namespace CUE4Parse.UE4.Wwise.Objects
         {
             writer.WriteStartObject();
 
-            // writer.WritePropertyName("EventActionCount");
-            // writer.WriteValue(EventActionCount);
+            writer.WritePropertyName("EventActionCount");
+            writer.WriteValue(EventActionCount);
 
             writer.WritePropertyName("EventActionIds");
             serializer.Serialize(writer, EventActionIds);
