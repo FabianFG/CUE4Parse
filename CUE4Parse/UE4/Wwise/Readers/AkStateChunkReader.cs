@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Readers
 {
     public struct AkStateProperty
     {
@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public List<AkState> States;
     }
 
-    public static class AkStateChunk
+    public static class AkStateChunkReader
     {
         public static List<AkStateGroup> ReadStateChunk(this FArchive Ar)
         {

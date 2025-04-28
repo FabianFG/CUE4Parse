@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Readers;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -8,40 +9,31 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
     public class HierarchySwitchContainer : AbstractHierarchy
     {
-        public readonly byte eHircType;
-        public readonly uint dwSectionSize;
-        public readonly uint ulID;
+        public AkFXParams FXChain { get; private set; }
 
-        public readonly byte bIsOverrideParentFX;
-        public readonly byte uNumFx1;
-        public readonly byte bIsOverrideParentMetadata;
-        public readonly byte uNumFx2;
+        public readonly byte OverrideParentMetadataFlag;
+        public readonly byte NumFXMetadataFlag;
 
         public readonly uint OverrideBusId;
         public readonly uint DirectParentID;
 
         public readonly ESwitchContainer BitVectorSwitch;
-        //public readonly bool bPriorityOverrideParent;
-        //public readonly bool bPriorityApplyDistFactor;
-        //public readonly bool bOverrideMidiEventsBehavior;
-        //public readonly bool bOverrideMidiNoteTracking;
-        //public readonly bool bEnableMidiNoteTracking;
-        //public readonly bool bIsMidiBreakLoopOnNoteOff;
 
         public List<AkProp> Props { get; private set; }
         public List<AkPropRange> PropRanges { get; private set; }
 
-        // Positioning
+        public AkPositioningParams PositioningParams { get; private set; }
+
         public readonly EBitsPositioning BitsPositioning;
 
-        public readonly EAuxParams auxParamsBitVector;
-        public readonly uint reflectionsAuxBus;
+        public readonly EAuxParams AuxParams;
+        public readonly uint ReflectionsAuxBus;
 
         public readonly EAdvSettings AdvSettingsParams;
-        public readonly byte eVirtualQueueBehavior;
-        public readonly ushort u16MaxNumInstance;
-        public readonly byte eBelowThresholdBehavior;
-        public readonly byte hdrEnvelopeBitVector;
+        public readonly byte VirtualQueueBehavior;
+        public readonly ushort MaxNumInstance;
+        public readonly byte BelowThresholdBehavior;
+        public readonly byte HdrEnvelopeBitVector;
 
         public List<AkStateGroup> StateGroups { get; private set; }
         public List<AkRTPC> RTPCs { get; private set; }
@@ -49,32 +41,19 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public readonly uint ulNumStateProps;
         public readonly uint ulNumStateGroups;
 
-        public readonly byte eGroupType;
-        public readonly uint ulGroupID;
-        public readonly uint ulDefaultSwitch;
-        public readonly byte bIsContinuousValidation;
+        public readonly byte GroupType;
+        public readonly uint GroupId;
+        public readonly uint DefaultSwitch;
+        public readonly byte IsContinuousValidation;
 
-        public readonly uint ulNumChilds;
-        public readonly List<uint> ChildIDs = new();
+        public readonly List<uint> ChildIDs = [];
 
         public HierarchySwitchContainer(FArchive Ar) : base(Ar)
         {
-            byte bOverrideFx = Ar.Read<byte>();
-            byte uNumFx = Ar.Read<byte>();
-            if (bOverrideFx != 0)
-            {
-                byte bBypassAll = Ar.Read<byte>(); // Only when overriding FX
+            FXChain = Ar.ReadFXChain();
 
-                for (int i = 0; i < uNumFx; i++)
-                {
-                    Ar.Read<byte>(); // uFXIndex
-                    Ar.Read<uint>(); // fxID
-                    Ar.Read<byte>(); // bitVector
-                }
-            }
-
-            Ar.Read<byte>(); // bIsOverrideParentMetadata
-            Ar.Read<byte>(); // uNumFx (metadata)
+            OverrideParentMetadataFlag = Ar.Read<byte>();
+            NumFXMetadataFlag = Ar.Read<byte>();
 
             OverrideBusId = Ar.Read<uint>();
             DirectParentID = Ar.Read<uint>();
@@ -84,66 +63,30 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Props = Ar.ReadProps();
             PropRanges = Ar.ReadPropRanges();
 
-            BitsPositioning = Ar.Read<EBitsPositioning>();
-            var pannerType = BitsPositioning.GetPannerType();
-            if (BitsPositioning.IsEmitter() || BitsPositioning.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
-                Ar.Read<byte>(); // read 3d flags
+            PositioningParams = Ar.ReadPositioning();
 
-            if (BitsPositioning.HasFlag(EBitsPositioning.PositioningInfoOverrideParent) && BitsPositioning.IsEmitter())
-            {
-                byte ePathMode = Ar.Read<byte>();
-                int transitionTime = Ar.Read<int>();
-
-                uint numVertices = Ar.Read<uint>();
-                for (int i = 0; i < numVertices; i++)
-                {
-                    Ar.Read<float>(); // Vertex.X
-                    Ar.Read<float>(); // Vertex.Y
-                    Ar.Read<float>(); // Vertex.Z
-                    Ar.Read<int>();   // Duration
-                }
-
-                uint numPlaylistItems = Ar.Read<uint>();
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Ar.Read<uint>(); // ulVerticesOffset
-                    Ar.Read<uint>(); // iNumVertices
-                }
-
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Ar.Read<float>(); // fXRange
-                    Ar.Read<float>(); // fYRange
-                    Ar.Read<float>(); // fZRange
-                }
-            }
-
-            // AuxParams
-            auxParamsBitVector = Ar.Read<EAuxParams>();
-            if (auxParamsBitVector.HasFlag(EAuxParams.HasAux))
+            AuxParams = Ar.Read<EAuxParams>();
+            if (AuxParams.HasFlag(EAuxParams.HasAux))
                 for (int i = 0; i < 4; i++)
                     Ar.Read<uint>();
-            reflectionsAuxBus = Ar.Read<uint>();
+            ReflectionsAuxBus = Ar.Read<uint>();
 
-            // AdvSettingsParams
             AdvSettingsParams = Ar.Read<EAdvSettings>();
-            eVirtualQueueBehavior = Ar.Read<byte>();
-            u16MaxNumInstance = Ar.Read<ushort>();
-            eBelowThresholdBehavior = Ar.Read<byte>();
-            hdrEnvelopeBitVector = Ar.Read<byte>();
+            VirtualQueueBehavior = Ar.Read<byte>();
+            MaxNumInstance = Ar.Read<ushort>();
+            BelowThresholdBehavior = Ar.Read<byte>();
+            HdrEnvelopeBitVector = Ar.Read<byte>();
 
             StateGroups = Ar.ReadStateChunk();
             RTPCs = Ar.ReadRTPCList();
 
-            // SwitchContainerGroup
-            eGroupType = Ar.Read<byte>();
-            ulGroupID = Ar.Read<uint>();
-            ulDefaultSwitch = Ar.Read<uint>();
-            bIsContinuousValidation = Ar.Read<byte>();
+            GroupType = Ar.Read<byte>();
+            GroupId = Ar.Read<uint>();
+            DefaultSwitch = Ar.Read<uint>();
+            IsContinuousValidation = Ar.Read<byte>();
 
-            // Children
-            ulNumChilds = Ar.Read<uint>();
-            for (int i = 0; i < ulNumChilds; i++)
+            var numChilds = Ar.Read<uint>();
+            for (int i = 0; i < numChilds; i++)
             {
                 ChildIDs.Add(Ar.Read<uint>());
             }
@@ -153,31 +96,76 @@ namespace CUE4Parse.UE4.Wwise.Objects
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("ID");
-            writer.WriteValue(ulID);
+            writer.WritePropertyName("FXChain");
+            serializer.Serialize(writer, FXChain);
 
-            writer.WritePropertyName("SwitchGroupID");
-            writer.WriteValue(ulGroupID);
+            writer.WritePropertyName("OverrideParentMetadataFlag");
+            writer.WriteValue(OverrideParentMetadataFlag);
 
-            writer.WritePropertyName("DefaultSwitchID");
-            writer.WriteValue(ulDefaultSwitch);
+            writer.WritePropertyName("NumFXMetadataFlag");
+            writer.WriteValue(NumFXMetadataFlag);
+
+            writer.WritePropertyName("OverrideBusId");
+            writer.WriteValue(OverrideBusId);
+
+            writer.WritePropertyName("DirectParentID");
+            writer.WriteValue(DirectParentID);
+
+            writer.WritePropertyName("BitVectorSwitch");
+            writer.WriteValue(BitVectorSwitch.ToString());
+
+            writer.WritePropertyName("Props");
+            serializer.Serialize(writer, Props);
+
+            writer.WritePropertyName("PropRanges");
+            serializer.Serialize(writer, PropRanges);
+
+            writer.WritePropertyName("PositioningParams");
+            serializer.Serialize(writer, PositioningParams);
+
+            writer.WritePropertyName("AuxParams");
+            writer.WriteValue(AuxParams.ToString());
+
+            writer.WritePropertyName("ReflectionsAuxBus");
+            writer.WriteValue(ReflectionsAuxBus);
+
+            writer.WritePropertyName("AdvSettingsParams");
+            writer.WriteValue(AdvSettingsParams.ToString());
+
+            writer.WritePropertyName("VirtualQueueBehavior");
+            writer.WriteValue(VirtualQueueBehavior);
+
+            writer.WritePropertyName("MaxNumInstance");
+            writer.WriteValue(MaxNumInstance);
+
+            writer.WritePropertyName("BelowThresholdBehavior");
+            writer.WriteValue(BelowThresholdBehavior);
+
+            writer.WritePropertyName("HdrEnvelopeBitVector");
+            writer.WriteValue(HdrEnvelopeBitVector);
+
+            writer.WritePropertyName("StateGroups");
+            serializer.Serialize(writer, StateGroups);
+
+            writer.WritePropertyName("RTPCs");
+            serializer.Serialize(writer, RTPCs);
+
+            writer.WritePropertyName("GroupType");
+            writer.WriteValue(GroupType);
+
+            writer.WritePropertyName("GroupId");
+            writer.WriteValue(GroupId);
+
+            writer.WritePropertyName("DefaultSwitch");
+            writer.WriteValue(DefaultSwitch);
+
+            writer.WritePropertyName("IsContinuousValidation");
+            writer.WriteValue(IsContinuousValidation != 0);
 
             writer.WritePropertyName("Children");
             serializer.Serialize(writer, ChildIDs);
 
             writer.WriteEndObject();
-        }
-    }
-
-    public class AkPropBundle2
-    {
-        public readonly byte pID;
-        public readonly float pValue;
-
-        public AkPropBundle2(FArchive Ar)
-        {
-            pID = Ar.Read<byte>();
-            pValue = Ar.Read<float>();
         }
     }
 }

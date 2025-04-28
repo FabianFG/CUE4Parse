@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Readers
 {
     public struct AkProp
     {
@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public float Max;
     }
 
-    public static class AkPropBundle
+    public static class AkPropBundleReader
     {
         public static List<AkProp> ReadProps(this FArchive Ar)
         {

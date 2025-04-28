@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Readers
 {
     public struct AkRTPCGraphPoint
     {
@@ -21,7 +21,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public List<AkRTPCGraphPoint> GraphPoints;
     }
 
-    public static class AkRTPCList
+    public static class AkRTPCListReader
     {
         public static List<AkRTPC> ReadRTPCList(this FArchive Ar)
         {

@@ -1,88 +1,59 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects
 {
-
     public class HierarchyLayerContainer : AbstractHierarchy
     {
+        public AkFXParams FXChain { get; private set; }
+
+        public readonly byte OverrideParentMetadataFlag;
+        public readonly byte NumFXMetadataFlag;
+
+        public readonly uint OverrideBusId;
         public readonly uint DirectParentID;
-        public readonly uint[] ChildIDs;
+
+        public readonly EPriorityMidi MidiFlags;
 
         public List<AkProp> Props { get; private set; }
         public List<AkPropRange> PropRanges { get; private set; }
+
+        public AkPositioningParams PositioningParams { get; private set; }
 
         public readonly EAuxParams AuxParams;
         public List<uint> AuxIds { get; set; } = [];
         public readonly uint ReflectionsAuxBus;
 
+        public readonly EAdvSettings AdvFlags;
+        public readonly byte VirtualQueueBehavior;
+        public readonly ushort MaxNumInstances;
+        public readonly byte BelowThresholdBehavior;
+        public readonly byte HdrEnvelopeFlags;
+
         public List<AkStateGroup> StateGroups { get; private set; }
         public List<AkRTPC> RTPCs { get; private set; }
 
+        public readonly uint[] ChildIDs;
+
         public HierarchyLayerContainer(FArchive Ar) : base(Ar)
         {
-            // NodeInitialFxParams
-            byte bOverrideFx = Ar.Read<byte>();
-            byte uNumFx = Ar.Read<byte>();
-            if (bOverrideFx != 0 && uNumFx != 0)
-            {
-                byte bBypassAll = Ar.Read<byte>(); // Only when overriding FX
+            FXChain = Ar.ReadFXChain();
 
-                for (int i = 0; i < uNumFx; i++)
-                {
-                    Ar.Read<byte>(); // uFXIndex
-                    Ar.Read<uint>(); // fxID
-                    Ar.Read<byte>(); // bitVector
-                }
-            }
+            OverrideParentMetadataFlag = Ar.Read<byte>();
+            NumFXMetadataFlag = Ar.Read<byte>();
 
-            // Metadata override
-            Ar.Read<byte>();
-            Ar.Read<byte>();
-
-            // OverrideBusId
-            Ar.Read<uint>();
+            OverrideBusId = Ar.Read<uint>();
             DirectParentID = Ar.Read<uint>();
 
-            var midiFlags = Ar.Read<EPriorityMidi>();
+            MidiFlags = Ar.Read<EPriorityMidi>();
 
             Props = Ar.ReadProps();
             PropRanges = Ar.ReadPropRanges();
 
-            var positioningBits = Ar.Read<EBitsPositioning>();
-            if (positioningBits.IsEmitter() || positioningBits.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
-                Ar.Read<byte>(); // 3D flags
-
-            if (positioningBits.HasFlag(EBitsPositioning.PositioningInfoOverrideParent) && positioningBits.IsEmitter())
-            {
-                byte ePathMode = Ar.Read<byte>();
-                int transitionTime = Ar.Read<int>();
-
-                uint numVertices = Ar.Read<uint>();
-                for (int i = 0; i < numVertices; i++)
-                {
-                    Ar.Read<float>(); // Vertex.X
-                    Ar.Read<float>(); // Vertex.Y
-                    Ar.Read<float>(); // Vertex.Z
-                    Ar.Read<int>();   // Duration
-                }
-
-                uint numPlaylistItems = Ar.Read<uint>();
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Ar.Read<uint>(); // ulVerticesOffset
-                    Ar.Read<uint>(); // iNumVertices
-                }
-
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Ar.Read<float>(); // fXRange
-                    Ar.Read<float>(); // fYRange
-                    Ar.Read<float>(); // fZRange
-                }
-            }
+            PositioningParams = Ar.ReadPositioning();
 
             AuxParams = Ar.Read<EAuxParams>();
             if (AuxParams.HasFlag(EAuxParams.HasAux))
@@ -90,11 +61,11 @@ namespace CUE4Parse.UE4.Wwise.Objects
                     AuxIds.Add(Ar.Read<uint>());
             ReflectionsAuxBus = Ar.Read<uint>();
 
-            var advFlags = Ar.Read<EAdvSettings>();
-            var virtualQueueBehavior = Ar.Read<byte>();
-            var maxNumInstances = Ar.Read<ushort>();
-            var belowThresholdBehavior = Ar.Read<byte>();
-            var hdrEnvelopeFlags = Ar.Read<byte>();
+            AdvFlags = Ar.Read<EAdvSettings>();
+            VirtualQueueBehavior = Ar.Read<byte>();
+            MaxNumInstances = Ar.Read<ushort>();
+            BelowThresholdBehavior = Ar.Read<byte>();
+            HdrEnvelopeFlags = Ar.Read<byte>();
 
             StateGroups = Ar.ReadStateChunk();
             RTPCs = Ar.ReadRTPCList();
@@ -115,13 +86,67 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             writer.WriteStartObject();
+
+            writer.WritePropertyName("FXChain");
+            serializer.Serialize(writer, FXChain);
+
+            writer.WritePropertyName("OverrideParentMetadataFlag");
+            writer.WriteValue(OverrideParentMetadataFlag);
+
+            writer.WritePropertyName("NumFXMetadataFlag");
+            writer.WriteValue(NumFXMetadataFlag);
+
+            writer.WritePropertyName("OverrideBusId");
+            writer.WriteValue(OverrideBusId);
+
             writer.WritePropertyName("DirectParentID");
             writer.WriteValue(DirectParentID);
+
+            writer.WritePropertyName("MidiFlags");
+            writer.WriteValue(MidiFlags.ToString());
+
+            writer.WritePropertyName("Props");
+            serializer.Serialize(writer, Props);
+
+            writer.WritePropertyName("PropRanges");
+            serializer.Serialize(writer, PropRanges);
+
+            writer.WritePropertyName("PositioningParams");
+            serializer.Serialize(writer, PositioningParams);
+
+            writer.WritePropertyName("AuxParams");
+            writer.WriteValue(AuxParams.ToString());
+
+            writer.WritePropertyName("AuxIds");
+            serializer.Serialize(writer, AuxIds);
+
+            writer.WritePropertyName("ReflectionsAuxBus");
+            writer.WriteValue(ReflectionsAuxBus);
+
+            writer.WritePropertyName("AdvFlags");
+            writer.WriteValue(AdvFlags.ToString());
+
+            writer.WritePropertyName("VirtualQueueBehavior");
+            writer.WriteValue(VirtualQueueBehavior);
+
+            writer.WritePropertyName("MaxNumInstances");
+            writer.WriteValue(MaxNumInstances);
+
+            writer.WritePropertyName("BelowThresholdBehavior");
+            writer.WriteValue(BelowThresholdBehavior);
+
+            writer.WritePropertyName("HdrEnvelopeFlags");
+            writer.WriteValue(HdrEnvelopeFlags);
+
+            writer.WritePropertyName("StateGroups");
+            serializer.Serialize(writer, StateGroups);
+
+            writer.WritePropertyName("RTPCs");
+            serializer.Serialize(writer, RTPCs);
+
             writer.WritePropertyName("ChildIDs");
-            writer.WriteStartArray();
-            foreach (var cid in ChildIDs)
-                writer.WriteValue(cid);
-            writer.WriteEndArray();
+            serializer.Serialize(writer, ChildIDs);
+
             writer.WriteEndObject();
         }
     }
