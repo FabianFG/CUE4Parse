@@ -122,6 +122,8 @@ public class FTexturePlatformData
             Ar.Position += 4;
         }
 
+        if (Ar.Game == EGame.GAME_DaysGone) Ar.Position += 8;
+
         Mips = new FTexture2DMipMap[mipCount];
         for (var i = 0; i < Mips.Length; i++)
         {

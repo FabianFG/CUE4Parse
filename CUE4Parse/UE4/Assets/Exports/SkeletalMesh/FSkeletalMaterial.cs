@@ -50,7 +50,7 @@ public class FSkeletalMaterial
             case EGame.GAME_MarvelRivals:
                 _ = new FGameplayTagContainer(Ar);
                 break;
-            case EGame.GAME_FragPunk:
+            case EGame.GAME_FragPunk or EGame.GAME_DaysGone:
                 Ar.Position += 4;
                 break;
             case EGame.GAME_Strinova:

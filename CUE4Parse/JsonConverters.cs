@@ -1400,7 +1400,6 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         throw new NotImplementedException();
     }
 }
-
 public class FReferenceSkeletonConverter : JsonConverter<FReferenceSkeleton>
 {
     public override void WriteJson(JsonWriter writer, FReferenceSkeleton value, JsonSerializer serializer)
@@ -1647,28 +1646,36 @@ public class FFontDataConverter : JsonConverter<FFontData>
     {
         writer.WriteStartObject();
 
-        if (value.LocalFontFaceAsset != null)
+        if (value.FallbackStruct is null)
         {
-            writer.WritePropertyName("LocalFontFaceAsset");
-            serializer.Serialize(writer, value.LocalFontFaceAsset);
+            if (value.LocalFontFaceAsset != null)
+            {
+                writer.WritePropertyName("LocalFontFaceAsset");
+                serializer.Serialize(writer, value.LocalFontFaceAsset);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(value.FontFilename))
+                {
+                    writer.WritePropertyName("FontFilename");
+                    writer.WriteValue(value.FontFilename);
+                }
+
+                writer.WritePropertyName("Hinting");
+                writer.WriteValue(value.Hinting);
+
+                writer.WritePropertyName("LoadingPolicy");
+                writer.WriteValue(value.LoadingPolicy);
+            }
+
+            writer.WritePropertyName("SubFaceIndex");
+            writer.WriteValue(value.SubFaceIndex);
         }
         else
         {
-            if (!string.IsNullOrEmpty(value.FontFilename))
-            {
-                writer.WritePropertyName("FontFilename");
-                writer.WriteValue(value.FontFilename);
-            }
-
-            writer.WritePropertyName("Hinting");
-            writer.WriteValue(value.Hinting);
-
-            writer.WritePropertyName("LoadingPolicy");
-            writer.WriteValue(value.LoadingPolicy);
+            writer.WritePropertyName("FallbackStruct");
+            serializer.Serialize(writer, value.FallbackStruct);
         }
-
-        writer.WritePropertyName("SubFaceIndex");
-        writer.WriteValue(value.SubFaceIndex);
 
         writer.WriteEndObject();
     }

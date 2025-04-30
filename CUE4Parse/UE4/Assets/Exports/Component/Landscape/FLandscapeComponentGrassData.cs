@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
@@ -22,6 +23,11 @@ public class FLandscapeComponentGrassData
         }
         else
         {
+            if (Ar.Game <= EGame.GAME_UE4_12 && Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID)
+            {
+                Ar.Position +=16; // Guid
+            }
+
             HeightData = Ar.ReadBulkArray<ushort>();
             WeightData = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.ReadArray<byte>);
         }

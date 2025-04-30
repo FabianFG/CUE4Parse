@@ -104,6 +104,8 @@ public class FSkelMeshSection
             var dummyEnableClothLOD = Ar.Read<byte>();
         }
 
+        if (Ar.Game == EGame.GAME_DaysGone) return;
+
         if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
         {
             bRecomputeTangent = Ar.ReadBoolean();

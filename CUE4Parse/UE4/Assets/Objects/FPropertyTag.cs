@@ -195,7 +195,7 @@ public class FPropertyTag
         var finalPos = pos + Size;
         try
         {
-            Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
+            Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL, Size);
 #if DEBUG
             if (finalPos != Ar.Position)
             {

@@ -183,6 +183,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionUE.FileVersionUE4 = Ar.Read<int>();
+                if (Ar.Game == EGame.GAME_DaysGone) FileVersionUE.FileVersionUE4 = 498;
 
                 if (legacyFileVersion <= -8)
                 {

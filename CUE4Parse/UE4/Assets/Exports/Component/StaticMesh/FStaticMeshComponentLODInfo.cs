@@ -1,3 +1,5 @@
+using CUE4Parse.UE4.Assets.Exports.BuildData;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -41,15 +43,25 @@ public class FStaticMeshComponentLODInfo
     public readonly FPaintedVertex[]? PaintedVertices;
     public readonly FColorVertexBuffer? OverrideVertexColors;
 
-    public FStaticMeshComponentLODInfo(FArchive Ar)
+    public FStaticMeshComponentLODInfo(FAssetArchive Ar)
     {
         var stripFlags = new FStripDataFlags(Ar);
         if (!stripFlags.IsAudioVisualDataStripped())
         {
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
             {
-                var lightMaps = Ar.ReadArray<FGuid>();
-                var shadowMaps = Ar.ReadArray<FGuid>();
+                FLightMap? lightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                };
+
+                var shadowMap = Ar.Read<EShadowMapType>() switch
+                {
+                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                    _ => null
+                };
             }
             else
             {
