@@ -54,20 +54,23 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
         public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
         {
-            FXChain = Ar.ReadFXChain();
+            FXChain = new AkFXParams(Ar);
 
             OverrideParentMetadataFlag = Ar.Read<byte>();
             NumFXMetadataFlag = Ar.Read<byte>();
+            if (WwiseVersions.WwiseVersion <= 145)
+                Ar.Read<byte>();
 
             OverrideBusId = Ar.Read<uint>();
             DirectParentID = Ar.Read<uint>();
 
             PriorityMidi = Ar.Read<EPriorityMidi>();
 
-            Props = Ar.ReadProps();
-            PropRanges = Ar.ReadPropRanges();
+            AkPropBundle propBundle = new(Ar);
+            Props = propBundle.Props;
+            PropRanges = propBundle.PropRanges;
 
-            PositioningParams = Ar.ReadPositioning();
+            PositioningParams = new AkPositioningParams(Ar);
 
             AuxParams = Ar.Read<EAuxParams>();
             if (AuxParams.HasFlag(EAuxParams.HasAux))
@@ -81,8 +84,8 @@ namespace CUE4Parse.UE4.Wwise.Objects
             BelowThresholdBehavior = Ar.Read<byte>();
             HdrEnvelopeFlags = Ar.Read<byte>();
 
-            StateGroups = Ar.ReadStateChunk();
-            RTPCs= Ar.ReadRTPCList();
+            StateGroups = new AkStateChunk(Ar).Groups;
+            RTPCs = new AkRTPCList(Ar);
 
             LoopCount = Ar.Read<ushort>();
             LoopModMin = Ar.Read<ushort>();

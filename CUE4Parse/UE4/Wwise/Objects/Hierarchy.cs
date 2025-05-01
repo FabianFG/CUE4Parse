@@ -15,6 +15,8 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
         public Hierarchy(FArchive Ar)
         {
+            var isSupported = WwiseVersions.IsSupported();
+
             Type = Ar.Read<EHierarchyObjectType>();
             Length = Ar.Read<int>();
             var hierarchyEndPosition = Ar.Position + Length;
@@ -25,11 +27,11 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 EHierarchyObjectType.SoundSfxVoice => new HierarchySoundSfxVoice(Ar),
                 EHierarchyObjectType.EventAction => new HierarchyEventAction(Ar),
                 EHierarchyObjectType.Event => new HierarchyEvent(Ar),
-                EHierarchyObjectType.RandomSequenceContainer => new HierarchyRandomSequenceContainer(Ar),
-                EHierarchyObjectType.SwitchContainer => new HierarchySwitchContainer(Ar),
+                EHierarchyObjectType.RandomSequenceContainer when isSupported => new HierarchyRandomSequenceContainer(Ar),
+                EHierarchyObjectType.SwitchContainer when isSupported => new HierarchySwitchContainer(Ar),
                 EHierarchyObjectType.ActorMixer => new HierarchyActorMixer(Ar),
                 EHierarchyObjectType.AudioBus => new HierarchyAudioBus(Ar),
-                EHierarchyObjectType.LayerContainer => new HierarchyLayerContainer(Ar),
+                EHierarchyObjectType.LayerContainer when isSupported => new HierarchyLayerContainer(Ar),
                 EHierarchyObjectType.MusicSegment => new HierarchyMusicSegment(Ar),
                 EHierarchyObjectType.MusicTrack => new HierarchyMusicTrack(Ar),
                 EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar),

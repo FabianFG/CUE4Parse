@@ -38,9 +38,6 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public List<AkStateGroup> StateGroups { get; private set; }
         public List<AkRTPC> RTPCs { get; private set; }
 
-        public readonly uint ulNumStateProps;
-        public readonly uint ulNumStateGroups;
-
         public readonly byte GroupType;
         public readonly uint GroupId;
         public readonly uint DefaultSwitch;
@@ -50,20 +47,23 @@ namespace CUE4Parse.UE4.Wwise.Objects
 
         public HierarchySwitchContainer(FArchive Ar) : base(Ar)
         {
-            FXChain = Ar.ReadFXChain();
+            FXChain = new AkFXParams(Ar);
 
             OverrideParentMetadataFlag = Ar.Read<byte>();
             NumFXMetadataFlag = Ar.Read<byte>();
+            if (WwiseVersions.WwiseVersion <= 145)
+                Ar.Read<byte>();
 
             OverrideBusId = Ar.Read<uint>();
             DirectParentID = Ar.Read<uint>();
 
             BitVectorSwitch = Ar.Read<ESwitchContainer>();
 
-            Props = Ar.ReadProps();
-            PropRanges = Ar.ReadPropRanges();
+            AkPropBundle propBundle = new(Ar);
+            Props = propBundle.Props;
+            PropRanges = propBundle.PropRanges;
 
-            PositioningParams = Ar.ReadPositioning();
+            PositioningParams = new AkPositioningParams(Ar);
 
             AuxParams = Ar.Read<EAuxParams>();
             if (AuxParams.HasFlag(EAuxParams.HasAux))
@@ -77,8 +77,8 @@ namespace CUE4Parse.UE4.Wwise.Objects
             BelowThresholdBehavior = Ar.Read<byte>();
             HdrEnvelopeBitVector = Ar.Read<byte>();
 
-            StateGroups = Ar.ReadStateChunk();
-            RTPCs = Ar.ReadRTPCList();
+            StateGroups = new AkStateChunk(Ar).Groups;
+            RTPCs = new AkRTPCList(Ar);
 
             GroupType = Ar.Read<byte>();
             GroupId = Ar.Read<uint>();
