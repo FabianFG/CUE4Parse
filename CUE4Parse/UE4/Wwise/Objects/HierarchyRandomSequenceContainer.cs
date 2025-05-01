@@ -1,230 +1,136 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
-using CUE4Parse.UE4.Wwise.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects;
+
+public class HierarchyRandomSequenceContainer : BaseHierarchyContainer
 {
-    public class HierarchyRandomSequenceContainer : AbstractHierarchy
+    public ushort LoopCount { get; private set; }
+    public ushort? LoopModMin { get; private set; }
+    public ushort? LoopModMax { get; private set; }
+    public float? TransitionTime { get; private set; }
+    public float? TransitionTimeModMin { get; private set; }
+    public float? TransitionTimeModMax { get; private set; }
+    public ushort AvoidRepeatCount { get; private set; }
+    public byte TransitionMode { get; private set; }
+    public byte RandomMode { get; private set; }
+    public byte Mode { get; private set; }
+    public new byte ByBitVector { get; private set; }
+    public uint[] ChildIDs { get; private set; }
+    public uint[] PlaylistItems { get; private set; }
+
+    public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
     {
-        public AkFXParams FXChain { get; private set; }
+        LoopCount = Ar.Read<ushort>();
 
-        public readonly byte OverrideParentMetadataFlag;
-        public readonly byte NumFXMetadataFlag;
-
-        public readonly uint OverrideBusId;
-        public readonly uint DirectParentID;
-        public readonly EPriorityMidi PriorityMidi;
-
-        public List<AkProp> Props { get; private set; }
-        public List<AkPropRange> PropRanges { get; private set; }
-
-        public AkPositioningParams PositioningParams { get; private set; }
-
-        public readonly ERandomSequence SequenceFlags;
-        public readonly EBitsPositioning BitsPositioning;
-
-        public readonly EAuxParams AuxParams;
-        public List<uint> AuxIds { get; set; } = [];
-        public readonly uint ReflectionsAuxBus;
-
-        public readonly EAdvSettings AdvSettingsParams;
-        public readonly byte VirtualQueueBehavior;
-        public readonly ushort MaxNumInstance;
-        public readonly byte BelowThresholdBehavior;
-        public readonly byte HdrEnvelopeFlags;
-
-        public List<AkStateGroup> StateGroups { get; private set; }
-        public List<AkRTPC> RTPCs { get; private set; }
-
-        public readonly ushort LoopCount;
-        public readonly ushort LoopModMin;
-        public readonly ushort LoopModMax;
-        public readonly float TransitionTime;
-        public readonly float TransitionTimeModMin;
-        public readonly float TransitionTimeModMax;
-        public readonly ushort AvoidRepeatCount;
-        public readonly byte TransitionMode;
-        public readonly byte RandomMode;
-        public readonly byte Mode;
-
-        public readonly uint[] ChildIDs;
-        //public readonly AkPlaylistItem[] PlayList;
-
-        public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
+        if (WwiseVersions.WwiseVersion > 72)
         {
-            FXChain = new AkFXParams(Ar);
-
-            OverrideParentMetadataFlag = Ar.Read<byte>();
-            NumFXMetadataFlag = Ar.Read<byte>();
-            if (WwiseVersions.WwiseVersion <= 145)
-                Ar.Read<byte>();
-
-            OverrideBusId = Ar.Read<uint>();
-            DirectParentID = Ar.Read<uint>();
-
-            PriorityMidi = Ar.Read<EPriorityMidi>();
-
-            AkPropBundle propBundle = new(Ar);
-            Props = propBundle.Props;
-            PropRanges = propBundle.PropRanges;
-
-            PositioningParams = new AkPositioningParams(Ar);
-
-            AuxParams = Ar.Read<EAuxParams>();
-            if (AuxParams.HasFlag(EAuxParams.HasAux))
-                for (int i = 0; i < 4; i++)
-                    AuxIds.Add(Ar.Read<uint>());
-            ReflectionsAuxBus = Ar.Read<uint>();
-
-            AdvSettingsParams = Ar.Read<EAdvSettings>();
-            VirtualQueueBehavior = Ar.Read<byte>();
-            MaxNumInstance = Ar.Read<ushort>();
-            BelowThresholdBehavior = Ar.Read<byte>();
-            HdrEnvelopeFlags = Ar.Read<byte>();
-
-            StateGroups = new AkStateChunk(Ar).Groups;
-            RTPCs = new AkRTPCList(Ar);
-
-            LoopCount = Ar.Read<ushort>();
             LoopModMin = Ar.Read<ushort>();
             LoopModMax = Ar.Read<ushort>();
+        }
+
+        if (WwiseVersions.WwiseVersion <= 38)
+        {
+            TransitionTime = Ar.Read<int>();
+            TransitionTimeModMin = Ar.Read<int>();
+            TransitionTimeModMax = Ar.Read<int>();
+        }
+        else
+        {
             TransitionTime = Ar.Read<float>();
             TransitionTimeModMin = Ar.Read<float>();
             TransitionTimeModMax = Ar.Read<float>();
-            AvoidRepeatCount = Ar.Read<ushort>();
+        }
+
+        AvoidRepeatCount = Ar.Read<ushort>();
+
+        if (WwiseVersions.WwiseVersion > 36)
+        {
             TransitionMode = Ar.Read<byte>();
             RandomMode = Ar.Read<byte>();
             Mode = Ar.Read<byte>();
-            SequenceFlags = Ar.Read<ERandomSequence>();
-
-            var numChildren = Ar.Read<uint>();
-            ChildIDs = new uint[numChildren];
-            for (uint i = 0; i < numChildren; i++)
-                ChildIDs[i] = Ar.Read<uint>();
-
-            //var listCount = Ar.Read<ushort>();                   // ulPlayListItem
-            //int itemCount = Ar.Read7BitEncodedInt();             // pItems list header
-            //PlayList = new AkPlaylistItem[itemCount];
-            //for (int i = 0; i < itemCount; i++)
-            //{
-            //    PlayList[i].PlayID = Ar.Read<uint>();
-            //    PlayList[i].Weight = Ar.Read<int>();
-            //}
         }
 
-        public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        if (WwiseVersions.WwiseVersion > 89)
         {
-            writer.WriteStartObject();
+            ByBitVector = Ar.Read<byte>();
+        }
 
-            writer.WritePropertyName("FXChain");
-            serializer.Serialize(writer, FXChain);
+        ChildIDs = new CAkChildren(Ar).ChildIDs;
+        PlaylistItems = ReadPlaylist(Ar);
+    }
 
-            writer.WritePropertyName("OverrideParentMetadataFlag");
-            writer.WriteValue(OverrideParentMetadataFlag);
+    private uint[] ReadPlaylist(FArchive Ar)
+    {
+        var itemCount = WwiseVersions.WwiseVersion > 38 ? Ar.Read<ushort>() : Ar.Read<uint>();
+        var items = new uint[itemCount];
+        for (int i = 0; i < itemCount; i++)
+        {
+            items[i] = Ar.Read<uint>();
+        }
+        return items;
+    }
 
-            writer.WritePropertyName("NumFXMetadataFlag");
-            writer.WriteValue(NumFXMetadataFlag);
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
 
-            writer.WritePropertyName("OverrideBusId");
-            writer.WriteValue(OverrideBusId);
+        base.WriteJson(writer, serializer);
 
-            writer.WritePropertyName("DirectParentID");
-            writer.WriteValue(DirectParentID);
+        writer.WritePropertyName("LoopCount");
+        writer.WriteValue(LoopCount);
 
-            writer.WritePropertyName("PriorityMidi");
-            writer.WriteValue(PriorityMidi.ToString());
-
-            writer.WritePropertyName("Props");
-            serializer.Serialize(writer, Props);
-
-            writer.WritePropertyName("PropRanges");
-            serializer.Serialize(writer, PropRanges);
-
-            writer.WritePropertyName("PositioningParams");
-            serializer.Serialize(writer, PositioningParams);
-
-            writer.WritePropertyName("AuxParams");
-            writer.WriteValue(AuxParams.ToString());
-
-            writer.WritePropertyName("AuxIds");
-            serializer.Serialize(writer, AuxIds);
-
-            writer.WritePropertyName("ReflectionsAuxBus");
-            writer.WriteValue(ReflectionsAuxBus);
-
-            writer.WritePropertyName("AdvSettingsParams");
-            writer.WriteValue(AdvSettingsParams.ToString());
-
-            writer.WritePropertyName("VirtualQueueBehavior");
-            writer.WriteValue(VirtualQueueBehavior);
-
-            writer.WritePropertyName("MaxNumInstance");
-            writer.WriteValue(MaxNumInstance);
-
-            writer.WritePropertyName("BelowThresholdBehavior");
-            writer.WriteValue(BelowThresholdBehavior);
-
-            writer.WritePropertyName("HdrEnvelopeFlags");
-            writer.WriteValue(HdrEnvelopeFlags);
-
-            writer.WritePropertyName("StateGroups");
-            serializer.Serialize(writer, StateGroups);
-
-            writer.WritePropertyName("RTPCs");
-            serializer.Serialize(writer, RTPCs);
-
-            writer.WritePropertyName("LoopCount");
-            writer.WriteValue(LoopCount);
-
+        if (LoopModMin.HasValue)
+        {
             writer.WritePropertyName("LoopModMin");
             writer.WriteValue(LoopModMin);
+        }
 
+        if (LoopModMax.HasValue)
+        {
             writer.WritePropertyName("LoopModMax");
             writer.WriteValue(LoopModMax);
+        }
 
+        if (TransitionTime.HasValue)
+        {
             writer.WritePropertyName("TransitionTime");
             writer.WriteValue(TransitionTime);
+        }
 
+        if (TransitionTimeModMin.HasValue)
+        {
             writer.WritePropertyName("TransitionTimeModMin");
             writer.WriteValue(TransitionTimeModMin);
+        }
 
+        if (TransitionTimeModMax.HasValue)
+        {
             writer.WritePropertyName("TransitionTimeModMax");
             writer.WriteValue(TransitionTimeModMax);
-
-            writer.WritePropertyName("AvoidRepeatCount");
-            writer.WriteValue(AvoidRepeatCount);
-
-            writer.WritePropertyName("TransitionMode");
-            writer.WriteValue(TransitionMode);
-
-            writer.WritePropertyName("RandomMode");
-            writer.WriteValue(RandomMode);
-
-            writer.WritePropertyName("Mode");
-            writer.WriteValue(Mode);
-
-            writer.WritePropertyName("SequenceFlags");
-            writer.WriteValue(SequenceFlags.ToString());
-
-            writer.WritePropertyName("ChildIDs");
-            serializer.Serialize(writer, ChildIDs);
-
-            //writer.WritePropertyName("PlayList");
-            //writer.WriteStartArray();
-            //foreach (var p in PlayList)
-            //{
-            //    writer.WriteStartObject();
-            //    writer.WritePropertyName("PlayID");
-            //    writer.WriteValue(p.PlayID);
-            //    writer.WritePropertyName("Weight");
-            //    writer.WriteValue(p.Weight);
-            //    writer.WriteEndObject();
-            //}
-            //writer.WriteEndArray();
-
-            writer.WriteEndObject();
         }
+
+        writer.WritePropertyName("AvoidRepeatCount");
+        writer.WriteValue(AvoidRepeatCount);
+
+        writer.WritePropertyName("TransitionMode");
+        writer.WriteValue(TransitionMode);
+
+        writer.WritePropertyName("RandomMode");
+        writer.WriteValue(RandomMode);
+
+        writer.WritePropertyName("Mode");
+        writer.WriteValue(Mode);
+
+        writer.WritePropertyName("ByBitVector");
+        writer.WriteValue(ByBitVector);
+
+        writer.WritePropertyName("ChildIDs");
+        serializer.Serialize(writer, ChildIDs);
+
+        writer.WritePropertyName("PlaylistItems");
+        serializer.Serialize(writer, PlaylistItems);
+
+        writer.WriteEndObject();
     }
 }

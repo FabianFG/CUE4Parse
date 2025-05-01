@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Wwise;
 public static class WwiseVersions
 {
     // Global access to wwise version game currently uses
-    // Should be set once when WwiseReader is initialized
+    // Should be set only once when WwiseReader is initialized
     public static uint WwiseVersion { get; private set; }
     public static void SetVersion(uint version)
     {
@@ -60,10 +60,11 @@ public static class WwiseVersions
     ];
 
     // Versions FModel currently supports
+    // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [
-        145,
-        150
+        145,    // Valorant
+        150     // Dead by Daylight
     ];
 
     public static bool IsSupported() => SupportedVersions.Contains(WwiseVersion);
