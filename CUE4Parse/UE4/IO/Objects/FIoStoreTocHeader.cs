@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -21,6 +22,7 @@ namespace CUE4Parse.UE4.IO.Objects
         Latest = LatestPlusOne - 1
     }
 
+    [Flags]
     public enum EIoContainerFlags : byte
     {
         None,

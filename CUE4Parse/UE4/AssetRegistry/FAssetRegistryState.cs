@@ -1,7 +1,7 @@
-using System;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -16,9 +16,9 @@ namespace CUE4Parse.UE4.AssetRegistry
 
         public FAssetRegistryState()
         {
-            PreallocatedAssetDataBuffers = Array.Empty<FAssetData>();
-            PreallocatedDependsNodeDataBuffers = Array.Empty<FDependsNode>();
-            PreallocatedPackageDataBuffers = Array.Empty<FAssetPackageData>();
+            PreallocatedAssetDataBuffers = [];
+            PreallocatedDependsNodeDataBuffers = [];
+            PreallocatedPackageDataBuffers = [];
         }
 
         public FAssetRegistryState(FArchive Ar) : this()

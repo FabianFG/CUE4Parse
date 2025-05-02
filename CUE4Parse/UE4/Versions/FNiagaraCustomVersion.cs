@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Versions
             // Reworked scripts to support emitter & system scripts
             AddedEmitterAndSystemScripts,
 
-            // Rework of script execution contexts to allow better reuse and reduce overhead of parameter handling. 
+            // Rework of script execution contexts to allow better reuse and reduce overhead of parameter handling.
             ScriptExecutionContextRework,
 
             // Removed the Niagara variable ID's making hookup impossible until next compile
@@ -143,7 +143,7 @@ namespace CUE4Parse.UE4.Versions
 
             PrecompileNamespaceFixup, // Promote parameters used across script executions to the Dataset, and Demote unused parameters.
 
-            FixNullScriptVariables, // Postload fixup in UNiagaraGraph to fixup VariableToScriptVariable map entries being null. 
+            FixNullScriptVariables, // Postload fixup in UNiagaraGraph to fixup VariableToScriptVariable map entries being null.
 
             PrecompileNamespaceFixup2, // Move FNiagaraVariableMetaData from storing scope enum to storing registered scope name.
 
@@ -157,7 +157,7 @@ namespace CUE4Parse.UE4.Versions
 
             VariablesUseTypeDefRegistry, // Replace the TypeDefinition in VariableBase with an index into the type registry
 
-            AddLibraryVisibilityProperty, // Expand the visibility options of the scripts to be able to hide a script completely from the user 
+            AddLibraryVisibilityProperty, // Expand the visibility options of the scripts to be able to hide a script completely from the user
 
             SignificanceHandlers,
 
@@ -167,7 +167,7 @@ namespace CUE4Parse.UE4.Versions
 
             ChangeSystemDeterministicDefault,   // Changed the default mode from deterministic to non-deterministic which matches emitters
 
-            StaticSwitchFunctionPinsUsePersistentGuids, // Update static switch pins to use the PersistentId from their script variable so that when they're renamed their values aren't lost when reallocating pins. 
+            StaticSwitchFunctionPinsUsePersistentGuids, // Update static switch pins to use the PersistentId from their script variable so that when they're renamed their values aren't lost when reallocating pins.
 
             VisibilityCullingImprovements, // Extended visibility culling options and moved properties into their own struct.
 
@@ -209,6 +209,10 @@ namespace CUE4Parse.UE4.Versions
 
             EmitterStateAddLoopDelayEnabled,	// Added loop delay enabled to emitter state
 
+            SerializeUsageBitMaskToGPUFunctionInfo, // Make sure that we serialize the UsageBitMask with the GPUFunctionInfo
+
+            AddedNewInterpolatedSpawnMode, // Changed the interpolated spawn property into an enum
+
             // DO NOT ADD A NEW VERSION UNLESS YOU HAVE TALKED TO THE NIAGARA LEAD. Mismanagement of these versions can lead to data loss if it is adjusted in multiple streams simultaneously.
             // -----<new versions can be added above this line>  -------------------------------------------------
             VersionPlusOne,
@@ -238,6 +242,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_3 => Type.DynamicPinNodeFixup,
                 < EGame.GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
                 < EGame.GAME_UE5_5 => Type.NDCSpawnGroupOverrideDisabledByDefault,
+                < EGame.GAME_UE5_6 => Type.EmitterStateAddLoopDelayEnabled,
                 _ => Type.LatestVersion
             };
         }

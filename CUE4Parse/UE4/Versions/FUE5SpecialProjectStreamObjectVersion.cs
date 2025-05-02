@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Readers;
 namespace CUE4Parse.UE4.Versions
 {
     // Custom serialization version for changes made in //UE5/Private-Frosty stream
-    public static class FUE5PrivateFrostyStreamObjectVersion
+    public static class FUE5SpecialProjectStreamObjectVersion
     {
         public enum Type
         {
@@ -35,6 +35,9 @@ namespace CUE4Parse.UE4.Versions
             // Strip the Morph Target source data for cooked builds
             StripMorphTargetSourceDataForCookedBuilds,
 
+            // StateTree now holds PropertyBag + GUID for root-level parameters rather than FStateTreeStateParameters. Access is protected by default and can be overriden through virtuals on UStateTreeEditorData derived classes.
+            StateTreeGlobalParameterChanges,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -51,6 +54,7 @@ namespace CUE4Parse.UE4.Versions
             return Ar.Game switch
             {
                 < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE5_6 => Type.StripMorphTargetSourceDataForCookedBuilds,
                 _ => Type.LatestVersion
             };
         }

@@ -164,6 +164,9 @@ namespace CUE4Parse.UE4.Versions
             //Orthographic Near and Far Plane Auto-resolve enabled by default
             OrthographicAutoNearFarPlane,
 
+            // Fix a bug where BlendMask counts could get out of sync with BlendPose counts.
+            AnimLayeredBoneBlendMasksFix,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1
@@ -185,6 +188,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_1 => Type.SerializeFloatPinDefaultValuesAsSinglePrecision,
                 < EGame.GAME_UE5_3 => Type.LinkedAnimGraphMemberReference,
                 < EGame.GAME_UE5_4 => Type.OpenColorIODisabledDisplayConfigurationDefault,
+                < EGame.GAME_UE5_6 => Type.OrthographicAutoNearFarPlane,
                 _ => Type.LatestVersion
             };
         }

@@ -141,6 +141,7 @@ public enum EGame : uint
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
+    GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_6
 }
@@ -172,6 +173,7 @@ public static class GameUtils
                     EGame.GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
+                < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }

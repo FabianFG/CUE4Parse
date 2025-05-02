@@ -2622,8 +2622,16 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
         writer.WritePropertyName("DiskSize");
         serializer.Serialize(writer, value.DiskSize);
 
-        writer.WritePropertyName("PackageGuid");
-        serializer.Serialize(writer, value.PackageGuid);
+        if (value.PackageGuid.IsValid())
+        {
+            writer.WritePropertyName("PackageGuid");
+            serializer.Serialize(writer, value.PackageGuid);
+        }
+        else
+        {
+            writer.WritePropertyName("PackageSavedHash");
+            serializer.Serialize(writer, value.PackageSavedHash);
+        }
 
         if (value.CookedHash != null)
         {

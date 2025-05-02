@@ -13,7 +13,7 @@ public class AActor : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
+        if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
         {
             bIsCooked = Ar.ReadBoolean();
             if (bIsCooked)

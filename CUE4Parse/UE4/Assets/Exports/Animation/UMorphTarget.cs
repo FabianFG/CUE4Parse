@@ -87,7 +87,7 @@ public class FMorphTargetLODModel
             }
 
             var bVerticesAreStrippedForCookedBuilds = false;
-            if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
+            if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
             {
                 // Strip source morph data for cooked build if targets don't include mobile. Mobile uses CPU morphing which needs the source morph data.
                 bVerticesAreStrippedForCookedBuilds = Ar.ReadBoolean();
