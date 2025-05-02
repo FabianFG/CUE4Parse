@@ -56,7 +56,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchyContainer
             ByBitVector = Ar.Read<byte>();
         }
 
-        ChildIDs = new CAkChildren(Ar).ChildIDs;
+        ChildIDs = new AkChildren(Ar).ChildIDs;
         PlaylistItems = ReadPlaylist(Ar);
     }
 

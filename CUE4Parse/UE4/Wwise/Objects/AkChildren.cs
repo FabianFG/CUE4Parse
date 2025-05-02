@@ -2,11 +2,11 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class CAkChildren
+public class AkChildren
 {
     public uint[] ChildIDs { get; }
 
-    public CAkChildren(FArchive Ar)
+    public AkChildren(FArchive Ar)
     {
         var numChildren = Ar.Read<uint>();
         ChildIDs = new uint[numChildren];

@@ -9,7 +9,7 @@ public class HierarchyLayerContainer : BaseHierarchyContainer
 
     public HierarchyLayerContainer(FArchive Ar) : base(Ar)
     {
-        ChildIDs = new CAkChildren(Ar).ChildIDs;
+        ChildIDs = new AkChildren(Ar).ChildIDs;
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

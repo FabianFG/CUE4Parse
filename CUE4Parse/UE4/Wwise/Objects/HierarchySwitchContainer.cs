@@ -17,7 +17,7 @@ public class HierarchySwitchContainer : BaseHierarchyContainer
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
         IsContinuousValidation = Ar.Read<byte>();
-        ChildIDs = new CAkChildren(Ar).ChildIDs;
+        ChildIDs = new AkChildren(Ar).ChildIDs;
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

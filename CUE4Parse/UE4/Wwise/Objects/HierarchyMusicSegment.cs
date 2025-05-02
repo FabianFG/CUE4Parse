@@ -21,12 +21,12 @@ public class HierarchyMusicSegment : AbstractHierarchy
             Flags = 0;
         }
 
-        // Step back so AbstractHierarchyContainer starts reading correctly, since ID is read twice
+        // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         Ar.Position -= 4;
 
         ContainerHierarchy = new BaseHierarchyContainer(Ar);
 
-        ChildIDs = new CAkChildren(Ar).ChildIDs;
+        ChildIDs = new AkChildren(Ar).ChildIDs;
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -37,7 +37,9 @@ public class HierarchyMusicSegment : AbstractHierarchy
         writer.WriteValue(Flags);
 
         writer.WritePropertyName("ContainerHierarchy");
+        writer.WriteStartObject();
         ContainerHierarchy.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName("ChildIDs");
         serializer.Serialize(writer, ChildIDs);

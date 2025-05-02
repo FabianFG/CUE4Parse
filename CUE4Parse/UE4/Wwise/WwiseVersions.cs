@@ -16,6 +16,7 @@ public static class WwiseVersions
         }
     }
 
+    // Credits to https://github.com/bnnm/wwiser/blob/ead1751c0320e5e9b532f80bf738cba5f5d2664e/wwiser/parser/wdefs.py#L22
     public static readonly uint[] BankVersions =
     [
         26, // 0x1A Wwise 2007.3?
@@ -59,7 +60,7 @@ public static class WwiseVersions
         154  // 0x9A Wwise 2024.1
     ];
 
-    // Versions FModel currently supports
+    // Versions CUE4Parse currently supports
     // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [

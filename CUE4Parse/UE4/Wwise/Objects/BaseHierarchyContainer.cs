@@ -137,9 +137,10 @@ namespace CUE4Parse.UE4.Wwise.Objects
             HdrEnvelopeFlags = Ar.Read<byte>();
         }
 
+        // WriteStartEndObjects are handled by derived classes!
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            writer.WriteStartObject();
+            //writer.WriteStartObject();
 
             writer.WritePropertyName("FXChain");
             serializer.Serialize(writer, FXChain);
@@ -195,7 +196,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
             writer.WritePropertyName("RTPCs");
             serializer.Serialize(writer, RTPCs);
 
-            writer.WriteEndObject();
+            //writer.WriteEndObject();
         }
     }
 }
