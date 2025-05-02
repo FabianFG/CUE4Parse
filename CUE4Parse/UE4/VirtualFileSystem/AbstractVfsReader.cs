@@ -6,6 +6,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using GenericReader;
 using Serilog;
 
 namespace CUE4Parse.UE4.VirtualFileSystem
@@ -147,5 +148,21 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public abstract void Dispose();
 
         public override string ToString() => Path;
+
+        public static int Write(char[] buffer, int offset, string value)
+        {
+            value.CopyTo(buffer.AsSpan(offset));
+            return offset + value.Length;
+        }
+
+        public static int Write(char[] buffer, int offset, FStringMemory value, bool isFile)
+        {
+            var span = buffer.AsSpan(offset);
+            var valueLength = value.GetEncoding().GetChars(value.GetSpan(), span);
+            if (isFile)
+                return offset + valueLength;
+            span[valueLength] = '/';
+            return offset + valueLength + 1;
+        }
     }
 }
