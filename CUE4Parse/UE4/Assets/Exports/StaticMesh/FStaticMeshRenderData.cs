@@ -111,14 +111,17 @@ public class FStaticMeshRenderData
 
         Bounds = new FBoxSphereBounds(Ar);
 
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            var bRenderDataFlags = Ar.Read<byte>();
-            bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
-        }
-        else if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
-        {
-            bLODsShareStaticLighting = Ar.ReadBoolean();
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                var bRenderDataFlags = Ar.Read<byte>();
+                bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
+            }
+            else
+            {
+                bLODsShareStaticLighting = Ar.ReadBoolean();
+            }
         }
 
         if (Ar.Game < EGame.GAME_UE4_14)
