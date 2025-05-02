@@ -135,7 +135,7 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DeltaForceHawkOps or EGame.GAME_DeadzoneRogue) Ar.Position += 4;
 
         var screenSizeLength = Ar.Game switch
         {

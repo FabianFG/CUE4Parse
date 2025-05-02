@@ -101,6 +101,8 @@ public partial class USkeletalMesh : UObject
                     var NaniteResources = new FNaniteResources(Ar);
                 }
 
+                if (Ar.Game == EGame.GAME_DeadzoneRogue) Ar.Position += 4;
+
                 if (useNewCookedFormat)
                 {
                     var numInlinedLODs = Ar.Read<byte>();
