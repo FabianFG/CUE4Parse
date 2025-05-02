@@ -21,11 +21,11 @@ public class FTexture2DMipMap
         SizeZ = sizeZ;
     }
 
-    public FTexture2DMipMap(FAssetArchive Ar)
+    public FTexture2DMipMap(FAssetArchive Ar, bool bSerializeMipData = true)
     {
         var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
 
-        BulkData = new FByteBulkData(Ar);
+        if (bSerializeMipData) BulkData = new FByteBulkData(Ar);
 
         if (Ar.Game == EGame.GAME_Borderlands3)
         {

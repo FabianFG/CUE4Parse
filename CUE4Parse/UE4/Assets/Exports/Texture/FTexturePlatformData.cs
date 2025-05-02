@@ -64,7 +64,7 @@ public class FTexturePlatformData
         VTData = null;
     }
 
-    public FTexturePlatformData(FAssetArchive Ar, UTexture Owner)
+    public FTexturePlatformData(FAssetArchive Ar, UTexture Owner, bool bSerializeMipData = true)
     {
         if (Ar is { Game: >= EGame.GAME_UE5_0, IsFilterEditorOnly: true })
         {
@@ -127,7 +127,7 @@ public class FTexturePlatformData
         Mips = new FTexture2DMipMap[mipCount];
         for (var i = 0; i < Mips.Length; i++)
         {
-            Mips[i] = new FTexture2DMipMap(Ar);
+            Mips[i] = new FTexture2DMipMap(Ar, bSerializeMipData);
 
             if (Owner is UVolumeTexture or UTextureCube)
             {

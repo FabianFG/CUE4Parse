@@ -81,7 +81,7 @@ public abstract class UTexture : UUnrealMaterial
 #if DEBUG
                 Log.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
-                PlatformData = new FTexturePlatformData(Ar, this);
+                PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
                 if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
 
