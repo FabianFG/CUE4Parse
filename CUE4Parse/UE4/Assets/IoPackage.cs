@@ -92,8 +92,16 @@ namespace CUE4Parse.UE4.Assets
                     Summary.bUnversioned = true;
                 }
 
+                FZenPackageCellOffsets cellOffsets;
                 if (summary.bHasVersioningInfo == 0 && uassetAr.Ver >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
-                    uassetAr.Position += 8; // FZenPackageCellOffsets
+                {
+                    cellOffsets = uassetAr.Read<FZenPackageCellOffsets>();
+                }
+                else
+                {
+                    cellOffsets.CellImportMapOffset = summary.ExportBundleEntriesOffset;
+                    cellOffsets.CellExportMapOffset = summary.ExportBundleEntriesOffset;
+                }
 
                 // Name map
                 NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
@@ -153,7 +161,7 @@ namespace CUE4Parse.UE4.Assets
                 ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
 
                 // Export bundle entries
-                uassetAr.Position = summary.ExportBundleEntriesOffset;
+                uassetAr.Position = cellOffsets.CellImportMapOffset;
                 exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
                 if (uassetAr.Game < EGame.GAME_UE5_3)

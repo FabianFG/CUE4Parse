@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -30,6 +31,13 @@ public struct FZenPackageVersioningInfo
         LicenseeVersion = Ar.Read<int>();
         CustomVersions = new FCustomVersionContainer(Ar);
     }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct FZenPackageCellOffsets
+{
+    public int CellImportMapOffset;
+    public int CellExportMapOffset;
 }
 
 public readonly struct FZenPackageSummary

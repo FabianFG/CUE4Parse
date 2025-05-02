@@ -43,7 +43,7 @@ public class FStaticLODModel
     public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
     public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
     // Game specific data
-    public object? AdditionalBuffer; 
+    public object? AdditionalBuffer;
 
     public FStaticLODModel()
     {
@@ -289,6 +289,11 @@ public class FStaticLODModel
                     }
 
                     var profileNames = Ar.ReadArray(Ar.ReadFName);
+
+                    if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
+                    {
+                        Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
+                    }
                 }
             }
         }
@@ -398,7 +403,15 @@ public class FStaticLODModel
 
         if (Ar.Versions["SkeletalMesh.HasRayTracingData"])
         {
-            var rayTracingData = Ar.ReadArray<byte>();
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
+                Ar.ReadBulkArray<byte>();
+            }
+            else
+            {
+                Ar.SkipFixedArray(1);
+            }
         }
 
         if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.SerializeSkeletalMeshMorphTargetRenderData)
