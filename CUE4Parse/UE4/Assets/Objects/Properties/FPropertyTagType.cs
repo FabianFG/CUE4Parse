@@ -101,11 +101,11 @@ public abstract class FPropertyTagType
 
     public abstract override string ToString();
 
-    internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type)
+    internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type, int size = 0)
     {
         var tagType = propertyType switch
         {
-            "ArrayProperty" => new ArrayProperty(Ar, tagData, type),
+            "ArrayProperty" => new ArrayProperty(Ar, tagData, type, size),
             "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
             "AssetClassProperty" => new AssetObjectProperty(Ar, type),
             "BoolProperty" => new BoolProperty(Ar, tagData, type),

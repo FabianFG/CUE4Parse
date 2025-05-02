@@ -36,7 +36,6 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
@@ -118,7 +117,6 @@ public static class TextureDecoder
 
                     if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.ZippedGPU_DEPRECATED)
                         Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data!, (int)tileStart, (int)tileLength, layerData, 0, packedOutputSize, CompressionMethod.Zlib);
-
                     else
                         Array.Copy(vt.Chunks[chunkIndex].BulkData.Data!, tileStart, layerData, 0, packedOutputSize);
 
@@ -150,8 +148,10 @@ public static class TextureDecoder
 
                 ArrayPool<byte>.Shared.Return(layerData);
             }
+            var managedData = GetSliceData((byte*)pixelDataPtr, bitmapWidth, bitmapHeight, bytesPerPixel).ToArray();
+            NativeMemory.Free(pixelDataPtr);
 
-            return new CTexture(bitmapWidth, bitmapHeight, colorType, GetSliceData((byte*)pixelDataPtr, bitmapWidth, bitmapHeight, bytesPerPixel).ToArray());
+            return new CTexture(bitmapWidth, bitmapHeight, colorType, managedData);
         }
     }
 
@@ -170,7 +170,6 @@ public static class TextureDecoder
         {
             sizeX = sizeX.Align(4);
             sizeY = sizeY.Align(4);
-            // sizeZ = sizeZ.Align(4);
         }
 
         DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);

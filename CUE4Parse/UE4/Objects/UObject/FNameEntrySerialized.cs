@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 #endif
         public FNameEntrySerialized(FArchive Ar)
         {
-            var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game == EGame.GAME_GearsOfWar4;
+            var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is EGame.GAME_GearsOfWar4 or EGame.GAME_DaysGone;
 
             Name = Ar.ReadFString().Trim();
 

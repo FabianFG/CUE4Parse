@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -13,10 +14,15 @@ public class FFontData : IUStruct
     public EFontHinting Hinting;
     public EFontLoadingPolicy LoadingPolicy;
     public int SubFaceIndex;
+    public FStructFallback? FallbackStruct;
 
     public FFontData(FAssetArchive Ar)
     {
-        if (FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.AddedFontFaceAssets) return;
+        if (FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.AddedFontFaceAssets)
+        {
+            FallbackStruct = new FStructFallback(Ar);
+            return;
+        }
 
         var bIsCooked = Ar.ReadBoolean();
         if (bIsCooked)

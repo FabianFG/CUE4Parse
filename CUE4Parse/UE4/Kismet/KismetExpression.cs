@@ -1475,7 +1475,7 @@ public class FScriptText
 
     public FScriptText(FKismetArchive Ar)
     {
-        TextLiteralType = (EBlueprintTextLiteralType)Ar.Read<byte>();
+        TextLiteralType = Ar.Game >= EGame.GAME_UE4_12 ? (EBlueprintTextLiteralType)Ar.Read<byte>() : EBlueprintTextLiteralType.LocalizedText;
         switch (TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:

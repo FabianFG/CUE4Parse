@@ -21,7 +21,7 @@ public class ULandscapeComponent: UPrimitiveComponent
     
     public Lazy<UTexture2D[]> WeightmapTextures;
     
-    public FMeshMapBuildData LegacyMapBuildData;
+    public FMeshMapBuildData? LegacyMapBuildData;
     public FLandscapeComponentGrassData GrassData;
     public bool bCooked;
 
@@ -42,6 +42,7 @@ public class ULandscapeComponent: UPrimitiveComponent
         
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
+            LegacyMapBuildData = new FMeshMapBuildData();
             LegacyMapBuildData.LightMap = new FLightMap(Ar);
             LegacyMapBuildData.ShadowMap = new FShadowMap(Ar);
         }

@@ -16,7 +16,7 @@ public class FStaticMeshLODResources
     public FStaticMeshSection[] Sections { get; }
     public FCardRepresentationData? CardRepresentationData { get; set; }
     public float MaxDeviation { get; }
-    public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
+    public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
     public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
     public FColorVertexBuffer? ColorVertexBuffer { get; set; }
     public FRawStaticIndexBuffer? IndexBuffer { get; private set; }
