@@ -126,6 +126,15 @@ namespace CUE4Parse.UE4.IO.Objects
             else if (Version >= EIoContainerHeaderVersion.SoftPackageReferencesOffset)
             {
                 SoftPackageReferencesSerialInfo = new FIoContainerHeaderSerialInfo(Ar);
+
+                if (SoftPackageReferencesSerialInfo.Size > 0)
+                {
+                    var endPos = Ar.Position + SoftPackageReferencesSerialInfo.Size;
+                    if (endPos > Ar.Length)
+                        throw new ParserException();
+
+                    Ar.Position = endPos;
+                }
             }
         }
 

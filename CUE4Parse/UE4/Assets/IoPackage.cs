@@ -92,6 +92,9 @@ namespace CUE4Parse.UE4.Assets
                     Summary.bUnversioned = true;
                 }
 
+                if (summary.bHasVersioningInfo == 0 && uassetAr.Ver >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
+                    uassetAr.Position += 8; // FZenPackageCellOffsets
+
                 // Name map
                 NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
                 Summary.NameCount = NameMap.Length;

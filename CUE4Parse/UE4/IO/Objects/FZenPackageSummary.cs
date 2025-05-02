@@ -64,7 +64,6 @@ public readonly struct FZenPackageSummary
         {
             DependencyBundleHeadersOffset = Ar.Read<int>();
             DependencyBundleEntriesOffset = Ar.Read<int>();
-
             ImportedPackageNamesOffset = Ar.Read<int>();
         }
         else
