@@ -28,8 +28,6 @@ public class UScriptArray
     {
         InnerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptArray needs inner type");
         var elementCount = Ar.Read<int>();
-        Properties = new List<FPropertyTagType>(elementCount);
-        if (elementCount == 0) return;
 
         if (elementCount > Ar.Length - Ar.Position)
         {
@@ -59,6 +57,9 @@ public class UScriptArray
                 InnerTagData = DaysGoneProperties.GetArrayStructType(tagData.Name, elemsize);
             }
         }
+
+        Properties = new List<FPropertyTagType>(elementCount);
+        if (elementCount == 0) return;
 
         // special case for ByteProperty, as it can be read as a single byte or as EnumProperty
         if (InnerType == "ByteProperty")

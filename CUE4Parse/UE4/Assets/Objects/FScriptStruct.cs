@@ -104,6 +104,7 @@ public class FScriptStruct
             "MovieSceneSequenceID" => type == ReadType.ZERO ? new FMovieSceneSequenceID() : Ar.Read<FMovieSceneSequenceID>(),
             "MovieSceneSequenceInstanceDataPtr" => type == ReadType.ZERO ? new FMovieSceneSequenceInstanceDataPtr() : new FMovieSceneSequenceInstanceDataPtr(Ar),
             "MovieSceneSubSequenceTree" => type == ReadType.ZERO ? new FMovieSceneSubSequenceTree() : new FMovieSceneSubSequenceTree(Ar),
+            "MovieSceneTimeWarpVariant" => type == ReadType.ZERO ? new FStructFallback() : new FMovieSceneTimeWarpVariant(Ar),
             "MovieSceneTrackFieldData" => type == ReadType.ZERO ? new FMovieSceneTrackFieldData() : new FMovieSceneTrackFieldData(Ar),
             "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : Ar.Read<FMovieSceneTrackIdentifier>(),
             "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
