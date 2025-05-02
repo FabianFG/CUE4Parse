@@ -111,13 +111,18 @@ public class FStaticMeshRenderData
 
         Bounds = new FBoxSphereBounds(Ar);
 
-        if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
+        if (Ar.Game >= EGame.GAME_UE5_6)
+        {
+            var bRenderDataFlags = Ar.Read<byte>();
+            bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
+        }
+        else if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
+        {
             bLODsShareStaticLighting = Ar.ReadBoolean();
+        }
 
         if (Ar.Game < EGame.GAME_UE4_14)
-        {
-            var bReducedBySimplygon = Ar.ReadBoolean();
-        }
+            _ = Ar.ReadBoolean();
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
