@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -13,11 +15,12 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
-public abstract class UTexture : UUnrealMaterial
+public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public bool SRGB { get; private set; }
+    public FPackageIndex[] AssetUserData { get; private set; } = [];
     public bool RenderNearestNeighbor { get; private set; }
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
@@ -40,6 +43,7 @@ public abstract class UTexture : UUnrealMaterial
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
         SRGB = GetOrDefault(nameof(SRGB), true);
+        AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
 
         if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
         {
@@ -144,14 +148,25 @@ public abstract class UTexture : UUnrealMaterial
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.FirstOrDefault(x => x.BulkData.Data != null);
+    private IEnumerable<UTextureAllMipDataProviderFactory> GetAllMipProvider() // TODO: get rid of list, why we would need multiple anyway
+    {
+        foreach (var aud in AssetUserData)
+            if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out var result))
+                yield return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FTexture2DMipMap? GetFirstMip()
+    {
+        return PlatformData.Mips.FirstOrDefault(x => x.EnsureValidBulkData(GetAllMipProvider()));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipByMaxSize(int maxSize)
     {
         foreach (var mip in PlatformData.Mips)
         {
-            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.BulkData.Data != null)
+            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.EnsureValidBulkData(GetAllMipProvider())) // TODO: duplicates
                 return mip;
         }
 
@@ -163,7 +178,7 @@ public abstract class UTexture : UUnrealMaterial
     {
         foreach (var mip in PlatformData.Mips)
         {
-            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.BulkData.Data != null)
+            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.EnsureValidBulkData(GetAllMipProvider())) // TODO: duplicates
                 return mip;
         }
 

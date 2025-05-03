@@ -1,10 +1,9 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Texture;
-using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
@@ -19,51 +18,34 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        // var OptionalMips = Mips.Length - NumNonOptionalMips;
-        // check(OptionalMips >= 0);
-
-        // var FirstInlineMip = Mips.Length - NumNonStreamingMips;
-        // check(FirstInlineMip >= 0);
 
         NumNonOptionalMips = Ar.Read<int>();
         NumNonStreamingMips = Ar.Read<int>();
         LandscapeGridScale = new FVector(Ar);
-        
-        var mipCount = Ar.Read<int>();
-        Mips = new FLandscapeTexture2DMipMap[mipCount];
-        for (var i = 0; i < Mips.Length; i++)
-        {
-            // select bulk data flags for optional/streaming/inline mips
-            // EBulkDataFlags BulkDataFlags;
-            // if (i < OptionalMips)
-            // {
-            //     // optional mip
-            //     BulkDataFlags = EBulkDataFlags.BULKDATA_Force_NOT_InlinePayload | EBulkDataFlags.BULKDATA_OptionalPayload;
-            // }
-            // else if (i < FirstInlineMip)
-            // {
-            //     // streaming mip
-            //     bool bDuplicateNonOptionalMips = false; // TODO [chris.tchou] : if we add support for optional mips, we might need to calculate this.
-            //     BulkDataFlags = EBulkDataFlags.BULKDATA_Force_NOT_InlinePayload | (bDuplicateNonOptionalMips ? EBulkDataFlags.BULKDATA_DuplicateNonOptionalPayload : 0);
-            // }
-            // else
-            // {
-            //     // non streaming inline mip (can be single use as we only need to upload to GPU once, are never streamed out)
-            //     BulkDataFlags = EBulkDataFlags.BULKDATA_ForceInlinePayload | EBulkDataFlags.BULKDATA_SingleUse;
-            // }
-            Mips[i] = new FLandscapeTexture2DMipMap(Ar/*, BulkDataFlags*/);
-        }
+
+        Mips = Ar.ReadArray(() => new FLandscapeTexture2DMipMap(Ar));
 
         Texture = new FPackageIndex(Ar);
     }
 
-    public static void ApplyTo(UTexture2D? TargetTexture, ref FVector InLandsapeGridScale)
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        if (TargetTexture is null) return;
+        base.WriteJson(writer, serializer);
 
-        var Width = TargetTexture.PlatformData.SizeX;
-        var Height = TargetTexture.PlatformData.SizeY;
-        var MipCount = TargetTexture.PlatformData.Mips.Length;
+        writer.WritePropertyName("NumNonOptionalMips");
+        writer.WriteValue(NumNonOptionalMips);
+
+        writer.WritePropertyName("NumNonStreamingMips");
+        writer.WriteValue(NumNonStreamingMips);
+
+        writer.WritePropertyName("LandscapeGridScale");
+        serializer.Serialize(writer, LandscapeGridScale);
+
+        writer.WritePropertyName("Mips");
+        serializer.Serialize(writer, Mips);
+
+        writer.WritePropertyName("Texture");
+        serializer.Serialize(writer, Texture);
     }
 
     public void DecompressMip(byte[] SourceData, long SourceDataBytes, byte[] DestData, long DestDataBytes, int MipIndex)
