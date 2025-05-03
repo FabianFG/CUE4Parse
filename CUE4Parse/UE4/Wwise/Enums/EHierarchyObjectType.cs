@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Wwise.Enums
         MusicSegment,
         MusicTrack,
         MusicSwitchContainer,
-        MusicPlaylistContainer,
+        MusicRandomSequenceContainer,
         Attenuation,
         DialogueEvent,
         MotionBus,

@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects
 {
-    public class BaseHierarchyContainer : AbstractHierarchy
+    public class BaseHierarchy : AbstractHierarchy
     {
         public AkFXParams FXChain { get; protected set; }
         public byte OverrideParentMetadataFlag { get; protected set; }
@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public List<AkStateGroup> StateGroups { get; protected set; }
         public List<AkRTPC> RTPCs { get; protected set; }
 
-        public BaseHierarchyContainer(FArchive Ar) : base(Ar)
+        public BaseHierarchy(FArchive Ar) : base(Ar)
         {
             FXChain = new AkFXParams(Ar);
 

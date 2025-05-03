@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class HierarchyLayerContainer : BaseHierarchyContainer
+public class HierarchyLayerContainer : BaseHierarchy
 {
     public uint[] ChildIDs { get; private set; }
 

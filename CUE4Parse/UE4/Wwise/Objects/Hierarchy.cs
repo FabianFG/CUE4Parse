@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
                 EHierarchyObjectType.MusicSegment when isSupported => new HierarchyMusicSegment(Ar),
                 EHierarchyObjectType.MusicTrack when isSupported => new HierarchyMusicTrack(Ar),
                 EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar),
-                EHierarchyObjectType.MusicPlaylistContainer => new HierarchyMusicPlaylistContainer(Ar),
+                EHierarchyObjectType.MusicRandomSequenceContainer => new HierarchyMusicRandomSequenceContainer(Ar),
                 EHierarchyObjectType.Attenuation => new HierarchyAttenuation(Ar),
                 EHierarchyObjectType.DialogueEvent => new HierarchyDialogueEvent(Ar),
                 EHierarchyObjectType.MotionBus => new HierarchyMotionBus(Ar),

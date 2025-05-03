@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class HierarchySwitchContainer : BaseHierarchyContainer
+public class HierarchySwitchContainer : BaseHierarchy
 {
     public byte GroupType { get; private set; }
     public uint GroupId { get; private set; }

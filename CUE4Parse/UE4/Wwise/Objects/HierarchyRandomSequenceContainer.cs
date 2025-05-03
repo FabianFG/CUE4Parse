@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class HierarchyRandomSequenceContainer : BaseHierarchyContainer
+public class HierarchyRandomSequenceContainer : BaseHierarchy
 {
     public ushort LoopCount { get; private set; }
     public ushort? LoopModMin { get; private set; }

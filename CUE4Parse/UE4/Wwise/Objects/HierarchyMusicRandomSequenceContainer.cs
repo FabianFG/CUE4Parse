@@ -3,9 +3,12 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class HierarchyMusicSegment : BaseHierarchyMusic
+public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
 {
-    public HierarchyMusicSegment(FArchive Ar) : base(Ar) { }
+    public HierarchyMusicRandomSequenceContainer(FArchive Ar) : base(Ar)
+    {
+
+    }
 
     //public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
 }
