@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
@@ -8,7 +12,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 [JsonConverter(typeof(FTexture2DMipMapConverter))]
 public class FTexture2DMipMap
 {
-    public readonly FByteBulkData BulkData;
+    public readonly FByteBulkData? BulkData;
     public int SizeX;
     public int SizeY;
     public int SizeZ;
@@ -43,6 +47,23 @@ public class FTexture2DMipMap
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_DERIVED_DATA2 && !cooked)
         {
             var derivedDataKey = Ar.ReadFString();
+        }
+    }
+
+    public bool EnsureValidBulkData(IEnumerable<UTextureAllMipDataProviderFactory> provider/*, int index*/)
+    {
+        if (BulkData?.Data != null) return true;
+
+        // we match mip by Sizes, maybe consider using indices at some point?
+        switch (provider.FirstOrDefault()) // TODO: find better way
+        {
+            case ULandscapeTextureStorageProviderFactory landscapeProvider:
+            {
+                var mip = landscapeProvider.Mips.First(x => x.SizeX == SizeX && x.SizeY == SizeY);
+                // decompress here and put that in BulkData.Data
+                return true;
+            }
+            default: throw new NotImplementedException("unknown mip data provider");
         }
     }
 }
