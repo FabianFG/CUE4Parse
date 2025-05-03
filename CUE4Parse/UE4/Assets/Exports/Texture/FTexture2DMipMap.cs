@@ -72,7 +72,9 @@ public class FTexture2DMipMap
                 BulkData = new FByteBulkData(data);
                 return true;
             }
-            default: throw new NotImplementedException("unknown mip data provider");
+            // default: throw new NotImplementedException("unknown mip data provider");
         }
+
+        return false;
     }
 }
