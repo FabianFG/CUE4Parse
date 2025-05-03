@@ -18,6 +18,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        base.Deserialize(Ar, validPos);
         // var OptionalMips = Mips.Length - NumNonOptionalMips;
         // check(OptionalMips >= 0);
 
@@ -26,8 +27,10 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
 
         NumNonOptionalMips = Ar.Read<int>();
         NumNonStreamingMips = Ar.Read<int>();
-        LandscapeGridScale = Ar.Read<FVector>();
-
+        LandscapeGridScale = new FVector(Ar);
+        
+        var mipCount = Ar.Read<int>();
+        Mips = new FLandscapeTexture2DMipMap[mipCount];
         for (var i = 0; i < Mips.Length; i++)
         {
             // select bulk data flags for optional/streaming/inline mips
