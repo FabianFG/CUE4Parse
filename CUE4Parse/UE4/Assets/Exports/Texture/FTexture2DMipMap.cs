@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -12,7 +10,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 [JsonConverter(typeof(FTexture2DMipMapConverter))]
 public class FTexture2DMipMap
 {
-    public readonly FByteBulkData? BulkData;
+    public FByteBulkData? BulkData;
     public int SizeX;
     public int SizeY;
     public int SizeZ;
@@ -50,17 +48,28 @@ public class FTexture2DMipMap
         }
     }
 
-    public bool EnsureValidBulkData(IEnumerable<UTextureAllMipDataProviderFactory> provider/*, int index*/)
+    public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
         if (BulkData?.Data != null) return true;
 
-        // we match mip by Sizes, maybe consider using indices at some point?
-        switch (provider.FirstOrDefault()) // TODO: find better way
+        switch (provider)
         {
             case ULandscapeTextureStorageProviderFactory landscapeProvider:
             {
-                var mip = landscapeProvider.Mips.First(x => x.SizeX == SizeX && x.SizeY == SizeY);
-                // decompress here and put that in BulkData.Data
+                var data = new Lazy<byte[]?>(() =>
+                {
+                    var mip = landscapeProvider.Mips[mipLevel];
+                    if (mip.BulkData.Data is null)
+                    {
+                        throw new ArgumentException("mip data provider has no data to work with");
+                    }
+
+                    var destination = new byte[mip.SizeX * mip.SizeY * 4];
+                    landscapeProvider.DecompressMip(mip.BulkData.Data, mip.BulkData.Data.Length, destination, destination.Length, mipLevel);
+                    return destination;
+                });
+
+                BulkData = new FByteBulkData(data);
                 return true;
             }
             default: throw new NotImplementedException("unknown mip data provider");

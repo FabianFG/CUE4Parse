@@ -37,6 +37,26 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public virtual TextureAddress GetTextureAddressY() => TextureAddress.TA_Wrap;
     public virtual TextureAddress GetTextureAddressZ() => TextureAddress.TA_Wrap;
 
+    private UTextureAllMipDataProviderFactory? _mipDataProvider;
+    public UTextureAllMipDataProviderFactory? MipDataProvider
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            if (_mipDataProvider is null)
+            {
+                foreach (var aud in AssetUserData)
+                {
+                    if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out _mipDataProvider))
+                    {
+                        break;
+                    }
+                }
+            }
+            return _mipDataProvider;
+        }
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -148,25 +168,15 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private IEnumerable<UTextureAllMipDataProviderFactory> GetAllMipProvider() // TODO: get rid of list, why we would need multiple anyway
-    {
-        foreach (var aud in AssetUserData)
-            if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out var result))
-                yield return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetFirstMip()
-    {
-        return PlatformData.Mips.FirstOrDefault(x => x.EnsureValidBulkData(GetAllMipProvider()));
-    }
+    public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipByMaxSize(int maxSize)
     {
-        foreach (var mip in PlatformData.Mips)
+        for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
-            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.EnsureValidBulkData(GetAllMipProvider())) // TODO: duplicates
+            var mip = PlatformData.Mips[i];
+            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.EnsureValidBulkData(MipDataProvider, i))
                 return mip;
         }
 
@@ -176,9 +186,10 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipBySize(int sizeX, int sizeY)
     {
-        foreach (var mip in PlatformData.Mips)
+        for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
-            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.EnsureValidBulkData(GetAllMipProvider())) // TODO: duplicates
+            var mip = PlatformData.Mips[i];
+            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.EnsureValidBulkData(MipDataProvider, i))
                 return mip;
         }
 

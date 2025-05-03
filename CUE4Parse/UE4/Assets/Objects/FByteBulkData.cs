@@ -31,6 +31,11 @@ namespace CUE4Parse.UE4.Assets.Objects
             _data = new Lazy<byte[]>(data);
         }
 
+        public FByteBulkData(Lazy<byte[]?> data)
+        {
+            _data = data;
+        }
+
         public FByteBulkData(FAssetArchive Ar)
         {
             Header = new FByteBulkDataHeader(Ar);

@@ -42,7 +42,7 @@ internal class FLandscapeComponentDataInterface {
         _cache = new byte[inComponent.GetWeightmapLayerAllocations().Length][];
 
         UTexture2D heightMapTexture = Component.GetHeightmap()!;
-        var mipProvider = heightMapTexture.GetAllMipProvider().FirstOrDefault(provider => provider is ULandscapeTextureStorageProviderFactory) as ULandscapeTextureStorageProviderFactory;
+        var mipProvider = heightMapTexture.MipDataProvider as ULandscapeTextureStorageProviderFactory;
         var format = heightMapTexture.Format;
         Debug.Assert(heightMapTexture.Format == EPixelFormat.PF_B8G8R8A8);
 
@@ -65,7 +65,7 @@ internal class FLandscapeComponentDataInterface {
             var platform = heightMapTexture.Owner!.Provider!.Versions.Platform;
             var mip = heightMapTexture.PlatformData.Mips[MipLevel];
             var bulkData = mip.BulkData?.Data;
-            
+
             if (bulkData == null)
             {
                 var mipProviderMip = mipProvider?.Mips[MipLevel]!;
