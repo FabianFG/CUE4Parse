@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects;
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyRandomSequenceContainer : BaseHierarchy
 {
@@ -17,7 +18,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public byte Mode { get; private set; }
     public new byte ByBitVector { get; private set; }
     public uint[] ChildIDs { get; private set; }
-    public uint[] PlaylistItems { get; private set; }
+    public List<AkPlayList.AkPlayListItem> Playlist { get; private set; }
 
     public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
     {
@@ -57,18 +58,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
         }
 
         ChildIDs = new AkChildren(Ar).ChildIDs;
-        PlaylistItems = ReadPlaylist(Ar);
-    }
-
-    private uint[] ReadPlaylist(FArchive Ar)
-    {
-        var itemCount = WwiseVersions.WwiseVersion > 38 ? Ar.Read<ushort>() : Ar.Read<uint>();
-        var items = new uint[itemCount];
-        for (int i = 0; i < itemCount; i++)
-        {
-            items[i] = Ar.Read<uint>();
-        }
-        return items;
+        Playlist = new AkPlayList(Ar).PlaylistItems;
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -128,8 +118,8 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
         writer.WritePropertyName("ChildIDs");
         serializer.Serialize(writer, ChildIDs);
 
-        writer.WritePropertyName("PlaylistItems");
-        serializer.Serialize(writer, PlaylistItems);
+        writer.WritePropertyName("Playlist");
+        serializer.Serialize(writer, Playlist);
 
         writer.WriteEndObject();
     }

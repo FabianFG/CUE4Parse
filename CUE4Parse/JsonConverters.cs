@@ -37,7 +37,9 @@ using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Oodle.Objects;
 using CUE4Parse.UE4.Shaders;
 using CUE4Parse.UE4.Wwise;
+using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
+using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 #pragma warning disable CS8765
@@ -1398,6 +1400,45 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
+    }
+}
+
+public class BankHeaderConverter : JsonConverter<BankHeader>
+{
+    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("Version");
+        writer.WriteValue(value.Version);
+
+        writer.WritePropertyName("SoundBankId");
+        writer.WriteValue(value.SoundBankId);
+
+        writer.WritePropertyName("LanguageId");
+        writer.WriteValue(value.LanguageId);
+
+        writer.WritePropertyName("FeedbackInBank");
+        writer.WriteValue(value.FeedbackInBank);
+
+        writer.WritePropertyName("AltValues");
+        writer.WriteValue(value.AltValues.ToString());
+
+        writer.WritePropertyName("ProjectId");
+        writer.WriteValue(value.ProjectId);
+
+        writer.WritePropertyName("SoundBankType");
+        writer.WriteValue(value.SoundBankType);
+
+        writer.WritePropertyName("BankHash");
+        writer.WriteValue(value.BankHash);
+
+        writer.WriteEndObject();
+    }
+
+    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException("Deserialization is not implemented.");
     }
 }
 
@@ -3152,4 +3193,38 @@ public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseL
 
     public override FWwiseLocalizedSoundBankCookedData? ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedSoundBankCookedData? existingValue, bool hasExistingValue, JsonSerializer serializer)
         => throw new NotImplementedException("Deserialization not implemented");
+}
+
+public class AkSwitchParamsConverter : JsonConverter<AkSwitchParams>
+{
+    public override void WriteJson(JsonWriter writer, AkSwitchParams value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("NodeID");
+        writer.WriteValue(value.NodeID);
+
+        writer.WritePropertyName("IsFirstOnly");
+        writer.WriteValue(value.IsFirstOnly);
+
+        writer.WritePropertyName("ContinuePlayback");
+        writer.WriteValue(value.ContinuePlayback);
+
+        writer.WritePropertyName("OnSwitchMode");
+        writer.WriteValue(value.OnSwitchMode.ToString());
+
+        writer.WritePropertyName("FadeOutTime");
+        writer.WriteValue(value.FadeOutTime);
+
+        writer.WritePropertyName("FadeInTime");
+        writer.WriteValue(value.FadeInTime);
+
+        writer.WriteEndObject();
+    }
+
+    public override AkSwitchParams ReadJson(JsonReader reader, Type objectType, AkSwitchParams existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects;
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchySwitchContainer : BaseHierarchy
 {
@@ -11,6 +12,9 @@ public class HierarchySwitchContainer : BaseHierarchy
     public byte IsContinuousValidation { get; private set; }
     public uint[] ChildIDs { get; private set; }
 
+    public List<AkSwitchPackage> SwitchPackages { get; private set; }
+    public List<AkSwitchParams> SwitchParams { get; private set; }
+
     public HierarchySwitchContainer(FArchive Ar) : base(Ar)
     {
         GroupType = Ar.Read<byte>();
@@ -18,6 +22,22 @@ public class HierarchySwitchContainer : BaseHierarchy
         DefaultSwitch = Ar.Read<uint>();
         IsContinuousValidation = Ar.Read<byte>();
         ChildIDs = new AkChildren(Ar).ChildIDs;
+
+        var numSwitchGroups = Ar.Read<uint>();
+        SwitchPackages = [];
+        for (var i = 0; i < numSwitchGroups; i++)
+        {
+            var switchGroup = new AkSwitchPackage(Ar);
+            SwitchPackages.Add(switchGroup);
+        }
+
+        var numSwitchParams = Ar.Read<uint>();
+        SwitchParams = [];
+        for (var i = 0; i < numSwitchParams; i++)
+        {
+            var switchParam = new AkSwitchParams(Ar);
+            SwitchParams.Add(switchParam);
+        }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -40,6 +60,12 @@ public class HierarchySwitchContainer : BaseHierarchy
 
         writer.WritePropertyName("ChildIDs");
         serializer.Serialize(writer, ChildIDs);
+
+        writer.WritePropertyName("SwitchPackages");
+        serializer.Serialize(writer, SwitchPackages);
+
+        writer.WritePropertyName("SwitchParams");
+        serializer.Serialize(writer, SwitchParams);
 
         writer.WriteEndObject();
     }

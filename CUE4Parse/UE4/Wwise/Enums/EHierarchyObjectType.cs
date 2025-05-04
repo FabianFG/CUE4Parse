@@ -17,9 +17,12 @@ namespace CUE4Parse.UE4.Wwise.Enums
         MusicRandomSequenceContainer,
         Attenuation,
         DialogueEvent,
-        MotionBus,
-        MotionFx,
-        Effect,
-        AuxiliaryBus
+        FxShareSet,
+        FxCustom,
+        AuxiliaryBus,
+        LFO,
+        Envelope,
+        AudioDevice,
+        TimeMod
     }
 }

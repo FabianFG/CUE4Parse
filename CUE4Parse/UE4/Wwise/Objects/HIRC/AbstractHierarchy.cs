@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC
 {
     public abstract class AbstractHierarchy
     {

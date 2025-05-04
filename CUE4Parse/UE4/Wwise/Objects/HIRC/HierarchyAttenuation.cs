@@ -1,11 +1,11 @@
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC
 {
-    public class HierarchyMotionBus : AbstractHierarchy
+    public class HierarchyAttenuation : AbstractHierarchy
     {
-        public HierarchyMotionBus(FArchive Ar) : base(Ar)
+        public HierarchyAttenuation(FArchive Ar) : base(Ar)
         {
 
         }

@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
+using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -62,7 +63,7 @@ public class WwiseReader
                     }
                     break;
                 case ESectionIdentifier.BKHD:
-                        Header = Ar.Read<BankHeader>();
+                        Header = new BankHeader(Ar, sectionLength);
                         WwiseVersions.SetVersion(Header.Version);
                     break;
                 case ESectionIdentifier.INIT:

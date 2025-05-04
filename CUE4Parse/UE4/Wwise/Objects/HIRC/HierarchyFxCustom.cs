@@ -1,11 +1,11 @@
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC
 {
-    public class HierarchyGeneric : AbstractHierarchy
+    public class HierarchyFxCustom : AbstractHierarchy
     {
-        public HierarchyGeneric(FArchive Ar) : base(Ar)
+        public HierarchyFxCustom(FArchive Ar) : base(Ar)
         {
 
         }

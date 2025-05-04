@@ -1,11 +1,75 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects;
+
+[JsonConverter(typeof(BankHeaderConverter))]
+[StructLayout(LayoutKind.Sequential)]
+public struct BankHeader
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public readonly struct BankHeader
+    public uint Version { get; private set; }
+    public uint SoundBankId { get; private set; }
+    public uint LanguageId { get; private set; }
+    public bool FeedbackInBank { get; private set; }
+    public EAltValues AltValues { get; private set; }
+    public uint ProjectId { get; private set; }
+    public uint SoundBankType { get; private set; }
+    public byte[] BankHash { get; private set; }
+
+    public BankHeader(FArchive Ar, int sectionLength)
     {
-        public readonly uint Version;
-        public readonly uint Id;
+        Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, dunno how to handle that
+        SoundBankId = Ar.Read<uint>();
+        LanguageId = Ar.Read<uint>();
+
+        FeedbackInBank = false;
+        AltValues = 0;
+        ProjectId = 0;
+        SoundBankType = 0;
+        BankHash = [];
+
+        if (Version <= 26)
+        {
+            Ar.Read<ulong>(); // timestamp
+        }
+        else if (Version <= 126)
+        {
+            FeedbackInBank = (Ar.Read<uint>() & 1) != 0;
+        }
+        else if (Version <= 134)
+        {
+            AltValues = Ar.Read<EAltValues>();
+        }
+        else
+        {
+            AltValues = Ar.Read<EAltValues>();
+        }
+
+        if (Version > 76)
+        {
+            ProjectId = Ar.Read<uint>();
+        }
+
+        if (Version > 141)
+        {
+            SoundBankType = Ar.Read<uint>();
+            BankHash = Ar.ReadBytes(0x10);
+        }
+
+        // Determine padding size
+        int gapSize = Version switch
+        {
+            <= 26 => (sectionLength - 0x18),
+            <= 76 => (sectionLength - 0x10),
+            <= 141 => (sectionLength - 0x14),
+            _ => (sectionLength - 0x14 - 0x04 - 0x10)
+        };
+
+        if (gapSize > 0)
+        {
+            Ar.Position += gapSize;
+        }
     }
 }

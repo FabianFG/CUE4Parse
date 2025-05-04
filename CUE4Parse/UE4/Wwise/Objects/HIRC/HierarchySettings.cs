@@ -2,7 +2,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC
 {
     public class HierarchySettings : AbstractHierarchy
     {
@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Wwise.Objects
             Settings = new Setting<EHierarchyParameterType>[SettingsCount];
             var settingIds = Ar.ReadArray<EHierarchyParameterType>(SettingsCount);
             var settingValues = Ar.ReadArray<float>(SettingsCount);
-            for(int index = 0; index < SettingsCount; index++)
+            for (int index = 0; index < SettingsCount; index++)
             {
                 Settings[index] = new Setting<EHierarchyParameterType>(settingIds[index], settingValues[index]);
             }

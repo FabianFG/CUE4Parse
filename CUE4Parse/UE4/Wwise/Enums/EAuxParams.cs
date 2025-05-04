@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 
-namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums;
+
+[Flags]
+public enum EAuxParams : byte
 {
-    [Flags]
-    public enum EAuxParams : byte
-    {
-        None = 0,
-        OverrideUserAuxSends = 1 << 2,
-        HasAux = 1 << 3,
-        OverrideReflections = 1 << 4
-    }
+    None = 0,
+    OverrideUserAuxSends = 1 << 2,
+    HasAux = 1 << 3,
+    OverrideReflections = 1 << 4
 }

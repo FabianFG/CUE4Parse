@@ -1,11 +1,11 @@
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC
 {
-    public class HierarchyAudioBus : AbstractHierarchy
+    public class HierarchyDialogueEvent : AbstractHierarchy
     {
-        public HierarchyAudioBus(FArchive Ar) : base(Ar)
+        public HierarchyDialogueEvent(FArchive Ar) : base(Ar)
         {
 
         }
@@ -13,4 +13,3 @@ namespace CUE4Parse.UE4.Wwise.Objects
         public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
     }
 }
-
