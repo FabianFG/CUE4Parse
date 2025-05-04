@@ -344,7 +344,7 @@ namespace CUE4Parse.FileProvider
             };
         }
 
-        private static readonly string[] pluginExtensions = { ".uplugin", ".upluginmanifest" };
+        private static readonly string[] pluginExtensions = { ".uplugin", ".upluginmanifest", "AssetRegistry.bin" };
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
         public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
@@ -355,6 +355,7 @@ namespace CUE4Parse.FileProvider
             var plugins = Files.Where(f => pluginExtensions.Any(suffix => f.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)));
             var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !plugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
 
+            var virtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
             Parallel.ForEach(plugins, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -367,7 +368,7 @@ namespace CUE4Parse.FileProvider
                     var virtPath = gameFile.Directory.SubstringAfterLast('/');
                     var path = gameFile.Directory;
 
-                    VirtualPaths.TryAdd(virtPath, path);
+                    virtualPaths.TryAdd(virtPath, path);
                     return;
                 }
 
@@ -382,7 +383,7 @@ namespace CUE4Parse.FileProvider
                     var virtPath = gameFile.Path.SubstringAfterLast('/').SubstringBeforeLast('.');
                     var path = gameFile.Path.SubstringBeforeLast('/');
 
-                    VirtualPaths.TryAdd(virtPath, path);
+                    virtualPaths.TryAdd(virtPath, path);
                 }
                 else
                 {
@@ -400,10 +401,15 @@ namespace CUE4Parse.FileProvider
                         var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
                         var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
 
-                        VirtualPaths.TryAdd(virtPath, path);
+                        virtualPaths.TryAdd(virtPath, path);
                     }
                 }
             });
+
+            foreach (var kvp in virtualPaths)
+            {
+                VirtualPaths[kvp.Key] = kvp.Value;
+            }
 
             return VirtualPaths.Count;
         }
@@ -609,7 +615,7 @@ namespace CUE4Parse.FileProvider
         public bool TryLoadPackage(string path, [MaybeNullWhen(false)] out IPackage package)
         {
             if (TryGetGameFile(path, out var file))
-            {
+                    {
                 return TryLoadPackage(file, out package);
             }
 
