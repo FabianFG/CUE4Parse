@@ -460,7 +460,7 @@ public static class MeshConverter
                         var layerName = allocationInfo.GetLayerName();
 
                         // weight as Mesh Vertex colors
-                        if (flags.HasFlag(ELandscapeExportFlags.Mesh))
+                        if ((flags & ELandscapeExportFlags.Mesh) == ELandscapeExportFlags.Mesh)
                         {
                             // ReSharper disable once CanSimplifyDictionaryLookupWithTryAdd
                             if (!extraVertexColorMap.ContainsKey(layerName))
@@ -476,7 +476,7 @@ public static class MeshConverter
                         var pixelX = textureUv2.X;
                         var pixelY = textureUv2.Y;
 
-                        if (flags.HasFlag(ELandscapeExportFlags.Weightmap))
+                        if ((flags & ELandscapeExportFlags.Weightmap) == ELandscapeExportFlags.Weightmap)
                         {
                             lock (weightMapLock)
                             {
@@ -505,7 +505,7 @@ public static class MeshConverter
                         }
                     }
 
-                    if (flags.HasFlag(ELandscapeExportFlags.Mesh) && landscapeLod != null)
+                    if ((flags & ELandscapeExportFlags.Mesh) == ELandscapeExportFlags.Mesh && landscapeLod != null)
                     {
                         var vert = landscapeLod.Verts[baseVertIndex + vertIndex];
                         vert.Position = position;

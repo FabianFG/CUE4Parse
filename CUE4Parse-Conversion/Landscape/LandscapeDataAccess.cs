@@ -32,8 +32,9 @@ internal class FLandscapeComponentDataInterface {
     private readonly object _dataLock = new();
 
     private bool _bEnsuredWeightmapTexCache;
-
-    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel) {
+    
+    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel) 
+    {
         Component = inComponent;
         HeightMipData = null;
         XYOffsetMipData = null;
@@ -42,7 +43,7 @@ internal class FLandscapeComponentDataInterface {
         _cache = new byte[inComponent.GetWeightmapLayerAllocations().Length][];
 
         UTexture2D heightMapTexture = Component.GetHeightmap()!;
-        var mipProvider = heightMapTexture.MipDataProvider as ULandscapeTextureStorageProviderFactory;
+
         var format = heightMapTexture.Format;
         Debug.Assert(heightMapTexture.Format == EPixelFormat.PF_B8G8R8A8);
 
@@ -60,24 +61,25 @@ internal class FLandscapeComponentDataInterface {
         ComponentSizeVerts = (Component.ComponentSizeQuads + 1) >> MipLevel;
         SubsectionSizeVerts = (Component.SubsectionSizeQuads + 1) >> MipLevel;
         ComponentNumSubsections = Component.NumSubsections;
+        
         if (MipLevel < heightMapTexture.PlatformData.Mips.Length) {
             Trace.Assert(heightMapTexture.Owner != null, "heightMapTexture.Owner != null");
             var platform = heightMapTexture.Owner!.Provider!.Versions.Platform;
-            var mip = heightMapTexture.PlatformData.Mips[MipLevel];
+
+            var mip = heightMapTexture.GetMip(MipLevel);
+
+            if (mip == null)
+                throw new InvalidOperationException($"failed to get mip {MipLevel} from height map texture");
+
             var bulkData = mip.BulkData?.Data;
 
             if (bulkData == null)
-            {
-                var mipProviderMip = mipProvider?.Mips[MipLevel]!;
-                var tempBulkData = new byte[mipProviderMip.SizeX * mipProviderMip.SizeY * 4];
-                mipProvider?.DecompressMip(mipProviderMip.BulkData.Data, mipProviderMip.BulkData.Data.Length, tempBulkData, tempBulkData.Length, MipLevel);
-                bulkData = tempBulkData;
-            }
+                throw new InvalidOperationException("height map bulk data is null");
 
             if (platform == ETexturePlatform.XboxAndPlaystation)
-                bulkData = PlatformDeswizzlers.DeswizzleXBPS(bulkData!, mip, formatInfo);
+                bulkData = PlatformDeswizzlers.DeswizzleXBPS(bulkData, mip, formatInfo);
             else if (platform == ETexturePlatform.NintendoSwitch)
-                bulkData = PlatformDeswizzlers.GetDeswizzledData(bulkData!, mip, formatInfo);
+                bulkData = PlatformDeswizzlers.GetDeswizzledData(bulkData, mip, formatInfo);
 
             var ar = new FStreamArchive("HeightMap",
                 new MemoryStream(bulkData ?? throw new InvalidOperationException("height map bulk data is null")));
@@ -95,8 +97,8 @@ internal class FLandscapeComponentDataInterface {
         }
     }
 
-    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo,
-        out int LayerIdx) {
+    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo, out int LayerIdx) 
+    {
         LayerIdx = -1;
         FWeightmapLayerAllocationInfo[] componentWeightmapLayerAllocations =
             Component.GetWeightmapLayerAllocations();
@@ -124,7 +126,8 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    public bool EnsureWeightmapTextureDataCache() {
+    public bool EnsureWeightmapTextureDataCache() 
+    {
         var allocationInfos = Component.GetWeightmapLayerAllocations();
         for (var index = 0; index < allocationInfos.Length; index++) {
             var allocationInfo = allocationInfos[index];
@@ -141,7 +144,8 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData) {
+    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData) 
+    {
         if (_bEnsuredWeightmapTexCache) {
             // can read without lock
             outData = _cache[layerIdx];
@@ -173,7 +177,7 @@ internal class FLandscapeComponentDataInterface {
 
         var platform = weightTexture.Owner!.Provider!.Versions.Platform;
 
-        var mip = weightTexture.PlatformData.Mips[MipLevel];
+        var mip = weightTexture.GetMip(MipLevel);
 
         var bulkData = mip.BulkData.Data;
         if (platform == ETexturePlatform.XboxAndPlaystation)

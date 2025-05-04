@@ -168,6 +168,12 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FTexture2DMipMap? GetMip(int index) => 
+        index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
+            ? PlatformData.Mips[index]
+            : null;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
