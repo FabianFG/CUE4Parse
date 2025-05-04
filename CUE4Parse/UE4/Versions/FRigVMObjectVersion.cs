@@ -41,6 +41,9 @@ public static class FRigVMObjectVersion
         // Removing library node FSoftObjectPath from FRigVMGraphFunctionIdentifier
         RemoveLibraryNodeReferenceFromFunctionIdentifier,
 
+        // Adding variant struct to function identifier
+        AddVariantToFunctionIdentifier,
+
         // Adding variant to every RigVM asset
         AddVariantToRigVMAssets,
 

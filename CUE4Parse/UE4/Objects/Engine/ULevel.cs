@@ -33,7 +33,7 @@ public readonly struct FCompressedVisibilityChunk : IUStruct
     {
         bCompressed = Ar.ReadBoolean();
         UncompressedSize = Ar.Read<int>();
-        Data = Ar.ReadBytes(Ar.Read<int>());
+        Data = Ar.ReadArray<byte>();
     }
 }
 
@@ -46,7 +46,7 @@ public readonly struct FPrecomputedVisibilityBucket : IUStruct
     public FPrecomputedVisibilityBucket(FAssetArchive Ar)
     {
         CellDataSize = Ar.Read<int>();
-        Cells = Ar.Game != EGame.GAME_MetroAwakening ? Ar.ReadArray<FPrecomputedVisibilityCell>() : Ar.ReadArray(() => new FPrecomputedVisibilityCell(Ar));
+        Cells = Ar.ReadArray(() => new FPrecomputedVisibilityCell(Ar));
         CellDataChunks = Ar.ReadArray(() => new FCompressedVisibilityChunk(Ar));
     }
 }
@@ -94,15 +94,15 @@ public readonly struct FPrecomputedVolumeDistanceField : IUStruct
 
 public class ULevel : Assets.Exports.UObject
 {
-    public FPackageIndex?[] Actors { get; private set; }
-    public FURL URL { get; private set; }
-    public FPackageIndex Model { get; private set; }
-    public FPackageIndex[] ModelComponents { get; private set; }
-    public FPackageIndex LevelScriptActor { get; private set; }
-    public FPackageIndex NavListStart { get; private set; }
-    public FPackageIndex NavListEnd { get; private set; }
-    public FPrecomputedVisibilityHandler PrecomputedVisibilityHandler { get; private set; }
-    public FPrecomputedVolumeDistanceField PrecomputedVolumeDistanceField { get; private set; }
+    public FPackageIndex?[] Actors;
+    public FURL URL;
+    public FPackageIndex Model;
+    public FPackageIndex[] ModelComponents;
+    public FPackageIndex LevelScriptActor;
+    public FPackageIndex? NavListStart;
+    public FPackageIndex? NavListEnd;
+    public FPrecomputedVisibilityHandler? PrecomputedVisibilityHandler;      
+    public FPrecomputedVolumeDistanceField? PrecomputedVolumeDistanceField;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -145,6 +145,8 @@ public class ULevel : Assets.Exports.UObject
 
         writer.WritePropertyName("NavListEnd");
         serializer.Serialize(writer, NavListEnd);
+
+        if (PrecomputedVisibilityHandler == null) return;
 
         writer.WritePropertyName("PrecomputedVisibilityHandler");
         serializer.Serialize(writer, PrecomputedVisibilityHandler);
