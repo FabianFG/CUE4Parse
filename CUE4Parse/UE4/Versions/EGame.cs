@@ -141,6 +141,7 @@ public enum EGame : uint
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
+        GAME_MotoGP25 = GAME_UE5_5 + 4,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
 
