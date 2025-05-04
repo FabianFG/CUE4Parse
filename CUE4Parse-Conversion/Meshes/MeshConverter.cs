@@ -515,6 +515,21 @@ public static class MeshConverter
 
                         landscapeLod.ExtraUV.Value[0][baseVertIndex + vertIndex] = (FMeshUVFloat)weightmapUv;
                     }
+
+                    if (!weightMapsInternal.ContainsKey("NormalMapTest"))
+                        weightMapsInternal["NormalMapTest"] = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+                    var normaBitmap = weightMapsInternal["NormalMapTest"];
+                    unsafe
+                    {
+                        var pixels = (byte*)normaBitmap.GetPixels();
+                        var pixelX = textureUv2.X;
+                        var pixelY = textureUv2.Y;
+                        var index = pixelY * width + pixelX;
+                        pixels[index * 4 + 2] = (byte)(normal.X * 127 + 128);
+                        pixels[index * 4 + 1] = (byte)(normal.Y * 127 + 128);
+                        pixels[index * 4 + 0] = (byte)(normal.Z * 127 + 128);
+                        pixels[index * 4 + 3] = 255;
+                    }
                 }
             });
             tasks[i] = task;

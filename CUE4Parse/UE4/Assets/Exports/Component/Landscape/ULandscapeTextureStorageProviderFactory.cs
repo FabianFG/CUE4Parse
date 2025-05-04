@@ -57,153 +57,230 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
     }
 
     // Helper method to sample world position at offset
-    private static void SampleWorldPositionAtOffset(out FVector outPoint, byte[] mipData, int x, int y, int mipSizeX, FVector inLandscapeGridScale)
-    {
-        int offsetBytes = (y * mipSizeX + x) * 4;
-        ushort heightData = (ushort)((mipData[offsetBytes + 2] * 256) + mipData[offsetBytes + 1]);
-
-        // NOTE: Since we are using deltas between points to calculate the normal,
-        // we don't care about constant offsets in the position, only relative scales
-        outPoint = new FVector(
-            x * inLandscapeGridScale.X,
-            y * inLandscapeGridScale.Y,
-            GetLocalHeight(heightData) * inLandscapeGridScale.Z);
-    }
 
     const float LANDSCAPE_ZSCALE = 1.0f / 128.0f;
     const float MidValue = 32768f;
 
     // LandscapeDataAccess.GetLocalHeight
-    public static float GetLocalHeight(ushort height) 
+
+    private FVector2D CalculatePremultU16(int mipIndex, FVector gridScale)
     {
-        // Reserved 2 bits for other purpose
-        // Most significant bit - Visibility, 0 is visible(default), 1 is invisible
-        // 2nd significant bit - Triangle flip, not implemented yet
-        return (height - MidValue) * LANDSCAPE_ZSCALE;
+        int mipScale = 1 << mipIndex;
+        
+        float scaleFactor = -LANDSCAPE_ZSCALE / (gridScale.X * gridScale.Y * mipScale);
+
+        var x = gridScale.Z * gridScale.Y * scaleFactor;
+        var y = gridScale.Z * gridScale.X * scaleFactor;
+        return new FVector2D(x, y);
     }
 
-    public void DecompressMip(byte[] sourceData, long sourceDataBytes, byte[] destData, long destDataBytes, int mipIndex)
+    public unsafe void DecompressMip(byte[] sourceData, long sourceDataBytes, byte[] destData, long destDataBytes, int mipIndex)
     {
-        var mip = Mips[mipIndex];
+        // Check if the mip is not compressed, just copy it
+        FLandscapeTexture2DMipMap mip = Mips[mipIndex];
         if (!mip.bCompressed)
         {
-            // mip is uncompressed, just copy it
             Array.Copy(sourceData, 0, destData, 0, destDataBytes);
             return;
         }
 
-        var totalPixels = mip.SizeX * mip.SizeY;
+        int width = mip.SizeX;
+        int height = mip.SizeY;
+        int totalPixels = width * height;
+        int borderPixels = (width + height) * 2 - 4;
         
-        // Validate buffer sizes
-        if (sourceDataBytes != (totalPixels + (mip.SizeX + mip.SizeY) * 2 - 4) * 2)
-        {
-            throw new ArgumentException("Source data buffer has incorrect size");
-        }
-        
-        if (destDataBytes != totalPixels * 4)
-        {
-            throw new ArgumentException("Destination data buffer has incorrect size");
-        }
+        if (sourceDataBytes != (totalPixels + borderPixels) * 2) 
+            throw new InvalidOperationException("Invalid source data size");
+        if (destDataBytes != totalPixels * 4) 
+            throw new InvalidOperationException("Invalid destination data size");
 
-        // Undo Delta Encode of Heights
-        ushort lastHeight = 32768;
-        for (int pixelIndex = 0; pixelIndex < totalPixels; pixelIndex++)
+        // Save some multiplying by premultiplying the grid scales, mip scale and ZScale
+        FVector2D premultU16 = CalculatePremultU16(mipIndex, LandscapeGridScale);
+
+        // Current center pixel height
+        // (also used to delta decode the heights - initial value must match the initial value used during encoding)
+        ushort CC = 32768;
+
+        // Partial normal results recorded for the previous line
+        FVector[] prevLinePartialNormals = new FVector[width];
+        for (int i = 0; i < width; i++)
+            prevLinePartialNormals[i] = new FVector(0, 0, 0);
+
+        fixed (byte* srcPtr = sourceData)
+        fixed (byte* dstPtr = destData)
         {
-            int sourceOffset = pixelIndex * 2;
-            ushort deltaHeight = (ushort)((sourceData[sourceOffset] * 256) + sourceData[sourceOffset + 1]);
-
-            // undo delta
-            lastHeight += deltaHeight;
-
-            // texture data is stored as BGRA, or [normal x, height low bits, height high bits, normal y]
-            int destOffset = pixelIndex * 4;
-            destData[destOffset + 0] = 128; // Initialize normal X to 128 (neutral value)
-            destData[destOffset + 1] = (byte)(lastHeight & 0xff); // Height low bits
-            destData[destOffset + 2] = (byte)(lastHeight >> 8);   // Height high bits
-            destData[destOffset + 3] = 128; // Initialize normal Y to 128 (neutral value)
-        }
-
-        // Recompute normals in the interior
-        {
-            // Skip computing the edges, as they will be overwritten later
-            // This avoids handling samples that go off the edge
-            for (int y = 1; y < mip.SizeY - 1; y++)
+            // Iterate each line
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 1; x < mip.SizeX - 1; x++)
+                int lineOffsetInPixels = y * width;
+                byte* src = srcPtr + (lineOffsetInPixels * 2);
+                FColor* dstColorPtr = (FColor*)(dstPtr + lineOffsetInPixels * 4);
+
+                if (y == 0)
                 {
-                    // Based on shader code in LandscapeLayersPS.usf
-                    FVector TL, TT, CC, LL, RR, BR, BB;
+                    // Just decode heights for the first line (normals don't matter they will be stomped below)
+                    for (int x = 0; x < width; x++)
+                    {
+                        ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
+                        CC += deltaHeight;
+                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
+                        src += 2;
+                        dstColorPtr++;
+                    }
+                }
+                else
+                {
+                    // Compute initial values (first pixel)
+                    FVector P1 = new FVector(0, 0, 0);  // previous quad N1 normal
+                    FVector P01 = new FVector(0, 0, 0); // previous quad (N0+N1) normals
+                    ushort TT;                              // previous quad TT height
+                    {
+                        ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
+                        CC += deltaHeight;
+                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
 
-                    SampleWorldPositionAtOffset(out TL, destData, x - 1, y - 1, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out TT, destData, x + 0, y - 1, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out CC, destData, x + 0, y + 0, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out LL, destData, x - 1, y + 0, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out RR, destData, x + 1, y + 0, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out BR, destData, x + 1, y + 1, mip.SizeX, LandscapeGridScale);
-                    SampleWorldPositionAtOffset(out BB, destData, x + 0, y + 1, mip.SizeX, LandscapeGridScale);
+                        // Load TT for first pixel (becomes TL for second pixel)
+                        TT = DecodeHeightU16(dstColorPtr + 0 - width);
 
-                    FVector N0 = ComputeTriangleNormal(CC, LL, TL);
-                    FVector N1 = ComputeTriangleNormal(TL, TT, CC);
-                    FVector N2 = ComputeTriangleNormal(LL, CC, BB);
-                    FVector N3 = ComputeTriangleNormal(RR, CC, TT);
-                    FVector N4 = ComputeTriangleNormal(BR, BB, CC);
-                    FVector N5 = ComputeTriangleNormal(CC, RR, BR);
+                        src += 2;
+                        dstColorPtr++;
+                    }
 
-                    FVector finalNormal = (N0 + N1 + N2 + N3 + N4 + N5);
-                    finalNormal.Normalize();
+                    // Rest of the pixels in the line
+                    for (int x = 1; x < width; x++)
+                    {
+                        // Re-use previous pixel TT and CC as this pixel TL and LL
+                        ushort TL = TT;
+                        ushort LL = CC;
 
-                    // Rescale normal.xy to [0,255] range, and write out as bytes
-                    int offsetBytes = (y * mip.SizeX + x) * 4;
-                    destData[offsetBytes + 0] = (byte)Math.Clamp(((finalNormal.X + 1.0f) * 0.5f) * 255.0f, 0.0f, 255.0f);
-                    destData[offsetBytes + 3] = (byte)Math.Clamp(((finalNormal.Y + 1.0f) * 0.5f) * 255.0f, 0.0f, 255.0f);
+                        // 1) Decode Height at CC
+                        ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
+                        CC += deltaHeight;
+
+                        // Load TT
+                        TT = DecodeHeightU16(dstColorPtr + 0 - width);
+
+                        // 2) Write Height at CC (normals get written during processing of the next line)
+                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
+                        
+                        // 3) Compute local normals N0/N1 for the current quad (CC/TT/TL/LL)
+                        FVector N0 = ComputeGridNormalFromDeltaHeightsPremultU16(CC - LL, LL - TL, premultU16);
+                        FVector N1 = ComputeGridNormalFromDeltaHeightsPremultU16(TT - TL, CC - TT, premultU16);
+                        FVector N01 = N0 + N1;
+
+
+                        // 4) Complete Normal calculation for TL - this takes the partial result from the previous line and fills in the rest
+                        FVector TL_Normal = prevLinePartialNormals[x - 1] + P1 + N01;
+                        FastNormalize(ref TL_Normal);
+
+                        // 5) Write Normal for TL
+                        FColor* topLeftPixel = dstColorPtr - width - 1;
+                        topLeftPixel->B = (byte)Math.Clamp((TL_Normal.X * 127.5f + 127.5f), 0.0f, 255.0f);
+                        topLeftPixel->A = (byte)Math.Clamp((TL_Normal.Y * 127.5f + 127.5f), 0.0f, 255.0f);
+
+                        // 6) Store Partial Normal for LL in PrevLinePartialNormals (P0 + P1 + N0) - the rest will be filled in when processing the next line
+                        FVector LL_PartialNormal = P01 + N0;
+                        prevLinePartialNormals[x - 1] = LL_PartialNormal;
+
+                        // Pass normals to next pixel
+                        P1 = N1;
+                        P01 = N01;
+
+                        src += 2;
+                        dstColorPtr++;
+                    }
+                }
+            }
+
+            // Write out normals along the edge (delta encoded clockwise starting from top left)
+            {
+                byte* src = srcPtr + (totalPixels * 2);
+                byte lastNormalX = 128;
+                byte lastNormalY = 128;
+
+                {
+                    void DecodeNormal(int x, int y, byte* dst)
+                    {
+                        int destOffset = (y * width + x) * 4;
+                        lastNormalX += src[0];
+                        lastNormalY += src[1];
+                        dst[destOffset + 0] = lastNormalX;
+                        dst[destOffset + 3] = lastNormalY;
+                        src += 2;
+                    }
+                    
+                    for (int x = 0; x < width; x++)      // [0 ... Width-1], 0
+                    {
+                        DecodeNormal(x, 0, dstPtr);
+                    }
+
+                    for (int y = 1; y < height; y++)      // Width-1, [1 ... Height-1]
+                    {
+                        DecodeNormal(width - 1, y, dstPtr);
+                    }
+
+                    for (int x = width - 2; x >= 0; x--)  // [Width-2 ... 0], Height-1
+                    {
+                        DecodeNormal(x, height - 1, dstPtr);
+                    }
+
+                    for (int y = height - 2; y >= 1; y--)  // 0, [Height-2 ... 1]
+                    {
+                        DecodeNormal(0, y, dstPtr);
+                    }
                 }
             }
         }
+    }
 
-        // Write out normals along the edge (delta encoded clockwise starting from top left)
-        int sourceOffset2 = totalPixels * 2;
-        byte lastNormalX = 128;
-        byte lastNormalY = 128;
-
-        // Define a local function to decode normals
-        void DecodeNormal(int x, int y)
+    private FVector ComputeGridNormalFromDeltaHeightsPremultU16(int dhdx, int dhdy, FVector2D premultU16)
+    {
+        FVector normal = new FVector(
+            dhdx * premultU16.X,
+            dhdy * premultU16.Y,
+            1.0f
+        );
+        
+        // Normalize (optimized)
+        float squareSum = normal.X * normal.X + normal.Y * normal.Y + 1.0f;
+        if (squareSum > UnrealMath.SmallNumber)
         {
-            int destOffset = (y * mip.SizeX + x) * 4;
-            lastNormalX += sourceData[sourceOffset2 + 0];
-            lastNormalY += sourceData[sourceOffset2 + 1];
-            destData[destOffset + 0] = lastNormalX;
-            destData[destOffset + 3] = lastNormalY;
-            sourceOffset2 += 2;
+            float scale = 1.0f / (float)Math.Sqrt(squareSum);
+            normal.X *= scale;
+            normal.Y *= scale;
+            normal.Z = scale;
         }
-
-        // Top edge: [0 ... MipSizeX-1], 0
-        for (int x = 0; x < mip.SizeX; x++)
+        else
         {
-            DecodeNormal(x, 0);
+            normal.X = 0.0f;
+            normal.Y = 0.0f;
+            normal.Z = 1.0f;
         }
+        
+        return normal;
+    }
+    
+    private static unsafe ushort DecodeHeightU16(FColor* pixel)
+    {
+        ushort heightData = (ushort)(pixel->R * 256 + pixel->G);
+        return heightData;
+    }
 
-        // Right edge: MipSizeX-1, [1 ... MipSizeY-1]
-        for (int y = 1; y < mip.SizeY; y++)
+    private static void FastNormalize(ref FVector v)
+    {
+        float squareSum = v.X * v.X + v.Y * v.Y + v.Z * v.Z;
+        if (squareSum > UnrealMath.SmallNumber)
         {
-            DecodeNormal(mip.SizeX - 1, y);
+            float scale = 1.0f / MathF.Sqrt(squareSum);
+            v.X *= scale;
+            v.Y *= scale;
+            v.Z *= scale;
         }
-
-        // Bottom edge: [MipSizeX-2 ... 0], MipSizeY-1
-        for (int x = mip.SizeX - 2; x >= 0; x--)
+        else
         {
-            DecodeNormal(x, mip.SizeY - 1);
-        }
-
-        // Left edge: 0, [MipSizeY-2 ... 1]
-        for (int y = mip.SizeY - 2; y >= 1; y--)
-        {
-            DecodeNormal(0, y);
-        }
-
-        // Verify we've consumed all source data
-        if (sourceOffset2 != sourceDataBytes)
-        {
-            throw new InvalidOperationException($"Did not consume all source data. Consumed {sourceOffset2} bytes out of {sourceDataBytes}");
+            v.X = 0.0f;
+            v.Y = 0.0f;
+            v.Z = 1.0f;
         }
     }
 }
