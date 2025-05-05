@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
-using CUE4Parse.UE4.Wwise.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -13,7 +12,7 @@ public class BaseHierarchy : AbstractHierarchy
     public byte NumFXMetadataFlag { get; protected set; }
     public byte OverrideAttachmentParams { get; protected set; }
     public uint OverrideBusId { get; protected set; }
-    public uint DirectParentID { get; protected set; }
+    public uint DirectParentId { get; protected set; }
     public byte Priority { get; protected set; }
     public byte PriorityOverrideParent { get; protected set; }
     public byte PriorityApplyDistFactor { get; protected set; }
@@ -48,7 +47,7 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         OverrideBusId = Ar.Read<uint>();
-        DirectParentID = Ar.Read<uint>();
+        DirectParentId = Ar.Read<uint>();
 
         if (WwiseVersions.WwiseVersion <= 56)
         {
@@ -157,10 +156,10 @@ public class BaseHierarchy : AbstractHierarchy
             writer.WriteValue(OverrideBusId);
         }
 
-        if (DirectParentID != 0)
+        if (DirectParentId != 0)
         {
-            writer.WritePropertyName("DirectParentID");
-            writer.WriteValue(DirectParentID);
+            writer.WritePropertyName("DirectParentId");
+            writer.WriteValue(DirectParentId);
         }
 
         writer.WritePropertyName("Props");

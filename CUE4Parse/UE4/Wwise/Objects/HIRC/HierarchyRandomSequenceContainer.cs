@@ -17,7 +17,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public byte RandomMode { get; private set; }
     public byte Mode { get; private set; }
     public new byte ByBitVector { get; private set; }
-    public uint[] ChildIDs { get; private set; }
+    public uint[] ChildIds { get; private set; }
     public List<AkPlayList.AkPlayListItem> Playlist { get; private set; }
 
     public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
@@ -57,7 +57,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
             ByBitVector = Ar.Read<byte>();
         }
 
-        ChildIDs = new AkChildren(Ar).ChildIDs;
+        ChildIds = new AkChildren(Ar).ChildIds;
         Playlist = new AkPlayList(Ar).PlaylistItems;
     }
 
@@ -115,8 +115,8 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
         writer.WritePropertyName("ByBitVector");
         writer.WriteValue(ByBitVector);
 
-        writer.WritePropertyName("ChildIDs");
-        serializer.Serialize(writer, ChildIDs);
+        writer.WritePropertyName("ChildIds");
+        serializer.Serialize(writer, ChildIds);
 
         writer.WritePropertyName("Playlist");
         serializer.Serialize(writer, Playlist);

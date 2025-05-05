@@ -1,33 +1,27 @@
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Wwise.Objects.HIRC
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
+
+public class HierarchyActorMixer : BaseHierarchy
 {
-    public class HierarchyActorMixer : AbstractHierarchy
+    public uint[] ChildIds { get; private set; }
+
+    public HierarchyActorMixer(FArchive Ar) : base(Ar)
     {
-        public readonly uint DirectParentID;
+        ChildIds = new AkChildren(Ar).ChildIds;
+    }
 
-        public HierarchyActorMixer(FArchive Ar) : base(Ar)
-        {
-            Ar.Read<byte>(); // bIsOverrideParentFX
-            Ar.Read<byte>(); // uNumFx (parent FX count)
-            Ar.Read<byte>(); // bIsOverrideParentMetadata
-            Ar.Read<byte>(); // uNumFx (metadata FX count)
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
 
-            Ar.Read<uint>(); // Read OverrideBusId
+        base.WriteJson(writer, serializer);
 
-            DirectParentID = Ar.Read<uint>();
-        }
+        writer.WritePropertyName("ChildIds");
+        serializer.Serialize(writer, ChildIds);
 
-        public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("DirectParentID");
-            writer.WriteValue(DirectParentID);
-
-            writer.WriteEndObject();
-        }
+        writer.WriteEndObject();
     }
 }
 

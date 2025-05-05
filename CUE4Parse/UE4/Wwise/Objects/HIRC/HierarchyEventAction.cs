@@ -31,6 +31,9 @@ public class HierarchyEventAction : AbstractHierarchy
         ActionData = EventActionType switch
         {
             EEventActionType.Play => new ActionPlay(Ar),
+            EEventActionType.Stop => new ActionStop(Ar),
+            EEventActionType.SetGameParameter => new ActionSetGameParameter(Ar),
+            EEventActionType.ResetGameParameter => new ActionSetGameParameter(Ar),
             // TODO: add all action types
             _ => null,
         };

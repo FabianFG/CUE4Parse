@@ -23,9 +23,9 @@ public class AkPositioningParams
             Flags3D = ar.Read<byte>();
         }
 
-        Vertices = new List<AkVertex>();
-        PlaylistItems = new List<AkPlaylistItem>();
-        PlaylistRanges = new List<AkPlaylistRange>();
+        Vertices = [];
+        PlaylistItems = [];
+        PlaylistRanges = [];
 
         if (BitsPositioning.HasFlag(EBitsPositioning.PositioningInfoOverrideParent) && BitsPositioning.IsEmitter())
         {

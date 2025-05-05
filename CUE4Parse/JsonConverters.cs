@@ -39,6 +39,7 @@ using CUE4Parse.UE4.Shaders;
 using CUE4Parse.UE4.Wwise;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
+using CUE4Parse.UE4.Wwise.Objects.Actions;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -3223,6 +3224,25 @@ public class AkSwitchParamsConverter : JsonConverter<AkSwitchParams>
     }
 
     public override AkSwitchParams ReadJson(JsonReader reader, Type objectType, AkSwitchParams existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class ActionParamsConverter : JsonConverter<ActionParams>
+{
+    public override void WriteJson(JsonWriter writer, ActionParams value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("EFadeCurve");
+        writer.WriteValue(value.EFadeCurve.ToString());
+
+        writer.WriteEndObject();
+    }
+
+    public override ActionParams ReadJson(JsonReader reader, Type objectType, ActionParams existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();

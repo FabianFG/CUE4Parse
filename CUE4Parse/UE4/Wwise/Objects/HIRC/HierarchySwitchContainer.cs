@@ -10,7 +10,7 @@ public class HierarchySwitchContainer : BaseHierarchy
     public uint GroupId { get; private set; }
     public uint DefaultSwitch { get; private set; }
     public byte IsContinuousValidation { get; private set; }
-    public uint[] ChildIDs { get; private set; }
+    public uint[] ChildIds { get; private set; }
 
     public List<AkSwitchPackage> SwitchPackages { get; private set; }
     public List<AkSwitchParams> SwitchParams { get; private set; }
@@ -21,7 +21,7 @@ public class HierarchySwitchContainer : BaseHierarchy
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
         IsContinuousValidation = Ar.Read<byte>();
-        ChildIDs = new AkChildren(Ar).ChildIDs;
+        ChildIds = new AkChildren(Ar).ChildIds;
 
         var numSwitchGroups = Ar.Read<uint>();
         SwitchPackages = [];
@@ -58,8 +58,8 @@ public class HierarchySwitchContainer : BaseHierarchy
         writer.WritePropertyName("IsContinuousValidation");
         writer.WriteValue(IsContinuousValidation != 0);
 
-        writer.WritePropertyName("ChildIDs");
-        serializer.Serialize(writer, ChildIDs);
+        writer.WritePropertyName("ChildIds");
+        serializer.Serialize(writer, ChildIds);
 
         writer.WritePropertyName("SwitchPackages");
         serializer.Serialize(writer, SwitchPackages);

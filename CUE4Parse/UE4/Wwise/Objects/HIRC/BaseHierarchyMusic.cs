@@ -8,14 +8,14 @@ public abstract class BaseHierarchyMusic : AbstractHierarchy
     public BaseHierarchy ContainerHierarchy { get; private set; }
 
     public byte Flags { get; private set; }
-    public uint[] ChildIDs { get; private set; }
+    public uint[] ChildIds { get; private set; }
 
     protected BaseHierarchyMusic(FArchive Ar) : base(Ar)
     {
         Flags = WwiseVersions.WwiseVersion > 89 ? Ar.Read<byte>() : (byte) 0;
         Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         ContainerHierarchy = new BaseHierarchy(Ar);
-        ChildIDs = new AkChildren(Ar).ChildIDs;
+        ChildIds = new AkChildren(Ar).ChildIds;
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -30,8 +30,8 @@ public abstract class BaseHierarchyMusic : AbstractHierarchy
         ContainerHierarchy.WriteJson(writer, serializer);
         writer.WriteEndObject();
 
-        writer.WritePropertyName("ChildIDs");
-        serializer.Serialize(writer, ChildIDs);
+        writer.WritePropertyName("ChildIds");
+        serializer.Serialize(writer, ChildIds);
 
         writer.WriteEndObject();
     }
