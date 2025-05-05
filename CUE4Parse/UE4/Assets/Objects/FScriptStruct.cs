@@ -56,6 +56,7 @@ public class FScriptStruct
             "ColorMaterialInput" when FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.MaterialInputUsesLinearColor
                 => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
             "ColorMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<FLinearColor>() : new FMaterialInput<FLinearColor>(Ar),
+            "CompressedRichCurve" => type == ReadType.ZERO ? new FStructFallback() : new FCompressedRichCurve(Ar),
             "DateTime" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
             "ExpressionInput" => type == ReadType.ZERO ? new FExpressionInput() : new FExpressionInput(Ar),
             "FrameNumber" => type == ReadType.ZERO ? new FFrameNumber() : Ar.Read<FFrameNumber>(),
@@ -228,6 +229,9 @@ public class FScriptStruct
             "OffsetCoords" when Ar.Game == EGame.GAME_TempestRising => type == ReadType.ZERO ? new TIntVector2<float>() : Ar.Read<TIntVector2<float>>(),
             "TedInstancedStruct" => new FInstancedStruct(Ar),
             "TedMarkerHandle" or "FoWAgentHandle" => type == ReadType.ZERO ? new TIntVector1<int>() : Ar.Read<TIntVector1<int>>(),
+
+            // Avowed
+            "NiagaraUserParameterModifier" => new NiagaraUserParameterModifier(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };

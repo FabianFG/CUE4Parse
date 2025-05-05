@@ -36,6 +36,10 @@ public class UScriptSet
             {
                 tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
             }
+            if (Ar.Game == EGame.GAME_Avowed && tagData.Name.EndsWith("IDs"))
+            {
+                tagData.InnerTypeData =  new FPropertyTagData("Guid");
+            }
         }
 
         var numElementsToRemove = Ar.Read<int>();
