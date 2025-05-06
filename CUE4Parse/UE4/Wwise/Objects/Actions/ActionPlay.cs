@@ -4,11 +4,13 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class ActionPlay
 {
+    public ActionParams ActionParams { get; private set; }
     public uint? BankId { get; private set; }
     public uint? BankType { get; private set; }
 
     public ActionPlay(FArchive Ar)
     {
+        ActionParams = new ActionParams(Ar);
         if (WwiseVersions.WwiseVersion > 26)
         {
             BankId = Ar.Read<uint>();

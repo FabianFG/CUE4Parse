@@ -8,7 +8,7 @@ public class ActionSetGameParameter
     public ActionParams ActionParams { get; private set; }
     public bool? BypassTransition { get; private set; }
     public EValueMeaning ValueMeaning { get; private set; }
-    public RangedParameter<float> Modifier { get; private set; }
+    public RangedParameter Modifier { get; private set; }
     public ExceptParams ExceptParams { get; private set; }
 
     public ActionSetGameParameter(FArchive Ar)
@@ -28,7 +28,7 @@ public class ActionSetGameParameter
             ValueMeaning = (EValueMeaning) Ar.Read<byte>();
         }
 
-        var modifier = new RangedParameter<float>
+        var modifier = new RangedParameter
         {
             Base = Ar.Read<float>(),
             Min = Ar.Read<float>(),
@@ -38,7 +38,7 @@ public class ActionSetGameParameter
         ExceptParams = new ExceptParams(Ar);
     }
 
-    public class RangedParameter<T>
+    public class RangedParameter
     {
         public float Base { get; set; }
         public float Min { get; set; }
