@@ -28,7 +28,7 @@ public class FSkinWeightVertexBuffer
         bool bExtraBoneInfluences;
         uint maxBoneInfluences;
         bool bUse16BitBoneIndex = false;
-        bool bUse16BitBoneWeight;
+        bool bUse16BitBoneWeight = false;
         uint numVertices;
         uint numBones;
 
@@ -74,7 +74,8 @@ public class FSkinWeightVertexBuffer
         {
             if (!bNewWeightFormat)
             {
-                Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences, bUse16BitBoneIndex));
+                Weights = Ar.ReadBulkArray(() => new FSkinWeightInfo(Ar, bExtraBoneInfluences, bUse16BitBoneIndex, bUse16BitBoneWeight));
+                return;
             }
             else
             {
@@ -113,14 +114,14 @@ public class FSkinWeightVertexBuffer
                     for (var i = 0; i < Weights.Length; i++)
                     {
                         tempAr.Position = LookupData[i] >> 8;
-                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex, (byte)LookupData[i]);
+                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex, bUse16BitBoneWeight, (byte)LookupData[i]);
                     }
                 }
                 else
                 {
                     for (var i = 0; i < Weights.Length; i++)
                     {
-                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex);
+                        Weights[i] = new FSkinWeightInfo(tempAr, bExtraBoneInfluences, bUse16BitBoneIndex, bUse16BitBoneWeight);
                     }
                 }
             }
