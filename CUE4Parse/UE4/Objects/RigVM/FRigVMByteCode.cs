@@ -14,7 +14,7 @@ public class FRigVMByteCode
     public List<IRigInstruction> Instructions = [];
     public string[] Entries = [];
     public FRigVMBranchInfo[] BranchInfos = [];
-    public string? PublicContextPathName;
+    public FTopLevelAssetPath? PublicContextAssetPath;
     public bool bHasPublicContextPathName = false;
 
     public FRigVMByteCode(FAssetArchive Ar)
@@ -55,9 +55,16 @@ public class FRigVMByteCode
             BranchInfos = Ar.ReadArray(() => new FRigVMBranchInfo(Ar));
         }
 
-        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMBytecodeStorePublicContextPath)
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMBytecodeStorePublicContextPathAsTopLevelAssetPath)
         {
-            PublicContextPathName = Ar.ReadFString();
+            PublicContextAssetPath = new FTopLevelAssetPath(Ar);
+            bHasPublicContextPathName = true;
+        }
+        else if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMBytecodeStorePublicContextPath)
+        {
+            var publicContextPathName = Ar.ReadFString();
+
+            PublicContextAssetPath = new FTopLevelAssetPath(publicContextPathName);
             bHasPublicContextPathName = true;
         }
     }
@@ -70,7 +77,7 @@ public class FRigVMByteCode
             <= ERigVMOpCode.Execute_64_Operands or ERigVMOpCode.Execute => new FRigVMExecuteOp(Ar),
             ERigVMOpCode.Copy => new FRigVMCopyOp(Ar),
             ERigVMOpCode.Zero or ERigVMOpCode.BoolFalse or ERigVMOpCode.BoolTrue or ERigVMOpCode.Increment
-                or ERigVMOpCode.Decrement or ERigVMOpCode.ArrayReset or ERigVMOpCode.ArrayReverse=> Ar.Read<FRigVMUnaryOp>(),
+                or ERigVMOpCode.Decrement or ERigVMOpCode.ArrayReset or ERigVMOpCode.ArrayReverse or ERigVMOpCode.SetupTraits => Ar.Read<FRigVMUnaryOp>(),
             ERigVMOpCode.Equals or ERigVMOpCode.NotEquals => Ar.Read<FRigVMComparisonOp>(),
             ERigVMOpCode.JumpAbsolute or ERigVMOpCode.JumpForward or ERigVMOpCode.JumpBackward => Ar.Read<FRigVMJumpOp>(),
             ERigVMOpCode.JumpAbsoluteIf or ERigVMOpCode.JumpForwardIf or ERigVMOpCode.JumpBackwardIf => new FRigVMJumpIfOp(Ar),
@@ -89,14 +96,33 @@ public class FRigVMByteCode
     }
 }
 
-public readonly struct FRigVMBranchInfo(FAssetArchive Ar)
+public readonly struct FRigVMBranchInfo
 {
-    public readonly int Index = Ar.Read<int>();
-    public readonly FName Label = Ar.ReadFString();
-    public readonly int InstructionIndex = Ar.Read<int>();
-    public readonly int ArgumentIndex = Ar.Read<int>();
-    public readonly ushort FirstInstruction = Ar.Read<ushort>();
-    public readonly ushort LastInstruction = Ar.Read<ushort>();
+    public readonly int Index;
+    public readonly FName Label;
+    public readonly int InstructionIndex;
+    public readonly int ArgumentIndex;
+    public readonly int FirstInstruction;
+    public readonly int LastInstruction;
+
+    public FRigVMBranchInfo(FAssetArchive Ar)
+    {
+        Index = Ar.Read<int>();
+        Label = Ar.ReadFString();
+        InstructionIndex = Ar.Read<int>();
+        ArgumentIndex = Ar.Read<int>();
+
+        if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.ByteCodeCleanup)
+        {
+            FirstInstruction = Ar.Read<ushort>();
+            LastInstruction = Ar.Read<ushort>();
+        }
+        else
+        {
+            FirstInstruction = Ar.Read<int>();
+            LastInstruction = Ar.Read<int>();
+        }
+    }
 }
 
 public interface IRigInstruction;
@@ -236,7 +262,9 @@ public readonly struct FRigVMCopyOp : IRigInstruction
         }
         else
         {
-            NumBytes = Ar.Read<ushort>();
+            if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.ByteCodeCleanup)
+                NumBytes = Ar.Read<ushort>();
+
             RegisterType = Ar.Read<ERigVMRegisterType>();
         }
     }

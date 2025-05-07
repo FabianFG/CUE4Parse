@@ -75,6 +75,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
                 EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
                 EGame.GAME_MonsterJamShowdown => MonsterJamShowdownAes.MonsterJamShowdownDecrypt,
+                EGame.GAME_MotoGP25 => MotoGP25Aes.MotoGP25Decrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
                 EGame.GAME_TonyHawkProSkater12 => THPS12Aes.THPS12Decrypt,

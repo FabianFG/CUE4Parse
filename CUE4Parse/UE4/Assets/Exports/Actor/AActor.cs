@@ -13,7 +13,11 @@ public class AActor : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
+        // not sure why, but very rarely it overreads for CDO, maybe related to SparseClassDataStructSerialization
+        // doesn't matter so return early in this case
+        if (Ar.Position >= validPos) return;  
+
+        if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
         {
             bIsCooked = Ar.ReadBoolean();
             if (bIsCooked)

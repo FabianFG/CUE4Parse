@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public ResolvedObject? CurveCompressionSettings; // UAnimCurveCompressionSettings
 
         #region FCompressedAnimSequence CompressedData
-        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
+        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable = []; // used for compressed data, missing before 4.12
         public FSmartName[] CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
         public byte[]? CompressedCurveByteStream;
@@ -67,6 +67,15 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
             }
 
+            if (Ar.Game == EGame.GAME_DaysGone)
+            {
+                var rawcurvedata = GetOrDefault<FStructFallback>("RawCurveData");
+                if (rawcurvedata is not null && rawcurvedata.TryGet("FloatCurves", out FStructFallback[] array, []))
+                {
+                    Ar.Position += array.Length * sizeof(short);
+                }
+            }
+
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
             {
@@ -88,7 +97,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.MoveCompressedAnimDataToTheDDC)
             {
                 var compressedData = new FUECompressedAnimData();
-                CompressedDataStructure = compressedData;
+                CompressedDataStructure = compressedData;                   
 
                 // Part of data were serialized as properties
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());

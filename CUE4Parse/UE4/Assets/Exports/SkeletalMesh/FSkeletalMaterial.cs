@@ -14,6 +14,7 @@ public class FSkeletalMaterial
     public FName MaterialSlotName;
     public FName? ImportedMaterialSlotName;
     public FMeshUVChannelInfo? UVChannelData;
+    public FPackageIndex OverlayMaterialInterface;
 
     public FSkeletalMaterial(FAssetArchive Ar)
     {
@@ -45,12 +46,15 @@ public class FSkeletalMaterial
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
 
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+            OverlayMaterialInterface = new FPackageIndex(Ar);
+
         switch (Ar.Game)
         {
             case EGame.GAME_MarvelRivals:
                 _ = new FGameplayTagContainer(Ar);
                 break;
-            case EGame.GAME_FragPunk:
+            case EGame.GAME_FragPunk or EGame.GAME_DaysGone:
                 Ar.Position += 4;
                 break;
             case EGame.GAME_Strinova:

@@ -1,7 +1,7 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.AssetRegistry.Objects
+namespace CUE4Parse.UE4.Versions
 {
     /** Version used for serializing asset registry caches, both runtime and editor */
     public enum FAssetRegistryVersionType
@@ -37,6 +37,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         AssetPackageDataHasExtension,		// Added Extension to AssetPackageData.
         AssetPackageDataHasPackageLocation,	// Added PackageLocation to AssetPackageData.
         MarshalledTextAsUTF8String,			// Replaced 2 byte wide string with UTF8 String
+        PackageSavedHash,					// Replaced FAssetPackageData::PackageGuid with PackageSavedHash
+        ExternalActorToWorldIsEditorOnly,   // FPackageDependencyData::LoadDependenciesFromPackageHeader changed how it calculates PackageDependencies
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -45,19 +47,12 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
     public static class FAssetRegistryVersion
     {
-        private static readonly FGuid _GUID = new(0x717F9EE7, 0xE9B0493A, 0x88B39132, 0x1B388107);
+        private static readonly FGuid GUID = new(0x717F9EE7, 0xE9B0493A, 0x88B39132, 0x1B388107);
 
-        public static bool TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
+        public static void TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
         {
             var guid = Ar.Read<FGuid>();
-            if (guid == _GUID)
-            {
-                version = Ar.Read<FAssetRegistryVersionType>();
-                return true;
-            }
-
-            version = FAssetRegistryVersionType.LatestVersion;
-            return false;
+            version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.LatestVersion;
         }
     }
 }

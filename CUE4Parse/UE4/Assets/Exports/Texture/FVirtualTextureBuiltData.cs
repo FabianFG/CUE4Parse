@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -248,5 +248,22 @@ public class FVirtualTextureBuiltData
         }
 
         return (chunkIndex, offset, tileDataLength);
+    }
+
+    public FVirtualTextureTileOffsetData GetTileOffsetData(int level)
+    {
+        FVirtualTextureTileOffsetData tileOffsetData;
+        if (IsLegacyData())
+        {
+            // calculate the max address in this mip
+            // aka get the next mip max address and subtract it by the current mip max address
+            var blockWidthInTiles = GetWidthInTiles();
+            var blockHeightInTiles = GetHeightInTiles();
+            var maxAddress = TileIndexPerMip[Math.Min(level + 1, NumMips)];
+            tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - TileIndexPerMip[level], 1));
+        }
+        else
+            tileOffsetData = TileOffsetData[level];
+        return tileOffsetData;
     }
 }

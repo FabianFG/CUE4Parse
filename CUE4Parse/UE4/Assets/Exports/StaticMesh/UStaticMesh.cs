@@ -1,6 +1,5 @@
 using System;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -70,8 +69,8 @@ public class UStaticMesh : UObject
                 }
                 else
                 {
-                    Ar.ReadArray<FVector>(); // Vertices
-                    Ar.ReadArray<ushort>();  // Indices
+                    Ar.SkipFixedArray(12); // Vertices
+                    Ar.SkipFixedArray(2); // Indices
                 }
 
             }
@@ -107,6 +106,7 @@ public class UStaticMesh : UObject
             }
         }
 
+        if (Ar.Game == EGame.GAME_DaysGone) Ar.SkipFixedArray(4);
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
         if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 4;
     }

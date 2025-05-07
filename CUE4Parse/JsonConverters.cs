@@ -1404,45 +1404,6 @@ public class WwiseConverter : JsonConverter<WwiseReader>
     }
 }
 
-public class BankHeaderConverter : JsonConverter<BankHeader>
-{
-    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Version");
-        writer.WriteValue(value.Version);
-
-        writer.WritePropertyName("SoundBankId");
-        writer.WriteValue(value.SoundBankId);
-
-        writer.WritePropertyName("LanguageId");
-        writer.WriteValue(value.LanguageId);
-
-        writer.WritePropertyName("FeedbackInBank");
-        writer.WriteValue(value.FeedbackInBank);
-
-        writer.WritePropertyName("AltValues");
-        writer.WriteValue(value.AltValues.ToString());
-
-        writer.WritePropertyName("ProjectId");
-        writer.WriteValue(value.ProjectId);
-
-        writer.WritePropertyName("SoundBankType");
-        writer.WriteValue(value.SoundBankType);
-
-        writer.WritePropertyName("BankHash");
-        writer.WriteValue(value.BankHash);
-
-        writer.WriteEndObject();
-    }
-
-    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException("Deserialization is not implemented.");
-    }
-}
-
 public class FReferenceSkeletonConverter : JsonConverter<FReferenceSkeleton>
 {
     public override void WriteJson(JsonWriter writer, FReferenceSkeleton value, JsonSerializer serializer)
@@ -1689,28 +1650,36 @@ public class FFontDataConverter : JsonConverter<FFontData>
     {
         writer.WriteStartObject();
 
-        if (value.LocalFontFaceAsset != null)
+        if (value.FallbackStruct is null)
         {
-            writer.WritePropertyName("LocalFontFaceAsset");
-            serializer.Serialize(writer, value.LocalFontFaceAsset);
+            if (value.LocalFontFaceAsset != null)
+            {
+                writer.WritePropertyName("LocalFontFaceAsset");
+                serializer.Serialize(writer, value.LocalFontFaceAsset);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(value.FontFilename))
+                {
+                    writer.WritePropertyName("FontFilename");
+                    writer.WriteValue(value.FontFilename);
+                }
+
+                writer.WritePropertyName("Hinting");
+                writer.WriteValue(value.Hinting);
+
+                writer.WritePropertyName("LoadingPolicy");
+                writer.WriteValue(value.LoadingPolicy);
+            }
+
+            writer.WritePropertyName("SubFaceIndex");
+            writer.WriteValue(value.SubFaceIndex);
         }
         else
         {
-            if (!string.IsNullOrEmpty(value.FontFilename))
-            {
-                writer.WritePropertyName("FontFilename");
-                writer.WriteValue(value.FontFilename);
-            }
-
-            writer.WritePropertyName("Hinting");
-            writer.WriteValue(value.Hinting);
-
-            writer.WritePropertyName("LoadingPolicy");
-            writer.WriteValue(value.LoadingPolicy);
+            writer.WritePropertyName("FallbackStruct");
+            serializer.Serialize(writer, value.FallbackStruct);
         }
-
-        writer.WritePropertyName("SubFaceIndex");
-        writer.WriteValue(value.SubFaceIndex);
 
         writer.WriteEndObject();
     }
@@ -2657,8 +2626,16 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
         writer.WritePropertyName("DiskSize");
         serializer.Serialize(writer, value.DiskSize);
 
-        writer.WritePropertyName("PackageGuid");
-        serializer.Serialize(writer, value.PackageGuid);
+        if (value.PackageGuid.IsValid())
+        {
+            writer.WritePropertyName("PackageGuid");
+            serializer.Serialize(writer, value.PackageGuid);
+        }
+        else
+        {
+            writer.WritePropertyName("PackageSavedHash");
+            serializer.Serialize(writer, value.PackageSavedHash);
+        }
 
         if (value.CookedHash != null)
         {
@@ -3246,5 +3223,44 @@ public class ActionParamsConverter : JsonConverter<ActionParams>
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
+    }
+}
+
+public class BankHeaderConverter : JsonConverter<BankHeader>
+{
+    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("Version");
+        writer.WriteValue(value.Version);
+
+        writer.WritePropertyName("SoundBankId");
+        writer.WriteValue(value.SoundBankId);
+
+        writer.WritePropertyName("LanguageId");
+        writer.WriteValue(value.LanguageId);
+
+        writer.WritePropertyName("FeedbackInBank");
+        writer.WriteValue(value.FeedbackInBank);
+
+        writer.WritePropertyName("AltValues");
+        writer.WriteValue(value.AltValues.ToString());
+
+        writer.WritePropertyName("ProjectId");
+        writer.WriteValue(value.ProjectId);
+
+        writer.WritePropertyName("SoundBankType");
+        writer.WriteValue(value.SoundBankType);
+
+        writer.WritePropertyName("BankHash");
+        writer.WriteValue(value.BankHash);
+
+        writer.WriteEndObject();
+    }
+
+    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException("Deserialization is not implemented.");
     }
 }

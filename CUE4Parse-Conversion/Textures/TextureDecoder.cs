@@ -50,6 +50,18 @@ public static class TextureDecoder
         return new Span<byte>(data + startIndex, offset);
     }
 
+    public static int GetMinLevel(FVirtualTextureBuiltData vt)
+    {
+        for ( var i = 0; i < vt.NumMips; i++)
+        {
+            var tileOffsetData = vt.GetTileOffsetData(i);
+            ulong length = tileOffsetData.Height * tileOffsetData.Width * vt.TileSize * vt.TileSize * 4; // for simplicity just use 4 bytes per pixel
+            if (length < (ulong)Array.MaxLength)
+                return i;
+        }
+        return 0;
+    }
+
     private static CTexture DecodeVT(UTexture texture, FVirtualTextureBuiltData vt)
     {
         unsafe
@@ -57,21 +69,9 @@ public static class TextureDecoder
             var tileSize = (int) vt.TileSize;
             var tileBorderSize = (int) vt.TileBorderSize;
             var tilePixelSize = (int) vt.GetPhysicalTileSize();
-            const int level = 0;
+            int level = GetMinLevel(vt);
 
-            FVirtualTextureTileOffsetData tileOffsetData;
-            if (vt.IsLegacyData())
-            {
-                // calculate the max address in this mip
-                // aka get the next mip max address and subtract it by the current mip max address
-                var blockWidthInTiles = vt.GetWidthInTiles();
-                var blockHeightInTiles = vt.GetHeightInTiles();
-                var maxAddress = vt.TileIndexPerMip[Math.Min(level + 1, vt.NumMips)];
-                tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - vt.TileIndexPerMip[level], 1));
-            }
-            else
-                tileOffsetData = vt.TileOffsetData[level];
-
+            var tileOffsetData = vt.GetTileOffsetData(level);
 
             var bitmapWidth = (int) tileOffsetData.Width * tileSize;
             var bitmapHeight = (int) tileOffsetData.Height * tileSize;

@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FCustomVersionContainer CustomVersionContainer;
         public EPackageFlags PackageFlags;
         public int TotalHeaderSize;
-        public readonly string FolderName;
+        public readonly string PackageName;
         public int NameCount;
         public int NameOffset;
         public readonly int SoftObjectPathsCount;
@@ -54,15 +54,21 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly string? LocalizationId;
         public readonly int GatherableTextDataCount;
         public readonly int GatherableTextDataOffset;
+        public int MetaDataOffset;
         public int ExportCount;
         public int ExportOffset;
         public int ImportCount;
         public int ImportOffset;
+        public int CellExportCount;
+        public int CellExportOffset;
+        public int CellImportCount;
+        public int CellImportOffset;
         public readonly int DependsOffset;
         public readonly int SoftPackageReferencesCount;
         public readonly int SoftPackageReferencesOffset;
         public readonly int SearchableNamesOffset;
         public readonly int ThumbnailTableOffset;
+        public FSHAHash SavedHash;
         public readonly FGuid Guid;
         public readonly FGuid PersistentGuid;
         public readonly FGenerationInfo[] Generations;
@@ -84,7 +90,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageFileSummary()
         {
             CustomVersionContainer = new FCustomVersionContainer();
-            FolderName = string.Empty;
+            PackageName = string.Empty;
             Generations = Array.Empty<FGenerationInfo>();
             ChunkIds = Array.Empty<int>();
         }
@@ -118,7 +124,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 bUnversioned = true;
                 FileVersionUE = Ar.Ver;
                 CustomVersionContainer = new FCustomVersionContainer();
-                FolderName = "None";
+                PackageName = "None";
                 PackageFlags = EPackageFlags.PKG_FilterEditorOnly;
                 goto afterPackageFlags;
             }
@@ -183,6 +189,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionUE.FileVersionUE4 = Ar.Read<int>();
+                if (Ar.Game == EGame.GAME_DaysGone) FileVersionUE.FileVersionUE4 = 498;
 
                 if (legacyFileVersion <= -8)
                 {
@@ -190,6 +197,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
+
+                if (FileVersionUE >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+                {
+                    SavedHash = new FSHAHash(Ar);
+                    TotalHeaderSize = Ar.Read<int>();
+                }
+
                 CustomVersionContainer = new FCustomVersionContainer(Ar, FCustomVersionContainer.DetermineSerializationFormat(legacyFileVersion));
 
                 if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Versions.Length > 0)
@@ -220,8 +234,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException("Can't load legacy UE3 file");
             }
 
-            TotalHeaderSize = Ar.Read<int>();
-            FolderName = Ar.ReadFString(); // PackageGroup
+            if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+            {
+                TotalHeaderSize = Ar.Read<int>();
+            }
+
+            PackageName = Ar.ReadFString(); // PackageGroup
             PackageFlags = Ar.Read<EPackageFlags>();
 
             /*if (PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
@@ -257,6 +275,20 @@ namespace CUE4Parse.UE4.Objects.UObject
             ExportOffset = Ar.Read<int>();
             ImportCount = Ar.Read<int>();
             ImportOffset = Ar.Read<int>();
+
+            if (FileVersionUE >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
+            {
+                CellExportCount = Ar.Read<int>();
+                CellExportOffset = Ar.Read<int>();
+                CellImportCount = Ar.Read<int>();
+                CellImportOffset = Ar.Read<int>();
+            }
+
+            if (FileVersionUE >= EUnrealEngineObjectUE5Version.METADATA_SERIALIZATION_OFFSET)
+            {
+                MetaDataOffset = Ar.Read<int>();
+            }
+
             DependsOffset = Ar.Read<int>();
 
             if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION)
@@ -279,9 +311,12 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             ThumbnailTableOffset = Ar.Read<int>();
 
-            if (Ar.Game is EGame.GAME_Valorant or EGame.GAME_HYENAS) Ar.Position += 8;
+            if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+            {
+                Guid = Ar.Read<FGuid>();
+            }
 
-            Guid = Ar.Read<FGuid>();
+            if (Ar.Game is EGame.GAME_Valorant or EGame.GAME_HYENAS) Ar.Position += 8;
 
             if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
             {

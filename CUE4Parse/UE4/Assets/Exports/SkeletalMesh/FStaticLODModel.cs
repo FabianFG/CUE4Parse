@@ -43,7 +43,7 @@ public class FStaticLODModel
     public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
     public bool SkipLod => Indices == null || Indices.Indices16.Length < 1 && Indices.Indices32.Length < 1;
     // Game specific data
-    public object? AdditionalBuffer; 
+    public object? AdditionalBuffer;
 
     public FStaticLODModel()
     {
@@ -198,12 +198,18 @@ public class FStaticLODModel
 
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH && HasClothData())
                     ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
+
+                if (Ar.Game == EGame.GAME_DaysGone)
+                {
+                    _ = new FMultisizeIndexContainer(Ar);
+                    Ar.Position += 12;
+                }
             }
         }
 
         if (Ar.Game == EGame.GAME_SeaOfThieves)
         {
-            var _ = new FMultisizeIndexContainer(Ar);
+            _ = new FMultisizeIndexContainer(Ar);
         }
     }
 
@@ -289,6 +295,11 @@ public class FStaticLODModel
                     }
 
                     var profileNames = Ar.ReadArray(Ar.ReadFName);
+
+                    if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
+                    {
+                        Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
+                    }
                 }
             }
         }
@@ -398,10 +409,18 @@ public class FStaticLODModel
 
         if (Ar.Versions["SkeletalMesh.HasRayTracingData"])
         {
-            var rayTracingData = Ar.ReadArray<byte>();
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
+                Ar.ReadBulkArray<byte>();
+            }
+            else
+            {
+                Ar.SkipFixedArray(1);
+            }
         }
 
-        if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeSkeletalMeshMorphTargetRenderData)
+        if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.SerializeSkeletalMeshMorphTargetRenderData)
         {
             bool bSerializeCompressedMorphTargets = Ar.ReadBoolean();
             if (bSerializeCompressedMorphTargets)
@@ -446,7 +465,7 @@ public class FStaticLODModel
         }
     }
 
-    private bool HasClothData()
+    public bool HasClothData()
     {
         for (var i = 0; i < Chunks.Length; i++)
             if (Chunks[i].HasClothData) // pre-UE4.13 code
