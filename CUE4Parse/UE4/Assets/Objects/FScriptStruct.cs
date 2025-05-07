@@ -6,6 +6,7 @@ using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
+using CUE4Parse.GameTypes.SOD2.Assets.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
@@ -232,6 +233,9 @@ public class FScriptStruct
 
             // Avowed
             "NiagaraUserParameterModifier" => new NiagaraUserParameterModifier(Ar),
+
+            // State of Decay 2
+            "ItemsBitArray" when Ar.Game == EGame.GAME_StateOfDecay2 => type == ReadType.ZERO ? new FItemsBitArray() : new FItemsBitArray(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };

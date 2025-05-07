@@ -161,6 +161,8 @@ public class FPakEntry : VfsEntry
 
         endRead:
         StructSize = (int) (Ar.Position - startOffset);
+
+        if (Ar.Game == GAME_StateOfDecay2 && CompressionMethod == CompressionMethod.None) StructSize = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
