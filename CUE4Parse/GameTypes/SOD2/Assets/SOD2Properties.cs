@@ -17,9 +17,13 @@ public static class SOD2Properties
             case "ArcMissionEventIndices":
             case "RequirementsMap":
             case "CookedComponentInstancingData":
-            case "Assets":
             case "CollectionEntryCache":
+            case "Characters":
                 keyType = "NameProperty";
+                valueType = "StructProperty";
+                break;
+            case "Assets":
+                keyType = "StrProperty";
                 valueType = "StructProperty";
                 break;
             case "AllHumanDefinitions":
