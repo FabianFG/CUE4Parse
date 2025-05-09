@@ -20,14 +20,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
     public HierarchyMusicSwitchContainer(FArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
-
-        var numStingers = Ar.Read<uint>();
-        Stingers = [];
-        for (int i = 0; i < numStingers; i++)
-        {
-            var stinger = new AkStinger(Ar);
-            Stingers.Add(stinger);
-        }
+        Stingers = AkStinger.ReadMultiple(Ar);
 
         MusicTransitionRule = new AkMusicTransitionRule(Ar);
 

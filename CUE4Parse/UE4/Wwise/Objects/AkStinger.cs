@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -14,7 +10,7 @@ public class AkStinger
     public uint SyncPlayAt { get; private set; }
     public uint CueFilterHash { get; private set; }
     public int DontRepeatTime { get; private set; }
-    public uint numSegmentLookAhead { get; private set; }
+    public uint NumSegmentLookAhead { get; private set; }
 
     public AkStinger(FArchive Ar)
     {
@@ -28,6 +24,19 @@ public class AkStinger
         }
 
         DontRepeatTime = Ar.Read<int>();
-        numSegmentLookAhead = Ar.Read<uint>();
+        NumSegmentLookAhead = Ar.Read<uint>();
+    }
+
+    public static List<AkStinger> ReadMultiple(FArchive Ar)
+    {
+        var stingers = new List<AkStinger>();
+        var numStingers = Ar.Read<uint>();
+        for (int i = 0; i < numStingers; i++)
+        {
+            var stinger = new AkStinger(Ar);
+            stingers.Add(stinger);
+        }
+
+        return stingers;
     }
 }
