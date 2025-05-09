@@ -14,12 +14,14 @@ public class FInstancedStaticMeshInstanceData
     {
         Transform = new FMatrix(Ar);
 
-        if (Ar.Game == EGame.GAME_HogwartsLegacy)
-            Ar.SkipFixedArray(sizeof(int));
-        if (Ar.Game is EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves or EGame.GAME_DaysGone)
-            Ar.Position += 16; // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
-        if (Ar.Game is EGame.GAME_SilentHill2Remake or EGame.GAME_StateOfDecay2)
-            Ar.Position += 32; // probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
+        Ar.Position += Ar.Game switch
+        {
+            EGame.GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int),
+            EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves
+                or EGame.GAME_DaysGone or EGame.GAME_InfinityNikki => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
+            EGame.GAME_SilentHill2Remake or EGame.GAME_StateOfDecay2 => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
+            _ => 0,
+        };
         TransformData.SetFromMatrix(Transform);
     }
 

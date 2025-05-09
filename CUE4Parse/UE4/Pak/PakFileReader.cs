@@ -37,14 +37,23 @@ namespace CUE4Parse.UE4.Pak
             this.Ar = Ar;
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
-            if (Info.Version > PakFile_Version_Latest &&
-                Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker &&
-                Ar.Game != EGame.GAME_Snowbreak && Ar.Game != EGame.GAME_TheDivisionResurgence &&
-                Ar.Game != EGame.GAME_TorchlightInfinite && Ar.Game != EGame.GAME_DeadByDaylight &&
-                Ar.Game != EGame.GAME_QQ && Ar.Game != EGame.GAME_DreamStar) // These games use version >= 12 to indicate their custom formats
+
+            if (Info.Version > PakFile_Version_Latest && !UsingCustomPakVersion())
             {
                 Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
+        }
+
+        // These games use version >= 12 to indicate their custom formats
+        private bool UsingCustomPakVersion()
+        {
+            return Ar.Game switch
+            {
+                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight
+                    or EGame.GAME_Snowbreak or EGame.GAME_TorchlightInfinite or EGame.GAME_TowerOfFantasy
+                    or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar => true,
+                _ => false
+            };
         }
 
         public PakFileReader(string filePath, VersionContainer? versions = null)
