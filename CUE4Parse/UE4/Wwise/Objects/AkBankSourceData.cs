@@ -9,11 +9,11 @@ public class AkBankSourceData
     public uint DataIndex { get; private set; }
     public uint SampleRate { get; private set; }
     public uint FormatBits { get; private set; }
-    public uint SourceID { get; private set; }
-    public uint FileID { get; private set; }
+    public uint SourceId { get; private set; }
+    public uint FileId { get; private set; }
     public uint FileOffset { get; private set; }
     public uint InMemoryMediaSize { get; private set; }
-    public uint CacheID { get; private set; }
+    public uint CacheId { get; private set; }
     public byte SourceBits { get; private set; }
     public bool IsLanguageSpecific { get; private set; }
     public bool HasSource { get; private set; }
@@ -43,14 +43,14 @@ public class AkBankSourceData
             }
         }
 
-        SourceID = Ar.Read<uint>();
+        SourceId = Ar.Read<uint>();
         if (WwiseVersions.WwiseVersion <= 26)
         {
             // Do nothing
         }
         else if (WwiseVersions.WwiseVersion <= 88)
         {
-            FileID = Ar.Read<uint>();
+            FileId = Ar.Read<uint>();
             if (StreamType != 1)
             {
                 FileOffset = Ar.Read<uint>();
@@ -61,7 +61,7 @@ public class AkBankSourceData
         {
             if (WwiseVersions.WwiseVersion <= 89 || WwiseVersions.WwiseVersion <= 112)
             {
-                FileID = Ar.Read<uint>();
+                FileId = Ar.Read<uint>();
                 if (StreamType != 2)
                     FileOffset = Ar.Read<uint>();
                 InMemoryMediaSize = Ar.Read<uint>();
@@ -73,7 +73,7 @@ public class AkBankSourceData
         }
         else
         {
-            CacheID = Ar.Read<uint>();
+            CacheId = Ar.Read<uint>();
             InMemoryMediaSize = Ar.Read<uint>();
         }
 
