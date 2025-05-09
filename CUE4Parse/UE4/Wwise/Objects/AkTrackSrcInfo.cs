@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkTrackSrcInfo
 {
     public uint TrackID { get; private set; }
-    public ulong SourceID { get; private set; }
+    public uint SourceID { get; private set; }
     public uint CacheID { get; private set; }
-    public ulong EventID { get; private set; }
+    public uint EventID { get; private set; }
     public double PlayAt { get; private set; }
     public double BeginTrimOffset { get; private set; }
     public double EndTrimOffset { get; private set; }
@@ -16,7 +16,7 @@ public class AkTrackSrcInfo
     public AkTrackSrcInfo(FArchive Ar)
     {
         TrackID = Ar.Read<uint>();
-        SourceID = Ar.Read<ulong>();
+        SourceID = Ar.Read<uint>();
         if (WwiseVersions.WwiseVersion > 150)
         {
             CacheID = Ar.Read<uint>();
@@ -24,7 +24,7 @@ public class AkTrackSrcInfo
 
         if (WwiseVersions.WwiseVersion > 132)
         {
-            EventID = Ar.Read<ulong>();
+            EventID = Ar.Read<uint>();
         }
 
         PlayAt = Ar.Read<double>();

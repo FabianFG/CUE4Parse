@@ -20,7 +20,7 @@ public abstract class BaseHierarchyMusic : AbstractHierarchy
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
+        //writer.WriteStartObject();
 
         writer.WritePropertyName("Flags");
         writer.WriteValue(Flags);
@@ -33,6 +33,6 @@ public abstract class BaseHierarchyMusic : AbstractHierarchy
         writer.WritePropertyName("ChildIds");
         serializer.Serialize(writer, ChildIds);
 
-        writer.WriteEndObject();
+        //writer.WriteEndObject();
     }
 }

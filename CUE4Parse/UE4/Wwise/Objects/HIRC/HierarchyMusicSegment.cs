@@ -7,5 +7,12 @@ public class HierarchyMusicSegment : BaseHierarchyMusic
 {
     public HierarchyMusicSegment(FArchive Ar) : base(Ar) { }
 
-    //public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        base.WriteJson(writer, serializer);
+
+        writer.WriteEndObject();
+    }
 }

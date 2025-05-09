@@ -10,5 +10,12 @@ public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
 
     }
 
-    //public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        base.WriteJson(writer, serializer);
+
+        writer.WriteEndObject();
+    }
 }
