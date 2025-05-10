@@ -18,3 +18,6 @@ public class USharpClass(string className) : UScriptClass(className);
 [SkipObjectRegistration]
 public class UPythonClass(string className) : UScriptClass(className);
 
+[SkipObjectRegistration] // AngelScript
+public class UASClass(string className) : UScriptClass(className);
+

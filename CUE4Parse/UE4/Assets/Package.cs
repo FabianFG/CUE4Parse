@@ -299,6 +299,7 @@ namespace CUE4Parse.UE4.Assets
                 "Class" => new(() => new UScriptClass(Name.Text)),
                 "SharpClass" => new(() => new USharpClass(Name.Text)),
                 "PythonClass" => new(() => new UPythonClass(Name.Text)),
+                "ASClass" => new(() => new UASClass(Name.Text)),
                 "ScriptStruct" => new (() => new UScriptClass(Name.Text)),
                 _ => null
             };
