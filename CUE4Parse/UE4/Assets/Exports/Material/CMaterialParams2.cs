@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -226,7 +227,7 @@ public class CMaterialParams2
         return mapping;
     }
 
-    public bool TryGetTexture2d(out UTexture? texture, params string[] names)
+    public bool TryGetTexture2d([MaybeNullWhen(false)] out UTexture texture, params string[] names)
     {
         foreach (var name in names)
         {
