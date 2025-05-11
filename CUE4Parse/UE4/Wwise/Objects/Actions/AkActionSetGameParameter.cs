@@ -3,15 +3,15 @@ using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class ActionSetGameParameter
+public partial class AkActionSetGameParameter
 {
     public ActionParams ActionParams { get; private set; }
     public bool? BypassTransition { get; private set; }
     public EValueMeaning ValueMeaning { get; private set; }
-    public RangedParameter Modifier { get; private set; }
+    public RandomizerModifier RandomizerModifier { get; private set; }
     public ExceptParams ExceptParams { get; private set; }
 
-    public ActionSetGameParameter(FArchive Ar)
+    public AkActionSetGameParameter(FArchive Ar)
     {
         ActionParams = new ActionParams(Ar);
         if (WwiseVersions.WwiseVersion > 89)
@@ -28,20 +28,7 @@ public class ActionSetGameParameter
             ValueMeaning = (EValueMeaning) Ar.Read<byte>();
         }
 
-        var modifier = new RangedParameter
-        {
-            Base = Ar.Read<float>(),
-            Min = Ar.Read<float>(),
-            Max = Ar.Read<float>()
-        };
-        Modifier = modifier;
+        RandomizerModifier = new RandomizerModifier(Ar);
         ExceptParams = new ExceptParams(Ar);
-    }
-
-    public class RangedParameter
-    {
-        public float Base { get; set; }
-        public float Min { get; set; }
-        public float Max { get; set; }
     }
 }

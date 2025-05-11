@@ -17,7 +17,7 @@ public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
         Stingers = AkStinger.ReadMultiple(Ar);
         MusicTransitionRule = new AkMusicTransitionRule(Ar);
 
-        var numPlaylistItems = Ar.Read<uint>(); // I assume this is for parent and children together, therefore parent is always 1
+        Ar.Read<uint>(); // numPlaylistItems, I assume this is for parent and children together, therefore parent is always 1
         Playlist = [];
         for (int i = 0; i < 1; i++)
         {

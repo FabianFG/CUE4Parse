@@ -9,11 +9,11 @@ public class AkRTPCGraphPoint
     public float To { get; }
     public uint Interpolation { get; }
 
-    public AkRTPCGraphPoint(FArchive ar)
+    public AkRTPCGraphPoint(FArchive Ar)
     {
-        From = ar.Read<float>();
-        To = ar.Read<float>();
-        Interpolation = ar.Read<uint>();
+        From = Ar.Read<float>();
+        To = Ar.Read<float>();
+        Interpolation = Ar.Read<uint>();
     }
 }
 
@@ -27,57 +27,57 @@ public class AkRTPC
     public byte Scaling { get; }
     public List<AkRTPCGraphPoint> GraphPoints { get; }
 
-    public AkRTPC(FArchive ar, bool modulator = false)
+    public AkRTPC(FArchive Ar, bool modulator = false)
     {
-        RTPCId = ar.Read<uint>();
+        RTPCId = Ar.Read<uint>();
 
         if (WwiseVersions.WwiseVersion > 89)
         {
-            RTPCType = ar.Read<byte>();
-            RTPCAccum = ar.Read<byte>();
+            RTPCType = Ar.Read<byte>();
+            RTPCAccum = Ar.Read<byte>();
         }
 
         if (WwiseVersions.WwiseVersion <= 89)
         {
-            ParamId = ar.Read<int>();
+            ParamId = Ar.Read<int>();
         }
         else if (WwiseVersions.WwiseVersion <= 113)
         {
-            ParamId = ar.Read<byte>();
+            ParamId = Ar.Read<byte>();
         }
         else
         {
-            ParamId = ar.Read7BitEncodedInt();
+            ParamId = Ar.Read7BitEncodedInt();
         }
 
-        RTPCCurveId = ar.Read<uint>();
+        RTPCCurveId = Ar.Read<uint>();
 
         if (WwiseVersions.WwiseVersion <= 36)
         {
-            Scaling = ar.Read<byte>();
+            Scaling = Ar.Read<byte>();
         }
         else
         {
-            Scaling = ar.Read<byte>();
+            Scaling = Ar.Read<byte>();
         }
 
-        ushort pointsCount = ar.Read<ushort>();
+        ushort pointsCount = Ar.Read<ushort>();
         GraphPoints = new List<AkRTPCGraphPoint>(pointsCount);
         for (int j = 0; j < pointsCount; j++)
         {
-            GraphPoints.Add(new AkRTPCGraphPoint(ar));
+            GraphPoints.Add(new AkRTPCGraphPoint(Ar));
         }
     }
 }
 
 public class AkRTPCList : List<AkRTPC>
 {
-    public AkRTPCList(FArchive ar, bool modulator = false)
+    public AkRTPCList(FArchive Ar, bool modulator = false)
     {
-        ushort numCurves = ar.Read<ushort>();
+        ushort numCurves = Ar.Read<ushort>();
         for (int i = 0; i < numCurves; i++)
         {
-            Add(new AkRTPC(ar, modulator));
+            Add(new AkRTPC(Ar, modulator));
         }
     }
 }

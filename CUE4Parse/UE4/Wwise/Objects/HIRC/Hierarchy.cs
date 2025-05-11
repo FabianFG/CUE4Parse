@@ -20,37 +20,41 @@ public readonly struct Hierarchy
         Type = Ar.Read<EHierarchyObjectType>();
         Length = Ar.Read<uint>();
         var hierarchyEndPosition = Ar.Position + Length;
-        Data = Type switch
+        Data = isSupported ? Type switch
         {
             EHierarchyObjectType.Settings => new HierarchySettings(Ar),
-            EHierarchyObjectType.SoundSfxVoice when isSupported => new HierarchySoundSfxVoice(Ar),
+            EHierarchyObjectType.SoundSfxVoice => new HierarchySoundSfxVoice(Ar),
             EHierarchyObjectType.EventAction => new HierarchyEventAction(Ar),
             EHierarchyObjectType.Event => new HierarchyEvent(Ar),
-            EHierarchyObjectType.RandomSequenceContainer when isSupported => new HierarchyRandomSequenceContainer(Ar),
-            EHierarchyObjectType.SwitchContainer when isSupported => new HierarchySwitchContainer(Ar),
+            EHierarchyObjectType.RandomSequenceContainer => new HierarchyRandomSequenceContainer(Ar),
+            EHierarchyObjectType.SwitchContainer => new HierarchySwitchContainer(Ar),
             EHierarchyObjectType.ActorMixer => new HierarchyActorMixer(Ar),
             EHierarchyObjectType.AudioBus => new HierarchyAudioBus(Ar),
-            EHierarchyObjectType.LayerContainer when isSupported => new HierarchyLayerContainer(Ar),
-            EHierarchyObjectType.MusicSegment when isSupported => new HierarchyMusicSegment(Ar),
-            EHierarchyObjectType.MusicTrack when isSupported => new HierarchyMusicTrack(Ar),
-            EHierarchyObjectType.MusicSwitchContainer when isSupported => new HierarchyMusicSwitchContainer(Ar),
-            EHierarchyObjectType.MusicRandomSequenceContainer when isSupported => new HierarchyMusicRandomSequenceContainer(Ar),
+            EHierarchyObjectType.LayerContainer => new HierarchyLayerContainer(Ar),
+            EHierarchyObjectType.MusicSegment => new HierarchyMusicSegment(Ar),
+            EHierarchyObjectType.MusicTrack => new HierarchyMusicTrack(Ar),
+            EHierarchyObjectType.MusicSwitchContainer => new HierarchyMusicSwitchContainer(Ar),
+            EHierarchyObjectType.MusicRandomSequenceContainer => new HierarchyMusicRandomSequenceContainer(Ar),
             EHierarchyObjectType.Attenuation => new HierarchyAttenuation(Ar),
             EHierarchyObjectType.DialogueEvent => new HierarchyDialogueEvent(Ar),
             EHierarchyObjectType.FxShareSet => new HierarchyFxShareSet(Ar),
             EHierarchyObjectType.FxCustom => new HierarchyFxCustom(Ar),
             EHierarchyObjectType.AuxiliaryBus => new HierarchyAuxiliaryBus(Ar),
+            EHierarchyObjectType.AudioDevice => new HierarchyAudioDevice(Ar),
             EHierarchyObjectType.LFO => new HierarchyGeneric(Ar),
             EHierarchyObjectType.Envelope => new HierarchyGeneric(Ar),
-            EHierarchyObjectType.AudioDevice => new HierarchyGeneric(Ar),
             EHierarchyObjectType.TimeMod => new HierarchyGeneric(Ar),
-            _ => new HierarchyGeneric(Ar),
-        };
+            _ => new HierarchyGeneric(Ar)
+        } : new HierarchyGeneric(Ar);
 
         if (Ar.Position != hierarchyEndPosition)
         {
 #if DEBUG
             Log.Warning($"Didn't read hierarchy {Type} {Data.Id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+            if (Data is HierarchyEventAction action)
+            {
+                Log.Warning($"EventAction: {action.EventActionType}");
+            }
 #endif
             Ar.Position = hierarchyEndPosition;
         }

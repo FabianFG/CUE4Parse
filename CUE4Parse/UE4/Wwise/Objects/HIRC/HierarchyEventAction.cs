@@ -30,10 +30,21 @@ public class HierarchyEventAction : AbstractHierarchy
 
         ActionData = EventActionType switch
         {
-            EEventActionType.Play => new ActionPlay(Ar),
-            EEventActionType.Stop => new ActionStop(Ar),
-            EEventActionType.SetGameParameter => new ActionSetGameParameter(Ar),
-            EEventActionType.ResetGameParameter => new ActionSetGameParameter(Ar),
+            EEventActionType.Play => new AkActionPlay(Ar),
+            EEventActionType.Stop => new AkActionStop(Ar),
+            EEventActionType.SetGameParameter or
+                EEventActionType.ResetGameParameter => new AkActionSetGameParameter(Ar),
+            EEventActionType.SetHighPassFilter or
+                EEventActionType.SetHighPassFilter2 or
+                EEventActionType.ResetVoiceLowPassFilter or
+                EEventActionType.SetVoiceVolume or
+                EEventActionType.SetVoicePitch or
+                EEventActionType.SetVoiceLowPassFilter or
+                EEventActionType.ResetVoiceVolume or
+                EEventActionType.ResetVoicePitch => new AkActionSetAkProps(Ar),
+            EEventActionType.Seek => new AkActionSeek(Ar),
+            EEventActionType.SetSwitch => new AkActionSetSwitch(Ar),
+            EEventActionType.SetState => new AkActionSetState(Ar),
             // TODO: add all action types
             _ => null,
         };

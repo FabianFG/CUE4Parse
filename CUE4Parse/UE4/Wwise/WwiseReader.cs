@@ -22,12 +22,13 @@ public class WwiseReader
     public Dictionary<uint, string>? IdToString { get; }
     public string? Platform { get; }
     public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
+    public EnvSettings? EnvSettings { get; private set; }
     private uint Version => Header.Version;
 
     public WwiseReader(FArchive Ar)
     {
-        IdToString = new Dictionary<uint, string>();
-        WwiseEncodedMedias = new Dictionary<string, byte[]>();
+        IdToString = [];
+        WwiseEncodedMedias = [];
         while (Ar.Position < Ar.Length)
         {
             var sectionIdentifier = Ar.Read<ESectionIdentifier>();
@@ -63,8 +64,8 @@ public class WwiseReader
                     }
                     break;
                 case ESectionIdentifier.BKHD:
-                        Header = new BankHeader(Ar, sectionLength);
-                        WwiseVersions.SetVersion(Header.Version);
+                    Header = new BankHeader(Ar, sectionLength);
+                    WwiseVersions.SetVersion(Header.Version);
                     break;
                 case ESectionIdentifier.INIT:
                     Initialization = Ar.ReadArray(() =>
@@ -103,6 +104,7 @@ public class WwiseReader
                 case ESectionIdentifier.STMG:
                     break;
                 case ESectionIdentifier.ENVS:
+                    EnvSettings = new EnvSettings(Ar);
                     break;
                 case ESectionIdentifier.FXPR:
                     break;
@@ -145,20 +147,20 @@ public class WwiseReader
             // that hierarchy will give other hierarchy ids and so on until the end sound data
             // but not everything is currently getting parsed so that's not possible
 
-            //foreach (var hierarchy in Hierarchies)
-            //{
-            //    switch (hierarchy.Type)
-            //    {
-            //        case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice sfxVoice:
-            //            // Directly checking the StreamType and mapping it to ESoundSource
-
-            //                WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
-                        
-            //            break;
-            //        default:
-            //            break;
-            //    }
-            //}
+            // foreach (var hierarchy in Hierarchies)
+            // {
+            //     switch (hierarchy.Type)
+            //     {
+            //         case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice
+            //         {
+            //             SoundSource: ESoundSource.Embedded
+            //         } sfxVoice:
+            //             WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
+            //             break;
+            //         default:
+            //             break;
+            //     }
+            // }
         }
     }
 

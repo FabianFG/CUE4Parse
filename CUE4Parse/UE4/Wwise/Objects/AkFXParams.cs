@@ -37,14 +37,11 @@ public class AkFX
 
 public class AkFXParams
 {
-    public bool OverrideFX { get; set; }
     public bool BypassAll { get; set; }
     public List<AkFX> Effects { get; set; }
 
     public AkFXParams(FArchive Ar)
     {
-        OverrideFX = Ar.Read<byte>() != 0;
-
         int count;
         if (WwiseVersions.WwiseVersion <= 26)
         {
@@ -55,8 +52,7 @@ public class AkFXParams
             count = Ar.Read<byte>(); // uNumFx
         }
 
-        Effects = new List<AkFX>();
-
+        Effects = [];
         if (count > 0)
         {
             if (WwiseVersions.WwiseVersion <= 26)

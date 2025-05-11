@@ -2,14 +2,14 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class ActionStop
+public class AkActionStop
 {
     public ActionParams ActionParams { get; private set; }
     public bool ApplyToStateTransitions { get; private set; }
     public bool ApplyToDynamicSequence { get; private set; }
     public ExceptParams ExceptParams { get; private set; }
 
-    public ActionStop(FArchive Ar)
+    public AkActionStop(FArchive Ar)
     {
         ActionParams = new ActionParams(Ar);
         var byBitVector = Ar.Read<byte>();

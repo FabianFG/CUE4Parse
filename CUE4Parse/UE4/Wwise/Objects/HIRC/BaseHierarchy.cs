@@ -7,6 +7,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchy : AbstractHierarchy
 {
+    public bool OverrideFX { get; set; }
     public AkFXParams FXParams { get; protected set; }
     public byte OverrideParentMetadataFlag { get; protected set; }
     public byte NumFXMetadataFlag { get; protected set; }
@@ -34,6 +35,7 @@ public class BaseHierarchy : AbstractHierarchy
 
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
+        OverrideFX = Ar.Read<byte>() != 0;
         FXParams = new AkFXParams(Ar);
 
         if (WwiseVersions.WwiseVersion > 136)

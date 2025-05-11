@@ -1,19 +1,23 @@
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public static class WwiseVersions
 {
     // Global access to wwise version game currently uses
-    // Should be set only once when WwiseReader is initialized
-    public static uint WwiseVersion { get; private set; }
+    // Should always change because it's possible for game to use multiple versions
+    private static uint _wwiseVersion;
+    public static uint WwiseVersion
+    {
+        get => Interlocked.CompareExchange(ref _wwiseVersion, 0, 0);
+        private set => Interlocked.Exchange(ref _wwiseVersion, value);
+    }
+
     public static void SetVersion(uint version)
     {
-        if (WwiseVersion == 0)
-        {
-            WwiseVersion = version;
-        }
+        WwiseVersion = version;
     }
 
     // Credits to https://github.com/bnnm/wwiser/blob/ead1751c0320e5e9b532f80bf738cba5f5d2664e/wwiser/parser/wdefs.py#L22
@@ -64,6 +68,8 @@ public static class WwiseVersions
     // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [
+        135,    // Dead by Daylight (old)
+        140,    // Dead by Daylight (old)
         145,    // Valorant
         150     // Dead by Daylight
     ];

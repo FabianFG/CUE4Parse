@@ -48,43 +48,43 @@ public class AkStateChunk
     public int HeaderCount { get; }
     public List<AkStateGroup> Groups { get; }
 
-    public AkStateChunk(FArchive ar)
+    public AkStateChunk(FArchive Ar)
     {
         // Read header metadata
-        HeaderCount = ar.Read7BitEncodedInt();
+        HeaderCount = Ar.Read7BitEncodedInt();
         for (int i = 0; i < HeaderCount; i++)
         {
-            ar.Read7BitEncodedInt();
-            ar.Read<byte>();
-            ar.Read<byte>();
+            Ar.Read7BitEncodedInt();
+            Ar.Read<byte>();
+            Ar.Read<byte>();
         }
 
         // Read groups
-        int groupCount = ar.Read7BitEncodedInt();
+        int groupCount = Ar.Read7BitEncodedInt();
         var groups = new List<AkStateGroup>(groupCount);
         for (int g = 0; g < groupCount; g++)
         {
-            uint groupId = ar.Read<uint>();
-            byte groupType = ar.Read<byte>();
-            int stateCount = ar.Read7BitEncodedInt();
+            uint groupId = Ar.Read<uint>();
+            byte groupType = Ar.Read<byte>();
+            int stateCount = Ar.Read7BitEncodedInt();
 
             var states = new List<AkState>(stateCount);
             for (int s = 0; s < stateCount; s++)
             {
-                uint stateId = ar.Read<uint>();
+                uint stateId = Ar.Read<uint>();
                 if (WwiseVersions.WwiseVersion <= 145)
                 {
-                    uint stateInstanceId = ar.Read<uint>();
+                    uint stateInstanceId = Ar.Read<uint>();
                     states.Add(new AkState(stateId, stateInstanceId, []));
                 }
                 else
                 {
-                    ushort propCount = ar.Read<ushort>();
+                    ushort propCount = Ar.Read<ushort>();
                     var props = new List<AkStateProperty>(propCount);
                     for (int k = 0; k < propCount; k++)
                     {
-                        ushort propId = ar.Read<ushort>();
-                        float value = ar.Read<float>();
+                        ushort propId = Ar.Read<ushort>();
+                        float value = Ar.Read<float>();
                         props.Add(new AkStateProperty(propId, value));
                     }
                     states.Add(new AkState(stateId, null, props));
