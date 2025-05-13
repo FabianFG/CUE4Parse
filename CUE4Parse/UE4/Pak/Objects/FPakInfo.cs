@@ -137,6 +137,22 @@ public partial class FPakInfo
             goto beforeCompression;
         }
 
+        if (Ar.Game == EGame.GAME_DuneAwakening)
+        {
+            var magic = Ar.Read<uint>();
+            if (magic != 0xA590ED1E) return;
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>();
+            IndexHash = new FSHAHash(Ar);
+            EncryptionKeyGuid = Ar.Read<FGuid>();
+            EncryptedIndex = Ar.ReadFlag();
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC) return;
+            Version = Ar.Read<EPakFileVersion>();
+            Ar.Position += 36; // another index size/offset/hash
+            goto beforeCompression;
+        }
+
         // New FPakInfo fields.
         EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
         EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
@@ -313,7 +329,7 @@ public partial class FPakInfo
 
         SizeLast,
         SizeMax = SizeLast - 1,
-
+        SizeDuneAwakening = 261,
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
     }
 
@@ -334,8 +350,12 @@ public partial class FPakInfo
         unsafe
         {
             var length = Ar.Length;
-            var maxOffset = (long) OffsetsToTry.SizeMax;
-            if (Ar.Game == EGame.GAME_KartRiderDrift) maxOffset = (long) OffsetsToTry.SizeKartRiderDrift;
+            var maxOffset = Ar.Game switch
+            {
+                EGame.GAME_DuneAwakening => (long) OffsetsToTry.SizeDuneAwakening,
+                EGame.GAME_KartRiderDrift => (long) OffsetsToTry.SizeKartRiderDrift,
+                _ => (long) OffsetsToTry.SizeMax,
+            };
 
             if (length < maxOffset)
             {
@@ -365,6 +385,7 @@ public partial class FPakInfo
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
                 EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.Size_ARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
+                EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
             };
             foreach (var offset in offsetsToTry)

@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
@@ -238,6 +239,12 @@ public class FScriptStruct
 
             // State of Decay 2
             "ItemsBitArray" when Ar.Game == EGame.GAME_StateOfDecay2 => type == ReadType.ZERO ? new FItemsBitArray() : new FItemsBitArray(Ar),
+
+            // Dune Awakening
+            "BodyInstance" when Ar.Game == EGame.GAME_DuneAwakening => new FBodyInstance(Ar),
+            "GenericTeamId" when Ar.Game == EGame.GAME_DuneAwakening => new FGenericTeamId(Ar),
+            "UniqueID" when Ar.Game == EGame.GAME_DuneAwakening => new FUniqueID(Ar),
+            "BotAutoBorderCrossingConfig" when Ar.Game == EGame.GAME_DuneAwakening => new FBotAutoBorderCrossingConfig(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
