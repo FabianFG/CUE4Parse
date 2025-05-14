@@ -15,12 +15,10 @@ public readonly struct Hierarchy
 
     public Hierarchy(FArchive Ar)
     {
-        var isSupported = WwiseVersions.IsSupported();
-
         Type = Ar.Read<EHierarchyObjectType>();
         Length = Ar.Read<uint>();
         var hierarchyEndPosition = Ar.Position + Length;
-        Data = isSupported ? Type switch
+        Data = WwiseVersions.IsSupported() ? Type switch
         {
             EHierarchyObjectType.Settings => new HierarchySettings(Ar),
             EHierarchyObjectType.SoundSfxVoice => new HierarchySoundSfxVoice(Ar),

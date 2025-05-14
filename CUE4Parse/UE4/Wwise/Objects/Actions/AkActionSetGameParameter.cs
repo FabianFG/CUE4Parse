@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public partial class AkActionSetGameParameter
+public class AkActionSetGameParameter
 {
     public ActionParams ActionParams { get; private set; }
     public bool? BypassTransition { get; private set; }

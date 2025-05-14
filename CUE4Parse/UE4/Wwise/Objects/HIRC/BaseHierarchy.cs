@@ -22,9 +22,7 @@ public class BaseHierarchy : AbstractHierarchy
     public List<AkProp> Props { get; protected set; }
     public List<AkPropRange> PropRanges { get; protected set; }
     public AkPositioningParams PositioningParams { get; protected set; }
-    public EAuxParams AuxParams { get; protected set; }
-    public List<uint> AuxIds { get; protected set; } = new();
-    public uint ReflectionsAuxBus { get; protected set; }
+    public AkAuxParams? AuxParams { get; protected set; }
     public EAdvSettings AdvSettingsParams { get; protected set; }
     public byte VirtualQueueBehavior { get; protected set; }
     public ushort MaxNumInstance { get; protected set; }
@@ -43,7 +41,7 @@ public class BaseHierarchy : AbstractHierarchy
             SetInitialMetadataParams(Ar);
         }
 
-        if (WwiseVersions.WwiseVersion <= 145)
+        if (WwiseVersions.WwiseVersion > 89 && WwiseVersions.WwiseVersion <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>();
         }
@@ -87,7 +85,7 @@ public class BaseHierarchy : AbstractHierarchy
 
         if (WwiseVersions.WwiseVersion > 65)
         {
-            SetAuxParams(Ar);
+            AuxParams = new AkAuxParams(Ar);
         }
 
         SetAdvSettingsParams(Ar);
@@ -114,19 +112,6 @@ public class BaseHierarchy : AbstractHierarchy
     {
         OverrideParentMetadataFlag = Ar.Read<byte>();
         NumFXMetadataFlag = Ar.Read<byte>();
-    }
-
-    private void SetAuxParams(FArchive Ar)
-    {
-        AuxParams = Ar.Read<EAuxParams>();
-        if (AuxParams.HasFlag(EAuxParams.HasAux))
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                AuxIds.Add(Ar.Read<uint>());
-            }
-        }
-        ReflectionsAuxBus = Ar.Read<uint>();
     }
 
     private void SetAdvSettingsParams(FArchive Ar)
@@ -174,13 +159,7 @@ public class BaseHierarchy : AbstractHierarchy
         serializer.Serialize(writer, PositioningParams);
 
         writer.WritePropertyName("AuxParams");
-        writer.WriteValue(AuxParams.ToString());
-
-        writer.WritePropertyName("AuxIds");
-        serializer.Serialize(writer, AuxIds);
-
-        writer.WritePropertyName("ReflectionsAuxBus");
-        writer.WriteValue(ReflectionsAuxBus);
+        serializer.Serialize(writer, AuxParams);
 
         writer.WritePropertyName("AdvSettingsParams");
         writer.WriteValue(AdvSettingsParams.ToString());

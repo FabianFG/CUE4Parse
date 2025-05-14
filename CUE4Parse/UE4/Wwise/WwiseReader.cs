@@ -66,6 +66,9 @@ public class WwiseReader
                 case ESectionIdentifier.BKHD:
                     Header = new BankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Header.Version);
+#if DEBUG
+                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Header.Version} is not supported");              
+#endif
                     break;
                 case ESectionIdentifier.INIT:
                     Initialization = Ar.ReadArray(() =>

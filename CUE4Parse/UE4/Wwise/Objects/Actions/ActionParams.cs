@@ -10,7 +10,7 @@ public class ActionParams
     public int? TTime { get; private set; }
     public int? TTimeMin { get; private set; }
     public int? TTimeMax { get; private set; }
-    public ECurveInterpolation EFadeCurve { get; private set; }
+    public ECurveInterpolation FadeCurve { get; private set; }
 
     public ActionParams(FArchive Ar)
     {
@@ -22,6 +22,6 @@ public class ActionParams
         }
 
         var byBitVector = Ar.Read<byte>();
-        EFadeCurve = (ECurveInterpolation) (byBitVector & 0x1F);
+        FadeCurve = (ECurveInterpolation) (byBitVector & 0x1F);
     }
 }

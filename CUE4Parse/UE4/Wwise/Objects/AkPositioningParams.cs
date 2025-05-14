@@ -14,13 +14,13 @@ public class AkPositioningParams
     public List<AkPlaylistItem> PlaylistItems { get; }
     public List<AkPlaylistRange> PlaylistRanges { get; }
 
-    public AkPositioningParams(FArchive ar)
+    public AkPositioningParams(FArchive Ar)
     {
-        BitsPositioning = ar.Read<EBitsPositioning>();
+        BitsPositioning = Ar.Read<EBitsPositioning>();
 
         if (BitsPositioning.IsEmitter() || BitsPositioning.HasFlag(EBitsPositioning.HasListenerRelativeRouting))
         {
-            Flags3D = ar.Read<byte>();
+            Flags3D = Ar.Read<byte>();
         }
 
         Vertices = [];
@@ -29,24 +29,24 @@ public class AkPositioningParams
 
         if (BitsPositioning.HasFlag(EBitsPositioning.PositioningInfoOverrideParent) && BitsPositioning.IsEmitter())
         {
-            PathMode = ar.Read<byte>();
-            TransitionTime = ar.Read<int>();
+            PathMode = Ar.Read<byte>();
+            TransitionTime = Ar.Read<int>();
 
-            uint numVertices = ar.Read<uint>();
+            uint numVertices = Ar.Read<uint>();
             for (int i = 0; i < numVertices; i++)
             {
-                Vertices.Add(new AkVertex(ar));
+                Vertices.Add(new AkVertex(Ar));
             }
 
-            uint numPlaylistItems = ar.Read<uint>();
+            uint numPlaylistItems = Ar.Read<uint>();
             for (int i = 0; i < numPlaylistItems; i++)
             {
-                PlaylistItems.Add(new AkPlaylistItem(ar));
+                PlaylistItems.Add(new AkPlaylistItem(Ar));
             }
 
             for (int i = 0; i < numPlaylistItems; i++)
             {
-                PlaylistRanges.Add(new AkPlaylistRange(ar));
+                PlaylistRanges.Add(new AkPlaylistRange(Ar));
             }
         }
     }
@@ -58,12 +58,12 @@ public class AkPositioningParams
         public float Z { get; }
         public int Duration { get; }
 
-        public AkVertex(FArchive ar)
+        public AkVertex(FArchive Ar)
         {
-            X = ar.Read<float>();
-            Y = ar.Read<float>();
-            Z = ar.Read<float>();
-            Duration = ar.Read<int>();
+            X = Ar.Read<float>();
+            Y = Ar.Read<float>();
+            Z = Ar.Read<float>();
+            Duration = Ar.Read<int>();
         }
     }
 
@@ -72,10 +72,10 @@ public class AkPositioningParams
         public uint VerticesOffset { get; }
         public uint NumVertices { get; }
 
-        public AkPlaylistItem(FArchive ar)
+        public AkPlaylistItem(FArchive Ar)
         {
-            VerticesOffset = ar.Read<uint>();
-            NumVertices = ar.Read<uint>();
+            VerticesOffset = Ar.Read<uint>();
+            NumVertices = Ar.Read<uint>();
         }
     }
 
@@ -85,11 +85,11 @@ public class AkPositioningParams
         public float YRange { get; }
         public float ZRange { get; }
 
-        public AkPlaylistRange(FArchive ar)
+        public AkPlaylistRange(FArchive Ar)
         {
-            XRange = ar.Read<float>();
-            YRange = ar.Read<float>();
-            ZRange = ar.Read<float>();
+            XRange = Ar.Read<float>();
+            YRange = Ar.Read<float>();
+            ZRange = Ar.Read<float>();
         }
     }
 }

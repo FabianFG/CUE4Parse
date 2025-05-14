@@ -3217,7 +3217,7 @@ public class ActionParamsConverter : JsonConverter<ActionParams>
         writer.WriteStartObject();
 
         writer.WritePropertyName("EFadeCurve");
-        writer.WriteValue(value.EFadeCurve.ToString());
+        writer.WriteValue(value.FadeCurve.ToString());
 
         writer.WriteEndObject();
     }

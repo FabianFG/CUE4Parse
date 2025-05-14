@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkFX
 {
     public byte FXIndex { get; set; }
-    public uint FXID { get; set; }
+    public uint FXId { get; set; }
     public byte BitVector { get; set; }
     public bool IsShareSet { get; set; } // Version <= 145
     public bool IsRendered { get; set; } // Version <= 145
@@ -20,14 +20,14 @@ public class AkFX
         else if (WwiseVersions.WwiseVersion <= 145)
         {
             FXIndex = Ar.Read<byte>();
-            FXID = Ar.Read<uint>();
+            FXId = Ar.Read<uint>();
             IsShareSet = Ar.Read<byte>() != 0;
             IsRendered = Ar.Read<byte>() != 0;
         }
         else
         {
             FXIndex = Ar.Read<byte>();
-            FXID = Ar.Read<uint>();
+            FXId = Ar.Read<uint>();
             BitVector = Ar.Read<byte>();
             IsShareSet = (BitVector & (1 << 1)) != 0;
             IsRendered = (BitVector & (1 << 2)) != 0;
@@ -73,5 +73,19 @@ public class AkFXParams
                 Effects.Add(new AkFX(Ar));
             }
         }
+    }
+}
+
+public class AkFXChunk
+{
+    public byte FXIndex { get; set; }
+    public uint FXId { get; set; }
+    public byte IsShareSet { get; set; }
+
+    public AkFXChunk(FArchive Ar)
+    {
+        FXIndex = Ar.Read<byte>();
+        FXId = Ar.Read<uint>();
+        IsShareSet = Ar.Read<byte>();
     }
 }
