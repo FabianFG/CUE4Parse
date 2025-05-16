@@ -3,7 +3,7 @@ using System;
 namespace CUE4Parse.UE4.Wwise.Enums;
 
 [Flags]
-public enum EPriorityMidi : byte
+public enum EMidiBehaviorFlags : byte
 {
     None = 0,
     PriorityOverrideParent = 1 << 0,
@@ -11,5 +11,6 @@ public enum EPriorityMidi : byte
     OverrideMidiEventsBehavior = 1 << 2,
     OverrideMidiNoteTracking = 1 << 3,
     EnableMidiNoteTracking = 1 << 4,
-    MidiBreakLoopOnNoteOff = 1 << 5
+    IsMidiBreakLoopOnNoteOff = 1 << 5
 }
+

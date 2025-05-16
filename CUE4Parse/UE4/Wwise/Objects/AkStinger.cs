@@ -29,12 +29,11 @@ public class AkStinger
 
     public static List<AkStinger> ReadMultiple(FArchive Ar)
     {
-        var stingers = new List<AkStinger>();
         var numStingers = Ar.Read<uint>();
+        var stingers = new List<AkStinger>((int)numStingers);
         for (int i = 0; i < numStingers; i++)
         {
-            var stinger = new AkStinger(Ar);
-            stingers.Add(stinger);
+            stingers.Add(new AkStinger(Ar));
         }
 
         return stingers;

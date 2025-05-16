@@ -5,22 +5,22 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class ExceptParams
 {
-    public byte ExceptionListSize { get; private set; }
     public List<ExceptionElement> ExceptionElements { get; private set; }
 
     public ExceptParams(FArchive Ar)
     {
+        byte exceptionListSize;
         if (WwiseVersions.WwiseVersion <= 122)
         {
-            ExceptionListSize = (byte)Ar.Read<uint>();
+            exceptionListSize = (byte)Ar.Read<uint>();
         }
         else
         {
-            ExceptionListSize = Ar.Read<byte>();
+            exceptionListSize = Ar.Read<byte>();
         }
 
         ExceptionElements = [];
-        for (int i = 0; i < ExceptionListSize; i++)
+        for (int i = 0; i < exceptionListSize; i++)
         {
             ExceptionElements.Add(new ExceptionElement(Ar));
         }

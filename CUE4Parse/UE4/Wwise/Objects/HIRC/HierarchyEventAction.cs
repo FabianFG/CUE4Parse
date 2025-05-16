@@ -45,6 +45,10 @@ public class HierarchyEventAction : AbstractHierarchy
             EEventActionType.Seek => new AkActionSeek(Ar),
             EEventActionType.SetSwitch => new AkActionSetSwitch(Ar),
             EEventActionType.SetState => new AkActionSetState(Ar),
+            EEventActionType.Mute or
+                EEventActionType.UnMute => new AkActionBase(Ar),
+            EEventActionType.Resume => new AkActionResume(Ar),
+            EEventActionType.Pause => new AkActionPause(Ar),
             // TODO: add all action types
             _ => null,
         };

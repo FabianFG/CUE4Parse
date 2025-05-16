@@ -7,15 +7,24 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 public class HierarchyLayerContainer : BaseHierarchy
 {
     public uint[] ChildIds { get; private set; }
-    public List<AkPlayList.AkPlayListItem> Playlist { get; private set; }
+    public List<AkLayer> Layers { get; private set; }
     public byte IsContinuousValidation { get; private set; }
 
     public HierarchyLayerContainer(FArchive Ar) : base(Ar)
     {
         ChildIds = new AkChildren(Ar).ChildIds;
-        Playlist = new AkPlayList(Ar).PlaylistItems;
-        IsContinuousValidation = Ar.Read<byte>();
-        Ar.Position += 2; // Padding?
+
+        var numLayers = Ar.Read<uint>();
+        Layers = new List<AkLayer>((int)numLayers);
+        for (int i = 0; i < numLayers; i++)
+        {
+            Layers.Add(new AkLayer(Ar));
+        }
+
+        if (WwiseVersions.WwiseVersion > 118)
+        {
+            IsContinuousValidation = Ar.Read<byte>();
+        }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -27,8 +36,8 @@ public class HierarchyLayerContainer : BaseHierarchy
         writer.WritePropertyName("ChildIds");
         serializer.Serialize(writer, ChildIds);
 
-        writer.WritePropertyName("PlayList");
-        serializer.Serialize(writer, Playlist);
+        writer.WritePropertyName("Layers");
+        serializer.Serialize(writer, Layers);
 
         writer.WritePropertyName("IsContinuousValidation");
         writer.WriteValue(IsContinuousValidation != 0);

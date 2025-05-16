@@ -15,6 +15,18 @@ public class AkRTPCGraphPoint
         To = Ar.Read<float>();
         Interpolation = Ar.Read<uint>();
     }
+
+    public static List<AkRTPCGraphPoint> ReadMultiple(FArchive Ar)
+    {
+        uint pointsCount = Ar.Read<uint>();
+        var graphPoints = new List<AkRTPCGraphPoint>((int)pointsCount);
+        for (int j = 0; j < pointsCount; j++)
+        {
+            graphPoints.Add(new AkRTPCGraphPoint(Ar));
+        }
+
+        return graphPoints;
+    }
 }
 
 public class AkRTPC
@@ -68,16 +80,16 @@ public class AkRTPC
             GraphPoints.Add(new AkRTPCGraphPoint(Ar));
         }
     }
-}
 
-public class AkRTPCList : List<AkRTPC>
-{
-    public AkRTPCList(FArchive Ar, bool modulator = false)
+    public static List<AkRTPC> ReadMultiple(FArchive Ar, bool modulator = false)
     {
         ushort numCurves = Ar.Read<ushort>();
-        for (int i = 0; i < numCurves; i++)
+        var rtpcEntries = new List<AkRTPC>(numCurves);
+        for (int j = 0; j < numCurves; j++)
         {
-            Add(new AkRTPC(Ar, modulator));
+            rtpcEntries.Add(new AkRTPC(Ar, modulator));
         }
+
+        return rtpcEntries;
     }
 }

@@ -40,7 +40,7 @@ public class BaseHierarchyFx : AbstractHierarchy
             mediaList.Add(mediaItem);
         }
 
-        RTPCs = new AkRTPCList(Ar);
+        RTPCs = AkRTPC.ReadMultiple(Ar);
 
         if (WwiseVersions.WwiseVersion <= 89)
         {

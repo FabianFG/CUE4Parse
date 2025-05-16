@@ -3183,7 +3183,7 @@ public class AkSwitchParamsConverter : JsonConverter<AkSwitchParams>
         writer.WriteStartObject();
 
         writer.WritePropertyName("NodeID");
-        writer.WriteValue(value.NodeID);
+        writer.WriteValue(value.NodeId);
 
         writer.WritePropertyName("IsFirstOnly");
         writer.WriteValue(value.IsFirstOnly);

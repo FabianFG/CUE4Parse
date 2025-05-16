@@ -5,39 +5,39 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkStateProperty
 {
-    public ushort ID { get; }
+    public ushort Id { get; }
     public float Value { get; }
 
     public AkStateProperty(ushort id, float value)
     {
-        ID = id;
+        Id = id;
         Value = value;
     }
 }
 
 public class AkState
 {
-    public uint ID { get; }
-    public uint? StateInstanceID { get; }
+    public uint Id { get; }
+    public uint? StateInstanceId { get; }
     public List<AkStateProperty> Properties { get; }
 
     public AkState(uint id, uint? stateInstanceId, List<AkStateProperty> properties)
     {
-        ID = id;
-        StateInstanceID = stateInstanceId;
+        Id = id;
+        StateInstanceId = stateInstanceId;
         Properties = properties;
     }
 }
 
 public class AkStateGroup
 {
-    public uint ID { get; }
+    public uint Id { get; }
     public byte GroupType { get; }
     public List<AkState> States { get; }
 
     public AkStateGroup(uint id, byte groupType, List<AkState> states)
     {
-        ID = id;
+        Id = id;
         GroupType = groupType;
         States = states;
     }
@@ -50,7 +50,6 @@ public class AkStateChunk
 
     public AkStateChunk(FArchive Ar)
     {
-        // Read header metadata
         HeaderCount = Ar.Read7BitEncodedInt();
         for (int i = 0; i < HeaderCount; i++)
         {
@@ -59,7 +58,6 @@ public class AkStateChunk
             Ar.Read<byte>();
         }
 
-        // Read groups
         int groupCount = Ar.Read7BitEncodedInt();
         var groups = new List<AkStateGroup>(groupCount);
         for (int g = 0; g < groupCount; g++)

@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicTrack : AbstractHierarchy
 {
-    public byte Flags { get; private set; }
-    public uint NumSources { get; private set; }
+    public EMusicFlags Flags { get; private set; }
     public List<AkBankSourceData> Sources { get; private set; } = [];
-    public uint NumPlaylistItems { get; private set; }
     public List<AkTrackSrcInfo> Playlist { get; private set; } = [];
     public List<AkClipAutomation> ClipAutomations { get; private set; } = [];
     public BaseHierarchy BaseParams { get; private set; }
@@ -17,38 +16,40 @@ public class HierarchyMusicTrack : AbstractHierarchy
     public short LoopModMin { get; private set; }
     public short LoopModMax { get; private set; }
     public uint ERSType { get; private set; }
-    public byte ETrackType { get; private set; }
+    public EMusicTrackType MusicTrackType { get; private set; }
+    public AkTrackSwitchParams? SwitchParams { get; private set; }
+    public AkTransParams? TransParams { get; private set; }
     public int LookAheadTime { get; private set; }
 
     public HierarchyMusicTrack(FArchive Ar) : base(Ar)
     {
         if (WwiseVersions.WwiseVersion > 89 && WwiseVersions.WwiseVersion <= 112)
         {
-            Flags = Ar.Read<byte>();
+            Flags = Ar.Read<EMusicFlags>();
         }
         else if (WwiseVersions.WwiseVersion <= 152)
         {
-            Flags = Ar.Read<byte>();
+            Flags = Ar.Read<EMusicFlags>();
         }
 
-        NumSources = Ar.Read<uint>();
+        var numSources = Ar.Read<uint>();
         if (WwiseVersions.WwiseVersion <= 26)
         {
-            for (int i = 0; i < NumSources; i++)
+            for (int i = 0; i < numSources; i++)
             {
                 Sources.Add(new AkBankSourceData(Ar));
             }
         }
 
-        for (int i = 0; i < NumSources; i++)
+        for (int i = 0; i < numSources; i++)
         {
             Sources.Add(new AkBankSourceData(Ar));
         }
 
         if (WwiseVersions.WwiseVersion > 26)
         {
-            NumPlaylistItems = Ar.Read<uint>();
-            for (int i = 0; i < NumPlaylistItems; i++)
+            var numPlaylistItems = Ar.Read<uint>();
+            for (int i = 0; i < numPlaylistItems; i++)
             {
                 Playlist.Add(new AkTrackSrcInfo(Ar));
             }
@@ -81,10 +82,11 @@ public class HierarchyMusicTrack : AbstractHierarchy
         }
         else
         {
-            ETrackType = Ar.Read<byte>();
-            if (ETrackType == 0x3) // Special case for track type
+            MusicTrackType = Ar.Read<EMusicTrackType>();
+            if (MusicTrackType == EMusicTrackType.Switch) // Special case for track type
             {
-                // TODO: implement switch and trans params here
+                SwitchParams = new AkTrackSwitchParams(Ar);
+                TransParams = new AkTransParams(Ar);
             }
         }
 
@@ -111,16 +113,10 @@ public class HierarchyMusicTrack : AbstractHierarchy
         writer.WriteStartObject();
 
         writer.WritePropertyName("Flags");
-        writer.WriteValue(Flags);
-
-        writer.WritePropertyName("NumSources");
-        writer.WriteValue(NumSources);
+        writer.WriteValue(Flags.ToString());
 
         writer.WritePropertyName("Sources");
         serializer.Serialize(writer, Sources);
-
-        writer.WritePropertyName("NumPlaylistItems");
-        writer.WriteValue(NumPlaylistItems);
 
         writer.WritePropertyName("Playlist");
         serializer.Serialize(writer, Playlist);
@@ -157,10 +153,19 @@ public class HierarchyMusicTrack : AbstractHierarchy
             writer.WriteValue(ERSType);
         }
 
-        if (ETrackType != 0)
+        if (MusicTrackType != 0)
         {
-            writer.WritePropertyName("ETrackType");
-            writer.WriteValue(ETrackType);
+            writer.WritePropertyName("MusicTrackType");
+            writer.WriteValue(MusicTrackType.ToString());
+        }
+
+        if (MusicTrackType == EMusicTrackType.Switch)
+        {
+            writer.WritePropertyName("SwitchParams");
+            serializer.Serialize(writer, SwitchParams);
+
+            writer.WritePropertyName("TransParams");
+            serializer.Serialize(writer, TransParams);
         }
 
         if (LookAheadTime != 0)

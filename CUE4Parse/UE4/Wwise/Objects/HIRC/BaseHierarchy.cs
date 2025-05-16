@@ -18,16 +18,16 @@ public class BaseHierarchy : AbstractHierarchy
     public byte PriorityOverrideParent { get; protected set; }
     public byte PriorityApplyDistFactor { get; protected set; }
     public sbyte DistOffset { get; protected set; }
-    public byte ByBitVector { get; protected set; }
+    public EMidiBehaviorFlags MidiBehaviorFlags { get; protected set; }
     public List<AkProp> Props { get; protected set; }
     public List<AkPropRange> PropRanges { get; protected set; }
     public AkPositioningParams PositioningParams { get; protected set; }
     public AkAuxParams? AuxParams { get; protected set; }
     public EAdvSettings AdvSettingsParams { get; protected set; }
-    public byte VirtualQueueBehavior { get; protected set; }
+    public EVirtualQueueBehavior VirtualQueueBehavior { get; protected set; }
     public ushort MaxNumInstance { get; protected set; }
-    public byte BelowThresholdBehavior { get; protected set; }
-    public byte HdrEnvelopeFlags { get; protected set; }
+    public EBelowThresholdBehavior BelowThresholdBehavior { get; protected set; }
+    public EHdrEnvelopeFlags HdrEnvelopeFlags { get; protected set; }
     public List<AkStateGroup> StateGroups { get; protected set; }
     public List<AkRTPC> RTPCs { get; protected set; }
 
@@ -63,10 +63,10 @@ public class BaseHierarchy : AbstractHierarchy
         }
         else
         {
-            ByBitVector = Ar.Read<byte>();
+            MidiBehaviorFlags = Ar.Read<EMidiBehaviorFlags>();
 
-            PriorityOverrideParent = (byte) ((ByBitVector & 0b00000001) != 0 ? 1 : 0);
-            PriorityApplyDistFactor = (byte) ((ByBitVector & 0b00000010) != 0 ? 1 : 0);
+            PriorityOverrideParent = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityOverrideParent ? 1 : 0);
+            PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0);
         }
 
         AkPropBundle propBundle = new(Ar);
@@ -105,7 +105,7 @@ public class BaseHierarchy : AbstractHierarchy
             StateGroups = new AkStateChunk(Ar).Groups;
         }
 
-        RTPCs = new AkRTPCList(Ar);
+        RTPCs = AkRTPC.ReadMultiple(Ar);
     }
 
     private void SetInitialMetadataParams(FArchive Ar)
@@ -117,25 +117,29 @@ public class BaseHierarchy : AbstractHierarchy
     private void SetAdvSettingsParams(FArchive Ar)
     {
         AdvSettingsParams = Ar.Read<EAdvSettings>();
-        VirtualQueueBehavior = Ar.Read<byte>();
+        VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
         MaxNumInstance = Ar.Read<ushort>();
-        BelowThresholdBehavior = Ar.Read<byte>();
-        HdrEnvelopeFlags = Ar.Read<byte>();
+        BelowThresholdBehavior = Ar.Read<EBelowThresholdBehavior>();
+        HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
     }
 
     // WriteStartEndObjects are handled by derived classes!
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        //writer.WriteStartObject();
+        writer.WritePropertyName("OverrideFX");
+        writer.WriteValue(OverrideFX);
 
         writer.WritePropertyName("FXParams");
         serializer.Serialize(writer, FXParams);
 
         writer.WritePropertyName("OverrideParentMetadataFlag");
-        writer.WriteValue(OverrideParentMetadataFlag);
+        writer.WriteValue(OverrideParentMetadataFlag != 0);
 
         writer.WritePropertyName("NumFXMetadataFlag");
         writer.WriteValue(NumFXMetadataFlag);
+
+        writer.WritePropertyName("OverrideAttachmentParams");
+        writer.WriteValue(OverrideAttachmentParams);
 
         if (OverrideBusId != 0)
         {
@@ -148,6 +152,21 @@ public class BaseHierarchy : AbstractHierarchy
             writer.WritePropertyName("DirectParentId");
             writer.WriteValue(DirectParentId);
         }
+
+        writer.WritePropertyName("Priority");
+        writer.WriteValue(Priority != 0);
+
+        writer.WritePropertyName("PriorityOverrideParent");
+        writer.WriteValue(PriorityOverrideParent != 0);
+
+        writer.WritePropertyName("PriorityApplyDistFactor");
+        writer.WriteValue(PriorityApplyDistFactor != 0);
+
+        writer.WritePropertyName("DistOffset");
+        writer.WriteValue(DistOffset);
+
+        writer.WritePropertyName("MidiBehaviorFlags");
+        writer.WriteValue(MidiBehaviorFlags.ToString());
 
         writer.WritePropertyName("Props");
         serializer.Serialize(writer, Props);
@@ -165,23 +184,21 @@ public class BaseHierarchy : AbstractHierarchy
         writer.WriteValue(AdvSettingsParams.ToString());
 
         writer.WritePropertyName("VirtualQueueBehavior");
-        writer.WriteValue(VirtualQueueBehavior);
+        writer.WriteValue(VirtualQueueBehavior.ToString());
 
         writer.WritePropertyName("MaxNumInstance");
         writer.WriteValue(MaxNumInstance);
 
         writer.WritePropertyName("BelowThresholdBehavior");
-        writer.WriteValue(BelowThresholdBehavior);
+        writer.WriteValue(BelowThresholdBehavior.ToString());
 
         writer.WritePropertyName("HdrEnvelopeFlags");
-        writer.WriteValue(HdrEnvelopeFlags);
+        writer.WriteValue(HdrEnvelopeFlags.ToString());
 
         writer.WritePropertyName("StateGroups");
         serializer.Serialize(writer, StateGroups);
 
         writer.WritePropertyName("RTPCs");
         serializer.Serialize(writer, RTPCs);
-
-        //writer.WriteEndObject();
     }
 }

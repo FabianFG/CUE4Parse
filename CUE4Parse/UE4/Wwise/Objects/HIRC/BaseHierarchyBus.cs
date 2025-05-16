@@ -127,7 +127,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             }
         }
 
-        RTPCs = new AkRTPCList(Ar);
+        RTPCs = AkRTPC.ReadMultiple(Ar);
 
         if (WwiseVersions.WwiseVersion <= 56)
         {

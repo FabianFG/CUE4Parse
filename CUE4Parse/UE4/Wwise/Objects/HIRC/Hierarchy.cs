@@ -51,7 +51,7 @@ public readonly struct Hierarchy
             Log.Warning($"Didn't read hierarchy {Type} {Data.Id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
             if (Data is HierarchyEventAction action)
             {
-                Log.Warning($"EventAction: {action.EventActionType}");
+                Log.Warning($"EventAction type: {action.EventActionType}");
             }
 #endif
             Ar.Position = hierarchyEndPosition;

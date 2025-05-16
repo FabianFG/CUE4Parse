@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -13,10 +14,10 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public float? TransitionTimeModMin { get; private set; }
     public float? TransitionTimeModMax { get; private set; }
     public ushort AvoidRepeatCount { get; private set; }
-    public byte TransitionMode { get; private set; }
-    public byte RandomMode { get; private set; }
-    public byte Mode { get; private set; }
-    public new byte ByBitVector { get; private set; }
+    public ETransitionMode TransitionMode { get; private set; }
+    public ERandomMode RandomMode { get; private set; }
+    public ERandomSequenceContainerMode Mode { get; private set; }
+    public EPlayListFlags PlaylistFlags { get; private set; }
     public uint[] ChildIds { get; private set; }
     public List<AkPlayList.AkPlayListItem> Playlist { get; private set; }
 
@@ -47,14 +48,14 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
 
         if (WwiseVersions.WwiseVersion > 36)
         {
-            TransitionMode = Ar.Read<byte>();
-            RandomMode = Ar.Read<byte>();
-            Mode = Ar.Read<byte>();
+            TransitionMode = Ar.Read<ETransitionMode>();
+            RandomMode = Ar.Read<ERandomMode>();
+            Mode = Ar.Read<ERandomSequenceContainerMode>();
         }
 
         if (WwiseVersions.WwiseVersion > 89)
         {
-            ByBitVector = Ar.Read<byte>();
+            PlaylistFlags = Ar.Read<EPlayListFlags>();
         }
 
         ChildIds = new AkChildren(Ar).ChildIds;
@@ -104,16 +105,16 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
         writer.WriteValue(AvoidRepeatCount);
 
         writer.WritePropertyName("TransitionMode");
-        writer.WriteValue(TransitionMode);
+        writer.WriteValue(TransitionMode.ToString());
 
         writer.WritePropertyName("RandomMode");
-        writer.WriteValue(RandomMode);
+        writer.WriteValue(RandomMode.ToString());
 
         writer.WritePropertyName("Mode");
-        writer.WriteValue(Mode);
+        writer.WriteValue(Mode.ToString());
 
-        writer.WritePropertyName("ByBitVector");
-        writer.WriteValue(ByBitVector);
+        writer.WritePropertyName("PlaylistFlags");
+        writer.WriteValue(PlaylistFlags.ToString());
 
         writer.WritePropertyName("ChildIds");
         serializer.Serialize(writer, ChildIds);

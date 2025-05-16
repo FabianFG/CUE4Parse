@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -71,7 +70,7 @@ public class HierarchyAttenuation : AbstractHierarchy
             Curves.Add(new AkConversionTable(Ar));
         }
 
-        RTPCs = new AkRTPCList(Ar);
+        RTPCs = AkRTPC.ReadMultiple(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 [JsonConverter(typeof(AkSwitchParamsConverter))]
 public class AkSwitchParams
 {
-    public uint NodeID { get; private set; }
+    public uint NodeId { get; private set; }
     public bool IsFirstOnly { get; private set; }
     public bool ContinuePlayback { get; private set; }
     public EOnSwitchMode OnSwitchMode { get; private set; }
@@ -16,7 +16,7 @@ public class AkSwitchParams
 
     public AkSwitchParams(FArchive Ar)
     {
-        NodeID = Ar.Read<uint>();
+        NodeId = Ar.Read<uint>();
 
         if (WwiseVersions.WwiseVersion <= 89)
         {

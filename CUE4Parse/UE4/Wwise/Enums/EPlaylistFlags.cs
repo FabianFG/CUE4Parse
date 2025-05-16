@@ -3,7 +3,7 @@ using System;
 namespace CUE4Parse.UE4.Wwise.Enums;
 
 [Flags]
-public enum ERandomSequence : byte
+public enum EPlayListFlags : byte
 {
     None = 0,
     IsUsingWeight = 1 << 0,
