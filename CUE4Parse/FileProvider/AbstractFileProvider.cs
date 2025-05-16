@@ -568,7 +568,7 @@ namespace CUE4Parse.FileProvider
         #region LoadPackage Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IPackage LoadPackage(string path) => LoadPackage(this[path]);
-        public IPackage LoadPackage(GameFile file)
+        public virtual IPackage LoadPackage(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -590,7 +590,7 @@ namespace CUE4Parse.FileProvider
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IPackage> LoadPackageAsync(string path) => LoadPackageAsync(this[path]);
-        public async Task<IPackage> LoadPackageAsync(GameFile file)
+        public virtual async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -615,7 +615,7 @@ namespace CUE4Parse.FileProvider
         public bool TryLoadPackage(string path, [MaybeNullWhen(false)] out IPackage package)
         {
             if (TryGetGameFile(path, out var file))
-                    {
+            {
                 return TryLoadPackage(file, out package);
             }
 
@@ -789,7 +789,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> SafeLoadPackageObjectAsync<T>(string path, string objectName) where T : UObject => await SafeLoadPackageObjectAsync<T>((path, objectName)).ConfigureAwait(false);
 
-        private async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
+        protected async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
         {
             try
             {
