@@ -16,11 +16,11 @@ public class AkActionResume
     {
         ActionParams = new ActionParams(Ar);
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             Ar.Read<uint>(); // IsMaster
         }
-        else if (WwiseVersions.WwiseVersion <= 62)
+        else if (WwiseVersions.Version <= 62)
         {
             Ar.Read<byte>(); // IsMaster
         }

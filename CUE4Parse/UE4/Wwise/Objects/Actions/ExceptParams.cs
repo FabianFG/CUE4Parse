@@ -10,7 +10,7 @@ public class ExceptParams
     public ExceptParams(FArchive Ar)
     {
         byte exceptionListSize;
-        if (WwiseVersions.WwiseVersion <= 122)
+        if (WwiseVersions.Version <= 122)
         {
             exceptionListSize = (byte)Ar.Read<uint>();
         }
@@ -36,7 +36,7 @@ public class ExceptionElement
     {
         Id = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 65)
+        if (WwiseVersions.Version > 65)
         {
             IsBus = Ar.Read<byte>();
         }

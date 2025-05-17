@@ -28,9 +28,9 @@ public class AkBankSourceData
 
         StreamType = Ar.Read<byte>();
 
-        if (WwiseVersions.WwiseVersion <= 46)
+        if (WwiseVersions.Version <= 46)
         {
-            if (WwiseVersions.WwiseVersion <= 26)
+            if (WwiseVersions.Version <= 26)
             {
                 DataIndex = Ar.Read<uint>();
                 SampleRate = Ar.Read<uint>();
@@ -44,11 +44,11 @@ public class AkBankSourceData
         }
 
         SourceId = Ar.Read<uint>();
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             // Do nothing
         }
-        else if (WwiseVersions.WwiseVersion <= 88)
+        else if (WwiseVersions.Version <= 88)
         {
             FileId = Ar.Read<uint>();
             if (StreamType != 1)
@@ -57,9 +57,9 @@ public class AkBankSourceData
                 InMemoryMediaSize = Ar.Read<uint>();
             }
         }
-        else if (WwiseVersions.WwiseVersion <= 150)
+        else if (WwiseVersions.Version <= 150)
         {
-            if (WwiseVersions.WwiseVersion <= 89 || WwiseVersions.WwiseVersion <= 112)
+            if (WwiseVersions.Version <= 89 || WwiseVersions.Version <= 112)
             {
                 FileId = Ar.Read<uint>();
                 if (StreamType != 2)
@@ -77,7 +77,7 @@ public class AkBankSourceData
             InMemoryMediaSize = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 112)
+        if (WwiseVersions.Version <= 112)
         {
             SourceBits = Ar.Read<byte>();
             IsLanguageSpecific = (SourceBits & (1 << 0)) != 0;
@@ -95,12 +95,12 @@ public class AkBankSourceData
 
         bool hasParam;
         bool alwaysParam;
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             hasParam = true;
             alwaysParam = true;
         }
-        else if (WwiseVersions.WwiseVersion <= 126)
+        else if (WwiseVersions.Version <= 126)
         {
             hasParam = (pluginType == 2 || pluginType == 5);
             alwaysParam = false;

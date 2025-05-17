@@ -22,7 +22,8 @@ public class WwiseReader
     public Dictionary<uint, string>? IdToString { get; }
     public string? Platform { get; }
     public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
-    public EnvSettings? EnvSettings { get; private set; }
+    public GlobalSettings? GlobalSettings { get; }
+    public EnvSettings? EnvSettings { get; }
     private uint Version => Header.Version;
 
     public WwiseReader(FArchive Ar)
@@ -65,9 +66,9 @@ public class WwiseReader
                     break;
                 case ESectionIdentifier.BKHD:
                     Header = new BankHeader(Ar, sectionLength);
-                    WwiseVersions.SetVersion(Header.Version);
+                    WwiseVersions.SetVersion(Version);
 #if DEBUG
-                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Header.Version} is not supported");              
+                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Version} is not supported");              
 #endif
                     break;
                 case ESectionIdentifier.INIT:
@@ -105,6 +106,7 @@ public class WwiseReader
                     }
                     break;
                 case ESectionIdentifier.STMG:
+                    //GlobalSettings = new GlobalSettings(Ar);
                     break;
                 case ESectionIdentifier.ENVS:
                     EnvSettings = new EnvSettings(Ar);

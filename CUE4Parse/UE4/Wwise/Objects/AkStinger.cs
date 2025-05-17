@@ -18,7 +18,7 @@ public class AkStinger
         SegmentId = Ar.Read<uint>();
         SyncPlayAt = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 62)
+        if (WwiseVersions.Version > 62)
         {
             CueFilterHash = Ar.Read<uint>();
         }

@@ -23,7 +23,7 @@ public enum EEventActionType : byte
     SetGameParameter = 0x13, // AkActionSetGameParameter
     ResetGameParameter = 0x14, // AkActionSetGameParameter
     Event = 0x15, // AkActionEvent
-    SetSwitch = 0x19, //CAkActionSetSwitch
+    SetSwitch = 0x19, // AkActionSetSwitch
     ToggleBypassEffect = 0x1A, // AkActionBypassFX
     ResetBypassEffect = 0x1B, // AkActionBypassFX
     Break = 0x1C, // AkActionBreak

@@ -25,13 +25,13 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     {
         LoopCount = Ar.Read<ushort>();
 
-        if (WwiseVersions.WwiseVersion > 72)
+        if (WwiseVersions.Version > 72)
         {
             LoopModMin = Ar.Read<ushort>();
             LoopModMax = Ar.Read<ushort>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 38)
+        if (WwiseVersions.Version <= 38)
         {
             TransitionTime = Ar.Read<int>();
             TransitionTimeModMin = Ar.Read<int>();
@@ -46,14 +46,14 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
 
         AvoidRepeatCount = Ar.Read<ushort>();
 
-        if (WwiseVersions.WwiseVersion > 36)
+        if (WwiseVersions.Version > 36)
         {
             TransitionMode = Ar.Read<ETransitionMode>();
             RandomMode = Ar.Read<ERandomMode>();
             Mode = Ar.Read<ERandomSequenceContainerMode>();
         }
 
-        if (WwiseVersions.WwiseVersion > 89)
+        if (WwiseVersions.Version > 89)
         {
             PlaylistFlags = Ar.Read<EPlayListFlags>();
         }

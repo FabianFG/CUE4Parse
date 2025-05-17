@@ -39,9 +39,9 @@ public readonly struct Hierarchy
             EHierarchyObjectType.FxCustom => new HierarchyFxCustom(Ar),
             EHierarchyObjectType.AuxiliaryBus => new HierarchyAuxiliaryBus(Ar),
             EHierarchyObjectType.AudioDevice => new HierarchyAudioDevice(Ar),
-            EHierarchyObjectType.LFO => new HierarchyGeneric(Ar),
-            EHierarchyObjectType.Envelope => new HierarchyGeneric(Ar),
-            EHierarchyObjectType.TimeMod => new HierarchyGeneric(Ar),
+            EHierarchyObjectType.LFO => new HierarchyLFO(Ar),
+            EHierarchyObjectType.Envelope => new HierarchyEnvelope(Ar),
+            EHierarchyObjectType.TimeMod => new HierarchyTimeMod(Ar),
             _ => new HierarchyGeneric(Ar)
         } : new HierarchyGeneric(Ar);
 

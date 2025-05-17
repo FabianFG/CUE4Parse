@@ -7,41 +7,33 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyBus : AbstractHierarchy
 {
-    public uint OverrideBusId { get; protected set; }
-    public uint DeviceSharesetId { get; protected set; }
-    public List<AkProp> Props { get; protected set; } = [];
-    //public List<AkPropRange>? PropRanges { get; protected set; }
-    public AkPositioningParams? PositioningParams { get; protected set; }
-    public AkAuxParams? AuxParams { get; protected set; }
-
-    public EAdvSettings? AdvSettingsParams { get; protected set; }
-    public ushort? MaxNumInstance { get; protected set; }
-    public uint? ChannelConfig { get; protected set; }
-    public byte? HdrEnvelopeFlags { get; protected set; }
-
-    public uint RecoveryTime { get; protected set; }
-
-    public List<AkDuckInfo> DuckInfo { get; protected set; } = [];
-
-    public AkFXParams FXParams { get; protected set; }
-
-    public byte OverrideAttachmentParams { get; protected set; }
-
-    public List<AkFXChunk> FXChunk { get; protected set; } = [];
-
-    public List<AkRTPC> RTPCs { get; protected set; }
-
-    public List<AkStateGroup>? StateGroups { get; protected set; }
+    public uint OverrideBusId { get; private set; }
+    public uint DeviceSharesetId { get; private set; }
+    public List<AkProp> Props { get; private set; } = [];
+    public AkPositioningParams? PositioningParams { get; private set; }
+    public AkAuxParams? AuxParams { get; private set; }
+    public EAdvSettings? AdvSettingsParams { get; private set; }
+    public ushort? MaxNumInstance { get; private set; }
+    public uint? ChannelConfig { get; private set; }
+    public byte? HdrEnvelopeFlags { get; private set; }
+    public uint RecoveryTime { get; private set; }
+    public float MaxDuckVolume { get; private set; }
+    public List<AkDuckInfo> DuckInfo { get; private set; } = [];
+    public AkFXBus FXBusParams { get; private set; }
+    public byte OverrideAttachmentParams { get; private set; }
+    public List<AkFXChunk> FXChunk { get; private set; } = [];
+    public List<AkRTPC> RTPCs { get; private set; }
+    public List<AkStateGroup>? StateGroups { get; private set; }
 
     public BaseHierarchyBus(FArchive Ar) : base(Ar)
     {
         OverrideBusId = Ar.Read<uint>();
-        if (WwiseVersions.WwiseVersion > 126 && OverrideBusId == 0)
+        if (WwiseVersions.Version > 126 && OverrideBusId == 0)
         {
             DeviceSharesetId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.WwiseVersion > 56)
+        if (WwiseVersions.Version > 56)
         {
             int propCount = Ar.Read<byte>();
             var propIds = new List<byte>(propCount);
@@ -66,13 +58,13 @@ public class BaseHierarchyBus : AbstractHierarchy
             }
         }
 
-        if (WwiseVersions.WwiseVersion > 122)
+        if (WwiseVersions.Version > 122)
         {
             PositioningParams = new AkPositioningParams(Ar);
             AuxParams = new AkAuxParams(Ar);
         }
 
-        if (WwiseVersions.WwiseVersion <= 53)
+        if (WwiseVersions.Version <= 53)
         {
             // TODO: Handle this case
         }
@@ -84,19 +76,19 @@ public class BaseHierarchyBus : AbstractHierarchy
             HdrEnvelopeFlags = Ar.Read<byte>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             var stateGroupId = Ar.Read<uint>();
         }
 
         RecoveryTime = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 38)
+        if (WwiseVersions.Version > 38)
         {
-            var maxDuckVolume = Ar.Read<float>();
+            MaxDuckVolume = Ar.Read<float>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             var stateSyncType = Ar.Read<uint>();
         }
@@ -107,15 +99,14 @@ public class BaseHierarchyBus : AbstractHierarchy
             DuckInfo.Add(new AkDuckInfo(Ar));
         }
 
-        //OverrideFX = Ar.Read<byte>() != 0;
-        FXParams = new AkFXParams(Ar);
+        FXBusParams = new AkFXBus(Ar);
 
-        if (WwiseVersions.WwiseVersion > 89 && WwiseVersions.WwiseVersion <= 145)
+        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>();
         }
 
-        if (WwiseVersions.WwiseVersion > 136)
+        if (WwiseVersions.Version > 136)
         {
             var numFx = Ar.Read<byte>();
             if (numFx > 0)
@@ -129,7 +120,7 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         RTPCs = AkRTPC.ReadMultiple(Ar);
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             // TODO: State chunk inlined
         }
@@ -138,7 +129,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             StateGroups = new AkStateChunk(Ar).Groups;
         }
 
-        if (WwiseVersions.WwiseVersion <= 126)
+        if (WwiseVersions.Version <= 126)
         {
             // TODO: FeedbackInfo
         }
@@ -179,7 +170,7 @@ public class BaseHierarchyBus : AbstractHierarchy
         if (AdvSettingsParams.HasValue)
         {
             writer.WritePropertyName("AdvSettingsParams");
-            writer.WriteValue(AdvSettingsParams.Value);
+            writer.WriteValue(AdvSettingsParams.Value.ToString());
         }
 
         if (MaxNumInstance.HasValue)
@@ -209,8 +200,8 @@ public class BaseHierarchyBus : AbstractHierarchy
             serializer.Serialize(writer, d);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("FXParams");
-        serializer.Serialize(writer, FXParams);
+        writer.WritePropertyName("FXBusParams");
+        serializer.Serialize(writer, FXBusParams);
 
         writer.WritePropertyName("OverrideAttachmentParams");
         writer.WriteValue(OverrideAttachmentParams);

@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkPositioningParams
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public EBitsPositioning BitsPositioning { get; }
     public byte? Flags3D { get; }
     public byte? PathMode { get; }

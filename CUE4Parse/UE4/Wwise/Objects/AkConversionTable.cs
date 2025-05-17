@@ -11,7 +11,7 @@ public class AkConversionTable
 
     public AkConversionTable(FArchive ar)
     {
-        if (WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version <= 36)
         {
             Scaling = ar.Read<uint>();
             Size = ar.Read<uint>();

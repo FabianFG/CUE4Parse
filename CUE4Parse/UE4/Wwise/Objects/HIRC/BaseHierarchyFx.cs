@@ -42,13 +42,13 @@ public class BaseHierarchyFx : AbstractHierarchy
 
         RTPCs = AkRTPC.ReadMultiple(Ar);
 
-        if (WwiseVersions.WwiseVersion <= 89)
+        if (WwiseVersions.Version <= 89)
         {
             // Do nothing for versions <= 89
         }
-        else if (WwiseVersions.WwiseVersion <= 126)
+        else if (WwiseVersions.Version <= 126)
         {
-            if (WwiseVersions.WwiseVersion > 122)
+            if (WwiseVersions.Version > 122)
             {
                 // Unused bytes
                 Ar.Read<byte>();

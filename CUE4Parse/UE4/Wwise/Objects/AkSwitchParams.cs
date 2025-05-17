@@ -1,15 +1,16 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-[JsonConverter(typeof(AkSwitchParamsConverter))]
 public class AkSwitchParams
 {
     public uint NodeId { get; private set; }
     public bool IsFirstOnly { get; private set; }
     public bool ContinuePlayback { get; private set; }
+    [JsonConverter(typeof(StringEnumConverter))]
     public EOnSwitchMode OnSwitchMode { get; private set; }
     public int FadeOutTime { get; private set; }
     public int FadeInTime { get; private set; }
@@ -18,14 +19,14 @@ public class AkSwitchParams
     {
         NodeId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion <= 89)
+        if (WwiseVersions.Version <= 89)
         {
             IsFirstOnly = Ar.Read<byte>() != 0;
             ContinuePlayback = Ar.Read<byte>() != 0;
             var onSwitchModeBitVector = Ar.Read<byte>();
             OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
         }
-        else if (WwiseVersions.WwiseVersion <= 150)
+        else if (WwiseVersions.Version <= 150)
         {
             var bitVector = Ar.Read<byte>();
             IsFirstOnly = (bitVector & 0b00000001) != 0;

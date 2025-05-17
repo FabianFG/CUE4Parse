@@ -17,12 +17,12 @@ public class AkTrackSrcInfo
     {
         TrackId = Ar.Read<uint>();
         SourceId = Ar.Read<uint>();
-        if (WwiseVersions.WwiseVersion > 150)
+        if (WwiseVersions.Version > 150)
         {
             CacheId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.WwiseVersion > 132)
+        if (WwiseVersions.Version > 132)
         {
             EventId = Ar.Read<uint>();
         }

@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkAuxParams
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public EAuxParams AuxParams { get; }
     public List<uint> AuxIds { get; }
     public uint ReflectionsAuxBus { get; }
@@ -22,7 +25,7 @@ public class AkAuxParams
             }
         }
 
-        if (WwiseVersions.WwiseVersion > 135)
+        if (WwiseVersions.Version > 135)
         {
             ReflectionsAuxBus = ar.Read<uint>();
         }

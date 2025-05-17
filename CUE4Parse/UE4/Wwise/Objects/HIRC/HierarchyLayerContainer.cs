@@ -21,7 +21,7 @@ public class HierarchyLayerContainer : BaseHierarchy
             Layers.Add(new AkLayer(Ar));
         }
 
-        if (WwiseVersions.WwiseVersion > 118)
+        if (WwiseVersions.Version > 118)
         {
             IsContinuousValidation = Ar.Read<byte>();
         }

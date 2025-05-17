@@ -19,16 +19,6 @@ public class AkMusicTransitionRule
             Rules.Add(rule);
         }
     }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Rules");
-        serializer.Serialize(writer, Rules);
-
-        writer.WriteEndObject();
-    }
 }
 
 public class TransitionRule
@@ -42,14 +32,14 @@ public class TransitionRule
 
     public TransitionRule(FArchive Ar)
     {
-        int numSrc = WwiseVersions.WwiseVersion <= 72 ? 1 : Ar.Read<int>();
+        int numSrc = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
         SrcIds = [];
         for (int i = 0; i < numSrc; i++)
         {
             SrcIds.Add(Ar.Read<int>());
         }
 
-        int numDst = WwiseVersions.WwiseVersion <= 72 ? 1 : Ar.Read<int>();
+        int numDst = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
         DstIds = [];
         for (int i = 0; i < numDst; i++)
         {
@@ -59,39 +49,11 @@ public class TransitionRule
         SrcRules = [new SrcRule(Ar)];
         DstRules = [new DstRule(Ar)];
 
-        HasTransitionObject = WwiseVersions.WwiseVersion <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
+        HasTransitionObject = WwiseVersions.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
         if (HasTransitionObject)
         {
             TransObject = new TransitionObject(Ar);
         }
-    }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("SrcIds");
-        serializer.Serialize(writer, SrcIds);
-
-        writer.WritePropertyName("DstIds");
-        serializer.Serialize(writer, DstIds);
-
-        writer.WritePropertyName("SrcRules");
-        serializer.Serialize(writer, SrcRules);
-
-        writer.WritePropertyName("DstRules");
-        serializer.Serialize(writer, DstRules);
-
-        writer.WritePropertyName("HasTransitionObject");
-        writer.WriteValue(HasTransitionObject);
-
-        if (HasTransitionObject)
-        {
-            writer.WritePropertyName("TransObject");
-            TransObject?.WriteJson(writer, serializer);
-        }
-
-        writer.WriteEndObject();
     }
 }
 
@@ -112,40 +74,12 @@ public class SrcRule
         FadeOffset = Ar.Read<int>();
         SyncType = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 62 && WwiseVersions.WwiseVersion <= 72)
+        if (WwiseVersions.Version > 62 && WwiseVersions.Version <= 72)
             MarkerId = Ar.Read<uint>();
-        else if (WwiseVersions.WwiseVersion > 72)
+        else if (WwiseVersions.Version > 72)
             CueFilterHash = Ar.Read<uint>();
 
         PlayPostExit = Ar.Read<byte>();
-    }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("TransitionTime");
-        writer.WriteValue(TransitionTime);
-
-        writer.WritePropertyName("FadeCurve");
-        writer.WriteValue(FadeCurve);
-
-        writer.WritePropertyName("FadeOffset");
-        writer.WriteValue(FadeOffset);
-
-        writer.WritePropertyName("SyncType");
-        writer.WriteValue(SyncType);
-
-        writer.WritePropertyName("MarkerId");
-        writer.WriteValue(MarkerId);
-
-        writer.WritePropertyName("CueFilterHash");
-        writer.WriteValue(CueFilterHash);
-
-        writer.WritePropertyName("PlayPostExit");
-        writer.WriteValue(PlayPostExit);
-
-        writer.WriteEndObject();
     }
 }
 
@@ -168,14 +102,14 @@ public class DstRule
         FadeCurve = Ar.Read<uint>();
         FadeOffset = Ar.Read<int>();
 
-        if (WwiseVersions.WwiseVersion <= 72)
+        if (WwiseVersions.Version <= 72)
             MarkerID = Ar.Read<uint>();
         else
             CueFilterHash = Ar.Read<uint>();
 
         JumpToId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 132)
+        if (WwiseVersions.Version > 132)
         {
             JumpToType = Ar.Read<ushort>();
             EntryType = Ar.Read<ushort>();
@@ -183,45 +117,8 @@ public class DstRule
 
         PlayPreEntry = Ar.Read<byte>();
 
-        if (WwiseVersions.WwiseVersion > 62)
+        if (WwiseVersions.Version > 62)
             DestMatchSourceCueName = Ar.Read<byte>();
-    }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("TransitionTime");
-        writer.WriteValue(TransitionTime);
-
-        writer.WritePropertyName("FadeCurve");
-        writer.WriteValue(FadeCurve);
-
-        writer.WritePropertyName("FadeOffset");
-        writer.WriteValue(FadeOffset);
-
-        writer.WritePropertyName("MarkerID");
-        writer.WriteValue(MarkerID);
-
-        writer.WritePropertyName("CueFilterHash");
-        writer.WriteValue(CueFilterHash);
-
-        writer.WritePropertyName("JumpToId");
-        writer.WriteValue(JumpToId);
-
-        writer.WritePropertyName("JumpToType");
-        writer.WriteValue(JumpToType);
-
-        writer.WritePropertyName("EntryType");
-        writer.WriteValue(EntryType);
-
-        writer.WritePropertyName("PlayPreEntry");
-        writer.WriteValue(PlayPreEntry);
-
-        writer.WritePropertyName("DestMatchSourceCueName");
-        writer.WriteValue(DestMatchSourceCueName);
-
-        writer.WriteEndObject();
     }
 }
 
@@ -241,28 +138,6 @@ public class TransitionObject
         PlayPreEntry = Ar.Read<byte>();
         PlayPostExit = Ar.Read<byte>();
     }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("SegmentId");
-        writer.WriteValue(SegmentId);
-
-        writer.WritePropertyName("FadeInParams");
-        FadeInParams.WriteJson(writer, serializer);
-
-        writer.WritePropertyName("FadeOutParams");
-        FadeOutParams.WriteJson(writer, serializer);
-
-        writer.WritePropertyName("PlayPreEntry");
-        writer.WriteValue(PlayPreEntry);
-
-        writer.WritePropertyName("PlayPostExit");
-        writer.WriteValue(PlayPostExit);
-
-        writer.WriteEndObject();
-    }
 }
 
 public class FadeParams
@@ -276,21 +151,5 @@ public class FadeParams
         TransitionTime = Ar.Read<int>();
         FadeCurve = Ar.Read<uint>();
         FadeOffset = Ar.Read<int>();
-    }
-
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("TransitionTime");
-        writer.WriteValue(TransitionTime);
-
-        writer.WritePropertyName("FadeCurve");
-        writer.WriteValue(FadeCurve);
-
-        writer.WritePropertyName("FadeOffset");
-        writer.WriteValue(FadeOffset);
-
-        writer.WriteEndObject();
     }
 }

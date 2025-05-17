@@ -8,40 +8,40 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 public class BaseHierarchy : AbstractHierarchy
 {
     public bool OverrideFX { get; set; }
-    public AkFXParams FXParams { get; protected set; }
-    public byte OverrideParentMetadataFlag { get; protected set; }
-    public byte NumFXMetadataFlag { get; protected set; }
-    public byte OverrideAttachmentParams { get; protected set; }
-    public uint OverrideBusId { get; protected set; }
-    public uint DirectParentId { get; protected set; }
-    public byte Priority { get; protected set; }
-    public byte PriorityOverrideParent { get; protected set; }
-    public byte PriorityApplyDistFactor { get; protected set; }
-    public sbyte DistOffset { get; protected set; }
-    public EMidiBehaviorFlags MidiBehaviorFlags { get; protected set; }
-    public List<AkProp> Props { get; protected set; }
-    public List<AkPropRange> PropRanges { get; protected set; }
-    public AkPositioningParams PositioningParams { get; protected set; }
-    public AkAuxParams? AuxParams { get; protected set; }
-    public EAdvSettings AdvSettingsParams { get; protected set; }
-    public EVirtualQueueBehavior VirtualQueueBehavior { get; protected set; }
-    public ushort MaxNumInstance { get; protected set; }
-    public EBelowThresholdBehavior BelowThresholdBehavior { get; protected set; }
-    public EHdrEnvelopeFlags HdrEnvelopeFlags { get; protected set; }
-    public List<AkStateGroup> StateGroups { get; protected set; }
-    public List<AkRTPC> RTPCs { get; protected set; }
+    public AkFXParams FXParams { get; private set; }
+    public byte OverrideParentMetadataFlag { get; private set; }
+    public byte NumFXMetadataFlag { get; private set; }
+    public byte OverrideAttachmentParams { get; private set; }
+    public uint OverrideBusId { get; private set; }
+    public uint DirectParentId { get; private set; }
+    public byte Priority { get; private set; }
+    public byte PriorityOverrideParent { get; private set; }
+    public byte PriorityApplyDistFactor { get; private set; }
+    public sbyte DistOffset { get; private set; }
+    public EMidiBehaviorFlags MidiBehaviorFlags { get; private set; }
+    public List<AkProp> Props { get; private set; }
+    public List<AkPropRange> PropRanges { get; private set; }
+    public AkPositioningParams PositioningParams { get; private set; }
+    public AkAuxParams? AuxParams { get; private set; }
+    public EAdvSettings AdvSettingsParams { get; private set; }
+    public EVirtualQueueBehavior VirtualQueueBehavior { get; private set; }
+    public ushort MaxNumInstance { get; private set; }
+    public EBelowThresholdBehavior BelowThresholdBehavior { get; private set; }
+    public EHdrEnvelopeFlags HdrEnvelopeFlags { get; private set; }
+    public List<AkStateGroup> StateGroups { get; private set; }
+    public List<AkRTPC> RTPCs { get; private set; }
 
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
         OverrideFX = Ar.Read<byte>() != 0;
         FXParams = new AkFXParams(Ar);
 
-        if (WwiseVersions.WwiseVersion > 136)
+        if (WwiseVersions.Version > 136)
         {
             SetInitialMetadataParams(Ar);
         }
 
-        if (WwiseVersions.WwiseVersion > 89 && WwiseVersions.WwiseVersion <= 145)
+        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>();
         }
@@ -49,14 +49,14 @@ public class BaseHierarchy : AbstractHierarchy
         OverrideBusId = Ar.Read<uint>();
         DirectParentId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             Priority = Ar.Read<byte>();
             PriorityOverrideParent = Ar.Read<byte>();
             PriorityApplyDistFactor = Ar.Read<byte>();
             DistOffset = Ar.Read<sbyte>();
         }
-        else if (WwiseVersions.WwiseVersion <= 89)
+        else if (WwiseVersions.Version <= 89)
         {
             PriorityOverrideParent = Ar.Read<byte>();
             PriorityApplyDistFactor = Ar.Read<byte>();
@@ -73,7 +73,7 @@ public class BaseHierarchy : AbstractHierarchy
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
-        if (WwiseVersions.WwiseVersion <= 122)
+        if (WwiseVersions.Version <= 122)
         {
             // TODO: implement legacy positioning params
             PositioningParams = new AkPositioningParams(Ar);
@@ -83,19 +83,19 @@ public class BaseHierarchy : AbstractHierarchy
             PositioningParams = new AkPositioningParams(Ar);
         }
 
-        if (WwiseVersions.WwiseVersion > 65)
+        if (WwiseVersions.Version > 65)
         {
             AuxParams = new AkAuxParams(Ar);
         }
 
         SetAdvSettingsParams(Ar);
 
-        if (WwiseVersions.WwiseVersion <= 52)
+        if (WwiseVersions.Version <= 52)
         {
             // TODO: implement legacy state handling
             StateGroups = new AkStateChunk(Ar).Groups;
         }
-        else if (WwiseVersions.WwiseVersion <= 122)
+        else if (WwiseVersions.Version <= 122)
         {
             // TODO: implement legacy state handling
             StateGroups = new AkStateChunk(Ar).Groups;

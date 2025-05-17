@@ -2,7 +2,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
@@ -33,9 +32,8 @@ public class AkTransParams
         {
             TransitionTime = Ar.Read<uint>();
             var fadeCurve = Ar.Read<uint>();
-            FadeCurve = (ECurveInterpolation)(byte)fadeCurve;
+            FadeCurve = (ECurveInterpolation) (byte) fadeCurve;
             FadeOffset = Ar.Read<uint>();
         }
     }
-
 }

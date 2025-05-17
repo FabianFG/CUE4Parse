@@ -3,38 +3,6 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkProp
-{
-    public byte Id { get; }
-    public float Value { get; }
-
-    public AkProp(FArchive Ar)
-    {
-        Id = Ar.Read<byte>();
-        Value = Ar.Read<float>();
-    }
-
-    public AkProp(byte id, float value)
-    {
-        Id = id;
-        Value = value;
-    }
-}
-
-public class AkPropRange
-{
-    public byte Id { get; }
-    public float Min { get; }
-    public float Max { get; }
-
-    public AkPropRange(FArchive ar)
-    {
-        Id = ar.Read<byte>();
-        Min = ar.Read<float>();
-        Max = ar.Read<float>();
-    }
-}
-
 public class AkPropBundle
 {
     public List<AkProp> Props { get; }
@@ -55,5 +23,90 @@ public class AkPropBundle
         {
             PropRanges.Add(new AkPropRange(Ar));
         }
+    }
+
+    public static List<AkProp> ReadLinearAkProp(FArchive Ar)
+    {
+        int propCount = Ar.Read<byte>();
+        var ids = new List<byte>(propCount);
+        var values = new List<float>(propCount);
+
+        for (int i = 0; i < propCount; i++)
+        {
+            ids.Add(Ar.Read<byte>());
+        }
+
+        for (int i = 0; i < propCount; i++)
+        {
+            values.Add(Ar.Read<float>());
+        }
+
+        List<AkProp> props = new(propCount);
+        for (int i = 0; i < propCount; i++)
+        {
+            props.Add(new AkProp(ids[i], values[i]));
+        }
+
+        return props;
+    }
+
+    public static List<AkPropRange> ReadLinearAkPropRange(FArchive Ar)
+    {
+        int propCount = Ar.Read<byte>();
+        var ids = new List<byte>(propCount);
+
+        for (int i = 0; i < propCount; i++)
+        {
+            ids.Add(Ar.Read<byte>());
+        }
+
+        var ranges = new List<AkPropRange>(propCount);
+        for (int i = 0; i < propCount; i++)
+        {
+            float min = Ar.Read<float>();
+            float max = Ar.Read<float>();
+            ranges.Add(new AkPropRange(ids[i], min, max));
+        }
+
+        return ranges;
+    }
+}
+
+public class AkProp
+{
+    public byte Id { get; }
+    public float Value { get; }
+
+    public AkProp(FArchive Ar)
+    {
+        Id = Ar.Read<byte>();
+        Value = Ar.Read<float>();
+    }
+
+    public AkProp(byte id, float value)
+    {
+        Id = id;
+        Value = value;
+    }
+}
+
+public class AkPropRange
+{
+    public byte Id { get; private set; }
+    public float Min { get; private set; }
+    public float Max { get; private set; }
+
+    public AkPropRange(FArchive Ar)
+    {
+        Id = Ar.Read<byte>();
+        Min = Ar.Read<float>();
+        Max = Ar.Read<float>();
+    }
+
+    public AkPropRange(byte id, float min, float max)
+    {
+        Id = id;
+        Min = min;
+        Max = max;
     }
 }

@@ -9,7 +9,7 @@ public class AkPlayList
 
     public AkPlayList(FArchive Ar)
     {
-        var numItems = WwiseVersions.WwiseVersion <= 38 ? Ar.Read<uint>() : Ar.Read<ushort>();
+        var numItems = WwiseVersions.Version <= 38 ? Ar.Read<uint>() : Ar.Read<ushort>();
 
         PlaylistItems = new List<AkPlayListItem>((int) numItems);
 
@@ -27,7 +27,7 @@ public class AkPlayList
         public AkPlayListItem(FArchive Ar)
         {
             PlayID = Ar.Read<uint>();
-            Weight = WwiseVersions.WwiseVersion <= 56 ? Ar.Read<byte>() : Ar.Read<int>(); // Could also be uint for version 128
+            Weight = WwiseVersions.Version <= 56 ? Ar.Read<byte>() : Ar.Read<int>(); // Could also be uint for version 128
         }
     }
 }

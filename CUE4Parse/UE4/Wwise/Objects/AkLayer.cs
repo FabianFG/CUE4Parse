@@ -18,12 +18,12 @@ public class AkLayer
         RTPCs = AkRTPC.ReadMultiple(Ar);
         RTPCId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 89)
+        if (WwiseVersions.Version > 89)
         {
             RTPCType = Ar.Read<byte>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 59)
+        if (WwiseVersions.Version <= 59)
         {
             RTPCCrossfadingDefaultValue = Ar.Read<float>();
         }

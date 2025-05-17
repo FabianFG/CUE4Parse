@@ -25,7 +25,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
         MusicTransitionRule = new AkMusicTransitionRule(Ar);
 
         Arguments = [];
-        if (WwiseVersions.WwiseVersion <= 72)
+        if (WwiseVersions.Version <= 72)
         {
             // TODO: GroupSettings = new AkGroupSettings(Ar);
         }
@@ -67,7 +67,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
         writer.WritePropertyName("MusicTransitionRule");
         serializer.Serialize(writer, MusicTransitionRule.Rules);
 
-        if (WwiseVersions.WwiseVersion <= 72)
+        if (WwiseVersions.Version <= 72)
         {
             //writer.WritePropertyName("GroupSettings");
             //serializer.Serialize(writer, GroupSettings);

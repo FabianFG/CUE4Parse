@@ -37,9 +37,7 @@ using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Oodle.Objects;
 using CUE4Parse.UE4.Shaders;
 using CUE4Parse.UE4.Wwise;
-using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
-using CUE4Parse.UE4.Wwise.Objects.Actions;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -3174,59 +3172,6 @@ public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseL
 
     public override FWwiseLocalizedSoundBankCookedData? ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedSoundBankCookedData? existingValue, bool hasExistingValue, JsonSerializer serializer)
         => throw new NotImplementedException("Deserialization not implemented");
-}
-
-public class AkSwitchParamsConverter : JsonConverter<AkSwitchParams>
-{
-    public override void WriteJson(JsonWriter writer, AkSwitchParams value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("NodeID");
-        writer.WriteValue(value.NodeId);
-
-        writer.WritePropertyName("IsFirstOnly");
-        writer.WriteValue(value.IsFirstOnly);
-
-        writer.WritePropertyName("ContinuePlayback");
-        writer.WriteValue(value.ContinuePlayback);
-
-        writer.WritePropertyName("OnSwitchMode");
-        writer.WriteValue(value.OnSwitchMode.ToString());
-
-        writer.WritePropertyName("FadeOutTime");
-        writer.WriteValue(value.FadeOutTime);
-
-        writer.WritePropertyName("FadeInTime");
-        writer.WriteValue(value.FadeInTime);
-
-        writer.WriteEndObject();
-    }
-
-    public override AkSwitchParams ReadJson(JsonReader reader, Type objectType, AkSwitchParams existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class ActionParamsConverter : JsonConverter<ActionParams>
-{
-    public override void WriteJson(JsonWriter writer, ActionParams value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("EFadeCurve");
-        writer.WriteValue(value.FadeCurve.ToString());
-
-        writer.WriteEndObject();
-    }
-
-    public override ActionParams ReadJson(JsonReader reader, Type objectType, ActionParams existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
 }
 
 public class BankHeaderConverter : JsonConverter<BankHeader>

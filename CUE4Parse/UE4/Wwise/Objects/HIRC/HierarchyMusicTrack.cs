@@ -23,17 +23,17 @@ public class HierarchyMusicTrack : AbstractHierarchy
 
     public HierarchyMusicTrack(FArchive Ar) : base(Ar)
     {
-        if (WwiseVersions.WwiseVersion > 89 && WwiseVersions.WwiseVersion <= 112)
+        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 112)
         {
             Flags = Ar.Read<EMusicFlags>();
         }
-        else if (WwiseVersions.WwiseVersion <= 152)
+        else if (WwiseVersions.Version <= 152)
         {
             Flags = Ar.Read<EMusicFlags>();
         }
 
         var numSources = Ar.Read<uint>();
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             for (int i = 0; i < numSources; i++)
             {
@@ -46,7 +46,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
             Sources.Add(new AkBankSourceData(Ar));
         }
 
-        if (WwiseVersions.WwiseVersion > 26)
+        if (WwiseVersions.Version > 26)
         {
             var numPlaylistItems = Ar.Read<uint>();
             for (int i = 0; i < numPlaylistItems; i++)
@@ -57,7 +57,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
             Ar.Read<uint>(); // numSubTrack
         }
 
-        if (WwiseVersions.WwiseVersion > 62)
+        if (WwiseVersions.Version > 62)
         {
             var numClipAutomationItems = Ar.Read<uint>();
             for (int i = 0; i < numClipAutomationItems; i++)
@@ -69,14 +69,14 @@ public class HierarchyMusicTrack : AbstractHierarchy
         Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         BaseParams = new BaseHierarchy(Ar);
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             Loop = Ar.Read<short>();
             LoopModMin = Ar.Read<short>();
             LoopModMax = Ar.Read<short>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 89)
+        if (WwiseVersions.Version <= 89)
         {
             ERSType = Ar.Read<uint>();
         }
@@ -92,7 +92,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
 
         LookAheadTime = Ar.Read<int>();
 
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             uint numPlaylistItems = Ar.Read<uint>();
             if (numPlaylistItems > 0)

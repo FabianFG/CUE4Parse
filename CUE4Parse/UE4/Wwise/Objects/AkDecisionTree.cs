@@ -25,11 +25,11 @@ public class AkDecisionTree
 
     private static uint DetermineItemSize()
     {
-        if (WwiseVersions.WwiseVersion <= 29)
+        if (WwiseVersions.Version <= 29)
             return 0x08;
-        if (WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version <= 36)
             return 0x0C;
-        if (WwiseVersions.WwiseVersion <= 45)
+        if (WwiseVersions.Version <= 45)
             return 0x08;
         return 0x0C; // Default
     }
@@ -64,16 +64,6 @@ public class AkDecisionTree
             }
         }
     }
-
-    //public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    //{
-    //    writer.WriteStartObject();
-
-    //    writer.WritePropertyName("DecisionTree");
-    //    serializer.Serialize(writer, Nodes);
-
-    //    writer.WriteEndObject();
-    //}
 }
 
 public class AkDecisionTreeNode
@@ -104,12 +94,12 @@ public class AkDecisionTreeNode
             ChildrenCount = Ar.Read<ushort>();
         }
 
-        if (WwiseVersions.WwiseVersion > 29 && WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version > 29 && WwiseVersions.Version <= 36)
         {
             Weight = Ar.Read<ushort>();
             Probability = Ar.Read<ushort>();
         }
-        else if (WwiseVersions.WwiseVersion > 45)
+        else if (WwiseVersions.Version > 45)
         {
             Weight = Ar.Read<ushort>();
             Probability = Ar.Read<ushort>();
@@ -131,38 +121,4 @@ public class AkDecisionTreeNode
 
         return isIdInvalid || isOverBounds;
     }
-
-    //public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    //{
-    //    writer.WriteStartObject();
-
-    //    writer.WritePropertyName("Key");
-    //    writer.WriteValue(Key);
-
-    //    writer.WritePropertyName("AudioNodeId");
-    //    writer.WriteValue(AudioNodeId);
-
-    //    if (ChildrenIndex != 0)
-    //    {
-    //        writer.WritePropertyName("ChildrenIndex");
-    //        writer.WriteValue(ChildrenIndex);
-    //    }
-
-    //    if (ChildrenCount != 0)
-    //    {
-    //        writer.WritePropertyName("ChildrenCount");
-    //        writer.WriteValue(ChildrenCount);
-    //    }
-
-    //    writer.WritePropertyName("Weight");
-    //    writer.WriteValue(Weight);
-
-    //    writer.WritePropertyName("Probability");
-    //    writer.WriteValue(Probability);
-
-    //    writer.WritePropertyName("Children");
-    //    serializer.Serialize(writer, Children);
-
-    //    writer.WriteEndObject();
-    //}
 }

@@ -37,8 +37,10 @@ public class HierarchyEventAction : AbstractHierarchy
             EEventActionType.SetHighPassFilter or
                 EEventActionType.SetHighPassFilter2 or
                 EEventActionType.ResetVoiceLowPassFilter or
+                EEventActionType.ResetBusVolume or
                 EEventActionType.SetVoiceVolume or
                 EEventActionType.SetVoicePitch or
+                EEventActionType.SetBusVolume or
                 EEventActionType.SetVoiceLowPassFilter or
                 EEventActionType.ResetVoiceVolume or
                 EEventActionType.ResetVoicePitch => new AkActionSetAkProps(Ar),
@@ -46,7 +48,8 @@ public class HierarchyEventAction : AbstractHierarchy
             EEventActionType.SetSwitch => new AkActionSetSwitch(Ar),
             EEventActionType.SetState => new AkActionSetState(Ar),
             EEventActionType.Mute or
-                EEventActionType.UnMute => new AkActionBase(Ar),
+                EEventActionType.UnMute or
+                EEventActionType.ResetPlaylist => new AkActionBase(Ar),
             EEventActionType.Resume => new AkActionResume(Ar),
             EEventActionType.Pause => new AkActionPause(Ar),
             // TODO: add all action types

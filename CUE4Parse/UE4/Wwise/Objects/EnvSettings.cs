@@ -12,12 +12,12 @@ public class EnvSettings
         ConversionTableEntries = [];
         int maxY;
         int maxX;
-        if (WwiseVersions.WwiseVersion <= 89)
+        if (WwiseVersions.Version <= 89)
         {
             maxX = 2;
             maxY = 2;
         }
-        else if (WwiseVersions.WwiseVersion <= 150)
+        else if (WwiseVersions.Version <= 150)
         {
             maxX = 2;
             maxY = 3;
@@ -34,7 +34,7 @@ public class EnvSettings
             {
                 var curveEnabled = ar.Read<byte>();
                 int curveSize;
-                if (WwiseVersions.WwiseVersion <= 36)
+                if (WwiseVersions.Version <= 36)
                 {
                     var curveScaling = ar.Read<uint>();
                     curveSize = (int) ar.Read<uint>();

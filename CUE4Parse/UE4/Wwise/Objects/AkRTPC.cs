@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
@@ -32,28 +35,31 @@ public class AkRTPCGraphPoint
 public class AkRTPC
 {
     public uint RTPCId { get; }
-    public byte RTPCType { get; }
-    public byte RTPCAccum { get; }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public ERTPCType RTPCType { get; }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public ERTPCAccum RTPCAccum { get; }
     public int ParamId { get; }
     public uint RTPCCurveId { get; }
-    public byte Scaling { get; }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public ECurveScaling Scaling { get; }
     public List<AkRTPCGraphPoint> GraphPoints { get; }
 
     public AkRTPC(FArchive Ar, bool modulator = false)
     {
         RTPCId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion > 89)
+        if (WwiseVersions.Version > 89)
         {
-            RTPCType = Ar.Read<byte>();
-            RTPCAccum = Ar.Read<byte>();
+            RTPCType = Ar.Read<ERTPCType>();
+            RTPCAccum = Ar.Read<ERTPCAccum>();
         }
 
-        if (WwiseVersions.WwiseVersion <= 89)
+        if (WwiseVersions.Version <= 89)
         {
             ParamId = Ar.Read<int>();
         }
-        else if (WwiseVersions.WwiseVersion <= 113)
+        else if (WwiseVersions.Version <= 113)
         {
             ParamId = Ar.Read<byte>();
         }
@@ -64,13 +70,13 @@ public class AkRTPC
 
         RTPCCurveId = Ar.Read<uint>();
 
-        if (WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version <= 36)
         {
-            Scaling = Ar.Read<byte>();
+            Scaling = Ar.Read<ECurveScaling>();
         }
         else
         {
-            Scaling = Ar.Read<byte>();
+            Scaling = Ar.Read<ECurveScaling>();
         }
 
         ushort pointsCount = Ar.Read<ushort>();

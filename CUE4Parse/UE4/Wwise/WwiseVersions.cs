@@ -9,7 +9,7 @@ public static class WwiseVersions
     // Global access to wwise version game currently uses
     // Should always change because it's possible for game to use multiple versions
     private static uint _wwiseVersion;
-    public static uint WwiseVersion
+    public static uint Version
     {
         get => Interlocked.CompareExchange(ref _wwiseVersion, 0, 0);
         private set => Interlocked.Exchange(ref _wwiseVersion, value);
@@ -17,7 +17,7 @@ public static class WwiseVersions
 
     public static void SetVersion(uint version)
     {
-        WwiseVersion = version;
+        Version = version;
     }
 
     // Credits to https://github.com/bnnm/wwiser/blob/ead1751c0320e5e9b532f80bf738cba5f5d2664e/wwiser/parser/wdefs.py#L22
@@ -74,5 +74,5 @@ public static class WwiseVersions
         150     // Dead by Daylight
     ];
 
-    public static bool IsSupported() => SupportedVersions.Contains(WwiseVersion);
+    public static bool IsSupported() => SupportedVersions.Contains(Version);
 }

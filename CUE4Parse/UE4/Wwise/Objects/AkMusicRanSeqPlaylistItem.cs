@@ -19,7 +19,7 @@ public class AkMusicRanSeqPlaylistItem
         NumChildren = Ar.Read<uint>();
         Children = [];
 
-        if (WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version <= 36)
         {
             if (NumChildren != 0)
             {
@@ -35,7 +35,7 @@ public class AkMusicRanSeqPlaylistItem
         }
         else
         {
-            if (WwiseVersions.WwiseVersion <= 44)
+            if (WwiseVersions.Version <= 44)
             {
                 if (NumChildren == 0)
                 {
@@ -73,7 +73,7 @@ public class LoopInfo
     {
         Loop = Ar.Read<short>();
 
-        if (WwiseVersions.WwiseVersion > 89)
+        if (WwiseVersions.Version > 89)
         {
             LoopMin = Ar.Read<short>();
             LoopMax = Ar.Read<short>();
@@ -90,7 +90,7 @@ public class WeightInfo
 
     public WeightInfo(FArchive Ar)
     {
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             Weight = Ar.Read<ushort>();
         }
@@ -99,10 +99,8 @@ public class WeightInfo
             Weight = (ushort) Ar.Read<uint>();
         }
 
-
-            AvoidRepeatCount = Ar.Read<ushort>();
-            IsUsingWeight = Ar.Read<byte>();
-            IsShuffle = Ar.Read<byte>();
-        
+        AvoidRepeatCount = Ar.Read<ushort>();
+        IsUsingWeight = Ar.Read<byte>();
+        IsShuffle = Ar.Read<byte>();
     }
 }

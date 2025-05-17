@@ -14,12 +14,12 @@ public class AkActionSetGameParameter
     public AkActionSetGameParameter(FArchive Ar)
     {
         ActionParams = new ActionParams(Ar);
-        if (WwiseVersions.WwiseVersion > 89)
+        if (WwiseVersions.Version > 89)
         {
             BypassTransition = Ar.Read<byte>() != 0;
         }
 
-        if (WwiseVersions.WwiseVersion <= 56)
+        if (WwiseVersions.Version <= 56)
         {
             ValueMeaning = (EValueMeaning) Ar.Read<uint>();
         }

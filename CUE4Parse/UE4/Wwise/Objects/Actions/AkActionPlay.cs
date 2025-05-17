@@ -11,12 +11,12 @@ public class AkActionPlay
     public AkActionPlay(FArchive Ar)
     {
         ActionParams = new ActionParams(Ar);
-        if (WwiseVersions.WwiseVersion > 26)
+        if (WwiseVersions.Version > 26)
         {
             BankId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.WwiseVersion >= 144)
+        if (WwiseVersions.Version >= 144)
         {
             BankType = Ar.Read<uint>();
         }

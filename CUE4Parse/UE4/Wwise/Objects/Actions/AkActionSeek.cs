@@ -6,14 +6,14 @@ public class AkActionSeek
 {
     public byte IsSeekRelativeToDuration { get; protected set; }
     public RandomizerModifier RandomizerModifier { get; private set; }
-    public byte SnapToNearestMarket { get; protected set; }
+    public byte SnapToNearestMarker { get; protected set; }
     public ExceptParams ExceptParams { get; private set; }
 
     public AkActionSeek(FArchive Ar)
     {
         IsSeekRelativeToDuration = Ar.Read<byte>();
         RandomizerModifier = new RandomizerModifier(Ar);
-        SnapToNearestMarket = Ar.Read<byte>();
+        SnapToNearestMarker = Ar.Read<byte>();
         ExceptParams = new ExceptParams(Ar);
     }
 }

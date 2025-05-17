@@ -21,7 +21,7 @@ public class HierarchyAttenuation : AbstractHierarchy
 
     public HierarchyAttenuation(FArchive Ar) : base(Ar)
     {
-        if (WwiseVersions.WwiseVersion > 136)
+        if (WwiseVersions.Version > 136)
         {
             IsHeightSpreadEnabled = Ar.Read<byte>();
         }
@@ -34,13 +34,13 @@ public class HierarchyAttenuation : AbstractHierarchy
             OutsideVolume = Ar.Read<float>();
             LoPass = Ar.Read<float>();
 
-            if (WwiseVersions.WwiseVersion > 89)
+            if (WwiseVersions.Version > 89)
             {
                 HiPass = Ar.Read<float>();
             }
         }
 
-        int numCurves = WwiseVersions.WwiseVersion switch
+        int numCurves = WwiseVersions.Version switch
         {
             <= 62 => 5,
             <= 72 => 4,
@@ -55,7 +55,7 @@ public class HierarchyAttenuation : AbstractHierarchy
         }
 
         int numCurvesFinal;
-        if (WwiseVersions.WwiseVersion <= 36)
+        if (WwiseVersions.Version <= 36)
         {
             numCurvesFinal = (int) Ar.Read<uint>(); // Use uint for legacy versions and cast to int
         }

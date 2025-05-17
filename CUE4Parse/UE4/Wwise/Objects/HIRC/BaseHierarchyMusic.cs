@@ -13,7 +13,7 @@ public abstract class BaseHierarchyMusic : AbstractHierarchy
 
     protected BaseHierarchyMusic(FArchive Ar) : base(Ar)
     {
-        Flags = WwiseVersions.WwiseVersion > 89 ? Ar.Read<EMusicFlags>() : EMusicFlags.None;
+        Flags = WwiseVersions.Version > 89 ? Ar.Read<EMusicFlags>() : EMusicFlags.None;
         Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         ContainerHierarchy = new BaseHierarchy(Ar);
         ChildIds = new AkChildren(Ar).ChildIds;

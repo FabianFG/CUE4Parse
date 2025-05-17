@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
@@ -13,11 +14,11 @@ public class AkFX
 
     public AkFX(FArchive Ar)
     {
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             // No additional fields for version <= 26
         }
-        else if (WwiseVersions.WwiseVersion <= 145)
+        else if (WwiseVersions.Version <= 145)
         {
             FXIndex = Ar.Read<byte>();
             FXId = Ar.Read<uint>();
@@ -43,7 +44,7 @@ public class AkFXParams
     public AkFXParams(FArchive Ar)
     {
         int count;
-        if (WwiseVersions.WwiseVersion <= 26)
+        if (WwiseVersions.Version <= 26)
         {
             count = Ar.Read<uint>() != 0 ? 1 : 0; // uNumFx (flag check for version <= 26)
         }
@@ -55,11 +56,11 @@ public class AkFXParams
         Effects = [];
         if (count > 0)
         {
-            if (WwiseVersions.WwiseVersion <= 26)
+            if (WwiseVersions.Version <= 26)
             {
                 // No additional fields for version <= 26
             }
-            else if (WwiseVersions.WwiseVersion <= 145)
+            else if (WwiseVersions.Version <= 145)
             {
                 BypassAll = Ar.Read<byte>() != 0;
             }
@@ -87,5 +88,74 @@ public class AkFXChunk
         FXIndex = Ar.Read<byte>();
         FXId = Ar.Read<uint>();
         IsShareSet = Ar.Read<byte>();
+    }
+
+    public AkFXChunk(byte fxIndex, uint fxId, byte isShareSet)
+    {
+        FXIndex = fxIndex;
+        FXId = fxId;
+        IsShareSet = isShareSet;
+    }
+}
+
+public class AkFXBus
+{
+    public byte BitsFXBypass { get; set; }
+    public List<AkFXChunk> FXChunks { get; set; } = [];
+    public uint FXId0 { get; set; }
+    public bool IsShareSet0 { get; set; }
+
+    public AkFXBus(FArchive Ar)
+    {
+        int count = 0;
+        if (WwiseVersions.Version <= 26)
+        {
+            var numFX = Ar.Read<uint>();
+            if (numFX != 0)
+            {
+                count = 1;
+            }
+        }
+        else if (WwiseVersions.Version <= 145)
+        {
+            count = Ar.Read<byte>(); // numFX
+        }
+        else
+        {
+            count = 0;
+        }
+
+        bool readFX = false;
+        if (WwiseVersions.Version > 48 && WwiseVersions.Version <= 65)
+        {
+            readFX = count > 0; // TODO: or if is enviromental, only possible in versions <= 53
+        }
+        else
+        {
+            readFX = count > 0;
+        }
+
+        if (readFX)
+        {
+            if (WwiseVersions.Version > 26)
+            {
+                BitsFXBypass = Ar.Read<byte>();
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                var fxIndex = Ar.Read<byte>();
+                var fxId = Ar.Read<uint>();
+                var isShareSet = Ar.Read<byte>();
+                FXChunks.Add(new AkFXChunk(fxIndex, fxId, isShareSet));
+                Ar.Read<byte>(); // unused byte
+            }
+        }
+
+        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+        {
+            FXId0 = Ar.Read<uint>();
+            IsShareSet0 = Ar.Read<byte>() != 0;
+        }
     }
 }

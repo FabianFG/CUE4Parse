@@ -70,7 +70,7 @@ public class AkStateChunk
             for (int s = 0; s < stateCount; s++)
             {
                 uint stateId = Ar.Read<uint>();
-                if (WwiseVersions.WwiseVersion <= 145)
+                if (WwiseVersions.Version <= 145)
                 {
                     uint stateInstanceId = Ar.Read<uint>();
                     states.Add(new AkState(stateId, stateInstanceId, []));
