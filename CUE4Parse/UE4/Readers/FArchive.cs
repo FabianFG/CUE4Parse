@@ -335,33 +335,6 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
-        /// <summary>
-        /// Reads a SIGNED‑BYTE‑terminated ASCII string.
-        /// Stops when a byte <= 0 is encountered, or after 255 chars.
-        /// </summary>
-        /// <exception cref="ArgumentException">If string exceeds 255 characters without terminator.</exception>
-        public string ReadStz()
-        {
-            var sb = new StringBuilder(16);
-            int count = 0;
-
-            while (true)
-            {
-                sbyte b = (sbyte) Read<byte>();
-
-                // Terminate on zero or negative value
-                if (b <= 0)
-                    break;
-
-                sb.Append((char) b);
-
-                if (++count > 255)
-                    throw new ArgumentException("ReadStz: string too long (no terminator within 255 bytes).");
-            }
-
-            return sb.ToString();
-        }
-
         public virtual string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization

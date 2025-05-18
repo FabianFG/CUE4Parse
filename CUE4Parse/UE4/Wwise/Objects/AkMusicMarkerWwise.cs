@@ -29,7 +29,7 @@ public class AkMusicMarkerWwise
         }
         else
         {
-            MarkerName = Ar.ReadStz();
+            MarkerName = WwiseReader.ReadStzString(Ar);
         }
     }
 

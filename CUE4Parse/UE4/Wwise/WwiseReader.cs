@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
@@ -75,7 +76,7 @@ public class WwiseReader
                     Initialization = Ar.ReadArray(() =>
                     {
                         Ar.Position += 4;
-                        return Version <= 136 ? Ar.ReadFString() : ReadString(Ar);
+                        return Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
                     });
                     break;
                 case ESectionIdentifier.DIDX:
@@ -114,7 +115,7 @@ public class WwiseReader
                 case ESectionIdentifier.FXPR:
                     break;
                 case ESectionIdentifier.PLAT:
-                    Platform = Version <= 136 ? Ar.ReadFString() : ReadString(Ar);
+                    Platform = Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
                     break;
                 default:
 #if DEBUG
@@ -169,9 +170,10 @@ public class WwiseReader
         }
     }
 
-    public string ReadString(FArchive Ar)
+    public static string ReadStzString(FArchive Ar)
     {
         List<byte> bytes = [];
+        int count = 0;
 
         while (true)
         {
@@ -179,7 +181,10 @@ public class WwiseReader
             if (b == 0)
                 break;
             bytes.Add(b);
+
+            if (++count > 255)
+                throw new ArgumentException("ReadStz: string too long (no terminator within 255 bytes).");
         }
-        return Encoding.UTF8.GetString(bytes.ToArray());
+        return Encoding.UTF8.GetString([.. bytes]);
     }
 }
