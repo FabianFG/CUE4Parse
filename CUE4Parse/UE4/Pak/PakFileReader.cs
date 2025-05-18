@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
@@ -14,6 +15,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
+using GenericReader;
 using OffiUtils;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
@@ -200,7 +202,7 @@ namespace CUE4Parse.UE4.Pak
 
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
-            FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+            using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
 
             int fileCount = 0;
             EncryptedFileCount = 0;
@@ -251,50 +253,53 @@ namespace CUE4Parse.UE4.Pak
                 primaryIndex.Position -= 4;
                 encodedPakEntriesSize = (int) (primaryIndex.Length - primaryIndex.Position - 6);
             }
-            var encodedPakEntries = primaryIndex.ReadBytes(encodedPakEntriesSize);
+
+            var encodedPakEntriesData = primaryIndex.ReadBytes(encodedPakEntriesSize);
+            using var encodedPakEntries = new GenericBufferReader(encodedPakEntriesData);
 
             if (primaryIndex.Read<int>() < 0)
                 throw new ParserException("Corrupt pak PrimaryIndex detected");
 
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
-            var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
-            if (Ar.Game == EGame.GAME_Rennsport)
-            {
-                Ar.Position = directoryIndexOffset;
-                directoryIndex = new FByteArchive($"{Name} - Directory Index",
-                    RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0,
-                        (int) directoryIndexSize, true, this, true));
-            }
-            var directoryIndexLength = directoryIndex.Read<int>();
+            var data = Ar.Game != EGame.GAME_Rennsport
+                ? ReadAndDecrypt((int) directoryIndexSize)
+                : RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true);
+            using var directoryIndex = new GenericBufferReader(data);
 
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
-            unsafe
+
+            const int poolLength = 256;
+            var mountPointSpan = MountPoint.AsSpan();
+            using var charsPool = SpanOwner<char>.Allocate(poolLength * 2);
+            var charsSpan = charsPool.Span;
+            var dirPoolSpan = charsSpan[..poolLength];
+            var fileNamePoolSpan = charsSpan[poolLength..];
+            var directoryIndexLength = directoryIndex.Read<int>();
+            for (var dirIndex = 0; dirIndex < directoryIndexLength; dirIndex++)
             {
-                fixed (byte* ptr = encodedPakEntries)
+                var dirSpan = dirPoolSpan;
+                var dir = directoryIndex.ReadFStringMemory();
+                var dirLength = dir.GetEncoding().GetChars(dir.GetSpan(), dirSpan);
+                var trimDir = !mountPointSpan.IsEmpty && dirSpan[0] == '/' && mountPointSpan[^1] == '/';
+                dirSpan = dirSpan[(trimDir ? 1 : 0)..dirLength];
+
+                var fileEntries = directoryIndex.Read<int>();
+                for (var fileIndex = 0; fileIndex < fileEntries; fileIndex++)
                 {
-                    for (var i = 0; i < directoryIndexLength; i++)
-                    {
-                        var dir = directoryIndex.ReadFString();
-                        var dirDictLength = directoryIndex.Read<int>();
+                    var fileNameSpan = fileNamePoolSpan;
+                    var fileName = directoryIndex.ReadFStringMemory();
+                    var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
+                    fileNameSpan = fileNameSpan[..fileNameLength];
 
-                        for (var j = 0; j < dirDictLength; j++)
-                        {
-                            var name = directoryIndex.ReadFString();
-                            string path;
-                            if (mountPoint.EndsWith('/') && dir.StartsWith('/'))
-                                path = dir.Length == 1 ? string.Concat(mountPoint, name) : string.Concat(mountPoint, dir[1..], name);
-                            else
-                                path = string.Concat(mountPoint, dir, name);
+                    var offset = directoryIndex.Read<int>();
+                    if (offset == int.MinValue) continue;
 
-                            var offset = directoryIndex.Read<int>();
-                            if (offset == int.MinValue) continue;
+                    var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
 
-                            var entry = new FPakEntry(this, path, ptr + offset);
-                            if (entry.IsEncrypted) EncryptedFileCount++;
-                            files[path] = entry;
-                        }
-                    }
+                    var entry = new FPakEntry(this, path, encodedPakEntries, offset);
+                    if (entry.IsEncrypted) EncryptedFileCount++;
+                    files[path] = entry;
                 }
             }
 
