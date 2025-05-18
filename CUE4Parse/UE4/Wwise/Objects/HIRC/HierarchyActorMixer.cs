@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyActorMixer : BaseHierarchy
 {
-    public uint[] ChildIds { get; private set; }
+    public readonly uint[] ChildIds;
 
     public HierarchyActorMixer(FArchive Ar) : base(Ar)
     {

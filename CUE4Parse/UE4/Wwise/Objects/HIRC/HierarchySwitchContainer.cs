@@ -6,14 +6,13 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchySwitchContainer : BaseHierarchy
 {
-    public byte GroupType { get; private set; }
-    public uint GroupId { get; private set; }
-    public uint DefaultSwitch { get; private set; }
-    public byte IsContinuousValidation { get; private set; }
-    public uint[] ChildIds { get; private set; }
-
-    public List<AkSwitchPackage> SwitchPackages { get; private set; }
-    public List<AkSwitchParams> SwitchParams { get; private set; }
+    public readonly byte GroupType;
+    public readonly uint GroupId;
+    public readonly uint DefaultSwitch;
+    public readonly byte IsContinuousValidation;
+    public readonly uint[] ChildIds;
+    public readonly List<AkSwitchPackage> SwitchPackages;
+    public readonly List<AkSwitchParams> SwitchParams;
 
     public HierarchySwitchContainer(FArchive Ar) : base(Ar)
     {

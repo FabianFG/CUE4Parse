@@ -6,16 +6,13 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
 {
-    public AkMeterInfo MeterInfo { get; private set; }
-    public List<AkStinger> Stingers { get; private set; }
-    public AkMusicTransitionRule MusicTransitionRule { get; private set; }
-
-    public byte IsContinuePlayback { get; private set; }
-    public List<AkGameSync> Arguments { get; private set; }
-
-    public byte Mode { get; private set; }
-
-    public AkDecisionTree? DecisionTree { get; private set; }
+    public readonly AkMeterInfo MeterInfo;
+    public readonly List<AkStinger> Stingers;
+    public readonly AkMusicTransitionRule MusicTransitionRule;
+    public readonly byte IsContinuePlayback;
+    public readonly List<AkGameSync> Arguments;
+    public readonly byte Mode;
+    public readonly AkDecisionTree? DecisionTree;
 
     public HierarchyMusicSwitchContainer(FArchive Ar) : base(Ar)
     {

@@ -116,13 +116,9 @@ public class AkFXBus
                 count = 1;
             }
         }
-        else if (WwiseVersions.Version <= 145)
-        {
-            count = Ar.Read<byte>(); // numFX
-        }
         else
         {
-            count = 0;
+            count = Ar.Read<byte>(); // numFX
         }
 
         bool readFX = false;
@@ -148,7 +144,11 @@ public class AkFXBus
                 var fxId = Ar.Read<uint>();
                 var isShareSet = Ar.Read<byte>();
                 FXChunks.Add(new AkFXChunk(fxIndex, fxId, isShareSet));
-                Ar.Read<byte>(); // unused byte
+
+                if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+                {
+                    Ar.Read<byte>(); // unused byte
+                }
             }
         }
 

@@ -6,10 +6,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicSegment : BaseHierarchyMusic
 {
-    public AkMeterInfo MeterInfo { get; private set; }
-    public List<AkStinger> Stingers { get; private set; }
-    public double Duration { get; private set; }
-    public List<AkMusicMarkerWwise> Markers { get; private set; }
+    public readonly AkMeterInfo MeterInfo;
+    public readonly List<AkStinger> Stingers;
+    public readonly double Duration;
+    public readonly List<AkMusicMarkerWwise> Markers;
 
     public HierarchyMusicSegment(FArchive Ar) : base(Ar)
     {

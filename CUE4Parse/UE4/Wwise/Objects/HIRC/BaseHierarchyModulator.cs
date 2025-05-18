@@ -6,9 +6,9 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyModulator : AbstractHierarchy
 {
-    public List<AkProp> Props { get; private set; } = [];
-    public List<AkPropRange> PropRanges { get; private set; }
-    public List<AkRTPC> RTPCs { get; private set; }
+    public readonly List<AkProp> Props = [];
+    public readonly List<AkPropRange> PropRanges;
+    public readonly List<AkRTPC> RTPCs;
 
     public BaseHierarchyModulator(FArchive Ar) : base(Ar)
     {

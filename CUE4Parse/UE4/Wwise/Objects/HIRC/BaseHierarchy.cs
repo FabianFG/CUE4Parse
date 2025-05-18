@@ -7,29 +7,29 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchy : AbstractHierarchy
 {
-    public bool OverrideFX { get; set; }
-    public AkFXParams FXParams { get; private set; }
-    public byte OverrideParentMetadataFlag { get; private set; }
-    public byte NumFXMetadataFlag { get; private set; }
-    public byte OverrideAttachmentParams { get; private set; }
-    public uint OverrideBusId { get; private set; }
-    public uint DirectParentId { get; private set; }
-    public byte Priority { get; private set; }
-    public byte PriorityOverrideParent { get; private set; }
-    public byte PriorityApplyDistFactor { get; private set; }
-    public sbyte DistOffset { get; private set; }
-    public EMidiBehaviorFlags MidiBehaviorFlags { get; private set; }
-    public List<AkProp> Props { get; private set; }
-    public List<AkPropRange> PropRanges { get; private set; }
-    public AkPositioningParams PositioningParams { get; private set; }
-    public AkAuxParams? AuxParams { get; private set; }
-    public EAdvSettings AdvSettingsParams { get; private set; }
-    public EVirtualQueueBehavior VirtualQueueBehavior { get; private set; }
-    public ushort MaxNumInstance { get; private set; }
-    public EBelowThresholdBehavior BelowThresholdBehavior { get; private set; }
-    public EHdrEnvelopeFlags HdrEnvelopeFlags { get; private set; }
-    public List<AkStateGroup> StateGroups { get; private set; }
-    public List<AkRTPC> RTPCs { get; private set; }
+    public readonly bool OverrideFX;
+    public readonly AkFXParams FXParams;
+    public readonly byte OverrideParentMetadataFlag;
+    public readonly byte NumFXMetadataFlag;
+    public readonly byte OverrideAttachmentParams;
+    public readonly uint OverrideBusId;
+    public readonly uint DirectParentId;
+    public readonly byte Priority;
+    public readonly byte PriorityOverrideParent;
+    public readonly byte PriorityApplyDistFactor;
+    public readonly sbyte DistOffset;
+    public readonly EMidiBehaviorFlags MidiBehaviorFlags;
+    public readonly List<AkProp> Props;
+    public readonly List<AkPropRange> PropRanges;
+    public readonly AkPositioningParams PositioningParams;
+    public readonly AkAuxParams? AuxParams;
+    public readonly EAdvSettings AdvSettingsParams;
+    public readonly EVirtualQueueBehavior VirtualQueueBehavior;
+    public readonly ushort MaxNumInstance;
+    public readonly EBelowThresholdBehavior BelowThresholdBehavior;
+    public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
+    public readonly List<AkStateGroup> StateGroups;
+    public readonly List<AkRTPC> RTPCs;
 
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
@@ -38,7 +38,8 @@ public class BaseHierarchy : AbstractHierarchy
 
         if (WwiseVersions.Version > 136)
         {
-            SetInitialMetadataParams(Ar);
+            OverrideParentMetadataFlag = Ar.Read<byte>();
+            NumFXMetadataFlag = Ar.Read<byte>();
         }
 
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
@@ -88,7 +89,11 @@ public class BaseHierarchy : AbstractHierarchy
             AuxParams = new AkAuxParams(Ar);
         }
 
-        SetAdvSettingsParams(Ar);
+        AdvSettingsParams = Ar.Read<EAdvSettings>();
+        VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
+        MaxNumInstance = Ar.Read<ushort>();
+        BelowThresholdBehavior = Ar.Read<EBelowThresholdBehavior>();
+        HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
 
         if (WwiseVersions.Version <= 52)
         {
@@ -106,21 +111,6 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         RTPCs = AkRTPC.ReadMultiple(Ar);
-    }
-
-    private void SetInitialMetadataParams(FArchive Ar)
-    {
-        OverrideParentMetadataFlag = Ar.Read<byte>();
-        NumFXMetadataFlag = Ar.Read<byte>();
-    }
-
-    private void SetAdvSettingsParams(FArchive Ar)
-    {
-        AdvSettingsParams = Ar.Read<EAdvSettings>();
-        VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
-        MaxNumInstance = Ar.Read<ushort>();
-        BelowThresholdBehavior = Ar.Read<EBelowThresholdBehavior>();
-        HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
     }
 
     // WriteStartEndObjects are handled by derived classes!

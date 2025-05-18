@@ -5,10 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyAudioBus : BaseHierarchyBus
 {
-    public HierarchyAudioBus(FArchive Ar) : base(Ar)
-    {
-
-    }
+    public HierarchyAudioBus(FArchive Ar) : base(Ar) { }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

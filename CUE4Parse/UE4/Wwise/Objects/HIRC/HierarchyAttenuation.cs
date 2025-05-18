@@ -6,18 +6,18 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyAttenuation : AbstractHierarchy
 {
-    public byte IsHeightSpreadEnabled { get; private set; }
-    public byte IsConeEnabled { get; private set; }
+    public readonly byte IsHeightSpreadEnabled;
+    public readonly byte IsConeEnabled;
 
-    public float? InsideDegrees { get; private set; }
-    public float? OutsideDegrees { get; private set; }
-    public float? OutsideVolume { get; private set; }
-    public float? LoPass { get; private set; }
-    public float? HiPass { get; private set; }
+    public readonly float? InsideDegrees;
+    public readonly float? OutsideDegrees;
+    public readonly float? OutsideVolume;
+    public readonly float? LoPass;
+    public readonly float? HiPass;
 
-    public List<AkConversionTable> Curves { get; }
+    public readonly List<AkConversionTable> Curves;
 
-    public List<AkRTPC> RTPCs { get; protected set; }
+    public readonly List<AkRTPC> RTPCs;
 
     public HierarchyAttenuation(FArchive Ar) : base(Ar)
     {

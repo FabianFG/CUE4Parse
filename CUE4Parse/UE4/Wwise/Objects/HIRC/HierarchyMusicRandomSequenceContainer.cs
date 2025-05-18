@@ -6,10 +6,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
 {
-    public AkMeterInfo MeterInfo { get; private set; }
-    public List<AkStinger> Stingers { get; private set; }
-    public AkMusicTransitionRule MusicTransitionRule { get; private set; }
-    public List<AkMusicRanSeqPlaylistItem> Playlist { get; private set; }
+    public readonly AkMeterInfo MeterInfo;
+    public readonly List<AkStinger> Stingers;
+    public readonly AkMusicTransitionRule MusicTransitionRule;
+    public readonly List<AkMusicRanSeqPlaylistItem> Playlist;
 
     public HierarchyMusicRandomSequenceContainer(FArchive Ar) : base(Ar)
     {

@@ -7,9 +7,9 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class ActionParams
 {
-    public int? TTime { get; private set; }
-    public int? TTimeMin { get; private set; }
-    public int? TTimeMax { get; private set; }
+    public int TTime { get; private set; }
+    public int TTimeMin { get; private set; }
+    public int TTimeMax { get; private set; }
     [JsonConverter(typeof(StringEnumConverter))]
     public ECurveInterpolation FadeCurve { get; private set; }
 

@@ -6,9 +6,9 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyLayerContainer : BaseHierarchy
 {
-    public uint[] ChildIds { get; private set; }
-    public List<AkLayer> Layers { get; private set; }
-    public byte IsContinuousValidation { get; private set; }
+    public readonly uint[] ChildIds;
+    public readonly List<AkLayer> Layers;
+    public readonly byte IsContinuousValidation;
 
     public HierarchyLayerContainer(FArchive Ar) : base(Ar)
     {

@@ -8,7 +8,7 @@ public class BaseHierarchyFx : AbstractHierarchy
 {
     public class RTPCInit
     {
-        public byte ParamID { get; set; }
+        public byte ParamId { get; set; }
         public float InitValue { get; set; }
     }
 
@@ -19,8 +19,11 @@ public class BaseHierarchyFx : AbstractHierarchy
         public float Value { get; set; }
     }
 
-    public List<AkRTPC> RTPCs { get; protected set; }
-    public List<AkStateGroup>? StateGroups { get; protected set; }
+    public readonly List<AkMediaMap> MediaList;
+    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkStateGroup> StateGroups = [];
+    public readonly List<RTPCInit> RTPCInits = [];
+    public readonly List<PluginPropertyValue> PluginPropertyValues = [];
 
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
     {
@@ -29,7 +32,7 @@ public class BaseHierarchyFx : AbstractHierarchy
         WwisePlugin.ParsePluginParams(Ar, pluginId);
 
         var numBankData = Ar.Read<byte>();
-        var mediaList = new List<AkMediaMap>(numBankData);
+        MediaList = new List<AkMediaMap>(numBankData);
         for (int i = 0; i < numBankData; i++)
         {
             var mediaItem = new AkMediaMap
@@ -37,7 +40,7 @@ public class BaseHierarchyFx : AbstractHierarchy
                 Index = Ar.Read<byte>(),
                 SourceId = Ar.Read<uint>()
             };
-            mediaList.Add(mediaItem);
+            MediaList.Add(mediaItem);
         }
 
         RTPCs = AkRTPC.ReadMultiple(Ar);
@@ -56,15 +59,14 @@ public class BaseHierarchyFx : AbstractHierarchy
             }
 
             var numInit = Ar.Read<ushort>();
-            var rtpcInitList = new List<RTPCInit>(numInit);
+            RTPCInits = new List<RTPCInit>(numInit);
             for (int i = 0; i < numInit; i++)
             {
-                var rtpcInit = new RTPCInit
+                RTPCInits.Add(new RTPCInit
                 {
-                    ParamID = Ar.Read<byte>(),
+                    ParamId = Ar.Read<byte>(),
                     InitValue = Ar.Read<float>()
-                };
-                rtpcInitList.Add(rtpcInit);
+                });
             }
         }
         else
@@ -72,19 +74,31 @@ public class BaseHierarchyFx : AbstractHierarchy
             StateGroups = new AkStateChunk(Ar).Groups;
 
             var numValues = Ar.Read<ushort>();
-            var propertyValuesList = new List<PluginPropertyValue>(numValues);
+            PluginPropertyValues = new List<PluginPropertyValue>(numValues);
             for (int i = 0; i < numValues; i++)
             {
-                var propertyValue = new PluginPropertyValue
+                PluginPropertyValues.Add(new PluginPropertyValue
                 {
                     PropertyId = Ar.Read<byte>(),
                     RtpcAccum = Ar.Read<byte>(),
                     Value = Ar.Read<float>()
-                };
-                propertyValuesList.Add(propertyValue);
+                });
             }
         }
     }
 
-    public override void WriteJson(JsonWriter writer, JsonSerializer serializer) { }
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WritePropertyName("RTPCs");
+        serializer.Serialize(writer, RTPCs);
+
+        writer.WritePropertyName("StateGroups");
+        serializer.Serialize(writer, StateGroups);
+
+        writer.WritePropertyName("RTPCInits");
+        serializer.Serialize(writer, RTPCInits);
+
+        writer.WritePropertyName("PluginPropertyValues");
+        serializer.Serialize(writer, PluginPropertyValues);
+    }
 }

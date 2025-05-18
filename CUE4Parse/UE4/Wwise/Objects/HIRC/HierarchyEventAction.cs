@@ -11,8 +11,8 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly EEventActionScope EventActionScope;
     public readonly EEventActionType EventActionType;
     public readonly uint ReferencedId;
-    public List<AkProp> Props { get; protected set; }
-    public List<AkPropRange> PropRanges { get; protected set; }
+    public readonly List<AkProp> Props;
+    public readonly List<AkPropRange> PropRanges;
 
     public object? ActionData { get; private set; }
 

@@ -5,8 +5,8 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchySoundSfxVoice : AbstractHierarchy
 {
-    public AkBankSourceData Source { get; private set; }
-    public BaseHierarchy BaseParams { get; private set; }
+    public readonly AkBankSourceData Source;
+    public readonly BaseHierarchy BaseParams;
 
     public HierarchySoundSfxVoice(FArchive Ar) : base(Ar)
     {

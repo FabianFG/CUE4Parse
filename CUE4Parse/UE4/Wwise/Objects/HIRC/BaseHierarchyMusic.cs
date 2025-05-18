@@ -4,12 +4,12 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
-public abstract class BaseHierarchyMusic : AbstractHierarchy
+public class BaseHierarchyMusic : AbstractHierarchy
 {
-    public BaseHierarchy ContainerHierarchy { get; private set; }
+    public readonly BaseHierarchy ContainerHierarchy;
 
-    public EMusicFlags Flags { get; private set; }
-    public uint[] ChildIds { get; private set; }
+    public readonly EMusicFlags Flags;
+    public readonly uint[] ChildIds;
 
     protected BaseHierarchyMusic(FArchive Ar) : base(Ar)
     {

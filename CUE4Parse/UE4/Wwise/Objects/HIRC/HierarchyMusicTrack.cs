@@ -7,19 +7,19 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicTrack : AbstractHierarchy
 {
-    public EMusicFlags Flags { get; private set; }
-    public List<AkBankSourceData> Sources { get; private set; } = [];
-    public List<AkTrackSrcInfo> Playlist { get; private set; } = [];
-    public List<AkClipAutomation> ClipAutomations { get; private set; } = [];
-    public BaseHierarchy BaseParams { get; private set; }
-    public short Loop { get; private set; }
-    public short LoopModMin { get; private set; }
-    public short LoopModMax { get; private set; }
-    public uint ERSType { get; private set; }
-    public EMusicTrackType MusicTrackType { get; private set; }
-    public AkTrackSwitchParams? SwitchParams { get; private set; }
-    public AkTransParams? TransParams { get; private set; }
-    public int LookAheadTime { get; private set; }
+    public readonly EMusicFlags Flags;
+    public readonly List<AkBankSourceData> Sources = [];
+    public readonly List<AkTrackSrcInfo> Playlist = [];
+    public readonly List<AkClipAutomation> ClipAutomations = [];
+    public readonly BaseHierarchy BaseParams;
+    public readonly short Loop;
+    public readonly short LoopModMin;
+    public readonly short LoopModMax;
+    public readonly uint ERSType;
+    public readonly EMusicTrackType MusicTrackType;
+    public readonly AkTrackSwitchParams? SwitchParams;
+    public readonly AkTransParams? TransParams;
+    public readonly int LookAheadTime;
 
     public HierarchyMusicTrack(FArchive Ar) : base(Ar)
     {

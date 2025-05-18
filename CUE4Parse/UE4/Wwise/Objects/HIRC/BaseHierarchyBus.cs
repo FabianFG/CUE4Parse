@@ -7,23 +7,23 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyBus : AbstractHierarchy
 {
-    public uint OverrideBusId { get; private set; }
-    public uint DeviceSharesetId { get; private set; }
-    public List<AkProp> Props { get; private set; } = [];
-    public AkPositioningParams? PositioningParams { get; private set; }
-    public AkAuxParams? AuxParams { get; private set; }
-    public EAdvSettings? AdvSettingsParams { get; private set; }
-    public ushort? MaxNumInstance { get; private set; }
-    public uint? ChannelConfig { get; private set; }
-    public byte? HdrEnvelopeFlags { get; private set; }
-    public uint RecoveryTime { get; private set; }
-    public float MaxDuckVolume { get; private set; }
-    public List<AkDuckInfo> DuckInfo { get; private set; } = [];
-    public AkFXBus FXBusParams { get; private set; }
-    public byte OverrideAttachmentParams { get; private set; }
-    public List<AkFXChunk> FXChunk { get; private set; } = [];
-    public List<AkRTPC> RTPCs { get; private set; }
-    public List<AkStateGroup>? StateGroups { get; private set; }
+    public readonly uint OverrideBusId;
+    public readonly uint DeviceSharesetId;
+    public readonly List<AkProp> Props = [];
+    public readonly AkPositioningParams? PositioningParams;
+    public readonly AkAuxParams? AuxParams;
+    public readonly EAdvSettings? AdvSettingsParams;
+    public readonly ushort? MaxNumInstance;
+    public readonly uint? ChannelConfig;
+    public readonly byte? HdrEnvelopeFlags;
+    public readonly uint RecoveryTime;
+    public readonly float MaxDuckVolume;
+    public readonly List<AkDuckInfo> DuckInfo = [];
+    public readonly AkFXBus FXBusParams;
+    public readonly byte OverrideAttachmentParams;
+    public readonly List<AkFXChunk> FXChunk = [];
+    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkStateGroup>? StateGroups;
 
     public BaseHierarchyBus(FArchive Ar) : base(Ar)
     {

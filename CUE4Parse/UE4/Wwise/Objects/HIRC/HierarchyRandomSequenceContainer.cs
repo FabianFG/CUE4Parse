@@ -7,19 +7,19 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyRandomSequenceContainer : BaseHierarchy
 {
-    public ushort LoopCount { get; private set; }
-    public ushort? LoopModMin { get; private set; }
-    public ushort? LoopModMax { get; private set; }
-    public float? TransitionTime { get; private set; }
-    public float? TransitionTimeModMin { get; private set; }
-    public float? TransitionTimeModMax { get; private set; }
-    public ushort AvoidRepeatCount { get; private set; }
-    public ETransitionMode TransitionMode { get; private set; }
-    public ERandomMode RandomMode { get; private set; }
-    public ERandomSequenceContainerMode Mode { get; private set; }
-    public EPlayListFlags PlaylistFlags { get; private set; }
-    public uint[] ChildIds { get; private set; }
-    public List<AkPlayList.AkPlayListItem> Playlist { get; private set; }
+    public readonly ushort LoopCount;
+    public readonly ushort? LoopModMin;
+    public readonly ushort? LoopModMax;
+    public readonly float? TransitionTime;
+    public readonly float? TransitionTimeModMin;
+    public readonly float? TransitionTimeModMax;
+    public readonly ushort AvoidRepeatCount;
+    public readonly ETransitionMode TransitionMode;
+    public readonly ERandomMode RandomMode;
+    public readonly ERandomSequenceContainerMode Mode;
+    public readonly EPlayListFlags PlaylistFlags;
+    public readonly uint[] ChildIds;
+    public readonly List<AkPlayList.AkPlayListItem> Playlist;
 
     public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
     {
