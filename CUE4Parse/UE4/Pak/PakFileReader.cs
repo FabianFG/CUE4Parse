@@ -1,10 +1,10 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
@@ -257,43 +257,45 @@ namespace CUE4Parse.UE4.Pak
                 ? ReadAndDecrypt((int) directoryIndexSize)
                 : RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true);
             using var directoryIndex = new GenericBufferReader(data);
-            var directoryIndexLength = directoryIndex.Read<int>();
 
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
 
-            var dirNamePool = ArrayPool<char>.Shared.Rent(384);
-            var currentLength = Write(dirNamePool, 0, MountPoint);
-            var mountlength = currentLength;
-            for (var i = 0; i < directoryIndexLength; i++)
+            const int poolLength = 256;
+            var mountPointSpan = MountPoint.AsSpan();
+            using var charsPool = SpanOwner<char>.Allocate(poolLength * 2);
+            var charsSpan = charsPool.Span;
+            var dirPoolSpan = charsSpan[..poolLength];
+            var fileNamePoolSpan = charsSpan[poolLength..];
+            var directoryIndexLength = directoryIndex.Read<int>();
+            for (var dirIndex = 0; dirIndex < directoryIndexLength; dirIndex++)
             {
-                var dir = directoryIndex.ReadFString();
-                if (mountPoint.EndsWith('/') && dir.StartsWith('/'))
-                    currentLength = Write(dirNamePool, currentLength - 1, dir) - 1;
-                else
-                    currentLength = Write(dirNamePool, currentLength, dir);
+                 var dirSpan = dirPoolSpan;
+                 var dir = directoryIndex.ReadFStringMemory();
+                 var dirLength = dir.GetEncoding().GetChars(dir.GetSpan(), dirSpan);
+                 var trimDir = !mountPointSpan.IsEmpty && dirSpan[0] == '/' && mountPointSpan[^1] == '/';
+                 dirSpan = dirSpan[(trimDir ? 1 : 0)..dirLength];
 
-                var dirDictLength = directoryIndex.Read<int>();
-                var dirLength = currentLength;
-                for (var j = 0; j < dirDictLength; j++)
-                {
-                    var fullPathLength = Write(dirNamePool, dirLength, directoryIndex.ReadFStringMemory(), true);
-                    var fullPathSpan = dirNamePool.AsSpan(..fullPathLength);
-                    var path = new string(fullPathSpan);
+                 var fileEntries = directoryIndex.Read<int>();
+                 for (var fileIndex = 0; fileIndex < fileEntries; fileIndex++)
+                 {
+                     var fileNameSpan = fileNamePoolSpan;
+                     var fileName = directoryIndex.ReadFStringMemory();
+                     var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
+                     fileNameSpan = fileNameSpan[..fileNameLength];
 
-                    var offset = directoryIndex.Read<int>();
-                    if (offset == int.MinValue)
-                        continue;
+                     var offset = directoryIndex.Read<int>();
+                     if (offset == int.MinValue) continue;
 
-                    var entry = new FPakEntry(this, path, encodedPakEntries, offset);
-                    if (entry.IsEncrypted)
-                        EncryptedFileCount++;
-                    files[path] = entry;
-                }
-                currentLength = mountlength;
+                     var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
+
+                     var entry = new FPakEntry(this, path, encodedPakEntries, offset);
+                     if (entry.IsEncrypted)
+                         EncryptedFileCount++;
+                     files[path] = entry;
+                 }
             }
 
             Files = files;
-            ArrayPool<char>.Shared.Return(dirNamePool);
         }
 
         private void ReadFrozenIndex(StringComparer pathComparer)
