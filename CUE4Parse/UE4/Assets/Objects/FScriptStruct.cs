@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
@@ -6,6 +7,7 @@ using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
+using CUE4Parse.GameTypes.SOD2.Assets.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
@@ -56,12 +58,14 @@ public class FScriptStruct
             "ColorMaterialInput" when FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.MaterialInputUsesLinearColor
                 => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
             "ColorMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<FLinearColor>() : new FMaterialInput<FLinearColor>(Ar),
+            "CompressedRichCurve" => type == ReadType.ZERO ? new FStructFallback() : new FCompressedRichCurve(Ar),
             "DateTime" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
             "ExpressionInput" => type == ReadType.ZERO ? new FExpressionInput() : new FExpressionInput(Ar),
             "FrameNumber" => type == ReadType.ZERO ? new FFrameNumber() : Ar.Read<FFrameNumber>(),
             "Guid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
             "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
             "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
+            "NameCurveKey" => type == ReadType.ZERO ? new FNameCurveKey() : new FNameCurveKey(Ar),
             "RichCurveKey" => type == ReadType.ZERO ? new FRichCurveKey() : Ar.Read<FRichCurveKey>(),
             "SimpleCurveKey" => type == ReadType.ZERO ? new FSimpleCurveKey() : Ar.Read<FSimpleCurveKey>(),
             "ScalarMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<float>() : new FMaterialInput<float>(Ar),
@@ -81,6 +85,7 @@ public class FScriptStruct
             "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
             "IntPoint" or "Int32Point" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
             "IntVector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
+            "UintVector2" => type == ReadType.ZERO ? new TIntVector2<uint>() : Ar.Read<TIntVector2<uint>>(),
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
@@ -228,6 +233,18 @@ public class FScriptStruct
             "OffsetCoords" when Ar.Game == EGame.GAME_TempestRising => type == ReadType.ZERO ? new TIntVector2<float>() : Ar.Read<TIntVector2<float>>(),
             "TedInstancedStruct" => new FInstancedStruct(Ar),
             "TedMarkerHandle" or "FoWAgentHandle" => type == ReadType.ZERO ? new TIntVector1<int>() : Ar.Read<TIntVector1<int>>(),
+
+            // Avowed
+            "NiagaraUserParameterModifier" => new NiagaraUserParameterModifier(Ar),
+
+            // State of Decay 2
+            "ItemsBitArray" when Ar.Game == EGame.GAME_StateOfDecay2 => type == ReadType.ZERO ? new FItemsBitArray() : new FItemsBitArray(Ar),
+
+            // Dune Awakening
+            "BodyInstance" when Ar.Game == EGame.GAME_DuneAwakening => new FBodyInstance(Ar),
+            "GenericTeamId" when Ar.Game == EGame.GAME_DuneAwakening => new FGenericTeamId(Ar),
+            "UniqueID" when Ar.Game == EGame.GAME_DuneAwakening => new FUniqueID(Ar),
+            "BotAutoBorderCrossingConfig" when Ar.Game == EGame.GAME_DuneAwakening => new FBotAutoBorderCrossingConfig(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };

@@ -1,4 +1,4 @@
-﻿namespace CUE4Parse_Conversion;
+namespace CUE4Parse_Conversion;
 
 public class Constants
 {
@@ -21,4 +21,7 @@ public class Constants
     public const int VSocket_SIZE = 64 + 64 + 3 * 4 + 4 * 4 + 3 * 4;
 
     public const int DXT_BITS_PER_PIXEL = 4;
+
+    public const float Byte_Bone_Scale = 1.0f / byte.MaxValue;
+    public const float UShort_Bone_Scale = 1.0f / ushort.MaxValue;
 }

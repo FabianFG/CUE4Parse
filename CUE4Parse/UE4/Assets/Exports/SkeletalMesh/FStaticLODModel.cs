@@ -139,10 +139,7 @@ public class FStaticLODModel
 
                 // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1415
                 if (Ar.Game == EGame.GAME_StateOfDecay2)
-                {
-                    Ar.Position += 8;
-                    return;
-                }
+                    stripDataFlags.ClassStripFlags |= (byte) EClassDataStripFlag.CDSF_AdjacencyData;
 
                 if (Ar.Game == EGame.GAME_SeaOfThieves)
                 {
@@ -204,6 +201,7 @@ public class FStaticLODModel
                     _ = new FMultisizeIndexContainer(Ar);
                     Ar.Position += 12;
                 }
+                if (Ar.Game == EGame.GAME_StateOfDecay2) Ar.Position += 8;
             }
         }
 

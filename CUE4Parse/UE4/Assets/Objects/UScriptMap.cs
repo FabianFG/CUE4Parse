@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using Newtonsoft.Json;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.GameTypes.DaysGone.Assets;
+using CUE4Parse.GameTypes.SOD2.Assets;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -22,8 +23,12 @@ public class UScriptMap
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.PROPERTY_TAG_SET_MAP_SUPPORT)
         {
-            if (Ar.Game == EGame.GAME_DaysGone)
-                DaysGoneProperties.GetMapPropertyTypes(tagData.Name, out tagData.InnerType, out tagData.ValueType);              
+            _ = Ar.Game switch
+            {
+                EGame.GAME_DaysGone => DaysGoneProperties.GetMapPropertyTypes(tagData.Name, out tagData.InnerType, out tagData.ValueType),
+                EGame.GAME_StateOfDecay2 => SOD2Properties.GetMapPropertyTypes(tagData.Name, out tagData.InnerType, out tagData.ValueType),
+                _ => false,
+            };
         }
 
         if (tagData.InnerType == null || tagData.ValueType == null)

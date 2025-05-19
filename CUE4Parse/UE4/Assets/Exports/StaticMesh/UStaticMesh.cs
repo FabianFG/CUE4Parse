@@ -106,9 +106,13 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game == EGame.GAME_DaysGone) Ar.SkipFixedArray(4);
-        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-        if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 4;
+        Ar.Position += Ar.Game switch
+        {
+            EGame.GAME_OutlastTrials => 1,
+            EGame.GAME_Farlight84 or EGame.GAME_DuneAwakening => 4,
+            EGame.GAME_DaysGone => Ar.Read<int>() * 4,
+            _ => 0
+        };
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
