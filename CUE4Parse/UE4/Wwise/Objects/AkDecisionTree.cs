@@ -7,6 +7,11 @@ public class AkDecisionTree
 {
     public List<AkDecisionTreeNode> Nodes { get; private set; }
 
+    public AkDecisionTree()
+    {
+        Nodes = [];
+    }
+
     public AkDecisionTree(FArchive Ar, uint treeDepth, uint treeDataSize)
     {
         Nodes = ParseDecisionTree(Ar, treeDataSize, treeDepth);

@@ -12,7 +12,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
     public readonly byte IsContinuePlayback;
     public readonly List<AkGameSync> Arguments;
     public readonly byte Mode;
-    public readonly AkDecisionTree? DecisionTree;
+    public readonly AkDecisionTree DecisionTree;
 
     public HierarchyMusicSwitchContainer(FArchive Ar) : base(Ar)
     {
@@ -25,6 +25,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
         if (WwiseVersions.Version <= 72)
         {
             // TODO: GroupSettings = new AkGroupSettings(Ar);
+            DecisionTree = new AkDecisionTree(); // Empty tree for old versions
         }
         else
         {

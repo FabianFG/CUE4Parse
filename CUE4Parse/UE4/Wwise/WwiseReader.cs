@@ -69,7 +69,7 @@ public class WwiseReader
                     Header = new BankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Version);
 #if DEBUG
-                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Version} is not supported");              
+                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Version} is not supported");
 #endif
                     break;
                 case ESectionIdentifier.INIT:
@@ -107,10 +107,16 @@ public class WwiseReader
                     }
                     break;
                 case ESectionIdentifier.STMG:
-                    //GlobalSettings = new GlobalSettings(Ar);
+                    //if (WwiseVersions.IsSupported())
+                    //{
+                    //    GlobalSettings = new GlobalSettings(Ar);
+                    //}
                     break;
                 case ESectionIdentifier.ENVS:
-                    EnvSettings = new EnvSettings(Ar);
+                    if (WwiseVersions.IsSupported()) // Let's guard this just in case
+                    { 
+                        EnvSettings = new EnvSettings(Ar);
+                    }
                     break;
                 case ESectionIdentifier.FXPR:
                     break;
