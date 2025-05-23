@@ -29,17 +29,17 @@ public class WwiseProvider
     private readonly List<string> _wwiseLoadedSoundBanks = [];
     private bool _completedWwiseFullBnkInit = false;
 
-    public WwiseProvider(AbstractVfsFileProvider provider, UAkAudioEvent wwiseData)
+    public WwiseProvider(AbstractVfsFileProvider provider, UAkAudioEvent audioEvent)
     {
         _provider = provider;
-        _baseWwiseAudioPath = DetermineBaseWwiseAudioPath(wwiseData);
+        _baseWwiseAudioPath = DetermineBaseWwiseAudioPath(audioEvent);
         BulkInitializeWwiseSoundBanks();
     }
 
     public List<WwiseExtractedSound> ExtractAudioEventSounds(UAkAudioEvent audioEvent, string audioDirectory)
     {
         var results = new List<WwiseExtractedSound>();
-        var visitedWemIds = new HashSet<uint>();
+        var visitedWemIds = new HashSet<uint>(); // To prevent duplicates
 
         var wwiseData = audioEvent.EventCookedData;
         if (wwiseData == null)
@@ -66,9 +66,13 @@ public class WwiseProvider
 
                 TryLoadAndCacheSoundBank(soundBankPath, soundBankName, out _);
 
-                var visitedDecisionNodes = new HashSet<(uint parentHierarchyId, uint audioNodeId)>();
-                if (uint.TryParse(audioEventId, out uint parsedAudioEventId) &&
-                    _wwiseHierarchyTables.TryGetValue(parsedAudioEventId, out var eventHierarchy) &&
+                var visitedDecisionNodes = new HashSet<(uint parentHierarchyId, uint audioNodeId)>(); // To prevent infinite loops (shouldn't happen, just in case)
+
+                if (!long.TryParse(audioEventId, out long parsedId))
+                    continue;
+
+                uint parsedAudioEventId = (uint) parsedId;
+                if (_wwiseHierarchyTables.TryGetValue(parsedAudioEventId, out var eventHierarchy) &&
                     eventHierarchy.Data is HierarchyEvent hierarchyEvent)
                 {
                     foreach (var actionId in hierarchyEvent.EventActionIds)
