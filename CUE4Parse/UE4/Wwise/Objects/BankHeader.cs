@@ -7,16 +7,16 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 [JsonConverter(typeof(BankHeaderConverter))]
 [StructLayout(LayoutKind.Sequential)]
-public struct BankHeader
+public readonly struct BankHeader
 {
-    public uint Version { get; private set; }
-    public uint SoundBankId { get; private set; }
-    public uint LanguageId { get; private set; }
-    public bool FeedbackInBank { get; private set; }
-    public EAltValues AltValues { get; private set; }
-    public uint ProjectId { get; private set; }
-    public uint SoundBankType { get; private set; }
-    public byte[] BankHash { get; private set; }
+    public readonly uint Version;
+    public readonly uint SoundBankId;
+    public readonly uint LanguageId;
+    public readonly bool FeedbackInBank;
+    public readonly EAltValues AltValues;
+    public readonly uint ProjectId;
+    public readonly uint SoundBankType;
+    public readonly byte[] BankHash;
 
     public BankHeader(FArchive Ar, int sectionLength)
     {

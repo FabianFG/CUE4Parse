@@ -4,6 +4,6 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionBase(FArchive Ar)
 {
-    public ActionParams ActionParams { get; private set; } = new ActionParams(Ar);
-    public ExceptParams ExceptParams { get; private set; } = new ExceptParams(Ar);
+    public readonly ActionParams ActionParams = new(Ar);
+    public readonly ExceptParams ExceptParams = new(Ar);
 }

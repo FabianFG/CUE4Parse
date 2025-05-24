@@ -7,10 +7,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionResume
 {
-    public ActionParams ActionParams { get; private set; }
+    public readonly ActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public EResumeOptions ResumeOptions { get; private set; }
-    public ExceptParams ExceptParams { get; private set; }
+    public readonly EResumeOptions ResumeOptions;
+    public readonly ExceptParams ExceptParams;
 
     public AkActionResume(FArchive Ar)
     {

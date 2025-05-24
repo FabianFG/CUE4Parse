@@ -7,10 +7,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionPause
 {
-    public ActionParams ActionParams { get; private set; }
+    public readonly ActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public EPauseOptions PauseOptions { get; private set; }
-    public ExceptParams ExceptParams { get; private set; }
+    public readonly EPauseOptions PauseOptions;
+    public readonly ExceptParams ExceptParams;
 
     public AkActionPause(FArchive Ar)
     {

@@ -1,18 +1,17 @@
-using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkFX
+public class AkFx
 {
-    public byte FXIndex { get; set; }
-    public uint FXId { get; set; }
-    public byte BitVector { get; set; }
-    public bool IsShareSet { get; set; } // Version <= 145
-    public bool IsRendered { get; set; } // Version <= 145
+    public readonly byte FXIndex;
+    public readonly uint FXId;
+    public readonly byte BitVector;
+    public readonly bool IsShareSet; // Version <= 145
+    public readonly bool IsRendered; // Version <= 145
 
-    public AkFX(FArchive Ar)
+    public AkFx(FArchive Ar)
     {
         if (WwiseVersions.Version <= 26)
         {
@@ -36,12 +35,12 @@ public class AkFX
     }
 }
 
-public class AkFXParams
+public class AkFxParams
 {
-    public bool BypassAll { get; set; }
-    public List<AkFX> Effects { get; set; }
+    public readonly bool BypassAll;
+    public readonly List<AkFx> Effects;
 
-    public AkFXParams(FArchive Ar)
+    public AkFxParams(FArchive Ar)
     {
         int count;
         if (WwiseVersions.Version <= 26)
@@ -71,41 +70,41 @@ public class AkFXParams
 
             for (int i = 0; i < count; i++)
             {
-                Effects.Add(new AkFX(Ar));
+                Effects.Add(new AkFx(Ar));
             }
         }
     }
 }
 
-public class AkFXChunk
+public class AkFxChunk
 {
-    public byte FXIndex { get; set; }
-    public uint FXId { get; set; }
-    public byte IsShareSet { get; set; }
+    public readonly byte FxIndex;
+    public readonly uint FxId;
+    public readonly byte IsShareSet;
 
-    public AkFXChunk(FArchive Ar)
+    public AkFxChunk(FArchive Ar)
     {
-        FXIndex = Ar.Read<byte>();
-        FXId = Ar.Read<uint>();
+        FxIndex = Ar.Read<byte>();
+        FxId = Ar.Read<uint>();
         IsShareSet = Ar.Read<byte>();
     }
 
-    public AkFXChunk(byte fxIndex, uint fxId, byte isShareSet)
+    public AkFxChunk(byte fxIndex, uint fxId, byte isShareSet)
     {
-        FXIndex = fxIndex;
-        FXId = fxId;
+        FxIndex = fxIndex;
+        FxId = fxId;
         IsShareSet = isShareSet;
     }
 }
 
-public class AkFXBus
+public class AkFxBus
 {
-    public byte BitsFXBypass { get; set; }
-    public List<AkFXChunk> FXChunks { get; set; } = [];
-    public uint FXId0 { get; set; }
-    public bool IsShareSet0 { get; set; }
+    public readonly byte BitsFxBypass;
+    public readonly List<AkFxChunk> FxChunks = [];
+    public readonly uint FxId0;
+    public readonly bool IsShareSet0;
 
-    public AkFXBus(FArchive Ar)
+    public AkFxBus(FArchive Ar)
     {
         int count = 0;
         if (WwiseVersions.Version <= 26)
@@ -121,21 +120,21 @@ public class AkFXBus
             count = Ar.Read<byte>(); // numFX
         }
 
-        bool readFX = false;
+        bool readFx = false;
         if (WwiseVersions.Version > 48 && WwiseVersions.Version <= 65)
         {
-            readFX = count > 0; // TODO: or if is enviromental, only possible in versions <= 53
+            readFx = count > 0; // TODO: or if is enviromental, only possible in versions <= 53
         }
         else
         {
-            readFX = count > 0;
+            readFx = count > 0;
         }
 
-        if (readFX)
+        if (readFx)
         {
             if (WwiseVersions.Version > 26)
             {
-                BitsFXBypass = Ar.Read<byte>();
+                BitsFxBypass = Ar.Read<byte>();
             }
 
             for (int i = 0; i < count; i++)
@@ -143,7 +142,7 @@ public class AkFXBus
                 var fxIndex = Ar.Read<byte>();
                 var fxId = Ar.Read<uint>();
                 var isShareSet = Ar.Read<byte>();
-                FXChunks.Add(new AkFXChunk(fxIndex, fxId, isShareSet));
+                FxChunks.Add(new AkFxChunk(fxIndex, fxId, isShareSet));
 
                 if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
                 {
@@ -154,7 +153,7 @@ public class AkFXBus
 
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
         {
-            FXId0 = Ar.Read<uint>();
+            FxId0 = Ar.Read<uint>();
             IsShareSet0 = Ar.Read<byte>() != 0;
         }
     }

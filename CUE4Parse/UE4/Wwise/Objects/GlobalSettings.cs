@@ -5,10 +5,10 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class GlobalSettings
 {
-    public EFilterBehavior FilterBehavior { get; }
-    public float VolumeThreshold { get; }
-    public ushort MaxNumVoicesLimitInternal { get; }
-    public ushort MaxNumDangerousVirtVoicesLimitInternal { get; }
+    public readonly EFilterBehavior FilterBehavior;
+    public readonly float VolumeThreshold;
+    public readonly ushort MaxNumVoicesLimitInternal;
+    public readonly ushort MaxNumDangerousVirtVoicesLimitInternal;
 
     public GlobalSettings(FArchive Ar)
     {

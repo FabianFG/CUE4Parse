@@ -5,12 +5,12 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkStinger
 {
-    public uint TriggerId { get; private set; }
-    public uint SegmentId { get; private set; }
-    public uint SyncPlayAt { get; private set; }
-    public uint CueFilterHash { get; private set; }
-    public int DontRepeatTime { get; private set; }
-    public uint NumSegmentLookAhead { get; private set; }
+    public readonly uint TriggerId;
+    public readonly uint SegmentId;
+    public readonly uint SyncPlayAt;
+    public readonly uint CueFilterHash;
+    public readonly int DontRepeatTime;
+    public readonly uint NumSegmentLookAhead;
 
     public AkStinger(FArchive Ar)
     {

@@ -7,13 +7,13 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkSwitchParams
 {
-    public uint NodeId { get; private set; }
-    public bool IsFirstOnly { get; private set; }
-    public bool ContinuePlayback { get; private set; }
+    public readonly uint NodeId;
+    public readonly bool IsFirstOnly;
+    public readonly bool ContinuePlayback;
     [JsonConverter(typeof(StringEnumConverter))]
-    public EOnSwitchMode OnSwitchMode { get; private set; }
-    public int FadeOutTime { get; private set; }
-    public int FadeInTime { get; private set; }
+    public readonly EOnSwitchMode OnSwitchMode;
+    public readonly int FadeOutTime;
+    public readonly int FadeInTime;
 
     public AkSwitchParams(FArchive Ar)
     {

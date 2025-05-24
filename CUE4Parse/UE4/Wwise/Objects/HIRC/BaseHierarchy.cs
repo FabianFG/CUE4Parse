@@ -7,10 +7,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchy : AbstractHierarchy
 {
-    public readonly bool OverrideFX;
-    public readonly AkFXParams FXParams;
+    public readonly bool OverrideFx;
+    public readonly AkFxParams FxParams;
     public readonly byte OverrideParentMetadataFlag;
-    public readonly byte NumFXMetadataFlag;
+    public readonly byte NumFxMetadataFlag;
     public readonly byte OverrideAttachmentParams;
     public readonly uint OverrideBusId;
     public readonly uint DirectParentId;
@@ -29,17 +29,17 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly EBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
     public readonly List<AkStateGroup> StateGroups;
-    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkRtpc> RtpcList;
 
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
-        OverrideFX = Ar.Read<byte>() != 0;
-        FXParams = new AkFXParams(Ar);
+        OverrideFx = Ar.Read<byte>() != 0;
+        FxParams = new AkFxParams(Ar);
 
         if (WwiseVersions.Version > 136)
         {
             OverrideParentMetadataFlag = Ar.Read<byte>();
-            NumFXMetadataFlag = Ar.Read<byte>();
+            NumFxMetadataFlag = Ar.Read<byte>();
         }
 
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
@@ -110,23 +110,23 @@ public class BaseHierarchy : AbstractHierarchy
             StateGroups = new AkStateChunk(Ar).Groups;
         }
 
-        RTPCs = AkRTPC.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadMultiple(Ar);
     }
 
     // WriteStartEndObjects are handled by derived classes!
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("OverrideFX");
-        writer.WriteValue(OverrideFX);
+        writer.WritePropertyName("OverrideFx");
+        writer.WriteValue(OverrideFx);
 
-        writer.WritePropertyName("FXParams");
-        serializer.Serialize(writer, FXParams);
+        writer.WritePropertyName("FxParams");
+        serializer.Serialize(writer, FxParams);
 
         writer.WritePropertyName("OverrideParentMetadataFlag");
         writer.WriteValue(OverrideParentMetadataFlag != 0);
 
-        writer.WritePropertyName("NumFXMetadataFlag");
-        writer.WriteValue(NumFXMetadataFlag);
+        writer.WritePropertyName("NumFxMetadataFlag");
+        writer.WriteValue(NumFxMetadataFlag);
 
         writer.WritePropertyName("OverrideAttachmentParams");
         writer.WriteValue(OverrideAttachmentParams);
@@ -188,7 +188,7 @@ public class BaseHierarchy : AbstractHierarchy
         writer.WritePropertyName("StateGroups");
         serializer.Serialize(writer, StateGroups);
 
-        writer.WritePropertyName("RTPCs");
-        serializer.Serialize(writer, RTPCs);
+        writer.WritePropertyName("RtpcList");
+        serializer.Serialize(writer, RtpcList);
     }
 }

@@ -9,9 +9,9 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkAuxParams
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public EAuxParams AuxParams { get; }
-    public List<uint> AuxIds { get; }
-    public uint ReflectionsAuxBus { get; }
+    public readonly EAuxParams AuxParams;
+    public readonly List<uint> AuxIds;
+    public readonly uint ReflectionsAuxBus;
 
     public AkAuxParams(FArchive ar)
     {

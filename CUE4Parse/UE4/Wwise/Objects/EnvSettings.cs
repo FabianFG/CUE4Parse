@@ -7,7 +7,7 @@ public class EnvSettings
 {
     public List<ConversionTableEntry> ConversionTableEntries { get; private set; }
 
-    public EnvSettings(FArchive ar)
+    public EnvSettings(FArchive Ar)
     {
         ConversionTableEntries = [];
         int maxY;
@@ -32,23 +32,23 @@ public class EnvSettings
         {
             for (int j = 0; j < maxY; j++)
             {
-                var curveEnabled = ar.Read<byte>();
+                var curveEnabled = Ar.Read<byte>();
                 int curveSize;
                 if (WwiseVersions.Version <= 36)
                 {
-                    var curveScaling = ar.Read<uint>();
-                    curveSize = (int) ar.Read<uint>();
+                    var curveScaling = Ar.Read<uint>();
+                    curveSize = (int) Ar.Read<uint>();
                 }
                 else
                 {
-                    var curveScaling = ar.Read<byte>();
-                    curveSize = ar.Read<ushort>();
+                    var curveScaling = Ar.Read<byte>();
+                    curveSize = Ar.Read<ushort>();
                 }
 
-                var graphPoints = new List<AkRTPCGraphPoint>(curveSize);
+                var graphPoints = new List<AkRtpcGraphPoint>(curveSize);
                 for (int t = 0; t < curveSize; t++)
                 {
-                    graphPoints.Add(new AkRTPCGraphPoint(ar));
+                    graphPoints.Add(new AkRtpcGraphPoint(Ar));
                 }
 
                 ConversionTableEntries.Add(new ConversionTableEntry(curveEnabled, graphPoints));
@@ -59,9 +59,9 @@ public class EnvSettings
     public class ConversionTableEntry
     {
         public byte CurveEnabled { get; }
-        public List<AkRTPCGraphPoint> GraphPoints { get; }
+        public List<AkRtpcGraphPoint> GraphPoints { get; }
 
-        public ConversionTableEntry(byte curveEnabled, List<AkRTPCGraphPoint> graphPoints)
+        public ConversionTableEntry(byte curveEnabled, List<AkRtpcGraphPoint> graphPoints)
         {
             CurveEnabled = curveEnabled;
             GraphPoints = graphPoints;

@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkPositioningParams
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public EBitsPositioning BitsPositioning { get; }
+    public readonly EBitsPositioning BitsPositioning;
     public byte? Flags3D { get; }
     public byte? PathMode { get; }
     public int? TransitionTime { get; }

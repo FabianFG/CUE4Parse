@@ -4,8 +4,8 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionSetState
 {
-    public uint SwitchGroupId { get; protected set; }
-    public uint TargetStateId { get; protected set; }
+    public readonly uint SwitchGroupId;
+    public readonly uint TargetStateId;
 
     public AkActionSetState(FArchive Ar)
     {

@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkDecisionTree
 {
-    public List<AkDecisionTreeNode> Nodes { get; private set; }
+    public readonly List<AkDecisionTreeNode> Nodes;
 
     public AkDecisionTree()
     {

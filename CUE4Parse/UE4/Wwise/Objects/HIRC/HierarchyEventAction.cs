@@ -10,6 +10,7 @@ public class HierarchyEventAction : AbstractHierarchy
 {
     public readonly EEventActionScope EventActionScope;
     public readonly EEventActionType EventActionType;
+    public readonly byte IsBus;
     public readonly uint ReferencedId;
     public readonly List<AkProp> Props;
     public readonly List<AkPropRange> PropRanges;
@@ -20,10 +21,9 @@ public class HierarchyEventAction : AbstractHierarchy
     {
         EventActionScope = Ar.Read<EEventActionScope>();
         EventActionType = Ar.Read<EEventActionType>();
-
         ReferencedId = Ar.Read<uint>();
+        IsBus = Ar.Read<byte>();
 
-        var isBus = Ar.Read<byte>();
         AkPropBundle propBundle = new(Ar);
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
@@ -72,6 +72,9 @@ public class HierarchyEventAction : AbstractHierarchy
             writer.WritePropertyName("ReferencedId");
             writer.WriteValue(ReferencedId);
         }
+
+        writer.WritePropertyName("IsBus");
+        writer.WriteValue(IsBus != 0);
 
         writer.WritePropertyName("Props");
         serializer.Serialize(writer, Props);

@@ -70,7 +70,7 @@ public static class WwiseVersions
     [
         135,    // Dead by Daylight (old)
         140,    // Dead by Daylight (old)
-        145,    // Valorant
+        145,    // Valorant, Marvel Rivals
         150     // Dead by Daylight
     ];
 

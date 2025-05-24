@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkMusicMarkerWwise
 {
-    public uint Id { get; private set; }
-    public double Position { get; private set; }
-    public string? MarkerName { get; private set; }
+    public readonly uint Id;
+    public readonly double Position;
+    public readonly string? MarkerName;
 
     public AkMusicMarkerWwise(FArchive Ar)
     {

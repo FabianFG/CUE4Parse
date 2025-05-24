@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public abstract class AbstractHierarchy(FArchive Ar)
 {
-    public uint Id { get; } = Ar.Read<uint>();
+    public readonly uint Id = Ar.Read<uint>();
 
     public abstract void WriteJson(JsonWriter writer, JsonSerializer serializer);
 }

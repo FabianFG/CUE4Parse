@@ -68,9 +68,10 @@ public class HierarchyConverter : JsonConverter<Hierarchy>
         writer.WritePropertyName("Type");
         writer.WriteValue(value.Type.ToString());
 
-        // Helpful for debugging
+#if DEBUG
         writer.WritePropertyName("Length");
         writer.WriteValue(value.Length.ToString());
+#endif
 
         writer.WritePropertyName("Id");
         writer.WriteValue(value.Data.Id.ToString());

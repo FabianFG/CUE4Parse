@@ -19,10 +19,10 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly uint RecoveryTime;
     public readonly float MaxDuckVolume;
     public readonly List<AkDuckInfo> DuckInfo = [];
-    public readonly AkFXBus FXBusParams;
+    public readonly AkFxBus FxBusParams;
     public readonly byte OverrideAttachmentParams;
-    public readonly List<AkFXChunk> FXChunk = [];
-    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkFxChunk> FxChunk = [];
+    public readonly List<AkRtpc> RtpcList;
     public readonly List<AkStateGroup>? StateGroups;
 
     public BaseHierarchyBus(FArchive Ar) : base(Ar)
@@ -99,7 +99,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             DuckInfo.Add(new AkDuckInfo(Ar));
         }
 
-        FXBusParams = new AkFXBus(Ar);
+        FxBusParams = new AkFxBus(Ar);
 
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
         {
@@ -113,12 +113,12 @@ public class BaseHierarchyBus : AbstractHierarchy
             {
                 for (int i = 0; i < numFx; i++)
                 {
-                    FXChunk.Add(new AkFXChunk(Ar));
+                    FxChunk.Add(new AkFxChunk(Ar));
                 }
             }
         }
 
-        RTPCs = AkRTPC.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadMultiple(Ar);
 
         if (WwiseVersions.Version <= 56)
         {
@@ -200,21 +200,21 @@ public class BaseHierarchyBus : AbstractHierarchy
             serializer.Serialize(writer, d);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("FXBusParams");
-        serializer.Serialize(writer, FXBusParams);
+        writer.WritePropertyName("FxBusParams");
+        serializer.Serialize(writer, FxBusParams);
 
         writer.WritePropertyName("OverrideAttachmentParams");
         writer.WriteValue(OverrideAttachmentParams);
 
-        writer.WritePropertyName("FXChunk");
+        writer.WritePropertyName("FxChunk");
         writer.WriteStartArray();
-        foreach (var f in FXChunk)
+        foreach (var f in FxChunk)
             serializer.Serialize(writer, f);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("RTPCs");
+        writer.WritePropertyName("RtpcList");
         writer.WriteStartArray();
-        foreach (var r in RTPCs)
+        foreach (var r in RtpcList)
             serializer.Serialize(writer, r);
         writer.WriteEndArray();
 

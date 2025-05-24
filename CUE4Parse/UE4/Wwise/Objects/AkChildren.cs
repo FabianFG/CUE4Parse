@@ -4,7 +4,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkChildren
 {
-    public uint[] ChildIds { get; }
+    public readonly uint[] ChildIds;
 
     public AkChildren(FArchive Ar)
     {

@@ -4,9 +4,9 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionPlay
 {
-    public ActionParams ActionParams { get; private set; }
-    public uint? BankId { get; private set; }
-    public uint? BankType { get; private set; }
+    public readonly ActionParams ActionParams;
+    public readonly uint? BankId;
+    public readonly uint? BankType;
 
     public AkActionPlay(FArchive Ar)
     {

@@ -4,22 +4,22 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkBankSourceData
 {
-    public uint PluginId { get; private set; }
-    public byte StreamType { get; private set; }
-    public uint DataIndex { get; private set; }
-    public uint SampleRate { get; private set; }
-    public uint FormatBits { get; private set; }
-    public uint SourceId { get; private set; }
-    public uint FileId { get; private set; }
-    public uint FileOffset { get; private set; }
-    public uint InMemoryMediaSize { get; private set; }
-    public uint CacheId { get; private set; }
-    public byte SourceBits { get; private set; }
-    public bool IsLanguageSpecific { get; private set; }
-    public bool HasSource { get; private set; }
-    public bool ExternallySupplied { get; private set; }
-    public bool Prefetch { get; private set; }
-    public bool NonCachable { get; private set; }
+    public readonly uint PluginId;
+    public readonly byte StreamType;
+    public readonly uint DataIndex;
+    public readonly uint SampleRate;
+    public readonly uint FormatBits;
+    public readonly uint SourceId;
+    public readonly uint FileId;
+    public readonly uint FileOffset;
+    public readonly uint InMemoryMediaSize;
+    public readonly uint CacheId;
+    public readonly byte SourceBits;
+    public readonly bool IsLanguageSpecific;
+    public readonly bool HasSource;
+    public readonly bool ExternallySupplied;
+    public readonly bool Prefetch;
+    public readonly bool NonCachable;
 
     public AkBankSourceData(FArchive Ar)
     {

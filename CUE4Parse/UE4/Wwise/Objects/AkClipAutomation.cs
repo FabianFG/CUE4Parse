@@ -5,21 +5,20 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkClipAutomation
 {
-    public uint UClipIndex { get; }
-    public uint EAutoType { get; }
-    public uint UNumPoints { get; }
-    public List<AkRTPCGraphPoint> GraphPoints { get; }
+    public readonly uint UClipIndex;
+    public readonly uint EAutoType;
+    public readonly List<AkRtpcGraphPoint> GraphPoints;
 
     public AkClipAutomation(FArchive Ar)
     {
         UClipIndex = Ar.Read<uint>();
         EAutoType = Ar.Read<uint>();
-        UNumPoints = Ar.Read<uint>();
 
-        GraphPoints = new List<AkRTPCGraphPoint>((int) UNumPoints);
-        for (int i = 0; i < UNumPoints; i++)
+        var numPoints = Ar.Read<uint>();
+        GraphPoints = new List<AkRtpcGraphPoint>((int) numPoints);
+        for (int i = 0; i < numPoints; i++)
         {
-            GraphPoints.Add(new AkRTPCGraphPoint(Ar));
+            GraphPoints.Add(new AkRtpcGraphPoint(Ar));
         }
     }
 }

@@ -4,10 +4,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionSeek
 {
-    public byte IsSeekRelativeToDuration { get; protected set; }
-    public RandomizerModifier RandomizerModifier { get; private set; }
-    public byte SnapToNearestMarker { get; protected set; }
-    public ExceptParams ExceptParams { get; private set; }
+    public readonly byte IsSeekRelativeToDuration;
+    public readonly RandomizerModifier RandomizerModifier;
+    public readonly byte SnapToNearestMarker;
+    public readonly ExceptParams ExceptParams;
 
     public AkActionSeek(FArchive Ar)
     {

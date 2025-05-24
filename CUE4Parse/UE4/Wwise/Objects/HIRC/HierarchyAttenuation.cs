@@ -8,16 +8,13 @@ public class HierarchyAttenuation : AbstractHierarchy
 {
     public readonly byte IsHeightSpreadEnabled;
     public readonly byte IsConeEnabled;
-
     public readonly float? InsideDegrees;
     public readonly float? OutsideDegrees;
     public readonly float? OutsideVolume;
     public readonly float? LoPass;
     public readonly float? HiPass;
-
     public readonly List<AkConversionTable> Curves;
-
-    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkRtpc> RtpcList;
 
     public HierarchyAttenuation(FArchive Ar) : base(Ar)
     {
@@ -70,7 +67,7 @@ public class HierarchyAttenuation : AbstractHierarchy
             Curves.Add(new AkConversionTable(Ar));
         }
 
-        RTPCs = AkRTPC.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadMultiple(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -107,8 +104,8 @@ public class HierarchyAttenuation : AbstractHierarchy
         writer.WritePropertyName("Curves");
         serializer.Serialize(writer, Curves);
 
-        writer.WritePropertyName("RTPCs");
-        serializer.Serialize(writer, RTPCs);
+        writer.WritePropertyName("RtpcList");
+        serializer.Serialize(writer, RtpcList);
 
         writer.WriteEndObject();
     }

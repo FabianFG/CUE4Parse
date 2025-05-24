@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class ExceptParams
 {
-    public List<ExceptionElement> ExceptionElements { get; private set; }
+    public readonly List<ExceptionElement> ExceptionElements;
 
     public ExceptParams(FArchive Ar)
     {
@@ -29,8 +29,8 @@ public class ExceptParams
 
 public class ExceptionElement
 {
-    public uint Id { get; private set; }
-    public byte? IsBus { get; private set; }
+    public readonly uint Id;
+    public readonly byte? IsBus;
 
     public ExceptionElement(FArchive Ar)
     {

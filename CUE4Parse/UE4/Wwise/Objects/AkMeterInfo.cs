@@ -4,12 +4,12 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkMeterInfo
 {
-    public double GridPeriod { get; private set; }
-    public double GridOffset { get; private set; }
-    public float Tempo { get; private set; }
-    public byte TimeSigNumBeatsBar { get; private set; }
-    public byte TimeSigBeatValue { get; private set; }
-    public byte MeterInfoFlag { get; private set; }
+    public readonly double GridPeriod;
+    public readonly double GridOffset;
+    public readonly float Tempo;
+    public readonly byte TimeSigNumBeatsBar;
+    public readonly byte TimeSigBeatValue;
+    public readonly byte MeterInfoFlag;
 
     public AkMeterInfo(FArchive Ar)
     {

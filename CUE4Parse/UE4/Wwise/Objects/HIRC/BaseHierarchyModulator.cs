@@ -8,13 +8,13 @@ public class BaseHierarchyModulator : AbstractHierarchy
 {
     public readonly List<AkProp> Props = [];
     public readonly List<AkPropRange> PropRanges;
-    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkRtpc> RtpcList;
 
     public BaseHierarchyModulator(FArchive Ar) : base(Ar)
     {
         Props = AkPropBundle.ReadLinearAkProp(Ar);
         PropRanges = AkPropBundle.ReadLinearAkPropRange(Ar);
-        RTPCs = AkRTPC.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadMultiple(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -25,7 +25,7 @@ public class BaseHierarchyModulator : AbstractHierarchy
         writer.WritePropertyName("PropRanges");
         serializer.Serialize(writer, PropRanges);
 
-        writer.WritePropertyName("RTPCs");
-        serializer.Serialize(writer, RTPCs);
+        writer.WritePropertyName("RtpcList");
+        serializer.Serialize(writer, RtpcList);
     }
 }

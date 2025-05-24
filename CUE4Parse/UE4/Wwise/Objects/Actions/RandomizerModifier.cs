@@ -4,9 +4,9 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class RandomizerModifier
 {
-    public float Base { get; set; }
-    public float Min { get; set; }
-    public float Max { get; set; }
+    public readonly float Base;
+    public readonly float Min;
+    public readonly float Max;
 
     public RandomizerModifier(FArchive Ar)
     {

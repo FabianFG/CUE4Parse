@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkGameSync
 {
-    public uint GroupId { get; private set; }
+    public readonly uint GroupId;
     public byte GroupType { get; private set; }
 
     public AkGameSync(FArchive Ar)

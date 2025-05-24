@@ -7,14 +7,14 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkDuckInfo
 {
-    public uint BusId { get; set; }
-    public float DuckVolume { get; set; }
-    public uint FadeOutTime { get; set; }
-    public uint FadeInTime { get; set; }
+    public readonly uint BusId;
+    public readonly float DuckVolume;
+    public readonly uint FadeOutTime;
+    public readonly uint FadeInTime;
     [JsonConverter(typeof(StringEnumConverter))]
-    public ECurveInterpolation FadeCurve { get; set; }
-    public uint DuckingStateType { get; set; }
-    public byte TargetProp { get; set; } // Version > 65
+    public readonly ECurveInterpolation FadeCurve;
+    public readonly uint DuckingStateType;
+    public readonly byte TargetProp; // Version > 65
 
     public AkDuckInfo(FArchive Ar)
     {

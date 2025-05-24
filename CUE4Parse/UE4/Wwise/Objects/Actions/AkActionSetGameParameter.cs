@@ -5,11 +5,11 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionSetGameParameter
 {
-    public ActionParams ActionParams { get; private set; }
-    public bool? BypassTransition { get; private set; }
-    public EValueMeaning ValueMeaning { get; private set; }
-    public RandomizerModifier RandomizerModifier { get; private set; }
-    public ExceptParams ExceptParams { get; private set; }
+    public readonly ActionParams ActionParams;
+    public readonly bool? BypassTransition;
+    public readonly EValueMeaning ValueMeaning;
+    public readonly RandomizerModifier RandomizerModifier;
+    public readonly ExceptParams ExceptParams;
 
     public AkActionSetGameParameter(FArchive Ar)
     {

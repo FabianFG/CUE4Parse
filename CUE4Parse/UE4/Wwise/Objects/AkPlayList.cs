@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkPlayList
 {
-    public List<AkPlayListItem> PlaylistItems { get; }
+    public readonly List<AkPlayListItem> PlaylistItems;
 
     public AkPlayList(FArchive Ar)
     {
@@ -21,8 +21,8 @@ public class AkPlayList
 
     public class AkPlayListItem
     {
-        public uint PlayID { get; }
-        public int Weight { get; }
+        public readonly uint PlayID;
+        public readonly int Weight;
 
         public AkPlayListItem(FArchive Ar)
         {

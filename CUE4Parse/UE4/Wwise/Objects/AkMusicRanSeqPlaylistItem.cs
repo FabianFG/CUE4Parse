@@ -5,12 +5,12 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkMusicRanSeqPlaylistItem
 {
-    public uint SegmentId { get; private set; }
-    public uint PlaylistItemId { get; private set; }
-    public uint NumChildren { get; private set; }
-    public List<AkMusicRanSeqPlaylistItem> Children { get; private set; }
-    public LoopInfo LoopInfo { get; private set; }
-    public WeightInfo WeightInfo { get; private set; }
+    public readonly uint SegmentId;
+    public readonly uint PlaylistItemId;
+    public readonly uint NumChildren;
+    public readonly List<AkMusicRanSeqPlaylistItem> Children;
+    public readonly LoopInfo LoopInfo;
+    public readonly WeightInfo WeightInfo;
 
     public AkMusicRanSeqPlaylistItem(FArchive Ar)
     {
@@ -65,9 +65,9 @@ public class AkMusicRanSeqPlaylistItem
 
 public class LoopInfo
 {
-    public short Loop { get; private set; }
-    public short? LoopMin { get; private set; }
-    public short? LoopMax { get; private set; }
+    public readonly short Loop;
+    public readonly short? LoopMin;
+    public readonly short? LoopMax;
 
     public LoopInfo(FArchive Ar)
     {
@@ -83,10 +83,10 @@ public class LoopInfo
 
 public class WeightInfo
 {
-    public ushort Weight { get; private set; }
-    public ushort? AvoidRepeatCount { get; private set; }
-    public byte IsUsingWeight { get; private set; }
-    public byte IsShuffle { get; private set; }
+    public readonly ushort Weight;
+    public readonly ushort? AvoidRepeatCount;
+    public readonly byte IsUsingWeight;
+    public readonly byte IsShuffle;
 
     public WeightInfo(FArchive Ar)
     {

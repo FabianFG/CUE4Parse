@@ -4,14 +4,14 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkTrackSrcInfo
 {
-    public uint TrackId { get; private set; }
-    public uint SourceId { get; private set; }
-    public uint CacheId { get; private set; }
-    public uint EventId { get; private set; }
-    public double PlayAt { get; private set; }
-    public double BeginTrimOffset { get; private set; }
-    public double EndTrimOffset { get; private set; }
-    public double SrcDuration { get; private set; }
+    public readonly uint TrackId;
+    public readonly uint SourceId;
+    public readonly uint CacheId;
+    public readonly uint EventId;
+    public readonly double PlayAt;
+    public readonly double BeginTrimOffset;
+    public readonly double EndTrimOffset;
+    public readonly double SrcDuration;
 
     public AkTrackSrcInfo(FArchive Ar)
     {

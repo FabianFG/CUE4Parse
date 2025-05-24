@@ -5,11 +5,11 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyAudioDevice : BaseHierarchyFx
 {
-    public readonly AkFXParams FXParams;
+    public readonly AkFxParams FxParams;
 
     public HierarchyAudioDevice(FArchive Ar) : base(Ar)
     {
-        FXParams = new AkFXParams(Ar);
+        FxParams = new AkFxParams(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -18,8 +18,8 @@ public class HierarchyAudioDevice : BaseHierarchyFx
 
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("FXParams");
-        serializer.Serialize(writer, FXParams);
+        writer.WritePropertyName("FxParams");
+        serializer.Serialize(writer, FxParams);
 
         writer.WriteEndObject();
     }

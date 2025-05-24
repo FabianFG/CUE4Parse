@@ -6,23 +6,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyFx : AbstractHierarchy
 {
-    public class RTPCInit
-    {
-        public byte ParamId { get; set; }
-        public float InitValue { get; set; }
-    }
-
-    public class PluginPropertyValue
-    {
-        public byte PropertyId { get; set; }
-        public byte RtpcAccum { get; set; }
-        public float Value { get; set; }
-    }
-
     public readonly List<AkMediaMap> MediaList;
-    public readonly List<AkRTPC> RTPCs;
+    public readonly List<AkRtpc> RtpcList;
     public readonly List<AkStateGroup> StateGroups = [];
-    public readonly List<RTPCInit> RTPCInits = [];
+    public readonly List<RtpcInit> RtpcInitList = [];
     public readonly List<PluginPropertyValue> PluginPropertyValues = [];
 
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
@@ -43,7 +30,7 @@ public class BaseHierarchyFx : AbstractHierarchy
             MediaList.Add(mediaItem);
         }
 
-        RTPCs = AkRTPC.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadMultiple(Ar);
 
         if (WwiseVersions.Version <= 89)
         {
@@ -59,10 +46,10 @@ public class BaseHierarchyFx : AbstractHierarchy
             }
 
             var numInit = Ar.Read<ushort>();
-            RTPCInits = new List<RTPCInit>(numInit);
+            RtpcInitList = new List<RtpcInit>(numInit);
             for (int i = 0; i < numInit; i++)
             {
-                RTPCInits.Add(new RTPCInit
+                RtpcInitList.Add(new RtpcInit
                 {
                     ParamId = Ar.Read<byte>(),
                     InitValue = Ar.Read<float>()
@@ -87,16 +74,29 @@ public class BaseHierarchyFx : AbstractHierarchy
         }
     }
 
+    public class RtpcInit
+    {
+        public byte ParamId { get; set; }
+        public float InitValue { get; set; }
+    }
+
+    public class PluginPropertyValue
+    {
+        public byte PropertyId { get; set; }
+        public byte RtpcAccum { get; set; }
+        public float Value { get; set; }
+    }
+
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("RTPCs");
-        serializer.Serialize(writer, RTPCs);
+        writer.WritePropertyName("RtpcList");
+        serializer.Serialize(writer, RtpcList);
 
         writer.WritePropertyName("StateGroups");
         serializer.Serialize(writer, StateGroups);
 
-        writer.WritePropertyName("RTPCInits");
-        serializer.Serialize(writer, RTPCInits);
+        writer.WritePropertyName("RtpcInitList");
+        serializer.Serialize(writer, RtpcInitList);
 
         writer.WritePropertyName("PluginPropertyValues");
         serializer.Serialize(writer, PluginPropertyValues);

@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
-using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkMusicTransitionRule
 {
-    public List<TransitionRule> Rules { get; private set; }
+    public readonly List<TransitionRule> Rules;
 
     public AkMusicTransitionRule(FArchive Ar)
     {
@@ -23,12 +22,12 @@ public class AkMusicTransitionRule
 
 public class TransitionRule
 {
-    public List<int> SrcIds { get; private set; }
-    public List<int> DstIds { get; private set; }
-    public List<SrcRule> SrcRules { get; private set; }
-    public List<DstRule> DstRules { get; private set; }
-    public bool HasTransitionObject { get; private set; }
-    public TransitionObject? TransObject { get; private set; }
+    public readonly List<int> SrcIds;
+    public readonly List<int> DstIds;
+    public readonly List<SrcRule> SrcRules;
+    public readonly List<DstRule> DstRules;
+    public readonly bool HasTransitionObject;
+    public readonly TransitionObject? TransObject;
 
     public TransitionRule(FArchive Ar)
     {
@@ -59,13 +58,13 @@ public class TransitionRule
 
 public class SrcRule
 {
-    public int TransitionTime { get; private set; }
-    public uint FadeCurve { get; private set; }
-    public int FadeOffset { get; private set; }
-    public uint SyncType { get; private set; }
-    public uint MarkerId { get; private set; }
-    public uint CueFilterHash { get; private set; }
-    public byte PlayPostExit { get; private set; }
+    public readonly int TransitionTime;
+    public readonly uint FadeCurve;
+    public readonly int FadeOffset;
+    public readonly uint SyncType;
+    public readonly uint MarkerId;
+    public readonly uint CueFilterHash;
+    public readonly byte PlayPostExit;
 
     public SrcRule(FArchive Ar)
     {
@@ -85,16 +84,16 @@ public class SrcRule
 
 public class DstRule
 {
-    public int TransitionTime { get; private set; }
-    public uint FadeCurve { get; private set; }
-    public int FadeOffset { get; private set; }
-    public uint MarkerID { get; private set; }
-    public uint CueFilterHash { get; private set; }
-    public uint JumpToId { get; private set; }
-    public ushort JumpToType { get; private set; }
-    public ushort EntryType { get; private set; }
-    public byte PlayPreEntry { get; private set; }
-    public byte DestMatchSourceCueName { get; private set; }
+    public readonly int TransitionTime;
+    public readonly uint FadeCurve;
+    public readonly int FadeOffset;
+    public readonly uint MarkerID;
+    public readonly uint CueFilterHash;
+    public readonly uint JumpToId;
+    public readonly ushort JumpToType;
+    public readonly ushort EntryType;
+    public readonly byte PlayPreEntry;
+    public readonly byte DestMatchSourceCueName;
 
     public DstRule(FArchive Ar)
     {
@@ -124,11 +123,11 @@ public class DstRule
 
 public class TransitionObject
 {
-    public uint SegmentId { get; private set; }
-    public FadeParams FadeInParams { get; private set; }
-    public FadeParams FadeOutParams { get; private set; }
-    public byte PlayPreEntry { get; private set; }
-    public byte PlayPostExit { get; private set; }
+    public readonly uint SegmentId;
+    public readonly FadeParams FadeInParams;
+    public readonly FadeParams FadeOutParams;
+    public readonly byte PlayPreEntry;
+    public readonly byte PlayPostExit;
 
     public TransitionObject(FArchive Ar)
     {
@@ -142,9 +141,9 @@ public class TransitionObject
 
 public class FadeParams
 {
-    public int TransitionTime { get; private set; }
-    public uint FadeCurve { get; private set; }
-    public int FadeOffset { get; private set; }
+    public readonly int TransitionTime;
+    public readonly uint FadeCurve;
+    public readonly int FadeOffset;
 
     public FadeParams(FArchive Ar)
     {

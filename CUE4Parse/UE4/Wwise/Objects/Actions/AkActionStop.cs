@@ -4,10 +4,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class AkActionStop
 {
-    public ActionParams ActionParams { get; private set; }
-    public bool ApplyToStateTransitions { get; private set; }
-    public bool ApplyToDynamicSequence { get; private set; }
-    public ExceptParams ExceptParams { get; private set; }
+    public readonly ActionParams ActionParams;
+    public readonly bool ApplyToStateTransitions;
+    public readonly bool ApplyToDynamicSequence;
+    public readonly ExceptParams ExceptParams;
 
     public AkActionStop(FArchive Ar)
     {

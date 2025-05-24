@@ -7,11 +7,11 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkTransParams
 {
-    public AkFadeParams SourceFadeParams { get; private set; }
+    public readonly AkFadeParams SourceFadeParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public ESyncType SyncType { get; private set; }
-    public uint CueFilterHash { get; private set; }
-    public AkFadeParams DestinationFadeParams { get; private set; }
+    public readonly ESyncType SyncType;
+    public readonly uint CueFilterHash;
+    public readonly AkFadeParams DestinationFadeParams;
 
     public AkTransParams(FArchive Ar)
     {
@@ -23,10 +23,10 @@ public class AkTransParams
 
     public class AkFadeParams
     {
-        public uint TransitionTime { get; private set; }
+        public readonly uint TransitionTime;
         [JsonConverter(typeof(StringEnumConverter))]
-        public ECurveInterpolation FadeCurve { get; private set; }
-        public uint FadeOffset { get; private set; }
+        public readonly ECurveInterpolation FadeCurve;
+        public readonly uint FadeOffset;
 
         public AkFadeParams(FArchive Ar)
         {

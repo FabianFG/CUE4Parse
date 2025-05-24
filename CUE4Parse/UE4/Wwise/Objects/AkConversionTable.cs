@@ -5,9 +5,9 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkConversionTable
 {
-    public uint Scaling { get; }
-    public dynamic Size { get; } // uint for legacy versions, ushort for modern versions
-    public List<AkRTPCGraphPoint> GraphPoints { get; }
+    public readonly uint Scaling;
+    public readonly dynamic Size; // uint for legacy versions, ushort for modern versions
+    public readonly List<AkRtpcGraphPoint> GraphPoints;
 
     public AkConversionTable(FArchive ar)
     {
@@ -25,7 +25,7 @@ public class AkConversionTable
         GraphPoints = [];
         for (int i = 0; i < Size; i++)
         {
-            GraphPoints.Add(new AkRTPCGraphPoint(ar));
+            GraphPoints.Add(new AkRtpcGraphPoint(ar));
         }
     }
 }

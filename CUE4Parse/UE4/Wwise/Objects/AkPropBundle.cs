@@ -5,8 +5,8 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkPropBundle
 {
-    public List<AkProp> Props { get; }
-    public List<AkPropRange> PropRanges { get; }
+    public readonly List<AkProp> Props;
+    public readonly List<AkPropRange> PropRanges;
 
     public AkPropBundle(FArchive Ar)
     {
@@ -74,8 +74,8 @@ public class AkPropBundle
 
 public class AkProp
 {
-    public byte Id { get; }
-    public float Value { get; }
+    public readonly byte Id;
+    public readonly float Value;
 
     public AkProp(FArchive Ar)
     {
@@ -92,9 +92,9 @@ public class AkProp
 
 public class AkPropRange
 {
-    public byte Id { get; private set; }
-    public float Min { get; private set; }
-    public float Max { get; private set; }
+    public readonly byte Id;
+    public readonly float Min;
+    public readonly float Max;
 
     public AkPropRange(FArchive Ar)
     {
