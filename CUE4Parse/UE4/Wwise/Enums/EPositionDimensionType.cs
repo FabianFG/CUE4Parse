@@ -1,8 +1,7 @@
-namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums;
+
+public enum EPositionDimensionType : byte
 {
-    public enum EPositionDimensionType : byte
-    {
-        TwoD,
-        ThreeD,
-    }
+    TwoD,
+    ThreeD,
 }
