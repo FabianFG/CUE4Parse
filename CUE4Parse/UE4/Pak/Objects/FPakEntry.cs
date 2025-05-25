@@ -68,62 +68,23 @@ public class FPakEntry : VfsEntry
         UncompressedSize = Ar.Read<long>();
         Size = UncompressedSize;
 
-        if (Ar.Game == GAME_WildAssault)
-        {
-            Offset = (long) ((ulong) Offset ^ 0xA7CE6A55B275BB25) - 0x7A;
-            CompressedSize = (long) ((ulong) CompressedSize ^ 0xF00DF9C13B6B54B0) - 0xDF;
-            UncompressedSize = (long) ((ulong) UncompressedSize ^ 0x1604EC5A1949330D) - 0x6F;
-        }
-
         if (reader.Info.Version < PakFile_Version_FNameBasedCompressionMethod)
         {
             var legacyCompressionMethod = Ar.Read<ECompressionFlags>();
-            int compressionMethodIndex;
-
-            if (legacyCompressionMethod == COMPRESS_None)
+            var compressionMethodIndex = legacyCompressionMethod switch
             {
-                compressionMethodIndex = 0;
-            }
-            else if (legacyCompressionMethod == (ECompressionFlags) 259) // SOD2
-            {
-                compressionMethodIndex = 4;
-            }
-            else if (legacyCompressionMethod.HasFlag(COMPRESS_ZLIB))
-            {
-                compressionMethodIndex = 1;
-            }
-            else if (legacyCompressionMethod.HasFlag(COMPRESS_GZIP))
-            {
-                compressionMethodIndex = 2;
-            }
-            else if (legacyCompressionMethod.HasFlag(COMPRESS_Custom))
-            {
-                if (reader.Game == GAME_SeaOfThieves)
+                COMPRESS_None => 0,
+                (ECompressionFlags) 259 => 4, // SOD2
+                _ when legacyCompressionMethod.HasFlag(COMPRESS_ZLIB) => 1,
+                _ when legacyCompressionMethod.HasFlag(COMPRESS_GZIP) => 2,
+                _ when legacyCompressionMethod.HasFlag(COMPRESS_Custom) => reader.Game == GAME_SeaOfThieves ? 4 : 3, // LZ4 or Oodle, used by Fortnite Mobile until early 2019
+                _ => reader.Game switch
                 {
-                    compressionMethodIndex = 4; // LZ4
+                    GAME_PlayerUnknownsBattlegrounds => 3, // TODO: Investigate what a proper detection is.
+                    GAME_DeadIsland2 => 6, // ¯\_(ツ)_/¯
+                    _ => -1
                 }
-                else
-                {
-                    compressionMethodIndex = 3; // Oodle, used by Fortnite Mobile until early 2019
-                }
-            }
-            else
-            {
-                if (reader.Game == GAME_PlayerUnknownsBattlegrounds)
-                {
-                    compressionMethodIndex = 3; // TODO: Investigate what a proper detection is.
-                }
-                else if (reader.Game == GAME_DeadIsland2)
-                {
-                    compressionMethodIndex = 6; // ¯\_(ツ)_/¯
-                }
-                else
-                {
-                    compressionMethodIndex = -1;
-                    // throw new ParserException("Found an unknown compression type in pak file, will need to be supported for legacy files");
-                }
-            }
-
+            };
             CompressionMethod = compressionMethodIndex == -1 ? CompressionMethod.Unknown : reader.Info.CompressionMethods[compressionMethodIndex];
         }
         else if (reader.Info is { Version: PakFile_Version_FNameBasedCompressionMethod, IsSubVersion: false })
@@ -145,8 +106,6 @@ public class FPakEntry : VfsEntry
                 CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
             Flags = (uint) Ar.ReadByte();
             CompressionBlockSize = Ar.Read<uint>();
-            if (Ar.Game == GAME_WildAssault)
-                CompressionBlockSize = CompressionBlockSize ^ 0x6431032B - 0x81;
         }
 
         if (Ar.Game == GAME_TEKKEN7) Flags = (uint) (Flags & ~Flag_Encrypted);
@@ -264,7 +223,7 @@ public class FPakEntry : VfsEntry
         // This should clear out any excess CompressionBlocks that may be valid in the user's
         // passed in entry.
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;
-        CompressionBlocks = new FPakCompressedBlock[compressionBlocksCount];
+        CompressionBlocks = compressionBlocksCount > 0 ? new FPakCompressedBlock[compressionBlocksCount] : [];
 
         CompressionBlockSize = 0;
         if (compressionBlocksCount > 0)
@@ -330,7 +289,8 @@ public class FPakEntry : VfsEntry
 
         if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
         {
-            bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 | (bitfield & 0x0FC00000) << 1 | bitfield & 0xE0000000;
+            bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 |
+                       (bitfield & 0x0FC00000) << 1 | (bitfield & 0xC0000000) >> 1 | (bitfield & 0x20000000) << 2;
             Ar.Position++;
         }
 
@@ -373,7 +333,7 @@ public class FPakEntry : VfsEntry
 
         // This should clear out any excess CompressionBlocks that may be valid in the user's passed in entry.
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;
-        CompressionBlocks = new FPakCompressedBlock[compressionBlocksCount];
+        CompressionBlocks = compressionBlocksCount > 0 ? new FPakCompressedBlock[compressionBlocksCount] : [];
         CompressionBlockSize = compressionBlocksCount switch
         {
             1 => (uint) UncompressedSize,
