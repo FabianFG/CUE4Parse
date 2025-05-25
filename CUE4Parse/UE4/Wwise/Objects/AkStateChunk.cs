@@ -3,55 +3,41 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkStateProperty
-{
-    public readonly ushort Id;
-    public readonly float Value;
-
-    public AkStateProperty(ushort id, float value)
-    {
-        Id = id;
-        Value = value;
-    }
-}
-
-public class AkState
-{
-    public readonly uint Id;
-    public readonly uint? StateInstanceId;
-    public readonly List<AkStateProperty> Properties;
-
-    public AkState(uint id, uint? stateInstanceId, List<AkStateProperty> properties)
-    {
-        Id = id;
-        StateInstanceId = stateInstanceId;
-        Properties = properties;
-    }
-}
-
-public class AkStateGroup
-{
-    public readonly uint Id;
-    public readonly byte GroupType;
-    public readonly List<AkState> States;
-
-    public AkStateGroup(uint id, byte groupType, List<AkState> states)
-    {
-        Id = id;
-        GroupType = groupType;
-        States = states;
-    }
-}
-
 public class AkStateChunk
 {
-    public readonly int HeaderCount;
-    public readonly List<AkStateGroup> Groups;
+    public readonly List<AkStateGroup> Groups = [];
 
     public AkStateChunk(FArchive Ar)
     {
-        HeaderCount = Ar.Read7BitEncodedInt();
-        for (int i = 0; i < HeaderCount; i++)
+        var numGroups = Ar.Read<uint>();
+        Groups = new List<AkStateGroup>((int) numGroups);
+        for (int i = 0; i < numGroups; i++)
+        {
+            uint groupId = Ar.Read<uint>();
+            byte groupType = Ar.Read<byte>();
+            var numStates = Ar.Read<ushort>();
+
+            var states = new List<AkState>(numStates);
+            for (int s = 0; s < numStates; s++)
+            {
+                uint stateId = Ar.Read<uint>();
+                uint stateInstanceId = Ar.Read<uint>();
+                states.Add(new AkState(stateId, stateInstanceId, []));
+            }
+
+            Groups.Add(new AkStateGroup(groupId, groupType, states));
+        }
+    }
+}
+
+public class AkStateAwareChunk
+{
+    public readonly List<AkStateGroup> Groups;
+
+    public AkStateAwareChunk(FArchive Ar)
+    {
+        var headerCount = Ar.Read7BitEncodedInt();
+        for (int i = 0; i < headerCount; i++)
         {
             Ar.Read7BitEncodedInt();
             Ar.Read<byte>();
@@ -59,7 +45,7 @@ public class AkStateChunk
         }
 
         int groupCount = Ar.Read7BitEncodedInt();
-        var groups = new List<AkStateGroup>(groupCount);
+        Groups = new List<AkStateGroup>(groupCount);
         for (int g = 0; g < groupCount; g++)
         {
             uint groupId = Ar.Read<uint>();
@@ -89,9 +75,27 @@ public class AkStateChunk
                 }
             }
 
-            groups.Add(new AkStateGroup(groupId, groupType, states));
+            Groups.Add(new AkStateGroup(groupId, groupType, states));
         }
-
-        Groups = groups;
     }
+}
+
+public class AkStateProperty(ushort id, float value)
+{
+    public readonly ushort Id = id;
+    public readonly float Value = value;
+}
+
+public class AkState(uint id, uint? stateInstanceId, List<AkStateProperty> properties)
+{
+    public readonly uint Id = id;
+    public readonly uint? StateInstanceId = stateInstanceId;
+    public readonly List<AkStateProperty> Properties = properties;
+}
+
+public class AkStateGroup(uint id, byte groupType, List<AkState> states)
+{
+    public readonly uint Id = id;
+    public readonly byte GroupType = groupType;
+    public readonly List<AkState> States = states;
 }

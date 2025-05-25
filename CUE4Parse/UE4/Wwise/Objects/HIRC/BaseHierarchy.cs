@@ -74,15 +74,7 @@ public class BaseHierarchy : AbstractHierarchy
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
-        if (WwiseVersions.Version <= 122)
-        {
-            // TODO: implement legacy positioning params
-            PositioningParams = new AkPositioningParams(Ar);
-        }
-        else
-        {
-            PositioningParams = new AkPositioningParams(Ar);
-        }
+        PositioningParams = new AkPositioningParams(Ar);
 
         if (WwiseVersions.Version > 65)
         {
@@ -97,17 +89,16 @@ public class BaseHierarchy : AbstractHierarchy
 
         if (WwiseVersions.Version <= 52)
         {
-            // TODO: implement legacy state handling
+            // TODO: State chunk inlined
             StateGroups = new AkStateChunk(Ar).Groups;
         }
         else if (WwiseVersions.Version <= 122)
         {
-            // TODO: implement legacy state handling
             StateGroups = new AkStateChunk(Ar).Groups;
         }
         else
         {
-            StateGroups = new AkStateChunk(Ar).Groups;
+            StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
         RtpcList = AkRtpc.ReadMultiple(Ar);

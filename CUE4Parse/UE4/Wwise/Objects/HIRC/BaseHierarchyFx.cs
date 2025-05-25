@@ -58,7 +58,7 @@ public class BaseHierarchyFx : AbstractHierarchy
         }
         else
         {
-            StateGroups = new AkStateChunk(Ar).Groups;
+            StateGroups = new AkStateAwareChunk(Ar).Groups;
 
             var numValues = Ar.Read<ushort>();
             PluginPropertyValues = new List<PluginPropertyValue>(numValues);

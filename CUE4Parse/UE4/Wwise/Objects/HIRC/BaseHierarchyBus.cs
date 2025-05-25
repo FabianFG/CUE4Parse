@@ -36,19 +36,17 @@ public class BaseHierarchyBus : AbstractHierarchy
         if (WwiseVersions.Version > 56)
         {
             int propCount = Ar.Read<byte>();
-            var propIds = new List<byte>(propCount);
-            var propValues = new List<float>(propCount);
+            var propIds = new byte[propCount];
+            var propValues = new float[propCount];
 
             for (int i = 0; i < propCount; i++)
             {
-                var propId = Ar.Read<byte>();
-                propIds.Add(propId);
+                propIds[i] = Ar.Read<byte>();
             }
 
             for (int i = 0; i < propCount; i++)
             {
-                var propValue = Ar.Read<float>();
-                propValues.Add(propValue);
+                propValues[i] = Ar.Read<float>();
             }
 
             Props = new List<AkProp>(propCount);
@@ -67,6 +65,14 @@ public class BaseHierarchyBus : AbstractHierarchy
         if (WwiseVersions.Version <= 53)
         {
             // TODO: Handle this case
+        }
+        else if (WwiseVersions.Version <= 122)
+        {
+            Ar.Read<byte>();
+            AdvSettingsParams = Ar.Read<EAdvSettings>();
+            MaxNumInstance = Ar.Read<ushort>();
+            ChannelConfig = Ar.Read<uint>();
+            HdrEnvelopeFlags = Ar.Read<byte>();
         }
         else
         {
@@ -120,13 +126,18 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         RtpcList = AkRtpc.ReadMultiple(Ar);
 
-        if (WwiseVersions.Version <= 56)
+        if (WwiseVersions.Version <= 52)
         {
             // TODO: State chunk inlined
+            StateGroups = new AkStateChunk(Ar).Groups;
+        }
+        else if (WwiseVersions.Version <= 122)
+        {
+            StateGroups = new AkStateChunk(Ar).Groups;
         }
         else
         {
-            StateGroups = new AkStateChunk(Ar).Groups;
+            StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
         if (WwiseVersions.Version <= 126)

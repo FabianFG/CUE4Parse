@@ -15,9 +15,12 @@ public readonly struct Hierarchy
 
     public Hierarchy(FArchive Ar)
     {
-        Type = Ar.Read<EHierarchyObjectType>();
+        byte rawType = Ar.Read<byte>();
         Length = Ar.Read<uint>();
         var hierarchyEndPosition = Ar.Position + Length;
+
+        Type = MapHierarchyType(rawType);
+
         Data = WwiseVersions.IsSupported() ? Type switch
         {
             EHierarchyObjectType.Settings => new HierarchySettings(Ar),
@@ -57,6 +60,45 @@ public readonly struct Hierarchy
             Ar.Position = hierarchyEndPosition;
         }
     }
+
+    private static EHierarchyObjectType MapHierarchyType(byte rawType)
+    {
+        if (WwiseVersions.Version <= 125)
+        {
+            var typeV125 = (EHierarchyObjectTypeV125) rawType;
+
+            return typeV125 switch
+            {
+                EHierarchyObjectTypeV125.Settings => EHierarchyObjectType.Settings,
+                EHierarchyObjectTypeV125.SoundSfxVoice => EHierarchyObjectType.SoundSfxVoice,
+                EHierarchyObjectTypeV125.EventAction => EHierarchyObjectType.EventAction,
+                EHierarchyObjectTypeV125.Event => EHierarchyObjectType.Event,
+                EHierarchyObjectTypeV125.RandomSequenceContainer => EHierarchyObjectType.RandomSequenceContainer,
+                EHierarchyObjectTypeV125.SwitchContainer => EHierarchyObjectType.SwitchContainer,
+                EHierarchyObjectTypeV125.ActorMixer => EHierarchyObjectType.ActorMixer,
+                EHierarchyObjectTypeV125.AudioBus => EHierarchyObjectType.AudioBus,
+                EHierarchyObjectTypeV125.LayerContainer => EHierarchyObjectType.LayerContainer,
+                EHierarchyObjectTypeV125.MusicSegment => EHierarchyObjectType.MusicSegment,
+                EHierarchyObjectTypeV125.MusicTrack => EHierarchyObjectType.MusicTrack,
+                EHierarchyObjectTypeV125.MusicSwitchContainer => EHierarchyObjectType.MusicSwitchContainer,
+                EHierarchyObjectTypeV125.MusicRandomSequenceContainer => EHierarchyObjectType.MusicRandomSequenceContainer,
+                EHierarchyObjectTypeV125.Attenuation => EHierarchyObjectType.Attenuation,
+                EHierarchyObjectTypeV125.DialogueEvent => EHierarchyObjectType.DialogueEvent,
+                EHierarchyObjectTypeV125.FeedbackBus => 0,
+                EHierarchyObjectTypeV125.FeedbackNode => 0,
+                EHierarchyObjectTypeV125.FxShareSet => EHierarchyObjectType.FxShareSet,
+                EHierarchyObjectTypeV125.FxCustom => EHierarchyObjectType.FxCustom,
+                EHierarchyObjectTypeV125.AuxiliaryBus => EHierarchyObjectType.AuxiliaryBus,
+                EHierarchyObjectTypeV125.LFO => EHierarchyObjectType.LFO,
+                EHierarchyObjectTypeV125.Envelope => EHierarchyObjectType.Envelope,
+                EHierarchyObjectTypeV125.AudioDevice => EHierarchyObjectType.AudioDevice,
+                _ => 0,
+            };
+        }
+
+        return (EHierarchyObjectType) rawType;
+    }
+
 }
 
 public class HierarchyConverter : JsonConverter<Hierarchy>

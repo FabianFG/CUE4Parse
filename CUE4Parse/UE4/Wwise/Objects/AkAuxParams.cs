@@ -13,21 +13,21 @@ public class AkAuxParams
     public readonly List<uint> AuxIds;
     public readonly uint ReflectionsAuxBus;
 
-    public AkAuxParams(FArchive ar)
+    public AkAuxParams(FArchive Ar)
     {
         AuxIds = [];
-        AuxParams = ar.Read<EAuxParams>();
+        AuxParams = Ar.Read<EAuxParams>();
         if (AuxParams.HasFlag(EAuxParams.HasAux))
         {
             for (int i = 0; i < 4; i++)
             {
-                AuxIds.Add(ar.Read<uint>());
+                AuxIds.Add(Ar.Read<uint>());
             }
         }
 
         if (WwiseVersions.Version > 135)
         {
-            ReflectionsAuxBus = ar.Read<uint>();
+            ReflectionsAuxBus = Ar.Read<uint>();
         }
     }
 }

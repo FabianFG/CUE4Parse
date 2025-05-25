@@ -111,9 +111,9 @@ public class DstRule
         if (WwiseVersions.Version > 132)
         {
             JumpToType = Ar.Read<ushort>();
-            EntryType = Ar.Read<ushort>();
         }
 
+        EntryType = Ar.Read<ushort>();
         PlayPreEntry = Ar.Read<byte>();
 
         if (WwiseVersions.Version > 62)

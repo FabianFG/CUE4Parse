@@ -68,6 +68,7 @@ public static class WwiseVersions
     // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [
+        112,    // Dead by Daylight (old)
         135,    // Dead by Daylight (old)
         140,    // Dead by Daylight (old)
         145,    // Valorant, Marvel Rivals

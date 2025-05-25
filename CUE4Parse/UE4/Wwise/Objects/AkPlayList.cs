@@ -21,12 +21,12 @@ public class AkPlayList
 
     public class AkPlayListItem
     {
-        public readonly uint PlayID;
+        public readonly uint PlayId;
         public readonly int Weight;
 
         public AkPlayListItem(FArchive Ar)
         {
-            PlayID = Ar.Read<uint>();
+            PlayId = Ar.Read<uint>();
             Weight = WwiseVersions.Version <= 56 ? Ar.Read<byte>() : Ar.Read<int>(); // Could also be uint for version 128
         }
     }

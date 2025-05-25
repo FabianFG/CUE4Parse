@@ -1,3 +1,4 @@
+using System.Linq;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -11,13 +12,34 @@ public class HierarchySettings : AbstractHierarchy
 
     public HierarchySettings(FArchive Ar) : base(Ar)
     {
-        SettingsCount = Ar.Read<ushort>();
+        if (WwiseVersions.Version <= 126)
+        {
+            SettingsCount = Ar.Read<byte>();
+        }
+        else
+        {
+            SettingsCount = Ar.Read<ushort>();
+        }
+
         Settings = new Setting<EHierarchyParameterType>[SettingsCount];
-        var settingIds = Ar.ReadArray<EHierarchyParameterType>(SettingsCount);
+        var settingIds = ReadParameterTypes(Ar, SettingsCount);
         var settingValues = Ar.ReadArray<float>(SettingsCount);
         for (int index = 0; index < SettingsCount; index++)
         {
             Settings[index] = new Setting<EHierarchyParameterType>(settingIds[index], settingValues[index]);
+        }
+    }
+
+    private static EHierarchyParameterType[] ReadParameterTypes(FArchive Ar, int count)
+    {
+        if (WwiseVersions.Version <= 126)
+        {
+            var bytes = Ar.ReadArray<byte>(count);
+            return bytes.Select(b => (EHierarchyParameterType) (ushort) b).ToArray();
+        }
+        else
+        {
+            return Ar.ReadArray<EHierarchyParameterType>(count);
         }
     }
 
