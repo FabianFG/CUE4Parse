@@ -87,10 +87,11 @@ public partial class FPakInfo
             IndexHash = new FSHAHash(Ar);
             IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
             IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);
-            CompressionMethods = new List<CompressionMethod>
-            {
-                CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle, CompressionMethod.LZ4, CompressionMethod.Zstd
-            };
+            CompressionMethods =
+            [
+                CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle,
+                CompressionMethod.LZ4, CompressionMethod.Zstd
+            ];
             return;
         }
 
@@ -393,22 +394,22 @@ public partial class FPakInfo
                 reader.Seek(-(long) offset, SeekOrigin.End);
                 var info = new FPakInfo(reader, offset);
 
-                if (Ar.Game == EGame.GAME_OutlastTrials && info.Magic == PAK_FILE_MAGIC_OutlastTrials ||
-                    Ar.Game == EGame.GAME_TorchlightInfinite && info.Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
-                    Ar.Game == EGame.GAME_WildAssault && info.Magic == PAK_FILE_MAGIC_WildAssault ||
-                    Ar.Game == EGame.GAME_Undawn && info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
-                    Ar.Game == EGame.GAME_FridayThe13th && info.Magic == PAK_FILE_MAGIC_FridayThe13th ||
-                    Ar.Game == EGame.GAME_DreamStar && info.Magic == PAK_FILE_MAGIC_DreamStar ||
-                    Ar.Game == EGame.GAME_GameForPeace && info.Magic == PAK_FILE_MAGIC_GameForPeace ||
-                    Ar.Game == EGame.GAME_KartRiderDrift && info.Magic == PAK_FILE_MAGIC_KartRiderDrift ||
-                    Ar.Game == EGame.GAME_RacingMaster && info.Magic == PAK_FILE_MAGIC_RacingMaster ||
-                    Ar.Game == EGame.GAME_CrystalOfAtlan && info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan ||
-                    Ar.Game == EGame.GAME_PromiseMascotAgency && info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency)
-                    return info;
-                if (info.Magic == PAK_FILE_MAGIC)
+                var found = Ar.Game switch
                 {
-                    return info;
-                }
+                    EGame.GAME_FridayThe13th when info.Magic == PAK_FILE_MAGIC_FridayThe13th => true,
+                    EGame.GAME_GameForPeace when info.Magic == PAK_FILE_MAGIC_GameForPeace => true,
+                    EGame.GAME_Undawn when info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn => true,
+                    EGame.GAME_TorchlightInfinite when info.Magic == PAK_FILE_MAGIC_TorchlightInfinite => true,
+                    EGame.GAME_DreamStar when info.Magic == PAK_FILE_MAGIC_DreamStar => true,
+                    EGame.GAME_RacingMaster when info.Magic == PAK_FILE_MAGIC_RacingMaster => true,
+                    EGame.GAME_OutlastTrials when info.Magic == PAK_FILE_MAGIC_OutlastTrials => true,
+                    EGame.GAME_KartRiderDrift when info.Magic == PAK_FILE_MAGIC_KartRiderDrift => true,
+                    EGame.GAME_CrystalOfAtlan when info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan => true,
+                    EGame.GAME_PromiseMascotAgency when info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency => true,
+                    EGame.GAME_WildAssault when info.Magic == PAK_FILE_MAGIC_WildAssault => true,
+                    _ => info.Magic == PAK_FILE_MAGIC
+                };
+                if (found) return info;
             }
         }
         throw new ParserException($"File {Ar.Name} has an unknown format");

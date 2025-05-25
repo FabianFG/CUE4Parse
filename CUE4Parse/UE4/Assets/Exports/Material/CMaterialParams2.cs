@@ -47,11 +47,14 @@ public class CMaterialParams2
     [
         [
             "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse",
-            "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "DiffuseLayer1",
-            "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
-            "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
+            "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A",
+            "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map",
+            "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
+            "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor",
+            "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
             "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "Main_T_BaseColor",
-            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN"
+            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex",
+
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],

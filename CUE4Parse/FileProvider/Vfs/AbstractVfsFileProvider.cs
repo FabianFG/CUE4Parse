@@ -21,7 +21,9 @@ using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
+using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
 using CUE4Parse.UE4.Assets;
@@ -81,6 +83,8 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
                 EGame.GAME_TonyHawkProSkater12 => THPS12Aes.THPS12Decrypt,
                 EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
+                EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
+                EGame.GAME_Splitgate2 => Splitgate2Aes.Splitgate2Decrypt,
                 _ => null
             };
         }
