@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
@@ -112,9 +113,15 @@ namespace CUE4Parse.UE4.Objects.UObject
              *		-6 indicates optimizations to how custom versions are being serialized
              *		-7 indicates the texture allocation info has been removed from the summary
              *		-8 indicates that the UE5 version has been added to the summary
+             *		-9 indicates a contractual change in when early exits are required based on FileVersionTooNew. At or
+		    *		   after this LegacyFileVersion, we support changing the PackageFileSummary serialization format for
+		    *		   all bytes serialized after FileVersionLicensee, and that format change can be conditional on any
+		    *		   of the versions parsed before that point. All packageloaders that understand the -9
+		    *		   legacyfileformat are required to early exit without further serialization at that point if
+		    *		   FileVersionTooNew is true.
              */
-            const int CurrentLegacyFileVersion = -8;
-            var legacyFileVersion = CurrentLegacyFileVersion;
+            const int currentLegacyFileVersion = -9;
+            var legacyFileVersion = currentLegacyFileVersion;
 
             if (Tag == PACKAGE_FILE_TAG_ONE) // SOD2, "one"
             {
@@ -174,7 +181,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (legacyFileVersion < 0) // means we have modern version numbers
             {
-                if (legacyFileVersion < CurrentLegacyFileVersion)
+                if (legacyFileVersion < currentLegacyFileVersion)
                 {
                     // we can't safely load more than this because the legacy version code differs in ways we can not predict.
                     // Make sure that the linker will fail to load with it.
@@ -198,6 +205,13 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
 
+                if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || IsFileVersionTooNew())
+                {
+                    FileVersionUE.Reset();
+                    FileVersionLicenseeUE = 0;
+                    throw new ParserException("Package is either too new or too old");
+                }
+                
                 if (FileVersionUE >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
                 {
                     SavedHash = new FSHAHash(Ar);
@@ -290,13 +304,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             DependsOffset = Ar.Read<int>();
-
-            if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION)
-            {
-                Generations = [];
-                ChunkIds = [];
-                return; // we can't safely load more than this because the below was different in older files.
-            }
+            
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADD_STRING_ASSET_REFERENCES_MAP)
             {
@@ -474,6 +482,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 assetAr.AbsoluteOffset = NameOffset - (int) Ar.Position;
             }
+        }
+
+        public bool IsFileVersionTooNew()
+        {
+            return FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
+                   FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION;
         }
 
         private static void FixCorruptEngineVersion(FPackageFileVersion objectVersion, FEngineVersion version)
