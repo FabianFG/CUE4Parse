@@ -1,4 +1,7 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using System;
+using System.IO;
+using System.Linq;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -111,17 +114,45 @@ public class FPageStreamingState
     }
 }
 
-public readonly struct FFixupChunk
+public class FFixupChunk
 {
-    public readonly struct FHeader
+    public class FHeader
     {
         public readonly ushort NumClusters;
         public readonly ushort NumHierachyFixups;
         public readonly ushort NumClusterFixups;
-        public readonly ushort Pad;
+
+        public FHeader(FArchive Ar)
+        {
+            if (Ar.Game >= EGame.GAME_UE5_3)
+            {
+                ushort magic = Ar.Read<ushort>();
+                if (magic != 0x464Eu) //NF
+                {
+                    throw new InvalidDataException($"Invalid magic value, expected {0x464Eu:04x} got {magic:04x}");
+                }
+            }
+            NumClusters = Ar.Read<ushort>();
+            NumHierachyFixups = Ar.Read<ushort>();
+            NumClusterFixups = Ar.Read<ushort>();
+            if (Ar.Game < EGame.GAME_UE5_3)
+            {
+                // 2 byte padding
+                Ar.Position += 2;
+            }
+        }
     }
 
     public readonly FHeader Header;
+    public FHierarchyFixup[] HierarchyFixups;
+    public FClusterFixup[] ClusterFixups;
+
+    public FFixupChunk(FArchive Ar)
+    {
+        Header = new FHeader(Ar);
+        HierarchyFixups = Ar.ReadArray(Header.NumHierachyFixups, () => new FHierarchyFixup(Ar));
+        ClusterFixups = Ar.ReadArray(Header.NumClusterFixups, () => new FClusterFixup(Ar));
+    }
 }
 
 public class FHierarchyFixup
@@ -216,8 +247,20 @@ public class FCluster
     public uint VertReuseBatchCountTableSize;
     public TIntVector4<uint> VertReuseBatchInfo;
 
-    public FCluster(FArchive Ar)
+
+
+    public FCluster(FArchive Ar) : this(Ar, 1)
     {
+    }
+
+    public FCluster(FArchive Ar, int numClusters) {
+        if (numClusters <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(numClusters), $"{nameof(numClusters)} should never be 0 or a negative value.");
+        }
+        // clusters are stored in SOA layout so we gotta walk the stride.
+        int stride = 16 * (numClusters - 1);
+
         var numVerts_positionOffset = Ar.Read<uint>();
         NumVerts = GetBits(numVerts_positionOffset, 9, 0);
         PositionOffset = GetBits(numVerts_positionOffset, 23, 9);
@@ -232,6 +275,7 @@ public class FCluster
         ColorBits = GetBits(colorBits_groupIndex, 16, 0);
         GroupIndex = GetBits(colorBits_groupIndex, 16, 16); // debug only
 
+        Ar.Position += stride;
         PosStart = Ar.Read<FIntVector>();
 
         var bitsPerIndex_posPrecision_posBits = Ar.Read<uint>();
@@ -241,16 +285,20 @@ public class FCluster
         PosBitsY = GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
 
+        Ar.Position += stride;
         LODBounds = Ar.Read<FVector4>();
-        BoxBoundsCenter = Ar.Read<FVector>();
 
+        Ar.Position += stride;
+        BoxBoundsCenter = Ar.Read<FVector>();
         var lODError_edgeLength = Ar.Read<uint>();
         LODError = lODError_edgeLength;
         EdgeLength = lODError_edgeLength >> 16;
 
+        Ar.Position += stride;
         BoxBoundsExtent = Ar.Read<FVector>();
         Flags = Ar.Read<uint>();
 
+        Ar.Position += stride;
         var attributeOffset_bitsPerAttribute = Ar.Read<uint>();
         AttributeOffset = GetBits(attributeOffset_bitsPerAttribute, 22, 0);
         BitsPerAttribute = GetBits(attributeOffset_bitsPerAttribute, 10, 22);
@@ -262,6 +310,7 @@ public class FCluster
 
         UV_Prec = Ar.Read<uint>();
 
+        Ar.Position += stride;
         var materialEncoding = Ar.Read<uint>();
         if (materialEncoding < 0xFE000000u)
         {
@@ -274,6 +323,8 @@ public class FCluster
             Material1Length = GetBits(materialEncoding, 7, 25);
             VertReuseBatchCountTableOffset = 0;
             VertReuseBatchCountTableSize = 0;
+
+            Ar.Position += stride;
             VertReuseBatchInfo = Ar.Read<TIntVector4<uint>>();
         }
         else
@@ -287,9 +338,13 @@ public class FCluster
             Material1Length = 0;
             VertReuseBatchCountTableOffset = Ar.Read<uint>();
             VertReuseBatchCountTableSize = Ar.Read<uint>();
+
+            Ar.Position += stride;
             VertReuseBatchInfo = default;
         }
     }
+
+
 
     public static uint GetBits(uint value, int numBits, int offset)
     {
@@ -304,24 +359,111 @@ public readonly struct FRootPageInfo
     public readonly uint NumClusters;
 }
 
+public readonly struct FPageDiskHeader
+{
+    public readonly uint GpuSize;
+    public readonly uint NumClusters;
+    public readonly uint NumRawFloat4s;
+    public readonly uint NumTexCoords;
+    public readonly uint NumVertexRefs;
+    public readonly uint DecodeInfoOffset;
+    public readonly uint StripBitmaskOffset;
+    public readonly uint VertexRefBitmaskOffset;
+}
+
+public readonly struct FClusterDiskHeader
+{
+    public readonly uint IndexDataOffset;
+    public readonly uint PageClusterMapOffset;
+    public readonly uint VertexRefDataOffset;
+    public readonly uint PositionDataOffset;
+    public readonly uint AttributeDataOffset;
+    public readonly uint NumVertexRefs;
+    public readonly uint NumPrevRefVerticesBeforeDwords;
+    public readonly uint NumPrevNewVerticesBeforeDwords;
+}
+
+public readonly struct FPageGPUHeader
+{
+    public readonly uint NumClusters;
+    [JsonIgnore]
+    public readonly uint Pad1;
+    [JsonIgnore]
+    public readonly uint Pad2;
+    [JsonIgnore]
+    public readonly uint Pad3;
+}
+
 public class FNaniteStreamableData
 {
-    [JsonIgnore]
     public FFixupChunk FixupChunk;
-    public FHierarchyFixup[] HierarchyFixups;
-    public FClusterFixup[] ClusterFixups;
-    public FRootPageInfo[] RootPageInfos;
+
+    public FRootPageInfo[]? RootPageInfos;
     public FCluster[] Clusters;
+    public FPageDiskHeader? PageDiskHeader;
+    public FClusterDiskHeader[]? ClusterDiskHeaders;
+    public FPageGPUHeader? PageGPUHeader;
 
     public unsafe FNaniteStreamableData(FArchive Ar, int numRootPages, uint pageSize)
     {
-        FixupChunk = Ar.Read<FFixupChunk>();
-        HierarchyFixups = Ar.ReadArray(FixupChunk.Header.NumHierachyFixups, () => new FHierarchyFixup(Ar));
-        ClusterFixups = Ar.ReadArray(FixupChunk.Header.NumClusterFixups, () => new FClusterFixup(Ar));
-        RootPageInfos = Ar.ReadArray<FRootPageInfo>(numRootPages);
+        FixupChunk = new FFixupChunk(Ar);
 
-        Clusters = Ar.ReadArray(0, () => new FCluster(Ar));
-        Ar.Position += pageSize - sizeof(FRootPageInfo) * numRootPages;
+        // todo: check how it's actually serialized in pre 5.3
+        if (Ar.Game < EGame.GAME_UE5_3)
+        {
+            RootPageInfos = Ar.ReadArray<FRootPageInfo>(numRootPages);
+            Clusters = Ar.ReadArray(0, () => new FCluster(Ar));
+            Ar.Position += pageSize - sizeof(FRootPageInfo) * numRootPages;
+            PageDiskHeader = null;
+            ClusterDiskHeaders = null;
+            PageGPUHeader = null;
+        }
+        else
+        {
+            RootPageInfos = null;
+
+            // origin of all the offsets in the page cluster header
+            long pageDataOrigin = Ar.Position;
+            PageDiskHeader = Ar.Read<FPageDiskHeader>();
+            if (PageDiskHeader.Value.NumClusters > 0xFF)
+            {
+                throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.Value.NumClusters} max is 256");
+            }
+            if (PageDiskHeader.Value.NumTexCoords > 4)
+            {
+                throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+            }
+
+            ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.Value.NumClusters);
+
+            PageGPUHeader = Ar.Read<FPageGPUHeader>();
+            if (PageDiskHeader.Value.NumClusters != PageDiskHeader.Value.NumClusters)
+            {
+                throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+            }
+
+            // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
+            Clusters = new FCluster[PageGPUHeader.Value.NumClusters];
+            long clusterOrigin = Ar.Position;
+            for (int i = 0; i < Clusters.Length; i++)
+            {
+                Ar.Position = clusterOrigin + 16 * i;
+                Clusters[i] = new FCluster(Ar, Clusters.Length);
+            }
+            Ar.Position = clusterOrigin + (16 * 7 * Clusters.Length);
+            // material table
+            if (Clusters.Any(c => c.MaterialTableLength > 0))
+            {
+                // not figured out yet
+            }
+            // figure out
+            // decode info
+            // tri indexes
+            // page-cluster map
+            // ref vertex data
+            // non-ref vertex position data
+            // attribute data
+        }
     }
 }
 
