@@ -47,9 +47,8 @@ public class FPackedHierarchyNode
         {
             BoxBoundsCenter = Ar.Read<FVector>();
 
-            var minLODError_maxParentLODError = Ar.Read<uint>();
-            MinLODError = minLODError_maxParentLODError;
-            MaxParentLODError = minLODError_maxParentLODError >> 16;
+            MinLODError = (float) Ar.Read<Half>();
+            MaxParentLODError = (float) Ar.Read<Half>();
         }
     }
 
@@ -290,9 +289,8 @@ public class FCluster
 
         Ar.Position += stride;
         BoxBoundsCenter = Ar.Read<FVector>();
-        var lODError_edgeLength = Ar.Read<uint>();
-        LODError = lODError_edgeLength;
-        EdgeLength = lODError_edgeLength >> 16;
+        LODError = (float) Ar.Read<Half>();
+        EdgeLength = (float) Ar.Read<Half>();
 
         Ar.Position += stride;
         BoxBoundsExtent = Ar.Read<FVector>();
@@ -338,6 +336,8 @@ public class FCluster
             Material1Length = 0;
             VertReuseBatchCountTableOffset = Ar.Read<uint>();
             VertReuseBatchCountTableSize = Ar.Read<uint>();
+            // we can skip over those 2 dwords in this case
+            Ar.Position += 8;
 
             Ar.Position += stride;
             VertReuseBatchInfo = default;
