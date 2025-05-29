@@ -126,9 +126,10 @@ public class WwiseProvider
                                 if (!visitedDecisionNodes.Add(key))
                                     return;
 
+                                TraverseAndSave(node.AudioNodeId);
+
                                 foreach (var nodeChildTraverse in node.Children)
                                 {
-                                    TraverseAndSave(nodeChildTraverse.AudioNodeId);
                                     TraverseDecisionTreeNode(nodeChildTraverse, parentHierarchyId);
                                 }
                             }
