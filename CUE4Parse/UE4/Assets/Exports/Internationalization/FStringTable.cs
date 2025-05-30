@@ -16,7 +16,7 @@ public class FStringTable
         TableNamespace = Ar.ReadFString();
 
         KeysToEntries = Ar.ReadMap(Ar.ReadFString, Ar.ReadFString);
-        if (Ar.Game == EGame.GAME_Wildgate) return;
+        if (Ar.Game == EGame.GAME_Wildgate || Ar.Game == EGame.GAME_MarvelRivals) return;
         KeysToMetaData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadMap(Ar.ReadFName, Ar.ReadFString));
     }
 }
