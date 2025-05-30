@@ -236,13 +236,13 @@ public class WwiseProvider
         }
     }
 
-    private void DetermineBaseWwiseAudioPath(UAkAudioEvent audioEvent)
+    private void DetermineBaseWwiseAudioPath(UAkAudioEvent? audioEvent = null)
     {
         if (!string.IsNullOrEmpty(_baseWwiseAudioPath)) return;
 
         _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio"); // Most common directory
 
-        var wwiseData = audioEvent.EventCookedData;
+        var wwiseData = audioEvent?.EventCookedData;
         if (wwiseData == null) return;
 
         var eventData = wwiseData.Value.EventLanguageMap
@@ -278,10 +278,9 @@ public class WwiseProvider
 
     private void BulkInitializeWwiseSoundBanks()
     {
-        if (_completedWwiseFullBnkInit)
-            return;
+        if (_completedWwiseFullBnkInit) return;
         if (string.IsNullOrEmpty(_baseWwiseAudioPath))
-            throw new InvalidOperationException("base Wwise audio path not set");
+            DetermineBaseWwiseAudioPath();
 
         long totalLoadedSize = 0;
         int totalLoadedBanks = 0;
