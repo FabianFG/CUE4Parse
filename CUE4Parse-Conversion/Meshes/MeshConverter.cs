@@ -552,20 +552,19 @@ public static class MeshConverter
             weightMaps = weightMapsInternal.ToDictionary(x => x.Key, x => x.Value);
         }
 
-        if (flags.HasFlag(ELandscapeExportFlags.Mesh) && landscapeLod != null)
+        if (!flags.HasFlag(ELandscapeExportFlags.Mesh) || landscapeLod == null)
         {
-            landscapeLod.ExtraVertexColors = extraVertexColorMap.Values.ToArray();
-            extraVertexColorMap.Clear();
-            var landscapeMaterial = landscape.LandscapeMaterial;
-            var mat = landscapeMaterial.Load<UMaterialInterface>();
-            landscapeLod.Sections = new Lazy<CMeshSection[]>(new[] {
-                new CMeshSection(0, 0, triangleCount, mat?.Name ?? "DefaultMaterial", landscapeMaterial.ResolvedObject)
-            });
+            return true;
         }
-        else
+
+        landscapeLod.ExtraVertexColors = extraVertexColorMap.Values.ToArray();
+        extraVertexColorMap.Clear();
+        var landscapeMaterial = landscape.LandscapeMaterial;
+        var mat = landscapeMaterial.Load<UMaterialInterface>();
+        landscapeLod.Sections = new Lazy<CMeshSection[]>(new[]
         {
-            return false;
-        }
+            new CMeshSection(0, 0, triangleCount, mat?.Name ?? "DefaultMaterial", landscapeMaterial.ResolvedObject)
+        });
 
         var meshIndices = new List<uint>(triangleCount * 3); // TODO: replace with ArrayPool.Shared.Rent
         // https://github.com/EpicGames/UnrealEngine/blob/5de4acb1f05e289620e0a66308ebe959a4d63468/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxMainExport.cpp#L4657
