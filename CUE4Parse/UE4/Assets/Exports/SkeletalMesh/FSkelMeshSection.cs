@@ -248,7 +248,7 @@ public class FSkelMeshSection
         MaxBoneInfluences = Ar.Read<int>();
         CorrespondClothAssetIndex = Ar.Read<short>();
         ClothingData = Ar.Read<FClothingSectionData>();
-        
+
         if (Ar.Game == EGame.GAME_Paragon) return;
 
         if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
@@ -262,23 +262,14 @@ public class FSkelMeshSection
             bDisabled = Ar.ReadBoolean();
         }
 
-        switch (Ar.Game)
+        Ar.Position += Ar.Game switch
         {
-            case EGame.GAME_OutlastTrials:
-                Ar.Position += 1;
-                break;
-            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters:
-                Ar.Position += 4;
-                break;
-            case EGame.GAME_FragPunk:
-                Ar.Position += 8;
-                break;
-            case EGame.GAME_Strinova:
-                Ar.Position += 14;
-                break;
-            case EGame.GAME_MortalKombat1:
-                Ar.Position += 12;
-                break;
-        }
+            EGame.GAME_OutlastTrials => 1,
+            EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters => 4,
+            EGame.GAME_FragPunk => 8,
+            EGame.GAME_Strinova => 14,
+            EGame.GAME_MortalKombat1 or EGame.GAME_InfinityNikki => 12,
+            _ => 0,
+        };
     }
 }

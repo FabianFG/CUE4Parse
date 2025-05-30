@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -80,6 +81,9 @@ public class FStaticMeshLODResources
                         break;
                     case EGame.GAME_TheDivisionResurgence:
                         Ar.Position += 12;
+                        break;
+                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData == 1):
+                        _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }
             }
@@ -252,12 +256,7 @@ public class FStaticMeshLODResources
         }
 
         // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
-        var areaWeightedSectionSamplers = new FWeightedRandomSampler[Sections.Length];
-        for (var i = 0; i < Sections.Length; i++)
-        {
-            areaWeightedSectionSamplers[i] = new FWeightedRandomSampler(Ar);
-        }
-
+        _ = Ar.ReadArray(Sections.Length, () => new FWeightedRandomSampler(Ar)); // areaWeightedSectionSamplers
         _ = new FWeightedRandomSampler(Ar); // areaWeightedSampler
     }
 }

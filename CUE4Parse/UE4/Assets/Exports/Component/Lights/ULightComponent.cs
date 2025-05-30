@@ -1,7 +1,9 @@
-﻿using System;
+using System;
+using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Lights;
@@ -12,11 +14,20 @@ public class ULightComponent : ULightComponentBase
 {
     public float Intensity { get; protected set; }
     public ELightUnits IntensityUnits { get; protected set; }
+    public FStaticShadowDepthMapData? LegacyData { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos) 
     {
         base.Deserialize(Ar, validPos);
         Intensity = GetOrDefault<float>(nameof(Intensity), 1.0f);
+
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_SHADOW_DEPTH_MAPS)
+        {
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
+            {
+                LegacyData = new FStaticShadowDepthMapData(Ar);
+            }
+        }
     }
 
     public virtual double GetNitIntensity() => Intensity;
@@ -24,6 +35,12 @@ public class ULightComponent : ULightComponentBase
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
+
+        if (LegacyData != null)
+        {
+            writer.WritePropertyName("LegacyData");
+            serializer.Serialize(writer, LegacyData);
+        }
 
         var defaultRotation = this is URectLightComponent ? FRotator.ZeroRotator : new FRotator(-90, 0, 0);
 
@@ -112,7 +129,6 @@ public class UPointLightComponent : ULocalLightComponent
         if (!bUseInverseSquaredFalloff)
             return Intensity; // Unitless brightness
         
-
         double solidAngle = 4f * Math.PI;
         if (this is USpotLightComponent spotLightComponent) 
             solidAngle = 2f * Math.PI * (1.0f - spotLightComponent.GetCosHalfConeAngle());

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.Utils;
@@ -7,217 +7,210 @@ using static CUE4Parse.UE4.Objects.Engine.Curves.ERichCurveCompressionFormat;
 using static CUE4Parse.UE4.Objects.Engine.Curves.ERichCurveInterpMode;
 using static CUE4Parse.UE4.Objects.Engine.Curves.ERichCurveTangentMode;
 
-namespace CUE4Parse.UE4.Assets.Exports.Animation
-{
-    [JsonConverter(typeof(FCurveDescConverter))]
-    public /*private*/ struct FCurveDesc
-    {
-        public ERichCurveCompressionFormat CompressionFormat;
-        public ERichCurveKeyTimeCompressionFormat KeyTimeCompressionFormat;
-        public ERichCurveExtrapolation PreInfinityExtrap;
-        public ERichCurveExtrapolation PostInfinityExtrap;
-        public int NumKeys; // union { float ConstantValue; int NumKeys; }
-        public int KeyDataOffset;
+namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
-        public float ConstantValue
+[JsonConverter(typeof(FCurveDescConverter))]
+public /*private*/ struct FCurveDesc
+{
+    public ERichCurveCompressionFormat CompressionFormat;
+    public ERichCurveKeyTimeCompressionFormat KeyTimeCompressionFormat;
+    public ERichCurveExtrapolation PreInfinityExtrap;
+    public ERichCurveExtrapolation PostInfinityExtrap;
+    public int NumKeys; // union { float ConstantValue; int NumKeys; }
+    public int KeyDataOffset;
+
+    public float ConstantValue
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => BitConverter.Int32BitsToSingle(NumKeys);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => NumKeys = BitConverter.SingleToInt32Bits(value);
+    }
+}
+
+public class UAnimCurveCompressionCodec_CompressedRichCurve : UAnimCurveCompressionCodec
+{
+    public unsafe delegate FRichCurve CompressedCurveConverter(ERichCurveExtrapolation preInfinityExtrap, ERichCurveExtrapolation postInfinityExtrap, int constantValueNumKeys, byte* compressedKeys);
+
+    public static readonly unsafe CompressedCurveConverter[][] ConverterMap =
+    {
+        // RCCF_Empty
+        [
+            (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
+            {
+                DefaultValue = Unsafe.As<int, float>(ref constantValue),
+                PreInfinityExtrap = preInfinityExtrap,
+                PostInfinityExtrap = postInfinityExtrap,
+                Keys = []
+            },
+            (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
+            {
+                DefaultValue = Unsafe.As<int, float>(ref constantValue),
+                PreInfinityExtrap = preInfinityExtrap,
+                PostInfinityExtrap = postInfinityExtrap,
+                Keys = []
+            }
+        ],
+        // RCCF_Constant
+        [
+            (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
+            {
+                DefaultValue = 3.402823466e+38f, // MAX_flt
+                PreInfinityExtrap = preInfinityExtrap,
+                PostInfinityExtrap = postInfinityExtrap,
+                Keys = [new(0.0f, Unsafe.As<int, float>(ref constantValue))]
+            },
+            (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
+            {
+                DefaultValue = 3.402823466e+38f, // MAX_flt
+                PreInfinityExtrap = preInfinityExtrap,
+                PostInfinityExtrap = postInfinityExtrap,
+                Keys = [new(0.0f, Unsafe.As<int, float>(ref constantValue))]
+            }
+        ],
+        // RCCF_Linear
+        [
+            // RCKTCF_uint16
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var keyTimesOffset = 0;
+                var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Linear, compressedKeys, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            },
+            // RCKTCF_float32
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var keyTimesOffset = 0;
+                var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Linear, compressedKeys, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            }
+        ],
+        // RCCF_Cubic
+        [
+            // RCKTCF_uint16
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var keyTimesOffset = 0;
+                var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Cubic, compressedKeys, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            },
+            // RCKTCF_float32
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var keyTimesOffset = 0;
+                var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Cubic, compressedKeys, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            }
+        ],
+        // RCCF_Mixed
+        [
+            // RCKTCF_uint16
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var interpModesOffset = 0;
+                var keyTimesOffset = interpModesOffset + (numKeys * sizeof(byte)).Align(sizeof(ushort));
+                var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new MixedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            },
+            // RCKTCF_float32
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var interpModesOffset = 0;
+                var keyTimesOffset = interpModesOffset + (numKeys * sizeof(byte)).Align(sizeof(float));
+                var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new MixedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            }
+        ],
+        // RCCF_Weighted
+        [
+            // RCKTCF_uint16
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var interpModesOffset = 0;
+                var keyTimesOffset = interpModesOffset + (2 * numKeys * sizeof(byte)).Align(sizeof(ushort));
+                var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new WeightedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            },
+            // RCKTCF_float32
+            (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
+            {
+                var interpModesOffset = 0;
+                var keyTimesOffset = interpModesOffset + (2 * numKeys * sizeof(byte)).Align(sizeof(float));
+                var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
+                var keyDataAdapter = new WeightedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
+                return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
+            }
+        ],
+    };
+
+    private static FRichCurve ConvertToRaw(IKeyTimeAdapter keyTimeAdapter, IKeyDataAdapter keyDataAdapter, int numKeys, ERichCurveExtrapolation preInfinityExtrap, ERichCurveExtrapolation postInfinityExtrap)
+    {
+        var curve = new FRichCurve();
+        curve.DefaultValue = 3.402823466e+38f;
+        curve.PreInfinityExtrap = preInfinityExtrap;
+        curve.PostInfinityExtrap = postInfinityExtrap;
+        curve.Keys = new FRichCurveKey[numKeys];
+        for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => BitConverter.Int32BitsToSingle(NumKeys);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => NumKeys = BitConverter.SingleToInt32Bits(value);
+            var handle = keyDataAdapter.GetKeyDataHandle(keyIndex);
+            var interpMode = keyDataAdapter.GetKeyInterpMode(keyIndex);
+            var key = new FRichCurveKey();
+            key.InterpMode = interpMode switch
+            {
+                RCCF_Linear => RCIM_Linear,
+                RCCF_Cubic => RCIM_Cubic,
+                RCCF_Constant => RCIM_Constant,
+                RCCF_Empty => RCIM_None,
+                _ => throw new ArgumentException("Can't convert interpMode " + interpMode + " to ERichCurveInterpMode")
+            };
+            key.TangentMode = RCTM_Auto; // How to convert? interpMode == RCCF_Weighted && keyDataAdapter.GetKeyTangentWeightMode(keyIndex) != RCTWM_WeightedNone ? RCTM_User : RCTM_Auto;
+            key.TangentWeightMode = keyDataAdapter.GetKeyTangentWeightMode(keyIndex);
+            key.Time = keyTimeAdapter.GetTime(keyIndex);
+            key.Value = keyDataAdapter.GetKeyValue(handle);
+            key.ArriveTangent = keyDataAdapter.GetKeyArriveTangent(handle);
+            key.ArriveTangentWeight = keyDataAdapter.GetKeyArriveTangentWeight(handle);
+            key.LeaveTangent = keyDataAdapter.GetKeyLeaveTangent(handle);
+            key.LeaveTangentWeight = keyDataAdapter.GetKeyLeaveTangentWeight(handle);
+            curve.Keys[keyIndex] = key;
         }
+        return curve;
     }
 
-    public class UAnimCurveCompressionCodec_CompressedRichCurve : UAnimCurveCompressionCodec
+    public override unsafe FFloatCurve[] ConvertCurves(UAnimSequence animSeq)
     {
-        private unsafe delegate FRichCurve CompressedCurveConverter(ERichCurveExtrapolation preInfinityExtrap, ERichCurveExtrapolation postInfinityExtrap, int constantValueNumKeys, byte* compressedKeys);
-
-        private static readonly unsafe CompressedCurveConverter[][] ConverterMap =
+        if (animSeq.CompressedCurveByteStream == null || animSeq.CompressedCurveByteStream.Length == 0)
         {
-            // RCCF_Empty
-            new CompressedCurveConverter[]
-            {
-                (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
-                {
-                    DefaultValue = Unsafe.As<int, float>(ref constantValue),
-                    PreInfinityExtrap = preInfinityExtrap,
-                    PostInfinityExtrap = postInfinityExtrap,
-                    Keys = Array.Empty<FRichCurveKey>()
-                },
-                (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
-                {
-                    DefaultValue = Unsafe.As<int, float>(ref constantValue),
-                    PreInfinityExtrap = preInfinityExtrap,
-                    PostInfinityExtrap = postInfinityExtrap,
-                    Keys = Array.Empty<FRichCurveKey>()
-                }
-            },
-            // RCCF_Constant
-            new CompressedCurveConverter[]
-            {
-                (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
-                {
-                    DefaultValue = 3.402823466e+38f, // MAX_flt
-                    PreInfinityExtrap = preInfinityExtrap,
-                    PostInfinityExtrap = postInfinityExtrap,
-                    Keys = new FRichCurveKey[] { new(0.0f, Unsafe.As<int, float>(ref constantValue)) }
-                },
-                (preInfinityExtrap, postInfinityExtrap, constantValue, _) => new FRichCurve
-                {
-                    DefaultValue = 3.402823466e+38f, // MAX_flt
-                    PreInfinityExtrap = preInfinityExtrap,
-                    PostInfinityExtrap = postInfinityExtrap,
-                    Keys = new FRichCurveKey[] { new(0.0f, Unsafe.As<int, float>(ref constantValue)) }
-                }
-            },
-            // RCCF_Linear
-            new CompressedCurveConverter[]
-            {
-                // RCKTCF_uint16
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var keyTimesOffset = 0;
-                    var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Linear, compressedKeys, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                },
-                // RCKTCF_float32
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var keyTimesOffset = 0;
-                    var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Linear, compressedKeys, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                }
-            },
-            // RCCF_Cubic
-            new CompressedCurveConverter[]
-            {
-                // RCKTCF_uint16
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var keyTimesOffset = 0;
-                    var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Cubic, compressedKeys, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                },
-                // RCKTCF_float32
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var keyTimesOffset = 0;
-                    var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new UniformKeyDataAdapter(RCCF_Cubic, compressedKeys, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                }
-            },
-            // RCCF_Mixed
-            new CompressedCurveConverter[]
-            {
-                // RCKTCF_uint16
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var interpModesOffset = 0;
-                    var keyTimesOffset = interpModesOffset + (numKeys * sizeof(byte)).Align(sizeof(ushort));
-                    var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new MixedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                },
-                // RCKTCF_float32
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var interpModesOffset = 0;
-                    var keyTimesOffset = interpModesOffset + (numKeys * sizeof(byte)).Align(sizeof(float));
-                    var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new MixedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                }
-            },
-            // RCCF_Weighted
-            new CompressedCurveConverter[]
-            {
-                // RCKTCF_uint16
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var interpModesOffset = 0;
-                    var keyTimesOffset = interpModesOffset + (2 * numKeys * sizeof(byte)).Align(sizeof(ushort));
-                    var keyTimeAdapter = new Quantized16BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new WeightedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                },
-                // RCKTCF_float32
-                (preInfinityExtrap, postInfinityExtrap, numKeys, compressedKeys) =>
-                {
-                    var interpModesOffset = 0;
-                    var keyTimesOffset = interpModesOffset + (2 * numKeys * sizeof(byte)).Align(sizeof(float));
-                    var keyTimeAdapter = new Float32BitKeyTimeAdapter(compressedKeys, keyTimesOffset, numKeys);
-                    var keyDataAdapter = new WeightedKeyDataAdapter(compressedKeys, interpModesOffset, keyTimeAdapter);
-                    return ConvertToRaw(keyTimeAdapter, keyDataAdapter, numKeys, preInfinityExtrap, postInfinityExtrap);
-                }
-            },
-        };
-
-        private static FRichCurve ConvertToRaw(IKeyTimeAdapter keyTimeAdapter, IKeyDataAdapter keyDataAdapter, int numKeys, ERichCurveExtrapolation preInfinityExtrap, ERichCurveExtrapolation postInfinityExtrap)
-        {
-            var curve = new FRichCurve();
-            curve.DefaultValue = 3.402823466e+38f;
-            curve.PreInfinityExtrap = preInfinityExtrap;
-            curve.PostInfinityExtrap = postInfinityExtrap;
-            curve.Keys = new FRichCurveKey[numKeys];
-            for (var keyIndex = 0; keyIndex < numKeys; keyIndex++)
-            {
-                var handle = keyDataAdapter.GetKeyDataHandle(keyIndex);
-                var interpMode = keyDataAdapter.GetKeyInterpMode(keyIndex);
-                var key = new FRichCurveKey();
-                key.InterpMode = interpMode switch
-                {
-                    RCCF_Linear => RCIM_Linear,
-                    RCCF_Cubic => RCIM_Cubic,
-                    RCCF_Constant => RCIM_Constant,
-                    RCCF_Empty => RCIM_None,
-                    _ => throw new ArgumentException("Can't convert interpMode " + interpMode + " to ERichCurveInterpMode")
-                };
-                key.TangentMode = RCTM_Auto; // How to convert? interpMode == RCCF_Weighted && keyDataAdapter.GetKeyTangentWeightMode(keyIndex) != RCTWM_WeightedNone ? RCTM_User : RCTM_Auto;
-                key.TangentWeightMode = keyDataAdapter.GetKeyTangentWeightMode(keyIndex);
-                key.Time = keyTimeAdapter.GetTime(keyIndex);
-                key.Value = keyDataAdapter.GetKeyValue(handle);
-                key.ArriveTangent = keyDataAdapter.GetKeyArriveTangent(handle);
-                key.ArriveTangentWeight = keyDataAdapter.GetKeyArriveTangentWeight(handle);
-                key.LeaveTangent = keyDataAdapter.GetKeyLeaveTangent(handle);
-                key.LeaveTangentWeight = keyDataAdapter.GetKeyLeaveTangentWeight(handle);
-                curve.Keys[keyIndex] = key;
-            }
-            return curve;
+            return [];
         }
 
-        public override unsafe FFloatCurve[] ConvertCurves(UAnimSequence animSeq)
+        fixed (byte* buffer = &animSeq.CompressedCurveByteStream[0])
         {
-            if (animSeq.CompressedCurveByteStream == null || animSeq.CompressedCurveByteStream.Length == 0)
-            {
-                return Array.Empty<FFloatCurve>();
-            }
+            var curveDescriptions = (FCurveDesc*) buffer;
 
-            fixed (byte* buffer = &animSeq.CompressedCurveByteStream[0])
+            var compressedCurveNames = animSeq.CompressedCurveNames;
+            var numCurves = compressedCurveNames.Length;
+            var floatCurves = new FFloatCurve[numCurves];
+            for (var curveIndex = 0; curveIndex < numCurves; ++curveIndex)
             {
-                var curveDescriptions = (FCurveDesc*) buffer;
-
-                var compressedCurveNames = animSeq.CompressedCurveNames;
-                var numCurves = compressedCurveNames.Length;
-                var floatCurves = new FFloatCurve[numCurves];
-                for (var curveIndex = 0; curveIndex < numCurves; ++curveIndex)
+                var curveName = compressedCurveNames[curveIndex];
+                var curve = curveDescriptions[curveIndex];
+                var compressedKeys = buffer + curve.KeyDataOffset;
+                var rawCurve = ConverterMap[(int) curve.CompressionFormat][(int) curve.KeyTimeCompressionFormat](curve.PreInfinityExtrap, curve.PostInfinityExtrap, curve.NumKeys, compressedKeys);
+                floatCurves[curveIndex] = new FFloatCurve
                 {
-                    var curveName = compressedCurveNames[curveIndex];
-                    var curve = curveDescriptions[curveIndex];
-                    var compressedKeys = buffer + curve.KeyDataOffset;
-                    var rawCurve = ConverterMap[(int) curve.CompressionFormat][(int) curve.KeyTimeCompressionFormat](curve.PreInfinityExtrap, curve.PostInfinityExtrap, curve.NumKeys, compressedKeys);
-                    floatCurves[curveIndex] = new FFloatCurve
-                    {
-                        CurveName = curveName.DisplayName,
-                        FloatCurve = rawCurve,
-                        CurveTypeFlags = 4
-                    };
-                }
-                return floatCurves;
+                    CurveName = curveName.DisplayName,
+                    FloatCurve = rawCurve,
+                    CurveTypeFlags = 4
+                };
             }
+            return floatCurves;
         }
     }
 }

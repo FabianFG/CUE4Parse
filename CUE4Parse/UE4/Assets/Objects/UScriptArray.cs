@@ -53,7 +53,8 @@ public class UScriptArray
         {
             if (Ar.Game == EGame.GAME_DaysGone && InnerType == "StructProperty")
             {
-                var elemsize = (size - sizeof(int)) / elementCount;
+                var count = elementCount > 0 ? elementCount : 1;
+                var elemsize = (size - sizeof(int)) / count;
                 InnerTagData = DaysGoneProperties.GetArrayStructType(tagData.Name, elemsize);
             }
         }

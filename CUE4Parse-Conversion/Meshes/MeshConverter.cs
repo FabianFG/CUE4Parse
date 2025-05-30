@@ -303,12 +303,13 @@ public static class MeshConverter
                     skeletalMeshLod.VertexColors[vert] = srcLod.ColorVertexBuffer.Data[vert];
                 }
 
+                var scale = v.Infs.bUse16BitBoneWeight ? Constants.UShort_Bone_Scale : Constants.Byte_Bone_Scale;
                 foreach (var (weight, boneIndex) in v.Infs.BoneWeight.Zip(v.Infs.BoneIndex))
                 {
-                    if (weight != 0)
+                    if (weight != 0f)
                     {
-                        var bone = (short)boneMap[boneIndex];
-                        skeletalMeshLod.Verts[vert].AddInfluence(bone, weight);
+                        var bone = boneMap[boneIndex];
+                        skeletalMeshLod.Verts[vert].AddInfluence(bone, weight, weight * scale);
                     }
                 }
             }
@@ -334,6 +335,12 @@ public static class MeshConverter
 
         convertedMesh.FinalizeMesh();
         return true;
+    }
+
+    public struct FSectionRange
+    {
+        public int End;
+        public int Index;
     }
 
     private static void UnpackNormals(FPackedNormal[] normal, CMeshVertex v)

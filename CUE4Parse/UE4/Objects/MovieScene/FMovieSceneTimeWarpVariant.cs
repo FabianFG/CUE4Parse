@@ -1,6 +1,6 @@
 using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
@@ -25,14 +25,42 @@ public enum EMovieSceneTimeWarpType : byte
 public class FMovieSceneTimeWarpVariant : IUStruct
 {
     public EMovieSceneTimeWarpType Type;
-    public readonly byte[] data;
-    public readonly FAssetArchive Owner;
+    public double PlayRate;
+    public FPackageIndex? Custom;
+    public FStructFallback? Variant;
 
     public FMovieSceneTimeWarpVariant(FAssetArchive Ar)
     {
+        //Owner = Ar;
         var isLiteral = Ar.ReadBoolean();
-        data = Ar.ReadBytes(8);
-        Type = isLiteral ? EMovieSceneTimeWarpType.FixedPlayRate : (EMovieSceneTimeWarpType) (data[7] & 0x7) + 1;
+        Type = isLiteral ? EMovieSceneTimeWarpType.FixedPlayRate : Ar.Read<EMovieSceneTimeWarpType>();
+        switch (Type)
+        {
+            case EMovieSceneTimeWarpType.FixedPlayRate:
+                PlayRate = Ar.Read<double>();
+                break;
+            case EMovieSceneTimeWarpType.Custom:
+                Custom = new FPackageIndex(Ar);
+                break;
+            case EMovieSceneTimeWarpType.FixedTime:
+                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpFixedFrame");
+                break;
+            case EMovieSceneTimeWarpType.FrameRate:
+                Variant = new FStructFallback(Ar, "FrameRate");
+                break;
+            case EMovieSceneTimeWarpType.Loop:
+                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpLoop");
+                break;
+            case EMovieSceneTimeWarpType.Clamp:
+                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpClamp");
+                break;
+            case EMovieSceneTimeWarpType.LoopFloat:
+                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpLoopFloat");
+                break;
+            case EMovieSceneTimeWarpType.ClampFloat:
+                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpClampFloat");
+                break;
+        }
     }
 }
 
@@ -40,47 +68,21 @@ public class FMovieSceneTimeWarpVariantConverter : JsonConverter<FMovieSceneTime
 {
     public override void WriteJson(JsonWriter writer, FMovieSceneTimeWarpVariant value, JsonSerializer serializer)
     {
-        var data = value.data;
         writer.WriteStartObject();
         switch (value.Type)
         {
             case EMovieSceneTimeWarpType.FixedPlayRate:
                 writer.WritePropertyName("PlayRate");
-                writer.WriteValue(BitConverter.ToDouble(data));
+                writer.WriteValue(value.PlayRate);
                 break;
             case EMovieSceneTimeWarpType.Custom:
-                // probably wrong
-                writer.WritePropertyName("ReferenceToSelf");
-                serializer.Serialize(writer, new FPackageIndex(value.Owner, BitConverter.ToInt32(data)));
+                writer.WritePropertyName("Custom");
+                serializer.Serialize(writer, value.Custom);
                 break;
-            case EMovieSceneTimeWarpType.FixedTime:
-                writer.WritePropertyName("FrameNumber");
-                writer.WriteValue(BitConverter.ToInt32(data));
+            default:
+                writer.WritePropertyName("Variant");
+                serializer.Serialize(writer, value.Variant);
                 break;
-            case EMovieSceneTimeWarpType.FrameRate:
-                writer.WritePropertyName("FrameRate");
-                var numerator = data[0] | data[1] << 8 | data[2] << 16;
-                var denominator = data[3] | data[4] << 8 | data[5] << 16;
-                var frameRate = new FFrameRate(numerator, denominator);
-                serializer.Serialize(writer, frameRate);
-                break;
-            case EMovieSceneTimeWarpType.Loop:
-                writer.WritePropertyName("Duration");
-                writer.WriteValue(BitConverter.ToInt32(data));
-                break;
-            case EMovieSceneTimeWarpType.Clamp:
-                writer.WritePropertyName("max");
-                writer.WriteValue(BitConverter.ToInt32(data));
-                break;
-            case EMovieSceneTimeWarpType.LoopFloat:
-                writer.WritePropertyName("Duration");
-                writer.WriteValue(BitConverter.ToSingle(data));
-                break;
-            case EMovieSceneTimeWarpType.ClampFloat:
-                writer.WritePropertyName("StartTime");
-                writer.WriteValue(BitConverter.ToSingle(data));
-                break;
-
         };
         writer.WriteEndObject();
     }

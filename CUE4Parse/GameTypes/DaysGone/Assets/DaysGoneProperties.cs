@@ -4,7 +4,7 @@ namespace CUE4Parse.GameTypes.DaysGone.Assets;
 
 public static class DaysGoneProperties
 {
-    public static void GetMapPropertyTypes(string? name, out string? keyType, out string? valueType)
+    public static bool GetMapPropertyTypes(string? name, out string? keyType, out string? valueType)
     {
         switch (name)
         {
@@ -23,8 +23,9 @@ public static class DaysGoneProperties
             default:
                 keyType = null;
                 valueType = null;
-                break;
+                return false;
         }
+        return true;
     }
 
     public static FPropertyTagData? GetArrayStructType(string? name, int elementSize)

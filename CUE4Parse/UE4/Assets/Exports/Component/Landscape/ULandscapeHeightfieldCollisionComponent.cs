@@ -10,7 +10,10 @@ public class ULandscapeHeightfieldCollisionComponent : USceneComponent
         var bCooked = Ar.ReadBoolean();
         if (bCooked)
         {
-            Ar.SkipBulkArrayData(); // CookedCollisionData
+            if (Ar.Game >= Versions.EGame.GAME_UE4_14)
+                Ar.SkipBulkArrayData(); // CookedCollisionData
+            else
+                Ar.SkipFixedArray(1);
         }
     }
 }

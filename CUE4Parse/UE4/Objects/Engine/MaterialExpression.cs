@@ -10,7 +10,8 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine;
 
-[StructFallback][JsonConverter(typeof(FMaterialInputConverter<>))]
+[StructFallback]
+[JsonConverter(typeof(FExpressionInputConverter))]
 public class FMaterialInput<T> : FExpressionInput where T : struct
 {
     public bool UseConstant { get; protected set; }
@@ -20,6 +21,12 @@ public class FMaterialInput<T> : FExpressionInput where T : struct
     {
         UseConstant = false;
         Constant = new T();
+    }
+
+    public FMaterialInput(FStructFallback fallback) : base(fallback)
+    {
+        UseConstant = fallback.GetOrDefault(nameof(UseConstant), false);
+        Constant = fallback.GetOrDefault(nameof(Constant), new T());
     }
 
     public FMaterialInput(FAssetArchive Ar) : base(Ar)
@@ -32,49 +39,14 @@ public class FMaterialInput<T> : FExpressionInput where T : struct
         UseConstant = Ar.ReadBoolean();
         Constant = Ar.Read<T>();
     }
-}
 
-public class FMaterialInputConverter<T> : JsonConverter<FMaterialInput<T>> where T : struct
-{
-    public override void WriteJson(JsonWriter writer, FMaterialInput<T> value, JsonSerializer serializer)
+    public override void WriteAdditionalProperties(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
-        if (value.FallbackStruct is null)
-        {
-            writer.WritePropertyName(nameof(value.Expression));
-            serializer.Serialize(writer, value.Expression);
-            writer.WritePropertyName(nameof(value.OutputIndex));
-            serializer.Serialize(writer, value.OutputIndex);
-            writer.WritePropertyName(nameof(value.InputName));
-            serializer.Serialize(writer, value.InputName);
-            writer.WritePropertyName(nameof(value.Mask));
-            serializer.Serialize(writer, value.Mask);
-            writer.WritePropertyName(nameof(value.MaskR));
-            serializer.Serialize(writer, value.MaskR);
-            writer.WritePropertyName(nameof(value.MaskG));
-            serializer.Serialize(writer, value.MaskG);
-            writer.WritePropertyName(nameof(value.MaskB));
-            serializer.Serialize(writer, value.MaskB);
-            writer.WritePropertyName(nameof(value.MaskA));
-            serializer.Serialize(writer, value.MaskA);
-            writer.WritePropertyName(nameof(value.ExpressionName));
-            serializer.Serialize(writer, value.ExpressionName);
-            writer.WritePropertyName(nameof(value.UseConstant));
-            serializer.Serialize(writer, value.UseConstant);
-            writer.WritePropertyName(nameof(value.Constant));
-            serializer.Serialize(writer, value.Constant);
-        }
-        else
-        {
-            writer.WritePropertyName(nameof(value.FallbackStruct));
-            serializer.Serialize(writer, value.FallbackStruct);
-        }
-        writer.WriteEndObject();
-    }
+        writer.WritePropertyName(nameof(UseConstant));
+        serializer.Serialize(writer, UseConstant);
 
-    public override FMaterialInput<T>? ReadJson(JsonReader reader, Type objectType, FMaterialInput<T>? existingValue, bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
+        writer.WritePropertyName(nameof(Constant));
+        serializer.Serialize(writer, Constant);
     }
 }
 
@@ -86,6 +58,12 @@ public class FMaterialInputVector : FMaterialInput<FVector>
         UseConstant = false;
         Constant = FVector.ZeroVector;
     }
+
+    public FMaterialInputVector(FStructFallback fallback)
+    {
+        UseConstant = fallback.GetOrDefault(nameof(UseConstant), false);
+        Constant = fallback.GetOrDefault(nameof(Constant), FVector.ZeroVector);
+    }
 }
 
 [StructFallback]
@@ -96,9 +74,16 @@ public class FMaterialInputVector2D : FMaterialInput<FVector2D>
         UseConstant = false;
         Constant = FVector2D.ZeroVector;
     }
+
+    public FMaterialInputVector2D(FStructFallback fallback)
+    {
+        UseConstant = fallback.GetOrDefault(nameof(UseConstant), false);
+        Constant = fallback.GetOrDefault(nameof(Constant), FVector2D.ZeroVector);
+    }
 }
 
-[StructFallback][JsonConverter(typeof(FExpressionInputConverter))]
+[StructFallback]
+[JsonConverter(typeof(FExpressionInputConverter))]
 public class FExpressionInput : IUStruct
 {
     public FPackageIndex? Expression;
@@ -113,6 +98,19 @@ public class FExpressionInput : IUStruct
     public FStructFallback? FallbackStruct;
 
     public FExpressionInput() { }
+
+    public FExpressionInput(FStructFallback fallback)
+    {
+        Expression = fallback.GetOrDefault(nameof(Expression), new FPackageIndex());
+        OutputIndex = fallback.GetOrDefault(nameof(OutputIndex), 0);
+        InputName = fallback.GetOrDefault(nameof(InputName), default(FName));
+        Mask = fallback.GetOrDefault(nameof(Mask), 0);
+        MaskR = fallback.GetOrDefault(nameof(MaskR), 0);
+        MaskG = fallback.GetOrDefault(nameof(MaskG), 0);
+        MaskB = fallback.GetOrDefault(nameof(MaskB), 0);
+        MaskA = fallback.GetOrDefault(nameof(MaskA), 0);
+        ExpressionName = fallback.GetOrDefault(nameof(ExpressionName), default(FName));
+    }
 
     public FExpressionInput(FAssetArchive Ar)
     {
@@ -133,40 +131,40 @@ public class FExpressionInput : IUStruct
         MaskA = Ar.Read<int>();
         ExpressionName = Ar is { Game: <= EGame.GAME_UE5_1, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
     }
+
+    public virtual void WriteAdditionalProperties(JsonWriter writer, JsonSerializer serializer) { }
 }
 
 public class FExpressionInputConverter : JsonConverter<FExpressionInput>
 {
     public override void WriteJson(JsonWriter writer, FExpressionInput value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
-        if (value.FallbackStruct is null)
+        if (value.FallbackStruct is not null)
         {
-            writer.WritePropertyName(nameof(value.Expression));
-            serializer.Serialize(writer, value.Expression);
-            writer.WritePropertyName(nameof(value.OutputIndex));
-            serializer.Serialize(writer, value.OutputIndex);
-            writer.WritePropertyName(nameof(value.InputName));
-            serializer.Serialize(writer, value.InputName);
-            writer.WritePropertyName(nameof(value.Mask));
-            serializer.Serialize(writer, value.Mask);
-            writer.WritePropertyName(nameof(value.MaskR));
-            serializer.Serialize(writer, value.MaskR);
-            writer.WritePropertyName(nameof(value.MaskG));
-            serializer.Serialize(writer, value.MaskG);
-            writer.WritePropertyName(nameof(value.MaskB));
-            serializer.Serialize(writer, value.MaskB);
-            writer.WritePropertyName(nameof(value.MaskA));
-            serializer.Serialize(writer, value.MaskA);
-            writer.WritePropertyName(nameof(value.ExpressionName));
-            serializer.Serialize(writer, value.ExpressionName);
-        }
-        else
-        {
-            writer.WritePropertyName(nameof(value.FallbackStruct));
             serializer.Serialize(writer, value.FallbackStruct);
+            return;
         }
 
+        writer.WriteStartObject();
+        writer.WritePropertyName(nameof(value.Expression));
+        serializer.Serialize(writer, value.Expression);
+        writer.WritePropertyName(nameof(value.OutputIndex));
+        serializer.Serialize(writer, value.OutputIndex);
+        writer.WritePropertyName(nameof(value.InputName));
+        serializer.Serialize(writer, value.InputName);
+        writer.WritePropertyName(nameof(value.Mask));
+        serializer.Serialize(writer, value.Mask);
+        writer.WritePropertyName(nameof(value.MaskR));
+        serializer.Serialize(writer, value.MaskR);
+        writer.WritePropertyName(nameof(value.MaskG));
+        serializer.Serialize(writer, value.MaskG);
+        writer.WritePropertyName(nameof(value.MaskB));
+        serializer.Serialize(writer, value.MaskB);
+        writer.WritePropertyName(nameof(value.MaskA));
+        serializer.Serialize(writer, value.MaskA);
+        writer.WritePropertyName(nameof(value.ExpressionName));
+        serializer.Serialize(writer, value.ExpressionName);
+        value.WriteAdditionalProperties(writer, serializer);
         writer.WriteEndObject();
     }
 

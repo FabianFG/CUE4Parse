@@ -53,6 +53,15 @@ public class UMapBuildDataRegistry : UObject
             {
                 SkyAtmosphereBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FSkyAtmosphereMapBuildData(Ar));
             }
+
+            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.VolumetricLightMapGridDescSupport)
+            {
+                var bHasGrid = Ar.ReadBoolean();
+                if (bHasGrid)
+                {
+                    //var gridDesc = new FVolumetricLightmapGridDesc(Ar);
+                }
+            }
         }
     }
 

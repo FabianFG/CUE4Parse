@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
+using GenericReader;
 
 namespace CUE4Parse.UE4.Pak;
 
@@ -43,8 +44,7 @@ public partial class PakFileReader
         var PathHashSeed = primaryIndex.Read<ulong>();
         
         var encodedPakEntriesSize = primaryIndex.Read<int>();
-        var encodedPakEntries = primaryIndex.ReadBytes(encodedPakEntriesSize);
-        var encodedEntries = new FByteArchive("Encoded Entries", encodedPakEntries);
+        var encodedEntries = new GenericBufferReader(primaryIndex.ReadBytes(encodedPakEntriesSize));
 
         primaryIndex.Position += 8;
         if (!primaryIndex.ReadBoolean())
@@ -162,7 +162,7 @@ public partial class PakFileReader
                 files[path] = entry;
                 used.Add(hash);
 
-                void FindPayload(FArchive Ar, string extension, bool warning = false)
+                void FindPayload(GenericBufferReader Ar, string extension, bool warning = false)
                 {
                     var payloadName = string.Concat(hashpath, ".", extension);
                     var hash = Fnv64Path(payloadName, PathHashSeed);
