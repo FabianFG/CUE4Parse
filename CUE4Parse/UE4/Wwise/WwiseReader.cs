@@ -14,23 +14,23 @@ namespace CUE4Parse.UE4.Wwise;
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
+    public string Path { get; }
     public BankHeader Header { get; }
     public AkFolder[]? Folders { get; }
     public string[]? Initialization { get; }
     public DataIndex[]? WemIndexes { get; }
     public byte[][]? WemSounds { get; }
     public Hierarchy[]? Hierarchies { get; }
-    public Dictionary<uint, string>? IdToString { get; }
+    public Dictionary<uint, string>? IdToString { get; } = [];
     public string? Platform { get; }
-    public Dictionary<string, byte[]> WwiseEncodedMedias { get; }
+    public Dictionary<string, byte[]> WwiseEncodedMedias { get; } = [];
     public GlobalSettings? GlobalSettings { get; }
     public EnvSettings? EnvSettings { get; }
     private uint Version => Header.Version;
 
     public WwiseReader(FArchive Ar)
     {
-        IdToString = [];
-        WwiseEncodedMedias = [];
+        Path = Ar.Name;
         while (Ar.Position < Ar.Length)
         {
             var sectionIdentifier = Ar.Read<ESectionIdentifier>();
@@ -114,7 +114,7 @@ public class WwiseReader
                     break;
                 case ESectionIdentifier.ENVS:
                     if (WwiseVersions.IsSupported()) // Let's guard this just in case
-                    { 
+                    {
                         EnvSettings = new EnvSettings(Ar);
                     }
                     break;
