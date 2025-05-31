@@ -32,25 +32,25 @@ public class AkStateChunk
 
 public class AkStateAwareChunk
 {
+    public readonly List<AkStatePropertyInfo> StateProperties;
     public readonly List<AkStateGroup> Groups;
 
     public AkStateAwareChunk(FArchive Ar)
     {
-        var headerCount = Ar.Read7BitEncodedInt();
+        var headerCount = Ar.Read<byte>();
+        StateProperties = new List<AkStatePropertyInfo>(headerCount);
         for (int i = 0; i < headerCount; i++)
         {
-            Ar.Read7BitEncodedInt();
-            Ar.Read<byte>();
-            Ar.Read<byte>();
+            StateProperties.Add(new AkStatePropertyInfo(Ar));
         }
 
-        int groupCount = Ar.Read7BitEncodedInt();
+        int groupCount = Ar.Read<byte>();
         Groups = new List<AkStateGroup>(groupCount);
         for (int g = 0; g < groupCount; g++)
         {
             uint groupId = Ar.Read<uint>();
             byte groupType = Ar.Read<byte>();
-            int stateCount = Ar.Read7BitEncodedInt();
+            int stateCount = WwiseReader.ReadBigEndianVarInt(Ar);
 
             var states = new List<AkState>(stateCount);
             for (int s = 0; s < stateCount; s++)

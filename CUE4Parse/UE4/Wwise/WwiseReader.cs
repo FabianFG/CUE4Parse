@@ -193,4 +193,23 @@ public class WwiseReader
         }
         return Encoding.UTF8.GetString([.. bytes]);
     }
+
+    public static int ReadBigEndianVarInt(FArchive Ar)
+    {
+        int max = 0;
+
+        byte cur = Ar.Read<byte>();
+        int value = cur & 0x7F;
+
+        while ((cur & 0x80) != 0)
+        {
+            if (++max >= 10)
+                throw new FormatException("Unexpected variable loop count");
+
+            cur = Ar.Read<byte>();
+            value = (value << 7) | (cur & 0x7F);
+        }
+
+        return value;
+    }
 }

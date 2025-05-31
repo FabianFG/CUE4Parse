@@ -49,12 +49,15 @@ public class HierarchyMusicTrack : AbstractHierarchy
         if (WwiseVersions.Version > 26)
         {
             var numPlaylistItems = Ar.Read<uint>();
-            for (int i = 0; i < numPlaylistItems; i++)
+            if (numPlaylistItems > 0)
             {
-                Playlist.Add(new AkTrackSrcInfo(Ar));
-            }
+                for (int i = 0; i < numPlaylistItems; i++)
+                {
+                    Playlist.Add(new AkTrackSrcInfo(Ar));
+                }
 
-            Ar.Read<uint>(); // numSubTrack
+                Ar.Read<uint>(); // numSubTrack
+            }
         }
 
         if (WwiseVersions.Version > 62)

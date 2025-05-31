@@ -70,9 +70,9 @@ public static class WwiseVersions
     [
         112,    // Dead by Daylight (old)
         135,    // Dead by Daylight (old)
-        140,    // Dead by Daylight (old)
+        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy
         145,    // Valorant, Marvel Rivals
-        150     // Dead by Daylight
+        150     // Dead by Daylight, Splitgate 2
     ];
 
     public static bool IsSupported() => SupportedVersions.Contains(Version);

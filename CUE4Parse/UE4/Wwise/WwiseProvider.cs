@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Objects;
@@ -33,9 +34,10 @@ public class WwiseProvider
 {
     private readonly AbstractVfsFileProvider _provider;
     private readonly WwiseProviderConfiguration _configuration;
-    private string _baseWwiseAudioPath;
+    private string? _baseWwiseAudioPath;
 
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
+    private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
     private readonly List<string> _wwiseLoadedSoundBanks = [];
     private bool _completedWwiseFullBnkInit = false;
@@ -53,22 +55,21 @@ public class WwiseProvider
         }
     }
 
-    private HashSet<uint> _visitedHierarchyIds; // To speed things up
-    private HashSet<uint> _visitedWemIds; // To prevent duplicates
+    private readonly HashSet<(uint Id, Hierarchy Hierarchy)> _visitedHierarchies = []; // To speed things up
+    private readonly HashSet<uint> _visitedWemIds = []; // To prevent duplicates
 
     public List<WwiseExtractedSound> ExtractBankSounds(WwiseReader wwiseReader)
     {
-        CacheSoundBank(wwiseReader, _wwiseHierarchyTables, _wwiseEncodedMedia);
+        CacheSoundBank(wwiseReader);
         var ownerDirectory = wwiseReader.Path.SubstringBeforeLast('.');
 
-        _visitedHierarchyIds = [];
-        _visitedWemIds = [];
         var results = new List<WwiseExtractedSound>();
         if (wwiseReader.Hierarchies != null)
         {
             foreach (var h in wwiseReader.Hierarchies)
             {
-                if (h.Data is not HierarchyEvent hierarchyEvent) continue;
+                if (h.Data is not HierarchyEvent hierarchyEvent)
+                    continue;
                 LoopThroughEventActions(hierarchyEvent, results, ownerDirectory);
             }
         }
@@ -79,21 +80,38 @@ public class WwiseProvider
     {
         DetermineBaseWwiseAudioPath(audioEvent);
 
-        _visitedHierarchyIds = [];
-        _visitedWemIds = [];
+        _visitedHierarchies.Clear();
+        _visitedWemIds.Clear();
         var results = new List<WwiseExtractedSound>();
 
         var wwiseData = audioEvent.EventCookedData;
-        if (wwiseData == null) return results;
+        if (wwiseData == null)
+        {
+            var shortIdTag = audioEvent.Properties.FirstOrDefault(p => p.Name.Text == "ShortID");
+            if (shortIdTag?.Tag?.GenericValue is not uint shortId)
+                return results;
+
+            foreach (var hierarchy in GetHierarchiesById(shortId))
+            {
+                if (hierarchy.Data is HierarchyEvent hierarchyEvent)
+                {
+                    LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
+                }
+            }
+
+            return results;
+        }
 
         foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
         {
-            if (!eventData.HasValue) continue;
+            if (!eventData.HasValue)
+                continue;
             var debugName = eventData.Value.DebugName.Text;
 
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
-                if (!soundBank.bContainsMedia) continue;
+                if (!soundBank.bContainsMedia)
+                    continue;
 
                 var soundBankName = soundBank.SoundBankPathName.Text;
                 var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
@@ -160,54 +178,57 @@ public class WwiseProvider
 
         void TraverseAndSave(uint id)
         {
-            if (!_visitedHierarchyIds.Add(id) || !_wwiseHierarchyTables.TryGetValue(id, out var hierarchy))
-                return;
-
-            switch (hierarchy.Data)
+            foreach (var hierarchy in GetHierarchiesById(id))
             {
-                case HierarchySoundSfxVoice soundSfx:
-                    SaveWemSound(soundSfx.Source.SourceId);
-                    break;
-                case HierarchyMusicRandomSequenceContainer musicRandomSequenceContainer:
-                    foreach (var childId in musicRandomSequenceContainer.ChildIds)
-                        TraverseAndSave(childId);
-                    break;
-                case HierarchyMusicSwitchContainer musicSwitchContainer:
-                    foreach (var childId in musicSwitchContainer.ChildIds)
-                        TraverseAndSave(childId);
-                    foreach (var node in musicSwitchContainer.DecisionTree.Nodes)
-                        foreach (var nodeChild in node.Children)
-                            TraverseDecisionTreeNode(nodeChild);
+                if (!_visitedHierarchies.Add((id, hierarchy)))
+                    continue;
 
-                    void TraverseDecisionTreeNode(AkDecisionTreeNode node)
-                    {
-                        TraverseAndSave(node.AudioNodeId);
-                        foreach (var nodeChildTraverse in node.Children)
+                switch (hierarchy.Data)
+                {
+                    case HierarchySoundSfxVoice soundSfx:
+                        SaveWemSound(soundSfx.Source.SourceId);
+                        break;
+                    case HierarchyMusicRandomSequenceContainer musicRandomSequenceContainer:
+                        foreach (var childId in musicRandomSequenceContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                    case HierarchyMusicSwitchContainer musicSwitchContainer:
+                        foreach (var childId in musicSwitchContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        foreach (var node in musicSwitchContainer.DecisionTree.Nodes)
+                            foreach (var nodeChild in node.Children)
+                                TraverseDecisionTreeNode(nodeChild);
+
+                        void TraverseDecisionTreeNode(AkDecisionTreeNode node)
                         {
-                            TraverseDecisionTreeNode(nodeChildTraverse);
+                            TraverseAndSave(node.AudioNodeId);
+                            foreach (var nodeChildTraverse in node.Children)
+                            {
+                                TraverseDecisionTreeNode(nodeChildTraverse);
+                            }
                         }
-                    }
-                    break;
-                case HierarchyMusicTrack musicTrack:
-                    foreach (var playlist in musicTrack.Playlist)
-                        SaveWemSound(playlist.SourceId);
-                    break;
-                case HierarchyMusicSegment musicSegment:
-                    foreach (var childId in musicSegment.ChildIds)
-                        TraverseAndSave(childId);
-                    break;
-                case HierarchyRandomSequenceContainer randomContainer:
-                    foreach (var childId in randomContainer.ChildIds)
-                        TraverseAndSave(childId);
-                    break;
-                case HierarchySwitchContainer switchContainer:
-                    foreach (var childId in switchContainer.ChildIds)
-                        TraverseAndSave(childId);
-                    break;
-                case HierarchyLayerContainer layerContainer:
-                    foreach (var childId in layerContainer.ChildIds)
-                        TraverseAndSave(childId);
-                    break;
+                        break;
+                    case HierarchyMusicTrack musicTrack:
+                        foreach (var playlist in musicTrack.Playlist)
+                            SaveWemSound(playlist.SourceId);
+                        break;
+                    case HierarchyMusicSegment musicSegment:
+                        foreach (var childId in musicSegment.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                    case HierarchyRandomSequenceContainer randomContainer:
+                        foreach (var childId in randomContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                    case HierarchySwitchContainer switchContainer:
+                        foreach (var childId in switchContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                    case HierarchyLayerContainer layerContainer:
+                        foreach (var childId in layerContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                }
             }
         }
 
@@ -236,14 +257,17 @@ public class WwiseProvider
         }
     }
 
+    [MemberNotNull(nameof(_baseWwiseAudioPath))]
     private void DetermineBaseWwiseAudioPath(UAkAudioEvent? audioEvent = null)
     {
-        if (!string.IsNullOrEmpty(_baseWwiseAudioPath)) return;
+        if (!string.IsNullOrEmpty(_baseWwiseAudioPath))
+            return;
 
         _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio"); // Most common directory
 
         var wwiseData = audioEvent?.EventCookedData;
-        if (wwiseData == null) return;
+        if (wwiseData == null)
+            return;
 
         var eventData = wwiseData.Value.EventLanguageMap
             .Select(kv => kv.Value)
@@ -278,7 +302,8 @@ public class WwiseProvider
 
     private void BulkInitializeWwiseSoundBanks()
     {
-        if (_completedWwiseFullBnkInit) return;
+        if (_completedWwiseFullBnkInit)
+            return;
         if (string.IsNullOrEmpty(_baseWwiseAudioPath))
             DetermineBaseWwiseAudioPath();
 
@@ -330,29 +355,55 @@ public class WwiseProvider
 
         using var archive = new FByteArchive(relativePath, data);
         var wwiseReader = new WwiseReader(archive);
-        CacheSoundBank(wwiseReader, _wwiseHierarchyTables, _wwiseEncodedMedia);
+        CacheSoundBank(wwiseReader);
         _wwiseLoadedSoundBanks.Add(relativePath);
 
         fileSize = data.LongLength;
         return true;
     }
 
-    private void CacheSoundBank(WwiseReader wwiseReader, Dictionary<uint, Hierarchy> hierarchyTables, Dictionary<string, byte[]> encodedMedias)
+    private void CacheSoundBank(WwiseReader wwiseReader)
     {
         if (wwiseReader.Hierarchies != null)
         {
             foreach (var h in wwiseReader.Hierarchies)
             {
                 uint id = h.Data.Id;
-                if (!hierarchyTables.ContainsKey(id))
-                    hierarchyTables[id] = h;
+                if (_wwiseHierarchyTables.TryGetValue(id, out var existing))
+                {
+
+                    if (!_wwiseHierarchyDuplicates.ContainsKey(id))
+                        _wwiseHierarchyDuplicates[id] = [existing];
+
+                    _wwiseHierarchyDuplicates[id].Add(h);
+                }
+                else
+                {
+                    _wwiseHierarchyTables[id] = h;
+                }
             }
         }
 
         foreach (var kv in wwiseReader.WwiseEncodedMedias)
         {
-            if (!encodedMedias.ContainsKey(kv.Key))
-                encodedMedias[kv.Key] = kv.Value;
+            if (!_wwiseEncodedMedia.ContainsKey(kv.Key))
+                _wwiseEncodedMedia[kv.Key] = kv.Value;
+        }
+    }
+
+    private IEnumerable<Hierarchy> GetHierarchiesById(uint id)
+    {
+        if (_wwiseHierarchyTables.TryGetValue(id, out var primary))
+        {
+            yield return primary;
+        }
+
+        if (_wwiseHierarchyDuplicates.TryGetValue(id, out var duplicates))
+        {
+            foreach (var duplicate in duplicates)
+            {
+                yield return duplicate;
+            }
         }
     }
 }
