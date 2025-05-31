@@ -523,9 +523,9 @@ public static class MeshConverter
                         landscapeLod.ExtraUV.Value[0][baseVertIndex + vertIndex] = (FMeshUVFloat)weightmapUv;
                     }
 
-                    if (!weightMapsInternal.ContainsKey("NormalMapTest"))
-                        weightMapsInternal["NormalMapTest"] = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-                    var normaBitmap = weightMapsInternal["NormalMapTest"];
+                    if (!weightMapsInternal.ContainsKey("NormalMap_DX")) // directX normal map
+                        weightMapsInternal["NormalMap_DX"] = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+                    var normaBitmap = weightMapsInternal["NormalMap_DX"];
                     unsafe
                     {
                         var pixels = (byte*)normaBitmap.GetPixels();
