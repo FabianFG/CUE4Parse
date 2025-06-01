@@ -84,6 +84,10 @@ public partial class FPakInfo
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_GameForPeace) return;
             Version = Ar.Read<EPakFileVersion>();
+            if (Version >= EPakFileVersion.PakFile_Version_PathHashIndex)
+            {
+                Version = EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod;// Override to force readIndexLegacy
+            }
             IndexHash = new FSHAHash(Ar);
             IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
             IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);

@@ -4,16 +4,17 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace CUE4Parse.UE4.Localization
+namespace CUE4Parse.UE4.Localization;
+
+[JsonConverter(typeof(FTextLocalizationResourceConverter))]
+public class FTextLocalizationResource
 {
-    [JsonConverter(typeof(FTextLocalizationResourceConverter))]
-    public class FTextLocalizationResource
-    {
-        private readonly FGuid _locResMagic = new (0x7574140Eu, 0xFC034A67u, 0x9D90154Au, 0x1B7F37C3u);
-        public readonly Dictionary<FTextKey, Dictionary<FTextKey, FEntry>> Entries = new ();
+    private readonly FGuid _locResMagic = new (0x7574140Eu, 0xFC034A67u, 0x9D90154Au, 0x1B7F37C3u);
+    public readonly Dictionary<FTextKey, Dictionary<FTextKey, FEntry>> Entries = [];
 
         public FTextLocalizationResource(FArchive Ar)
         {
@@ -29,91 +30,69 @@ namespace CUE4Parse.UE4.Localization
                 Log.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
             }
 
-            // Is this LocRes file too new to load?
-            if (versionNumber > ELocResVersion.Latest)
-            {
+        // Is this LocRes file too new to load?
+        if (versionNumber > ELocResVersion.Latest)
+        {
+            if (Ar.Game != EGame.GAME_StellarBlade)
                 throw new ParserException(Ar, $"LocRes '{Ar.Name}' is too new to be loaded (File Version: {versionNumber:D}, Loader Version: {ELocResVersion.Latest:D})");
-            }
+        }
 
-            // Read the localized string array
-            var localizedStringArray = Array.Empty<FTextLocalizationResourceString>();
-            if (versionNumber >= ELocResVersion.Compact)
+        // Read the localized string array
+        var localizedStringArray = Array.Empty<FTextLocalizationResourceString>();
+        if (versionNumber >= ELocResVersion.Compact)
+        {
+            var localizedStringArrayOffset = Ar.Read<long>();
+            if (localizedStringArrayOffset != -1) // INDEX_NONE
             {
-                var localizedStringArrayOffset = Ar.Read<long>();
-                if (localizedStringArrayOffset != -1) // INDEX_NONE
+                var currentFileOffset = Ar.Position;
+                Ar.Position = localizedStringArrayOffset;
+                localizedStringArray = Ar.ReadArray(() => new FTextLocalizationResourceString(Ar, versionNumber));
+                Ar.Position = currentFileOffset;
+            }
+        }
+
+        // Read entries count
+        if (versionNumber >= ELocResVersion.Optimized_CRC32)
+        {
+            Ar.Position += 4; // EntriesCount
+        }
+
+        // Read namespace count
+        var namespaceCount = Ar.Read<uint>();
+        for (var i = 0; i < namespaceCount; i++)
+        {
+            var namespce = new FTextKey(Ar, versionNumber);
+            var keyCount = Ar.Read<uint>();
+            var keyValue = new Dictionary<FTextKey, FEntry>((int)keyCount);
+            for (var j = 0; j < keyCount; j++)
+            {
+                var key = new FTextKey(Ar, versionNumber);
+                FEntry newEntry = new(Ar);
+                if (versionNumber >= ELocResVersion.Compact)
                 {
-                    var currentFileOffset = Ar.Position;
-                    Ar.Position = localizedStringArrayOffset;
-                    if (versionNumber >= ELocResVersion.Optimized_CRC32)
+                    var localizedStringIndex = Ar.Read<int>();
+                    if (localizedStringArray.Length > localizedStringIndex)
                     {
-                        localizedStringArray = Ar.ReadArray(() => new FTextLocalizationResourceString(Ar));
+                        // Steal the string if possible
+                        var localizedString = localizedStringArray[localizedStringIndex];
+                        newEntry.LocalizedString = localizedString.String;
+                        if (localizedString.RefCount != -1) localizedString.RefCount--;
                     }
                     else
                     {
-                        var tmpLocalizedStringArray = Ar.ReadArray(Ar.ReadFString);
-                        localizedStringArray = new FTextLocalizationResourceString[tmpLocalizedStringArray.Length];
-                        for (var i = 0; i < localizedStringArray.Length; i++)
-                        {
-                            localizedStringArray[i] = new FTextLocalizationResourceString(tmpLocalizedStringArray[i], -1);
-                        }
+                        Log.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
                     }
 
-                    Ar.Position = currentFileOffset;
+                    if (Ar.Game == EGame.GAME_StellarBlade && versionNumber > ELocResVersion.Latest) Ar.Position += 4;
                 }
-            }
-
-            // Read entries count
-            if (versionNumber >= ELocResVersion.Optimized_CRC32)
-            {
-                Ar.Position += 4; // EntriesCount
-            }
-
-            // Read namespace count
-            var namespaceCount = Ar.Read<uint>();
-            for (var i = 0; i < namespaceCount; i++)
-            {
-                var namespce = new FTextKey(Ar, versionNumber);
-                var keyCount = Ar.Read<uint>();
-                var keyValue = new Dictionary<FTextKey, FEntry>((int)keyCount);
-                for (var j = 0; j < keyCount; j++)
+                else
                 {
-                    var key = new FTextKey(Ar, versionNumber);
-                    FEntry newEntry = new(Ar);
-                    if (versionNumber >= ELocResVersion.Compact)
-                    {
-                        var localizedStringIndex = Ar.Read<int>();
-                        if (localizedStringArray.Length > localizedStringIndex)
-                        {
-                            // Steal the string if possible
-                            var localizedString = localizedStringArray[localizedStringIndex];
-                            if (localizedString.RefCount == 1)
-                            {
-                                newEntry.LocalizedString = localizedString.String;
-                                localizedString.RefCount--;
-                            }
-                            else
-                            {
-                                newEntry.LocalizedString = localizedString.String;
-                                if (localizedString.RefCount != -1)
-                                {
-                                    localizedString.RefCount--;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Log.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
-                        }
-                    }
-                    else
-                    {
-                        newEntry.LocalizedString = Ar.ReadFString();
-                    }
-
-                    keyValue.Add(key, newEntry);
+                    newEntry.LocalizedString = Ar.ReadFString();
                 }
-                Entries.Add(namespce, keyValue);
+
+                keyValue.Add(key, newEntry);
             }
+            Entries.Add(namespce, keyValue);
         }
     }
 }
