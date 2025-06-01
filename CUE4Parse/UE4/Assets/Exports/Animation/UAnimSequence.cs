@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.MoveCompressedAnimDataToTheDDC)
             {
                 var compressedData = new FUECompressedAnimData();
-                CompressedDataStructure = compressedData;                   
+                CompressedDataStructure = compressedData;
 
                 // Part of data were serialized as properties
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
@@ -118,7 +118,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 // UE4.12+
                 var bSerializeCompressedData = Ar.ReadBoolean();
-
+                if (Ar.Game == EGame.GAME_GameForPeace && GetOrDefault<bool>("bUseStreamable")) Ar.Position += 24;
                 if (bSerializeCompressedData)
                 {
                     if (Ar.Game < EGame.GAME_UE4_23)

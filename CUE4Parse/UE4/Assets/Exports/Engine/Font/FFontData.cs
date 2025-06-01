@@ -36,7 +36,7 @@ public class FFontData : IUStruct
                 LoadingPolicy = Ar.Read<EFontLoadingPolicy>();
             }
 
-            SubFaceIndex = Ar.Read<int>();
+            SubFaceIndex = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<int>() : 0;
         }
     }
 }
