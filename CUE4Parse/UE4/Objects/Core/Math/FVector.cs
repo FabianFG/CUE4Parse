@@ -174,16 +174,25 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public static FVector operator +(FVector a, FVector b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector operator +(FVector a, FIntVector b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator +(FVector a, float bias) => new(a.X + bias, a.Y + bias, a.Z + bias);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator -(FVector a, FVector b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector operator -(FVector a, FIntVector b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator -(FVector a, float bias) => new(a.X - bias, a.Y - bias, a.Z - bias);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator *(FVector a, FVector b) => new(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector operator *(FVector a, FIntVector b) => new(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator *(FVector a, float scale) => new(a.X * scale, a.Y * scale, a.Z * scale);
@@ -203,6 +212,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator /(FVector a, FVector b) => new(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FVector operator /(FVector a, FIntVector b) => new(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FVector operator /(FVector a, float scale)

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -10,6 +12,196 @@ using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
+
+public class NaniteUtils
+{
+    public const int NANITE_MAX_UVS = 4;
+    public const int NANITE_MAX_NORMAL_QUANTIZATION_BITS = 15;
+    public const int NANITE_MAX_TANGENT_QUANTIZATION_BITS = 12;
+    public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS = 15;
+    public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
+
+    public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
+    public const int NANITE_MAX_CLUSTERS_PER_PAGE = (1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS);
+
+    public readonly static ImmutableDictionary<int, float> PrecisionScales;
+
+    static NaniteUtils()
+    {
+        ImmutableDictionary<int, float>.Builder builder = ImmutableDictionary.CreateBuilder<int, float>();
+        for (int i = -32; i <= 32; i++)
+        {
+            int temp = 0;
+            Unsafe.As<int, float>(ref temp) = 1.0f;
+            float scale = 1.0f;
+            Unsafe.As<float, int>(ref scale) = temp - (i << 23);
+            builder.Add(i, scale);
+        }
+        PrecisionScales = builder.ToImmutable();
+    }
+
+    public static uint GetBits(uint value, int numBits, int offset)
+    {
+        uint mask = (1u << numBits) - 1u;
+        return (value >> offset) & mask;
+    }
+
+    public static int UIntToInt(uint value, int bitLength)
+    {
+        return unchecked((int) (value << (32-bitLength)) ) >> (32-bitLength);
+    }
+
+
+    public static int GetBitsAsSigned(uint value, int numBits, int offset)
+    {
+        return UIntToInt(GetBits(value, numBits, offset), numBits);
+    }
+
+    public static uint BitAlignU32(uint high, uint low, long shift)
+    {
+        shift = shift & 31u;
+        uint result = low >> (int)shift;
+        result |= shift > 0 ? (high << (32 - (int) shift)) : 0u;
+        return result;
+    }
+
+    public static uint BitFieldMaskU32(int maskWidth, int maskLocation)
+    {
+        maskWidth &= 31;
+        maskLocation &= 31;
+        return ((1u << maskWidth) - 1) << maskLocation;
+    }
+
+    public static uint ReadUnalignedDword(FArchive Ar, long baseAddressInBytes, long bitOffset)
+    {
+        long byteAddress = baseAddressInBytes + (bitOffset >> 3);
+        long alignedByteAddress = byteAddress & ~3;
+        bitOffset = ((byteAddress - alignedByteAddress) << 3) | (bitOffset & 7);
+        Ar.Position = alignedByteAddress;
+        uint low = Ar.Read<uint>();
+        uint high = Ar.Read<uint>();
+        return BitAlignU32(high, low, bitOffset);
+    }
+    
+
+    public static uint UnpackByte0(uint v) => v & 0xff;
+    public static uint UnpackByte1(uint v) => (v >> 8) & 0xff;
+    public static uint UnpackByte2(uint v) => (v >> 16) & 0xff;
+    public static uint UnpackByte3(uint v) => v >> 24;
+
+    public static uint FirstBitHigh(uint x)
+    {
+        return x == 0 ? 0xFFFFFFFFu : (uint) BitOperations.Log2(x);
+    }
+
+    public static BitStreamReader CreateBitStreamReader_Aligned(long byteAddress, long bitOffset, long compileTimeMaxRemainingBits)
+    {
+        return new BitStreamReader(byteAddress, bitOffset, compileTimeMaxRemainingBits);
+    }
+
+    public static BitStreamReader CreateBitStreamReader(long byteAddress, long bitOffset, long compileTimeMaxRemainingBits)
+    {
+        long AlignedByteAddress = byteAddress & ~3;
+        bitOffset += (byteAddress & 3) << 3;
+        return new BitStreamReader(AlignedByteAddress, bitOffset, compileTimeMaxRemainingBits);
+    }
+
+    public class BitStreamReader
+    {
+        long AlignedByteAddress;
+        long BitOffsetFromAddress;
+        long CompileTimeMaxRemainingBits;
+
+        uint[] BufferBits = [0, 0, 0, 0];
+        long BufferOffset = 0;
+        long CompileTimeMinBufferBits = 0;
+        long CompileTimeMinDwordBits = 0;
+
+        public BitStreamReader(long alignedByteAddress, long bitOffset, long compileTimeMaxRemainingBits)
+        {
+            AlignedByteAddress = alignedByteAddress;
+            BitOffsetFromAddress = bitOffset;
+            CompileTimeMaxRemainingBits = compileTimeMaxRemainingBits;
+        }
+
+        public uint Read(FArchive Ar, int numBits, int compileTimeMaxBits)
+        {
+            if (compileTimeMaxBits > CompileTimeMinBufferBits)
+            {
+                // BitBuffer could be out of bits: Reload.
+
+                // Add cumulated offset since last refill. No need to update at every read.
+                BitOffsetFromAddress += BufferOffset;
+                long address = AlignedByteAddress + ((BitOffsetFromAddress >> 5) << 2);
+
+                // You have to be a bit weird about it because it tries
+                // to read from out of bounds, which is not great NGL
+                Ar.Position = address;
+                uint[] data = [0, 0, 0, 0];
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if (Ar.Position + sizeof(uint) <= Ar.Length)
+                    {
+                        data[i] = Ar.Read<uint>();
+                    }
+                    else if (Ar.Position == Ar.Length)
+                    {
+                        // safety
+                        data[i] = 0;
+                    }
+                    else
+                    {
+                        uint value = 0u;
+                        byte[] bytes = Ar.ReadBytes((int) Math.Min(sizeof(uint), Ar.Position - Ar.Length));
+                        for (int j = 0; j < bytes.Length; j++)
+                        {
+                            value |= (uint) bytes[j] << (j * 8);
+                        }
+                        data[i] = value;
+                    }
+                }
+                // Shift bits down to align
+                BufferBits[0] = BitAlignU32(data[1], data[0], BitOffsetFromAddress); // BitOffsetFromAddress implicitly &31
+                if (CompileTimeMaxRemainingBits > 32) BufferBits[1] = BitAlignU32(data[2], data[1], BitOffsetFromAddress); // BitOffsetFromAddress implicitly &31
+                if (CompileTimeMaxRemainingBits > 64) BufferBits[2] = BitAlignU32(data[3], data[2], BitOffsetFromAddress); // BitOffsetFromAddress implicitly &31
+                if (CompileTimeMaxRemainingBits > 96) BufferBits[3] = BitAlignU32(0, data[3], BitOffsetFromAddress); // BitOffsetFromAddress implicitly &31
+
+                BufferOffset = 0;
+                CompileTimeMinDwordBits = Math.Min(32, CompileTimeMaxRemainingBits);
+                CompileTimeMinBufferBits = Math.Min(97, CompileTimeMaxRemainingBits); // Up to 31 bits wasted to alignment
+        
+            }
+            else if (compileTimeMaxBits > CompileTimeMinDwordBits)
+            {
+                // Bottom dword could be out of bits: Shift down.
+                BitOffsetFromAddress += BufferOffset;
+
+                // Workaround for BitAlignU32(x, y, 32) returning x instead of y.
+                // In the common case where State.CompileTimeMinDwordBits != 0, this will be optimized to just BitAlignU32.
+                // sTODO: Can we get rid of this special case?
+                bool offset32 = CompileTimeMinDwordBits == 0 && BufferOffset == 32;
+
+                BufferBits[0]                                    = offset32 ? BufferBits[1] : BitAlignU32(BufferBits[1], BufferBits[0], BufferOffset);
+                if (CompileTimeMinBufferBits > 32) BufferBits[1] = offset32 ? BufferBits[2] : BitAlignU32(BufferBits[2], BufferBits[1], BufferOffset);
+                if (CompileTimeMinBufferBits > 64) BufferBits[2] = offset32 ? BufferBits[3] : BitAlignU32(BufferBits[3], BufferBits[2], BufferOffset);
+                if (CompileTimeMinBufferBits > 96) BufferBits[3] = offset32 ? 0             : BitAlignU32(0,             BufferBits[3], BufferOffset);
+        
+                BufferOffset = 0;
+
+                CompileTimeMinDwordBits = Math.Min(32, CompileTimeMaxRemainingBits);
+            }
+
+            uint result = GetBits(BufferBits[0], numBits, (int)BufferOffset); // BufferOffset implicitly &31
+            BufferOffset += numBits;
+            CompileTimeMinBufferBits -= compileTimeMaxBits;
+            CompileTimeMinDwordBits -= compileTimeMaxBits;
+            CompileTimeMaxRemainingBits -= compileTimeMaxBits;
+
+            return result;
+        }
+    }
+
+}
 
 public class FPackedHierarchyNode
 {
@@ -73,9 +265,9 @@ public class FPackedHierarchyNode
         public FMisc2(FArchive Ar)
         {
             var resourcePageIndex_numPages_groupPartSize = Ar.Read<uint>();
-            NumChildren = FCluster.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
-            NumPages = FCluster.GetBits(resourcePageIndex_numPages_groupPartSize, FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
-            StartPageIndex = FCluster.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS);
+            NumChildren = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
+            NumPages = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
+            StartPageIndex = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS);
             bEnabled = resourcePageIndex_numPages_groupPartSize != 0u;
             bLeaf = resourcePageIndex_numPages_groupPartSize != 0xFFFFFFFFu;
         }
@@ -184,10 +376,195 @@ public class FHierarchyFixup
     }
 }
 
+public class FNaniteVertexAttributes
+{
+    /// <summary>The normals of the vertex.</summary>
+    public FVector Normal;
+    /// <summary>The tangent component of the vertex + the sign as w (tx,ty,tz,sign).</summary>
+    public FVector4 TangentXAndSign;
+    /// <summary>The color of the vertex.</summary>
+    public FVector4 Color;
+    /// <summary>The uv coordinates of the vertex.</summary>
+    public FVector2D[] UVs = new FVector2D[NaniteUtils.NANITE_MAX_UVS];
+}
+
+public readonly struct FUVRange
+{
+    public readonly int MinX;
+    public readonly int MinY;
+    public readonly uint GapStartX;
+    public readonly uint GapStartY;
+    public readonly uint GapLengthX;
+    public readonly uint GapLengthY;
+    public readonly int Precision;
+    [JsonIgnore]
+    public readonly uint Padding;
+}
+
+public class FNaniteVertex
+{
+    /// <summary>The position value referenced for reference vertices</summary>
+    public FIntVector RawPos;
+    /// <summary>The position of the vertex in the 3d world.</summary>
+    public FVector Pos;
+    /// <summary>The attributes of the vertex.</summary>
+    public FNaniteVertexAttributes? Attributes;
+    // more for debugging purposes
+    public bool IsRef;
+
+    private static FVector UnpackNormals(uint packed, int bits)
+    {
+        uint mask = NaniteUtils.BitFieldMaskU32(bits, 0);
+        float[] f = [
+            NaniteUtils.GetBits(packed, bits, 0) * (2.0f / mask) - 1.0f,
+            NaniteUtils.GetBits(packed, bits, bits) * (2.0f / mask) - 1.0f
+         ];
+        FVector n = new(f[0], f[1], 1.0f - Math.Abs(f[0]) - Math.Abs(f[1]));
+        float t = Math.Clamp(-n[2], 0.0f, 1.0f);
+        n.X += n.X >= 0 ? -t : t;
+        n.Y += n.Y >= 0 ? -t : t;
+        n.Normalize();
+        return n;
+    }
+
+    private static FVector UnpackTangentX(FVector tangentZ, uint tangentAngleBits, int numTangentBits)
+    {
+        bool swapXZ = Math.Abs(tangentZ.Z) > Math.Abs(tangentZ.X);
+        if (swapXZ)
+        {
+            tangentZ = new FVector(tangentZ.Z, tangentZ.Y, tangentZ.X);
+        }
+
+        FVector tangentRefX = new FVector(-tangentZ.Y, tangentZ.X, 0.0f);
+        FVector tangentRefY = tangentZ ^ tangentRefX;
+
+        float dot = 0.0f;
+        dot += tangentRefX.X * tangentRefX.X;
+        dot += tangentRefX.Y * tangentRefX.Y;
+        float scale = 1.0f / (float)Math.Sqrt(dot);
+
+        float tangentAngle = tangentAngleBits * (float)(2.0 * Math.PI) / (1 << numTangentBits);
+        FVector tangentX = tangentRefX * (float)(Math.Cos(tangentAngle) * scale) + tangentRefY * (float)(Math.Sin(tangentAngle) * scale);
+        if (swapXZ)
+        {
+            (tangentX.X, tangentX.Z) = (tangentX.Z, tangentX.X);
+        }
+        return tangentX;
+    }
+
+    private static FVector2D UnpackTexCoord(uint[] packed, FUVRange uvRange)
+    {
+        if (packed.Length != 2)
+        {
+            throw new ArgumentException($"{nameof(packed)} wasn't of length 2!");
+        }
+        FVector2D t = new(packed[0], packed[1]);
+        t += new FVector2D(
+            packed[0] > uvRange.GapStartX ? uvRange.GapLengthX : 0.0f,
+            packed[1] > uvRange.GapStartY ? uvRange.GapLengthY : 0.0f
+        );
+        float scale = NaniteUtils.PrecisionScales[uvRange.Precision];
+        return (t + new FVector2D(uvRange.MinX, uvRange.MinY)) * scale;
+    }
+
+    internal void ReadPosData(FArchive Ar, long srcBaseAddress, long srcBitOffset, FCluster cluster)
+    {
+        uint NumBits = cluster.PosBitsX + cluster.PosBitsY + cluster.PosBitsZ;
+        uint[] packed = [
+            NaniteUtils.ReadUnalignedDword(Ar, srcBaseAddress, srcBitOffset),
+            NaniteUtils.ReadUnalignedDword(Ar, srcBaseAddress, srcBitOffset + 32)
+        ];
+
+        uint[] rawPos = [0, 0, 0];
+
+        rawPos[0] = NaniteUtils.GetBits(packed[0], (int)cluster.PosBitsX, 0);
+        packed[0] = NaniteUtils.BitAlignU32(packed[1], packed[0], cluster.PosBitsX);
+        packed[1] >>= (int)cluster.PosBitsX;
+
+        rawPos[1] = NaniteUtils.GetBits(packed[0], (int) cluster.PosBitsY, 0);
+        packed[0] = NaniteUtils.BitAlignU32(packed[1], packed[0], cluster.PosBitsY);
+
+        rawPos[2] = NaniteUtils.GetBits(packed[0], (int) cluster.PosBitsZ, 0);
+
+       
+        RawPos = new FIntVector((int) rawPos[0], (int) rawPos[1], (int) rawPos[2]);
+        Pos = new FVector(rawPos[0], rawPos[1], rawPos[2]);
+        Pos = (RawPos + cluster.PosStart) * NaniteUtils.PrecisionScales[cluster.PosPrecision];
+    }
+
+    internal void ReadAttributeData(FArchive Ar, NaniteUtils.BitStreamReader bitStreamReader, FNaniteStreamableData page, FCluster cluster, int clusterIndex)
+    {
+        Attributes = new FNaniteVertexAttributes();
+
+        long decodeInfoOffset = page.GPUPageHeaderOffset + cluster.DecodeInfoOffset;
+
+        uint[] colorMin = [NaniteUtils.UnpackByte0(cluster.ColorMin), NaniteUtils.UnpackByte1(cluster.ColorMin), NaniteUtils.UnpackByte2(cluster.ColorMin), NaniteUtils.UnpackByte3(cluster.ColorMin)];
+
+        int[] numComponentBits = [
+            (int) NaniteUtils.GetBits(cluster.ColorBits, 4, 0),
+            (int) NaniteUtils.GetBits(cluster.ColorBits, 4, 4),
+            (int) NaniteUtils.GetBits(cluster.ColorBits, 4, 8),
+            (int) NaniteUtils.GetBits(cluster.ColorBits, 4, 12),
+        ];
+
+        // parses normals
+        uint normalBits = bitStreamReader.Read(Ar, 2 * (int)cluster.NormalPrecision, 2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS);
+        Attributes.Normal = UnpackNormals(normalBits, (int)cluster.NormalPrecision);
+
+        // parse tangent
+        int numTangentBits = cluster.HasTangents ? ((int)cluster.TangentPrecision + 1) : 0;
+        uint tangentAngleAndSignBits = bitStreamReader.Read(Ar, numTangentBits, NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS + 1);
+        if (cluster.HasTangents)
+        {
+            bool bTangentYSign = (tangentAngleAndSignBits & (1 << (int)cluster.TangentPrecision)) != 0;
+            uint tangentAngleBits = NaniteUtils.GetBits(tangentAngleAndSignBits, (int) cluster.TangentPrecision, 0);
+            FVector tangentX = UnpackTangentX(new FVector(Attributes.Normal.X, Attributes.Normal.Y, Attributes.Normal.Z), tangentAngleBits, (int)cluster.TangentPrecision);
+            Attributes.TangentXAndSign = new FVector4(tangentX, bTangentYSign ? -1.0f : 1.0f);
+        }
+        else
+        {
+            Attributes.TangentXAndSign = new FVector4(0, 0, 0, 0);
+        }
+
+        // parse color
+        uint[] colorDelta = [
+            bitStreamReader.Read(Ar, numComponentBits[0], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS),
+            bitStreamReader.Read(Ar, numComponentBits[1], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS),
+            bitStreamReader.Read(Ar, numComponentBits[2], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS),
+            bitStreamReader.Read(Ar, numComponentBits[3], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS)
+        ];
+        Attributes.Color = new FVector4(
+            colorMin[0] + colorDelta[0] * (1.0f / 255.0f),
+            colorMin[1] + colorDelta[1] * (1.0f / 255.0f),
+            colorMin[2] + colorDelta[2] * (1.0f / 255.0f),
+            colorMin[3] + colorDelta[3] * (1.0f / 255.0f)
+        );
+
+        // parse tex coords
+        for (int texCoordIndex = 0; texCoordIndex < cluster.NumUVs; texCoordIndex++)
+        {
+            int[] uvPrec = [
+                (int) NaniteUtils.GetBits(cluster.UV_Prec, 4, texCoordIndex * 8),
+                (int) NaniteUtils.GetBits(cluster.UV_Prec, 4, texCoordIndex * 8 + 4)
+            ];
+            uint[] UVBits = [
+                bitStreamReader.Read(Ar, uvPrec[0], NaniteUtils.NANITE_MAX_TEXCOORD_QUANTIZATION_BITS),
+                bitStreamReader.Read(Ar, uvPrec[1], NaniteUtils.NANITE_MAX_TEXCOORD_QUANTIZATION_BITS)
+            ];
+
+            if (texCoordIndex < cluster.NumUVs)
+            {
+                Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, page.UVRanges[clusterIndex][texCoordIndex]);
+            }
+            else {
+                Attributes.UVs[texCoordIndex] = new FVector2D(0.0f, 0.0f);
+            }
+        }
+    }
+}
+
 public class FClusterFixup
 {
-    private const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
-    private const int NANITE_MAX_CLUSTERS_PER_PAGE = (1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS);
 
     public uint PageIndex;
     public uint ClusterIndex;
@@ -197,17 +574,38 @@ public class FClusterFixup
     public FClusterFixup(FArchive Ar)
     {
         var pageAndClusterIndex = Ar.Read<uint>();
-        PageIndex = pageAndClusterIndex >> NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
-        ClusterIndex = pageAndClusterIndex & (NANITE_MAX_CLUSTERS_PER_PAGE - 1u);
+        PageIndex = pageAndClusterIndex >> NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
+        ClusterIndex = pageAndClusterIndex & (NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE - 1u);
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
         PageDependencyStart = pageDependencyStartAndNum >> FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS;
         PageDependencyNum = pageDependencyStartAndNum & FHierarchyFixup.NANITE_MAX_GROUP_PARTS_MASK;
     }
 }
+public readonly struct FMaterialRange
+{
+    public readonly uint TriStart;
+    public readonly uint TriLength;
+    public readonly uint MaterialIndex;
+
+    public FMaterialRange(uint data) : this (
+        NaniteUtils.GetBits(data, 8, 0),
+        NaniteUtils.GetBits(data, 8, 8),
+        NaniteUtils.GetBits(data, 6, 16)
+    )
+    { }
+
+    public FMaterialRange(uint triStart, uint triLength, uint materialIndex) {
+        TriStart = triStart;
+        TriLength = triLength;
+        MaterialIndex = materialIndex;
+    }
+}
 
 public class FCluster
 {
+    
+
     private const int NANITE_MIN_POSITION_PRECISION = -8;
 
     public uint NumVerts;
@@ -223,6 +621,8 @@ public class FCluster
     public uint PosBitsX;
     public uint PosBitsY;
     public uint PosBitsZ;
+    public uint NormalPrecision;
+    public uint TangentPrecision;
     public FVector4 LODBounds;
     public FVector BoxBoundsCenter;
     public float LODError;
@@ -232,6 +632,7 @@ public class FCluster
     public uint AttributeOffset;
     public uint BitsPerAttribute;
     public uint DecodeInfoOffset;
+    public bool HasTangents;
     public uint NumUVs;
     public uint ColorMode;
     public uint UV_Prec;
@@ -246,43 +647,54 @@ public class FCluster
     public uint VertReuseBatchCountTableSize;
     public TIntVector4<uint> VertReuseBatchInfo;
 
+    // decoded mesh data
+    public FNaniteVertex?[] Vertices = [];
+    public uint[][] TriIndices = [];
+    public FMaterialRange[] MaterialRanges = [];
+    public uint[] GroupRefToVertex = [];
+    public uint[] GroupNonRefToVertex = [];
 
-
-    public FCluster(FArchive Ar) : this(Ar, 1)
+    public FCluster(FArchive Ar) : this(Ar, null, 1, 0)
     {
     }
 
-    public FCluster(FArchive Ar, int numClusters) {
+    public FCluster(FArchive Ar, FNaniteStreamableData? page, int numClusters, int clusterIndex) {
         if (numClusters <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(numClusters), $"{nameof(numClusters)} should never be 0 or a negative value.");
+        }
+        if (clusterIndex < 0 || clusterIndex >= numClusters)
+        {
+            throw new ArgumentOutOfRangeException(nameof(clusterIndex), $"{nameof(numClusters)} should never be below 0 or greate than {nameof(numClusters)} ({numClusters})");
         }
         // clusters are stored in SOA layout so we gotta walk the stride.
         int stride = 16 * (numClusters - 1);
 
         var numVerts_positionOffset = Ar.Read<uint>();
-        NumVerts = GetBits(numVerts_positionOffset, 9, 0);
-        PositionOffset = GetBits(numVerts_positionOffset, 23, 9);
+        NumVerts = NaniteUtils.GetBits(numVerts_positionOffset, 9, 0);
+        PositionOffset = NaniteUtils.GetBits(numVerts_positionOffset, 23, 9);
 
         var numTris_indexOffset = Ar.Read<uint>();
-        NumTris = GetBits(numTris_indexOffset, 8, 0);
-        IndexOffset = GetBits(numTris_indexOffset, 24, 8);
+        NumTris = NaniteUtils.GetBits(numTris_indexOffset, 8, 0);
+        IndexOffset = NaniteUtils.GetBits(numTris_indexOffset, 24, 8);
 
         ColorMin = Ar.Read<uint>();
 
         var colorBits_groupIndex = Ar.Read<uint>();
-        ColorBits = GetBits(colorBits_groupIndex, 16, 0);
-        GroupIndex = GetBits(colorBits_groupIndex, 16, 16); // debug only
+        ColorBits = NaniteUtils.GetBits(colorBits_groupIndex, 16, 0);
+        GroupIndex = NaniteUtils.GetBits(colorBits_groupIndex, 16, 16); // debug only
 
         Ar.Position += stride;
         PosStart = Ar.Read<FIntVector>();
 
         var bitsPerIndex_posPrecision_posBits = Ar.Read<uint>();
-        BitsPerIndex = GetBits(bitsPerIndex_posPrecision_posBits, 4, 0);
-        PosPrecision = (int)GetBits(bitsPerIndex_posPrecision_posBits, 5, 4) + NANITE_MIN_POSITION_PRECISION;
-        PosBitsX = GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
-        PosBitsY = GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
-        PosBitsZ = GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
+        BitsPerIndex = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 0);
+        PosPrecision = ((int) NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 4)) + NANITE_MIN_POSITION_PRECISION;
+        PosBitsX = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
+        PosBitsY = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
+        PosBitsZ = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
+        NormalPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 24);
+        TangentPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 28);
 
         Ar.Position += stride;
         LODBounds = Ar.Read<FVector4>();
@@ -298,13 +710,14 @@ public class FCluster
 
         Ar.Position += stride;
         var attributeOffset_bitsPerAttribute = Ar.Read<uint>();
-        AttributeOffset = GetBits(attributeOffset_bitsPerAttribute, 22, 0);
-        BitsPerAttribute = GetBits(attributeOffset_bitsPerAttribute, 10, 22);
+        AttributeOffset = NaniteUtils.GetBits(attributeOffset_bitsPerAttribute, 22, 0);
+        BitsPerAttribute = NaniteUtils.GetBits(attributeOffset_bitsPerAttribute, 10, 22);
 
-        var decodeInfoOffset_numUVs_colorMode = Ar.Read<uint>();
-        DecodeInfoOffset = GetBits(decodeInfoOffset_numUVs_colorMode, 22, 0);
-        NumUVs = GetBits(decodeInfoOffset_numUVs_colorMode, 3, 22);
-        ColorMode = GetBits(decodeInfoOffset_numUVs_colorMode, 2, 22 + 3);
+        var decodeInfoOffset_bHasTengants_numUVs_colorMode = Ar.Read<uint>();
+        DecodeInfoOffset = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 22, 0);
+        HasTangents = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
+        NumUVs = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
+        ColorMode = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 2, 26);
 
         UV_Prec = Ar.Read<uint>();
 
@@ -312,23 +725,26 @@ public class FCluster
         var materialEncoding = Ar.Read<uint>();
         if (materialEncoding < 0xFE000000u)
         {
+            // fast path
             MaterialTableOffset = 0;
             MaterialTableLength	= 0;
-            Material0Index = GetBits(materialEncoding, 6, 0);
-            Material1Index = GetBits(materialEncoding, 6, 6);
-            Material2Index = GetBits(materialEncoding, 6, 12);
-            Material0Length = GetBits(materialEncoding, 7, 18) + 1;
-            Material1Length = GetBits(materialEncoding, 7, 25);
+            Material0Index = NaniteUtils.GetBits(materialEncoding, 6, 0);
+            Material1Index = NaniteUtils.GetBits(materialEncoding, 6, 6);
+            Material2Index = NaniteUtils.GetBits(materialEncoding, 6, 12);
+            Material0Length = NaniteUtils.GetBits(materialEncoding, 7, 18) + 1;
+            Material1Length = NaniteUtils.GetBits(materialEncoding, 7, 25);
             VertReuseBatchCountTableOffset = 0;
             VertReuseBatchCountTableSize = 0;
 
             Ar.Position += stride;
             VertReuseBatchInfo = Ar.Read<TIntVector4<uint>>();
+            MaterialRanges = [];
         }
         else
         {
-            MaterialTableOffset = GetBits(materialEncoding, 19, 0);
-            MaterialTableLength = GetBits(materialEncoding, 6, 19) + 1;
+            // slow path
+            MaterialTableOffset = NaniteUtils.GetBits(materialEncoding, 19, 0);
+            MaterialTableLength = NaniteUtils.GetBits(materialEncoding, 6, 19) + 1;
             Material0Index = 0;
             Material1Index = 0;
             Material2Index = 0;
@@ -342,14 +758,329 @@ public class FCluster
             Ar.Position += stride;
             VertReuseBatchInfo = default;
         }
+
+        if (
+            Ar.Versions.Game >= EGame.GAME_UE5_3
+            && page is not null
+            && page.ClusterDiskHeaders is not null
+            && page.ClusterDiskHeaders.Length > clusterIndex
+            && page.PageDiskHeader is not null
+        )
+        {
+            FClusterDiskHeader clusterDiskHeader = page.ClusterDiskHeaders[clusterIndex];
+            // read the material table
+            if (ShouldUseMaterialTable())
+            {
+                MaterialRanges = new FMaterialRange[MaterialTableLength];
+                Ar.Position = page.GPUPageHeaderOffset + MaterialTableOffset * 4;
+                for (int i = 0; i < MaterialTableLength; i++)
+                {
+                    MaterialRanges[i] = new FMaterialRange(Ar.Read<uint>());
+                }
+            }
+
+            // parse triangle indices
+            TriIndices = new uint[NumTris][];
+            for (uint triIndex = 0; triIndex < NumTris; triIndex++)
+            {
+                uint[] indices = GetTriangleIndices(Ar, page, clusterDiskHeader, clusterIndex, triIndex);
+                if (indices[1] < Math.Min(indices[0], indices[2]))
+                    (indices[0], indices[1], indices[2]) = (indices[1], indices[2], indices[0]);
+                else if (indices[2] < Math.Min(indices[0], indices[1]))
+                    (indices[0], indices[1], indices[2]) = (indices[2], indices[0], indices[1]);
+
+                TriIndices[triIndex] = indices;
+            }
+
+            // identify vertex identification types
+            GroupRefToVertex = new uint[clusterDiskHeader.NumVertexRefs];
+            uint numNonRefVertices = NumVerts - clusterDiskHeader.NumVertexRefs;
+            GroupNonRefToVertex = new uint[numNonRefVertices];
+            uint[] groupNumRefsInPrevDwords8888 = [0, 0];
+            long alignedBitmaskOffset = page.PageDiskHeaderOffset + page.PageDiskHeader.Value.VertexRefBitmaskOffset + clusterIndex * 32; // NANITE_MAX_CLUSTER_VERTICES / 8
+            for (uint groupIndex = 0; groupIndex < 7; groupIndex++)
+            {
+                Ar.Position = alignedBitmaskOffset + groupIndex * 4;
+                uint count = (uint)BitOperations.PopCount(Ar.Read<uint>());
+                uint count8888 = count * 0x01010101; // Broadcast count to all bytes
+                uint index = groupIndex + 1;
+                groupNumRefsInPrevDwords8888[index >> 2] += count8888 << (int) ((index & 3) << 3); // Add to bytes above
+                if (NumVerts > 128 && index < 4)
+                {
+                    // Add low dword byte counts to all bytes in high dword when there are more than 128 vertices.
+                    groupNumRefsInPrevDwords8888[1] += count8888;
+                }
+            }
+            Vertices = new FNaniteVertex[NumVerts];
+            for (uint vertexIndex = 0; vertexIndex < NumVerts; vertexIndex++)
+            {
+                Vertices[vertexIndex] = null;
+                uint dwordIndex = vertexIndex >> 5;
+                uint bitIndex = vertexIndex & 31;
+
+                uint shift = (dwordIndex & 3) << 3;
+                uint numRefsInPrevDwords = (groupNumRefsInPrevDwords8888[dwordIndex >> 2] >> (int)shift) & 0xFFu;
+                Ar.Position = alignedBitmaskOffset + dwordIndex * 4;
+                uint dwordMask = Ar.Read<uint>();
+                uint numPrevRefVertices = (uint)BitOperations.PopCount(NaniteUtils.GetBits(dwordMask, (int) bitIndex, 0)) + numRefsInPrevDwords;
+
+                if ((dwordMask & (1u << (int)bitIndex)) != 0u)
+                {
+                    GroupRefToVertex[numPrevRefVertices] = vertexIndex;
+                }
+                else
+                {
+                    uint numPrevNonRefVertices = vertexIndex - numPrevRefVertices;
+                    GroupNonRefToVertex[numPrevNonRefVertices] = vertexIndex;
+                }
+            }
+
+            // read non ref vert information
+            for (int nonRefVertexIndex = 0; nonRefVertexIndex < numNonRefVertices; nonRefVertexIndex ++)
+            {
+                uint vertexIndex = GroupNonRefToVertex[nonRefVertexIndex];
+                uint positionBitsPerVertex = PosBitsX + PosBitsY + PosBitsZ;
+                uint srcPositionBitsPerVertex = (positionBitsPerVertex + 7) & ~7u;
+
+                FNaniteVertex vertex = new FNaniteVertex() { IsRef = false };
+                vertex.ReadPosData(
+                    Ar,
+                    page.PageDiskHeaderOffset + clusterDiskHeader.PositionDataOffset,
+                    nonRefVertexIndex * srcPositionBitsPerVertex,
+                    this
+                );
+
+                uint srcBitsPerAttribute = (BitsPerAttribute + 7) & ~7u;
+                NaniteUtils.BitStreamReader reader = NaniteUtils.CreateBitStreamReader_Aligned(
+                    page.PageDiskHeaderOffset + clusterDiskHeader.AttributeDataOffset,
+                    nonRefVertexIndex * srcBitsPerAttribute,
+                    GetMaxAttributeBits(NaniteUtils.NANITE_MAX_UVS)
+                );
+                vertex.ReadAttributeData(Ar, reader, page, this, clusterIndex);
+
+                Vertices[vertexIndex] = vertex;
+            }
+        }
     }
 
-
-
-    public static uint GetBits(uint value, int numBits, int offset)
+    private static int GetMaxAttributeBits(int numTexCoords)
     {
-        uint mask = (1u << numBits) - 1u;
-        return (value >> offset) & mask;
+        return
+            2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS
+            + 1 + NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS
+            + 4 * NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS
+            + numTexCoords * (2 * NaniteUtils.NANITE_MAX_TEXCOORD_QUANTIZATION_BITS);
+    }
+
+    /// <summary>Reads and unpacks the triangle indices of the cluster.</summary>
+    private uint[] GetTriangleIndices(FArchive Ar, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, int clusterIndex, uint triIndex)
+    {
+        if (!page.PageDiskHeader.HasValue)
+        {
+            throw new ArgumentException($"The page's disk header should not be null!", nameof(page));
+        }
+        uint dwordIndex = triIndex >> 5;
+        uint bitIndex = triIndex & 31;
+
+        // Bitmask.x: bIsStart, Bitmask.y: bIsLeft, Bitmask.z: bIsNewVertex
+        Ar.Position = page.PageDiskHeaderOffset + page.PageDiskHeader.Value.StripBitmaskOffset + (clusterIndex * 4 + dwordIndex) * 12;
+        uint sMask = Ar.Read<uint>();
+        uint lMask = Ar.Read<uint>();
+        uint wMask = Ar.Read<uint>();
+        uint slMask = sMask & lMask;
+
+        // const uint HeadRefVertexMask = ( SMask & LMask & WMask ) | ( ~SMask & WMask );
+        uint headRefVertexMask = (slMask | ~sMask) & wMask; // 1 if head of triangle is ref. S case with 3 refs or L/R case with 1 ref.
+
+        uint prevBitsMask = (1u << (int)bitIndex) - 1u;
+
+        uint numPrevRefVerticesBeforeDword = dwordIndex == 0 ? 0u : NaniteUtils.GetBits(clusterDiskHeader.NumPrevRefVerticesBeforeDwords, 10, (int)(dwordIndex * 10 - 10));
+        uint numPrevNewVerticesBeforeDword = dwordIndex == 0 ? 0u : NaniteUtils.GetBits(clusterDiskHeader.NumPrevNewVerticesBeforeDwords, 10, (int)(dwordIndex * 10 - 10));
+
+        int currentDwordNumPrevRefVertices = (BitOperations.PopCount(slMask & prevBitsMask) << 1) + BitOperations.PopCount(wMask & prevBitsMask);
+        int currentDwordNumPrevNewVertices = (BitOperations.PopCount(sMask & prevBitsMask) << 1) + (int)bitIndex - currentDwordNumPrevRefVertices;
+
+        int numPrevRefVertices = (int)numPrevRefVerticesBeforeDword + currentDwordNumPrevRefVertices;
+        int numPrevNewVertices = (int)numPrevNewVerticesBeforeDword + currentDwordNumPrevNewVertices;
+
+        int isStart = NaniteUtils.GetBitsAsSigned(sMask, 1, (int) bitIndex); // -1: true, 0: false
+        int isLeft = NaniteUtils.GetBitsAsSigned(lMask, 1, (int) bitIndex); // -1: true, 0: false
+        int isRef = NaniteUtils.GetBitsAsSigned(wMask, 1, (int) bitIndex); // -1: true, 0: false
+
+        // needs to allow underflow of u32
+        uint baseVertex = unchecked((uint) (numPrevNewVertices - 1));
+
+        uint[] outIndices = [ 0u, 0u, 0u ];
+        long readBaseAddress = page.PageDiskHeaderOffset + clusterDiskHeader.IndexDataOffset;
+        // -1 if not Start
+        uint indexData = NaniteUtils.ReadUnalignedDword(Ar, readBaseAddress, (numPrevRefVertices + ~isStart) * 5);
+        if (isStart != 0)
+        {
+            int minusNumRefVertices = (isLeft << 1) + isRef;
+            uint nextVertex = unchecked((uint)numPrevNewVertices);
+
+            if (minusNumRefVertices <= -1)
+            {
+                outIndices[0] = baseVertex - (indexData & 31);
+                indexData >>= 5;
+            }
+            else
+            {
+                outIndices[0] = nextVertex++;
+            }
+
+            if (minusNumRefVertices <= -2)
+            {
+                outIndices[1] = baseVertex - (indexData & 31);
+                indexData >>= 5;
+            }
+            else
+            {
+                outIndices[1] = nextVertex++;
+            }
+
+            if (minusNumRefVertices <= -3)
+            {
+                outIndices[2] = baseVertex - (indexData & 31);
+            }
+            else
+            {
+                outIndices[2] = nextVertex++;
+            }
+        }
+        else
+        {
+            // Handle two first vertices
+            uint prevBitIndex = bitIndex - 1u;
+            int isPrevStart = NaniteUtils.GetBitsAsSigned(sMask, 1, (int)prevBitIndex);
+            int isPrevHeadRef = NaniteUtils.GetBitsAsSigned(headRefVertexMask, 1, (int)prevBitIndex);
+            //const int NumPrevNewVerticesInTriangle = IsPrevStart ? ( 3u - ( bfe_u32( /*SLMask*/ LMask, PrevBitIndex, 1 ) << 1 ) - bfe_u32( /*SMask &*/ WMask, PrevBitIndex, 1 ) ) : /*1u - IsPrevRefVertex*/ 0u;
+            int numPrevNewVerticesInTriangle = isPrevStart & unchecked((int)(3u - ((NaniteUtils.GetBits( /*SLMask*/ lMask, 1, (int)prevBitIndex) << 1) | NaniteUtils.GetBits( /*SMask &*/ wMask, 1, (int)prevBitIndex))));
+
+            //OutIndices[ 1 ] = IsPrevRefVertex ? ( BaseVertex - ( IndexData & 31u ) + NumPrevNewVerticesInTriangle ) : BaseVertex;	// BaseVertex = ( NumPrevNewVertices - 1 );
+            outIndices[1] = (uint) (baseVertex + (isPrevHeadRef & (numPrevNewVerticesInTriangle - (indexData & 31u))));
+            //OutIndices[ 2 ] = IsRefVertex ? ( BaseVertex - bfe_u32( IndexData, 5, 5 ) ) : NumPrevNewVertices;
+            outIndices[2] = (uint) (numPrevNewVertices + (isRef & (-1 - NaniteUtils.GetBits(indexData, 5, 5))));
+
+            // We have to search for the third vertex. 
+            // Left triangles search for previous Right/Start. Right triangles search for previous Left/Start.
+            uint searchMask = sMask | (lMask ^ unchecked((uint)isLeft));               // SMask | ( IsRight ? LMask : RMask );
+            uint foundBitIndex = NaniteUtils.FirstBitHigh(searchMask & prevBitsMask);
+            int isFoundCaseS = NaniteUtils.GetBitsAsSigned(sMask, 1, (int)foundBitIndex);       // -1: true, 0: false
+
+            uint foundPrevBitsMask = unchecked((1u << unchecked((int)foundBitIndex)) - 1u);
+            int foundCurrentDwordNumPrevRefVertices = (BitOperations.PopCount(slMask & foundPrevBitsMask) << 1) + BitOperations.PopCount(wMask & foundPrevBitsMask);
+            int foundCurrentDwordNumPrevNewVertices = (BitOperations.PopCount(sMask & foundPrevBitsMask) << 1) + (int)foundBitIndex - foundCurrentDwordNumPrevRefVertices;
+
+            int foundNumPrevNewVertices = (int)numPrevNewVerticesBeforeDword + foundCurrentDwordNumPrevNewVertices;
+            int foundNumPrevRefVertices = (int)numPrevRefVerticesBeforeDword + foundCurrentDwordNumPrevRefVertices;
+
+            uint foundNumRefVertices = (NaniteUtils.GetBits(lMask, 1, (int)foundBitIndex) << 1) + NaniteUtils.GetBits(wMask, 1, (int) foundBitIndex);
+            uint isBeforeFoundRefVertex = NaniteUtils.GetBits(headRefVertexMask, 1, (int) foundBitIndex - 1);
+
+            // ReadOffset: Where is the vertex relative to triangle we searched for?
+            int readOffset = isFoundCaseS != 0 ? isLeft : 1;
+            uint foundIndexData = NaniteUtils.ReadUnalignedDword(Ar, readBaseAddress, (foundNumPrevRefVertices - readOffset) * 5);
+            uint foundIndex = ((uint)foundNumPrevNewVertices - 1u) - NaniteUtils.GetBits(foundIndexData, 5, 0);
+
+            bool condition = isFoundCaseS != 0 ? ((int) foundNumRefVertices >= 1 - isLeft) : (isBeforeFoundRefVertex != 0);
+            int foundNewVertex = foundNumPrevNewVertices + (isFoundCaseS != 0 ? (isLeft & (foundNumRefVertices == 0 ? 1 : 0)) : -1);
+            outIndices[0] = condition ? foundIndex : (uint)foundNewVertex;
+
+            if (isLeft != 0)
+            {
+                (outIndices[1], outIndices[2]) = (outIndices[2], outIndices[1]);
+            }
+        }
+
+
+        return outIndices;
+    }
+
+    /// <summary>Gets the material index of a given triangle.</summary>
+    /// <returns>The index of the material of the given triangle. uint.MAX_VALUE if not found.</returns>
+    public uint GetMaterialIndex(int triangleIndex)
+    {
+        // slow path
+        if (ShouldUseMaterialTable())
+        {
+            foreach (var range in MaterialRanges)
+                if (triangleIndex >= range.TriStart && triangleIndex < (range.TriStart + range.TriLength))
+                    return range.MaterialIndex;
+            // default value if nothing is found
+            return 0xFFFFFFFFu;
+        }
+
+        // fast path
+        if (triangleIndex < Material0Length)
+            return Material0Index;
+        else if (triangleIndex < (Material0Length + Material1Length))
+            return Material1Index;
+        return Material2Index;
+    }
+
+    // Returns true of the cluster should use a material table.
+    public bool ShouldUseMaterialTable()
+    {
+        return Material0Length > 0;
+    }
+
+    public void ResolveVertexReferences(FArchive Ar, FNaniteResources resources, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, FPageStreamingState pageStreamingState)
+    {
+        if (!page.PageDiskHeader.HasValue)
+        {
+            throw new ArgumentException($"{nameof(page)} doesn't have a {page.PageDiskHeader}!", nameof(page));
+        }
+        if (page.Clusters is null)
+        {
+            throw new ArgumentException($"{nameof(page)} hasn't loaded the cluster data yet!", nameof(page));
+        }
+        for (int refVertexIndex = 0; refVertexIndex < clusterDiskHeader.NumVertexRefs; refVertexIndex++) {
+
+            uint bertexIndex = GroupRefToVertex[refVertexIndex];
+            Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex;
+            byte pageClusterIndex = Ar.Read<byte>();
+
+            Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.PageClusterMapOffset + pageClusterIndex * 4;
+            uint pageClusterData = Ar.Read<uint>();
+
+            uint parentPageIndex = pageClusterData >> NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
+            uint srcLocalClusterIndex = NaniteUtils.GetBits(pageClusterData, NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS, 0);
+            Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex + page.PageDiskHeader.Value.NumVertexRefs;
+            byte srcCodedVertexIndex = Ar.Read<byte>();
+
+            FCluster srcCluster;
+            uint parentGPUPageIndex = 0;
+
+            bool isParentRef = parentPageIndex != 0;
+            uint realSrcVertexIndex;
+            if (isParentRef)
+            {
+                parentGPUPageIndex = resources.PageDependencies[pageStreamingState.DependenciesStart + (parentPageIndex - 1)];
+                srcCluster = resources.GetPage((int)parentGPUPageIndex).Clusters[srcLocalClusterIndex];
+                realSrcVertexIndex = srcCodedVertexIndex;
+            }
+            else
+            {
+                srcCluster = page.Clusters[srcLocalClusterIndex];
+                realSrcVertexIndex = srcCluster.GroupNonRefToVertex[srcCodedVertexIndex];
+            }
+
+            // transcode position
+            FNaniteVertex? srcVert = srcCluster.Vertices[realSrcVertexIndex];
+            if (srcVert is null)
+            {
+                throw new InvalidOperationException("The source vertex doesn't appear to have been loaded yet.");
+            }
+
+            FIntVector newRawPos = srcVert.RawPos + srcCluster.PosStart - PosStart;
+            Vertices[bertexIndex] = new FNaniteVertex() {
+                Pos = (newRawPos + PosStart) * NaniteUtils.PrecisionScales[PosPrecision],
+                RawPos = newRawPos,
+                Attributes = srcVert.Attributes,
+                IsRef = true
+            };
+        }
     }
 }
 
@@ -394,6 +1125,7 @@ public readonly struct FPageGPUHeader
     public readonly uint Pad3;
 }
 
+
 public class FNaniteStreamableData
 {
     public FFixupChunk FixupChunk;
@@ -403,8 +1135,14 @@ public class FNaniteStreamableData
     public FPageDiskHeader? PageDiskHeader;
     public FClusterDiskHeader[]? ClusterDiskHeaders;
     public FPageGPUHeader? PageGPUHeader;
+    public FUVRange[][]? UVRanges;
 
-    public unsafe FNaniteStreamableData(FArchive Ar, int numRootPages, uint pageSize)
+    [JsonIgnore]
+    public long PageDiskHeaderOffset;
+    [JsonIgnore]
+    public long GPUPageHeaderOffset;
+
+    public unsafe FNaniteStreamableData(FByteArchive Ar, FNaniteResources resources, int numRootPages, uint pageSize, int pageIndex)
     {
         FixupChunk = new FFixupChunk(Ar);
 
@@ -417,13 +1155,16 @@ public class FNaniteStreamableData
             PageDiskHeader = null;
             ClusterDiskHeaders = null;
             PageGPUHeader = null;
+            UVRanges = null;
+            PageDiskHeaderOffset = -1;
+            GPUPageHeaderOffset = -1;
         }
         else
         {
             RootPageInfos = null;
 
             // origin of all the offsets in the page cluster header
-            long pageDataOrigin = Ar.Position;
+            PageDiskHeaderOffset = Ar.Position;
             PageDiskHeader = Ar.Read<FPageDiskHeader>();
             if (PageDiskHeader.Value.NumClusters > 0xFF)
             {
@@ -436,6 +1177,7 @@ public class FNaniteStreamableData
 
             ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.Value.NumClusters);
 
+            GPUPageHeaderOffset = Ar.Position;
             PageGPUHeader = Ar.Read<FPageGPUHeader>();
             if (PageDiskHeader.Value.NumClusters != PageDiskHeader.Value.NumClusters)
             {
@@ -444,25 +1186,24 @@ public class FNaniteStreamableData
 
             // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
             Clusters = new FCluster[PageGPUHeader.Value.NumClusters];
+            UVRanges = new FUVRange[PageDiskHeader.Value.NumClusters][];
             long clusterOrigin = Ar.Position;
-            for (int i = 0; i < Clusters.Length; i++)
+            for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
             {
-                Ar.Position = clusterOrigin + 16 * i;
-                Clusters[i] = new FCluster(Ar, Clusters.Length);
+                // get the uv ranges
+                UVRanges[clusterIndex] = new FUVRange[PageDiskHeader.Value.NumTexCoords];
+                Ar.Position = PageDiskHeaderOffset + PageDiskHeader.Value.DecodeInfoOffset + clusterIndex * sizeof(FUVRange) * PageDiskHeader.Value.NumTexCoords;
+                UVRanges[clusterIndex] = Ar.ReadArray<FUVRange>((int)PageDiskHeader.Value.NumTexCoords);
+
+                Ar.Position = clusterOrigin + 16 * clusterIndex;
+                Clusters[clusterIndex] = new FCluster(Ar, this, Clusters.Length, clusterIndex);
             }
-            Ar.Position = clusterOrigin + (16 * 7 * Clusters.Length);
-            // material table
-            if (Clusters.Any(c => c.MaterialTableLength > 0))
+
+            // resolve vertex references once all basic data is parsed
+            for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
             {
-                // not figured out yet
+                Clusters[clusterIndex].ResolveVertexReferences(Ar, resources, this, ClusterDiskHeaders[clusterIndex], resources.PageStreamingStates[pageIndex]);
             }
-            // figure out
-            // decode info
-            // tri indexes
-            // page-cluster map
-            // ref vertex data
-            // non-ref vertex position data
-            // attribute data
         }
     }
 }
@@ -470,7 +1211,7 @@ public class FNaniteStreamableData
 public class FNaniteResources
 {
     // Persistent State
-    public FNaniteStreamableData RootData; // Root page is loaded on resource load, so we always have something to draw.
+    public FNaniteStreamableData[] RootData; // Root page is loaded on resource load, so we always have something to draw.
     public FByteBulkData StreamablePages; // Remaining pages are streamed on demand.
     public ushort[] ImposterAtlas;
     public FPackedHierarchyNode[] HierarchyNodes;
@@ -490,16 +1231,23 @@ public class FNaniteResources
     public uint NumClusters = 0;
     public uint ResourceFlags = 0;
 
+    [JsonIgnore]
+    public FNaniteStreamableData[] LoadedPages;
+    [JsonIgnore]
+    private VersionContainer TemplateArchiveVersion;
+    [JsonIgnore]
+    private byte[] RootPages;
+
     public FNaniteResources(FAssetArchive Ar)
     {
+        TemplateArchiveVersion = Ar.Versions;
+
         var stripFlags = new FStripDataFlags(Ar);
         if (!stripFlags.IsAudioVisualDataStripped())
         {
             ResourceFlags = Ar.Read<uint>();
             StreamablePages = new FByteBulkData(Ar);
-
-            var nanite = new FByteArchive("PackedCluster", Ar.ReadArray<byte>(), Ar.Versions);
-
+            RootPages = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
             HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
             HierarchyRootOffsets = Ar.ReadArray<uint>();
@@ -524,9 +1272,52 @@ public class FNaniteResources
 
             if (PageStreamingStates.Length > 0)
             {
-                nanite.Position = PageStreamingStates[0].BulkOffset;
-                RootData = new FNaniteStreamableData(nanite, NumRootPages, PageStreamingStates[0].PageSize);
+                LoadedPages = new FNaniteStreamableData[PageStreamingStates.Length];
+                RootData = new FNaniteStreamableData[NumRootPages];
+
+                // the format does allow for more than one
+                for (int pageIndex = 0; pageIndex < NumRootPages; pageIndex++)
+                {
+                    RootData[pageIndex] = GetPage(pageIndex);
+                }
             }
         }
+    }
+
+    public void LoadBulkPages()
+    {
+        // also try to load the non bulk just in case, it's not like it's gonna double load them anyway.
+        for (int pageIndex = 0; pageIndex < PageStreamingStates.Length; pageIndex++)
+        {
+            GetPage(pageIndex);
+        }
+    }
+
+    public FNaniteStreamableData GetPage(int pageIndex)
+    {
+        if (LoadedPages == null)
+        {
+            throw new InvalidOperationException("Cannot parse page information, does your game support nanite?");
+        }
+        if (pageIndex < 0 || pageIndex >= LoadedPages.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageIndex), $"0 is out of range! {NumRootPages} <= {pageIndex} < {LoadedPages.Length}");
+        }
+        if (LoadedPages[pageIndex] == null)
+        {
+            FPageStreamingState page = PageStreamingStates[pageIndex];
+            byte[] buffer;
+            if (pageIndex < NumRootPages)
+            {
+                buffer = RootPages[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
+            }
+            else
+            {
+                buffer = StreamablePages.Data[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
+            }
+            var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, TemplateArchiveVersion);
+            LoadedPages[pageIndex] = new FNaniteStreamableData(pageArchive, this, NumRootPages, PageStreamingStates[0].PageSize, pageIndex);
+        }
+        return LoadedPages[pageIndex];
     }
 }
