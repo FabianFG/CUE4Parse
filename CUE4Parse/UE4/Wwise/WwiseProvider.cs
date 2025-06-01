@@ -6,6 +6,7 @@ using System.Linq;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -87,15 +88,33 @@ public class WwiseProvider
         var wwiseData = audioEvent.EventCookedData;
         if (wwiseData == null)
         {
-            var shortIdTag = audioEvent.Properties.FirstOrDefault(p => p.Name.Text == "ShortID");
-            if (shortIdTag?.Tag?.GenericValue is not uint shortId)
+            var requiredBankProp = audioEvent.Properties.FirstOrDefault(p => p.Name.Text == "RequiredBank");
+            var shortIdProp = audioEvent.Properties.FirstOrDefault(p => p.Name.Text == "ShortID");
+
+            if (shortIdProp?.Tag?.GenericValue is not uint audioEventId || requiredBankProp?.Tag?.ToString() == null)
                 return results;
 
-            foreach (var hierarchy in GetHierarchiesById(shortId))
+            string? soundBankId = null;
+            if (requiredBankProp?.Tag is ObjectProperty objProp && objProp.Value != null)
             {
-                if (hierarchy.Data is HierarchyEvent hierarchyEvent)
+                if (objProp.Value.TryLoad(out var audioBank) && audioBank != null)
                 {
-                    LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
+                    soundBankId = audioBank?.Properties?.FirstOrDefault(p => p.Name.Text == "ShortID")?.Tag?.GenericValue?.ToString();
+                }
+            }
+
+            if (string.IsNullOrEmpty(soundBankId))
+                return results;
+            
+            var reader = LoadSoundBankById(uint.Parse(soundBankId));
+            if (reader != null)
+            {
+                foreach (var hierarchy in GetHierarchiesById(audioEventId))
+                {
+                    if (hierarchy.Data is HierarchyEvent hierarchyEvent)
+                    {
+                        LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
+                    }
                 }
             }
 
@@ -149,6 +168,41 @@ public class WwiseProvider
             }
         }
         return results;
+    }
+
+    private WwiseReader? LoadSoundBankById(uint soundBankId)
+    {
+        if (string.IsNullOrEmpty(_baseWwiseAudioPath))
+            DetermineBaseWwiseAudioPath();
+
+        foreach (var file in _provider.Files)
+        {
+            if (!file.Key.Contains(_baseWwiseAudioPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!file.Key.EndsWith(".bnk", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                using var headerReader = file.Value.CreateReader();
+                var id = WwiseReader.TryReadSoundBankId(headerReader);
+                if (id != soundBankId)
+                    continue;
+
+                using var fullReader = file.Value.CreateReader();
+                var reader = new WwiseReader(fullReader);
+                CacheSoundBank(reader);
+                _wwiseLoadedSoundBanks.Add(file.Key);
+                return reader;
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, $"Failed to read .bnk file '{file.Key}'");
+            }
+        }
+
+        return null;
     }
 
     private void LoopThroughEventActions(HierarchyEvent hierarchyEvent, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
@@ -264,6 +318,11 @@ public class WwiseProvider
             return;
 
         _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio"); // Most common directory
+
+        if (_provider.ProjectName == "DeadByDaylight") // Temp fix until better solution is found
+        {
+            _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio", "Cooked");
+        }
 
         var wwiseData = audioEvent?.EventCookedData;
         if (wwiseData == null)

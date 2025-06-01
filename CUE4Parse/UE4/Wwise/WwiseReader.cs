@@ -176,6 +176,29 @@ public class WwiseReader
         }
     }
 
+    /// Reads only the SoundBankId from a .bnk file
+    /// In order to quickly find the SoundBank without parsing the entire file
+    public static uint? TryReadSoundBankId(FArchive Ar)
+    {
+        while (Ar.Position < Ar.Length)
+        {
+            var sectionIdentifier = Ar.Read<ESectionIdentifier>();
+            var sectionLength = Ar.Read<int>();
+            var sectionStart = Ar.Position;
+
+            if (sectionIdentifier == ESectionIdentifier.BKHD)
+            {
+                var version = Ar.Read<uint>();
+                var soundBankId = Ar.Read<uint>();
+                return soundBankId;
+            }
+
+            Ar.Position = sectionStart + sectionLength;
+        }
+
+        return null;
+    }
+
     public static string ReadStzString(FArchive Ar)
     {
         List<byte> bytes = [];
