@@ -257,8 +257,11 @@ namespace CUE4Parse.UE4.Pak
             var encodedPakEntriesData = primaryIndex.ReadBytes(encodedPakEntriesSize);
             using var encodedPakEntries = new GenericBufferReader(encodedPakEntriesData);
 
-            if (primaryIndex.Read<int>() < 0)
+            var FilesNum = primaryIndex.Read<int>();
+            if (FilesNum < 0)
                 throw new ParserException("Corrupt pak PrimaryIndex detected");
+
+            var NonEncodedEntries = primaryIndex.ReadArray(FilesNum, () => new FPakEntry(this, "", primaryIndex));
 
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
@@ -291,13 +294,28 @@ namespace CUE4Parse.UE4.Pak
                     var fileName = directoryIndex.ReadFStringMemory();
                     var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
                     fileNameSpan = fileNameSpan[..fileNameLength];
+                    var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
 
                     var offset = directoryIndex.Read<int>();
                     if (offset == int.MinValue) continue;
 
-                    var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
+                    FPakEntry entry;
+                    if (offset >= 0)
+                    {
+                        entry = new FPakEntry(this, path, encodedPakEntries, offset);
+                    }
+                    else
+                    {
+                        var index = -offset - 1;
+                        if (index <0 || index >= NonEncodedEntries.Length)
+                        {
+                            Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
+                            continue;
+                        }
 
-                    var entry = new FPakEntry(this, path, encodedPakEntries, offset);
+                        entry = NonEncodedEntries[index];
+                        entry.Path = path;
+                    }
                     if (entry.IsEncrypted) EncryptedFileCount++;
                     files[path] = entry;
                 }
