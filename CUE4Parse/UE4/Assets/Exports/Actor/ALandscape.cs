@@ -1,6 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -24,10 +22,10 @@ public class ALandscapeProxy : AActor
         ComponentSizeQuads = GetOrDefault<int>(nameof(ComponentSizeQuads));
         SubsectionSizeQuads = GetOrDefault<int>(nameof(SubsectionSizeQuads));
         NumSubsections = GetOrDefault<int>(nameof(NumSubsections));
-        LandscapeComponents = GetOrDefault<FPackageIndex[]>(nameof(LandscapeComponents), Array.Empty<FPackageIndex>());
+        LandscapeComponents = GetOrDefault<FPackageIndex[]>(nameof(LandscapeComponents), []);
         LandscapeSectionOffset = GetOrDefault<int>(nameof(LandscapeSectionOffset));
-        LandscapeMaterial = GetOrDefault<FPackageIndex>(nameof(LandscapeMaterial), new FPackageIndex());
-        SplineComponent = GetOrDefault<FPackageIndex>(nameof(SplineComponent), new FPackageIndex());
+        LandscapeMaterial = GetOrDefault(nameof(LandscapeMaterial), new FPackageIndex());
+        SplineComponent = GetOrDefault(nameof(SplineComponent), new FPackageIndex());
         LandscapeGuid = GetOrDefault<FGuid>(nameof(LandscapeGuid));
     }
 }

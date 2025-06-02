@@ -467,7 +467,7 @@ public static class MeshConverter
                         var layerName = allocationInfo.GetLayerName();
 
                         // weight as Mesh Vertex colors
-                        if (flags.HasFlag(ELandscapeExportFlags.Mesh))
+                        if ((flags & ELandscapeExportFlags.Mesh) == ELandscapeExportFlags.Mesh)
                         {
                             // ReSharper disable once CanSimplifyDictionaryLookupWithTryAdd
                             if (!extraVertexColorMap.ContainsKey(layerName))
@@ -483,7 +483,7 @@ public static class MeshConverter
                         var pixelX = textureUv2.X;
                         var pixelY = textureUv2.Y;
 
-                        if (flags.HasFlag(ELandscapeExportFlags.Weightmap))
+                        if ((flags & ELandscapeExportFlags.Weightmap) == ELandscapeExportFlags.Weightmap)
                         {
                             lock (weightMapLock)
                             {
@@ -512,7 +512,7 @@ public static class MeshConverter
                         }
                     }
 
-                    if (flags.HasFlag(ELandscapeExportFlags.Mesh) && landscapeLod != null)
+                    if ((flags & ELandscapeExportFlags.Mesh) == ELandscapeExportFlags.Mesh && landscapeLod != null)
                     {
                         var vert = landscapeLod.Verts[baseVertIndex + vertIndex];
                         vert.Position = position;
@@ -521,6 +521,21 @@ public static class MeshConverter
                         vert.UV = (FMeshUVFloat)textureUv;
 
                         landscapeLod.ExtraUV.Value[0][baseVertIndex + vertIndex] = (FMeshUVFloat)weightmapUv;
+                    }
+
+                    if (!weightMapsInternal.ContainsKey("NormalMap_DX")) // directX normal map
+                        weightMapsInternal["NormalMap_DX"] = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+                    var normaBitmap = weightMapsInternal["NormalMap_DX"];
+                    unsafe
+                    {
+                        var pixels = (byte*)normaBitmap.GetPixels();
+                        var pixelX = textureUv2.X;
+                        var pixelY = textureUv2.Y;
+                        var index = pixelY * width + pixelX;
+                        pixels[index * 4 + 2] = (byte)(normal.X * 127 + 128);
+                        pixels[index * 4 + 1] = (byte)(normal.Y * 127 + 128);
+                        pixels[index * 4 + 0] = (byte)(normal.Z * 127 + 128);
+                        pixels[index * 4 + 3] = 255;
                     }
                 }
             });
@@ -544,20 +559,19 @@ public static class MeshConverter
             weightMaps = weightMapsInternal.ToDictionary(x => x.Key, x => x.Value);
         }
 
-        if (flags.HasFlag(ELandscapeExportFlags.Mesh) && landscapeLod != null)
+        if (!flags.HasFlag(ELandscapeExportFlags.Mesh) || landscapeLod == null)
         {
-            landscapeLod.ExtraVertexColors = extraVertexColorMap.Values.ToArray();
-            extraVertexColorMap.Clear();
-            var landscapeMaterial = landscape.LandscapeMaterial;
-            var mat = landscapeMaterial.Load<UMaterialInterface>();
-            landscapeLod.Sections = new Lazy<CMeshSection[]>(new[] {
-                new CMeshSection(0, 0, triangleCount, mat?.Name ?? "DefaultMaterial", landscapeMaterial.ResolvedObject)
-            });
+            return true;
         }
-        else
+
+        landscapeLod.ExtraVertexColors = extraVertexColorMap.Values.ToArray();
+        extraVertexColorMap.Clear();
+        var landscapeMaterial = landscape.LandscapeMaterial;
+        var mat = landscapeMaterial.Load<UMaterialInterface>();
+        landscapeLod.Sections = new Lazy<CMeshSection[]>(new[]
         {
-            return false;
-        }
+            new CMeshSection(0, 0, triangleCount, mat?.Name ?? "DefaultMaterial", landscapeMaterial.ResolvedObject)
+        });
 
         var meshIndices = new List<uint>(triangleCount * 3); // TODO: replace with ArrayPool.Shared.Rent
         // https://github.com/EpicGames/UnrealEngine/blob/5de4acb1f05e289620e0a66308ebe959a4d63468/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxMainExport.cpp#L4657

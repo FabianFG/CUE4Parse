@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 public class UTexture2D : UTexture
 {
     public FIntPoint ImportedSize { get; private set; }
-
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
 
@@ -22,7 +21,6 @@ public class UTexture2D : UTexture
     {
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
-
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
         AddressY = GetOrDefault<TextureAddress>(nameof(AddressY));
 
@@ -54,7 +52,6 @@ public class UTexture2D : UTexture
         if (bCooked)
         {
             var bSerializeMipData = true;
-
             if (Ar.Game >= EGame.GAME_UE5_3)
             {
                 // Controls whether FByteBulkData is serialized??

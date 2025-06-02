@@ -38,7 +38,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public ResolvedObject? ResolvedObject {
             get {
                 var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
-                if (resolvedObject == null) 
+                if (resolvedObject == null)
                 {
                     if (Owner == null) return null;
                     resolvedObject = Owner.ResolvePackageIndex(this);
@@ -56,7 +56,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return Owner.ResolvePackageIndex(this);
             }
         }
-        
+
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
@@ -117,7 +117,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public T? Load<T>() where T : UExport => Owner?.FindObject(this)?.Value as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>(out T? export) where T : UExport
+        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
         {
             if (!TryLoad(out var genericExport) || genericExport is not T cast)
             {
@@ -170,7 +170,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             return null;
         }
         #endregion
-        
+
         public bool Equals(FPackageIndex? other)
         {
             if (other is null) return false;
