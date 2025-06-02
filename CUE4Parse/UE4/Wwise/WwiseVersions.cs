@@ -69,6 +69,8 @@ public static class WwiseVersions
     public static readonly uint[] SupportedVersions =
     [
         112,    // Dead by Daylight (old)
+        113,    // Dead by Daylight (old)
+        132,    // Dead by Daylight (old)
         135,    // Dead by Daylight (old)
         140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy
         145,    // Valorant, Marvel Rivals

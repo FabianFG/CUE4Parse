@@ -25,7 +25,7 @@ public class AkAuxParams
             }
         }
 
-        if (WwiseVersions.Version > 135)
+        if (WwiseVersions.Version > 134)
         {
             ReflectionsAuxBus = Ar.Read<uint>();
         }

@@ -50,7 +50,7 @@ public class AkStateAwareChunk
         {
             uint groupId = Ar.Read<uint>();
             byte groupType = Ar.Read<byte>();
-            int stateCount = WwiseReader.ReadBigEndianVarInt(Ar);
+            int stateCount = WwiseReader.Read7BitEncodedIntBE(Ar);
 
             var states = new List<AkState>(stateCount);
             for (int s = 0; s < stateCount; s++)

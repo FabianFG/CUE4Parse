@@ -9,7 +9,15 @@ public class HierarchyEvent : AbstractHierarchy
 
     public HierarchyEvent(FArchive Ar) : base(Ar)
     {
-        var eventActionCount = Ar.Read<byte>();
+        int eventActionCount;
+        if (WwiseVersions.Version <= 122)
+        {
+            eventActionCount = (int) Ar.Read<uint>();
+        }
+        else
+        {
+            eventActionCount = WwiseReader.Read7BitEncodedIntBE(Ar);
+        }
         EventActionIds = Ar.ReadArray<uint>(eventActionCount);
     }
 

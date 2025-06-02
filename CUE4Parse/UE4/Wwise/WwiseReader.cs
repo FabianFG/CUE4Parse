@@ -121,7 +121,15 @@ public class WwiseReader
                 case ESectionIdentifier.FXPR:
                     break;
                 case ESectionIdentifier.PLAT:
-                    Platform = Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
+                    if (Version <= 136)
+                    {
+                        var stringSize = Ar.Read<uint>();
+                        Platform = Encoding.ASCII.GetString(Ar.ReadBytes((int) stringSize));
+                    }
+                    else
+                    {
+                        Platform = ReadStzString(Ar);
+                    };
                     break;
                 default:
 #if DEBUG
@@ -217,7 +225,7 @@ public class WwiseReader
         return Encoding.UTF8.GetString([.. bytes]);
     }
 
-    public static int ReadBigEndianVarInt(FArchive Ar)
+    public static int Read7BitEncodedIntBE(FArchive Ar)
     {
         int max = 0;
 

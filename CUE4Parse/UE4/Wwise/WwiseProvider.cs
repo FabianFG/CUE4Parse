@@ -105,7 +105,7 @@ public class WwiseProvider
 
             if (string.IsNullOrEmpty(soundBankId))
                 return results;
-            
+
             var reader = LoadSoundBankById(uint.Parse(soundBankId));
             if (reader != null)
             {
@@ -172,8 +172,7 @@ public class WwiseProvider
 
     private WwiseReader? LoadSoundBankById(uint soundBankId)
     {
-        if (string.IsNullOrEmpty(_baseWwiseAudioPath))
-            DetermineBaseWwiseAudioPath();
+        DetermineBaseWwiseAudioPath();
 
         foreach (var file in _provider.Files)
         {
@@ -319,11 +318,6 @@ public class WwiseProvider
 
         _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio"); // Most common directory
 
-        if (_provider.ProjectName == "DeadByDaylight") // Temp fix until better solution is found
-        {
-            _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", "WwiseAudio", "Cooked");
-        }
-
         var wwiseData = audioEvent?.EventCookedData;
         if (wwiseData == null)
             return;
@@ -363,8 +357,7 @@ public class WwiseProvider
     {
         if (_completedWwiseFullBnkInit)
             return;
-        if (string.IsNullOrEmpty(_baseWwiseAudioPath))
-            DetermineBaseWwiseAudioPath();
+        DetermineBaseWwiseAudioPath();
 
         long totalLoadedSize = 0;
         int totalLoadedBanks = 0;
@@ -401,6 +394,7 @@ public class WwiseProvider
             totalLoadedBanks += 1;
         }
 
+        _baseWwiseAudioPath = null;
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
