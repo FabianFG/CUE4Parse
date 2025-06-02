@@ -72,7 +72,7 @@ public static class WwiseVersions
         113,    // Dead by Daylight (old)
         132,    // Dead by Daylight (old)
         135,    // Dead by Daylight (old)
-        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy
+        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone
         145,    // Valorant, Marvel Rivals
         150     // Dead by Daylight, Splitgate 2
     ];
