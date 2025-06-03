@@ -37,10 +37,11 @@ public class WwiseProvider
     private readonly WwiseProviderConfiguration _configuration;
     private string? _baseWwiseAudioPath;
 
+    private static readonly HashSet<string> _validSoundBankExtensions = new(StringComparer.OrdinalIgnoreCase) { "bnk", "pck" };
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
     private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
-    private readonly List<string> _wwiseLoadedSoundBanks = [];
+    private readonly List<uint> _wwiseLoadedSoundBanks = [];
     private bool _completedWwiseFullBnkInit = false;
 
     public WwiseProvider(AbstractVfsFileProvider provider, WwiseProviderConfiguration? configuration = null)
@@ -106,15 +107,12 @@ public class WwiseProvider
             if (string.IsNullOrEmpty(soundBankId))
                 return results;
 
-            var reader = LoadSoundBankById(uint.Parse(soundBankId));
-            if (reader != null)
+            LoadSoundBankById(uint.Parse(soundBankId));
+            foreach (var hierarchy in GetHierarchiesById(audioEventId))
             {
-                foreach (var hierarchy in GetHierarchiesById(audioEventId))
+                if (hierarchy.Data is HierarchyEvent hierarchyEvent)
                 {
-                    if (hierarchy.Data is HierarchyEvent hierarchyEvent)
-                    {
-                        LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
-                    }
+                    LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
                 }
             }
 
@@ -134,7 +132,7 @@ public class WwiseProvider
 
                 var soundBankName = soundBank.SoundBankPathName.Text;
                 var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
-                TryLoadAndCacheSoundBank(soundBankPath, soundBankName, out _);
+                TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
 
                 if (_wwiseHierarchyTables.TryGetValue((uint) eventData.Value.EventId, out var eventHierarchy) &&
                     eventHierarchy.Data is HierarchyEvent hierarchyEvent)
@@ -170,8 +168,11 @@ public class WwiseProvider
         return results;
     }
 
-    private WwiseReader? LoadSoundBankById(uint soundBankId)
+    private void LoadSoundBankById(uint soundBankId)
     {
+        if (_wwiseLoadedSoundBanks.Contains(soundBankId))
+            return;
+
         DetermineBaseWwiseAudioPath();
 
         foreach (var file in _provider.Files)
@@ -179,7 +180,7 @@ public class WwiseProvider
             if (!file.Key.Contains(_baseWwiseAudioPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            if (!file.Key.EndsWith(".bnk", StringComparison.OrdinalIgnoreCase))
+            if (!_validSoundBankExtensions.Contains(Path.GetExtension(file.Key).TrimStart('.')))
                 continue;
 
             try
@@ -192,16 +193,13 @@ public class WwiseProvider
                 using var fullReader = file.Value.CreateReader();
                 var reader = new WwiseReader(fullReader);
                 CacheSoundBank(reader);
-                _wwiseLoadedSoundBanks.Add(file.Key);
-                return reader;
+                _wwiseLoadedSoundBanks.Add(soundBankId);
             }
             catch (Exception e)
             {
-                Log.Warning(e, $"Failed to read .bnk file '{file.Key}'");
+                Log.Warning(e, $"Failed to read soundbank file '{file.Key}'");
             }
         }
-
-        return null;
     }
 
     private void LoopThroughEventActions(HierarchyEvent hierarchyEvent, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
@@ -357,14 +355,12 @@ public class WwiseProvider
     {
         if (_completedWwiseFullBnkInit)
             return;
-        DetermineBaseWwiseAudioPath();
 
         long totalLoadedSize = 0;
         int totalLoadedBanks = 0;
 
         IEnumerable<GameFile> soundBankFiles = _provider.Files.Values
-            .Where(file => string.Equals(file.Extension, "bnk", StringComparison.OrdinalIgnoreCase))
-            .Where(file => file.Path.StartsWith(_baseWwiseAudioPath.Replace("\\", "/"), StringComparison.OrdinalIgnoreCase));
+            .Where(file => _validSoundBankExtensions.Contains(file.Extension));
 
         foreach (var soundbank in soundBankFiles)
         {
@@ -377,9 +373,9 @@ public class WwiseProvider
             }
 
             string fullPath = soundbank.Path;
-            string relPath = fullPath[_baseWwiseAudioPath.Length..].TrimStart('/', '\\');
+            string soundBankName = Path.GetFileNameWithoutExtension(fullPath);
 
-            if (!TryLoadAndCacheSoundBank(fullPath, relPath, out var size))
+            if (!TryLoadAndCacheSoundBank(fullPath, soundBankName, 0, out var size))
                 continue;
 
             if (totalLoadedSize + size > _configuration.MaxTotalWwiseSize)
@@ -394,22 +390,22 @@ public class WwiseProvider
             totalLoadedBanks += 1;
         }
 
-        _baseWwiseAudioPath = null;
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
-    private bool TryLoadAndCacheSoundBank(string fullAbsolutePath, string relativePath, out long fileSize)
+    private bool TryLoadAndCacheSoundBank(string fullAbsolutePath, string soundBankName, uint soundBankId, out long fileSize)
     {
         fileSize = 0;
 
-        if (_wwiseLoadedSoundBanks.Contains(relativePath) ||
+        if (_wwiseLoadedSoundBanks.Contains(soundBankId) ||
             !_provider.TrySaveAsset(fullAbsolutePath, out byte[]? data))
             return false;
 
-        using var archive = new FByteArchive(relativePath, data);
+        using var archive = new FByteArchive(soundBankName, data);
         var wwiseReader = new WwiseReader(archive);
         CacheSoundBank(wwiseReader);
-        _wwiseLoadedSoundBanks.Add(relativePath);
+        if (soundBankId != 0)
+            _wwiseLoadedSoundBanks.Add(soundBankId);
 
         fileSize = data.LongLength;
         return true;
