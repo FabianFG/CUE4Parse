@@ -404,8 +404,7 @@ public class WwiseProvider
         using var archive = new FByteArchive(soundBankName, data);
         var wwiseReader = new WwiseReader(archive);
         CacheSoundBank(wwiseReader);
-        if (soundBankId != 0)
-            _wwiseLoadedSoundBanks.Add(soundBankId);
+        _wwiseLoadedSoundBanks.Add(wwiseReader.Header.SoundBankId);
 
         fileSize = data.LongLength;
         return true;
