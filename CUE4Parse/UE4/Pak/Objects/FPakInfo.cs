@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects;
@@ -325,6 +326,7 @@ public partial class FPakInfo
         SiseRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
+        SizeARKSurvivalAscended = Size8a + 8, // additional byte for custom pak version
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
@@ -388,6 +390,7 @@ public partial class FPakInfo
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
+                EGame.GAME_ARKSurvivalAscended => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
             };
