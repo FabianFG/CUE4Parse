@@ -44,6 +44,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_RacingMaster = 0x9a51da3f;
     public const uint PAK_FILE_MAGIC_CrystalOfAtlan = 0x22ce976a;
     public const uint PAK_FILE_MAGIC_PromiseMascotAgency = 0x11adde11;
+    public const uint PAK_FILE_MAGIC_EtheriaRestart = 0x6B2A56B8;
 
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -411,6 +412,7 @@ public partial class FPakInfo
                     EGame.GAME_CrystalOfAtlan when info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan => true,
                     EGame.GAME_PromiseMascotAgency when info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency => true,
                     EGame.GAME_WildAssault when info.Magic == PAK_FILE_MAGIC_WildAssault => true,
+                    EGame.GAME_EtheriaRestart when info.Magic == PAK_FILE_MAGIC_EtheriaRestart => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
                 if (found) return info;

@@ -82,6 +82,7 @@ public enum EGame : uint
         GAME_FragPunk = GAME_UE4_26 + 14,
         GAME_RacingMaster = GAME_UE4_26 + 15,
         GAME_StellarBlade = GAME_UE4_26 + 16,
+        GAME_EtheriaRestart = GAME_UE4_26 + 17,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
