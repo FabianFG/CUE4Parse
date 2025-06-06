@@ -120,7 +120,6 @@ public enum EGame : uint
         GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_TheFirstDescendant = GAME_UE5_2 + 3,
         GAME_MetroAwakening = GAME_UE5_2 + 4,
-        GAME_ARKSurvivalAscended = GAME_UE5_2 + 5,
         GAME_DuneAwakening = GAME_UE5_2 + 6,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
@@ -145,6 +144,7 @@ public enum EGame : uint
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_MotoGP25 = GAME_UE5_5 + 4,
         GAME_Wildgate = GAME_UE5_5 + 5,
+        GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
 
