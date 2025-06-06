@@ -326,7 +326,7 @@ public partial class FPakInfo
         SiseRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
-        SizeARKSurvivalAscended = Size8a + 8, // additional byte for custom pak version
+        SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
