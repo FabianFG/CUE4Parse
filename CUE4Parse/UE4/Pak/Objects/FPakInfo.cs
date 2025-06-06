@@ -389,8 +389,8 @@ public partial class FPakInfo
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
+                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
-                EGame.GAME_ARKSurvivalAscended => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
             };
