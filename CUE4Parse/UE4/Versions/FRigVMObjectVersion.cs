@@ -66,6 +66,9 @@ public static class FRigVMObjectVersion
         // from RigVMCopyOp
         ByteCodeCleanup,
 
+        // The VM stores a local snapshot registry to use in cooked environments instead of the shared global registry
+        LocalizedRegistry,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
@@ -85,6 +88,7 @@ public static class FRigVMObjectVersion
             < EGame.GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
             < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
             < EGame.GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
+            < EGame.GAME_UE5_7 => Type.ByteCodeCleanup,
             _ => Type.LatestVersion
         };
     }
