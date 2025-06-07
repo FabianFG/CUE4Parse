@@ -534,10 +534,10 @@ public class FNaniteVertex
             bitStreamReader.Read(Ar, numComponentBits[3], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS)
         ];
         Attributes.Color = new FVector4(
-            colorMin[0] + colorDelta[0] * (1.0f / 255.0f),
-            colorMin[1] + colorDelta[1] * (1.0f / 255.0f),
-            colorMin[2] + colorDelta[2] * (1.0f / 255.0f),
-            colorMin[3] + colorDelta[3] * (1.0f / 255.0f)
+            (colorMin[0] + colorDelta[0]) * (1.0f / 255.0f),
+            (colorMin[1] + colorDelta[1]) * (1.0f / 255.0f),
+            (colorMin[2] + colorDelta[2]) * (1.0f / 255.0f),
+            (colorMin[3] + colorDelta[3]) * (1.0f / 255.0f)
         );
 
         // parse tex coords
@@ -1019,10 +1019,13 @@ public class FCluster
         return Material2Index;
     }
 
-    // Returns true of the cluster should use a material table.
+    /// <summary>
+    /// Checks if the cluster should reference the material table when identify material indices.
+    /// </summary>
+    /// <returns>True if the material table should be referenced instead.</returns>
     public bool ShouldUseMaterialTable()
     {
-        return Material0Length > 0;
+        return Material0Length == 0;
     }
 
     public void ResolveVertexReferences(FArchive Ar, FNaniteResources resources, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, FPageStreamingState pageStreamingState)
