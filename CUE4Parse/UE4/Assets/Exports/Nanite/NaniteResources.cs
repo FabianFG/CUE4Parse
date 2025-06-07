@@ -221,70 +221,57 @@ public class NaniteUtils
 
 }
 
+public class FHierarchyNodeSlice
+{
+    public FVector4 LODBounds;
+    public FVector BoxBoundsCenter;
+    public FVector BoxBoundsExtent;
+    public float MinLODError;
+    public float MaxParentLODError;
+    public uint ChildStartReference;    // Can be node (index) or cluster (page:cluster)
+    public uint NumChildren;
+    public uint StartPageIndex;
+    public uint NumPages;
+    public uint AssemblyTransformIndex;
+    public bool bEnabled;
+    public bool bLoaded;
+    public bool bLeaf;
+    public uint NodeIndex;
+    public uint SliceIndex;
+
+    public FHierarchyNodeSlice(FArchive Ar, uint index, uint sliceIndex)
+    {
+        NodeIndex = index;
+        SliceIndex = sliceIndex;
+        LODBounds = Ar.Read<FVector4>();
+        BoxBoundsCenter = Ar.Read<FVector>();
+        MinLODError = (float) Ar.Read<Half>();
+        MaxParentLODError = (float) Ar.Read<Half>();
+        BoxBoundsExtent = Ar.Read<FVector>();
+        ChildStartReference = Ar.Read<uint>();
+        bLoaded = ChildStartReference != 0xFFFFFFFFu;
+        var misc2 = Ar.Read<uint>();
+        NumChildren = NaniteUtils.GetBits(misc2, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
+        NumPages = NaniteUtils.GetBits(misc2, NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
+        StartPageIndex = NaniteUtils.GetBits(misc2, NaniteUtils.NANITE_MAX_RESOURCE_PAGES_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS);
+        bEnabled = misc2 != 0u;
+        bLeaf = misc2 != 0xFFFFFFFFu;
+        // #if NANITE_ASSEMBLY_DATA 5.6+ but set to 0
+        //         Ar << Node.Misc2[ i ].AssemblyPartIndex;
+        // #endif
+    }
+}
+
 public class FPackedHierarchyNode
 {
+    public FHierarchyNodeSlice[] Slices;
 
-
-    public FVector4[] LODBounds;
-    public FMisc0[] Misc0;
-    public FMisc1[] Misc1;
-    public FMisc2[] Misc2;
-
-    public FPackedHierarchyNode(FArchive Ar)
+    public FPackedHierarchyNode(FArchive Ar, uint index)
     {
-        LODBounds = new FVector4[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
-        Misc0 = new FMisc0[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
-        Misc1 = new FMisc1[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
-        Misc2 = new FMisc2[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
-
-        for (var i = 0; i < NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT; i++)
+        Slices = new FHierarchyNodeSlice[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
+        for (uint i = 0; i < NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT; i++)
         {
-            LODBounds[i] = Ar.Read<FVector4>();
-            Misc0[i] = new FMisc0(Ar);
-            Misc1[i] = Ar.Read<FMisc1>();
-            Misc2[i] = new FMisc2(Ar);
-        }
-    }
-
-    public class FMisc0
-    {
-        public FVector BoxBoundsCenter;
-        public float MinLODError;
-        public float MaxParentLODError;
-
-        public FMisc0(FArchive Ar)
-        {
-            BoxBoundsCenter = Ar.Read<FVector>();
-
-            MinLODError = (float) Ar.Read<Half>();
-            MaxParentLODError = (float) Ar.Read<Half>();
-        }
-    }
-
-    public struct FMisc1
-    {
-        public FVector BoxBoundsExtent;
-        public uint ChildStartReference;
-        public bool bLoaded => ChildStartReference != 0xFFFFFFFFu;
-    }
-
-    public class FMisc2
-    {
-
-        public uint NumChildren;
-        public uint NumPages;
-        public uint StartPageIndex;
-        public bool bEnabled;
-        public bool bLeaf;
-
-        public FMisc2(FArchive Ar)
-        {
-            var resourcePageIndex_numPages_groupPartSize = Ar.Read<uint>();
-            NumChildren = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
-            NumPages = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
-            StartPageIndex = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_RESOURCE_PAGES_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS);
-            bEnabled = resourcePageIndex_numPages_groupPartSize != 0u;
-            bLeaf = resourcePageIndex_numPages_groupPartSize != 0xFFFFFFFFu;
+            Slices[i] = new FHierarchyNodeSlice(Ar, index, i);
         }
     }
 }
@@ -1257,7 +1244,12 @@ public class FNaniteResources
             StreamablePages = new FByteBulkData(Ar);
             RootPages = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
-            HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
+            var count = Ar.Read<uint>();
+            HierarchyNodes = new FPackedHierarchyNode[count];
+            for (uint i = 0; i < count; i++)
+            {
+                HierarchyNodes[i] = new FPackedHierarchyNode(Ar, i);
+            }
             HierarchyRootOffsets = Ar.ReadArray<uint>();
             PageDependencies = Ar.ReadArray<uint>();
             if (Ar.Game >= EGame.GAME_UE5_6)
