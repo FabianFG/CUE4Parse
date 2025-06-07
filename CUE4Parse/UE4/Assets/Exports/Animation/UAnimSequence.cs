@@ -128,7 +128,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     else
                         SerializeCompressedData3(Ar);
 
-                    bUseRawDataOnly = Ar.ReadBoolean();
+                    if (Ar.Position + 4 <= validPos) bUseRawDataOnly = Ar.ReadBoolean();
                 }
             }
 
