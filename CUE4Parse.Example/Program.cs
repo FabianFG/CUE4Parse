@@ -1,52 +1,42 @@
 using System;
+using System.IO;
+using System.Linq;
+using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace CUE4Parse.Example
+namespace CUE4Parse.Example;
+
+public static class Program
 {
-    public static class Program
+    public static void Main()
     {
-        private const string _gameDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks"; // Change game directory path to the one you have.
-        private const string _aesKey = "0xF271F4B1EA375C42D3676058BAE8FBA295CB61F773070A706A48EAD7C6F98CDB";
+        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
 
-        private const string _mapping = "./mappings.usmap";
-        private const string _objectPath = "FortniteGame/Content/Athena/Items/Cosmetics/Characters/CID_A_112_Athena_Commando_M_Ruckus";
-        private const string _objectName = "FortCosmeticCharacterPartVariant_0";
+        OodleHelper.DownloadOodleDll();
+        OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
 
-        // Rick has 2 exports as of today
-        //      - CID_A_112_Athena_Commando_M_Ruckus
-        //      - FortCosmeticCharacterPartVariant_0
-        //
-        // this example will show you how to get them all or just one of them
+        var provider = new DefaultFileProvider("D:\\Fortnite\\FortniteGame\\Content\\Paks", SearchOption.TopDirectoryOnly, new VersionContainer(EGame.GAME_UE5_6));
+        provider.MappingsContainer = new FileUsmapTypeMappingsProvider(@"D:\Datamining\FModel\Output\.data\++Fortnite+Release-35.20-CL-42911808-Windows_oo.usmap");
+        provider.Initialize();
 
-        public static void Main()
+        provider.SubmitKey(new FGuid("D79AB2C3DF4BEA1654BDFC5904F2B31C"), new FAesKey("0x4FB0E3EB8DDC1F2C3196C8BDBBA696C07F322F8FBF2560702F8B0A691B8C913D"));
+        provider.SubmitKey(new FGuid("775056356849367BC0B1B596C264EEC8"), new FAesKey("0x0B0F2A29A8A00D09869C5D0B7CB00E46A886B4E8B2019A11B0028976EF493E91"));
+        provider.SubmitKey(new FGuid(), new FAesKey("0x67E992943B63878FEF3C02DE9E0100C127A6C34A569231ED153E03E6CDB0F5A2"));
+
+
+        foreach (var file in provider.MountedVfs.First(x => x.Name == "pakchunk1006-WindowsClient.utoc").Files.Values)
         {
-            Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+            if (!file.IsUePackage) continue;
 
-            var provider = new ApkFileProvider(@"C:\Users\valen\Downloads\ZqOY4K41h0N_Qb6WjEe23TlGExojpQ.apk", new VersionContainer(EGame.GAME_UE5_3));
-            // var provider = new DefaultFileProvider(_gameDirectory, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE5_3));
-            // provider.MappingsContainer = new FileUsmapTypeMappingsProvider(_mapping);
-
-            provider.Initialize(); // will scan local files and read them to know what it has to deal with (PAK/UTOC/UCAS/UASSET/UMAP)
-            provider.SubmitKey(new FGuid(), new FAesKey(_aesKey)); // decrypt basic info (1 guid - 1 key)
-
-            provider.LoadLocalization(ELanguage.English); // explicit enough
-
-            // these 2 lines will load all exports the asset has and transform them in a single Json string
-            var allExports = provider.LoadPackage(_objectPath).GetExports();
-            var fullJson = JsonConvert.SerializeObject(allExports, Formatting.Indented);
-
-            // each exports have a name, these 2 lines will load only one export the asset has
-            // you must use "LoadObject" and provide the full path followed by a dot followed by the export name
-            var variantExport = provider.LoadPackageObject(_objectPath + "." + _objectName);
-            var variantJson = JsonConvert.SerializeObject(variantExport, Formatting.Indented);
-
-            Console.WriteLine(variantJson); // Outputs the variantJson.
+            Log.Information("Loading package: {0}", file.ToString());
+            _ = provider.LoadPackage(file).GetExports().ToArray();
         }
     }
 }

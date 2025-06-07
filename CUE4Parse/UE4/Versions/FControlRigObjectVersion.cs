@@ -125,6 +125,9 @@ public static class FControlRigObjectVersion
         // Previous name and parent maps serialized as FRigHierarchyKey
         RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
 
+        // New setting for connectors to optionally specify their use only during post construction
+        RigHierarchyPostConstructionConnectors,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
@@ -150,6 +153,7 @@ public static class FControlRigObjectVersion
             < EGame.GAME_UE5_4 => Type.RigHierarchyControlPreferredRotationOrderFlag,
             < EGame.GAME_UE5_5 => Type.RigPoseWithParentKey,
             < EGame.GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
+            < EGame.GAME_UE5_7 => Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
             _ => Type.LatestVersion
         };
     }

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -152,6 +153,33 @@ public class FMorphTargetLODModel
     }
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct FDeltaBatchHeader
+{
+    public uint DataOffset;
+    public uint NumElements;
+    public bool bTangents;
+    public sbyte IndexBits;
+    public TIntVector3<sbyte> PositionBits;
+    public TIntVector3<sbyte> TangentZBits;
+    public uint IndexMin;
+    public FIntVector PositionMin;
+    public FIntVector TangentZMin;
+
+    public FDeltaBatchHeader(FAssetArchive Ar)
+    {
+        DataOffset = Ar.Read<uint>();
+        NumElements = Ar.Read<uint>();
+        bTangents = Ar.ReadBoolean();
+        IndexBits = Ar.Read<sbyte>();
+        PositionBits = Ar.Read<TIntVector3<sbyte>>();
+        TangentZBits = Ar.Read<TIntVector3<sbyte>>();
+        IndexMin = Ar.Read<uint>();
+        PositionMin = Ar.Read<FIntVector>();
+        TangentZMin = Ar.Read<FIntVector>();
+    }
+}
+
 public class UMorphTarget : UObject
 {
     public FMorphTargetLODModel[] MorphLODModels = [new()];
@@ -172,10 +200,31 @@ public class UMorphTarget : UObject
             return;
         }
 
-        var stripData = Ar.Read<FStripDataFlags>();
-        if (!stripData.IsAudioVisualDataStripped())
+        var stripFlags = Ar.Read<FStripDataFlags>();
+        if (stripFlags.IsAudioVisualDataStripped())
+            return;
+
+        var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >=
+            FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
+
+        MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
+
+        if (bCooked)
         {
-            MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
+            var bStoreCompressedVertices = Ar.ReadBoolean();
+
+            if (bStoreCompressedVertices)
+            {
+                var numLODs = Ar.Read<int>();
+
+                for (int lodIndex = 0; lodIndex < numLODs; lodIndex++)
+                {
+                    var packedDeltaHeaders = Ar.ReadArray(() => new FDeltaBatchHeader(Ar));
+                    var packedDeltaData = Ar.ReadArray<uint>();
+                    var positionPrecision = Ar.Read<float>();
+                    var tangentPrecision = Ar.Read<float>();
+                }
+            }
         }
     }
 
