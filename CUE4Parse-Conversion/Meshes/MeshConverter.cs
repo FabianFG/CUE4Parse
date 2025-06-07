@@ -21,6 +21,9 @@ using CUE4Parse.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
+using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
+using System.Threading;
 
 namespace CUE4Parse_Conversion.Meshes;
 
@@ -69,13 +72,19 @@ public static class MeshConverter
     public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline, out CStaticMesh convertedMesh)
     {
         convertedMesh = new CStaticMesh();
-        if (originalMesh.RenderData == null)
+        if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
             return false;
 
         convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
         convertedMesh.BoundingBox = new FBox(
             originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
             originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
+
+        if (TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
+        {
+            // the nanite full quality mesh will always be the highest quality version of the mesh
+            convertedMesh.LODs.Add(naniteMesh);
+        }
 
         foreach (var srcLod in originalMesh.RenderData.LODs)
         {
@@ -159,6 +168,180 @@ public static class MeshConverter
         }
 
         convertedMesh.FinalizeMesh();
+        return true;
+    }
+
+    private static bool TryConvertNaniteMesh(UStaticMesh originalMesh, out CStaticMeshLod? staticMeshLod)
+    {
+        // Only 5.3 and up have been confirmed working so far.
+        FNaniteResources? nanite = originalMesh.RenderData?.NaniteResources;
+        if (
+            nanite is null
+            || nanite.PageStreamingStates.Length <= 0
+            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_3
+        )
+        {
+            staticMeshLod = null;
+            return false;
+        }
+
+        // Load all nanite pages. This is more of a brute force approach.
+        // It would be better to only parse the clusters that meet the threshold.
+        // I don't know enought to be able to do so so this is more relyable for the moment.
+        nanite.LoadBulkPages();
+
+        // Identify the max number of UVs
+        int numTexCoords = nanite.NumInputTexCoords;
+        if (numTexCoords > Constants.MAX_MESH_UV_SETS)
+            throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
+
+        // Identify all high quality clusters
+        IEnumerable<FCluster> goodClusters = nanite.LoadedPages
+            .SelectMany(p => p!.Clusters)
+            .Where(c => c.Flags == 7u);
+
+
+        // Check if we even have tris to parse.
+        long numTris = goodClusters.Sum(c => c.TriIndices.Length);
+        long numVerts = goodClusters.Sum(c => c.Vertices.Length);
+        if (numTris <= 0 || numVerts <= 0)
+        {
+            staticMeshLod = null;
+            return false;
+        }
+
+        // Identify number of faces per materials.
+        CMeshSection[] matSections = new CMeshSection[originalMesh.Materials.Length];
+        for (int materialIndex = 0; materialIndex < originalMesh.Materials.Length; materialIndex++)
+        {
+            matSections[materialIndex] = new CMeshSection(
+                materialIndex,
+                0,
+                0,
+                originalMesh.StaticMaterials?[materialIndex].MaterialSlotName.Text,
+                originalMesh.Materials[materialIndex]
+            );
+        }
+        Parallel.ForEach(goodClusters, (c) =>
+        {
+            if (c.ShouldUseMaterialTable())
+            {
+                foreach (FMaterialRange range in c.MaterialRanges)
+                {
+                    Interlocked.Add(ref matSections[range.MaterialIndex].NumFaces, (int) range.TriLength);
+                }
+            }
+            else
+            {
+                Interlocked.Add(ref matSections[c.Material0Index].NumFaces, (int) c.Material0Length);
+                Interlocked.Add(ref matSections[c.Material1Index].NumFaces, (int) c.Material1Length);
+                Interlocked.Add(ref matSections[c.Material2Index].NumFaces, (int) (c.NumTris - (c.Material1Length + c.Material0Length)));
+            }
+        });
+
+        // Create trackers for write positions for each material since we are working in parallel.
+        int[] triBufferWriteOffsets = new int[matSections.Length];
+        for (int i = 1; i < matSections.Length; i++)
+        {
+            matSections[i].FirstIndex = triBufferWriteOffsets[i] = matSections[i - 1].FirstIndex + matSections[i - 1].NumFaces;
+        }
+
+        // Create the return object
+        uint[] triBuffer = new uint[(matSections[matSections.Length - 1].FirstIndex + matSections[matSections.Length - 1].NumFaces) * 3];
+        var outMesh = new CStaticMeshLod
+        {
+            NumTexCoords = numTexCoords,
+            HasNormals = true,
+            HasTangents = goodClusters.Any(c => c.HasTangents),
+            IsTwoSided = true,
+            Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer() { Indices32 = triBuffer }),
+            Sections = new Lazy<CMeshSection[]>(matSections)
+        };
+        outMesh.AllocateVerts((int) numVerts);
+        outMesh.AllocateVertexColorBuffer();
+
+        // Write vertices and the tri buffer
+        
+        uint vertOffsetTracker = 0;
+        Parallel.ForEach(goodClusters, (c) =>
+        {
+            uint globalVertOffset = Interlocked.Add(ref vertOffsetTracker, c.NumVerts) - c.NumVerts;
+            // Write the vertices
+            uint clusterVertOffset = 0;
+            foreach (var vert in c.Vertices)
+            {
+                uint vertOffset = globalVertOffset + clusterVertOffset++;
+                outMesh.Verts[vertOffset].Position = vert!.Pos;
+                outMesh.Verts[vertOffset].Normal = new FVector4(vert.Attributes!.Normal.X, vert.Attributes!.Normal.Y, vert.Attributes!.Normal.Z, 0);
+                if (outMesh.HasTangents)
+                {
+                    outMesh.Verts[vertOffset].Tangent = vert.Attributes.TangentXAndSign;
+                }
+
+                outMesh.Verts[vertOffset].UV.U = vert.Attributes.UVs[0].X;
+                outMesh.Verts[vertOffset].UV.V = vert.Attributes.UVs[0].Y;
+
+                for (int texCoordIndex = 1; texCoordIndex < numTexCoords; texCoordIndex++)
+                {
+                    outMesh.ExtraUV.Value[texCoordIndex - 1][vertOffset].U = vert.Attributes.UVs[texCoordIndex].X;
+                    outMesh.ExtraUV.Value[texCoordIndex - 1][vertOffset].V = vert.Attributes.UVs[texCoordIndex].Y;
+                }
+
+                outMesh.VertexColors![vertOffset] = new FColor(
+                    (byte) (vert.Attributes.Color.X * 0xFF),
+                    (byte) (vert.Attributes.Color.Y * 0xFF),
+                    (byte) (vert.Attributes.Color.Z * 0xFF),
+                    (byte) (vert.Attributes.Color.W * 0xFF)
+                );
+            }
+            void writeToTriBuffer(uint matIndex, uint triStart, uint triLength)
+            {
+                // Abort early if no values
+                if (triLength <= 0)
+                {
+                    return;
+                }
+                long triBufferWriteOffset = Interlocked.Add(ref triBufferWriteOffsets[matIndex], (int) triLength) - triLength;
+                triBufferWriteOffset *= 3;
+                for (long localTriIndex = 0; localTriIndex < triLength; localTriIndex++)
+                {
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][0] + globalVertOffset;
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][1] + globalVertOffset;
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][2] + globalVertOffset;
+                }
+            }
+            // Write the tris
+            if (c.ShouldUseMaterialTable())
+            {
+                foreach (FMaterialRange range in c.MaterialRanges)
+                {
+                    writeToTriBuffer(range.MaterialIndex, range.TriStart, range.TriLength);
+                }
+            }
+            else
+            {
+                writeToTriBuffer(c.Material0Index, 0, c.Material0Length);
+                writeToTriBuffer(c.Material1Index, c.Material0Length, c.Material1Length);
+                writeToTriBuffer(c.Material2Index, c.Material0Length + c.Material1Length, c.NumTris - (c.Material0Length + c.Material1Length));
+            }
+        });
+
+        // It's just easier to math out this way
+        foreach (CMeshSection s in matSections)
+        {
+            s.FirstIndex *= 3;
+        }
+
+        // aggressively garbage collect since the asset is re-parsed every time by FModel
+        // we don't need most of this data to still exist post mesh export anyway.
+        // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
+        for (int i = nanite.NumRootPages; i < nanite.LoadedPages.Length; i++)
+        {
+            nanite.LoadedPages[i] = null;
+        }
+        GC.Collect();
+        // parse all clusters that meed this threshold
+        staticMeshLod = outMesh;
         return true;
     }
 
