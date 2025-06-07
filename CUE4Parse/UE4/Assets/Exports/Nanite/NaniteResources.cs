@@ -15,6 +15,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
 public class NaniteUtils
 {
+    // nanite constants
     public const int NANITE_MAX_UVS = 4;
     public const int NANITE_MAX_NORMAL_QUANTIZATION_BITS = 15;
     public const int NANITE_MAX_TANGENT_QUANTIZATION_BITS = 12;
@@ -22,7 +23,24 @@ public class NaniteUtils
     public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
 
     public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
-    public const int NANITE_MAX_CLUSTERS_PER_PAGE = (1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS);
+    public const int NANITE_MAX_CLUSTERS_PER_PAGE = 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
+
+    public const int NANITE_MAX_CLUSTER_INDICES_BITS = 8;
+    public const int NANITE_MAX_CLUSTER_INDICES = 1 << NANITE_MAX_CLUSTER_INDICES_BITS;
+    public const int NANITE_MAX_CLUSTER_INDICES_MASK = NANITE_MAX_CLUSTER_INDICES - 1;
+
+    public const int NANITE_MIN_POSITION_PRECISION = -8;
+
+    public const int NANITE_MAX_BVH_NODE_FANOUT_BITS = 2;
+    public const int NANITE_MAX_BVH_NODE_FANOUT = 1 << NANITE_MAX_BVH_NODE_FANOUT_BITS;
+
+    public const int NANITE_MAX_CLUSTERS_PER_GROUP_BITS = 9;
+    public const int NANITE_MAX_RESOURCE_PAGES_BITS = 20;
+
+    public const int NANITE_MAX_HIERACHY_CHILDREN_BITS = 6;
+    public const int NANITE_MAX_GROUP_PARTS_BITS = 3;
+    public const int NANITE_MAX_HIERACHY_CHILDREN = (1 << NANITE_MAX_HIERACHY_CHILDREN_BITS);
+    public const int NANITE_MAX_GROUP_PARTS_MASK = ((1 << NANITE_MAX_GROUP_PARTS_BITS) - 1);
 
     public readonly static ImmutableDictionary<int, float> PrecisionScales;
 
@@ -205,8 +223,7 @@ public class NaniteUtils
 
 public class FPackedHierarchyNode
 {
-    private const int NANITE_MAX_BVH_NODE_FANOUT_BITS = 2;
-    private const int NANITE_MAX_BVH_NODE_FANOUT = 1 << NANITE_MAX_BVH_NODE_FANOUT_BITS;
+
 
     public FVector4[] LODBounds;
     public FMisc0[] Misc0;
@@ -215,12 +232,12 @@ public class FPackedHierarchyNode
 
     public FPackedHierarchyNode(FArchive Ar)
     {
-        LODBounds = new FVector4[NANITE_MAX_BVH_NODE_FANOUT];
-        Misc0 = new FMisc0[NANITE_MAX_BVH_NODE_FANOUT];
-        Misc1 = new FMisc1[NANITE_MAX_BVH_NODE_FANOUT];
-        Misc2 = new FMisc2[NANITE_MAX_BVH_NODE_FANOUT];
+        LODBounds = new FVector4[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
+        Misc0 = new FMisc0[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
+        Misc1 = new FMisc1[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
+        Misc2 = new FMisc2[NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT];
 
-        for (var i = 0; i < NANITE_MAX_BVH_NODE_FANOUT; i++)
+        for (var i = 0; i < NaniteUtils.NANITE_MAX_BVH_NODE_FANOUT; i++)
         {
             LODBounds[i] = Ar.Read<FVector4>();
             Misc0[i] = new FMisc0(Ar);
@@ -253,8 +270,6 @@ public class FPackedHierarchyNode
 
     public class FMisc2
     {
-        private const int NANITE_MAX_CLUSTERS_PER_GROUP_BITS = 9;
-        private const int NANITE_MAX_RESOURCE_PAGES_BITS = 20;
 
         public uint NumChildren;
         public uint NumPages;
@@ -265,9 +280,9 @@ public class FPackedHierarchyNode
         public FMisc2(FArchive Ar)
         {
             var resourcePageIndex_numPages_groupPartSize = Ar.Read<uint>();
-            NumChildren = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
-            NumPages = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
-            StartPageIndex = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS);
+            NumChildren = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
+            NumPages = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
+            StartPageIndex = NaniteUtils.GetBits(resourcePageIndex_numPages_groupPartSize, NaniteUtils.NANITE_MAX_RESOURCE_PAGES_BITS, NaniteUtils.NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS);
             bEnabled = resourcePageIndex_numPages_groupPartSize != 0u;
             bLeaf = resourcePageIndex_numPages_groupPartSize != 0xFFFFFFFFu;
         }
@@ -348,10 +363,6 @@ public class FFixupChunk
 
 public class FHierarchyFixup
 {
-    private const int NANITE_MAX_HIERACHY_CHILDREN_BITS = 6;
-    public const int NANITE_MAX_GROUP_PARTS_BITS = 3;
-    private const int NANITE_MAX_HIERACHY_CHILDREN = (1 << NANITE_MAX_HIERACHY_CHILDREN_BITS);
-    public const int NANITE_MAX_GROUP_PARTS_MASK = ((1 << NANITE_MAX_GROUP_PARTS_BITS) - 1);
 
     public uint PageIndex;
     public uint NodeIndex;
@@ -365,14 +376,14 @@ public class FHierarchyFixup
         PageIndex = Ar.Read<uint>();
 
         var hierarchyNodeAndChildIndex = Ar.Read<uint>();
-        NodeIndex = hierarchyNodeAndChildIndex >> NANITE_MAX_HIERACHY_CHILDREN_BITS;
-        ChildIndex = hierarchyNodeAndChildIndex & (NANITE_MAX_HIERACHY_CHILDREN - 1);
+        NodeIndex = hierarchyNodeAndChildIndex >> NaniteUtils.NANITE_MAX_HIERACHY_CHILDREN_BITS;
+        ChildIndex = hierarchyNodeAndChildIndex & (NaniteUtils.NANITE_MAX_HIERACHY_CHILDREN - 1);
 
         ClusterGroupPartStartIndex = Ar.Read<uint>();
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
-        PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS;
-        PageDependencyNum = pageDependencyStartAndNum & NANITE_MAX_GROUP_PARTS_MASK;
+        PageDependencyStart = pageDependencyStartAndNum >> NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS;
+        PageDependencyNum = pageDependencyStartAndNum & NaniteUtils.NANITE_MAX_GROUP_PARTS_MASK;
     }
 }
 
@@ -554,11 +565,16 @@ public class FNaniteVertex
 
             if (texCoordIndex < cluster.NumUVs)
             {
-                Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, page.UVRanges[clusterIndex][texCoordIndex]);
+                Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, page.UVRanges![clusterIndex][texCoordIndex]);
             }
             else {
                 Attributes.UVs[texCoordIndex] = new FVector2D(0.0f, 0.0f);
             }
+        }
+        // ensure that the unused tex coords are just 0,0
+        for (uint texCoordIndex = cluster.NumUVs; texCoordIndex < NaniteUtils.NANITE_MAX_UVS; texCoordIndex++)
+        {
+            Attributes.UVs[texCoordIndex] = new FVector2D(0.0f, 0.0f);
         }
     }
 }
@@ -578,8 +594,8 @@ public class FClusterFixup
         ClusterIndex = pageAndClusterIndex & (NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE - 1u);
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
-        PageDependencyStart = pageDependencyStartAndNum >> FHierarchyFixup.NANITE_MAX_GROUP_PARTS_BITS;
-        PageDependencyNum = pageDependencyStartAndNum & FHierarchyFixup.NANITE_MAX_GROUP_PARTS_MASK;
+        PageDependencyStart = pageDependencyStartAndNum >> NaniteUtils.NANITE_MAX_GROUP_PARTS_BITS;
+        PageDependencyNum = pageDependencyStartAndNum & NaniteUtils.NANITE_MAX_GROUP_PARTS_MASK;
     }
 }
 public readonly struct FMaterialRange
@@ -604,9 +620,6 @@ public readonly struct FMaterialRange
 
 public class FCluster
 {
-    
-
-    private const int NANITE_MIN_POSITION_PRECISION = -8;
 
     public uint NumVerts;
     public uint PositionOffset;
@@ -689,7 +702,7 @@ public class FCluster
 
         var bitsPerIndex_posPrecision_posBits = Ar.Read<uint>();
         BitsPerIndex = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 0);
-        PosPrecision = ((int) NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 4)) + NANITE_MIN_POSITION_PRECISION;
+        PosPrecision = ((int) NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 4)) + NaniteUtils.NANITE_MIN_POSITION_PRECISION;
         PosBitsX = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
         PosBitsY = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
@@ -721,7 +734,6 @@ public class FCluster
 
         UV_Prec = Ar.Read<uint>();
 
-        Ar.Position += stride;
         var materialEncoding = Ar.Read<uint>();
         if (materialEncoding < 0xFE000000u)
         {
@@ -1040,7 +1052,7 @@ public class FCluster
         }
         for (int refVertexIndex = 0; refVertexIndex < clusterDiskHeader.NumVertexRefs; refVertexIndex++) {
 
-            uint bertexIndex = GroupRefToVertex[refVertexIndex];
+            uint vertexIndex = GroupRefToVertex[refVertexIndex];
             Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex;
             byte pageClusterIndex = Ar.Read<byte>();
 
@@ -1077,7 +1089,8 @@ public class FCluster
             }
 
             FIntVector newRawPos = srcVert.RawPos + srcCluster.PosStart - PosStart;
-            Vertices[bertexIndex] = new FNaniteVertex() {
+            Vertices[vertexIndex] = new FNaniteVertex()
+            {
                 Pos = (newRawPos + PosStart) * NaniteUtils.PrecisionScales[PosPrecision],
                 RawPos = newRawPos,
                 Attributes = srcVert.Attributes,
@@ -1133,17 +1146,17 @@ public class FNaniteStreamableData
 {
     public FFixupChunk FixupChunk;
 
-    public FRootPageInfo[]? RootPageInfos;
-    public FCluster[] Clusters;
-    public FPageDiskHeader? PageDiskHeader;
-    public FClusterDiskHeader[]? ClusterDiskHeaders;
-    public FPageGPUHeader? PageGPUHeader;
-    public FUVRange[][]? UVRanges;
+    public FRootPageInfo[] RootPageInfos = [];
+    public FCluster[] Clusters = [];
+    public FPageDiskHeader? PageDiskHeader = null;
+    public FClusterDiskHeader[] ClusterDiskHeaders = [];
+    public FPageGPUHeader? PageGPUHeader = null;
+    public FUVRange[][] UVRanges = [];
 
     [JsonIgnore]
-    public long PageDiskHeaderOffset;
+    public long PageDiskHeaderOffset = -1;
     [JsonIgnore]
-    public long GPUPageHeaderOffset;
+    public long GPUPageHeaderOffset = -1;
 
     public unsafe FNaniteStreamableData(FByteArchive Ar, FNaniteResources resources, int numRootPages, uint pageSize, int pageIndex)
     {
@@ -1155,17 +1168,9 @@ public class FNaniteStreamableData
             RootPageInfos = Ar.ReadArray<FRootPageInfo>(numRootPages);
             Clusters = Ar.ReadArray(0, () => new FCluster(Ar));
             Ar.Position += pageSize - sizeof(FRootPageInfo) * numRootPages;
-            PageDiskHeader = null;
-            ClusterDiskHeaders = null;
-            PageGPUHeader = null;
-            UVRanges = null;
-            PageDiskHeaderOffset = -1;
-            GPUPageHeaderOffset = -1;
         }
         else
         {
-            RootPageInfos = null;
-
             // origin of all the offsets in the page cluster header
             PageDiskHeaderOffset = Ar.Position;
             PageDiskHeader = Ar.Read<FPageDiskHeader>();
@@ -1214,15 +1219,15 @@ public class FNaniteStreamableData
 public class FNaniteResources
 {
     // Persistent State
-    public FNaniteStreamableData[] RootData; // Root page is loaded on resource load, so we always have something to draw.
-    public FByteBulkData StreamablePages; // Remaining pages are streamed on demand.
-    public ushort[] ImposterAtlas;
-    public FPackedHierarchyNode[] HierarchyNodes;
-    public uint[] HierarchyRootOffsets;
-    public FPageStreamingState[] PageStreamingStates;
-    public uint[] PageDependencies;
-    public FMatrix3x4[] AssemblyTransforms;
-    public FBoxSphereBounds MeshBounds; // FBoxSphereBounds3f
+    public FNaniteStreamableData[] RootData = []; // Root page is loaded on resource load, so we always have something to draw.
+    public FByteBulkData? StreamablePages = null; // Remaining pages are streamed on demand.
+    public ushort[] ImposterAtlas = [];
+    public FPackedHierarchyNode[] HierarchyNodes = [];
+    public uint[] HierarchyRootOffsets = [];
+    public FPageStreamingState[] PageStreamingStates = [];
+    public uint[] PageDependencies = [];
+    public FMatrix3x4[] AssemblyTransforms = [];
+    public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
     public int NumRootPages = 0;
     public int PositionPrecision = 0;
     public int NormalPrecision = 0;
@@ -1235,11 +1240,11 @@ public class FNaniteResources
     public uint ResourceFlags = 0;
 
     [JsonIgnore]
-    public FNaniteStreamableData[] LoadedPages;
+    public FNaniteStreamableData?[] LoadedPages = [];
     [JsonIgnore]
-    private VersionContainer TemplateArchiveVersion;
+    public readonly VersionContainer TemplateArchiveVersion;
     [JsonIgnore]
-    private byte[] RootPages;
+    private byte[] RootPages = [];
 
     public FNaniteResources(FAssetArchive Ar)
     {
@@ -1308,19 +1313,28 @@ public class FNaniteResources
         }
         if (LoadedPages[pageIndex] == null)
         {
-            FPageStreamingState page = PageStreamingStates[pageIndex];
-            byte[] buffer;
-            if (pageIndex < NumRootPages)
-            {
-                buffer = RootPages[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
-            }
-            else
-            {
-                buffer = StreamablePages.Data[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
-            }
-            var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, TemplateArchiveVersion);
-            LoadedPages[pageIndex] = new FNaniteStreamableData(pageArchive, this, NumRootPages, PageStreamingStates[0].PageSize, pageIndex);
+            LoadedPages[pageIndex] = LoadPage(pageIndex);
         }
-        return LoadedPages[pageIndex];
+        return LoadedPages[pageIndex]!;
+    }
+
+    private FNaniteStreamableData LoadPage(int pageIndex)
+    {
+        FPageStreamingState page = PageStreamingStates[pageIndex];
+        byte[] buffer;
+        if (pageIndex < NumRootPages)
+        {
+            buffer = RootPages[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
+        }
+        else
+        {
+            if (StreamablePages?.Data is null)
+            {
+                throw new InvalidOperationException("Tried to read bulk page when bulk data is empty!");
+            }
+            buffer = StreamablePages.Data[(int) page.BulkOffset..(int) (page.BulkOffset + page.BulkSize)];
+        }
+        var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, TemplateArchiveVersion);
+        return new FNaniteStreamableData(pageArchive, this, NumRootPages, PageStreamingStates[0].PageSize, pageIndex);
     }
 }
