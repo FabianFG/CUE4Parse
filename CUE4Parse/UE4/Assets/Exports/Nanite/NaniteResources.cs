@@ -392,8 +392,8 @@ public readonly struct FUVRange
     public readonly int MinY;
     public readonly uint GapStartX;
     public readonly uint GapStartY;
-    public readonly uint GapLengthX;
-    public readonly uint GapLengthY;
+    public readonly int GapLengthX;
+    public readonly int GapLengthY;
     public readonly int Precision;
     [JsonIgnore]
     public readonly uint Padding;
