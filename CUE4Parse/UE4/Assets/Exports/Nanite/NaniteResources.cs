@@ -1282,7 +1282,7 @@ public class FNaniteStreamableData
         PageGPUHeader = Ar.Read<FPageGPUHeader>();
         if (PageGPUHeader.NumClusters != FixupChunk.Header.NumClusters)
         {
-            throw new InvalidDataException($"Data corruption detected! page gpu header and fixup cluster do not agree on the number of clusters. {PageDiskHeader.NumClusters} vs {FixupChunk.Header.NumClusters}");
+            throw new InvalidDataException($"Data corruption detected! page gpu header and fixup cluster do not agree on the number of clusters. {PageGPUHeader.NumClusters} vs {FixupChunk.Header.NumClusters}");
         }
 
         // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
