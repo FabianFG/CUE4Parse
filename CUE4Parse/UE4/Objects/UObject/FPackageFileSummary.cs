@@ -205,9 +205,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
 
-                if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE ||
+                if (FileVersionUE != EUnrealEngineObjectUE4Version.DETERMINE_BY_GAME &&
+                    FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE ||
                     FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
-                     FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                    FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 {
                     Log.Warning("File version is too new or too old");
                 }
