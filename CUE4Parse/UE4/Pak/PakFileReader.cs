@@ -51,9 +51,10 @@ namespace CUE4Parse.UE4.Pak
         {
             return Ar.Game switch
             {
-                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight
+                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight 
                     or EGame.GAME_Snowbreak or EGame.GAME_TorchlightInfinite or EGame.GAME_TowerOfFantasy
-                    or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar => true,
+                    or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar
+                    or EGame.GAME_EtheriaRestart => true,
                 _ => false
             };
         }
