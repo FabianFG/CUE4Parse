@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -112,8 +113,14 @@ namespace CUE4Parse.UE4.Objects.UObject
              *		-6 indicates optimizations to how custom versions are being serialized
              *		-7 indicates the texture allocation info has been removed from the summary
              *		-8 indicates that the UE5 version has been added to the summary
+             *      -9 indicates a contractual change in when early exits are required based on FileVersionTooNew. At or
+		     *		   after this LegacyFileVersion, we support changing the PackageFileSummary serialization format for
+		     *		   all bytes serialized after FileVersionLicensee, and that format change can be conditional on any
+		     *		   of the versions parsed before that point. All packageloaders that understand the -9
+		     *		   legacyfileformat are required to early exit without further serialization at that point if
+		     *		   FileVersionTooNew is true.
              */
-            const int CurrentLegacyFileVersion = -8;
+            const int CurrentLegacyFileVersion = -9;
             var legacyFileVersion = CurrentLegacyFileVersion;
 
             if (Tag == PACKAGE_FILE_TAG_ONE) // SOD2, "one"
@@ -197,6 +204,14 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
+
+                if (FileVersionUE != EUnrealEngineObjectUE4Version.DETERMINE_BY_GAME &&
+                    FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE ||
+                    FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
+                    FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                {
+                    Log.Warning("File version is too new or too old");
+                }
 
                 if (FileVersionUE >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
                 {

@@ -167,6 +167,18 @@ namespace CUE4Parse.UE4.Versions
             // Fix a bug where BlendMask counts could get out of sync with BlendPose counts.
             AnimLayeredBoneBlendMasksFix,
 
+            // Separated lens flare from bloom intensity
+            BloomIndependentLensFlare,
+
+            // Add settings to IAnimationDataModel GUID generation
+            AnimModelGuidGenerationSettings,
+
+            // Add support for Standalone HLOD
+            WorldPartitionAddStandaloneHLODSupport,
+
+            // Fixed the missing bounds for cloth assets that don't have them serialized
+            RecalculateClothAssetSerializedBounds,
+
             // -----<new versions can be added above this line>-------------------------------------------------
             VersionPlusOne,
             LatestVersion = VersionPlusOne - 1

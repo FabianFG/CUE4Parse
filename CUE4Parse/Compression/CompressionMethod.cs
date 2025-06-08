@@ -9,6 +9,7 @@
         Oodle = 4,
         LZ4,
         Zstd,
+        XB1Zlib,
         Unknown
     }
 }

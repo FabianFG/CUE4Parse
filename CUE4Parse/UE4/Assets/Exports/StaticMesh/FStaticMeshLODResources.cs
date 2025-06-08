@@ -3,6 +3,7 @@ using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
@@ -15,6 +16,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 public class FStaticMeshLODResources
 {
     public FStaticMeshSection[] Sections { get; }
+    public FBoxSphereBounds? SourceMeshBounds;
     public FCardRepresentationData? CardRepresentationData { get; set; }
     public float MaxDeviation { get; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
@@ -47,6 +49,12 @@ public class FStaticMeshLODResources
         if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
+
+        if (Ar.Game >= EGame.GAME_UE5_6)
+        {
+            SourceMeshBounds = new FBoxSphereBounds(Ar);
+        }
+
         MaxDeviation = Ar.Read<float>();
 
         if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;

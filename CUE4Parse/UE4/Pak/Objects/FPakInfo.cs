@@ -326,7 +326,7 @@ public partial class FPakInfo
         SiseRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
-        Size_ARKSurvivalAscended = Size8a + 8, // additional 8 bytes
+        SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
@@ -389,7 +389,7 @@ public partial class FPakInfo
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
-                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.Size_ARKSurvivalAscended],
+                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
