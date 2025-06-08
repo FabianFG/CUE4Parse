@@ -178,7 +178,7 @@ public static class MeshConverter
         if (
             nanite is null
             || nanite.PageStreamingStates.Length <= 0
-            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_3
+            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_2
         )
         {
             staticMeshLod = null;
@@ -196,9 +196,84 @@ public static class MeshConverter
             throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
 
         // Identify all high quality clusters
-        IEnumerable<FCluster> goodClusters = nanite.LoadedPages
-            .SelectMany(p => p!.Clusters)
-            .Where(c => c.Flags == 7u);
+        IEnumerable<FCluster> goodClusters;
+
+        if (nanite.TemplateArchiveVersion.Game >= EGame.GAME_UE5_3)
+        {
+            // we can use the fast path here
+            goodClusters = nanite.LoadedPages
+                .SelectMany(p => p!.Clusters)
+                .Where(c => c.Flags == 7u);
+        }
+        else
+        {
+            //for some meshes highest lod consist only from few slices in root node
+            //for example SM_Basementsections_Column_Part_A
+            var hierarchy = nanite.HierarchyNodes;
+            var rootNodes = nanite.HierarchyRootOffsets
+                .Where(i => i >= 0 && i < nanite.HierarchyNodes.Length)
+                .Select(i => nanite.HierarchyNodes[i]).SelectMany(x => x.Slices).ToList();
+            rootNodes.Sort((a, b) => a.MaxParentLODError.CompareTo(b.MaxParentLODError));
+
+            var highestrootNode = rootNodes.FirstOrDefault();
+            if (highestrootNode == null)
+            {
+                throw new ParserException("No root node found in Nanite hierarchy");
+            }
+
+            var highestLodSlices = new List<FHierarchyNodeSlice>();
+            var queue = new Queue<FPackedHierarchyNode>();
+            queue.Enqueue(hierarchy[highestrootNode.ChildStartReference]);
+            var og = false;
+            if (highestrootNode.MinLODError.Equals(-1.0f))
+                og = true;
+            while (queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+                foreach (var slice in node.Slices)
+                {
+                    if (!slice.bEnabled)
+                        continue;
+                    if (og && !slice.MinLODError.Equals(-1.0f))
+                    {
+                        continue;
+                    }
+                    if (slice.ChildStartReference != uint.MaxValue)
+                    {
+                        queue.Enqueue(hierarchy[slice.ChildStartReference]);
+                    }
+                    else
+                    {
+                        highestLodSlices.Add(slice);
+                    }
+                }
+            }
+
+
+            var clusters = new List<FCluster>();
+            foreach (var slice in highestLodSlices)
+            {
+                var page = nanite.LoadedPages[slice.StartPageIndex];
+                var fixups = page.FixupChunk.HierarchyFixups;
+                foreach (var fixup in fixups)
+                {
+                    if (fixup.NodeIndex == slice.NodeIndex && fixup.ChildIndex == slice.SliceIndex)
+                    {
+                        if (fixup.PageIndex != slice.StartPageIndex)
+                        {
+                            page = nanite.LoadedPages[fixup.PageIndex];
+                        }
+
+                        var start = (int) fixup.ClusterGroupPartStartIndex;
+                        var end = start + (int) slice.NumChildren;
+                        var localClusters = page.Clusters.AsSpan()[start..end].ToArray();
+                        clusters.AddRange(localClusters);
+                    }
+                }
+            }
+
+            goodClusters = clusters;
+        }
 
 
         // Check if we even have tris to parse.

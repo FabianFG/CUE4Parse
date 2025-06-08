@@ -510,18 +510,21 @@ public class FNaniteVertex
         Attributes.Normal = UnpackNormals(normalBits, (int)cluster.NormalPrecision);
 
         // parse tangent
-        int numTangentBits = cluster.HasTangents ? ((int)cluster.TangentPrecision + 1) : 0;
-        uint tangentAngleAndSignBits = bitStreamReader.Read(Ar, numTangentBits, NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS + 1);
-        if (cluster.HasTangents)
+        if (Ar.Game >= EGame.GAME_UE5_3)
         {
-            bool bTangentYSign = (tangentAngleAndSignBits & (1 << (int)cluster.TangentPrecision)) != 0;
-            uint tangentAngleBits = NaniteUtils.GetBits(tangentAngleAndSignBits, (int) cluster.TangentPrecision, 0);
-            FVector tangentX = UnpackTangentX(new FVector(Attributes.Normal.X, Attributes.Normal.Y, Attributes.Normal.Z), tangentAngleBits, (int)cluster.TangentPrecision);
-            Attributes.TangentXAndSign = new FVector4(tangentX, bTangentYSign ? -1.0f : 1.0f);
-        }
-        else
-        {
-            Attributes.TangentXAndSign = new FVector4(0, 0, 0, 0);
+            int numTangentBits = cluster.HasTangents ? ((int) cluster.TangentPrecision + 1) : 0;
+            uint tangentAngleAndSignBits = bitStreamReader.Read(Ar, numTangentBits, NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS + 1);
+            if (cluster.HasTangents)
+            {
+                bool bTangentYSign = (tangentAngleAndSignBits & (1 << (int) cluster.TangentPrecision)) != 0;
+                uint tangentAngleBits = NaniteUtils.GetBits(tangentAngleAndSignBits, (int) cluster.TangentPrecision, 0);
+                FVector tangentX = UnpackTangentX(new FVector(Attributes.Normal.X, Attributes.Normal.Y, Attributes.Normal.Z), tangentAngleBits, (int) cluster.TangentPrecision);
+                Attributes.TangentXAndSign = new FVector4(tangentX, bTangentYSign ? -1.0f : 1.0f);
+            }
+            else
+            {
+                Attributes.TangentXAndSign = new FVector4(0, 0, 0, 0);
+            }
         }
 
         // parse color
@@ -694,7 +697,11 @@ public class FCluster
         PosBitsY = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
         NormalPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 24);
-        TangentPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 28);
+        if (Ar.Game >= EGame.GAME_UE5_3)
+        {
+            TangentPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 28);
+        }
+        
 
         Ar.Position += stride;
         LODBounds = Ar.Read<FVector4>();
@@ -715,9 +722,17 @@ public class FCluster
 
         var decodeInfoOffset_bHasTengants_numUVs_colorMode = Ar.Read<uint>();
         DecodeInfoOffset = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 22, 0);
-        HasTangents = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
-        NumUVs = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
-        ColorMode = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 2, 26);
+        if (Ar.Game >= EGame.GAME_UE5_3)
+        {
+            HasTangents = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
+            NumUVs = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
+            ColorMode = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 2, 26);
+        }
+        else
+        {
+            NumUVs = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 22);
+            ColorMode = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 2, 25);
+        }
 
         UV_Prec = Ar.Read<uint>();
 
@@ -759,7 +774,7 @@ public class FCluster
         }
 
         if (
-            Ar.Versions.Game >= EGame.GAME_UE5_3
+            Ar.Versions.Game >= EGame.GAME_UE5_2
             && page is not null
             && page.ClusterDiskHeaders is not null
             && page.ClusterDiskHeaders.Length > clusterIndex
@@ -1149,56 +1164,46 @@ public class FNaniteStreamableData
     {
         FixupChunk = new FFixupChunk(Ar);
 
-        // todo: check how it's actually serialized in pre 5.3
-        if (Ar.Game < EGame.GAME_UE5_3)
+        // origin of all the offsets in the page cluster header
+        PageDiskHeaderOffset = Ar.Position;
+        PageDiskHeader = Ar.Read<FPageDiskHeader>();
+        if (PageDiskHeader.Value.NumClusters > 0xFF)
         {
-            RootPageInfos = Ar.ReadArray<FRootPageInfo>(numRootPages);
-            Clusters = Ar.ReadArray(0, () => new FCluster(Ar));
-            Ar.Position += pageSize - sizeof(FRootPageInfo) * numRootPages;
+            throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.Value.NumClusters} max is 256");
         }
-        else
+        if (PageDiskHeader.Value.NumTexCoords > 4)
         {
-            // origin of all the offsets in the page cluster header
-            PageDiskHeaderOffset = Ar.Position;
-            PageDiskHeader = Ar.Read<FPageDiskHeader>();
-            if (PageDiskHeader.Value.NumClusters > 0xFF)
-            {
-                throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.Value.NumClusters} max is 256");
-            }
-            if (PageDiskHeader.Value.NumTexCoords > 4)
-            {
-                throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
-            }
+            throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+        }
 
-            ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.Value.NumClusters);
+        ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.Value.NumClusters);
 
-            GPUPageHeaderOffset = Ar.Position;
-            PageGPUHeader = Ar.Read<FPageGPUHeader>();
-            if (PageDiskHeader.Value.NumClusters != PageDiskHeader.Value.NumClusters)
-            {
-                throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
-            }
+        GPUPageHeaderOffset = Ar.Position;
+        PageGPUHeader = Ar.Read<FPageGPUHeader>();
+        if (PageDiskHeader.Value.NumClusters != PageDiskHeader.Value.NumClusters)
+        {
+            throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+        }
 
-            // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
-            Clusters = new FCluster[PageGPUHeader.Value.NumClusters];
-            UVRanges = new FUVRange[PageDiskHeader.Value.NumClusters][];
-            long clusterOrigin = Ar.Position;
-            for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
-            {
-                // get the uv ranges
-                UVRanges[clusterIndex] = new FUVRange[PageDiskHeader.Value.NumTexCoords];
-                Ar.Position = PageDiskHeaderOffset + PageDiskHeader.Value.DecodeInfoOffset + clusterIndex * sizeof(FUVRange) * PageDiskHeader.Value.NumTexCoords;
-                UVRanges[clusterIndex] = Ar.ReadArray<FUVRange>((int)PageDiskHeader.Value.NumTexCoords);
+        // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
+        Clusters = new FCluster[PageGPUHeader.Value.NumClusters];
+        UVRanges = new FUVRange[PageDiskHeader.Value.NumClusters][];
+        long clusterOrigin = Ar.Position;
+        for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
+        {
+            // get the uv ranges
+            UVRanges[clusterIndex] = new FUVRange[PageDiskHeader.Value.NumTexCoords];
+            Ar.Position = PageDiskHeaderOffset + PageDiskHeader.Value.DecodeInfoOffset + clusterIndex * sizeof(FUVRange) * PageDiskHeader.Value.NumTexCoords;
+            UVRanges[clusterIndex] = Ar.ReadArray<FUVRange>((int)PageDiskHeader.Value.NumTexCoords);
 
-                Ar.Position = clusterOrigin + 16 * clusterIndex;
-                Clusters[clusterIndex] = new FCluster(Ar, this, Clusters.Length, clusterIndex);
-            }
+            Ar.Position = clusterOrigin + 16 * clusterIndex;
+            Clusters[clusterIndex] = new FCluster(Ar, this, Clusters.Length, clusterIndex);
+        }
 
-            // resolve vertex references once all basic data is parsed
-            for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
-            {
-                Clusters[clusterIndex].ResolveVertexReferences(Ar, resources, this, ClusterDiskHeaders[clusterIndex], resources.PageStreamingStates[pageIndex]);
-            }
+        // resolve vertex references once all basic data is parsed
+        for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
+        {
+            Clusters[clusterIndex].ResolveVertexReferences(Ar, resources, this, ClusterDiskHeaders[clusterIndex], resources.PageStreamingStates[pageIndex]);
         }
     }
 }
