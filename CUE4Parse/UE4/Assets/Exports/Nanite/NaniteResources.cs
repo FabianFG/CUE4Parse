@@ -16,23 +16,44 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 public class NaniteUtils
 {
     // nanite constants
+    /// <summary>The maximum amount of UVs a nanite mesh can have</summary>
     public const int NANITE_MAX_UVS = 4;
-    public const int NANITE_MAX_NORMAL_QUANTIZATION_BITS = 15;
+    /// <summary>The maximum number of bits used to serialize normals.</summary>
+    public static int NANITE_MAX_NORMAL_QUANTIZATION_BITS(EGame ver)
+    {
+        if (ver >= EGame.GAME_UE5_2) return 15;
+        return 9;
+    }
+    /// <summary>The maximum number of bits used to serialize tangents.</summary>
     public const int NANITE_MAX_TANGENT_QUANTIZATION_BITS = 12;
+    /// <summary>The maximum number of bits used to serialize an axis in a UV.</summary>
     public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS = 15;
+    /// <summary>The maximum number of bits used to serialize a color channel for a vertex color.</summary>
     public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
 
-    // 5.0 -> 5.1
-    public const int NANITE_NORMAL_QUANTIZATION_BITS = 9;
-
     public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
+    /// <summary>The maximum amount of clusters that can be contained in a page.</summary>
     public const int NANITE_MAX_CLUSTERS_PER_PAGE = 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
 
     public const int NANITE_MAX_CLUSTER_INDICES_BITS = 8;
+    /// <summary>The maximum amount of tri indices that can be contained in a cluster.</summary>
     public const int NANITE_MAX_CLUSTER_INDICES = 1 << NANITE_MAX_CLUSTER_INDICES_BITS;
     public const int NANITE_MAX_CLUSTER_INDICES_MASK = NANITE_MAX_CLUSTER_INDICES - 1;
 
-    public const int NANITE_MIN_POSITION_PRECISION = -8;
+    /// <summary>The minimum multiplier used to compute the position delta of a vertex within a cluster.</summary>
+    public static int NANITE_MIN_POSITION_PRECISION(EGame ver)
+    {
+        if (ver >= EGame.GAME_UE5_4)
+            return -20;
+        return -8;
+    }
+    /// <summary>The maximum multiplier used to compute the position delta of a vertex within a cluster.</summary>
+    public static int NANITE_MAX_POSITION_PRECISION(EGame ver)
+    {
+        if (ver >= EGame.GAME_UE5_4)
+            return 43;
+        return 23;
+    }
 
     public const int NANITE_MAX_BVH_NODE_FANOUT_BITS = 2;
     public const int NANITE_MAX_BVH_NODE_FANOUT = 1 << NANITE_MAX_BVH_NODE_FANOUT_BITS;
@@ -61,6 +82,7 @@ public class NaniteUtils
         PrecisionScales = builder.ToImmutable();
     }
 
+    /// <summary>Equivalent to BitFieldExtractU32.</summary>
     public static uint GetBits(uint value, int numBits, int offset)
     {
         uint mask = (1u << numBits) - 1u;
@@ -72,7 +94,7 @@ public class NaniteUtils
         return unchecked((int) (value << (32-bitLength)) ) >> (32-bitLength);
     }
 
-
+    /// <summary>Equivalent to BitFieldExtractS32.</summary>
     public static int GetBitsAsSigned(uint value, int numBits, int offset)
     {
         return UIntToInt(GetBits(value, numBits, offset), numBits);
@@ -93,6 +115,13 @@ public class NaniteUtils
         return ((1u << maskWidth) - 1) << maskLocation;
     }
 
+    /// <summary>
+    /// Reads a non-byte aligned uint from an archive.
+    /// </summary>
+    /// <param name="Ar">The archive to read from.</param>
+    /// <param name="baseAddressInBytes">A byte aligned position use as an anchor.</param>
+    /// <param name="bitOffset">The offset in bits from the aligned location.</param>
+    /// <returns></returns>
     public static uint ReadUnalignedDword(FArchive Ar, long baseAddressInBytes, long bitOffset)
     {
         long byteAddress = baseAddressInBytes + (bitOffset >> 3);
@@ -103,13 +132,17 @@ public class NaniteUtils
         uint high = Ar.Read<uint>();
         return BitAlignU32(high, low, bitOffset);
     }
-    
 
     public static uint UnpackByte0(uint v) => v & 0xff;
     public static uint UnpackByte1(uint v) => (v >> 8) & 0xff;
     public static uint UnpackByte2(uint v) => (v >> 16) & 0xff;
     public static uint UnpackByte3(uint v) => v >> 24;
 
+    /// <summary>
+    /// Finds the location of the highest populated bit in a uint.
+    /// Essentially just the ReverseBitScan instruction with a defined behaviour if the value is 0.
+    /// </summary>
+    /// <returns>the index of the first bit or uint.MAX_VALUE if not found.</returns>
     public static uint FirstBitHigh(uint x)
     {
         return x == 0 ? 0xFFFFFFFFu : (uint) BitOperations.Log2(x);
@@ -320,6 +353,7 @@ public class FFixupChunk
 
         public FHeader(FArchive Ar)
         {
+            // the NF header was add in 5.3 in previous versions it isn't there
             if (Ar.Game >= EGame.GAME_UE5_3)
             {
                 ushort magic = Ar.Read<ushort>();
@@ -331,6 +365,7 @@ public class FFixupChunk
             NumClusters = Ar.Read<ushort>();
             NumHierachyFixups = Ar.Read<ushort>();
             NumClusterFixups = Ar.Read<ushort>();
+            // prior to that the end was just padding
             if (Ar.Game < EGame.GAME_UE5_3)
             {
                 // 2 byte padding
@@ -410,7 +445,7 @@ public class FNaniteVertex
     public FVector Pos;
     /// <summary>The attributes of the vertex.</summary>
     public FNaniteVertexAttributes? Attributes;
-    // more for debugging purposes
+    /// <summary>True if the vertex as read as a reference. This exists only for debugging purposes.</summary>
     public bool IsRef;
 
     private static FVector UnpackNormals(uint packed, int bits)
@@ -509,8 +544,18 @@ public class FNaniteVertex
         ];
 
         // parses normals
-        uint normalBits = bitStreamReader.Read(Ar, 2 * (int)cluster.NormalPrecision, 2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS);
-        Attributes.Normal = UnpackNormals(normalBits, (int)cluster.NormalPrecision);
+        if (Ar.Game >= EGame.GAME_UE5_2)
+        {
+            uint normalBits = bitStreamReader.Read(Ar, 2 * (int) cluster.NormalPrecision, 2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game));
+            Attributes.Normal = UnpackNormals(normalBits, (int) cluster.NormalPrecision);
+        }
+        else
+        {
+            int normalPrecision = NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game);
+            uint normalBits = bitStreamReader.Read(Ar, 2 * normalPrecision, 2 * normalPrecision);
+            Attributes.Normal = UnpackNormals(normalBits, normalPrecision);
+        }
+        
 
         // parse tangent
         if (Ar.Game >= EGame.GAME_UE5_3)
@@ -537,6 +582,7 @@ public class FNaniteVertex
             bitStreamReader.Read(Ar, numComponentBits[2], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS),
             bitStreamReader.Read(Ar, numComponentBits[3], NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS)
         ];
+        // should be in the ranges of 0.0f .. 1.0f
         Attributes.Color = new FVector4(
             (colorMin[0] + colorDelta[0]) * (1.0f / 255.0f),
             (colorMin[1] + colorDelta[1]) * (1.0f / 255.0f),
@@ -591,10 +637,14 @@ public class FClusterFixup
         PageDependencyNum = pageDependencyStartAndNum & NaniteUtils.NANITE_MAX_GROUP_PARTS_MASK;
     }
 }
+
 public readonly struct FMaterialRange
 {
+    /// <summary>The index of the first triangle that uses this material.</summary>
     public readonly uint TriStart;
+    /// <summary>The number of tirangles that use this material.</summary>
     public readonly uint TriLength;
+    /// <summary>The index of the material used by the triangles this range points to.</summary>
     public readonly uint MaterialIndex;
 
     public FMaterialRange(uint data) : this (
@@ -613,41 +663,71 @@ public readonly struct FMaterialRange
 
 public class FCluster
 {
-
+    /// <summary>The number of vertexes in this cluster.</summary>
     public uint NumVerts;
+    /// <summary>The offset from the gpu page header where the non-ref vertex positions can be found.</summary>
     public uint PositionOffset;
+    /// <summary>The number of triangle indices in this cluster.</summary>
     public uint NumTris;
+    /// <summary>The offset from the gpu page header where the index data can be found.</summary>
     public uint IndexOffset;
+    /// <summary>A mimimum value for all vertex colors in this cluster. When reading a vertex color, add this value or else it will look off.</summary>
     public uint ColorMin;
+    /// <summary>number of bits for each channel of the vertex colors, each taking 4 bits.</summary>
     public uint ColorBits;
+    /// <summary>Debug value, never actually used.</summary>
     public uint GroupIndex;
+    /// <summary>The "starting point" to which all vertices in this cluster are relative to.</summary>
     public FIntVector PosStart;
+    /// <summary>The number of bits used per vertex index in the strip indices when the strip are optimized at runtime. Unused for our purposes.</summary>
     public uint BitsPerIndex;
+    /// <summary>A multiplier used to scale the delta between the pos start and the vertex positions.</summary>
     public int PosPrecision;
+    /// <summary>The number of bits used to encode the X coordinate of a vertex.</summary>
     public uint PosBitsX;
+    /// <summary>The number of bits used to encode the Y coordinate of a vertex.</summary>
     public uint PosBitsY;
+    /// <summary>The number of bits used to encode the Z coordinate of a vertex.</summary>
     public uint PosBitsZ;
+    /// <summary>The number of bits used to encode the x and y coordinate of the normals. Only available after 5.2</summary>
     public uint NormalPrecision;
+    /// <summary>The number of bits used to encode the tangent. Only available after 5.1.</summary>
     public uint TangentPrecision;
     public FVector4 LODBounds;
     public FVector BoxBoundsCenter;
+    /// <summary>The lower the value the closer the cluster is to the original mesh.</summary>
     public float LODError;
+    /// <summary>The lower the value the closer the cluster is to the original mesh.</summary>
     public float EdgeLength;
     public FVector BoxBoundsExtent;
+    /// <summary>Flags used to identify the cluster's role.</summary>
     public uint Flags;
+    /// <summary>The offset from the gpu page header where the vertex attributes of non-ref vertices can be found.</summary>
     public uint AttributeOffset;
+    /// <summary>The number of bits used to store the atribute data for a non-ref vertex in this cluster.</summary>
     public uint BitsPerAttribute;
+    /// <summary>The offset from the gpu page header where the uv ranges for this cluster can be found.</summary>
     public uint DecodeInfoOffset;
+    /// <summary>True if the mesh has explicit tangents, only available after 5.3</summary>
     public bool HasTangents;
+    /// <summary>The number of uv ranges associated with this cluster.</summary>
     public uint NumUVs;
     public uint ColorMode;
+    /// <summary>A map of the number of bits which which uv positions are serialized as. each byte can be separated into 2 nibbles, each representing the x and y coordinates.</summary>
     public uint UV_Prec;
+    /// <summary>The offset from the gpu page header where the material table for this cluser can be found. Will be 0 of the cluster does not use a material table.</summary>
     public uint MaterialTableOffset;
+    /// <summary>The number of entries in the material table.</summary>
     public uint MaterialTableLength;
+    /// <summary>Tri triangle index where the first material starts when not using a material table.</summary>
     public uint Material0Index;
+    /// <summary>Tri triangle index where the second material starts when not using a material table.</summary>
     public uint Material1Index;
+    /// <summary>Tri triangle index where the third material starts when not using a material table.</summary>
     public uint Material2Index;
+    /// <summary>The number of triangles associated with the first material. 0 if the cluster uses a material table.</summary>
     public uint Material0Length;
+    /// <summary>The number of triangles associated with the second material when not using a material table.</summary>
     public uint Material1Length;
     public uint VertReuseBatchCountTableOffset;
     public uint VertReuseBatchCountTableSize;
@@ -695,17 +775,13 @@ public class FCluster
 
         var bitsPerIndex_posPrecision_posBits = Ar.Read<uint>();
         BitsPerIndex = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 0);
-        PosPrecision = ((int) NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 4)) + NaniteUtils.NANITE_MIN_POSITION_PRECISION;
+        PosPrecision = ((int) NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 4)) + NaniteUtils.NANITE_MIN_POSITION_PRECISION(Ar.Game);
         PosBitsX = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
         PosBitsY = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
         if (Ar.Game >= EGame.GAME_UE5_2)
         {
             NormalPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 24);
-        }
-        else
-        {
-            NormalPrecision = NaniteUtils.NANITE_NORMAL_QUANTIZATION_BITS;
         }
         if (Ar.Game >= EGame.GAME_UE5_3)
         {
@@ -786,9 +862,7 @@ public class FCluster
         if (
             Ar.Game >= EGame.GAME_UE5_0
             && page is not null
-            && page.ClusterDiskHeaders is not null
             && page.ClusterDiskHeaders.Length > clusterIndex
-            && page.PageDiskHeader is not null
         )
         {
             FClusterDiskHeader clusterDiskHeader = page.ClusterDiskHeaders[clusterIndex];
@@ -821,7 +895,7 @@ public class FCluster
             uint numNonRefVertices = NumVerts - clusterDiskHeader.NumVertexRefs;
             GroupNonRefToVertex = new uint[numNonRefVertices];
             uint[] groupNumRefsInPrevDwords8888 = [0, 0];
-            long alignedBitmaskOffset = page.PageDiskHeaderOffset + page.PageDiskHeader.Value.VertexRefBitmaskOffset + clusterIndex * 32; // NANITE_MAX_CLUSTER_VERTICES / 8
+            long alignedBitmaskOffset = page.PageDiskHeaderOffset + page.PageDiskHeader.VertexRefBitmaskOffset + clusterIndex * 32; // NANITE_MAX_CLUSTER_VERTICES / 8
             for (uint groupIndex = 0; groupIndex < 7; groupIndex++)
             {
                 Ar.Position = alignedBitmaskOffset + groupIndex * 4;
@@ -890,12 +964,12 @@ public class FCluster
     private static int GetMaxAttributeBits(FArchive Ar, int numTexCoords)
     {
         int ret =
-            2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS
-            + 1 + NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS
+            + 2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game)
+            + 4 * NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS
             + numTexCoords * (2 * NaniteUtils.NANITE_MAX_TEXCOORD_QUANTIZATION_BITS);
         if (Ar.Game >= EGame.GAME_UE5_3)
         {
-            ret += 4 * NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS;
+            ret += 1 + NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS;
         }
         return ret;
     }
@@ -903,15 +977,11 @@ public class FCluster
     /// <summary>Reads and unpacks the triangle indices of the cluster.</summary>
     private uint[] GetTriangleIndices(FArchive Ar, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, int clusterIndex, uint triIndex)
     {
-        if (!page.PageDiskHeader.HasValue)
-        {
-            throw new ArgumentException($"The page's disk header should not be null!", nameof(page));
-        }
         uint dwordIndex = triIndex >> 5;
         uint bitIndex = triIndex & 31;
 
         // Bitmask.x: bIsStart, Bitmask.y: bIsLeft, Bitmask.z: bIsNewVertex
-        Ar.Position = page.PageDiskHeaderOffset + page.PageDiskHeader.Value.StripBitmaskOffset + (clusterIndex * 4 + dwordIndex) * 12;
+        Ar.Position = page.PageDiskHeaderOffset + page.PageDiskHeader.StripBitmaskOffset + (clusterIndex * 4 + dwordIndex) * 12;
         uint sMask = Ar.Read<uint>();
         uint lMask = Ar.Read<uint>();
         uint wMask = Ar.Read<uint>();
@@ -1058,10 +1128,6 @@ public class FCluster
 
     public void ResolveVertexReferences(FArchive Ar, FNaniteResources resources, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, FPageStreamingState pageStreamingState)
     {
-        if (!page.PageDiskHeader.HasValue)
-        {
-            throw new ArgumentException($"{nameof(page)} doesn't have a {page.PageDiskHeader}!", nameof(page));
-        }
         if (page.Clusters is null)
         {
             throw new ArgumentException($"{nameof(page)} hasn't loaded the cluster data yet!", nameof(page));
@@ -1077,7 +1143,7 @@ public class FCluster
 
             uint parentPageIndex = pageClusterData >> NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
             uint srcLocalClusterIndex = NaniteUtils.GetBits(pageClusterData, NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS, 0);
-            Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex + page.PageDiskHeader.Value.NumVertexRefs;
+            Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex + page.PageDiskHeader.NumVertexRefs;
             byte srcCodedVertexIndex = Ar.Read<byte>();
 
             FCluster srcCluster;
@@ -1116,38 +1182,50 @@ public class FCluster
     }
 }
 
-public readonly struct FRootPageInfo
-{
-    public readonly uint RuntimeResourceID;
-    public readonly uint NumClusters;
-}
-
+/// <summary>A header that describes the contents of a nanite streaming page.</summary>
 public readonly struct FPageDiskHeader
 {
+    /// <summary>The number of bytes that should follow the gpu header.</summary>
     public readonly uint GpuSize;
+    /// <summary>The number of cluster present in this page.</summary>
     public readonly uint NumClusters;
+    /// <summary>The bumber of uint4s used to store the cluster data, the material tables and the uv decode info.</summary>
     public readonly uint NumRawFloat4s;
+    /// <summary>The number of UVs this cluster uses.</summary>
     public readonly uint NumTexCoords;
+    /// <summary>The number of vertex references withing this page.</summary>
     public readonly uint NumVertexRefs;
+    /// <summary>The offset from this header where the uv ranges can be found.</summary>
     public readonly uint DecodeInfoOffset;
+    /// <summary>The offset from this header where the tirangle strip bitmasks start.</summary>
     public readonly uint StripBitmaskOffset;
+    /// <summary>The offset from this header where the reference vertex bitmasks start.</summary>
     public readonly uint VertexRefBitmaskOffset;
 }
 
+/// <summary>A header that describes the cluster at the same index as itself.</summary>
 public readonly struct FClusterDiskHeader
 {
+    /// <summary>The offset from the disk page header where the triangle indices for this cluster starts.</summary>
     public readonly uint IndexDataOffset;
+    /// <summary>The offset from the disk page header the reference vertex page mapping for this cluster starts.</summary>
     public readonly uint PageClusterMapOffset;
+    /// <summary>The offset from the disk page header the reference vertex data for this cluster starts.</summary>
     public readonly uint VertexRefDataOffset;
+    /// <summary>The offset from the disk page header the non-ref vertex's positions for this cluster starts.</summary>
     public readonly uint PositionDataOffset;
+    /// <summary>The offset from the disk page header the non-ref vertex's attributes for this cluster starts.</summary>
     public readonly uint AttributeDataOffset;
+    /// <summary>The number of vertexes that are references in this cluster.</summary>
     public readonly uint NumVertexRefs;
     public readonly uint NumPrevRefVerticesBeforeDwords;
     public readonly uint NumPrevNewVerticesBeforeDwords;
 }
 
+/// <summary>A header that is directly transcoded to the gpu at runtime.</summary>
 public readonly struct FPageGPUHeader
 {
+    /// <summary>The number of clusters in this page.</summary>
     public readonly uint NumClusters;
     [JsonIgnore]
     public readonly uint Pad1;
@@ -1157,18 +1235,23 @@ public readonly struct FPageGPUHeader
     public readonly uint Pad3;
 }
 
-
 public class FNaniteStreamableData
 {
     public FFixupChunk FixupChunk;
 
-    public FRootPageInfo[] RootPageInfos = [];
+    /// <summary>Describes the contents of this page.</summary>
+    public FPageDiskHeader PageDiskHeader;
+    /// <summary>A list of headers that </summary>
+    public FClusterDiskHeader[] ClusterDiskHeaders;
+    // ignoring because they take up so much space in the JSON and aren't really usefull to the end user, would probably be nice to put behind a flag
+    [JsonIgnore]
+    public FPageGPUHeader PageGPUHeader;
+    [JsonIgnore]
     public FCluster[] Clusters = [];
-    public FPageDiskHeader? PageDiskHeader = null;
-    public FClusterDiskHeader[] ClusterDiskHeaders = [];
-    public FPageGPUHeader? PageGPUHeader = null;
+    [JsonIgnore]
     public FUVRange[][] UVRanges = [];
 
+    // state variables used for parsing, this isn't serialized.
     [JsonIgnore]
     public long PageDiskHeaderOffset = -1;
     [JsonIgnore]
@@ -1181,34 +1264,37 @@ public class FNaniteStreamableData
         // origin of all the offsets in the page cluster header
         PageDiskHeaderOffset = Ar.Position;
         PageDiskHeader = Ar.Read<FPageDiskHeader>();
-        if (PageDiskHeader.Value.NumClusters > 0xFF)
+        if (PageDiskHeader.NumClusters > NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE)
         {
-            throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.Value.NumClusters} max is 256");
+            throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.NumClusters} max is {NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE}");
         }
-        if (PageDiskHeader.Value.NumTexCoords > 4)
+        if (PageDiskHeader.NumTexCoords > NaniteUtils.NANITE_MAX_UVS)
         {
-            throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+            throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.NumTexCoords} max is {NaniteUtils.NANITE_MAX_UVS}");
         }
-
-        ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.Value.NumClusters);
+        if (PageDiskHeader.NumClusters != FixupChunk.Header.NumClusters)
+        {
+            throw new InvalidDataException($"Data corruption detected! page disk header and fixup cluster do not agree on the number of clusters. {PageDiskHeader.NumClusters} vs {FixupChunk.Header.NumClusters}");
+        }
+        ClusterDiskHeaders = Ar.ReadArray<FClusterDiskHeader>((int) PageDiskHeader.NumClusters);
 
         GPUPageHeaderOffset = Ar.Position;
         PageGPUHeader = Ar.Read<FPageGPUHeader>();
-        if (PageDiskHeader.Value.NumClusters != PageDiskHeader.Value.NumClusters)
+        if (PageGPUHeader.NumClusters != FixupChunk.Header.NumClusters)
         {
-            throw new InvalidDataException($"Too many tex coords in FNaniteStreamableData, {PageDiskHeader.Value.NumTexCoords} max is 4");
+            throw new InvalidDataException($"Data corruption detected! page gpu header and fixup cluster do not agree on the number of clusters. {PageDiskHeader.NumClusters} vs {FixupChunk.Header.NumClusters}");
         }
 
         // Not stored as an array, it's actually stored as an SOA to speedup GPU transcoding
-        Clusters = new FCluster[PageGPUHeader.Value.NumClusters];
-        UVRanges = new FUVRange[PageDiskHeader.Value.NumClusters][];
+        Clusters = new FCluster[FixupChunk.Header.NumClusters];
+        UVRanges = new FUVRange[FixupChunk.Header.NumClusters][];
         long clusterOrigin = Ar.Position;
         for (int clusterIndex = 0; clusterIndex < Clusters.Length; clusterIndex++)
         {
             // get the uv ranges
-            UVRanges[clusterIndex] = new FUVRange[PageDiskHeader.Value.NumTexCoords];
-            Ar.Position = PageDiskHeaderOffset + PageDiskHeader.Value.DecodeInfoOffset + clusterIndex * sizeof(FUVRange) * PageDiskHeader.Value.NumTexCoords;
-            UVRanges[clusterIndex] = Ar.ReadArray<FUVRange>((int)PageDiskHeader.Value.NumTexCoords);
+            UVRanges[clusterIndex] = new FUVRange[PageDiskHeader.NumTexCoords];
+            Ar.Position = PageDiskHeaderOffset + PageDiskHeader.DecodeInfoOffset + clusterIndex * sizeof(FUVRange) * PageDiskHeader.NumTexCoords;
+            UVRanges[clusterIndex] = Ar.ReadArray<FUVRange>((int)PageDiskHeader.NumTexCoords);
 
             Ar.Position = clusterOrigin + 16 * clusterIndex;
             Clusters[clusterIndex] = new FCluster(Ar, this, Clusters.Length, clusterIndex);
@@ -1234,14 +1320,20 @@ public class FNaniteResources
     public uint[] PageDependencies = [];
     public FMatrix3x4[] AssemblyTransforms = [];
     public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
+    /// <summary>The number of root pages found outside of the bulk page.</summary>
     public int NumRootPages = 0;
+    /// <summary>The precision which which vertex positions are recorded with.</summary>
     public int PositionPrecision = 0;
+    /// <summary>The precision which which vertex normals are recorded with. Added with 5.2.</summary>
     public int NormalPrecision = 0;
-    public int TangentPrecision = 0;
+    /// <summary>The number of triangles the original mesh had.</summary>
     public uint NumInputTriangles = 0;
+    /// <summary>The number of verticies the original mesh had.</summary>
     public uint NumInputVertices = 0;
     public ushort NumInputMeshes = 0;
+    /// <summary>The number of UVs used by the origina mesh.</summary>
     public ushort NumInputTexCoords = 0;
+    /// <summary>The number of clusters in total for this mesh.</summary>
     public uint NumClusters = 0;
     public uint ResourceFlags = 0;
 
@@ -1261,7 +1353,6 @@ public class FNaniteResources
         {
             ResourceFlags = Ar.Read<uint>();
             StreamablePages = new FByteBulkData(Ar);
-            System.Diagnostics.Trace.WriteLine($"RP {Ar.Position}");
             RootPages = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
             var count = Ar.Read<uint>();
