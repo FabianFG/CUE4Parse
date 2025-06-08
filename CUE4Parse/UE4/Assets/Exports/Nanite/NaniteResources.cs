@@ -868,7 +868,7 @@ public class FCluster
                 NaniteUtils.BitStreamReader reader = NaniteUtils.CreateBitStreamReader_Aligned(
                     page.PageDiskHeaderOffset + clusterDiskHeader.AttributeDataOffset,
                     nonRefVertexIndex * srcBitsPerAttribute,
-                    GetMaxAttributeBits(NaniteUtils.NANITE_MAX_UVS)
+                    GetMaxAttributeBits(Ar, NaniteUtils.NANITE_MAX_UVS)
                 );
                 vertex.ReadAttributeData(Ar, reader, page, this, clusterIndex);
 
@@ -877,13 +877,17 @@ public class FCluster
         }
     }
 
-    private static int GetMaxAttributeBits(int numTexCoords)
+    private static int GetMaxAttributeBits(FArchive Ar, int numTexCoords)
     {
-        return
+        int ret =
             2 * NaniteUtils.NANITE_MAX_NORMAL_QUANTIZATION_BITS
             + 1 + NaniteUtils.NANITE_MAX_TANGENT_QUANTIZATION_BITS
-            + 4 * NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS
             + numTexCoords * (2 * NaniteUtils.NANITE_MAX_TEXCOORD_QUANTIZATION_BITS);
+        if (Ar.Game >= EGame.GAME_UE5_3)
+        {
+            ret += 4 * NaniteUtils.NANITE_MAX_COLOR_QUANTIZATION_BITS;
+        }
+        return ret;
     }
 
     /// <summary>Reads and unpacks the triangle indices of the cluster.</summary>
