@@ -22,6 +22,9 @@ public class NaniteUtils
     public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS = 15;
     public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
 
+    // 5.0 -> 5.1
+    public const int NANITE_NORMAL_QUANTIZATION_BITS = 9;
+
     public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
     public const int NANITE_MAX_CLUSTERS_PER_PAGE = 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
 
@@ -696,7 +699,14 @@ public class FCluster
         PosBitsX = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
         PosBitsY = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
-        NormalPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 24);
+        if (Ar.Game >= EGame.GAME_UE5_2)
+        {
+            NormalPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 24);
+        }
+        else
+        {
+            NormalPrecision = NaniteUtils.NANITE_NORMAL_QUANTIZATION_BITS;
+        }
         if (Ar.Game >= EGame.GAME_UE5_3)
         {
             TangentPrecision = NaniteUtils.GetBits(bitsPerIndex_posPrecision_posBits, 4, 28);
@@ -774,7 +784,7 @@ public class FCluster
         }
 
         if (
-            Ar.Versions.Game >= EGame.GAME_UE5_2
+            Ar.Game >= EGame.GAME_UE5_0
             && page is not null
             && page.ClusterDiskHeaders is not null
             && page.ClusterDiskHeaders.Length > clusterIndex
@@ -1251,6 +1261,7 @@ public class FNaniteResources
         {
             ResourceFlags = Ar.Read<uint>();
             StreamablePages = new FByteBulkData(Ar);
+            System.Diagnostics.Trace.WriteLine($"RP {Ar.Position}");
             RootPages = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
             var count = Ar.Read<uint>();

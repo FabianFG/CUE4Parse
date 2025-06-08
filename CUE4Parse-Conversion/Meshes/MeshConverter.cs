@@ -178,7 +178,7 @@ public static class MeshConverter
         if (
             nanite is null
             || nanite.PageStreamingStates.Length <= 0
-            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_2
+            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_0
         )
         {
             staticMeshLod = null;
@@ -207,72 +207,75 @@ public static class MeshConverter
         }
         else
         {
-            //for some meshes highest lod consist only from few slices in root node
-            //for example SM_Basementsections_Column_Part_A
-            var hierarchy = nanite.HierarchyNodes;
-            var rootNodes = nanite.HierarchyRootOffsets
-                .Where(i => i >= 0 && i < nanite.HierarchyNodes.Length)
-                .Select(i => nanite.HierarchyNodes[i]).SelectMany(x => x.Slices).ToList();
-            rootNodes.Sort((a, b) => a.MaxParentLODError.CompareTo(b.MaxParentLODError));
+            goodClusters = nanite.LoadedPages
+                .SelectMany(p => p!.Clusters)
+                .Where(x => x.EdgeLength < 0.0f);
+            ////for some meshes highest lod consist only from few slices in root node
+            ////for example SM_Basementsections_Column_Part_A
+            //var hierarchy = nanite.HierarchyNodes;
+            //var rootNodes = nanite.HierarchyRootOffsets
+            //    .Where(i => i >= 0 && i < nanite.HierarchyNodes.Length)
+            //    .Select(i => nanite.HierarchyNodes[i]).SelectMany(x => x.Slices).ToList();
+            //rootNodes.Sort((a, b) => a.MaxParentLODError.CompareTo(b.MaxParentLODError));
 
-            var highestrootNode = rootNodes.FirstOrDefault();
-            if (highestrootNode == null)
-            {
-                throw new ParserException("No root node found in Nanite hierarchy");
-            }
+            //var highestrootNode = rootNodes.FirstOrDefault();
+            //if (highestrootNode == null)
+            //{
+            //    throw new ParserException("No root node found in Nanite hierarchy");
+            //}
 
-            var highestLodSlices = new List<FHierarchyNodeSlice>();
-            var queue = new Queue<FPackedHierarchyNode>();
-            queue.Enqueue(hierarchy[highestrootNode.ChildStartReference]);
-            var og = false;
-            if (highestrootNode.MinLODError.Equals(-1.0f))
-                og = true;
-            while (queue.Count > 0)
-            {
-                var node = queue.Dequeue();
-                foreach (var slice in node.Slices)
-                {
-                    if (!slice.bEnabled)
-                        continue;
-                    if (og && !slice.MinLODError.Equals(-1.0f))
-                    {
-                        continue;
-                    }
-                    if (slice.ChildStartReference != uint.MaxValue)
-                    {
-                        queue.Enqueue(hierarchy[slice.ChildStartReference]);
-                    }
-                    else
-                    {
-                        highestLodSlices.Add(slice);
-                    }
-                }
-            }
+            //var highestLodSlices = new List<FHierarchyNodeSlice>();
+            //var queue = new Queue<FPackedHierarchyNode>();
+            //queue.Enqueue(hierarchy[highestrootNode.ChildStartReference]);
+            //var og = false;
+            //if (highestrootNode.MinLODError.Equals(-1.0f))
+            //    og = true;
+            //while (queue.Count > 0)
+            //{
+            //    var node = queue.Dequeue();
+            //    foreach (var slice in node.Slices)
+            //    {
+            //        if (!slice.bEnabled)
+            //            continue;
+            //        if (og && !slice.MinLODError.Equals(-1.0f))
+            //        {
+            //            continue;
+            //        }
+            //        if (slice.ChildStartReference != uint.MaxValue)
+            //        {
+            //            queue.Enqueue(hierarchy[slice.ChildStartReference]);
+            //        }
+            //        else
+            //        {
+            //            highestLodSlices.Add(slice);
+            //        }
+            //    }
+            //}
 
 
-            var clusters = new List<FCluster>();
-            foreach (var slice in highestLodSlices)
-            {
-                var page = nanite.LoadedPages[slice.StartPageIndex];
-                var fixups = page.FixupChunk.HierarchyFixups;
-                foreach (var fixup in fixups)
-                {
-                    if (fixup.NodeIndex == slice.NodeIndex && fixup.ChildIndex == slice.SliceIndex)
-                    {
-                        if (fixup.PageIndex != slice.StartPageIndex)
-                        {
-                            page = nanite.LoadedPages[fixup.PageIndex];
-                        }
+            //var clusters = new List<FCluster>();
+            //foreach (var slice in highestLodSlices)
+            //{
+            //    var page = nanite.LoadedPages[slice.StartPageIndex];
+            //    var fixups = page.FixupChunk.HierarchyFixups;
+            //    foreach (var fixup in fixups)
+            //    {
+            //        if (fixup.NodeIndex == slice.NodeIndex && fixup.ChildIndex == slice.SliceIndex)
+            //        {
+            //            if (fixup.PageIndex != slice.StartPageIndex)
+            //            {
+            //                page = nanite.LoadedPages[fixup.PageIndex];
+            //            }
 
-                        var start = (int) fixup.ClusterGroupPartStartIndex;
-                        var end = start + (int) slice.NumChildren;
-                        var localClusters = page.Clusters.AsSpan()[start..end].ToArray();
-                        clusters.AddRange(localClusters);
-                    }
-                }
-            }
+            //            var start = (int) fixup.ClusterGroupPartStartIndex;
+            //            var end = start + (int) slice.NumChildren;
+            //            var localClusters = page.Clusters.AsSpan()[start..end].ToArray();
+            //            clusters.AddRange(localClusters);
+            //        }
+            //    }
+            //}
 
-            goodClusters = clusters;
+            //goodClusters = clusters;
         }
 
 
