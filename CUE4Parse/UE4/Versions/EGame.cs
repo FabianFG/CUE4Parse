@@ -149,7 +149,7 @@ public enum EGame : uint
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
 
-    GAME_UE5_LATEST = GAME_UE5_6
+    GAME_UE5_LATEST = GAME_UE5_7
 }
 
 public static class GameUtils
