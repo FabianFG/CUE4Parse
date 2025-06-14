@@ -158,7 +158,7 @@ namespace CUE4Parse.UE4.Pak
         private void ReadIndexLegacy(StringComparer pathComparer)
         {
             Ar.Position = Info.IndexOffset;
-            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize), Versions);
+            var index = new FByteArchive($"{Name} - Index", ReadAndDecryptIndex((int) Info.IndexSize), Versions);
 
             string mountPoint;
             try
@@ -203,7 +203,7 @@ namespace CUE4Parse.UE4.Pak
 
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
-            using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+            using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
 
             int fileCount = 0;
             EncryptedFileCount = 0;
@@ -267,7 +267,7 @@ namespace CUE4Parse.UE4.Pak
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
             var data = Ar.Game != EGame.GAME_Rennsport
-                ? ReadAndDecrypt((int) directoryIndexSize)
+                ? ReadAndDecryptIndex((int) directoryIndexSize)
                 : RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true);
             using var directoryIndex = new GenericBufferReader(data);
 
@@ -372,6 +372,8 @@ namespace CUE4Parse.UE4.Pak
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override byte[] ReadAndDecryptIndex(int length) => ReadAndDecryptIndex(length, Ar, IsEncrypted);
 
         public override byte[] MountPointCheckBytes()
         {

@@ -312,7 +312,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             return;
         }
 
-        using var directoryIndex = new GenericBufferReader(DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
+        using var directoryIndex = new GenericBufferReader(DecryptIfEncrypted(TocResource.DirectoryIndexBuffer, IsEncrypted, true));
 
         string mountPoint;
         try
