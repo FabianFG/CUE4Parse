@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Pak
         {
             return Ar.Game switch
             {
-                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight 
+                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight or EGame.GAME_WutheringWaves
                     or EGame.GAME_Snowbreak or EGame.GAME_TorchlightInfinite or EGame.GAME_TowerOfFantasy
                     or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar
                     or EGame.GAME_EtheriaRestart => true,
@@ -80,7 +80,7 @@ namespace CUE4Parse.UE4.Pak
 #endif
                 switch (Game)
                 {
-                    case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse:
+                    case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves:
                         return NetEaseCompressedExtract(reader, pakEntry);
                     case EGame.GAME_GameForPeace:
                         return GameForPeaceExtract(reader, pakEntry);
@@ -109,7 +109,7 @@ namespace CUE4Parse.UE4.Pak
 
             switch (Game)
             {
-                case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse:
+                case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves:
                     return NetEaseExtract(reader, pakEntry);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);

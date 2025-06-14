@@ -57,6 +57,11 @@ public class UStaticMesh : UObject
         if (bCooked)
             RenderData = new FStaticMeshRenderData(Ar);
 
+        if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
+        {
+            Ar.Position += 64; // 8 per-platform floats
+        }
+
         if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
