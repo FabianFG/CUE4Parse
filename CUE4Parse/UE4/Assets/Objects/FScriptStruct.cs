@@ -170,7 +170,7 @@ public class FScriptStruct
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
-            //"FortActorRecord" => new FFortActorRecord(Ar),
+            "FortActorRecord" => new FFortActorRecord(Ar),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
