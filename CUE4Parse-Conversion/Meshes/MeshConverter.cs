@@ -24,6 +24,7 @@ using SkiaSharp;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using System.Threading;
+using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
 
@@ -53,7 +54,7 @@ public static class MeshConverter
         return true;
     }
 
-    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh)
+    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
         var originalMesh = spline?.GetStaticMesh().Load<UStaticMesh>();
         if (originalMesh == null)
@@ -61,15 +62,16 @@ public static class MeshConverter
             convertedMesh = new CStaticMesh();
             return false;
         }
-        return TryConvert(originalMesh, spline, out convertedMesh);
+        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh)
+    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
-        return TryConvert(originalMesh, null, out convertedMesh);
+        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline, out CStaticMesh convertedMesh)
+    public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline,
+        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
         convertedMesh = new CStaticMesh();
         if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
@@ -79,12 +81,6 @@ public static class MeshConverter
         convertedMesh.BoundingBox = new FBox(
             originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
             originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
-
-        if (TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
-        {
-            // the nanite full quality mesh will always be the highest quality version of the mesh
-            convertedMesh.LODs.Add(naniteMesh);
-        }
 
         foreach (var srcLod in originalMesh.RenderData.LODs)
         {
@@ -167,6 +163,22 @@ public static class MeshConverter
             convertedMesh.LODs.Add(staticMeshLod);
         }
 
+        if (naniteFormat != ENaniteMeshFormat.OnlyNormalLODs && TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
+        {
+            switch (naniteFormat)
+            {
+                case ENaniteMeshFormat.OnlyNaniteLOD:
+                    convertedMesh.LODs = [naniteMesh];
+                    break;
+                case ENaniteMeshFormat.AllLayersNaniteFirst:
+                    convertedMesh.LODs.Insert(0, naniteMesh);
+                    break;
+                case ENaniteMeshFormat.AllLayersNaniteLast:
+                    convertedMesh.LODs.Add(naniteMesh);
+                    break;
+            }
+        }
+
         convertedMesh.FinalizeMesh();
         return true;
     }
@@ -178,17 +190,14 @@ public static class MeshConverter
         if (
             nanite is null
             || nanite.PageStreamingStates.Length <= 0
-            || nanite.TemplateArchiveVersion.Game < EGame.GAME_UE5_0
+            || nanite.Archive.Game >= EGame.GAME_UE5_4
         )
         {
             staticMeshLod = null;
             return false;
         }
 
-        // Load all nanite pages. This is more of a brute force approach.
-        // It would be better to only parse the clusters that meet the threshold.
-        // I don't know enought to be able to do so so this is more relyable for the moment.
-        nanite.LoadBulkPages();
+        nanite.LoadAllPages();
 
         // Identify the max number of UVs
         int numTexCoords = nanite.NumInputTexCoords;
@@ -196,25 +205,20 @@ public static class MeshConverter
             throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
 
         // Identify all high quality clusters
-        IEnumerable<FCluster> goodClusters;
-
-        if (nanite.TemplateArchiveVersion.Game >= EGame.GAME_UE5_3)
-        {
-            goodClusters = nanite.LoadedPages
-                .SelectMany(p => p!.Clusters)
-                .Where(c => c.Flags == 7u);
-        }
-        else
-        {
-            goodClusters = nanite.LoadedPages
+        IEnumerable<FCluster> goodClusters = nanite.LoadedPages.Where(p => p != null)
                 .SelectMany(p => p!.Clusters)
                 .Where(x => x.EdgeLength < 0.0f);
-        }
-
 
         // Check if we even have tris to parse.
-        long numTris = goodClusters.Sum(c => c.TriIndices.Length);
-        long numVerts = goodClusters.Sum(c => c.Vertices.Length);
+        long numTris = 0;
+        long numVerts = 0;
+        var bHasTangents = false;
+        foreach (var cluster in goodClusters)
+        {
+            numTris += cluster.TriIndices.Length;
+            numVerts += cluster.Vertices.Length;
+            bHasTangents &= cluster.bHasTangents;
+        }
         if (numTris <= 0 || numVerts <= 0)
         {
             staticMeshLod = null;
@@ -258,12 +262,12 @@ public static class MeshConverter
         }
 
         // Create the return object
-        uint[] triBuffer = new uint[(matSections[matSections.Length - 1].FirstIndex + matSections[matSections.Length - 1].NumFaces) * 3];
+        uint[] triBuffer = new uint[(matSections[^1].FirstIndex + matSections[^1].NumFaces) * 3];
         var outMesh = new CStaticMeshLod
         {
             NumTexCoords = numTexCoords,
             HasNormals = true,
-            HasTangents = goodClusters.Any(c => c.HasTangents),
+            HasTangents = bHasTangents,
             IsTwoSided = true,
             Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer() { Indices32 = triBuffer }),
             Sections = new Lazy<CMeshSection[]>(matSections)
@@ -272,7 +276,7 @@ public static class MeshConverter
         outMesh.AllocateVertexColorBuffer();
 
         // Write vertices and the tri buffer
-        
+
         uint vertOffsetTracker = 0;
         Parallel.ForEach(goodClusters, (c) =>
         {
@@ -316,9 +320,9 @@ public static class MeshConverter
                 triBufferWriteOffset *= 3;
                 for (long localTriIndex = 0; localTriIndex < triLength; localTriIndex++)
                 {
-                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][0] + globalVertOffset;
-                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][1] + globalVertOffset;
-                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex][2] + globalVertOffset;
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex].X + globalVertOffset;
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex].Y + globalVertOffset;
+                    triBuffer[triBufferWriteOffset++] = c.TriIndices[triStart + localTriIndex].Z + globalVertOffset;
                 }
             }
             // Write the tris
@@ -346,12 +350,13 @@ public static class MeshConverter
         // aggressively garbage collect since the asset is re-parsed every time by FModel
         // we don't need most of this data to still exist post mesh export anyway.
         // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
-        for (int i = nanite.NumRootPages; i < nanite.LoadedPages.Length; i++)
+        for (int i = 0; i < nanite.LoadedPages.Length; i++)
         {
             nanite.LoadedPages[i] = null;
         }
         GC.Collect();
-        // parse all clusters that meed this threshold
+
+        outMesh.IsNanite = true;
         staticMeshLod = outMesh;
         return true;
     }

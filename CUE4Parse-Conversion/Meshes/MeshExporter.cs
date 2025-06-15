@@ -56,12 +56,12 @@ namespace CUE4Parse_Conversion.Meshes
         }
 
         public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : this(originalMesh, null, options){}
-       
+
         public MeshExporter(UStaticMesh originalMesh, USplineMeshComponent? splineMeshComponent, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
             {
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;

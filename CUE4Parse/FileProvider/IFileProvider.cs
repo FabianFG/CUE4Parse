@@ -70,6 +70,11 @@ namespace CUE4Parse.FileProvider
         public bool ReadShaderMaps { get; set; }
 
         /// <summary>
+        /// Whether file provider should read the Nanite pages
+        /// </summary>
+        public bool ReadNaniteData { get; set; }
+
+        /// <summary>
         /// Whether UMaterial loading should skip loading ReferencedTextures
         /// </summary>
         public bool SkipReferencedTextures { get; set; }

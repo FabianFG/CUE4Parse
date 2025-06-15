@@ -57,6 +57,7 @@ namespace CUE4Parse.FileProvider
         public ITypeMappingsProvider? MappingsContainer { get; set; }
         public bool ReadScriptData { get; set; }
         public bool ReadShaderMaps { get; set; }
+        public bool ReadNaniteData { get; set; }
         public bool SkipReferencedTextures { get; set; }
         public bool UseLazyPackageSerialization { get; set; } = true;
 
