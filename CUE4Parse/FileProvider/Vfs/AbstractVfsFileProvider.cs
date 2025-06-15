@@ -16,6 +16,7 @@ using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
+using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.MJS.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
@@ -85,6 +86,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
                 EGame.GAME_Splitgate2 => Splitgate2Aes.Splitgate2Decrypt,
+                EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
                 _ => null
             };
         }

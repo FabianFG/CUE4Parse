@@ -4,6 +4,7 @@ using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
+using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
@@ -246,6 +247,11 @@ public class FScriptStruct
             "GenericTeamId" when Ar.Game == EGame.GAME_DuneAwakening => new FGenericTeamId(Ar),
             "UniqueID" when Ar.Game == EGame.GAME_DuneAwakening => new FUniqueID(Ar),
             "BotAutoBorderCrossingConfig" when Ar.Game == EGame.GAME_DuneAwakening => new FBotAutoBorderCrossingConfig(Ar),
+
+            // MindsEye
+            "UgcData" when Ar.Game == EGame.GAME_MindsEye => new FUgcData(Ar),
+            "JsonObjectWrapper" when Ar.Game == EGame.GAME_MindsEye => new FJsonObjectWrapper(Ar),
+            "UGCPropertyDefaultValueOverride" when Ar.Game == EGame.GAME_MindsEye => new FUGCPropertyDefaultValueOverride(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };

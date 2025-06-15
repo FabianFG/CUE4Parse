@@ -29,7 +29,7 @@ public partial class PakFileReader
         var limit = Game switch
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
-            EGame.GAME_OperationApocalypse => 0x1000,
+            EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
             EGame.GAME_WutheringWaves => pakEntry.Path.EndsWith("ini") ? int.MaxValue : 0x800,
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
@@ -71,7 +71,7 @@ public partial class PakFileReader
         var limit = Game switch
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
-            EGame.GAME_OperationApocalypse => 0x1000,
+            EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
             EGame.GAME_WutheringWaves => 0x800,
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
