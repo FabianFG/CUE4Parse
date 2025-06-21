@@ -15,7 +15,7 @@ public class AActor : UObject
 
         // not sure why, but very rarely it overreads for CDO, maybe related to SparseClassDataStructSerialization
         // doesn't matter so return early in this case
-        if (Ar.Position >= validPos) return;  
+        if (Ar.Position >= validPos) return;
 
         if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.SerializeActorLabelInCookedBuilds)
         {
@@ -182,7 +182,6 @@ public class AHeterogeneousVolume : AInfo;
 public class AHierarchicalLODVolume : AVolume;
 public class AISMPartitionActor : APartitionActor;
 public class AInfo : AActor;
-public class AInstancedFoliageActor : AISMPartitionActor;
 public class AInstancedPlacementPartitionActor : AISMPartitionActor;
 public class AInteractiveFoliageActor : AStaticMeshActor;
 public class AInternalToolFrameworkActor : AActor;
@@ -203,7 +202,6 @@ public class ALandscapePlaceholder : AActor;
 public class ALandscapeSplineActor : AActor;
 public class ALandscapeSplineMeshesActor : APartitionActor;
 public class ALevelBounds : AActor;
-public class ALevelInstance : AActor;
 public class ALevelInstanceEditorInstanceActor : AActor;
 public class ALevelInstancePivot : AActor;
 public class ALevelScriptActor : AActor;
