@@ -19,6 +19,13 @@ public class FStringTable
         {
             var value = Ar.ReadFString();
             if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_LostRecordsBloomAndRage)
+            {
+                Ar.SkipFString();
+                var length = int.TryParse(Ar.ReadFString(), out var len) ? len : 0;
+                for (var i = 0; i < length; i++)
+                    Ar.SkipFString();
+            }
             return value;
         });
         if (Ar.Game == EGame.GAME_Wildgate) return;

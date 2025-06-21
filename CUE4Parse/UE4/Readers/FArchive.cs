@@ -334,6 +334,21 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipFString()
+        {
+            var length = Read<int>();
+            if (length == int.MinValue)
+                throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
+
+            if (Math.Abs(length) > Length - Position)
+            {
+                throw new ParserException($"Invalid FString length '{length}'");
+            }
+
+            Position += length >= 0 ? length : -length * sizeof(ushort);
+        }
+
         public virtual string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization

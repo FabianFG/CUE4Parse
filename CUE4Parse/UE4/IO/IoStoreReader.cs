@@ -427,7 +427,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var stringTable = directoryIndex.ReadFStringMemoryArray();
 
         var files = new Dictionary<string, GameFile>(fileEntries.Length, pathComparer);
-        var dirNamePool = ArrayPool<char>.Shared.Rent(256);
+        var dirNamePool = ArrayPool<char>.Shared.Rent(512);
         var currentLength = Write(dirNamePool, 0, MountPoint);
         ReadIndex(dirNamePool, currentLength, 0U);
 

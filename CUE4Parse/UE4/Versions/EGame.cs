@@ -121,6 +121,7 @@ public enum EGame : uint
         GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_TheFirstDescendant = GAME_UE5_2 + 3,
         GAME_MetroAwakening = GAME_UE5_2 + 4,
+        GAME_LostRecordsBloomAndRage = GAME_UE5_2 + 5,
         GAME_DuneAwakening = GAME_UE5_2 + 6,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
