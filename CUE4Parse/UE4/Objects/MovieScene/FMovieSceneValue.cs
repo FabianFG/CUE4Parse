@@ -11,7 +11,7 @@ public readonly struct FMovieSceneValue<T> : IUStruct
     public readonly ERichCurveInterpMode InterpMode;
     public readonly ERichCurveTangentMode TangentMode;
 
-    public FMovieSceneValue(FAssetArchive Ar, T value)
+    public FMovieSceneValue(FAssetArchive Ar, T value, bool compact = false)
     {
         Value = value;
         if (FSequencerObjectVersion.Get(Ar) < FSequencerObjectVersion.Type.SerializeFloatChannelCompletely)
@@ -22,10 +22,20 @@ public readonly struct FMovieSceneValue<T> : IUStruct
         }
         else
         {
-            Tangent = new FMovieSceneTangentData(Ar);
-            InterpMode = Ar.Read<ERichCurveInterpMode>();
-            TangentMode = Ar.Read<ERichCurveTangentMode>();
-            Ar.Position += 2; // Padding
+            if (compact)
+            {
+                Tangent = new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>());
+                InterpMode = Ar.Read<ERichCurveInterpMode>();
+                TangentMode = Ar.Read<ERichCurveTangentMode>();
+                Ar.Position += 1; // Padding
+            }
+            else
+            {
+                Tangent = new FMovieSceneTangentData(Ar);
+                InterpMode = Ar.Read<ERichCurveInterpMode>();
+                TangentMode = Ar.Read<ERichCurveTangentMode>();
+                Ar.Position += 2; // Padding
+            }
         }
     }
 }
