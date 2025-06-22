@@ -73,8 +73,8 @@ public static class WwiseVersions
         132,    // Dead by Daylight (old)
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
-        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone
-        145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic
+        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3
+        145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO
         150     // Dead by Daylight, Splitgate 2, Byte Breakers
     ];
 
