@@ -9,7 +9,10 @@ public class HierarchyAudioDevice : BaseHierarchyFx
 
     public HierarchyAudioDevice(FArchive Ar) : base(Ar)
     {
-        FxParams = new AkFxParams(Ar);
+        if (WwiseVersions.Version > 136)
+        {
+            FxParams = new AkFxParams(Ar);
+        }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

@@ -89,6 +89,9 @@ public class BaseHierarchyFx : AbstractHierarchy
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
+        writer.WritePropertyName("MediaList");
+        serializer.Serialize(writer, MediaList);
+
         writer.WritePropertyName("RtpcList");
         serializer.Serialize(writer, RtpcList);
 
