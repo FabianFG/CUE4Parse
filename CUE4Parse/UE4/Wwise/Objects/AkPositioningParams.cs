@@ -162,10 +162,10 @@ public class AkPositioningParams
 
     public class AkVertex
     {
-        public float X { get; }
-        public float Y { get; }
-        public float Z { get; }
-        public int Duration { get; }
+        public readonly float X;
+        public readonly float Y;
+        public readonly float Z;
+        public readonly int Duration;
 
         public AkVertex(FArchive Ar)
         {
@@ -178,8 +178,8 @@ public class AkPositioningParams
 
     public class AkPlaylistItem
     {
-        public uint VerticesOffset { get; }
-        public uint NumVertices { get; }
+        public readonly uint VerticesOffset;
+        public readonly uint NumVertices;
 
         public AkPlaylistItem(FArchive Ar)
         {
@@ -190,9 +190,9 @@ public class AkPositioningParams
 
     public class AkPlaylistRange
     {
-        public float XRange { get; }
-        public float YRange { get; }
-        public float ZRange { get; }
+        public readonly float XRange;
+        public readonly float YRange;
+        public readonly float ZRange;
 
         public AkPlaylistRange(FArchive Ar)
         {

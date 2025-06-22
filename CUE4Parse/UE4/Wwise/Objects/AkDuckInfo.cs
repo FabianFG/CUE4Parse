@@ -13,7 +13,6 @@ public class AkDuckInfo
     public readonly uint FadeInTime;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly ECurveInterpolation FadeCurve;
-    public readonly uint DuckingStateType;
     public readonly byte TargetProp; // Version > 65
 
     public AkDuckInfo(FArchive Ar)

@@ -87,7 +87,7 @@ public class DstRule
     public readonly int TransitionTime;
     public readonly uint FadeCurve;
     public readonly int FadeOffset;
-    public readonly uint MarkerID;
+    public readonly uint MarkerId;
     public readonly uint CueFilterHash;
     public readonly uint JumpToId;
     public readonly ushort JumpToType;
@@ -102,7 +102,7 @@ public class DstRule
         FadeOffset = Ar.Read<int>();
 
         if (WwiseVersions.Version <= 72)
-            MarkerID = Ar.Read<uint>();
+            MarkerId = Ar.Read<uint>();
         else
             CueFilterHash = Ar.Read<uint>();
 

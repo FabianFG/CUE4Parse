@@ -20,7 +20,7 @@ public readonly struct BankHeader
 
     public BankHeader(FArchive Ar, int sectionLength)
     {
-        Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, dunno how to handle that
+        Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, support for versions < 100 isn't needed anyway
         SoundBankId = Ar.Read<uint>();
         LanguageId = Ar.Read<uint>();
 

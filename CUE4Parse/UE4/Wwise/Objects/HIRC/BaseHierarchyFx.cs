@@ -51,7 +51,7 @@ public class BaseHierarchyFx : AbstractHierarchy
             {
                 RtpcInitList.Add(new RtpcInit
                 {
-                    ParamId = Ar.Read<byte>(),
+                    ParamId = WwiseReader.Read7BitEncodedIntBE(Ar),
                     InitValue = Ar.Read<float>()
                 });
             }
@@ -66,7 +66,7 @@ public class BaseHierarchyFx : AbstractHierarchy
             {
                 PluginPropertyValues.Add(new PluginPropertyValue
                 {
-                    PropertyId = Ar.Read<byte>(),
+                    PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar),
                     RtpcAccum = Ar.Read<byte>(),
                     Value = Ar.Read<float>()
                 });
@@ -76,13 +76,13 @@ public class BaseHierarchyFx : AbstractHierarchy
 
     public class RtpcInit
     {
-        public byte ParamId { get; set; }
+        public int ParamId { get; set; }
         public float InitValue { get; set; }
     }
 
     public class PluginPropertyValue
     {
-        public byte PropertyId { get; set; }
+        public int PropertyId { get; set; }
         public byte RtpcAccum { get; set; }
         public float Value { get; set; }
     }

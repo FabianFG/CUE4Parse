@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
@@ -45,7 +46,8 @@ public class WwiseReader
 
                     Ar.Position += 16;
                     Folders = Ar.ReadArray(() => new AkFolder(Ar));
-                    foreach (var folder in Folders) folder.PopulateName(Ar);
+                    foreach (var folder in Folders)
+                        folder.PopulateName(Ar);
                     foreach (var folder in Folders)
                     {
                         folder.Entries = new AkEntry[Ar.Read<uint>()];
@@ -69,7 +71,8 @@ public class WwiseReader
                     Header = new BankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Version);
 #if DEBUG
-                    if (!WwiseVersions.IsSupported()) Log.Warning($"Wwise version {Version} is not supported");
+                    if (!WwiseVersions.IsSupported())
+                        Log.Warning($"Wwise version {Version} is not supported");
 #endif
                     break;
                 case ESectionIdentifier.INIT:
@@ -83,7 +86,8 @@ public class WwiseReader
                     WemIndexes = Ar.ReadArray(sectionLength / 12, Ar.Read<DataIndex>);
                     break;
                 case ESectionIdentifier.DATA:
-                    if (WemIndexes == null) break;
+                    if (WemIndexes == null)
+                        break;
                     WemSounds = new byte[WemIndexes.Length][];
                     for (var i = 0; i < WemSounds.Length; i++)
                     {
@@ -129,7 +133,8 @@ public class WwiseReader
                     else
                     {
                         Platform = ReadStzString(Ar);
-                    };
+                    }
+                    ;
                     break;
                 default:
 #if DEBUG
@@ -196,7 +201,7 @@ public class WwiseReader
 
             if (sectionIdentifier == ESectionIdentifier.BKHD)
             {
-                var version = Ar.Read<uint>();
+                Ar.Read<uint>(); // Version
                 var soundBankId = Ar.Read<uint>();
                 return soundBankId;
             }
@@ -207,6 +212,7 @@ public class WwiseReader
         return null;
     }
 
+    #region Readers
     public static string ReadStzString(FArchive Ar)
     {
         List<byte> bytes = [];
@@ -243,4 +249,5 @@ public class WwiseReader
 
         return value;
     }
+    #endregion
 }

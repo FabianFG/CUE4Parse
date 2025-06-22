@@ -73,20 +73,20 @@ public class AkDecisionTree
 
 public class AkDecisionTreeNode
 {
-    public uint Key { get; private set; }
-    public uint AudioNodeId { get; private set; }
-    public ushort ChildrenIndex { get; private set; }
-    public ushort ChildrenCount { get; private set; }
-    public ushort Weight { get; private set; }
-    public ushort Probability { get; private set; }
-    public List<AkDecisionTreeNode> Children { get; private set; }
+    public readonly uint Key;
+    public readonly uint AudioNodeId;
+    public readonly ushort ChildrenIndex;
+    public readonly ushort ChildrenCount;
+    public readonly ushort Weight;
+    public readonly ushort Probability;
+    public readonly List<AkDecisionTreeNode> Children;
 
     public AkDecisionTreeNode(FArchive Ar, uint countMax, int currentDepth, int maxDepth, int itemSize)
     {
         Key = Ar.Read<uint>();
         Children = [];
 
-        bool isAudioNode = IsAudioNode(Ar, countMax, currentDepth, maxDepth, itemSize);
+        bool isAudioNode = IsAudioNode(Ar, countMax, itemSize);
 
         if (isAudioNode || currentDepth == maxDepth)
         {
@@ -111,7 +111,7 @@ public class AkDecisionTreeNode
         }
     }
 
-    private static bool IsAudioNode(FArchive Ar, uint countMax, int currentDepth, int maxDepth, int itemSize)
+    private static bool IsAudioNode(FArchive Ar, uint countMax, int itemSize)
     {
         long originalPosition = Ar.Position;
 

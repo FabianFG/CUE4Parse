@@ -9,23 +9,23 @@ public class AkConversionTable
     public readonly dynamic Size; // uint for legacy versions, ushort for modern versions
     public readonly List<AkRtpcGraphPoint> GraphPoints;
 
-    public AkConversionTable(FArchive ar)
+    public AkConversionTable(FArchive Ar)
     {
         if (WwiseVersions.Version <= 36)
         {
-            Scaling = ar.Read<uint>();
-            Size = ar.Read<uint>();
+            Scaling = Ar.Read<uint>();
+            Size = Ar.Read<uint>();
         }
         else
         {
-            Scaling = ar.Read<byte>();
-            Size = ar.Read<ushort>();
+            Scaling = Ar.Read<byte>();
+            Size = Ar.Read<ushort>();
         }
 
         GraphPoints = [];
         for (int i = 0; i < Size; i++)
         {
-            GraphPoints.Add(new AkRtpcGraphPoint(ar));
+            GraphPoints.Add(new AkRtpcGraphPoint(Ar));
         }
     }
 }

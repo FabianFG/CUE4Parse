@@ -14,8 +14,7 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly uint ReferencedId;
     public readonly List<AkProp> Props;
     public readonly List<AkPropRange> PropRanges;
-
-    public object? ActionData { get; private set; }
+    public readonly object? ActionData;
 
     public HierarchyEventAction(FArchive Ar) : base(Ar)
     {

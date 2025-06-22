@@ -11,7 +11,7 @@ public enum ESectionIdentifier : uint
     RIFF = 0x46464952,
     STID = 0x44495453, // String Mappings
     STMG = 0x474D5453, // Global Settings
-    ENVS = 0x53564E45, // Enviroment Settings
+    ENVS = 0x53564E45, // Environment Settings
     FXPR = 0x52505846, // FX Parameters
     PLAT = 0x54414C50 // Custom Platform
 }

@@ -96,9 +96,9 @@ public class WwiseProvider
                 return results;
 
             string? soundBankId = null;
-            if (requiredBankProp?.Tag is ObjectProperty objProp && objProp.Value != null)
+            if (requiredBankProp?.Tag is ObjectProperty { Value: not null } objProp)
             {
-                if (objProp.Value.TryLoad(out var audioBank) && audioBank != null)
+                if (objProp.Value.TryLoad(out var audioBank))
                 {
                     soundBankId = audioBank?.Properties?.FirstOrDefault(p => p.Name.Text == "ShortID")?.Tag?.GenericValue?.ToString();
                 }

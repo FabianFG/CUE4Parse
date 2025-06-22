@@ -9,14 +9,14 @@ public class ExceptParams
 
     public ExceptParams(FArchive Ar)
     {
-        byte exceptionListSize;
+        int exceptionListSize;
         if (WwiseVersions.Version <= 122)
         {
             exceptionListSize = (byte)Ar.Read<uint>();
         }
         else
         {
-            exceptionListSize = Ar.Read<byte>();
+            exceptionListSize = WwiseReader.Read7BitEncodedIntBE(Ar);
         }
 
         ExceptionElements = [];

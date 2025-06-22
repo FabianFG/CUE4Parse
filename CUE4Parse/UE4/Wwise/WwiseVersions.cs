@@ -72,10 +72,10 @@ public static class WwiseVersions
         113,    // Dead by Daylight (old)
         132,    // Dead by Daylight (old)
         134,    // Valorant (old)
-        135,    // Dead by Daylight (old)
+        135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
         140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone
-        145,    // Valorant, Marvel Rivals
-        150     // Dead by Daylight, Splitgate 2
+        145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic
+        150     // Dead by Daylight, Splitgate 2, Byte Breakers
     ];
 
     public static bool IsSupported() => SupportedVersions.Contains(Version);

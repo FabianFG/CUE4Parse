@@ -120,10 +120,10 @@ public class AkFxBus
             count = Ar.Read<byte>(); // numFX
         }
 
-        bool readFx = false;
+        bool readFx;
         if (WwiseVersions.Version > 48 && WwiseVersions.Version <= 65)
         {
-            readFx = count > 0; // TODO: or if is enviromental, only possible in versions <= 53
+            readFx = count > 0; // or if is environmental, only possible in versions <= 53, we shouldn't really care about versions < 100
         }
         else
         {

@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class EnvSettings
 {
-    public List<ConversionTableEntry> ConversionTableEntries { get; private set; }
+    public readonly List<ConversionTableEntry> ConversionTableEntries;
 
     public EnvSettings(FArchive Ar)
     {
@@ -36,12 +36,12 @@ public class EnvSettings
                 int curveSize;
                 if (WwiseVersions.Version <= 36)
                 {
-                    var curveScaling = Ar.Read<uint>();
+                    Ar.Read<uint>(); // CurveScaling
                     curveSize = (int) Ar.Read<uint>();
                 }
                 else
                 {
-                    var curveScaling = Ar.Read<byte>();
+                    Ar.Read<byte>(); // CurveScaling
                     curveSize = Ar.Read<ushort>();
                 }
 
