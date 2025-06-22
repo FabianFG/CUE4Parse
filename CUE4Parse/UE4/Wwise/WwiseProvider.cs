@@ -359,8 +359,23 @@ public class WwiseProvider
         long totalLoadedSize = 0;
         int totalLoadedBanks = 0;
 
-        IEnumerable<GameFile> soundBankFiles = _provider.Files.Values
-            .Where(file => _validSoundBankExtensions.Contains(file.Extension));
+        var soundBankFiles = _provider.Files.Values
+            .Where(file => _validSoundBankExtensions.Contains(file.Extension))
+            .ToList();
+
+        if (soundBankFiles.Count == 0)
+        {
+            var initAsset = _provider.Files.Values.Any(file => file.Extension.Equals("uasset", StringComparison.OrdinalIgnoreCase) &&
+                                                               (file.Path.Contains("Init", StringComparison.OrdinalIgnoreCase) ||
+                                                                file.Path.Contains("InitBank", StringComparison.OrdinalIgnoreCase)));
+
+            if (initAsset)
+            {
+                // TEMP: Init bnk was found, but caching isn't supported yet, prevent exception from throwing
+                _completedWwiseFullBnkInit = true;
+                return;
+            }
+        }
 
         foreach (var soundbank in soundBankFiles)
         {
