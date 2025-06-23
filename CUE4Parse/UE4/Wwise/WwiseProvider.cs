@@ -29,6 +29,8 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 102
     // Important note: If game splits audio event hierarchies across multiple soundbanks and either of these limits is reached, given game requires custom loading implementation!
     public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
     public int MaxBankFiles { get; } = maxBankFiles;
+    // NOTES:
+    // - REMATCH requires increase MaxBankFiles. Total Wwise size is fine.
 }
 
 public class WwiseProvider
