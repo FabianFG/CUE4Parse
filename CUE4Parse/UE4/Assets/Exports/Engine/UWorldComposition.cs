@@ -81,7 +81,7 @@ public class FWorldTileInfo
         {
             Position = Ar.Read<FIntVector>();
         }
-        Bounds = Ar.Read<FBox>();
+        Bounds = new FBox(Ar);
         Layer = new FWorldTileLayer(Ar);
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_UPDATED)
         {
@@ -99,7 +99,10 @@ public class FWorldTileInfo
             ZOrder = Ar.Read<int>();
         }
 
-        Ar.Position += 8; // idk
+        if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
+        {
+            Ar.Position += 8; // idk
+        }
     }
 }
 

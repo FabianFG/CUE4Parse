@@ -52,7 +52,7 @@ public class CMaterialParams2
             "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Basecolor",
             "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
-            "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "Main_T_BaseColor",
+            "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor",
             "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex",
 
         ],
