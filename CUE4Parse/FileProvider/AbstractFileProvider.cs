@@ -345,51 +345,58 @@ namespace CUE4Parse.FileProvider
             };
         }
 
-        private static readonly string[] pluginExtensions = { ".uplugin", ".upluginmanifest", "AssetRegistry.bin" };
+        private static readonly string[] pluginExtensions = [".uplugin", ".upluginmanifest", "Assetregisty.bin"];
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
         public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{ProjectName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             var arregex = new Regex($"^{ProjectName}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
-
-            var plugins = Files.Where(f => pluginExtensions.Any(suffix => f.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)));
-            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !plugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
-
-            var virtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
-            Parallel.ForEach(plugins, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>
+            ConcurrentBag<KeyValuePair<string, GameFile>> matchingPlugins = [];
+            Parallel.ForEach(Files, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                foreach (var suffix in pluginExtensions)
+                {
+                    if (kvp.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchingPlugins.Add(kvp);
+                        break;
+                    }
+                }
+            });
 
-                string filePath = kvp.Key;
-                GameFile gameFile = kvp.Value;
+            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !matchingPlugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
+
+            foreach ((string filePath, GameFile gameFile) in matchingPlugins)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
                 if (arregex.IsMatch(filePath))
                 {
                     var virtPath = gameFile.Directory.SubstringAfterLast('/');
                     var path = gameFile.Directory;
 
-                    virtualPaths.TryAdd(virtPath, path);
-                    return;
+                    VirtualPaths[virtPath] = path;
+                    continue;
                 }
 
                 if (useIndividualPlugin)
                 {
-                    if (!filePath.EndsWith(".uplugin")) return;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) return;
+                    if (!filePath.EndsWith(".uplugin")) continue;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
                     using var reader = new StreamReader(stream);
                     var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
-                    if (!pluginFile!.CanContainContent) return;
+                    if (!pluginFile!.CanContainContent) continue;
 
-                    var virtPath = gameFile.Path.SubstringAfterLast('/').SubstringBeforeLast('.');
-                    var path = gameFile.Path.SubstringBeforeLast('/');
-
-                    virtualPaths.TryAdd(virtPath, path);
+                    var virtPath = gameFile.NameWithoutExtension;
+                    var path = gameFile.Directory;
+                    VirtualPaths[virtPath] = path;
                 }
                 else
                 {
-                    if (!regex.IsMatch(filePath)) return;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) return;
+                    if (!regex.IsMatch(filePath)) continue;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
                     using var reader = new StreamReader(stream);
                     var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
 
@@ -401,15 +408,9 @@ namespace CUE4Parse.FileProvider
 
                         var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
                         var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
-
-                        virtualPaths.TryAdd(virtPath, path);
+                        VirtualPaths[virtPath] = path;
                     }
                 }
-            });
-
-            foreach (var kvp in virtualPaths)
-            {
-                VirtualPaths[kvp.Key] = kvp.Value;
             }
 
             return VirtualPaths.Count;
