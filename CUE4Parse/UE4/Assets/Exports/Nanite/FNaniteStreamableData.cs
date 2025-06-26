@@ -28,9 +28,9 @@ public class FNaniteStreamableData
         // origin of all the offsets in the page cluster header
         PageDiskHeaderOffset = Ar.Position;
         PageDiskHeader = new FPageDiskHeader(Ar);
-        if (PageDiskHeader.NumClusters > NaniteConstants.NANITE_MAX_CLUSTERS_PER_PAGE)
+        if (PageDiskHeader.NumClusters > NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE(Ar.Game))
         {
-            throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.NumClusters} max is {NaniteConstants.NANITE_MAX_CLUSTERS_PER_PAGE}");
+            throw new InvalidDataException($"Too many clusters in FNaniteStreamableData, {PageDiskHeader.NumClusters} max is {NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE(Ar.Game)}");
         }
         if (PageDiskHeader.NumTexCoords > NaniteConstants.NANITE_MAX_UVS)
         {

@@ -21,13 +21,28 @@ public static class NaniteConstants
     /// <summary>The maximum number of bits used to serialize tangents.</summary>
     public const int NANITE_MAX_TANGENT_QUANTIZATION_BITS = 12;
     /// <summary>The maximum number of bits used to serialize an axis in a UV.</summary>
-    public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS = 15;//5.4 20
+    public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500 = 15;
+    public const int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_504 = 20;
     /// <summary>The maximum number of bits used to serialize a color channel for a vertex color.</summary>
     public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
 
-    public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS = 8;
     /// <summary>The maximum amount of clusters that can be contained in a page.</summary>
-    public const int NANITE_MAX_CLUSTERS_PER_PAGE = (1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS);
+    public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500 = 8;
+    public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504 =
+        NANITE_STREAMING_PAGE_MAX_CLUSTERS_BITS > NANITE_ROOT_PAGE_MAX_CLUSTERS_BITS
+            ? NANITE_STREAMING_PAGE_MAX_CLUSTERS_BITS
+            : NANITE_ROOT_PAGE_MAX_CLUSTERS_BITS;
+
+    public const int NANITE_ROOT_PAGE_GPU_SIZE_BITS = 15;
+    public const int NANITE_ROOT_PAGE_GPU_SIZE = (int) (1u << NANITE_ROOT_PAGE_GPU_SIZE_BITS);
+    public const int NANITE_ROOT_PAGE_MAX_CLUSTERS_BITS = (NANITE_ROOT_PAGE_GPU_SIZE_BITS - NANITE_CLUSTER_MIN_EXPECTED_GPU_SIZE_BITS);
+    public const int NANITE_ROOT_PAGE_MAX_CLUSTERS = (int) (1u << NANITE_ROOT_PAGE_MAX_CLUSTERS_BITS);
+
+    public const int NANITE_STREAMING_PAGE_GPU_SIZE_BITS = 17;
+    public const int NANITE_STREAMING_PAGE_GPU_SIZE = (int)(1u << NANITE_STREAMING_PAGE_GPU_SIZE_BITS);
+    public const int NANITE_CLUSTER_MIN_EXPECTED_GPU_SIZE_BITS = 9;	// Used to determine how many bits to allocate for page cluster count.
+    public const int NANITE_STREAMING_PAGE_MAX_CLUSTERS_BITS = (NANITE_STREAMING_PAGE_GPU_SIZE_BITS - NANITE_CLUSTER_MIN_EXPECTED_GPU_SIZE_BITS);
+    public const int NANITE_STREAMING_PAGE_MAX_CLUSTERS = (int) (1u << NANITE_STREAMING_PAGE_MAX_CLUSTERS_BITS);
 
     public const int NANITE_MAX_CLUSTER_INDICES_BITS = 8;
     /// <summary>The maximum amount of tri indices that can be contained in a cluster.</summary>
@@ -50,6 +65,8 @@ public static class NaniteConstants
     // 5.4+
     public const int NANITE_MIN_POSITION_PRECISION_504 = -20;
     public const int NANITE_MAX_POSITION_PRECISION_504 = 43;
+
+    public const int NANITE_VERTEX_COLOR_MODE_VARIABLE = 1;
 
     [Flags]
     public enum NANITE_CLUSTER_FLAG : uint

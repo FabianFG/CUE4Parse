@@ -1,4 +1,6 @@
+using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -9,16 +11,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
 public readonly struct FUVRange
 {
-    public readonly TIntVector2<uint> Min;
-    public readonly TIntVector2<uint> NumBits;
+    private static readonly Vector64<uint> _mask = (Vector64<uint>.One << 5) - Vector64<uint>.One;
+
+    public readonly Vector64<uint> Min;
+    public readonly Vector64<uint> NumBits;
     public readonly uint NumMantissaBits;
+    public readonly uint TexCoordBytesPerValue;
 
     public FUVRange(FArchive Ar)
     {
-        var packed = Ar.Read<TIntVector2<uint>>();
-        Min = new TIntVector2<uint>(packed.X >> 5, packed.Y >> 5);
-        NumBits = new TIntVector2<uint>(GetBits(packed.X, 5, 0), GetBits(packed.Y, 5, 0));
+        var packed = Ar.Read<Vector64<uint>>();
+        Min = packed >> 5;
+        NumBits = packed & _mask;
         NumMantissaBits = NANITE_UV_FLOAT_NUM_MANTISSA_BITS;
+        TexCoordBytesPerValue = (Math.Max(NumBits[0], NumBits[1]) + 7) / 8;
     }
 }
 

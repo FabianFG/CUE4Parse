@@ -78,8 +78,8 @@ public class FClusterFixup
     public FClusterFixup(FArchive Ar)
     {
         var pageAndClusterIndex = Ar.Read<uint>();
-        PageIndex = pageAndClusterIndex >> NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
-        ClusterIndex = pageAndClusterIndex & (NANITE_MAX_CLUSTERS_PER_PAGE - 1u);
+        PageIndex = pageAndClusterIndex >> NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS(Ar.Game);
+        ClusterIndex = pageAndClusterIndex & (uint) (NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE(Ar.Game) - 1);
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
         PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS;

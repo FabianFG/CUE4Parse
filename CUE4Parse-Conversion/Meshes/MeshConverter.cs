@@ -185,24 +185,14 @@ public static class MeshConverter
 
     private static bool TryConvertNaniteMesh(UStaticMesh originalMesh, out CStaticMeshLod? staticMeshLod)
     {
-        // Only 5.3 and up have been confirmed working so far.
         FNaniteResources? nanite = originalMesh.RenderData?.NaniteResources;
-        if (
-            nanite is null
-            || nanite.PageStreamingStates.Length <= 0
-            || nanite.Archive.Game >= EGame.GAME_UE5_4
-        )
+        if (nanite is null || nanite.PageStreamingStates.Length <= 0)
         {
             staticMeshLod = null;
             return false;
         }
 
         nanite.LoadAllPages();
-
-        // Identify the max number of UVs
-        int numTexCoords = nanite.NumInputTexCoords;
-        if (numTexCoords > Constants.MAX_MESH_UV_SETS)
-            throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
 
         // Identify all high quality clusters
         IEnumerable<FCluster> goodClusters = nanite.LoadedPages.Where(p => p != null)
@@ -213,12 +203,17 @@ public static class MeshConverter
         long numTris = 0;
         long numVerts = 0;
         var bHasTangents = false;
+        uint numUVs = 0;
         foreach (var cluster in goodClusters)
         {
             numTris += cluster.TriIndices.Length;
             numVerts += cluster.Vertices.Length;
             bHasTangents &= cluster.bHasTangents;
+            numUVs = Math.Max(numUVs, cluster.NumUVs);
         }
+
+        // Identify the max number of UVs
+        int numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int)numUVs : nanite.NumInputTexCoords;
         if (numTris <= 0 || numVerts <= 0)
         {
             staticMeshLod = null;
@@ -302,12 +297,7 @@ public static class MeshConverter
                     outMesh.ExtraUV.Value[texCoordIndex - 1][vertOffset].V = vert.Attributes.UVs[texCoordIndex].Y;
                 }
 
-                outMesh.VertexColors![vertOffset] = new FColor(
-                    (byte) (vert.Attributes.Color.X * 0xFF),
-                    (byte) (vert.Attributes.Color.Y * 0xFF),
-                    (byte) (vert.Attributes.Color.Z * 0xFF),
-                    (byte) (vert.Attributes.Color.W * 0xFF)
-                );
+                outMesh.VertexColors![vertOffset] = vert.Attributes.Color;
             }
             void writeToTriBuffer(uint matIndex, uint triStart, uint triLength)
             {

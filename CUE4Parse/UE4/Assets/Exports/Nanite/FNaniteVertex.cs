@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -18,7 +19,7 @@ public class FNaniteVertex
     /// <summary>True if the vertex as read as a reference. This exists only for debugging purposes.</summary>
     public bool IsRef = false;
 
-    private static FVector UnpackNormals(uint packed, int bits)
+    public static FVector UnpackNormals(uint packed, int bits)
     {
         uint mask = BitFieldMaskU32(bits, 0);
         (float f0, float f1) = (GetBits(packed, bits, 0) * (2.0f / mask) - 1.0f, GetBits(packed, bits, bits) * (2.0f / mask) - 1.0f);
@@ -30,7 +31,7 @@ public class FNaniteVertex
         return n;
     }
 
-    private static FVector UnpackTangentX(FVector tangentZ, uint tangentAngleBits, int numTangentBits)
+    public static FVector UnpackTangentX(FVector tangentZ, uint tangentAngleBits, int numTangentBits)
     {
         bool swapXZ = Math.Abs(tangentZ.Z) > Math.Abs(tangentZ.X);
         if (swapXZ)
@@ -41,9 +42,7 @@ public class FNaniteVertex
         FVector tangentRefX = new FVector(-tangentZ.Y, tangentZ.X, 0.0f);
         FVector tangentRefY = tangentZ ^ tangentRefX;
 
-        float dot = 0.0f;
-        dot += tangentRefX.X * tangentRefX.X;
-        dot += tangentRefX.Y * tangentRefX.Y;
+        float dot = tangentRefX.X * tangentRefX.X + tangentRefX.Y * tangentRefX.Y;
         float scale = 1.0f / (float)Math.Sqrt(dot);
 
         float tangentAngle = tangentAngleBits * (float)(2.0 * Math.PI) / (1 << numTangentBits);
@@ -55,7 +54,7 @@ public class FNaniteVertex
         return tangentX;
     }
 
-    private static FVector2D UnpackTexCoord(TIntVector2<uint> packed, FUVRange_Old uvRangeOld)
+    public static FVector2D UnpackTexCoord(TIntVector2<uint> packed, FUVRange_Old uvRangeOld)
     {
         FVector2D t = new(packed.X, packed.Y);
         t += new FVector2D(
@@ -66,11 +65,11 @@ public class FNaniteVertex
         return (t + new FVector2D(uvRangeOld.Min.X, uvRangeOld.Min.Y)) * scale;
     }
 
-    private static FVector2D UnpackTexCoord(TIntVector2<uint> packed, FUVRange uvRange)
+    public static FVector2D UnpackTexCoord(Vector64<uint> packed, FUVRange uvRange)
     {
-        TIntVector2<uint> GlobalUV = new (uvRange.Min.X + packed.X, uvRange.Min.Y + packed.Y);
-        return new FVector2D(DecodeUVFloat(GlobalUV.X, uvRange.NumMantissaBits),
-            DecodeUVFloat(GlobalUV.Y, uvRange.NumMantissaBits));
+        var globalUV = packed + uvRange.Min;
+        return new FVector2D(DecodeUVFloat(globalUV[0], uvRange.NumMantissaBits),
+            DecodeUVFloat(globalUV[1], uvRange.NumMantissaBits));
     }
 
     private static float DecodeUVFloat(uint EncodedValue, uint NumMantissaBits)
@@ -79,7 +78,7 @@ public class FNaniteVertex
         bool bNeg = (EncodedValue <= ExponentAndMantissaMask);
         uint ExponentAndMantissa = (bNeg ? ~EncodedValue : EncodedValue) & ExponentAndMantissaMask;
 
-        float Result = (0x3F000000u + (ExponentAndMantissa << (int) (23 - NumMantissaBits)));
+        float Result = BitConverter.UInt32BitsToSingle(0x3F000000u + (ExponentAndMantissa << (int) (23 - NumMantissaBits)));
         Result = Math.Min(Result * 2.0f - 1.0f, Result); // Stretch denormals from [0.5,1.0] to [0.0,1.0]
 
         return bNeg ? -Result : Result;
@@ -98,9 +97,8 @@ public class FNaniteVertex
 
         var z = GetBits(packed.X, (int) cluster.PosBitsZ, 0);
 
-        RawPos = new FIntVector((int) x, (int) y, (int) z);
-        Pos = new FVector(x, y, z);
-        Pos = (RawPos + cluster.PosStart) * cluster.PosScale;
+        RawPos = new FIntVector((int) x, (int) y, (int) z) + cluster.PosStart;
+        Pos = RawPos * cluster.PosScale;
     }
 
     internal void ReadAttributeData(FArchive Ar, BitStreamReader bitStreamReader, FCluster cluster)
@@ -108,7 +106,8 @@ public class FNaniteVertex
         Attributes = new FNaniteVertexAttributes();
 
         // parses normals
-        uint normalBits = bitStreamReader.Read(Ar, 2 * (int) cluster.NormalPrecision, 2 * NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game));
+        uint normalBits = bitStreamReader.Read(Ar, 2 * (int) cluster.NormalPrecision,
+            2 * NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game));
         Attributes.Normal = UnpackNormals(normalBits, (int) cluster.NormalPrecision);
 
         // parse tangent
@@ -131,40 +130,26 @@ public class FNaniteVertex
 
         // parse color
         var numComponentBits = cluster.ColorComponentBits;
-        var colorDelta = new TIntVector4<uint>(
+        var color = Vector128.Create([
             bitStreamReader.Read(Ar, numComponentBits.X, NANITE_MAX_COLOR_QUANTIZATION_BITS),
             bitStreamReader.Read(Ar, numComponentBits.Y, NANITE_MAX_COLOR_QUANTIZATION_BITS),
             bitStreamReader.Read(Ar, numComponentBits.Z, NANITE_MAX_COLOR_QUANTIZATION_BITS),
             bitStreamReader.Read(Ar, numComponentBits.W, NANITE_MAX_COLOR_QUANTIZATION_BITS)
-        );
+        ]).As<uint, int>() + cluster.ColorMin;
 
-        const float scale = 1.0f / 255.0f;
-        // should be in the ranges of 0.0f .. 1.0f
-        var colorMin = cluster.ColorMin;
-        Attributes.Color = new FVector4(
-            (colorMin.X + colorDelta.X) * scale,
-            (colorMin.Y + colorDelta.Y) * scale,
-            (colorMin.Z + colorDelta.Z) * scale,
-            (colorMin.W + colorDelta.W) * scale
-        );
+        Attributes.Color = new FColor((byte) color[0], (byte) color[1], (byte) color[2], (byte) color[3]);
 
         // parse tex coords
         for (int texCoordIndex = 0; texCoordIndex < cluster.NumUVs; texCoordIndex++)
         {
             var uvPrec = new TIntVector2<uint>(GetBits(cluster.UVBitOffsets, 4, texCoordIndex * 8),
                 GetBits(cluster.UVBitOffsets, 4, texCoordIndex * 8 + 4));
-            TIntVector2<uint> UVBits =
-                new(bitStreamReader.Read(Ar, (int) uvPrec.X, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS),
-                    bitStreamReader.Read(Ar, (int) uvPrec.Y, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS));
 
-            if (Ar.Game >= EGame.GAME_UE5_4)
-            {
-                Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, cluster.UVRanges[texCoordIndex]);
-            }
-            else
-            {
-                Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, cluster.UVRanges_Old[texCoordIndex]);
-            }
+            TIntVector2<uint> UVBits =
+                new(bitStreamReader.Read(Ar, (int) uvPrec.X, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500),
+                    bitStreamReader.Read(Ar, (int) uvPrec.Y, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500));
+            Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, cluster.UVRanges_Old[texCoordIndex]);
+
         }
     }
 }

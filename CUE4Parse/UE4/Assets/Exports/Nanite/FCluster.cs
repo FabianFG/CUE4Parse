@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -19,7 +20,7 @@ public class FCluster
     /// <summary>The offset from the gpu page header where the index data can be found.</summary>
     public uint IndexOffset;
     /// <summary>A mimimum value for all vertex colors in this cluster. When reading a vertex color, add this value or else it will look off.</summary>
-    public TIntVector4<uint> ColorMin;
+    public Vector128<int> ColorMin;
     /// <summary>number of bits for each channel of the vertex colors, each taking 4 bits.</summary>
     public uint ColorBits;
     public TIntVector4<int> ColorComponentBits;
@@ -117,7 +118,7 @@ public class FCluster
         IndexOffset = GetBits(numTris_indexOffset, 24, 8);
 
         var colorMin = Ar.Read<uint>();
-        ColorMin = new TIntVector4<uint>(UnpackByte0(colorMin), UnpackByte1(colorMin), UnpackByte2(colorMin), UnpackByte3(colorMin));
+        ColorMin = Vector128.Create([UnpackByte0(colorMin), UnpackByte1(colorMin), UnpackByte2(colorMin), UnpackByte3(colorMin)]).As<uint, int>();
 
         var colorBits_groupIndex = Ar.Read<uint>();
         ColorBits = GetBits(colorBits_groupIndex, 16, 0);
@@ -126,7 +127,7 @@ public class FCluster
         ColorComponentBits = new TIntVector4<int>(
             (int) GetBits(ColorBits, 4, 0), (int) GetBits(ColorBits, 4, 4),
             (int) GetBits(ColorBits, 4, 8), (int) GetBits(ColorBits, 4, 12)
-            );
+        );
 
         Ar.Position += stride;
         PosStart = Ar.Read<FIntVector>();
@@ -182,9 +183,15 @@ public class FCluster
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
             bSkinning = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 23) == 1;
             NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 24);
-            ColorMode = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 2, 27);
+            ColorMode = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 27);
         }
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        else if (Ar.Game >= EGame.GAME_UE5_4)
+        {
+            bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
+            NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
+            ColorMode = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 26);
+        }
+        else if (Ar.Game >= EGame.GAME_UE5_3)
         {
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
             NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
@@ -199,7 +206,7 @@ public class FCluster
         UVBitOffsets = Ar.Read<uint>();
         var materialEncoding = Ar.Read<uint>();
         Ar.Position += stride;
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= EGame.GAME_UE5_5)
         {
             var ExtendedDataOfsset_Num = Ar.Read<uint>();
             ExtendedDataOffset = GetBits(ExtendedDataOfsset_Num, 22, 0);
@@ -276,29 +283,29 @@ public class FCluster
         GroupRefToVertex = new uint[clusterDiskHeader.NumVertexRefs];
         uint numNonRefVertices = NumVerts - clusterDiskHeader.NumVertexRefs;
         GroupNonRefToVertex = new uint[numNonRefVertices];
-        uint[] groupNumRefsInPrevDwords8888 = [0, 0];
+        Span<uint> groupNumRefsInPrevDwords8888 = stackalloc uint[2];
         long alignedBitmaskOffset = page.PageDiskHeaderOffset + page.PageDiskHeader.VertexRefBitmaskOffset + clusterIndex * 32; // NANITE_MAX_CLUSTER_VERTICES / 8
-        for (uint groupIndex = 0; groupIndex < 7; groupIndex++)
+        for (int groupIndex = 0; groupIndex < 7; groupIndex++)
         {
             Ar.Position = alignedBitmaskOffset + groupIndex * 4;
             uint count = (uint)BitOperations.PopCount(Ar.Read<uint>());
             uint count8888 = count * 0x01010101; // Broadcast count to all bytes
-            uint index = groupIndex + 1;
-            groupNumRefsInPrevDwords8888[index >> 2] += count8888 << (int) ((index & 3) << 3); // Add to bytes above
+            int index = groupIndex + 1;
+            groupNumRefsInPrevDwords8888[index >> 2] += count8888 << ((index & 3) << 3); // Add to bytes above
             if (NumVerts > 128 && index < 4)
             {
                 // Add low dword byte counts to all bytes in high dword when there are more than 128 vertices.
                 groupNumRefsInPrevDwords8888[1] += count8888;
             }
         }
-        Vertices = new FNaniteVertex[NumVerts];
+
         for (uint vertexIndex = 0; vertexIndex < NumVerts; vertexIndex++)
         {
             uint dwordIndex = vertexIndex >> 5;
             uint bitIndex = vertexIndex & 31;
 
             uint shift = (dwordIndex & 3) << 3;
-            uint numRefsInPrevDwords = (groupNumRefsInPrevDwords8888[dwordIndex >> 2] >> (int)shift) & 0xFFu;
+            uint numRefsInPrevDwords = (groupNumRefsInPrevDwords8888[(int)(dwordIndex >> 2)] >> (int)shift) & 0xFFu;
             Ar.Position = alignedBitmaskOffset + dwordIndex * 4;
             uint dwordMask = Ar.Read<uint>();
             uint numPrevRefVertices = (uint)BitOperations.PopCount(GetBits(dwordMask, (int) bitIndex, 0)) + numRefsInPrevDwords;
@@ -324,7 +331,108 @@ public class FCluster
             UVRanges_Old = Ar.ReadArray<FUVRange_Old>((int) NumUVs);
         }
 
+        Vertices = new FNaniteVertex[NumVerts];
         // read non ref vert information
+        if (Ar.Game >= EGame.GAME_UE5_4)
+        {
+            FUIntVector nextLowMidHighOffsets = new FUIntVector((int) clusterDiskHeader.LowBytesDataOffset, (int) clusterDiskHeader.MidBytesDataOffset,
+                    (int) clusterDiskHeader.HighBytesDataOffset) + (uint) page.PageDiskHeaderOffset;
+
+            var positionLowMidHighOffsets = nextLowMidHighOffsets;
+            uint positionBytesPerValue = (Math.Max(Math.Max(PosBitsX, PosBitsY), PosBitsZ) + 7) / 8;
+            Vector128<int> prevPassPosition = Vector128.Create([1 << (int) (PosBitsX - 1), 1 << (int) (PosBitsY - 1), 1 << (int) (PosBitsZ - 1), 0]);
+            Vector128<int> positionMask = Vector128.Create([(1 << (int) PosBitsX) - 1, (1 << (int) PosBitsY) - 1, (1 << (int) PosBitsZ) - 1, 0]);
+            nextLowMidHighOffsets += LowMidHighIncrement(positionBytesPerValue, 3 * numNonRefVertices);
+
+            var normalLowMidHighOffsets = nextLowMidHighOffsets;
+            uint normalBytesPerValue = (NormalPrecision + 7) / 8;
+            Vector128<int> prevPassNormal = Vector128<int>.Zero;
+            Vector128<int> normalMask = Vector128.Create((1 << (int) NormalPrecision) - 1);
+            nextLowMidHighOffsets += LowMidHighIncrement(normalBytesPerValue, 2 * numNonRefVertices);
+
+            uint tangentBytesPerValue = (TangentPrecision + 1 + 7) / 8;
+            Vector128<int> prevPassTangent = Vector128<int>.Zero;
+            var tangentLowMidHighOffsets = nextLowMidHighOffsets;
+            var tangentMask = 1 << (int) (TangentPrecision + 1) - 1;
+            if (bHasTangents)
+            {
+                nextLowMidHighOffsets += LowMidHighIncrement(tangentBytesPerValue, numNonRefVertices);
+            }
+
+            var vertexColorLowMidHighOffsets = nextLowMidHighOffsets;
+            var prevPassVertexColor  = Vector128<int>.Zero;
+            var colorMin = new FColor((byte) ColorMin[0], (byte) ColorMin[1], (byte) ColorMin[2], (byte) ColorMin[3]);
+            Vector128<int> vertexColorMask = Vector128.Create([(1 << ColorComponentBits.X) - 1, (1 << ColorComponentBits.Y) - 1, (1 << ColorComponentBits.Z) - 1, (1 << ColorComponentBits.W) - 1]);
+            if (ColorMode == NANITE_VERTEX_COLOR_MODE_VARIABLE)
+            {
+                nextLowMidHighOffsets += LowMidHighIncrement(1, 4 * numNonRefVertices);
+            }
+
+            var texCoordLowMidHighBaseOffset = nextLowMidHighOffsets;
+            var texCoordLowMidHighBaseOffsets = new FUIntVector[NumUVs];
+            Vector128<int>[] prevPassUVs = new Vector128<int>[NumUVs];
+            Vector128<int>[] texCoordMask = new Vector128<int>[NumUVs];
+            for (uint texCoordIndex = 0; texCoordIndex < NumUVs; texCoordIndex++)
+            {
+                texCoordLowMidHighBaseOffsets[texCoordIndex] = texCoordLowMidHighBaseOffset;
+                texCoordMask[texCoordIndex] = Vector128.Create([(1 << (int) UVRanges[texCoordIndex].NumBits[0]) - 1, (1 << (int) UVRanges[texCoordIndex].NumBits[1]) - 1, 0, 0]);
+                prevPassUVs[texCoordIndex] = Vector128<int>.Zero;
+                texCoordLowMidHighBaseOffset += LowMidHighIncrement(UVRanges[texCoordIndex].TexCoordBytesPerValue, 2 * numNonRefVertices);
+            }
+
+            var LMHReader = new LMHStreamReader(Ar);
+            for (uint nonRefVertexIndex = 0; nonRefVertexIndex < numNonRefVertices; nonRefVertexIndex++)
+            {
+                var vertex = new FNaniteVertex();
+                Vector128<int> Value = LMHReader.Read(positionLowMidHighOffsets, positionBytesPerValue, 3, nonRefVertexIndex, ref prevPassPosition) & positionMask;
+                vertex.RawPos = new FIntVector(Value[0], Value[1], Value[2]) + PosStart;
+                vertex.Pos = vertex.RawPos * PosScale;
+
+                var Attributes = new FNaniteVertexAttributes();
+                // parses normals
+                Value = LMHReader.Read(normalLowMidHighOffsets, normalBytesPerValue, 2, nonRefVertexIndex, ref prevPassNormal) & normalMask;
+                uint packedNormal = (uint) ((Value[1] << (int) NormalPrecision) | Value[0]);
+                Attributes.Normal = FNaniteVertex.UnpackNormals(packedNormal, (int) NormalPrecision);
+
+                if (bHasTangents)
+                {
+                    Value = LMHReader.Read(tangentLowMidHighOffsets, tangentBytesPerValue, 1, nonRefVertexIndex, ref prevPassTangent);
+                    var packedTangent = Value[0] & tangentMask;
+                    bool bTangentYSign = (packedTangent & (1 << (int) TangentPrecision)) != 0;
+                    uint tangentAngleBits = GetBits((uint)packedTangent, (int) TangentPrecision, 0);
+                    FVector tangentX = FNaniteVertex.UnpackTangentX(Attributes.Normal, tangentAngleBits, (int) TangentPrecision);
+                    Attributes.TangentXAndSign = new FVector4(tangentX, bTangentYSign ? -1.0f : 1.0f);
+                }
+                else
+                {
+                    Attributes.TangentXAndSign = new FVector4(0, 0, 0, 0);
+                }
+
+                if (ColorMode == NANITE_VERTEX_COLOR_MODE_VARIABLE)
+                {
+                    Value = LMHReader.Read(vertexColorLowMidHighOffsets, 1, 4, nonRefVertexIndex, ref prevPassVertexColor) & vertexColorMask;
+                    Value += ColorMin;
+                    Attributes.Color = new FColor((byte) Value[0], (byte) Value[1], (byte) Value[2], (byte) Value[3]);
+                }
+                else
+                {
+                    Attributes.Color = colorMin;
+                }
+
+                for (uint texCoordIndex = 0; texCoordIndex < NumUVs; texCoordIndex++)
+                {
+                    Value = LMHReader.Read(texCoordLowMidHighBaseOffsets[texCoordIndex], UVRanges[texCoordIndex].TexCoordBytesPerValue, 2, nonRefVertexIndex, ref prevPassUVs[texCoordIndex]) & texCoordMask[texCoordIndex];
+                    Attributes.UVs[texCoordIndex] = FNaniteVertex.UnpackTexCoord(Value.GetLower().As<int, uint>(), UVRanges[texCoordIndex]);
+                }
+
+                vertex.Attributes = Attributes;
+                uint vertexIndex = GroupNonRefToVertex[nonRefVertexIndex];
+                Vertices[vertexIndex] = vertex;
+            }
+
+            return;
+        }
+
         for (int nonRefVertexIndex = 0; nonRefVertexIndex < numNonRefVertices; nonRefVertexIndex ++)
         {
             uint vertexIndex = GroupNonRefToVertex[nonRefVertexIndex];
@@ -356,8 +464,7 @@ public class FCluster
         int ret =
             + 2 * NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game)
             + 4 * NANITE_MAX_COLOR_QUANTIZATION_BITS
-            + numTexCoords * (2 * NANITE_MAX_TEXCOORD_QUANTIZATION_BITS);
-        // To-Do: NANITE_MAX_TEXCOORD_QUANTIZATION_BITS in 5.4+
+            + numTexCoords * (2 * NANITE_MAX_TEXCOORD_QUANTIZATION_BITS(Ar.Game));
         if (Ar.Game >= EGame.GAME_UE5_3)
         {
             ret += 1 + NANITE_MAX_TANGENT_QUANTIZATION_BITS;
@@ -516,6 +623,7 @@ public class FCluster
 
     public void ResolveVertexReferences(FArchive Ar, FNaniteResources resources, FNaniteStreamableData page, FClusterDiskHeader clusterDiskHeader, FPageStreamingState pageStreamingState)
     {
+        int prevRefVertexIndex = 0;
         for (int refVertexIndex = 0; refVertexIndex < clusterDiskHeader.NumVertexRefs; refVertexIndex++)
         {
             uint vertexIndex = GroupRefToVertex[refVertexIndex];
@@ -525,10 +633,17 @@ public class FCluster
             Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.PageClusterMapOffset + pageClusterIndex * 4;
             uint pageClusterData = Ar.Read<uint>();
 
-            uint parentPageIndex = pageClusterData >> NANITE_MAX_CLUSTERS_PER_PAGE_BITS;
-            uint srcLocalClusterIndex = GetBits(pageClusterData, NANITE_MAX_CLUSTERS_PER_PAGE_BITS, 0);
+            var maxClustersPerPageBits = NANITE_MAX_CLUSTERS_PER_PAGE_BITS(Ar.Game);
+            uint parentPageIndex = pageClusterData >> maxClustersPerPageBits;
+            uint srcLocalClusterIndex = GetBits(pageClusterData, maxClustersPerPageBits, 0);
             Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex + page.PageDiskHeader.NumVertexRefs;
             byte srcCodedVertexIndex = Ar.Read<byte>();
+            if (Ar.Game >= EGame.GAME_UE5_4)
+            {
+                var temp = DecodeZigZag(srcCodedVertexIndex) + prevRefVertexIndex;
+                prevRefVertexIndex = temp;
+                srcCodedVertexIndex = (byte)temp;
+            }
 
             FCluster srcCluster;
             uint parentGPUPageIndex = 0;
@@ -544,7 +659,14 @@ public class FCluster
             else
             {
                 srcCluster = page.Clusters[srcLocalClusterIndex];
-                realSrcVertexIndex = srcCluster.GroupNonRefToVertex[srcCodedVertexIndex];
+                if (Ar.Game >= EGame.GAME_UE5_4)
+                {
+                    realSrcVertexIndex = srcCodedVertexIndex;
+                }
+                else
+                {
+                    realSrcVertexIndex = srcCluster.GroupNonRefToVertex[srcCodedVertexIndex];
+                }
             }
 
             // transcode position
@@ -554,11 +676,10 @@ public class FCluster
                 throw new InvalidOperationException("The source vertex doesn't appear to have been loaded yet.");
             }
 
-            FIntVector newRawPos = srcVert.RawPos + srcCluster.PosStart - PosStart;
             Vertices[vertexIndex] = new FNaniteVertex()
             {
-                Pos = (newRawPos + PosStart) * PrecisionScales[PosPrecision],
-                RawPos = newRawPos,
+                RawPos = srcVert.RawPos,
+                Pos = srcVert.RawPos * PosScale,
                 Attributes = srcVert.Attributes,
                 IsRef = true
             };

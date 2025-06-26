@@ -2,6 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
@@ -17,6 +19,15 @@ public class NaniteUtils
         {
             >= EGame.GAME_UE5_2 => NANITE_MAX_NORMAL_QUANTIZATION_BITS_502,
             _ => NANITE_MAX_NORMAL_QUANTIZATION_BITS_500
+        };
+    }
+    /// <summary>The maximum number of bits used to serialize normals.</summary>
+    public static int NANITE_MAX_TEXCOORD_QUANTIZATION_BITS(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_4 => NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_504,
+            _ => NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500
         };
     }
 
@@ -36,6 +47,24 @@ public class NaniteUtils
         {
             >= EGame.GAME_UE5_4 => NANITE_MAX_POSITION_PRECISION_504,
             _ => NANITE_MAX_POSITION_PRECISION_500
+        };
+    }
+
+    public static int NANITE_MAX_CLUSTERS_PER_PAGE_BITS(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_4 => NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
+            _ => NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500
+        };
+    }
+
+    public static int NANITE_MAX_CLUSTERS_PER_PAGE(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_4 => 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
+            _ => 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500
         };
     }
 
@@ -111,6 +140,13 @@ public class NaniteUtils
     public static uint UnpackByte2(uint v) => (v >> 16) & 0xff;
     public static uint UnpackByte3(uint v) => v >> 24;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int DecodeZigZag(uint data)
+    {
+        return (int)(data >> 1) ^ -(int)(data & 1);
+        //return (int)(data >> 1) ^ GetBitsAsSigned(data, 1 ,0);
+    }
+
     /// <summary>
     /// Finds the location of the highest populated bit in a uint.
     /// Essentially just the ReverseBitScan instruction with a defined behaviour if the value is 0.
@@ -119,6 +155,62 @@ public class NaniteUtils
     public static uint FirstBitHigh(uint x)
     {
         return x == 0 ? 0xFFFFFFFFu : (uint) BitOperations.Log2(x);
+    }
+
+    public static FUIntVector LowMidHighIncrement(uint numBytesPerValue, uint num)
+    {
+        return new FUIntVector(
+            numBytesPerValue >= 1 ? num : 0u,
+            numBytesPerValue >= 2 ? num : 0u,
+            numBytesPerValue >= 3 ? num : 0u
+        );
+    }
+
+    public class LMHStreamReader
+    {
+        private readonly FArchive _archive;
+
+        public LMHStreamReader(FArchive archive)
+        {
+            _archive = archive;
+        }
+
+        public Vector128<int> Read(FUIntVector lowMidHighOffsets, uint components, int count, uint index, ref Vector128<int> prevLastValue)
+        {
+            var position = lowMidHighOffsets + index * count;
+            Span<byte> span = stackalloc byte[4];
+            var buffer = span[..count];
+            Vector128<uint> packed = Vector128<uint>.Zero;
+
+            if (components >= 3)
+            {
+                _archive.ReadAt((long)position[2], buffer);
+                packed |= Vector128.Create<uint>([span[0], span[1], span[2], span[3]]) << 16;
+                span.Clear();
+            }
+
+            if (components >= 2)
+            {
+                _archive.ReadAt((long)position[1], buffer);
+                packed |= Vector128.Create<uint>([span[0], span[1], span[2], span[3]]) << 8;
+                span.Clear();
+            }
+
+            if (components >= 1)
+            {
+                _archive.ReadAt((long)position[0], buffer);
+                packed |= Vector128.Create<uint>([span[0], span[1], span[2], span[3]]);
+            }
+
+            Span<int> decoded = stackalloc int[4];
+            for (int i = 0; i < count; i++)
+                decoded[i] = DecodeZigZag(packed[i]);
+
+            var value = Vector128.Create<int>(decoded) + prevLastValue;
+            prevLastValue = value;
+
+            return value;
+        }
     }
 
     public static BitStreamReader CreateBitStreamReader_Aligned(long byteAddress, long bitOffset, long compileTimeMaxRemainingBits)
