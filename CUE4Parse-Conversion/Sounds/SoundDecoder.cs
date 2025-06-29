@@ -58,13 +58,13 @@ public static class SoundDecoder
         data = Decompress(shouldDecompress, ref audioFormat, input);
     }
 
-    public static void Decode(this UAkMediaAssetData mediaData, bool shouldDecompress, out string audioFormat, out byte[]? data)
+    public static void Decode(this UAkMediaAssetData media, bool shouldDecompress, out string audioFormat, out byte[]? data)
     {
         var offset = 0;
         audioFormat = "WEM";
 
-        var input = new byte[mediaData.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data.Length)];
-        foreach (var dataChunk in mediaData.DataChunks)
+        var input = new byte[media.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data.Length)];
+        foreach (var dataChunk in media.DataChunks)
         {
             if (dataChunk.IsPrefetch) continue;
             Buffer.BlockCopy(dataChunk.Data.Data, 0, input, offset, dataChunk.Data.Data.Length);
