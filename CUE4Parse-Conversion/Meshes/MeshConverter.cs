@@ -601,8 +601,8 @@ public static class MeshConverter
 
         var extraVertexColorMap = new ConcurrentDictionary<string, CVertexColor>();
 
-        var weightMapsInternal = new Dictionary<string, SKBitmap>();
-        var weightMapsPixels = new Dictionary<int, IntPtr>();
+        var weightMapsInternal = new ConcurrentDictionary<string, SKBitmap>();
+        var weightMapsPixels = new ConcurrentDictionary<int, IntPtr>();
         var weightMapLock = new object();
         var heightMapData = new L16[height * width];
 
