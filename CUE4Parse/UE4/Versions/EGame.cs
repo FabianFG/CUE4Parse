@@ -33,6 +33,7 @@ public enum EGame : uint
     GAME_UE4_16 = GameUtils.GameUe4Base + (16 << 16),
         GAME_PlayerUnknownsBattlegrounds = GAME_UE4_16 + 1,
         GAME_TrainSimWorld2020 = GAME_UE4_16 + 2,
+        GAME_NarutotoBorutoShinobiStriker = GAME_UE4_16 + 3,
     GAME_UE4_17 = GameUtils.GameUe4Base + (17 << 16),
         GAME_AWayOut = GAME_UE4_17 + 1,
     GAME_UE4_18 = GameUtils.GameUe4Base + (18 << 16),

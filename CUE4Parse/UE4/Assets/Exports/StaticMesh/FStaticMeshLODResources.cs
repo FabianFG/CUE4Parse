@@ -167,6 +167,14 @@ public class FStaticMeshLODResources
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
+        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker )
+        {
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            Ar.ReadArray(Sections.Length + 1, () => new FWeightedRandomSampler(Ar));
+            return;
+        }
+
         if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
         {
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
