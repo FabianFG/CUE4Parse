@@ -51,7 +51,7 @@ public class CMaterialParams2
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map",
             "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Basecolor",
-            "Base Texture Color", "BaseColorA", "BC", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
+            "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
             "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor",
             "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex", "ToneRimTex"
 
@@ -73,7 +73,7 @@ public class CMaterialParams2
             "Normal A Map", "T_Normal", "Normals Top", "Normals Side", "Fallback Normal",
             "Base_Normal", "BaseNormal", "Base Normal", "Normal Base", "TextureNormal", "Tex_BakedNormal", "TexNor",
             "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map",
-            "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
+            "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base", "NRH",
             "Texture A Normal", "CliffNormal", "Skin Normal", "Normal_MAIN","Main_T_Normal(B：SSSMask)", "PBREmissiveTex"
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],

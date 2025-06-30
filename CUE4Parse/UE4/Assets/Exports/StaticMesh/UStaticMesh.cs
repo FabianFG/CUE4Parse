@@ -67,10 +67,11 @@ public class UStaticMesh : UObject
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
-                if (Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean())
+                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan)
                 {
                     Ar.SkipBulkArrayData();
                     Ar.SkipBulkArrayData();
+                    if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
                 }
                 else
                 {

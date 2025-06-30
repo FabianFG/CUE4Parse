@@ -19,7 +19,7 @@ public class DNAExporter : ExporterBase
         var exportSavePath = GetExportSavePath();
         if (!string.IsNullOrEmpty(_dnaAsset.DnaFileName))
         {
-            var exportName = _dnaAsset.DnaFileName.SubstringAfterLast('/').SubstringBeforeLast('.');
+            var exportName = Path.GetFileNameWithoutExtension(_dnaAsset.DnaFileName);
             exportSavePath = exportSavePath.SubstringBeforeWithLast('/') + exportName;
         }
         else
