@@ -2,7 +2,10 @@
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
+using CommunityToolkit.HighPerformance;
+using CUE4Parse.UE4.Exceptions;
 
 namespace CUE4Parse.UE4.Readers;
 
@@ -38,6 +41,65 @@ public class FArchiveBigEndian : FArchive
             return (T)func(this);
 
         return base.Read<T>();
+    }
+
+    public override T[] ReadArray<T>(int length)
+    {
+        var size = Unsafe.SizeOf<T>();
+        var readLength = size * length;
+        CheckReadSize(readLength);
+
+        var buffer = ReadBytes(readLength);
+        if (size == 1)
+        {
+        }
+        else if (size == 2)
+        {
+            ReverseEndian(buffer.AsSpan().Cast<byte, ushort>());
+        }
+        else if (typeof(T) == typeof(uint) || typeof(T) == typeof(int) || typeof(T) == typeof(float))
+        {
+            ReverseEndian(buffer.AsSpan().Cast<byte, uint>());
+        }
+        else if (typeof(T) == typeof(ulong) || typeof(T) == typeof(long) || typeof(T) == typeof(double))
+        {
+            ReverseEndian(buffer.AsSpan().Cast<byte, ulong>());
+        }
+        else
+        {
+            throw new ParserException("Unsupported type for ReadArray: " + typeof(T).Name);
+        }
+        var result = new T[length];
+        if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
+        return result;
+    }
+
+    static void ReverseEndian<TSwap>(Span<TSwap> span) where TSwap : unmanaged
+    {
+        if (typeof(TSwap) == typeof(ushort))
+        {
+            var span2 = span.Cast<TSwap, ushort>();
+            for (int i = 0; i < span.Length; i++)
+            {
+                span2[i] = BinaryPrimitives.ReverseEndianness(span2[i]);
+            }
+        }
+        else if (typeof(TSwap) == typeof(uint))
+        {
+            var span4 = span.Cast<TSwap, uint>();
+            for (int i = 0; i < span.Length; i++)
+            {
+                span4[i] = BinaryPrimitives.ReverseEndianness(span4[i]);
+            }
+        }
+        else if (typeof(TSwap) == typeof(ulong))
+        {
+            var span8 = span.Cast<TSwap, ulong>();
+            for (int i = 0; i < span.Length; i++)
+            {
+                span8[i] = BinaryPrimitives.ReverseEndianness(span8[i]);
+            }
+        }
     }
 
     public override bool CanSeek => _baseArchive.CanSeek;
