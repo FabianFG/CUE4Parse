@@ -114,11 +114,11 @@ namespace CUE4Parse.UE4.Objects.UObject
              *		-7 indicates the texture allocation info has been removed from the summary
              *		-8 indicates that the UE5 version has been added to the summary
              *      -9 indicates a contractual change in when early exits are required based on FileVersionTooNew. At or
-		     *		   after this LegacyFileVersion, we support changing the PackageFileSummary serialization format for
-		     *		   all bytes serialized after FileVersionLicensee, and that format change can be conditional on any
-		     *		   of the versions parsed before that point. All packageloaders that understand the -9
-		     *		   legacyfileformat are required to early exit without further serialization at that point if
-		     *		   FileVersionTooNew is true.
+             *		   after this LegacyFileVersion, we support changing the PackageFileSummary serialization format for
+             *		   all bytes serialized after FileVersionLicensee, and that format change can be conditional on any
+             *		   of the versions parsed before that point. All packageloaders that understand the -9
+             *		   legacyfileformat are required to early exit without further serialization at that point if
+             *		   FileVersionTooNew is true.
              */
             const int CurrentLegacyFileVersion = -9;
             var legacyFileVersion = CurrentLegacyFileVersion;
@@ -136,7 +136,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 goto afterPackageFlags;
             }
 
-            if (Tag == PACKAGE_FILE_TAG_NTE && Ar.Game == EGame.GAME_NevernessToEverness)
+            if (Tag == PACKAGE_FILE_TAG_NTE && Ar.Game == EGame.GAME_NevernessToEverness_CBT1)
             {
                 var keyData = Ar.Read<FGuid>();
                 var decryptedDataLength = Ar.Read<int>();

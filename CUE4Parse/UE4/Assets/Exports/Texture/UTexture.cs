@@ -15,6 +15,8 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
+public class UBinkMediaTexture : UTexture;
+
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
     public FGuid LightingGuid { get; private set; }
@@ -168,11 +170,11 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetMip(int index) => 
+    public FTexture2DMipMap? GetMip(int index) =>
         index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
             ? PlatformData.Mips[index]
             : null;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 
