@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -19,6 +20,14 @@ public abstract class GameFile
         ..UePackageExtensions, ..UePackagePayloadExtensions,
         "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
     ];
+
+    // hashset for quick lookup
+    public static readonly HashSet<string> UePackageExtensionsSet = UePackageExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly HashSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly HashSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    // so we don't end up with a lot of duplicate "uasset"s in memory
+    private static readonly Dictionary<string, string> InternedExtensions = new(StringComparer.OrdinalIgnoreCase);
 
     private string _path;
     private string? _directory;
@@ -57,10 +66,10 @@ public abstract class GameFile
     public string PathWithoutExtension => _pathWithoutExtension ??= Path.SubstringBeforeLast('.');
     public string Name => _name ??= Path.SubstringAfterLast('/');
     public string NameWithoutExtension => _nameWithoutExtension ??= Name.SubstringBeforeLast('.');
-    public string Extension => _extension ??= Name.SubstringAfterLast('.');
+    public string Extension => _extension ??= InternExtension(Name.SubstringAfterLast('.'));
 
-    public bool IsUePackage => UePackageExtensions.Contains(Extension, StringComparer.OrdinalIgnoreCase);
-    public bool IsUePackagePayload => UePackagePayloadExtensions.Contains(Extension, StringComparer.OrdinalIgnoreCase);
+    public bool IsUePackage => UePackageExtensionsSet.Contains(Extension);
+    public bool IsUePackagePayload => UePackagePayloadExtensionsSet.Contains(Extension);
 
     public abstract byte[] Read();
     public abstract FArchive CreateReader();
@@ -124,4 +133,20 @@ public abstract class GameFile
     public async Task<FArchive?> SafeCreateReaderAsync() => await Task.Run(SafeCreateReader);
 
     public override string ToString() => Path;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string InternExtension(string extension)
+    {
+        if (InternedExtensions.TryGetValue(extension, out var interned))
+            return interned;
+        
+        lock (InternedExtensions)
+        {
+            if (InternedExtensions.TryGetValue(extension, out interned))
+                return interned;
+            
+            InternedExtensions[extension] = extension;
+            return extension;
+        }
+    }
 }
