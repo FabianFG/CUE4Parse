@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.ControlRig;
@@ -46,7 +47,7 @@ public class FRigBaseMetadata<T> : FRigBaseMetadata
 {
     public T Value;
 
-    public static FRigBaseMetadata Read(FAssetArchive Ar, bool isStorage = true)
+    public static FRigBaseMetadata Read(FArchive Ar, bool isStorage = true)
     {
         var name = Ar.ReadFName();
         var type = isStorage ? Ar.Read<ERigMetadataType>() : EnumUtils.GetValueByName<ERigMetadataType>(Ar.ReadFName().Text);
@@ -106,7 +107,7 @@ public struct FMetadataStorage
 {
     public Dictionary<FName, FRigBaseMetadata> MetadataMap;
 
-    public FMetadataStorage(FAssetArchive Ar)
+    public FMetadataStorage(FArchive Ar)
     {
         var num = Ar.Read<int>();
         MetadataMap = new Dictionary<FName, FRigBaseMetadata>(num);

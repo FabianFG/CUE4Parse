@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             Scale3D = data.GetOrDefault<FVector>(nameof(Scale3D));
         }
 
-        public FTransform(FVector inX, FVector inY, FVector inZ, FVector inW) 
+        public FTransform(FVector inX, FVector inY, FVector inZ, FVector inW)
         {
             SetFromMatrix(new FMatrix(inX, inY, inZ, inW));
         }
@@ -101,10 +101,16 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             // Normalize rotation
             Rotation.Normalize();
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetRotation(FQuat rotation) => Rotation = rotation;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetLocation(FVector origin) => Translation = origin;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetScale3D(FVector scale) => Scale3D = scale;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FRotator Rotator() => Rotation.Rotator();
 
