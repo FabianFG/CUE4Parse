@@ -52,6 +52,102 @@ public class FStaticLODModel
         ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer();
     }
 
+    // special version for reading from BulkData
+    public FStaticLODModel(FArchive Ar, bool bHasVertexColors, bool isFilterEditorOnly) : this()
+    {
+        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
+
+        Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar, isFilterEditorOnly));
+
+        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
+        {
+            Indices = new FMultisizeIndexContainer(Ar);
+        }
+        else
+        {
+            // UE4.19+ uses 32-bit index buffer (for editor data)
+            Indices = new FMultisizeIndexContainer { Indices32 = Ar.ReadBulkArray<uint>() };
+        }
+
+        ActiveBoneIndices = Ar.ReadArray<short>();
+
+        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
+        {
+            Chunks = Ar.ReadArray(() => new FSkelMeshChunk(Ar));
+        }
+
+        Size = Ar.Read<int>();
+        if (!stripDataFlags.IsAudioVisualDataStripped())
+            NumVertices = Ar.Read<int>();
+
+        RequiredBones = Ar.ReadArray<short>();
+        if (!stripDataFlags.IsEditorDataStripped())
+        {
+            //RawPointIndices = new FIntBulkData(Ar);
+            throw new ParserException("RawPointIndices is unsupported");
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
+        {
+            MeshToImportVertexMap = Ar.ReadArray<int>();
+            MaxImportVertex = Ar.Read<int>();
+        }
+
+        if (!stripDataFlags.IsAudioVisualDataStripped())
+        {
+            NumTexCoords = Ar.Read<int>();
+            if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
+            {
+                VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer(Ar);
+                if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
+                {
+                    var skinWeights = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
+                    if (skinWeights.Weights.Length > 0)
+                    {
+                        // Copy data to VertexBufferGPUSkin
+                        if (VertexBufferGPUSkin.bUseFullPrecisionUVs)
+                        {
+                            for (var i = 0; i < NumVertices; i++)
+                            {
+                                VertexBufferGPUSkin.VertsFloat[i].Infs = skinWeights.Weights[i];
+                            }
+                        }
+                        else
+                        {
+                            for (var i = 0; i < NumVertices; i++)
+                            {
+                                VertexBufferGPUSkin.VertsHalf[i].Infs = skinWeights.Weights[i];
+                            }
+                        }
+                    }
+                }
+
+                if (bHasVertexColors)
+                {
+                    if (skelMeshVer < FSkeletalMeshCustomVersion.Type.UseSharedColorBufferFormat)
+                    {
+                        ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                    }
+                    else
+                    {
+                        var newColorVertexBuffer = new FColorVertexBuffer(Ar);
+                        ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(newColorVertexBuffer.Data);
+                    }
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
+                    throw new ParserException("Unsupported: extra SkelMesh vertex influences (old mesh format)");
+
+                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                    AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
+
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH && HasClothData())
+                    ClothVertexBuffer = new FSkeletalMeshVertexClothBuffer(Ar);
+            }
+        }
+    }
+
     public FStaticLODModel(FAssetArchive Ar, bool bHasVertexColors) : this()
     {
         if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
@@ -59,7 +155,7 @@ public class FStaticLODModel
         var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
         if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 4;
 
-        Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar));
+        Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar, Ar.IsFilterEditorOnly));
 
         if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
         {

@@ -1,8 +1,11 @@
 using System;
+using System.IO;
 using CUE4Parse.Compression;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
@@ -52,6 +55,18 @@ namespace CUE4Parse.UE4.IO.Objects
             for (int i = 0; i < Header.TocEntryCount; i++)
             {
                 ChunkOffsetLengths[i] = new FIoOffsetAndLength(archive);
+            }
+
+            if (Ar.Game == EGame.GAME_NeedForSpeedMobile && !Ar.Name.EndsWith("global.utoc"))
+            {
+                archive.Position -= Header.TocEntryCount * 10;
+                var len = ((int)Header.TocEntryCount * 10).Align(16);
+                var data = archive.ReadArray<byte>(len).Decrypt(new FAesKey("0xB71C91417A3790F27BE3852C6775EBF39D88BEABC0CDDCF721F7B2F0CA69FA12"));
+                using var chunksAr = new FByteArchive("ChunkOffsetLengths", data);
+                for (int i = 0; i < Header.TocEntryCount; i++)
+                {
+                    ChunkOffsetLengths[i] = new FIoOffsetAndLength(chunksAr);
+                }
             }
 
             // Chunk perfect hash map

@@ -449,6 +449,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     var name = stringTable[fileEntry.Name];
                     var fullPathLength = Write(directoryName, directoryLength, name, true);
                     var fullPathSpan = directoryName.AsSpan(..fullPathLength);
+                    if (Game == EGame.GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
                     var path = new string(fullPathSpan);
 
                     var entry = new FIoStoreEntry(this, path, fileEntry.UserData);

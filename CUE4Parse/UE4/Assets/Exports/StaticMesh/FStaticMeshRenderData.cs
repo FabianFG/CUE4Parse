@@ -13,14 +13,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshRenderDataConverter))]
 public class FStaticMeshRenderData
 {
-    private const int MAX_STATIC_UV_SETS_UE4 = 8;
-    private const int MAX_STATIC_LODS_UE4 = 8;
+    protected const int MAX_STATIC_UV_SETS_UE4 = 8;
+    protected const int MAX_STATIC_LODS_UE4 = 8;
 
-    public readonly FStaticMeshLODResources[]? LODs;
-    public readonly FNaniteResources? NaniteResources;
-    public readonly FBoxSphereBounds? Bounds;
-    public readonly bool bLODsShareStaticLighting;
-    public readonly float[]? ScreenSize;
+    public FStaticMeshLODResources[]? LODs;
+    public FNaniteResources? NaniteResources;
+    public FBoxSphereBounds? Bounds;
+    public bool bLODsShareStaticLighting;
+    public float[]? ScreenSize;
+
+    public FStaticMeshRenderData() { }
 
     public FStaticMeshRenderData(FAssetArchive Ar)
     {

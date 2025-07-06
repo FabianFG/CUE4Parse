@@ -55,7 +55,11 @@ public partial class USkeletalMesh : UObject
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
         {
-            LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
+            LODModels = Ar.Game switch
+            {
+                EGame.GAME_GameForPeace => GFPSerializeLODModels(Ar),
+                _ => Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors)),
+            };
         }
         else
         {

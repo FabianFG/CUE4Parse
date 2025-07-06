@@ -55,7 +55,14 @@ public class UStaticMesh : UObject
 
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
-            RenderData = new FStaticMeshRenderData(Ar);
+        {
+            RenderData = Ar.Game switch
+            {
+                EGame.GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
+                _ => RenderData = new FStaticMeshRenderData(Ar)
+            };
+        }
+
 
         if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
         {
