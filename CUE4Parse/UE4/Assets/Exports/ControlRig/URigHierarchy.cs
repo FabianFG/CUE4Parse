@@ -22,7 +22,7 @@ public class URigHierarchy : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        var serializationSettings = new FRigHierarchySerializationSettings();
+        var serializationSettings = new FRigHierarchySerializationSettings(Ar);
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyCompactTransformSerialization)
         {
             serializationSettings.Load(Ar);
