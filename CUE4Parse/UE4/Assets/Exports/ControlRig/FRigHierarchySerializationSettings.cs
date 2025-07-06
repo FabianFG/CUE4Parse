@@ -16,6 +16,19 @@ public struct FRigHierarchySerializationSettings
     public bool bSerializeCurrentTransform;
     public ESerializationPhase SerializationPhase;
 
+    public FRigHierarchySerializationSettings()
+    {
+        ControlRigVersion = FControlRigObjectVersion.Type.LatestVersion;
+        bIsSerializingToPackage = false;
+        bUseCompressedArchive = false;
+        bStoreCompactTransforms = true;
+        bSerializeLocalTransform = true;
+        bSerializeGlobalTransform = true;
+        bSerializeInitialTransform = true;
+        bSerializeCurrentTransform = true;
+        SerializationPhase = ESerializationPhase.StaticData;
+    }
+
     public void Load(FArchive Ar)
     {
         ControlRigVersion = Ar.Read<FControlRigObjectVersion.Type>();

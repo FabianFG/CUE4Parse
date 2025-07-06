@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.ControlRig.Rigs;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.ControlRig;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -98,23 +100,44 @@ public class URigHierarchy : UObject
 
         if (FControlRigObjectVersion.Get(archiveForElements) >= FControlRigObjectVersion.Type.RigHierarchyStoringPreviousNames)
         {
-            if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey)
+            if (FControlRigObjectVersion.Get(archiveForElements) >= FControlRigObjectVersion.Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey)
             {
-                PreviousHierarchyNameMap = Ar.ReadMap(() => new FRigHierarchyKey(Ar), () => new FRigHierarchyKey(Ar));
-                PreviousHierarchyParentMap = Ar.ReadMap(() => new FRigHierarchyKey(Ar), () => new FRigHierarchyKey(Ar));
+                PreviousHierarchyNameMap = archiveForElements.ReadMap(() => new FRigHierarchyKey(archiveForElements), () => new FRigHierarchyKey(archiveForElements));
+                PreviousHierarchyParentMap = archiveForElements.ReadMap(() => new FRigHierarchyKey(archiveForElements), () => new FRigHierarchyKey(archiveForElements));
             }
             else
             {
                 var previousNameMap = archiveForElements.ReadMap(() => new FRigElementKey(archiveForElements), () => new FRigElementKey(archiveForElements));
                 var previousParentMap = archiveForElements.ReadMap(() => new FRigElementKey(archiveForElements), () => new FRigElementKey(archiveForElements));
 
-
+                // TODO:
+                // PreviousHierarchyNameMap.Reset();
+                // for(const TPair<FRigElementKey, FRigElementKey>& Pair : PreviousNameMap)
+                // {
+                //     PreviousHierarchyNameMap.Add(Pair.Key, Pair.Value);
+                // }
+                // PreviousHierarchyParentMap.Reset();
+                // for(const TPair<FRigElementKey, FRigElementKey>& Pair : PreviousParentMap)
+                // {
+                //     PreviousHierarchyParentMap.Add(Pair.Key, Pair.Value);
+                // }
             }
         }
 
         if (FControlRigObjectVersion.Get(archiveForElements) >= FControlRigObjectVersion.Type.RigHierarchyStoresElementMetadata)
         {
             LoadedElementMetadata = archiveForElements.ReadMap(() => new FRigElementKey(archiveForElements), () => new FMetadataStorage(archiveForElements));
+        }
+
+        if (FControlRigObjectVersion.Get(archiveForElements) >= FControlRigObjectVersion.Type.RigHierarchyStoresComponents)
+        {
+            var numComponents = archiveForElements.Read<int>();
+
+            if (numComponents > 0)
+            {
+                var scriptStructNames = Ar.ReadArray(Ar.ReadFString);
+                throw new NotImplementedException();
+            }
         }
     }
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
