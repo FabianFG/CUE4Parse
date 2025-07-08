@@ -147,9 +147,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 foreach (var property in classDefaultObject.Properties)
                 {
                     var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
-                    var variableType = BlueprintDecompilerUtils.GetPropertyPrefix(property.TagData?.Type);
+                    
+                    // this needs a better way imo. Ideally should be along with GetPropertyText(property); so thet the fucking UScriptArray works properly
+                    var variableType = BlueprintDecompilerUtils.GetPropertyType(property);
 
-                    var variableExpression = $"{variableType}{property.TagData?.StructType} {property.Name.Text} = {variableText}";
+                    var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
                     publicVariable.Add(variableExpression);
                 }
             }
