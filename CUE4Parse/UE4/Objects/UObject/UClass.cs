@@ -112,21 +112,18 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public string DecompileBlueprintToPseudo()
         {
-            var superStruct = SuperStruct.Load<UStruct>();
-
             var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
-            
             var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
+            
+            var superStruct = SuperStruct.Load<UStruct>();
             var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
             var stringBuilder = new CustomStringBuilder();
             
             stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
-
             stringBuilder.OpenBlock();
 
             // Properties
-
             var publicVariable = new List<string>();
             var protectedVariable = new List<string>();
             var privateVariable = new List<string>();
@@ -142,21 +139,18 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return string.Empty;
             }
 
-            try
+            foreach (var property in classDefaultObject.Properties)
             {
-                foreach (var property in classDefaultObject.Properties)
-                {
-                    var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
+                var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
+                if (variableText is null)
+                    continue;
                     
-                    // this needs a better way imo. Ideally should be along with GetPropertyText(property); so thet the fucking UScriptArray works properly
-                    var variableType = BlueprintDecompilerUtils.GetPropertyType(property);
+                var variableType = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableType is null)
+                    continue;
 
-                    var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
-                    publicVariable.Add(variableExpression);
-                }
-            }
-            catch (Exception e)
-            {
+                var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
+                publicVariable.Add(variableExpression);
             }
             
             stringBuilder.OpenBlock("public:");

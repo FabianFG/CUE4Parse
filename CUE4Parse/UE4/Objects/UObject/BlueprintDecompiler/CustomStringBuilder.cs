@@ -49,7 +49,7 @@ public class CustomStringBuilder
     public void CloseBlock(string text = "}")
     {
         DecreaseIndentation();
-        Append(text);
+        if (!string.IsNullOrWhiteSpace(text)) Append(text);
     }
 
     public void IncreaseIndentation() => _indentationLevel++;
