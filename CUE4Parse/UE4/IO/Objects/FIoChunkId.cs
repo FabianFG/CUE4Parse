@@ -56,7 +56,7 @@ namespace CUE4Parse.UE4.IO.Objects
     public readonly struct FIoChunkId : IEquatable<FIoChunkId>
     {
         public readonly ulong ChunkId;
-        private readonly ushort _chunkIndex;
+        public readonly ushort _chunkIndex;
         private readonly byte _padding;
         public readonly byte ChunkType;
 

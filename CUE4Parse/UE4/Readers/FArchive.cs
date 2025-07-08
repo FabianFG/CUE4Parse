@@ -458,9 +458,16 @@ namespace CUE4Parse.UE4.Readers
                 bWasByteSwapped = (packageFileTag.CompressedSize != (long) ARCHIVE_V2_HEADER_TAG);
                 bReadCompressionFormat = true;
 
-                // read CompressionFormatToDecode
-                //FCompressionUtil.SerializeCompressorName(this, ref compressionFormatToDecode);
-                throw new NotImplementedException();
+                compressionFormatToDecode = Read<byte>() switch
+                {
+                    0 => ReadFString(),
+                    1 => "None",
+                    2 => "Oodle",
+                    3 => "Zlib",
+                    4 => "Gzip",
+                    5 => "LZ4",
+                    _ => throw new ParserException(this, $"Unknown CompressionFormatToDecode value: {compressionFormatToDecode}")
+                };
             }
             else
             {
@@ -493,7 +500,6 @@ namespace CUE4Parse.UE4.Readers
                 summary.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.UncompressedSize);
                 packageFileTag.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) packageFileTag.UncompressedSize);
             }
-
 
             // Handle change in compression chunk size in backward compatible way.
             var loadingCompressionChunkSize = packageFileTag.UncompressedSize;
