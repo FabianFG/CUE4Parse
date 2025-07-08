@@ -162,10 +162,17 @@ public class FReflectionCaptureData
     }
 }
 
-public class FLightComponentMapBuildData(FArchive Ar)
+public class FLightComponentMapBuildData
 {
-    public int ShadowMapChannel = Ar.Read<int>();
-    public FStaticShadowDepthMapData DepthMap = new FStaticShadowDepthMapData(Ar);
+    public int ShadowMapChannel;
+    public FStaticShadowDepthMapData DepthMap;
+
+    public FLightComponentMapBuildData(FArchive Ar)
+    {
+        ShadowMapChannel = Ar.Read<int>();
+        DepthMap = new FStaticShadowDepthMapData(Ar);
+        if (Ar.Game == EGame.GAME_TonyHawkProSkater34) Ar.Position += 76; // Identity Matrix + Zero Vector
+    }
 }
 
 public class FStaticShadowDepthMapData(FArchive Ar)

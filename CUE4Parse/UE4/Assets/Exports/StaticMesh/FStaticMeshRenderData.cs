@@ -29,6 +29,8 @@ public class FStaticMeshRenderData
         if (Ar.Versions["StaticMesh.KeepMobileMinLODSettingOnDesktop"])
             _ = Ar.Read<int>(); // minMobileLODIdx
 
+        if (Ar.Game == EGame.GAME_TonyHawkProSkater34 && !Ar.ReadBoolean()) return;
+
         Ar.Position += Ar.Game switch
         {
             EGame.GAME_HYENAS => 1,
