@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -112,17 +114,57 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var superStruct = SuperStruct.Load<UStruct>();
 
-            var derivedClass = KismetUtils.GetClassWithPrefix(this);
+            var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
             
             var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-            var baseClass = KismetUtils.GetClassWithPrefix(superStruct);
+            var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
             var stringBuilder = new CustomStringBuilder();
             
             stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
-            
+
             stringBuilder.OpenBlock();
-            stringBuilder.AppendLine("int testVar = 0;");
+
+            // Properties
+
+            var publicVariable = new List<string>();
+            var protectedVariable = new List<string>();
+            var privateVariable = new List<string>();
+            
+            // foreach (var property in Properties)
+            // {
+            //     Console.WriteLine(property.Name);
+            // }
+
+            if (!ClassDefaultObject.TryLoad(out var classDefaultObject))
+            {
+                Log.Warning("Failed to load classDefaultObject");
+                return string.Empty;
+            }
+
+            try
+            {
+                foreach (var property in classDefaultObject.Properties)
+                {
+                    var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
+                    var variableType = BlueprintDecompilerUtils.GetPropertyPrefix(property.TagData?.Type);
+
+                    var variableExpression = $"{variableType}{property.TagData?.StructType} {property.Name.Text} = {variableText}";
+                    publicVariable.Add(variableExpression);
+                }
+            }
+            catch (Exception e)
+            {
+            }
+            
+            stringBuilder.OpenBlock("public:");
+            
+            foreach (var property in publicVariable)
+            {
+                stringBuilder.AppendLine(property);
+            }
+            
+            stringBuilder.CloseBlock(string.Empty);
             stringBuilder.CloseBlock("};");
             
             return stringBuilder.ToString();
