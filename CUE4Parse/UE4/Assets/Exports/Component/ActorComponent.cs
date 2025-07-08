@@ -170,7 +170,6 @@ public class UMeshComponent : UPrimitiveComponent;
 public class UMeshWireframeComponent : UMeshComponent;
 public class UMockDataMeshTrackerComponent : USceneComponent;
 public class UMockGameplayTasksComponent : UGameplayTasksComponent;
-public class UModelComponent : UPrimitiveComponent;
 public class UModularSynthComponent : USynthComponent;
 public class UMotionControllerComponent : UPrimitiveComponent;
 public class UMovementComp_Character : UCharacterMovementComponent;
