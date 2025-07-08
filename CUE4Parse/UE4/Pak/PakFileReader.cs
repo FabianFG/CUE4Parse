@@ -180,6 +180,8 @@ namespace CUE4Parse.UE4.Pak
             }
 
             var fileCount = index.Read<int>();
+            if (Ar.Game == EGame.GAME_TFOL) fileCount -= 100;
+            
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
             for (var i = 0; i < fileCount; i++)
             {
