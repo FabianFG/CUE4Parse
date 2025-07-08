@@ -79,7 +79,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
-
+        
         public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
         {
             var type = ObjectTypeRegistry.Get(Name);
@@ -108,6 +108,26 @@ namespace CUE4Parse.UE4.Objects.UObject
             return null;
         }
 
+        public string DecompileBlueprintToPseudo()
+        {
+            var superStruct = SuperStruct.Load<UStruct>();
+
+            var derivedClass = KismetUtils.GetClassWithPrefix(this);
+            
+            var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
+            var baseClass = KismetUtils.GetClassWithPrefix(superStruct);
+
+            var stringBuilder = new CustomStringBuilder();
+            
+            stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
+            
+            stringBuilder.OpenBlock();
+            stringBuilder.AppendLine("int testVar = 0;");
+            stringBuilder.CloseBlock("};");
+            
+            return stringBuilder.ToString();
+        }
+        
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
