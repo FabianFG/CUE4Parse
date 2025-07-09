@@ -75,7 +75,7 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 3;
+        if (Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart) Ar.Position += 3;
 
         if (Ar.Game == EGame.GAME_GameForPeace)
         {
@@ -84,6 +84,10 @@ public partial class FPakInfo
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_GameForPeace) return;
             Version = Ar.Read<EPakFileVersion>();
+            if (Version >= EPakFileVersion.PakFile_Version_PathHashIndex)
+            {
+                Version = EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod;// Override to force readIndexLegacy
+            }
             IndexHash = new FSHAHash(Ar);
             IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
             IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);
@@ -163,7 +167,7 @@ public partial class FPakInfo
         if (Magic != PAK_FILE_MAGIC)
         {
             if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials ||
-                Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
+                Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
                 Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault ||
                 Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                 Ar.Game == EGame.GAME_FridayThe13th && Magic == PAK_FILE_MAGIC_FridayThe13th ||
@@ -203,12 +207,13 @@ public partial class FPakInfo
         }
 
         IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
-        if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 1;
+        if (Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart) Ar.Position += 1;
         if (Ar.Game == EGame.GAME_BlackMythWukong) Ar.Position += 2;
         IndexOffset = Ar.Read<long>();
         if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         if (Ar.Game == EGame.GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
+        if (Ar.Game == EGame.GAME_NevernessToEverness) IndexOffset -= 1;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
@@ -321,7 +326,7 @@ public partial class FPakInfo
         SiseRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
-        Size_ARKSurvivalAscended = Size8a + 8, // additional 8 bytes
+        SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
@@ -375,7 +380,7 @@ public partial class FPakInfo
 
             var offsetsToTry = Ar.Game switch
             {
-                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
+                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart => [OffsetsToTry.SizeHotta],
                 EGame.GAME_FridayThe13th => [OffsetsToTry.SizeFTT],
                 EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
                 EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
@@ -384,7 +389,7 @@ public partial class FPakInfo
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
-                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.Size_ARKSurvivalAscended],
+                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
@@ -399,7 +404,7 @@ public partial class FPakInfo
                     EGame.GAME_FridayThe13th when info.Magic == PAK_FILE_MAGIC_FridayThe13th => true,
                     EGame.GAME_GameForPeace when info.Magic == PAK_FILE_MAGIC_GameForPeace => true,
                     EGame.GAME_Undawn when info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn => true,
-                    EGame.GAME_TorchlightInfinite when info.Magic == PAK_FILE_MAGIC_TorchlightInfinite => true,
+                    EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart when info.Magic == PAK_FILE_MAGIC_TorchlightInfinite => true,
                     EGame.GAME_DreamStar when info.Magic == PAK_FILE_MAGIC_DreamStar => true,
                     EGame.GAME_RacingMaster when info.Magic == PAK_FILE_MAGIC_RacingMaster => true,
                     EGame.GAME_OutlastTrials when info.Magic == PAK_FILE_MAGIC_OutlastTrials => true,

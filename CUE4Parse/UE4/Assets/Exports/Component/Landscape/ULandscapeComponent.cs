@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -18,6 +19,8 @@ public class ULandscapeComponent: UPrimitiveComponent
     public FVector4 WeightmapScaleBias;
     public float WeightmapSubsectionOffset;
     public FWeightmapLayerAllocationInfo[] WeightmapLayerAllocations;
+    public FBox CachedLocalBox;
+    public FGuid MapBuildDataId;
     
     public Lazy<UTexture2D[]> WeightmapTextures;
     
@@ -37,6 +40,8 @@ public class ULandscapeComponent: UPrimitiveComponent
         WeightmapScaleBias = GetOrDefault(nameof(WeightmapScaleBias), new FVector4(0, 0, 0, 0));
         WeightmapSubsectionOffset = GetOrDefault(nameof(WeightmapSubsectionOffset), 0f);
         WeightmapLayerAllocations = GetOrDefault(nameof(WeightmapLayerAllocations), Array.Empty<FWeightmapLayerAllocationInfo>());
+        CachedLocalBox = GetOrDefault<FBox>(nameof(CachedLocalBox));
+        MapBuildDataId = GetOrDefault<FGuid>(nameof(MapBuildDataId));
         // throw new NotImplementedException();
         WeightmapTextures = new Lazy<UTexture2D[]>(() => GetOrDefault<UTexture2D[]>("WeightmapTextures", []));
         

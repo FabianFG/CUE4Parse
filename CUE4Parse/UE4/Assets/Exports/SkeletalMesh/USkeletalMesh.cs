@@ -25,6 +25,8 @@ public partial class USkeletalMesh : UObject
     public FPackageIndex Skeleton { get; private set; }
     public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
     public FPackageIndex PhysicsAsset { get; private set; }
+    public FPackageIndex[]? AssetUserData { get; private set; }
+    public FNaniteResources? NaniteResources;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -37,6 +39,7 @@ public partial class USkeletalMesh : UObject
         Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
         Skeleton = GetOrDefault(nameof(Skeleton), new FPackageIndex());
         PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
+        AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
 
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         ImportedBounds = new FBoxSphereBounds(Ar);
@@ -52,7 +55,11 @@ public partial class USkeletalMesh : UObject
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
         {
-            LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
+            LODModels = Ar.Game switch
+            {
+                EGame.GAME_GameForPeace => GFPSerializeLODModels(Ar),
+                _ => Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors)),
+            };
         }
         else
         {
@@ -98,7 +105,7 @@ public partial class USkeletalMesh : UObject
 
                 if (Ar.Game >= EGame.GAME_UE5_5)
                 {
-                    var NaniteResources = new FNaniteResources(Ar);
+                    NaniteResources = new FNaniteResources(Ar);
                 }
 
                 if (Ar.Game == EGame.GAME_DeadzoneRogue) Ar.Position += 4;
@@ -204,13 +211,16 @@ public partial class USkeletalMesh : UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("ImportedBounds");
+        writer.WritePropertyName(nameof(ImportedBounds));
         serializer.Serialize(writer, ImportedBounds);
 
-        writer.WritePropertyName("SkeletalMaterials");
+        writer.WritePropertyName(nameof(SkeletalMaterials));
         serializer.Serialize(writer, SkeletalMaterials);
 
-        writer.WritePropertyName("LODModels");
+        writer.WritePropertyName(nameof(LODModels));
         serializer.Serialize(writer, LODModels);
+
+        writer.WritePropertyName(nameof(NaniteResources));
+        serializer.Serialize(writer, NaniteResources);
     }
 }

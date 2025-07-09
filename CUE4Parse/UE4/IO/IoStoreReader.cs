@@ -208,6 +208,12 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
     private byte[] Read(long offset, long length)
     {
+        switch (Game)
+        {
+            case EGame.GAME_MindsEye:
+                return ReadPartiallyEncrypted(offset, length);
+        }
+
         var compressionBlockSize = TocResource.Header.CompressionBlockSize;
         var dst = new byte[length];
         var firstBlockIndex = (int) (offset / compressionBlockSize);
@@ -278,6 +284,95 @@ public partial class IoStoreReader : AbstractAesVfsReader
         return dst;
     }
 
+    private byte[] ReadPartiallyEncrypted(long offset, long length)
+    {
+        var limit = Game switch
+        {
+            EGame.GAME_MindsEye => 0x1000,
+            _ => throw new ArgumentOutOfRangeException(nameof(Game), "Unsupported game for partial encrypted io store extraction")
+        };
+
+        var compressionBlockSize = TocResource.Header.CompressionBlockSize;
+        var dst = new byte[length];
+        var firstBlockIndex = (int) (offset / compressionBlockSize);
+        var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
+        var offsetInBlock = offset % compressionBlockSize;
+        var remainingSize = length;
+        var dstOffset = 0;
+
+        var compressedBuffer = Array.Empty<byte>();
+        var uncompressedBuffer = Array.Empty<byte>();
+
+        FArchive?[]? clonedReaders = null;
+
+        for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
+        {
+            ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
+
+            var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
+            if (compressedBuffer.Length < rawSize)
+            {
+                compressedBuffer = new byte[rawSize];
+            }
+
+            var partitionIndex = (int) ((ulong) compressionBlock.Offset / TocResource.Header.PartitionSize);
+            var partitionOffset = (long) ((ulong) compressionBlock.Offset % TocResource.Header.PartitionSize);
+            FArchive reader;
+            if (IsConcurrent)
+            {
+                clonedReaders ??= new FArchive?[ContainerStreams.Count];
+                ref var clone = ref clonedReaders[partitionIndex];
+                clone ??= (FArchive) ContainerStreams[partitionIndex].Clone();
+                reader = clone;
+            }
+            else
+                reader = ContainerStreams[partitionIndex];
+
+            reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
+            if (IsEncrypted && limit > 0)
+            {
+                if ((int) rawSize < limit)
+                {
+                    compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted);
+                    limit -= (int) rawSize;
+                }
+                else
+                {
+                    var decrypted = DecryptIfEncrypted(compressedBuffer, 0, limit, IsEncrypted);
+                    Buffer.BlockCopy(decrypted, 0, compressedBuffer, 0, limit);
+                    limit = 0;
+                }
+            }
+
+            byte[] src;
+            if (compressionBlock.CompressionMethodIndex == 0)
+            {
+                src = compressedBuffer;
+            }
+            else
+            {
+                var uncompressedSize = compressionBlock.UncompressedSize;
+                if (uncompressedBuffer.Length < uncompressedSize)
+                {
+                    uncompressedBuffer = new byte[uncompressedSize];
+                }
+
+                var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
+                Compression.Compression.Decompress(compressedBuffer, 0, (int) compressionBlock.CompressedSize, uncompressedBuffer, 0,
+                    (int) uncompressedSize, compressionMethod, reader);
+                src = uncompressedBuffer;
+            }
+
+            var sizeInBlock = (int) Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
+            Buffer.BlockCopy(src, (int) offsetInBlock, dst, dstOffset, sizeInBlock);
+            offsetInBlock = 0;
+            remainingSize -= sizeInBlock;
+            dstOffset += sizeInBlock;
+        }
+
+        return dst;
+    }
+
     public override void Mount(StringComparer pathComparer)
     {
         var watch = new Stopwatch();
@@ -312,7 +407,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             return;
         }
 
-        using var directoryIndex = new GenericBufferReader(DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
+        using var directoryIndex = new GenericBufferReader(DecryptIfEncrypted(TocResource.DirectoryIndexBuffer, IsEncrypted, true));
 
         string mountPoint;
         try
@@ -332,7 +427,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var stringTable = directoryIndex.ReadFStringMemoryArray();
 
         var files = new Dictionary<string, GameFile>(fileEntries.Length, pathComparer);
-        var dirNamePool = ArrayPool<char>.Shared.Rent(256);
+        var dirNamePool = ArrayPool<char>.Shared.Rent(512);
         var currentLength = Write(dirNamePool, 0, MountPoint);
         ReadIndex(dirNamePool, currentLength, 0U);
 
@@ -354,6 +449,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     var name = stringTable[fileEntry.Name];
                     var fullPathLength = Write(directoryName, directoryLength, name, true);
                     var fullPathSpan = directoryName.AsSpan(..fullPathLength);
+                    if (Game == EGame.GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
                     var path = new string(fullPathSpan);
 
                     var entry = new FIoStoreEntry(this, path, fileEntry.UserData);

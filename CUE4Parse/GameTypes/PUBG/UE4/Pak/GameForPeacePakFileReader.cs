@@ -59,6 +59,35 @@ public partial class PakFileReader
     private void GameForPeaceReadIndex(StringComparer pathComparer, FByteArchive index)
     {
         var saved = index.Position;
+        var count = index.Read<int>();
+
+        var oldVersion = false;
+        try
+        {
+            var path = index.ReadFString();
+        }
+        catch
+        {
+            oldVersion = true;
+        }
+        finally
+        {
+            index.Position = saved;
+        }
+
+        if (!oldVersion)
+        {
+            var newentries = index.ReadMap(index.ReadFString, () => new FPakEntry(this, "", index, Game));
+            var newfiles = new Dictionary<string, GameFile>(newentries.Count, pathComparer);
+            foreach (var (key, value) in newentries)
+            {
+                var path = string.Concat(MountPoint, key);
+                value.Path = path;
+                newfiles[path] = value;
+            }
+            Files = newfiles;
+            return;
+        }
 
         var entries = index.ReadArray(() => new FPakEntry(this, "", index, Game));
         var files = new Dictionary<string, GameFile>(entries.Length, pathComparer);
@@ -66,7 +95,6 @@ public partial class PakFileReader
         var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) Ar.Read<long>()));
 
         var directoryIndexLength = (int) directoryIndex.Read<long>();
-        index.Position = saved + 4;
         for (var i = 0; i < directoryIndexLength; i++)
         {
             var dir = directoryIndex.ReadFString();

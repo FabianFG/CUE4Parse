@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Exports.ControlRig;
+using CUE4Parse.UE4.Assets.Exports.ControlRig.Rigs.Elements;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -15,34 +16,79 @@ public enum ESerializationPhase
     InterElementData
 };
 
-public struct FRigComputedTransform(FAssetArchive Ar)
+public struct FRigComputedTransform
 {
-    public FTransform Transform = new FTransform(Ar);
-    public bool bDirty = Ar.ReadBoolean();
+    public FTransform Transform;
+    public bool bDirty;
+
+    public FRigComputedTransform(FArchive Ar, FRigHierarchySerializationSettings inSettings)
+    {
+        if (inSettings.ControlRigVersion < FControlRigObjectVersion.Type.RigHierarchyCompactTransformSerialization)
+        {
+            Transform = new FTransform(Ar);
+            bDirty = Ar.ReadBoolean();
+        }
+        else
+        {
+            bDirty = Ar.ReadBoolean();
+            if (!bDirty)
+            {
+                var rigTransform = new FRigCompactTransform(Transform);
+                rigTransform.Load(Ar, inSettings);
+
+                Transform = rigTransform.Transform;
+            }
+        }
+    }
 }
 
-public struct FRigLocalAndGlobalTransform(FAssetArchive Ar)
+public struct FRigLocalAndGlobalTransform
 {
-    public FRigComputedTransform Local = new FRigComputedTransform(Ar);
-    public FRigComputedTransform Global = new FRigComputedTransform(Ar);
+    public FRigComputedTransform Local;
+    public FRigComputedTransform Global;
+
+    public FRigLocalAndGlobalTransform(FArchive Ar, FRigHierarchySerializationSettings inSettings)
+    {
+        if (inSettings.bSerializeLocalTransform)
+        {
+            Local = new FRigComputedTransform(Ar, inSettings);
+        }
+
+        if (inSettings.bSerializeGlobalTransform)
+        {
+            Global = new FRigComputedTransform(Ar, inSettings);
+        }
+    }
 }
 
-public struct FRigCurrentAndInitialTransform(FAssetArchive Ar)
+public struct FRigCurrentAndInitialTransform
 {
-    public FRigLocalAndGlobalTransform Current = new FRigLocalAndGlobalTransform(Ar);
-    public FRigLocalAndGlobalTransform Initial = new FRigLocalAndGlobalTransform(Ar);
+    public FRigLocalAndGlobalTransform Current;
+    public FRigLocalAndGlobalTransform Initial;
+
+    public FRigCurrentAndInitialTransform(FArchive Ar, FRigHierarchySerializationSettings inSettings)
+    {
+        if (inSettings.bSerializeCurrentTransform)
+        {
+            Current = new FRigLocalAndGlobalTransform(Ar, inSettings);
+        }
+
+        if (inSettings.bSerializeInitialTransform)
+        {
+            Initial = new FRigLocalAndGlobalTransform(Ar, inSettings);
+        }
+    }
 }
 
 public class FRigBaseElement
 {
-    [JsonIgnore]
-    public URigHierarchy? Owner;
+    [JsonIgnore] public URigHierarchy? Owner;
     public FRigElementKey LoadedKey;
 
-    public virtual void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public virtual void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
         Owner = hierarchy;
-        if (serializationPhase != ESerializationPhase.StaticData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
 
         LoadedKey = new FRigElementKey(Ar);
 
@@ -50,25 +96,25 @@ public class FRigBaseElement
             FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyStoresElementMetadata) return;
 
         //static const UEnum* MetadataTypeEnum = StaticEnum<ERigMetadataType>();
-        var MetadataNum = Ar.Read<int>();
-        for(var MetadataIndex = 0; MetadataIndex < MetadataNum; MetadataIndex++)
+        var metadataNum = Ar.Read<int>();
+        for(var metadataIndex = 0; metadataIndex < metadataNum; metadataIndex++)
         {
-            FName MetadataName = Ar.ReadFName();
-            FName MetadataTypeName = Ar.ReadFName();
-            FRigBaseMetadata Md = FRigBoolMetadata.Read(Ar, false);
+            _ = Ar.ReadFName();
+            _ = Ar.ReadFName();
+            _ = FRigBoolMetadata.Read(Ar, false);
         }
     }
 }
 
 public class FRigTransformElement : FRigBaseElement
 {
-    public FRigCurrentAndInitialTransform Pose;
+    public FRigCurrentAndInitialTransform PoseStorage;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
-        if (serializationPhase == ESerializationPhase.StaticData)
-            Pose = new FRigCurrentAndInitialTransform(Ar);
+        base.Load(Ar, hierarchy, inSettings);
+        if (inSettings.SerializationPhase == ESerializationPhase.StaticData)
+            PoseStorage = new FRigCurrentAndInitialTransform(Ar, inSettings);
     }
 }
 
@@ -76,11 +122,11 @@ public class FRigSingleParentElement : FRigTransformElement
 {
     public FRigElementKey ParentKey;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (serializationPhase != ESerializationPhase.InterElementData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.InterElementData) return;
 
         ParentKey = new FRigElementKey(Ar);
     }
@@ -88,9 +134,9 @@ public class FRigSingleParentElement : FRigTransformElement
 
 public struct FRigElementWeight(float value)
 {
-    float Location = value;
-    float Rotation = value;
-    float Scale = value;
+    public float Location = value;
+    public float Rotation = value;
+    public float Scale = value;
 }
 
 public struct FRigElementParentConstraint
@@ -98,6 +144,7 @@ public struct FRigElementParentConstraint
     public FRigTransformElement ParentElement;
     public FRigElementWeight Weight;
     public FRigElementWeight InitialWeight;
+    public FName DisplayLabel;
     // mutable FRigComputedTransform Cache;
     public bool bCacheIsDirty;
 }
@@ -108,26 +155,26 @@ public class FRigMultiParentElement : FRigTransformElement
     public FRigElementParentConstraint[] ParentConstraints;
     public Dictionary<FRigElementKey, int> IndexLookup = [];
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
-        if(serializationPhase == ESerializationPhase.StaticData)
+        base.Load(Ar, hierarchy, inSettings);
+
+        if (inSettings.SerializationPhase == ESerializationPhase.StaticData)
         {
             if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RemovedMultiParentParentCache)
             {
-                Parent = new FRigCurrentAndInitialTransform(Ar);
+                Parent = new FRigCurrentAndInitialTransform(Ar, inSettings);
             }
 
-            var NumParents = Ar.Read<int>();
-            ParentConstraints = new FRigElementParentConstraint[NumParents];
+            var numParents = Ar.Read<int>();
+            ParentConstraints = new FRigElementParentConstraint[numParents];
         }
-        else if(serializationPhase == ESerializationPhase.InterElementData)
+        else if (inSettings.SerializationPhase == ESerializationPhase.InterElementData)
         {
-            for(var ParentIndex = 0; ParentIndex < ParentConstraints.Length; ParentIndex++)
+            for (var parentIndex = 0; parentIndex < ParentConstraints.Length; parentIndex++)
             {
-                FRigElementParentConstraint constraint = new();
-                FRigElementKey ParentKey = new FRigElementKey(Ar);
-                constraint.bCacheIsDirty = true;
+                var parentKey = new FRigElementKey(Ar);
+                FRigElementParentConstraint constraint = new() { bCacheIsDirty = true };
 
                 if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyMultiParentConstraints)
                 {
@@ -136,12 +183,24 @@ public class FRigMultiParentElement : FRigTransformElement
                 }
                 else
                 {
-                    constraint.InitialWeight = new FRigElementWeight(Ar.Read<float>());
-                    constraint.Weight = new FRigElementWeight(Ar.Read<float>());
+                    var initialWeight = Ar.Read<float>();
+                    constraint.InitialWeight = new FRigElementWeight(initialWeight);
+
+                    var weight = Ar.Read<float>();
+                    constraint.Weight = new FRigElementWeight(weight);
                 }
 
-                ParentConstraints[ParentIndex] = constraint;
-                IndexLookup.Add(ParentKey, ParentIndex);
+                if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RigHierarchyParentContraintWithLabel)
+                {
+                    constraint.DisplayLabel = new FName("None");
+                }
+                else
+                {
+                    constraint.DisplayLabel = Ar.ReadFName();
+                }
+
+                ParentConstraints[parentIndex] = constraint;
+                IndexLookup.Add(parentKey, parentIndex);
             }
         }
     }
@@ -156,13 +215,13 @@ public enum ERigBoneType
 public class FRigBoneElement : FRigSingleParentElement
 {
     public FName TypeName;
-    ERigBoneType BoneType;
+    public ERigBoneType BoneType;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (serializationPhase != ESerializationPhase.StaticData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
         BoneType = EnumUtils.GetValueByName<ERigBoneType>(Ar.ReadFName().Text);
     }
 }
@@ -234,10 +293,10 @@ public enum EEulerRotationOrder : byte
     ZYX
 };
 
-public struct FRigControlLimitEnabled(FAssetArchive Ar)
+public struct FRigControlLimitEnabled(FArchive Ar)
 {
-    bool bMinimum = Ar.ReadBoolean();
-    bool bMaximum = Ar.ReadBoolean();
+    public bool bMinimum = Ar.ReadBoolean();
+    public bool bMaximum = Ar.ReadBoolean();
 }
 
 public struct FRigControlValue
@@ -281,7 +340,7 @@ public struct FRigControlElementCustomization
     public FRigElementKey[] AvailableSpaces;
     public FRigElementKey[] RemovedSpaces = [];
 
-    public FRigControlElementCustomization(FAssetArchive Ar)
+    public FRigControlElementCustomization(FArchive Ar)
     {
         AvailableSpaces = Ar.ReadArray(() => new FRigElementKey(Ar));
     }
@@ -295,29 +354,29 @@ public struct FRigControlElementCustomization
 
 public struct FRigControlSettings
 {
-    ERigControlAnimationType AnimationType;
-    ERigControlType ControlType;
-    FName DisplayName;
+    public ERigControlAnimationType AnimationType;
+    public ERigControlType ControlType;
+    public FName DisplayName;
     /** the primary axis to use for float controls */
-    ERigControlAxis PrimaryAxis;
+    public ERigControlAxis PrimaryAxis;
     /** If Created from a Curve  Container*/
-    bool bIsCurve;
+    public bool bIsCurve;
     /** True if the control has limits. */
-    FRigControlLimitEnabled[] LimitEnabled;
-    bool bDrawLimits;
+    public FRigControlLimitEnabled[] LimitEnabled;
+    public bool bDrawLimits;
     /** The minimum limit of the control's value */
-    FRigControlValue MinimumValue;
+    public FRigControlValue MinimumValue;
     /** The maximum limit of the control's value */
-    FRigControlValue MaximumValue;
+    public FRigControlValue MaximumValue;
     /** Set to true if the shape is currently visible in 3d */
-    bool bShapeVisible;
+    public bool bShapeVisible;
     /** Defines how the shape visibility should be changed */
-    ERigControlVisibility ShapeVisibility;
+    public ERigControlVisibility ShapeVisibility;
     /* This is optional UI setting - this doesn't mean this is always used, but it is optional for manipulation layer to use this*/
-    FName ShapeName;
-    FLinearColor ShapeColor;
+    public FName ShapeName;
+    public FLinearColor ShapeColor;
     /** If the control is transient and only visible in the control rig editor */
-    bool bIsTransientControl;
+    public bool bIsTransientControl;
     /** If the control is integer it can use this enum to choose values */
     //TObjectPtr<UEnum> ControlEnum;
 
@@ -339,7 +398,7 @@ public struct FRigControlSettings
     // Whether to use a specified rotation order or just use the default FRotator order and conversion functions
     public bool bUsePreferredRotationOrder;
 
-    public FRigControlSettings(FAssetArchive Ar)
+    public FRigControlSettings(FArchive Ar)
     {
         FName AnimationTypeName, ControlTypeName, ShapeVisibilityName, PrimaryAxisName;
         string ControlEnumPathName;
@@ -515,7 +574,7 @@ public struct FRigControlSettings
     }
 }
 
-public struct FRigPreferredEulerAngles(FAssetArchive Ar)
+public struct FRigPreferredEulerAngles(FArchive Ar)
 {
     EEulerRotationOrder RotationOrder = EnumUtils.GetValueByName<EEulerRotationOrder>(Ar.ReadFName().Text);
     FVector Current = new FVector(Ar);
@@ -530,15 +589,15 @@ public class FRigControlElement : FRigMultiParentElement
     FRigCurrentAndInitialTransform Shape;
     FRigPreferredEulerAngles? PreferredEulerAngles;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (serializationPhase != ESerializationPhase.StaticData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
 
         Settings = new FRigControlSettings(Ar);
-        Offset = new FRigCurrentAndInitialTransform(Ar);
-        Shape = new FRigCurrentAndInitialTransform(Ar);
+        Offset = new FRigCurrentAndInitialTransform(Ar, inSettings);
+        Shape = new FRigCurrentAndInitialTransform(Ar, inSettings);
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.PreferredEulerAnglesForControls)
         {
             PreferredEulerAngles = new FRigPreferredEulerAngles(Ar);
@@ -548,19 +607,29 @@ public class FRigControlElement : FRigMultiParentElement
 
 public class FRigCurveElement : FRigBaseElement
 {
+    public bool bIsValueSet;
     public float Value;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase SerializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, SerializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (SerializationPhase == ESerializationPhase.InterElementData) return;
-        var bIsValueSet = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadBoolean() : false;
+        if (inSettings.SerializationPhase == ESerializationPhase.InterElementData) return;
+
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.CurveElementValueStateFlag)
+        {
+            bIsValueSet = Ar.ReadBoolean();
+        }
+        else
+        {
+            bIsValueSet = true;
+        }
+
         Value = Ar.Read<float>();
     }
 }
 
-public struct FRigRigidBodySettings(FAssetArchive Ar)
+public struct FRigRigidBodySettings(FArchive Ar)
 {
     float Mass = Ar.Read<float>();
 }
@@ -569,11 +638,11 @@ public class FRigRigidBodyElement : FRigSingleParentElement
 {
     public FRigRigidBodySettings Settings;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (serializationPhase != ESerializationPhase.StaticData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
 
         Settings = new FRigRigidBodySettings(Ar);
     }
@@ -587,7 +656,7 @@ public enum EConnectorType : byte
     Secondary, // Could be multiple, can auto-solve (visible if not solved), can be optional
 }
 
-public struct FRigConnectionRuleStash(FAssetArchive Ar)
+public struct FRigConnectionRuleStash(FArchive Ar)
 {
     public string ScriptStructPath = Ar.ReadFString();
     public string ExportedText = Ar.ReadFString();
@@ -600,7 +669,7 @@ public struct FRigConnectorSettings
     public bool bOptional = false;
     public FRigConnectionRuleStash[] Rules;
 
-    public FRigConnectorSettings(FAssetArchive Ar)
+    public FRigConnectorSettings(FArchive Ar)
     {
         Description = Ar.ReadFString();
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ConnectorsWithType)
@@ -617,11 +686,11 @@ public class FRigConnectorElement : FRigBaseElement
 {
     public FRigConnectorSettings Settings;
 
-    public override void Load(FAssetArchive Ar, URigHierarchy hierarchy, ESerializationPhase serializationPhase)
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
-        base.Load(Ar, hierarchy, serializationPhase);
+        base.Load(Ar, hierarchy, inSettings);
 
-        if (serializationPhase != ESerializationPhase.StaticData) return;
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
 
         Settings = new FRigConnectorSettings(Ar);
     }

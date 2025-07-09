@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.UObject
 {
     [SkipObjectRegistration]
-    public class UEnum : Assets.Exports.UObject
+    public class UEnum : UField
     {
         /** List of pairs of all enum names and values. */
         public (FName, long)[] Names;

@@ -41,9 +41,11 @@ public class USceneComponent : UActorComponent
         }
     }
 
+    public FTransform GetRelativeTransform() => new(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+
     public FTransform GetAbsoluteTransform()
     {
-        var newTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var newTransform = GetRelativeTransform();
         var parent = GetAttachParent();
         while (parent != null)
         {
@@ -55,7 +57,7 @@ public class USceneComponent : UActorComponent
 
     private FTransform GetComponentToWorld()
     {
-        var relativeTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var relativeTransform = GetRelativeTransform();
         if (GetAttachParent() != null) // CalcNewComponentToWorld_GeneralCases
         {
             return relativeTransform * GetAttachParent()!.GetSocketTransform("", ERelativeTransformSpace.RTS_World);
@@ -66,7 +68,7 @@ public class USceneComponent : UActorComponent
 
     public FTransform GetSocketTransform(string socketName, ERelativeTransformSpace transformSpace)
     {
-        var relativeTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var relativeTransform = GetRelativeTransform();
         if (transformSpace == ERelativeTransformSpace.RTS_World)
         {
             return relativeTransform;

@@ -30,4 +30,13 @@ public readonly struct FMovieSceneTangentData : IUStruct
             Ar.Position += 3; // Padding
         }
     }
+
+    public FMovieSceneTangentData(float arriveTangent, float leaveTangent, float arriveTangentWeight, float leaveTangentWeight, ERichCurveTangentWeightMode tangentWeightMode)
+    {
+        ArriveTangent = arriveTangent;
+        LeaveTangent = leaveTangent;
+        ArriveTangentWeight = arriveTangentWeight;
+        LeaveTangentWeight = leaveTangentWeight;
+        TangentWeightMode = tangentWeightMode;
+    }
 }

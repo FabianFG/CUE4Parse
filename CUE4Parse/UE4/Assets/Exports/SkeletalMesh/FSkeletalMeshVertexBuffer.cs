@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -23,7 +24,7 @@ public class FSkeletalMeshVertexBuffer
         VertsFloat = [];
     }
 
-    public FSkeletalMeshVertexBuffer(FAssetArchive Ar) : this()
+    public FSkeletalMeshVertexBuffer(FArchive Ar) : this()
     {
         var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
 

@@ -5,12 +5,14 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Writers;
+using CUE4Parse_Conversion.DNA;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -21,6 +23,7 @@ namespace CUE4Parse_Conversion.Meshes
     public class MeshExporter : ExporterBase
     {
         public readonly List<Mesh> MeshLods;
+        public readonly List<DNAExporter> DNAAssets = [];
 
         public MeshExporter(USkeleton originalSkeleton, ExporterOptions options) : base(originalSkeleton, options)
         {
@@ -56,12 +59,12 @@ namespace CUE4Parse_Conversion.Meshes
         }
 
         public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : this(originalMesh, null, options){}
-       
+
         public MeshExporter(UStaticMesh originalMesh, USplineMeshComponent? splineMeshComponent, ExporterOptions options) : base(originalMesh, options)
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
             {
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
@@ -129,6 +132,15 @@ namespace CUE4Parse_Conversion.Meshes
             {
                 Log.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
+            }
+
+            foreach (var userData in originalMesh.AssetUserData)
+            {
+                if (userData.TryLoad<UDNAAsset>(out var originalDNA))
+                {
+                    var dna = new DNAExporter(originalDNA, options);
+                    DNAAssets.Add(dna);
+                }
             }
 
             var totalSockets = new List<FPackageIndex>();
@@ -209,6 +221,11 @@ namespace CUE4Parse_Conversion.Meshes
             label = string.Empty;
             savedFilePath = string.Empty;
             if (MeshLods.Count == 0) return b;
+
+            for (var i = 0; i < DNAAssets.Count; i++)
+            {
+                DNAAssets[i].TryWriteToDir(baseDirectory, out _, out _);
+            }
 
             var outText = "LOD ";
             for (var i = 0; i < MeshLods.Count; i++)

@@ -16,8 +16,10 @@ using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
+using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.MJS.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
+using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
@@ -81,10 +83,12 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_MotoGP25 => MotoGP25Aes.MotoGP25Decrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
-                EGame.GAME_TonyHawkProSkater12 => THPS12Aes.THPS12Decrypt,
+                EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
                 EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
                 EGame.GAME_Splitgate2 => Splitgate2Aes.Splitgate2Decrypt,
+                EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
+                EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 _ => null
             };
         }

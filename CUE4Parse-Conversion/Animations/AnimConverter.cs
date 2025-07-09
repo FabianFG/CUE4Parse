@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -509,7 +509,7 @@ namespace CUE4Parse_Conversion.Animations
             // read scale keys
             if (scaleOffset == -1)
             {
-                track.KeyScale = [FVector.ZeroVector];
+                track.KeyScale = [FVector.OneVector];
             }
             else
             {

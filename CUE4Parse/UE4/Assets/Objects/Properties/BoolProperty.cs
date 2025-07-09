@@ -17,6 +17,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
                 case ReadType.NORMAL:
                 case ReadType.MAP:
                 case ReadType.ARRAY:
+                case ReadType.OPTIONAL:
                     Value = Ar.ReadFlag();
                     break;
                 case ReadType.ZERO:

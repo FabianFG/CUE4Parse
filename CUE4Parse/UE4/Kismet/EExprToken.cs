@@ -113,8 +113,8 @@ public enum EExprToken : byte
     EX_ArrayGetByRef		= 0x6B,
     EX_ClassSparseDataVariable = 0x6C, // Sparse data variable
     EX_FieldPathConst		= 0x6D,
-    //						= 0x6E,
-    //						= 0x6F,
+    EX_Placeholder1			= 0x6E,
+    EX_Placeholder2			= 0x6F,
     EX_AutoRtfmTransact     = 0x70, // AutoRTFM: run following code in a transaction
     EX_AutoRtfmStopTransact = 0x71, // AutoRTFM: if in a transaction, abort or break, otherwise no operation
     EX_AutoRtfmAbortIfNot   = 0x72, // AutoRTFM: evaluate bool condition, abort transaction on false
@@ -124,7 +124,7 @@ public enum EExprToken : byte
 public enum ECastToken : byte
 {
     CST_ObjectToInterface		= 0x00,
-    CST_ObjectToBool			= 0x01,//idk if this is used or 0x47 is used
+    CST_ObjectToBool			= 0x01,
     CST_InterfaceToBool			= 0x02,
     CST_DoubleToFloat			= 0x03,
     CST_FloatToDouble			= 0x04,

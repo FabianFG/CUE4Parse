@@ -15,6 +15,7 @@ public class CBaseMeshLod
     public bool HasNormals = false;
     public bool HasTangents = false;
     public bool IsTwoSided = false;
+    public bool IsNanite = false;
     public Lazy<CMeshSection[]> Sections;
     public Lazy<FMeshUVFloat[][]> ExtraUV;
     public FColor[]? VertexColors;

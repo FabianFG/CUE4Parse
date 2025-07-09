@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.Utils;
 using GenericReader;
 
 namespace CUE4Parse.UE4.Pak;
@@ -42,7 +42,7 @@ public partial class PakFileReader
         MountPoint = mountPoint;
         var bytes = primaryIndex.ReadBytes(3);
         var PathHashSeed = primaryIndex.Read<ulong>();
-        
+
         var encodedPakEntriesSize = primaryIndex.Read<int>();
         var encodedEntries = new GenericBufferReader(primaryIndex.ReadBytes(encodedPakEntriesSize));
 
@@ -74,13 +74,71 @@ public partial class PakFileReader
             {
                 return string.Concat("Seria/Plugins/", span);
             }
-        };
+        }
 
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
         if (directoryIndexLength == 0)
         {
+            var regex = new Regex(@"^(0|[1-9]\d*)$");
             var pathHashIndex = directoryIndex.ReadMap(directoryIndex.Read<ulong>, directoryIndex.Read<int>);
             var used = new HashSet<ulong>();
+
+            void FindPayload(GenericBufferReader Ar, string path, string extension, bool warning = false)
+            {
+                var payloadName = System.IO.Path.ChangeExtension(path, extension);
+                var hash = Fnv64Path(payloadName, PathHashSeed);
+                if (pathHashIndex.TryGetValue(hash, out var offset))
+                {
+                    if (offset != int.MinValue)
+                    {
+                        path = string.Concat(MountPoint, payloadName);
+                        var entry = new FPakEntry(this, path, Ar, offset);
+                        if (entry.IsEncrypted)
+                            EncryptedFileCount++;
+                        files[path] = entry;
+                        used.Add(hash);
+                    }
+                }
+                else if (warning)
+                {
+                    Log.Warning("Missing {0} file for package {1}", extension, path);
+                }
+            }
+
+            List<string> foundFiles = [];
+            var packageNamesFile = System.IO.Path.Combine(System.IO.Path.ChangeExtension(Path, "txt"));
+            var parentDir = Directory.GetParent(Path)?.Parent;
+            if (parentDir is not null)
+            {
+                var baseFileName = System.IO.Path.GetFileNameWithoutExtension(Path);
+                packageNamesFile = System.IO.Path.Combine(parentDir.FullName, "GeneratedIndex", baseFileName + ".txt");
+            }
+
+            if (System.IO.Path.Exists(packageNamesFile))
+            {
+                var allLines = File.ReadAllLines(packageNamesFile);
+                foundFiles.AddRange(allLines);
+                foreach (var line in allLines)
+                {
+                    var newhash = Fnv64Path(line, PathHashSeed);
+                    if (pathHashIndex.TryGetValue(newhash, out var offset))
+                    {
+                        if (offset != int.MinValue)
+                        {
+                            var filepath = string.Concat(MountPoint, line);
+                            var entry = new FPakEntry(this, filepath, encodedEntries, offset);
+                            if (entry.IsEncrypted) EncryptedFileCount++;
+                            files[filepath] = entry;
+                            used.Add(newhash);
+
+                            FindPayload(encodedEntries, line, "uexp", true);
+                            FindPayload(encodedEntries, line, "ubulk");
+                            FindPayload(encodedEntries, line, "uptnl");
+                        }
+                    }
+                }
+            }
+
             foreach (var key in pathHashIndex)
             {
                 var hash = key.Key;
@@ -90,7 +148,12 @@ public partial class PakFileReader
 
                 var entry = new FPakEntry(this, hash.ToString(), encodedEntries, offset);
 
-                if (!entry.TryCreateReader(out var reader)) continue;
+                if (!entry.TryCreateReader(out var reader))
+                {
+                    Log.Warning("Failed to create reader for pathhash {0} with offset {1}", hash, offset);
+                    files[hash.ToString()] = entry;
+                    continue;
+                }
 
                 var magic = reader.Read<uint>();
                 switch (magic)
@@ -104,6 +167,15 @@ public partial class PakFileReader
                         if (entry.IsEncrypted)
                             EncryptedFileCount++;
                         files[luapath] = entry;
+                        used.Add(hash);
+                        continue;
+                    case 0x4f54544f: // OTTO
+                        reader.Position += 4;
+                        var ottoPath = string.Concat(mountPoint, hash, ".otf");
+                        entry.Path = ottoPath;
+                        if (entry.IsEncrypted)
+                            EncryptedFileCount++;
+                        files[ottoPath] = entry;
                         used.Add(hash);
                         continue;
                     case FPackageFileSummary.PACKAGE_FILE_TAG:
@@ -126,7 +198,7 @@ public partial class PakFileReader
                     mainExport = exports.FirstOrDefault(exp => (exp.ObjectFlags & 2) == 2);
                     if (mainExport is null)
                     {
-                        Log.Warning("Can't find package name for {0} pathhash", hash);
+                        Log.Warning("Can't find export name for {0} pathhash", hash);
                         continue;
                     }
                 }
@@ -139,55 +211,74 @@ public partial class PakFileReader
                 if (number == 0 && numberIndex != -1 && numberIndex > 0)
                 {
                     if (numberIndex < assetname.Length - 1) numberIndex++;
-                    
-                    if (assetname[numberIndex] != '0' && int.TryParse(assetname.AsSpan()[numberIndex..], out number) && number >= 0)
+                    if (regex.IsMatch(assetname.AsSpan()[numberIndex..]))
                     {
-                        number++;
-                        assetname = assetname[..(numberIndex-1)];
+                        if (assetname[numberIndex] != '0')
+                        {
+                            if (int.TryParse(assetname.AsSpan()[numberIndex..], out var number1) && number1 >= 0)
+                            {
+                                number = number1+1;
+                                assetname = assetname[..(numberIndex-1)];
+                            }
+                        }
+                        else if (int.TryParse(assetname.AsSpan()[numberIndex..], out var number2) && number2 == 0)
+                        {
+                            number = 1;
+                            assetname = assetname[..(numberIndex-1)];
+                        }
                     }
                 }
 
-                var name = package.NameMap.FirstOrDefault(name => pathComparer.Equals(name.Name.SubstringAfterLast('/'), assetname) && name.Name.StartsWith('/'));
-                if (name.Name is null)
+                var found = false;
+                var path = string.Empty;
+                var hashpath = string.Empty;
+                string packageName = "";
+                ulong hash1 = 0;
+                ulong hash2 = 0;
+                foreach (var name in package.NameMap)
                 {
-                    Log.Warning("Can't find package name for {0} pathhash", hash);
+                    if (!name.Name.StartsWith('/') || name.Name.Length <= 1 || name.Name.StartsWith("/Script")) continue;
+                    packageName = FixCoAPackagePath(number == 0 ? name.Name : $"{name.Name}_{number-1}" , pathComparer);
+                    hashpath = MountPoint == "" ? packageName : packageName.Replace(MountPoint, "");
+                    hash1 = Fnv64Path(hashpath+".uasset", PathHashSeed);
+
+                    if (hash1 == hash)
+                    {
+                        found = true;
+                        hashpath += ".uasset";
+                        path = string.Concat(MountPoint, hashpath);
+                        break;
+                    }
+                    hash2 = Fnv64Path(hashpath+".umap", PathHashSeed);
+                    if (hash2 == hash)
+                    {
+                        found = true;
+                        hashpath += ".umap";
+                        path = string.Concat(MountPoint, hashpath);
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    Log.Warning("Can't find package name for {0} pathhash in {1}", hash, Name);
                     continue;
                 }
-                var packageName = FixCoAPackagePath(number == 0 ? name.Name : $"{name.Name}_{number-1}" , pathComparer);
-                var hashpath = MountPoint == "" ? packageName : packageName.Replace(MountPoint, "");
-                var path = string.Concat(MountPoint, hashpath, ".uasset");
+
+                foundFiles.Add(hashpath);
                 entry.Path = path;
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
                 files[path] = entry;
                 used.Add(hash);
 
-                void FindPayload(GenericBufferReader Ar, string extension, bool warning = false)
-                {
-                    var payloadName = string.Concat(hashpath, ".", extension);
-                    var hash = Fnv64Path(payloadName, PathHashSeed);
-                    if (pathHashIndex.TryGetValue(hash, out offset))
-                    {
-                        if (offset != int.MinValue)
-                        {
-                            path = string.Concat(MountPoint, payloadName);
-                            entry = new FPakEntry(this, path, Ar, offset);
-                            if (entry.IsEncrypted)
-                                EncryptedFileCount++;
-                            files[path] = entry;
-                            used.Add(hash);
-                        }
-                    }
-                    else if (warning)
-                    {
-                        Log.Warning("Missing {0} file for package {1}", extension, packageName);
-                    }
-                }
-
-                FindPayload(encodedEntries, "uexp", true);
-                FindPayload(encodedEntries, "ubulk");
-                FindPayload(encodedEntries, "uptnl");
+                FindPayload(encodedEntries, hashpath, "uexp", true);
+                FindPayload(encodedEntries, hashpath, "ubulk");
+                FindPayload(encodedEntries, hashpath,"uptnl");
             }
+
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(packageNamesFile)!);
+            File.WriteAllLinesAsync(packageNamesFile, foundFiles);
 
             if (MountPoint == "")
                 mountPoint = "Seria/Content/";

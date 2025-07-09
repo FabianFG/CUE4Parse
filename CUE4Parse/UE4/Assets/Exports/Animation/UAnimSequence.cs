@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.MoveCompressedAnimDataToTheDDC)
             {
                 var compressedData = new FUECompressedAnimData();
-                CompressedDataStructure = compressedData;                   
+                CompressedDataStructure = compressedData;
 
                 // Part of data were serialized as properties
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
@@ -118,7 +118,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 // UE4.12+
                 var bSerializeCompressedData = Ar.ReadBoolean();
-
+                if (Ar.Game == EGame.GAME_GameForPeace && GetOrDefault<bool>("bUseStreamable")) Ar.Position += 24;
                 if (bSerializeCompressedData)
                 {
                     if (Ar.Game < EGame.GAME_UE4_23)
@@ -128,7 +128,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     else
                         SerializeCompressedData3(Ar);
 
-                    bUseRawDataOnly = Ar.ReadBoolean();
+                    if (Ar.Position + 4 <= validPos) bUseRawDataOnly = Ar.ReadBoolean();
                 }
             }
 
@@ -366,7 +366,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (AdditiveAnimType == EAdditiveAnimationType.AAT_None) return false;
             return RefPoseType switch
             {
-                EAdditiveBasePoseType.ABPT_RefPose => true,
+                EAdditiveBasePoseType.ABPT_RefPose => RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefPoseSeq.Name.Text != Name && RefFrameIndex >= 0,
                 EAdditiveBasePoseType.ABPT_LocalAnimFrame => RefFrameIndex >= 0,

@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Versions
 
             return Ar.Game switch
             {
-                < EGame.GAME_UE4_26 => Type.BeforeCustomVersionWasAdded,
+                < EGame.GAME_UE4_26 => (Type) (-1),
                 _ => Type.LatestVersion
             };
         }

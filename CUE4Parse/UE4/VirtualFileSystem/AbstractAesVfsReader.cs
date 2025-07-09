@@ -58,23 +58,23 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count) =>
         DecryptIfEncrypted(bytes, beginOffset, count, IsEncrypted);
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted, bool isIndex = false)
     {
         if (!isEncrypted) return bytes;
         if (CustomEncryption != null)
         {
-            return CustomEncryption(bytes, 0, bytes.Length, true, this);
+            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
         }
 
         return Decrypt(bytes, AesKey);
     }
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted, bool bypassMountPointCheck = false)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted, bool bypassMountPointCheck = false, bool isIndex = false)
     {
         if (!isEncrypted) return bytes;
         if (CustomEncryption != null)
         {
-            return CustomEncryption(bytes, beginOffset, count, false, this);
+            return CustomEncryption(bytes, beginOffset, count, isIndex, this);
         }
 
         return Decrypt(bytes, AesKey, bypassMountPointCheck);
@@ -84,9 +84,19 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     protected abstract byte[] ReadAndDecrypt(int length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected virtual byte[] ReadAndDecryptIndex(int length) => ReadAndDecrypt(length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
         DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
 
     protected byte[] ReadAndDecryptAt(long position, int length, FArchive reader, bool isEncrypted) =>
         DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected byte[] ReadAndDecryptIndex(int length, FArchive reader, bool isEncrypted) =>
+        DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted, true);
+
+    protected byte[] ReadAndDecryptIndexAt(long position, int length, FArchive reader, bool isEncrypted) =>
+        DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted, true);
 }

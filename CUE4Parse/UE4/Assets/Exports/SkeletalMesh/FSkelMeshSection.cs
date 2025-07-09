@@ -3,6 +3,7 @@ using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Serilog;
@@ -63,7 +64,7 @@ public class FSkelMeshSection
         ChunkedParentSectionIndex = -1;
     }
 
-    public FSkelMeshSection(FAssetArchive Ar) : this()
+    public FSkelMeshSection(FArchive Ar, bool IsFilterEditorOnly = false) : this()
     {
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         var skelMeshVer = FSkeletalMeshCustomVersion.Get(Ar);
@@ -124,7 +125,7 @@ public class FSkelMeshSection
                 BaseVertexIndex = Ar.Read<uint>();
             }
 
-            if (!stripDataFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
+            if (!stripDataFlags.IsEditorDataStripped() && !IsFilterEditorOnly)
             {
                 if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSoftAndRigidVerts)
                 {

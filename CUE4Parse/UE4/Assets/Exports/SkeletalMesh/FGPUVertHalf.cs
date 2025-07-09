@@ -1,6 +1,5 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Meshes;
+﻿using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -11,10 +10,10 @@ public class FGPUVertHalf : FSkelMeshVertexBase
 
     public FGPUVertHalf()
     {
-        UV = Array.Empty<FMeshUVHalf>();
+        UV = [];
     }
 
-    public FGPUVertHalf(FAssetArchive Ar, bool bExtraBoneInfluences, int numSkelUVSets) : this()
+    public FGPUVertHalf(FArchive Ar, bool bExtraBoneInfluences, int numSkelUVSets) : this()
     {
         SerializeForGPU(Ar, bExtraBoneInfluences);
 

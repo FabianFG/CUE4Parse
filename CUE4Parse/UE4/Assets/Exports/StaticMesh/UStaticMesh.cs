@@ -55,17 +55,30 @@ public class UStaticMesh : UObject
 
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
-            RenderData = new FStaticMeshRenderData(Ar);
+        {
+            RenderData = Ar.Game switch
+            {
+                EGame.GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
+                _ => RenderData = new FStaticMeshRenderData(Ar)
+            };
+        }
+
+
+        if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
+        {
+            Ar.Position += 64; // 8 per-platform floats
+        }
 
         if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
-                if (Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean())
+                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan)
                 {
                     Ar.SkipBulkArrayData();
                     Ar.SkipBulkArrayData();
+                    if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
                 }
                 else
                 {

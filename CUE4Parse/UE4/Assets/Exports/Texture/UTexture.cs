@@ -1,27 +1,35 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
-public abstract class UTexture : UUnrealMaterial
+public class UBinkMediaTexture : UTexture;
+
+public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
+    public TextureGroup LODGroup { get; private set; }
+    public TextureFilter Filter { get; private set; }
     public bool SRGB { get; private set; }
-    public bool RenderNearestNeighbor { get; private set; }
+    public FPackageIndex[] AssetUserData { get; private set; } = [];
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
 
+    public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
     public bool IsHDR => CompressionSettings is
         TextureCompressionSettings.TC_HDR or
@@ -34,18 +42,35 @@ public abstract class UTexture : UUnrealMaterial
     public virtual TextureAddress GetTextureAddressY() => TextureAddress.TA_Wrap;
     public virtual TextureAddress GetTextureAddressZ() => TextureAddress.TA_Wrap;
 
+    private UTextureAllMipDataProviderFactory? _mipDataProvider;
+    public UTextureAllMipDataProviderFactory? MipDataProvider
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            if (_mipDataProvider is null)
+            {
+                foreach (var aud in AssetUserData)
+                {
+                    if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out _mipDataProvider))
+                    {
+                        break;
+                    }
+                }
+            }
+            return _mipDataProvider;
+        }
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
+        LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
+        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
-
-        if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
-        {
-            RenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
-                                    trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
-        }
+        AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
 
         var stripFlags = Ar.Read<FStripDataFlags>();
 
@@ -81,7 +106,7 @@ public abstract class UTexture : UUnrealMaterial
 #if DEBUG
                 Log.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
-                PlatformData = new FTexturePlatformData(Ar, this);
+                PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
                 if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
 
@@ -144,14 +169,21 @@ public abstract class UTexture : UUnrealMaterial
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.FirstOrDefault(x => x.BulkData.Data != null);
+    public FTexture2DMipMap? GetMip(int index) =>
+        index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
+            ? PlatformData.Mips[index]
+            : null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipByMaxSize(int maxSize)
     {
-        foreach (var mip in PlatformData.Mips)
+        for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
-            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.BulkData.Data != null)
+            var mip = PlatformData.Mips[i];
+            if ((mip.SizeX <= maxSize || mip.SizeY <= maxSize) && mip.EnsureValidBulkData(MipDataProvider, i))
                 return mip;
         }
 
@@ -161,9 +193,10 @@ public abstract class UTexture : UUnrealMaterial
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipBySize(int sizeX, int sizeY)
     {
-        foreach (var mip in PlatformData.Mips)
+        for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
-            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.BulkData.Data != null)
+            var mip = PlatformData.Mips[i];
+            if (mip.SizeX == sizeX && mip.SizeY == sizeY && mip.EnsureValidBulkData(MipDataProvider, i))
                 return mip;
         }
 

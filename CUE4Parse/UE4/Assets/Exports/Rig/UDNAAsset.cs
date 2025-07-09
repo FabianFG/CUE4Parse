@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,16 +21,27 @@ public class UDNAAsset : UObject
     public DNAVersion LayerVersion;
     public IndexTable IndexTable;
     public Dictionary<string, IRawBase> Layers;
+    public Lazy<byte[]>? DNAData;
+    public string DnaFileName;
 
     private readonly byte[] _signature = "DNA"u8.ToArray();
     private readonly byte[] _eof = "AND"u8.ToArray();
+    private long dnaStartPos;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        DnaFileName = GetOrDefault(nameof(DnaFileName), string.Empty);
 
-        if (FDNAAssetCustomVersion.Get(Ar) > FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+        if (FDNAAssetCustomVersion.Get(Ar) >= FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {
+            dnaStartPos = Ar.Position;
+            DNAData = new Lazy<byte[]>(() => {
+                Ar.Position = dnaStartPos;
+                return Ar.ReadBytes((int)(validPos - dnaStartPos));
+            });
+
+            Ar.Position = dnaStartPos;
             var startPos = Ar.Position;
             var endianAr = new FArchiveBigEndian(Ar);
 
@@ -106,28 +117,28 @@ public class UDNAAsset : UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("Version");
+        writer.WritePropertyName(nameof(Version));
         serializer.Serialize(writer, Version);
 
-        writer.WritePropertyName("Descriptor");
+        writer.WritePropertyName(nameof(Descriptor));
         serializer.Serialize(writer, Descriptor);
 
-        writer.WritePropertyName("Definition");
-        serializer.Serialize(writer, Definition);
+        //writer.WritePropertyName("Definition");
+        //serializer.Serialize(writer, Definition);
 
-        writer.WritePropertyName("Behavior");
-        serializer.Serialize(writer, Behavior);
+        //writer.WritePropertyName("Behavior");
+        //serializer.Serialize(writer, Behavior);
 
-        writer.WritePropertyName("Geometry");
-        serializer.Serialize(writer, Geometry);
+        //writer.WritePropertyName("Geometry");
+        //serializer.Serialize(writer, Geometry);
 
-        writer.WritePropertyName("LayerVersion");
-        serializer.Serialize(writer, LayerVersion);
+        //writer.WritePropertyName("LayerVersion");
+        //serializer.Serialize(writer, LayerVersion);
 
-        writer.WritePropertyName("IndexTable");
-        serializer.Serialize(writer, IndexTable);
+        //writer.WritePropertyName("IndexTable");
+        //serializer.Serialize(writer, IndexTable);
 
-        writer.WritePropertyName("Layers");
-        serializer.Serialize(writer, Layers);
+        //writer.WritePropertyName("Layers");
+        //serializer.Serialize(writer, Layers);
     }
 }

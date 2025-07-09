@@ -9,7 +9,7 @@ public class FSkinWeightVertexBuffer
 {
     private const int _NUM_INFLUENCES_UE4 = 4;
 
-    public  FSkinWeightInfo[] Weights;
+    public FSkinWeightInfo[] Weights;
 
     public FSkinWeightVertexBuffer()
     {

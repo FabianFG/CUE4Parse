@@ -4,6 +4,7 @@ using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
+using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
@@ -87,6 +88,9 @@ public class FScriptStruct
             "IntVector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
             "UintVector2" => type == ReadType.ZERO ? new TIntVector2<uint>() : Ar.Read<TIntVector2<uint>>(),
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
+            "UintVector" => type == ReadType.ZERO ? new TIntVector3<uint>() : Ar.Read<TIntVector3<uint>>(),
+            "IntVector4" => type == ReadType.ZERO ? new TIntVector4<int>() : Ar.Read<TIntVector4<int>>(),
+            "UintVector4" => type == ReadType.ZERO ? new TIntVector4<uint>() : Ar.Read<TIntVector4<uint>>(),
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
@@ -101,8 +105,8 @@ public class FScriptStruct
             "MovieSceneEventParameters" => type == ReadType.ZERO ? new FMovieSceneEventParameters() : new FMovieSceneEventParameters(Ar),
             "MovieSceneFloatChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<float>() : new FMovieSceneChannel<float>(Ar),
             "MovieSceneDoubleChannel" => type == ReadType.ZERO ? new FMovieSceneChannel<double>() : new FMovieSceneChannel<double>(Ar),
-            "MovieSceneFloatValue" => type == ReadType.ZERO ? new FMovieSceneValue<float>() : new FMovieSceneValue<float>(Ar, Ar.Read<float>()),
-            "MovieSceneDoubleValue" => type == ReadType.ZERO ? new FMovieSceneValue<double>() : new FMovieSceneValue<double>(Ar, Ar.Read<double>()),
+            "MovieSceneFloatValue" => type == ReadType.ZERO ? new FMovieSceneValue<float>() : new FMovieSceneValue<float>(Ar, Ar.Read<float>(), true),
+            "MovieSceneDoubleValue" => type == ReadType.ZERO ? new FMovieSceneValue<double>() : new FMovieSceneValue<double>(Ar, Ar.Read<double>(), true),
             "MovieSceneFrameRange" => type == ReadType.ZERO ? new FMovieSceneFrameRange() : Ar.Read<FMovieSceneFrameRange>(),
             "MovieSceneSegment" => type == ReadType.ZERO ? new FMovieSceneSegment() : new FMovieSceneSegment(Ar),
             "MovieSceneSegmentIdentifier" => type == ReadType.ZERO ? new FMovieSceneSegmentIdentifier() : Ar.Read<FMovieSceneSegmentIdentifier>(),
@@ -111,7 +115,8 @@ public class FScriptStruct
             "MovieSceneSubSequenceTree" => type == ReadType.ZERO ? new FMovieSceneSubSequenceTree() : new FMovieSceneSubSequenceTree(Ar),
             "MovieSceneTimeWarpVariant" => type == ReadType.ZERO ? new FStructFallback() : new FMovieSceneTimeWarpVariant(Ar),
             "MovieSceneTrackFieldData" => type == ReadType.ZERO ? new FMovieSceneTrackFieldData() : new FMovieSceneTrackFieldData(Ar),
-            "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : Ar.Read<FMovieSceneTrackIdentifier>(),
+            "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : new FMovieSceneTrackIdentifier(Ar),
+            "MovieSceneTrackIdentifiers" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
             "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
             "FontData" => new FFontData(Ar),
             "FontCharacter" => new FFontCharacter(Ar),
@@ -169,7 +174,7 @@ public class FScriptStruct
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
-            //"FortActorRecord" => new FFortActorRecord(Ar),
+            "FortActorRecord" => new FFortActorRecord(Ar),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
@@ -245,6 +250,16 @@ public class FScriptStruct
             "GenericTeamId" when Ar.Game == EGame.GAME_DuneAwakening => new FGenericTeamId(Ar),
             "UniqueID" when Ar.Game == EGame.GAME_DuneAwakening => new FUniqueID(Ar),
             "BotAutoBorderCrossingConfig" when Ar.Game == EGame.GAME_DuneAwakening => new FBotAutoBorderCrossingConfig(Ar),
+
+            // MindsEye
+            "UgcData" when Ar.Game == EGame.GAME_MindsEye => new FUgcData(Ar),
+            "JsonObjectWrapper" when Ar.Game == EGame.GAME_MindsEye => new FJsonObjectWrapper(Ar),
+            "UGCPropertyDefaultValueOverride" when Ar.Game == EGame.GAME_MindsEye => new FUGCPropertyDefaultValueOverride(Ar),
+
+            // Vindictus Defying Fate
+            "VinInstancedStruct" => new FInstancedStruct(Ar),
+            "VinInstancedPropertyBag" => new FInstancedPropertyBag(Ar),
+            "AnyValue" => new FAnyValue(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
