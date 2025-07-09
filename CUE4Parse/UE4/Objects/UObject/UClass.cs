@@ -128,39 +128,74 @@ namespace CUE4Parse.UE4.Objects.UObject
             var protectedVariable = new List<string>();
             var privateVariable = new List<string>();
             
-            // foreach (var property in Properties)
-            // {
-            //     Console.WriteLine(property.Name);
-            // }
-
-            if (!ClassDefaultObject.TryLoad(out var classDefaultObject))
-            {
-                Log.Warning("Failed to load classDefaultObject");
-                return string.Empty;
-            }
-
-            foreach (var property in classDefaultObject.Properties)
+            foreach (var property in Properties)
             {
                 var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                 if (variableText is null)
                     continue;
                     
-                var variableType = BlueprintDecompilerUtils.GetPropertyType(property);
+                var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
                 if (variableType is null)
                     continue;
 
                 var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
                 publicVariable.Add(variableExpression);
             }
-            
-            stringBuilder.OpenBlock("public:");
-            
-            foreach (var property in publicVariable)
+
+            foreach (var childProperty in ChildProperties)
             {
-                stringBuilder.AppendLine(property);
+                if (childProperty is not FProperty property)
+                    continue;
+                
+                var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableValue is null || variableType is null)
+                    continue;
+
+                var variableExpression = $"{variableType} {property.Name.Text} = {variableValue};";
+                publicVariable.Add(variableExpression);
             }
             
-            stringBuilder.CloseBlock(string.Empty);
+            if (ClassDefaultObject.TryLoad(out var classDefaultObject))
+            {
+                foreach (var property in classDefaultObject.Properties)
+                {
+                    var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
+                    if (variableText is null)
+                        continue;
+                    
+                    var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
+                    if (variableType is null)
+                        continue;
+
+                    var variableExpression = $"{variableType} {property.Name.Text} = {variableText};";
+                    publicVariable.Add(variableExpression);
+                }
+            }
+            
+
+            if (publicVariable.Count > 0)
+            {
+                stringBuilder.DecreaseIndentation();
+                stringBuilder.AppendLine("public:");
+                stringBuilder.IncreaseIndentation();
+
+                foreach (var property in publicVariable)
+                {
+                    stringBuilder.AppendLine(property);
+                }
+            }
+
+            foreach (var (key, value) in FuncMap)
+            {
+                if (!value.TryLoad(out var export) || export is not UFunction function)
+                    continue;
+
+                foreach (var expression in function.ScriptBytecode)
+                {
+                    
+                }
+            }
+            
             stringBuilder.CloseBlock("};");
             
             return stringBuilder.ToString();

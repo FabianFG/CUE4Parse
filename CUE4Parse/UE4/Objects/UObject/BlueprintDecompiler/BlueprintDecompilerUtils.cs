@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
@@ -37,7 +36,7 @@ public static class BlueprintDecompilerUtils
         return "U";
     }
     
-    public static string? GetPropertyType(FPropertyTag propertyType)
+    public static string? GetPropertyTagType(FPropertyTag propertyType)
     {
         string? text = null;
         switch (propertyType.TagData?.Type)
@@ -49,8 +48,8 @@ public static class BlueprintDecompilerUtils
             }
             case "ObjectProperty":
             {
-                var packageIndex = (propertyType.Tag?.GenericValue as FPackageIndex)?.ToString().SubstringBefore("'");
-                text = $"TObjectPtr<U{packageIndex}>";
+                var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
+                text = $"TObjectPtr<U{classType}>";
                 break;
             }
             case "ArrayProperty":
@@ -62,7 +61,7 @@ public static class BlueprintDecompilerUtils
                     break;
                 }
 
-                var scriptArrayType = GetPropertyType(scriptArray.Properties[0]);
+                var scriptArrayType = GetPropertyTagType(scriptArray.Properties[0]);
                 text = $"TArray<{scriptArrayType}>";
                 
                 break;
@@ -97,7 +96,7 @@ public static class BlueprintDecompilerUtils
         return text;
     }
 
-    private static string? GetPropertyType(FPropertyTagType property)
+    private static string? GetPropertyTagType(FPropertyTagType property)
     {
         string? text = null;
         
@@ -105,8 +104,64 @@ public static class BlueprintDecompilerUtils
         {
             case ObjectProperty objProperty:
             {
-                var objectType = (objProperty.GenericValue as FPackageIndex)?.ToString().SubstringBefore("'");
+                var objectType = (objProperty.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
                 text = $"TObjectPtr<U{objectType}>";
+                break;
+            }
+            default:
+            {
+                Log.Warning("Property Value '{type}' is currently not supported for UScriptArray", property.GetType());
+                break;
+            }
+        }
+
+        return text;
+    }
+
+    public static (string?, string?) GetPropertyType(FProperty property)
+    {
+        string? type = null;
+        string? value = null;
+        
+        switch (property)
+        {
+            case FStructProperty structProperty:
+            {
+                var structType = structProperty.Struct.Name;
+                
+                type = $"F{structType}";
+                value = structProperty.Struct.ToString();
+                break;
+            }
+            case FObjectProperty objectProperty:
+            {
+                var classType = objectProperty.PropertyClass.Name;
+                
+                value = objectProperty.PropertyClass.ToString();
+                type = $"TObjectPtr<U{classType}>";
+
+                break;
+            }
+            // all of these are default values?
+            case FIntProperty intProperty:
+            {
+                type = "int";
+                value = "0";
+                
+                break;
+            }
+            case FDoubleProperty doubleProperty:
+            {
+                type = "double";
+                value = "0.0";
+                
+                break;
+            }
+            case FBoolProperty boolProperty:
+            {
+                type = "bool";
+                value = "false";
+
                 break;
             }
             default:
@@ -116,7 +171,7 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        return text;
+        return (value, type);
     }
 
     public static string? GetPropertyText(FPropertyTag propertyTag)
@@ -125,7 +180,7 @@ public static class BlueprintDecompilerUtils
         return GetPropertyText(propertyValue!);
     }
     
-    private static string? GetPropertyText(object value, bool bAddSemicolon = true)
+    private static string? GetPropertyText(object value)
     {
         string? text = null;
         switch (value)
@@ -136,7 +191,7 @@ public static class BlueprintDecompilerUtils
                 stringBuilder.OpenBlock("[");
                 foreach (var property in scriptArray.Properties)
                 {
-                    stringBuilder.AppendLine(GetPropertyText(property.GenericValue!, false)!);
+                    stringBuilder.AppendLine(GetPropertyText(property.GenericValue!)!);
                 }
                 stringBuilder.CloseBlock("]");
                 
@@ -179,9 +234,6 @@ public static class BlueprintDecompilerUtils
                 break;
             }
         }
-
-        if (bAddSemicolon)
-            text += ';';
         
         return text;
     }
@@ -210,7 +262,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Type '{type}' is currently not supported", scriptStruct.StructType.GetType());
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", scriptStruct.StructType.GetType());
                 break;
             }
         }
