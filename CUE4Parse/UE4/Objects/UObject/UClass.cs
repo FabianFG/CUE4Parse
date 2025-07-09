@@ -4,6 +4,7 @@ using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
@@ -124,9 +125,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             stringBuilder.OpenBlock();
 
             // Properties
+            // TODO switch to this
+            // var variables = new Dictionary<string, EAccessMode>();
+            
             var publicVariable = new List<string>();
-            var protectedVariable = new List<string>();
-            var privateVariable = new List<string>();
+            var protectedVariables = new List<string>();
+            var privateVariables = new List<string>();
             
             foreach (var property in Properties)
             {
@@ -142,19 +146,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 publicVariable.Add(variableExpression);
             }
 
-            foreach (var childProperty in ChildProperties)
-            {
-                if (childProperty is not FProperty property)
-                    continue;
-                
-                var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
-                if (variableValue is null || variableType is null)
-                    continue;
-
-                var variableExpression = $"{variableType} {property.Name.Text} = {variableValue};";
-                publicVariable.Add(variableExpression);
-            }
-            
             if (ClassDefaultObject.TryLoad(out var classDefaultObject))
             {
                 foreach (var property in classDefaultObject.Properties)
@@ -168,10 +159,24 @@ namespace CUE4Parse.UE4.Objects.UObject
                         continue;
 
                     var variableExpression = $"{variableType} {property.Name.Text} = {variableText};";
-                    publicVariable.Add(variableExpression);
+                    protectedVariables.Add(variableExpression);
                 }
             }
             
+            foreach (var childProperty in ChildProperties)
+            {
+                if (childProperty is not FProperty property)
+                    continue;
+                
+                var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableType is null)
+                    continue;
+
+                var value = variableValue is null ? string.Empty : $" = {variableValue}";
+                var variableExpression = $"{variableType} {property.Name.Text}{value};";
+                
+                privateVariables.Add(variableExpression);
+            }
 
             if (publicVariable.Count > 0)
             {
@@ -184,16 +189,85 @@ namespace CUE4Parse.UE4.Objects.UObject
                     stringBuilder.AppendLine(property);
                 }
             }
+            
+            if (protectedVariables.Count > 0)
+            {
+                stringBuilder.DecreaseIndentation();
+                stringBuilder.AppendLine("protected:");
+                stringBuilder.IncreaseIndentation();
 
+                foreach (var variable in protectedVariables)
+                {
+                    stringBuilder.AppendLine(variable);
+                }
+            }
+            
+            if (privateVariables.Count > 0)
+            {
+                stringBuilder.DecreaseIndentation();
+                stringBuilder.AppendLine("private:");
+                stringBuilder.IncreaseIndentation();
+
+                foreach (var variable in privateVariables)
+                {
+                    stringBuilder.AppendLine(variable);
+                }
+            }
+            
+            if (FuncMap.Count > 0) stringBuilder.AppendLine();
+
+            var totalFuncMapCount = FuncMap.Count;
+            var index = 1;
+            
             foreach (var (key, value) in FuncMap)
             {
                 if (!value.TryLoad(out var export) || export is not UFunction function)
                     continue;
 
+                var parametersList = new List<string>();
+                foreach (var childProperty in function.ChildProperties)
+                {
+                    if (childProperty is not FProperty property)
+                        continue;
+                
+                    var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                    if (variableType is null)
+                        continue;
+                
+                    var parameterExpression = $"{variableType} {property.Name.Text}";
+                    parametersList.Add(parameterExpression);
+                }
+                
+                var parameters = string.Join(", ", parametersList);
+                var returnType = function.ScriptBytecode[^2] switch
+                {
+                    EX_Return valid => valid.ReturnExpression switch
+                    {
+                        EX_Nothing => "void",
+                        _ => throw new NotImplementedException($"ReturnExpression {valid.ReturnExpression.GetType().Name} is currently not implemented"),
+                    }, 
+                    
+                    _ => throw new NotSupportedException()
+                };
+                
+                var functionExpression = $"{returnType} {key.Text}({parameters})";
+                
+                var functionStringBuilder = new CustomStringBuilder();
+                functionStringBuilder.AppendLine(functionExpression);
+                functionStringBuilder.OpenBlock();
+                
                 foreach (var expression in function.ScriptBytecode)
                 {
-                    
+                    // TODO:
                 }
+                
+                functionStringBuilder.CloseBlock();
+                
+                var functionBlock = functionStringBuilder.ToString();
+                stringBuilder.AppendLine(functionBlock);
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                
+                index++;
             }
             
             stringBuilder.CloseBlock("};");
@@ -273,4 +347,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
         }
     }
+}
+
+public enum EAccessMode : byte
+{
+    Public,
+    Protected,
+    Private
 }

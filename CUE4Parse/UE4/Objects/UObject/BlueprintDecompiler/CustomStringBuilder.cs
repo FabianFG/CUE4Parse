@@ -24,7 +24,10 @@ public class CustomStringBuilder
     public void AppendLine(string text = "")
     {
         if (string.IsNullOrEmpty(text))
+        {
             _stringBuilder.AppendLine();
+            return;
+        }
 
         var lines = text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None);
         foreach (var line in lines)
@@ -49,7 +52,7 @@ public class CustomStringBuilder
     public void CloseBlock(string text = "}")
     {
         DecreaseIndentation();
-        if (!string.IsNullOrWhiteSpace(text)) Append(text);
+        Append(text);
     }
 
     public void IncreaseIndentation() => _indentationLevel++;

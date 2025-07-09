@@ -1,6 +1,8 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.Utils;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
@@ -49,7 +51,7 @@ public static class BlueprintDecompilerUtils
             case "ObjectProperty":
             {
                 var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
-                text = $"TObjectPtr<U{classType}>";
+                text = $"U{classType}*";
                 break;
             }
             case "ArrayProperty":
@@ -105,12 +107,12 @@ public static class BlueprintDecompilerUtils
             case ObjectProperty objProperty:
             {
                 var objectType = (objProperty.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
-                text = $"TObjectPtr<U{objectType}>";
+                text = $"U{objectType}*";
                 break;
             }
             default:
             {
-                Log.Warning("Property Value '{type}' is currently not supported for UScriptArray", property.GetType());
+                Log.Warning("Property Value '{type}' is currently not supported for UScriptArray", property.GetType().Name);
                 break;
             }
         }
@@ -118,59 +120,94 @@ public static class BlueprintDecompilerUtils
         return text;
     }
 
+    public static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
+                                                        property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+                                                        property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
+                                                        property.GetType() == typeof(FObjectProperty);
+    
     public static (string?, string?) GetPropertyType(FProperty property)
     {
         string? type = null;
         string? value = null;
         
+        var propertyFlags = property.PropertyFlags;
+        Log.Debug("Property Flags: {flag}", propertyFlags.ToStringBitfield());
+        
+        if (propertyFlags.HasFlag(EPropertyFlags.ConstParm))
+        {
+            type += "const ";
+        }
+        
         switch (property)
         {
-            case FStructProperty structProperty:
-            {
-                var structType = structProperty.Struct.Name;
-                
-                type = $"F{structType}";
-                value = structProperty.Struct.ToString();
-                break;
-            }
             case FObjectProperty objectProperty:
             {
                 var classType = objectProperty.PropertyClass.Name;
                 
                 value = objectProperty.PropertyClass.ToString();
-                type = $"TObjectPtr<U{classType}>";
+                type += $"U{classType}*";
 
                 break;
             }
-            // all of these are default values?
-            case FIntProperty intProperty:
+            case FArrayProperty arrayProperty:
             {
-                type = "int";
-                value = "0";
+                var (innerValue, innerType) = GetPropertyType(arrayProperty.Inner!);
+
+                var customStringBuilder = new CustomStringBuilder();
+                customStringBuilder.OpenBlock("[");
+                customStringBuilder.AppendLine(innerValue!);
+                customStringBuilder.CloseBlock("]");
+
+                value = customStringBuilder.ToString();
+                type += $"TArray<{innerType}>";
                 
                 break;
             }
-            case FDoubleProperty doubleProperty:
+            case FStructProperty structProperty:
             {
-                type = "double";
-                value = "0.0";
+                var structType = structProperty.Struct.Name;
                 
+                type += $"F{structType}";
+                value = structProperty.Struct.ToString();
+                break;
+            }
+            // all of these are default values?
+            case FNumericProperty:
+            {
+                if (property is FByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
+                {
+                    type = enumObj.Name;
+                }
+                else
+                {
+                    type = property.GetType().Name.SubstringAfter("F").SubstringBefore("Property").ToLowerInvariant();
+                }
+
+                break;
+            }
+            case FInterfaceProperty interfaceProperty:
+            {
+                type = $"F{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
             case FBoolProperty boolProperty:
             {
                 type = "bool";
-                value = "false";
-
                 break;
             }
             default:
             {
-                Log.Warning("Property Value '{type}' is currently not supported", property.GetType());
+                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
                 break;
             }
         }
 
+        if (IsPointer(property))
+            type += "*";
+
+        if (propertyFlags.HasFlag(EPropertyFlags.OutParm))
+            type += "&";
+        
         return (value, type);
     }
 
@@ -215,7 +252,7 @@ public static class BlueprintDecompilerUtils
             }
             case bool boolean:
             {
-                text = boolean.ToString().ToLower();
+                text = boolean.ToString().ToLowerInvariant();
                 break;
             }
             case int int32:
@@ -230,7 +267,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Value '{type}' is currently not supported", value.GetType());
+                Log.Warning("Property Value '{type}' is currently not supported", value.GetType().Name);
                 break;
             }
         }
