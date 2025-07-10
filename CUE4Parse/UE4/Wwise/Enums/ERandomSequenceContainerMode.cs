@@ -1,8 +1,7 @@
-﻿namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums;
+
+public enum ERandomSequenceContainerMode : byte
 {
-    public enum ERandomSequenceContainerMode : byte
-    {
-        Random,
-        Sequence,
-    }
+    Random,
+    Sequence,
 }
