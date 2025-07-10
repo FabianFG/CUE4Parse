@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -127,6 +126,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Properties
             // TODO switch to this
             // var variables = new Dictionary<string, EAccessMode>();
+
+            var existingVariables = new List<string>();
             
             var publicVariable = new List<string>();
             var protectedVariables = new List<string>();
@@ -134,6 +135,9 @@ namespace CUE4Parse.UE4.Objects.UObject
             
             foreach (var property in Properties)
             {
+                if (existingVariables.Contains(property.Name.Text))
+                    continue;
+                
                 var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                 if (variableText is null)
                     continue;
@@ -144,12 +148,17 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
                 publicVariable.Add(variableExpression);
+                
+                existingVariables.Add(property.Name.Text);
             }
 
             if (ClassDefaultObject.TryLoad(out var classDefaultObject))
             {
                 foreach (var property in classDefaultObject.Properties)
                 {
+                    if (existingVariables.Contains(property.Name.Text))
+                        continue;
+                    
                     var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                     if (variableText is null)
                         continue;
@@ -160,12 +169,17 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                     var variableExpression = $"{variableType} {property.Name.Text} = {variableText};";
                     protectedVariables.Add(variableExpression);
+                    
+                    existingVariables.Add(property.Name.Text);
                 }
             }
             
             foreach (var childProperty in ChildProperties)
             {
                 if (childProperty is not FProperty property)
+                    continue;
+                
+                if (existingVariables.Contains(property.Name.Text))
                     continue;
                 
                 var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
@@ -176,6 +190,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 var variableExpression = $"{variableType} {property.Name.Text}{value};";
                 
                 privateVariables.Add(variableExpression);
+                
+                existingVariables.Add(property.Name.Text);
             }
 
             if (publicVariable.Count > 0)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.Utils;
@@ -45,13 +44,13 @@ public static class BlueprintDecompilerUtils
         {
             case "StructProperty":
             {
-                text = $"F{propertyType.TagData.StructType}";
+                text = $"struct F{propertyType.TagData.StructType}";
                 break;
             }
             case "ObjectProperty":
             {
                 var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
-                text = $"U{classType}*";
+                text = $"class U{classType}*";
                 break;
             }
             case "ArrayProperty":
@@ -131,7 +130,7 @@ public static class BlueprintDecompilerUtils
         string? value = null;
         
         var propertyFlags = property.PropertyFlags;
-        Log.Debug("Property Flags: {flag}", propertyFlags.ToStringBitfield());
+        // Log.Debug("Property Flags: {flag}", propertyFlags.ToStringBitfield());
         
         if (propertyFlags.HasFlag(EPropertyFlags.ConstParm))
         {
@@ -145,7 +144,7 @@ public static class BlueprintDecompilerUtils
                 var classType = objectProperty.PropertyClass.Name;
                 
                 value = objectProperty.PropertyClass.ToString();
-                type += $"U{classType}*";
+                type += $"class U{classType}*";
 
                 break;
             }
@@ -167,11 +166,10 @@ public static class BlueprintDecompilerUtils
             {
                 var structType = structProperty.Struct.Name;
                 
-                type += $"F{structType}";
+                type += $"struct F{structType}";
                 value = structProperty.Struct.ToString();
                 break;
             }
-            // all of these are default values?
             case FNumericProperty:
             {
                 if (property is FByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
@@ -202,7 +200,7 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        if (IsPointer(property))
+        if (IsPointer(property) && !type.EndsWith("*"))
             type += "*";
 
         if (propertyFlags.HasFlag(EPropertyFlags.OutParm))
@@ -224,15 +222,23 @@ public static class BlueprintDecompilerUtils
         {
             case UScriptArray scriptArray:
             {
-                var stringBuilder = new CustomStringBuilder();
-                stringBuilder.OpenBlock("[");
-                foreach (var property in scriptArray.Properties)
+                if (scriptArray.Properties.Count > 0)
                 {
-                    stringBuilder.AppendLine(GetPropertyText(property.GenericValue!)!);
+                    var stringBuilder = new CustomStringBuilder();
+                    stringBuilder.OpenBlock("[");
+                    foreach (var property in scriptArray.Properties)
+                    {
+                        stringBuilder.AppendLine(GetPropertyText(property.GenericValue!)!);
+                    }
+                    stringBuilder.CloseBlock("]");
+                    
+                    text = stringBuilder.ToString();
                 }
-                stringBuilder.CloseBlock("]");
+                else
+                {
+                    text = "[]";
+                }
                 
-                text = stringBuilder.ToString();
                 break;
             }
             case FPackageIndex packageIndex:
