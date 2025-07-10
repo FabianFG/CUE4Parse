@@ -46,6 +46,10 @@ public class WwiseProvider
     private readonly List<uint> _wwiseLoadedSoundBanks = [];
     private bool _completedWwiseFullBnkInit = false;
 
+    public WwiseProvider(AbstractVfsFileProvider provider, int maxBankFiles)
+        : this(provider, new WwiseProviderConfiguration(maxBankFiles: maxBankFiles))
+    {
+    }
     public WwiseProvider(AbstractVfsFileProvider provider, WwiseProviderConfiguration? configuration = null)
     {
         _provider = provider;
