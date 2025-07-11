@@ -1,8 +1,7 @@
-namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums;
+
+public enum EPosition3DSource : uint
 {
-    public enum EPosition3DSource : uint
-    {
-        UserDefined = 0x2,
-        GameDefined,
-    }
+    UserDefined = 0x2,
+    GameDefined,
 }
