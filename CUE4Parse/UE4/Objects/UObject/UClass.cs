@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -81,7 +82,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
-        
+
         public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
         {
             var type = ObjectTypeRegistry.Get(Name);
@@ -114,183 +115,147 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
             var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-            
+
             var superStruct = SuperStruct.Load<UStruct>();
             var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
             var stringBuilder = new CustomStringBuilder();
-            
+
             stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
             stringBuilder.OpenBlock();
 
-            // Properties
-            // TODO switch to this
-            // var variables = new Dictionary<string, EAccessMode>();
+            var existingVariables = new HashSet<string>();
+            var variables = new Dictionary<string, EAccessMode>();
 
-            var existingVariables = new List<string>();
-            
-            var publicVariable = new List<string>();
-            var protectedVariables = new List<string>();
-            var privateVariables = new List<string>();
-            
             foreach (var property in Properties)
             {
-                if (existingVariables.Contains(property.Name.Text))
+                if (!existingVariables.Add(property.Name.Text))
                     continue;
-                
+
                 var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                 if (variableText is null)
                     continue;
-                    
+
                 var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
                 if (variableType is null)
                     continue;
 
-                var variableExpression = $"{variableType} {property.Name.Text} = {variableText}";
-                publicVariable.Add(variableExpression);
-                
-                existingVariables.Add(property.Name.Text);
+                var variableExpression = $"{variableType} {property.Name.Text} = {variableText};";
+                variables[variableExpression] = EAccessMode.Public;
             }
 
             if (ClassDefaultObject.TryLoad(out var classDefaultObject))
             {
                 foreach (var property in classDefaultObject.Properties)
                 {
-                    if (existingVariables.Contains(property.Name.Text))
+                    if (!existingVariables.Add(property.Name.Text))
                         continue;
-                    
+
                     var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                     if (variableText is null)
                         continue;
-                    
+
                     var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
                     if (variableType is null)
                         continue;
 
                     var variableExpression = $"{variableType} {property.Name.Text} = {variableText};";
-                    protectedVariables.Add(variableExpression);
-                    
-                    existingVariables.Add(property.Name.Text);
+                    variables[variableExpression] = EAccessMode.Protected;
                 }
             }
-            
+
             foreach (var childProperty in ChildProperties)
             {
                 if (childProperty is not FProperty property)
                     continue;
-                
-                if (existingVariables.Contains(property.Name.Text))
+
+                if (!existingVariables.Add(property.Name.Text))
                     continue;
-                
+
                 var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
                 if (variableType is null)
                     continue;
 
                 var value = variableValue is null ? string.Empty : $" = {variableValue}";
                 var variableExpression = $"{variableType} {property.Name.Text}{value};";
-                
-                privateVariables.Add(variableExpression);
-                
-                existingVariables.Add(property.Name.Text);
+                variables[variableExpression] = EAccessMode.Private;
             }
 
-            if (publicVariable.Count > 0)
+            foreach (var group in variables.GroupBy(pair => pair.Value))
             {
                 stringBuilder.DecreaseIndentation();
-                stringBuilder.AppendLine("public:");
+                stringBuilder.AppendLine(group.Key.ToString().ToLower() + ":");
                 stringBuilder.IncreaseIndentation();
 
-                foreach (var property in publicVariable)
-                {
-                    stringBuilder.AppendLine(property);
-                }
-            }
-            
-            if (protectedVariables.Count > 0)
-            {
-                stringBuilder.DecreaseIndentation();
-                stringBuilder.AppendLine("protected:");
-                stringBuilder.IncreaseIndentation();
-
-                foreach (var variable in protectedVariables)
+                foreach (var variable in group.Select(pair => pair.Key))
                 {
                     stringBuilder.AppendLine(variable);
                 }
             }
-            
-            if (privateVariables.Count > 0)
-            {
-                stringBuilder.DecreaseIndentation();
-                stringBuilder.AppendLine("private:");
-                stringBuilder.IncreaseIndentation();
 
-                foreach (var variable in privateVariables)
-                {
-                    stringBuilder.AppendLine(variable);
-                }
-            }
-            
             if (FuncMap.Count > 0) stringBuilder.AppendLine();
 
             var totalFuncMapCount = FuncMap.Count;
             var index = 1;
-            
+
             foreach (var (key, value) in FuncMap)
             {
                 if (!value.TryLoad(out var export) || export is not UFunction function)
                     continue;
 
                 var parametersList = new List<string>();
+
+                string returnType = "void";
                 foreach (var childProperty in function.ChildProperties)
                 {
                     if (childProperty is not FProperty property)
                         continue;
-                
+
                     var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
                     if (variableType is null)
                         continue;
-                
+
+                    if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    {
+                        returnType = variableType;
+                        continue; // skip as this shouldn't be written?
+                    }
+
                     var parameterExpression = $"{variableType} {property.Name.Text}";
                     parametersList.Add(parameterExpression);
                 }
-                
+
                 var parameters = string.Join(", ", parametersList);
-                var returnType = function.ScriptBytecode[^2] switch
-                {
-                    EX_Return valid => valid.ReturnExpression switch
-                    {
-                        EX_Nothing => "void",
-                        _ => throw new NotImplementedException($"ReturnExpression {valid.ReturnExpression.GetType().Name} is currently not implemented"),
-                    }, 
-                    
-                    _ => throw new NotSupportedException()
-                };
-                
                 var functionExpression = $"{returnType} {key.Text}({parameters})";
-                
+
                 var functionStringBuilder = new CustomStringBuilder();
                 functionStringBuilder.AppendLine(functionExpression);
                 functionStringBuilder.OpenBlock();
-                
-                foreach (var expression in function.ScriptBytecode)
+
+                foreach (KismetExpression expression in function.ScriptBytecode)
                 {
                     // TODO:
+                    ProcessExpression(expression);
                 }
-                
+                static void ProcessExpression(KismetExpression token) // maybe make this not a local function? did this just in case.
+                {
+
+                }
+
                 functionStringBuilder.CloseBlock();
-                
+
                 var functionBlock = functionStringBuilder.ToString();
                 stringBuilder.AppendLine(functionBlock);
                 if (index < totalFuncMapCount) stringBuilder.AppendLine();
-                
+
                 index++;
             }
-            
+
             stringBuilder.CloseBlock("};");
-            
+
             return stringBuilder.ToString();
         }
-        
+
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);

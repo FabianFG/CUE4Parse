@@ -29,14 +29,14 @@ public static class BlueprintDecompilerUtils
 
             if (!string.IsNullOrEmpty(prefix))
                 return prefix;
-            
+
             if (struc?.SuperStruct is null || !struc.SuperStruct.TryLoad(out struc))
                 break;
         }
 
         return "U";
     }
-    
+
     public static string? GetPropertyTagType(FPropertyTag propertyType)
     {
         string? text = null;
@@ -64,7 +64,7 @@ public static class BlueprintDecompilerUtils
 
                 var scriptArrayType = GetPropertyTagType(scriptArray.Properties[0]);
                 text = $"TArray<{scriptArrayType}>";
-                
+
                 break;
             }
             case "IntProperty":
@@ -100,7 +100,7 @@ public static class BlueprintDecompilerUtils
     private static string? GetPropertyTagType(FPropertyTagType property)
     {
         string? text = null;
-        
+
         switch (property)
         {
             case ObjectProperty objProperty:
@@ -123,26 +123,26 @@ public static class BlueprintDecompilerUtils
                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                         property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                         property.GetType() == typeof(FObjectProperty);
-    
+
     public static (string?, string?) GetPropertyType(FProperty property)
     {
         string? type = null;
         string? value = null;
-        
+
         var propertyFlags = property.PropertyFlags;
         // Log.Debug("Property Flags: {flag}", propertyFlags.ToStringBitfield());
-        
+
         if (propertyFlags.HasFlag(EPropertyFlags.ConstParm))
         {
             type += "const ";
         }
-        
+
         switch (property)
         {
             case FObjectProperty objectProperty:
             {
                 var classType = objectProperty.PropertyClass.Name;
-                
+
                 value = objectProperty.PropertyClass.ToString();
                 type += $"class U{classType}*";
 
@@ -159,13 +159,13 @@ public static class BlueprintDecompilerUtils
 
                 value = customStringBuilder.ToString();
                 type += $"TArray<{innerType}>";
-                
+
                 break;
             }
             case FStructProperty structProperty:
             {
                 var structType = structProperty.Struct.Name;
-                
+
                 type += $"struct F{structType}";
                 value = structProperty.Struct.ToString();
                 break;
@@ -203,9 +203,9 @@ public static class BlueprintDecompilerUtils
         if (IsPointer(property) && !type.EndsWith("*"))
             type += "*";
 
-        if (propertyFlags.HasFlag(EPropertyFlags.OutParm))
+        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
             type += "&";
-        
+
         return (value, type);
     }
 
@@ -214,7 +214,7 @@ public static class BlueprintDecompilerUtils
         var propertyValue = propertyTag.Tag?.GenericValue;
         return GetPropertyText(propertyValue!);
     }
-    
+
     private static string? GetPropertyText(object value)
     {
         string? text = null;
@@ -231,14 +231,14 @@ public static class BlueprintDecompilerUtils
                         stringBuilder.AppendLine(GetPropertyText(property.GenericValue!)!);
                     }
                     stringBuilder.CloseBlock("]");
-                    
+
                     text = stringBuilder.ToString();
                 }
                 else
                 {
                     text = "[]";
                 }
-                
+
                 break;
             }
             case FPackageIndex packageIndex:
@@ -277,7 +277,7 @@ public static class BlueprintDecompilerUtils
                 break;
             }
         }
-        
+
         return text;
     }
 
@@ -291,7 +291,7 @@ public static class BlueprintDecompilerUtils
             {
                 if (fallback.Properties.Count == 0)
                     return "[]";
-                
+
                 var stringBuilder = new CustomStringBuilder();
                 stringBuilder.OpenBlock("[");
                 foreach (var property in fallback.Properties)
@@ -299,7 +299,7 @@ public static class BlueprintDecompilerUtils
                     stringBuilder.AppendLine(property.ToString());
                 }
                 stringBuilder.CloseBlock("]");
-                
+
                 text = stringBuilder.ToString();
                 break;
             }
@@ -309,7 +309,7 @@ public static class BlueprintDecompilerUtils
                 break;
             }
         }
-        
+
         return text;
     }
 }
