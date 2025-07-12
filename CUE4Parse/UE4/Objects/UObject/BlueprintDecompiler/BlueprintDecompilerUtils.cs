@@ -47,7 +47,13 @@ public static class BlueprintDecompilerUtils
                 text = $"struct F{propertyType.TagData.StructType}";
                 break;
             }
+            case "MapProperty":
+            {
+                text = $"struct TMap<{propertyType.TagData.StructType}>";
+                break;
+            }
             case "ObjectProperty":
+            case "ClassProperty": // todo: is ClassProperty correct?
             {
                 var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
                 text = $"class U{classType}*";
@@ -193,6 +199,26 @@ public static class BlueprintDecompilerUtils
                 type = "bool";
                 break;
             }
+            case FTextProperty textProperty:
+            {
+                type = "todo"; // todo:
+                break;
+            }
+            case FStrProperty strProperty:
+            {
+                type = "string";
+                break;
+            }
+            case FNameProperty nameProperty:
+            {
+                type = "todo"; // todo:
+                break;
+            }
+            case FDelegateProperty delegateProperty:
+            {
+                type = "todo"; // todo:
+                break;
+            }
             default:
             {
                 Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
@@ -241,9 +267,37 @@ public static class BlueprintDecompilerUtils
 
                 break;
             }
+            case UScriptMap scriptMap:
+            {
+                if (scriptMap.Properties.Count > 0)
+                {
+                    var stringBuilder = new CustomStringBuilder();
+                    stringBuilder.OpenBlock("[");
+
+                    foreach (var KeyValue in scriptMap.Properties)
+                    {
+                        var keyText = GetPropertyText(KeyValue.Key)!;
+                        var valueText = GetPropertyText(KeyValue.Value)!;
+
+                        stringBuilder.OpenBlock();
+                        stringBuilder.AppendLine($"\"{keyText}\": \"{valueText}\"");
+                        stringBuilder.CloseBlock("},");
+                    }
+
+                    stringBuilder.CloseBlock("]");
+
+                    text = stringBuilder.ToString();
+                }
+                else
+                {
+                    text = "[]";
+                }
+
+                break;
+            }
             case FPackageIndex packageIndex:
             {
-                text = packageIndex.ToString();
+                text = $"\"{packageIndex}\"";
                 break;
             }
             case FScriptStruct scriptStruct:
@@ -256,6 +310,11 @@ public static class BlueprintDecompilerUtils
                 text = name.ToString();
                 break;
             }
+            case string textString:
+            {
+                text = textString;
+                break;
+            }
             case bool boolean:
             {
                 text = boolean.ToString().ToLowerInvariant();
@@ -264,6 +323,16 @@ public static class BlueprintDecompilerUtils
             case int int32:
             {
                 text = int32.ToString();
+                break;
+            }
+            case long int64:
+            {
+                text = int64.ToString();
+                break;
+            }
+            case float single:
+            {
+                text = single.ToString();
                 break;
             }
             case double float32:

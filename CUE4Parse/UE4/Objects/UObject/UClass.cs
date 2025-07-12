@@ -211,6 +211,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                     if (childProperty is not FProperty property)
                         continue;
 
+                    if (!property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                        continue;
+
                     var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
                     if (variableType is null)
                         continue;
