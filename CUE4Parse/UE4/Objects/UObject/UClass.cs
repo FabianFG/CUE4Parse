@@ -82,7 +82,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
-
+        
         public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
         {
             var type = ObjectTypeRegistry.Get(Name);
@@ -115,12 +115,12 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
             var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-
+            
             var superStruct = SuperStruct.Load<UStruct>();
             var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
             var stringBuilder = new CustomStringBuilder();
-
+            
             stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
             stringBuilder.OpenBlock();
 
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                     if (variableText is null)
                         continue;
-
+                    
                     var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
                     if (variableType is null)
                         continue;
@@ -163,7 +163,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     variables[variableExpression] = EAccessMode.Protected;
                 }
             }
-
+            
             foreach (var childProperty in ChildProperties)
             {
                 if (childProperty is not FProperty property)
@@ -171,7 +171,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 if (!existingVariables.Add(property.Name.Text))
                     continue;
-
+                
                 var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
                 if (variableType is null)
                     continue;
@@ -192,12 +192,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                     stringBuilder.AppendLine(variable);
                 }
             }
-
+            
             if (FuncMap.Count > 0) stringBuilder.AppendLine();
 
             var totalFuncMapCount = FuncMap.Count;
             var index = 1;
-
+            
             foreach (var (key, value) in FuncMap)
             {
                 if (!value.TryLoad(out var export) || export is not UFunction function)
@@ -205,13 +205,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 var parametersList = new List<string>();
 
-                string returnType = "void";
+                var returnType = "void";
                 foreach (var childProperty in function.ChildProperties)
                 {
-                    if (childProperty is not FProperty property)
-                        continue;
-
-                    if (!property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                    if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                         continue;
 
                     var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
@@ -221,44 +218,46 @@ namespace CUE4Parse.UE4.Objects.UObject
                     if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
                     {
                         returnType = variableType;
-                        continue; // skip as this shouldn't be written?
+                        continue;
                     }
 
                     var parameterExpression = $"{variableType} {property.Name.Text}";
                     parametersList.Add(parameterExpression);
                 }
-
+                
                 var parameters = string.Join(", ", parametersList);
                 var functionExpression = $"{returnType} {key.Text}({parameters})";
-
+                
                 var functionStringBuilder = new CustomStringBuilder();
                 functionStringBuilder.AppendLine(functionExpression);
                 functionStringBuilder.OpenBlock();
-
-                foreach (KismetExpression expression in function.ScriptBytecode)
+                
+                foreach (var kismetExpression in function.ScriptBytecode)
                 {
-                    // TODO:
-                    ProcessExpression(expression);
+                    if (kismetExpression is EX_PushExecutionFlow or EX_EndOfScript or EX_JumpIfNot or EX_Jump or EX_ComputedJump)
+                    {
+                        index++;
+                        continue;
+                    }
+                        
+                    var lineExpression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+                    functionStringBuilder.AppendLine($"{lineExpression};");
                 }
-                static void ProcessExpression(KismetExpression token) // maybe make this not a local function? did this just in case.
-                {
-
-                }
-
+                
                 functionStringBuilder.CloseBlock();
-
+                
                 var functionBlock = functionStringBuilder.ToString();
                 stringBuilder.AppendLine(functionBlock);
                 if (index < totalFuncMapCount) stringBuilder.AppendLine();
-
+                
                 index++;
             }
-
+            
             stringBuilder.CloseBlock("};");
-
+            
             return stringBuilder.ToString();
         }
-
+        
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
