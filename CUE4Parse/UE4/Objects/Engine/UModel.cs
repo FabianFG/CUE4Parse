@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -248,7 +249,7 @@ namespace CUE4Parse.UE4.Objects.Engine
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-
+            if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
             const int StripVertexBufferFlag = 1;
             var stripData = new FStripDataFlags(Ar);
 

@@ -209,7 +209,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
-        private void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
+        protected void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)
                 _requiredKeys.TryAdd(reader.EncryptionKeyGuid, null);

@@ -40,6 +40,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
         private const uint PACKAGE_FILE_TAG_NTE = 0xD5A8D56E;
+        private const uint PACKAGE_FILE_TAG_AE = 0x56DE5ECA; // AshEchoes
 
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
@@ -160,6 +161,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar = new FByteArchive("NTE - Decrypted FPackageFileSummary", decryptedData, Ar.Versions);
                 Tag = Ar.Read<uint>();
             }
+
+            if (Tag == PACKAGE_FILE_TAG_AE) Tag = PACKAGE_FILE_TAG;
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {

@@ -22,7 +22,7 @@ public class FPakEntry : VfsEntry
 
     public readonly long CompressedSize;
     public readonly long UncompressedSize;
-    public sealed override CompressionMethod CompressionMethod { get; }
+    public override CompressionMethod CompressionMethod { get; }
     public readonly FPakCompressedBlock[] CompressionBlocks = [];
     public readonly uint Flags;
     public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
@@ -31,6 +31,8 @@ public class FPakEntry : VfsEntry
 
     public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
     public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
+
+    public FPakEntry(IVfsReader vfs, string path, long size = 0) : base(vfs, path) { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FPakEntry(PakFileReader reader, string path, FArchive Ar) : base(reader, path)

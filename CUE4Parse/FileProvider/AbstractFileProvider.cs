@@ -347,7 +347,7 @@ namespace CUE4Parse.FileProvider
 
         private static readonly string[] pluginExtensions = [".uplugin", ".upluginmanifest", "Assetregisty.bin"];
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
-        public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
+        public virtual int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{ProjectName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             var arregex = new Regex($"^{ProjectName}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);

@@ -11,9 +11,9 @@ namespace CUE4Parse.FileProvider
 {
     public class DefaultFileProvider : AbstractVfsFileProvider
     {
-        private readonly DirectoryInfo _workingDirectory;
-        private readonly DirectoryInfo[] _extraDirectories;
-        private readonly SearchOption _searchOption;
+        protected readonly DirectoryInfo _workingDirectory;
+        protected readonly DirectoryInfo[] _extraDirectories;
+        protected readonly SearchOption _searchOption;
 
         [Obsolete("Use the other constructors with explicit StringComparer")]
         public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -101,12 +102,13 @@ public class ULevel : Assets.Exports.UObject
     public FPackageIndex LevelScriptActor;
     public FPackageIndex? NavListStart;
     public FPackageIndex? NavListEnd;
-    public FPrecomputedVisibilityHandler? PrecomputedVisibilityHandler;      
+    public FPrecomputedVisibilityHandler? PrecomputedVisibilityHandler;
     public FPrecomputedVolumeDistanceField? PrecomputedVolumeDistanceField;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
         if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray) Ar.Position += 4;
         Actors = Ar.ReadArray(() => new FPackageIndex(Ar));
         URL = new FURL(Ar);
