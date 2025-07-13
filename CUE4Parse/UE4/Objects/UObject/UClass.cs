@@ -82,7 +82,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Defaults.
             ClassDefaultObject = new FPackageIndex(Ar);
         }
-        
+
         public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
         {
             var type = ObjectTypeRegistry.Get(Name);
@@ -115,12 +115,12 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
             var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-            
+
             var superStruct = SuperStruct.Load<UStruct>();
             var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
             var stringBuilder = new CustomStringBuilder();
-            
+
             stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
             stringBuilder.OpenBlock();
 
@@ -154,7 +154,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     var variableText = BlueprintDecompilerUtils.GetPropertyText(property);
                     if (variableText is null)
                         continue;
-                    
+
                     var variableType = BlueprintDecompilerUtils.GetPropertyTagType(property);
                     if (variableType is null)
                         continue;
@@ -163,7 +163,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     variables[variableExpression] = EAccessMode.Protected;
                 }
             }
-            
+
             foreach (var childProperty in ChildProperties)
             {
                 if (childProperty is not FProperty property)
@@ -171,7 +171,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 if (!existingVariables.Add(property.Name.Text))
                     continue;
-                
+
                 var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
                 if (variableType is null)
                     continue;
@@ -192,72 +192,79 @@ namespace CUE4Parse.UE4.Objects.UObject
                     stringBuilder.AppendLine(variable);
                 }
             }
-            
+
             if (FuncMap.Count > 0) stringBuilder.AppendLine();
 
             var totalFuncMapCount = FuncMap.Count;
             var index = 1;
-            
-            foreach (var (key, value) in FuncMap)
+
+            if (true)
             {
-                if (!value.TryLoad(out var export) || export is not UFunction function)
-                    continue;
-
-                var parametersList = new List<string>();
-
-                var returnType = "void";
-                foreach (var childProperty in function.ChildProperties)
+                foreach (var (key, value) in FuncMap)
                 {
-                    if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                    if (!value.TryLoad(out var export) || export is not UFunction function)
                         continue;
 
-                    var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
-                    if (variableType is null)
-                        continue;
+                    var parametersList = new List<string>();
 
-                    if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    var returnType = "void";
+                    foreach (var childProperty in function.ChildProperties)
                     {
-                        returnType = variableType;
-                        continue;
+                        if (childProperty is not FProperty property ||
+                            !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                            continue;
+
+                        var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                        if (variableType is null)
+                            continue;
+
+                        if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                        {
+                            returnType = variableType;
+                            continue;
+                        }
+
+                        var parameterExpression = $"{variableType} {property.Name.Text}";
+                        parametersList.Add(parameterExpression);
                     }
 
-                    var parameterExpression = $"{variableType} {property.Name.Text}";
-                    parametersList.Add(parameterExpression);
-                }
-                
-                var parameters = string.Join(", ", parametersList);
-                var functionExpression = $"{returnType} {key.Text}({parameters})";
-                
-                var functionStringBuilder = new CustomStringBuilder();
-                functionStringBuilder.AppendLine(functionExpression);
-                functionStringBuilder.OpenBlock();
-                
-                foreach (var kismetExpression in function.ScriptBytecode)
-                {
-                    if (kismetExpression is EX_PushExecutionFlow or EX_EndOfScript or EX_JumpIfNot or EX_Jump or EX_ComputedJump)
+                    var parameters = string.Join(", ", parametersList);
+                    var functionExpression = $"{returnType} {key.Text}({parameters})";
+
+                    var functionStringBuilder = new CustomStringBuilder();
+                    functionStringBuilder.AppendLine(functionExpression);
+                    functionStringBuilder.OpenBlock();
+
+                    foreach (var kismetExpression in function.ScriptBytecode)
                     {
-                        index++;
-                        continue;
+                        if (kismetExpression is EX_PushExecutionFlow or EX_EndOfScript or EX_JumpIfNot or EX_Jump
+                            or EX_ComputedJump or EX_PopExecutionFlow)
+                            continue;
+
+                        var lineExpression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+                        functionStringBuilder.AppendLine($"{lineExpression};");
+
+                        if (lineExpression.StartsWith("if"))
+                        {
+                            functionStringBuilder.AppendLine();
+                        }
                     }
-                        
-                    var lineExpression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
-                    functionStringBuilder.AppendLine($"{lineExpression};");
+
+                    functionStringBuilder.CloseBlock();
+
+                    var functionBlock = functionStringBuilder.ToString();
+                    stringBuilder.AppendLine(functionBlock);
+                    if (index < totalFuncMapCount) stringBuilder.AppendLine();
+
+                    index++;
                 }
-                
-                functionStringBuilder.CloseBlock();
-                
-                var functionBlock = functionStringBuilder.ToString();
-                stringBuilder.AppendLine(functionBlock);
-                if (index < totalFuncMapCount) stringBuilder.AppendLine();
-                
-                index++;
             }
-            
+
             stringBuilder.CloseBlock("};");
-            
+
             return stringBuilder.ToString();
         }
-        
+
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);

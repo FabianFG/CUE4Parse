@@ -52,8 +52,8 @@ public static class BlueprintDecompilerUtils
             }
             case "ObjectProperty":
             {
-                var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name;
-                text = $"class U{classType}*";
+                var classType = (propertyType.Tag?.GenericValue as FPackageIndex)?.ResolvedObject?.Class?.Name.ToString();
+                text = $"class U{classType ?? "Object"}*";
                 break;
             }
             case "ArrayProperty":
@@ -88,6 +88,11 @@ public static class BlueprintDecompilerUtils
             case "EnumProperty":
             {
                 text = propertyType.TagData.EnumName!;
+                break;
+            }
+            case "NameProperty":
+            {
+                text = "FName";
                 break;
             }
             default:
@@ -244,7 +249,8 @@ public static class BlueprintDecompilerUtils
             }
             case FPackageIndex packageIndex:
             {
-                text = packageIndex.ToString();
+                var pkgIndex = packageIndex.ToString();
+                text = pkgIndex == "0" ? "nullptr" : $"\"{pkgIndex}\"";
                 break;
             }
             case FScriptStruct scriptStruct:
@@ -297,7 +303,10 @@ public static class BlueprintDecompilerUtils
                 stringBuilder.OpenBlock("[");
                 foreach (var property in fallback.Properties)
                 {
-                    stringBuilder.AppendLine(property.ToString());
+                    var propertyText = GetPropertyText(property);
+                    var propertyType = GetPropertyTagType(property);
+                    
+                    stringBuilder.AppendLine(propertyText!);
                 }
                 stringBuilder.CloseBlock("]");
                 
@@ -367,6 +376,11 @@ public static class BlueprintDecompilerUtils
                     throw new NotImplementedException();
                 }
 
+                if (variable is EX_InstanceVariable)
+                {
+                    throw new NotImplementedException();
+                }
+
                 expression = $"{variable.New?.Path[0].Text ?? "UnknownVariable"}";
                 break;
             }
@@ -402,14 +416,14 @@ public static class BlueprintDecompilerUtils
             case EX_Cast exCast:
             {
                 var variable = GetLineExpression(exCast.Target);
-                var conversionCast = exCast.ConversionType switch
+                var convertedType = exCast.ConversionType switch
                 {
-                    ECastToken.CST_InterfaceToBool => "reinterpret_cast<bool>",
-                    ECastToken.CST_DoubleToFloat => "static_cast<float>",
+                    ECastToken.CST_InterfaceToBool or ECastToken.CST_ObjectToBool => "bool",
+                    ECastToken.CST_DoubleToFloat => "float",
                     _ => throw new NotImplementedException()
                 };
                 
-                expression = $"{conversionCast}({variable})";
+                expression = $"dynamic_cast<{convertedType}>({variable})";
                 
                 break;
             }
@@ -430,9 +444,9 @@ public static class BlueprintDecompilerUtils
             case EX_LetBase letObj:
             {
                 var variable = GetLineExpression(letObj.Variable);
-                var function = GetLineExpression(letObj.Assignment);
+                var assignmentVariable = GetLineExpression(letObj.Assignment);
                 
-                expression = $"{variable} = {function}";
+                expression = $"{variable} = {assignmentVariable}";
                 
                 break;
             }
@@ -457,6 +471,29 @@ public static class BlueprintDecompilerUtils
                 
                 break;
             }
+            case EX_SoftObjectConst softObjectConst:
+            {
+                var pathToObject = GetLineExpression(softObjectConst.Value);
+                return $"FSoftObjectPath(\"{pathToObject}\")";
+            }
+            case EX_StringConst stringConst:
+            {
+                return stringConst.Value;
+            }
+            case EX_StructConst structConst:
+            {
+                var parameters = new List<string>();
+                foreach (var property in structConst.Properties)
+                {
+                    parameters.Add(GetLineExpression(property));
+                }
+                
+                var parametersString =  string.Join(", ", parameters);
+                var pkgIndex = structConst.Struct.ToString().SubstringAfter('.');
+                var struc = $"F{pkgIndex}";
+
+                return $"{struc}({parametersString})";
+            }
             case EX_NameConst nameConst:
             {
                 var nameValue = nameConst.Value.ToString();
@@ -467,6 +504,10 @@ public static class BlueprintDecompilerUtils
             {
                 expression = intConst.Value.ToString();
                 break;
+            }
+            case EX_FloatConst  floatConst:
+            {
+                return floatConst.Value.ToString(CultureInfo.InvariantCulture);
             }
             case EX_ByteConst byteConst:
             {
@@ -493,11 +534,6 @@ public static class BlueprintDecompilerUtils
                 expression = customStringBuilder.ToString();
                 break;
             }
-            case EX_PopExecutionFlow:
-            {
-                expression = "FlowStack.Pop()";
-                break;
-            }
             case EX_ArrayGetByRef arrayGetByRef:
             {
                 var arrayIndex = GetLineExpression(arrayGetByRef.ArrayIndex);
@@ -516,6 +552,51 @@ public static class BlueprintDecompilerUtils
             {
                 expression = "false";
                 break;
+            }
+            case EX_SetArray setArray:
+            {
+                var variableName = string.Empty;
+                if (setArray.AssigningProperty is not null)
+                {
+                    variableName = GetLineExpression(setArray.AssigningProperty);
+                }
+                else if (setArray.ArrayInnerProp is not null)
+                {
+                    throw new NotImplementedException();
+                }
+                
+                var customStringBuilder = new CustomStringBuilder();
+                if (setArray.Elements.Length > 0)
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    customStringBuilder.Append($"TArray<void> {variableName} = {{ }}");
+                }
+                
+                return customStringBuilder.ToString();
+            }
+            case EX_DynamicCast dynamicCast:
+            {
+                var classPtr = $"U{dynamicCast.ClassPtr.Name}*";
+                var variable = GetLineExpression(dynamicCast.Target);
+                
+                return $"dynamic_cast<{classPtr}>({variable})";
+            }
+            case EX_BindDelegate bindDelegate:
+            {
+                var variableName = GetLineExpression(bindDelegate.Delegate);
+                var functionName = bindDelegate.FunctionName.ToString();
+
+                return $"{variableName}->BindUFunction({functionName})";
+            }
+            case EX_AddMulticastDelegate multicastDelegate:
+            {
+                var variableName = GetLineExpression(multicastDelegate.Delegate);
+                var delegateToAdd = GetLineExpression(multicastDelegate.DelegateToAdd);
+
+                return $"{variableName}->AddDelegate({delegateToAdd})";
             }
             default:
                 throw new NotImplementedException($"KismetExpression '{kismetExpression.GetType().Name}' is currently not supported");
