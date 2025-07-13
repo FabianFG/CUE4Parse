@@ -234,7 +234,7 @@ public partial class FPakInfo
             IndexSize = (long) ((ulong) IndexSize ^ 0x6DB425B4BC084B4B) - 0xA8;
         }
 
-        if (Ar.Game == EGame.GAME_DeadByDaylight)
+        if (Ar.Game is EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old)
         {
             CustomEncryptionData = Ar.ReadBytes(28);
             _ = Ar.Read<uint>();
@@ -323,7 +323,7 @@ public partial class FPakInfo
         SizeB1 = Size9 + 1, // UE4.25
         //Size10 = Size8a
 
-        SiseRacingMaster = Size8 + 4, // additional int
+        SizeRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
         SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
@@ -382,13 +382,13 @@ public partial class FPakInfo
             {
                 EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart => [OffsetsToTry.SizeHotta],
                 EGame.GAME_FridayThe13th => [OffsetsToTry.SizeFTT],
-                EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
+                EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => [OffsetsToTry.SizeDbD],
                 EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                 EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
                 EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
-                EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
+                EGame.GAME_RacingMaster => [OffsetsToTry.SizeRacingMaster],
                 EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
