@@ -1516,6 +1516,28 @@ public class EX_WuWaInstr2 : KismetExpression
     }
 }
 
+public class EX_DFInstr : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_Placeholder1;
+    public KismetExpression Left;
+    public KismetExpression Right;
+
+    public EX_DFInstr(FKismetArchive Ar)
+    {
+        Left = Ar.ReadExpression();
+        Right = Ar.ReadExpression();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
+    {
+        base.WriteJson(writer, serializer, bAddIndex);
+        writer.WritePropertyName(nameof(Left));
+        serializer.Serialize(writer, Left);
+        writer.WritePropertyName(nameof(Right));
+        serializer.Serialize(writer, Right);
+    }
+}
+
 [JsonConverter(typeof(FScriptTextConverter))]
 public class FScriptText
 {

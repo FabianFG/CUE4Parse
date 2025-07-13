@@ -55,7 +55,7 @@ public class FField
         "MulticastDelegateProperty" => new FMulticastDelegateProperty(),
         "MulticastInlineDelegateProperty" => new FMulticastInlineDelegateProperty(),
         "NameProperty" => new FNameProperty(),
-        "ObjectProperty" => new FObjectProperty(),
+        "ObjectProperty" or "ObjectPtrProperty" => new FObjectProperty(),
         "SetProperty" => new FSetProperty(),
         "SoftClassProperty" => new FSoftClassProperty(),
         "SoftObjectProperty" => new FSoftObjectProperty(),
