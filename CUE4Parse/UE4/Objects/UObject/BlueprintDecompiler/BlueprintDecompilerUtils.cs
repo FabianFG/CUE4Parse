@@ -136,9 +136,15 @@ public static class BlueprintDecompilerUtils
             }
             case "UInt64Property":
             {
-                text = "uint";
+                text = "uint64";
                 break;
             }
+            case "UInt32Property":
+            {
+                text = "uint32";
+                break;
+            }
+            case "TextProperty": // correct?
             case "StrProperty":
             {
                 text = "string";
@@ -169,6 +175,16 @@ public static class BlueprintDecompilerUtils
             case BoolProperty boolProperty:
             {
                 text = boolProperty?.GenericValue.ToString() ?? "UnknownBoolProp"; // real?
+                break;
+            }
+            case NameProperty nameProperty:
+            {
+                text = nameProperty?.GenericValue.ToString() ?? "UnknownNameProp"; // real?
+                break;
+            }
+            case FloatProperty floatProperty:
+            {
+                text = floatProperty?.GenericValue.ToString() ?? "UnknownFloatProp"; // real?
                 break;
             }
             default:
@@ -427,6 +443,11 @@ public static class BlueprintDecompilerUtils
                 text = uint64.ToString();
                 break;
             }
+            case UInt32 uint32:
+            {
+                text = uint32.ToString();
+                break;
+            }
             case string str:
             {
                 text = str;
@@ -557,6 +578,8 @@ public static class BlueprintDecompilerUtils
                 var funcName = finalFunction.StackNode.Name;
 
                 expression = $"U{funcClass}::{funcName}({parameters})";
+                // what is this vro, incorrect sometimes, fix.
+                // CallFunc_GetViewportSize_ReturnValue = FindObject<UClass>("/Script/UMG.Default__WidgetLayoutLibrary")->UWidgetLayoutLibrary::GetViewportSize(this);
                 break;
             }
             case EX_VirtualFunction virtualFunction:
@@ -827,7 +850,7 @@ public static class BlueprintDecompilerUtils
                 customStringBuilder.AppendLine($"if (!{booleanVariable})");
                 customStringBuilder.IncreaseIndentation();
 
-                customStringBuilder.Append("return;");
+                customStringBuilder.Append("return");
                 customStringBuilder.DecreaseIndentation();
 
                 expression = customStringBuilder.ToString();
