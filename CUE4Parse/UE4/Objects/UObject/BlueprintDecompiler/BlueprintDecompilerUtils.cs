@@ -413,6 +413,16 @@ public static class BlueprintDecompilerUtils
                 text = nameProp.ToString();
                 break;
             }
+            case IntProperty intProp:
+            {
+                text = intProp.ToString();
+                break;
+            }
+            case DoubleProperty doubleProp:
+            {
+                text = doubleProp.ToString();
+                break;
+            }
             case bool boolean:
             {
                 text = boolean.ToString().ToLowerInvariant();
