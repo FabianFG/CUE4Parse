@@ -82,7 +82,7 @@ public class FPakEntry : VfsEntry
                 _ when legacyCompressionMethod.HasFlag(COMPRESS_Custom) => reader.Game == GAME_SeaOfThieves ? 4 : 3, // LZ4 or Oodle, used by Fortnite Mobile until early 2019
                 _ => reader.Game switch
                 {
-                    GAME_PlayerUnknownsBattlegrounds => 3, // TODO: Investigate what a proper detection is.
+                    GAME_PlayerUnknownsBattlegrounds or GAME_Ashen => 3, // TODO: Investigate what a proper detection is.
                     GAME_DeadIsland2 => 6, // ¯\_(ツ)_/¯
                     _ => -1
                 }
