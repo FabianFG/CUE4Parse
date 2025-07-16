@@ -208,8 +208,7 @@ public class UClass : UStruct
                 var returnType = "void";
                 foreach (var childProperty in function.ChildProperties)
                 {
-                    if (childProperty is not FProperty property ||
-                        !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                    if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                         continue;
 
                     var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
@@ -239,7 +238,12 @@ public class UClass : UStruct
                         or EX_ComputedJump or EX_PopExecutionFlow)
                         continue;
 
-                    var lineExpression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+                    var lineExpression = $"{BlueprintDecompilerUtils.GetLineExpression(kismetExpression)};";
+
+#if DEBUG
+                    lineExpression += $" // {kismetExpression.GetType().Name}";
+#endif
+                    
                     functionStringBuilder.AppendLine($"{lineExpression};");
 
                     if (lineExpression.StartsWith("if"))

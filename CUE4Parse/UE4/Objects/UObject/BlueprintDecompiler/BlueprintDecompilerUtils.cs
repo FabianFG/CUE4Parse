@@ -280,8 +280,7 @@ public static class BlueprintDecompilerUtils
 
     public static string GetLineExpression(KismetExpression kismetExpression)
     {
-        string expression;
-
+        // TODO: Everything that include Const will have the const keyword at the start **maybe**
         switch (kismetExpression)
         {
             // whats the difference between localVariable and instanceVariable
@@ -320,7 +319,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context_FailSilent failSilent:
             {
-                var function = GetLineExpression(failSilent.ContextExpression);
+                var function = GetLineExpression(failSilent.ContextExpression).SubstringAfter("::");
                 var obj = GetLineExpression(failSilent.ObjectExpression);
 
                 var customStringBuilder = new CustomStringBuilder();
@@ -334,9 +333,9 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context context:
             {
-                var function = GetLineExpression(context.ContextExpression);
+                var function = GetLineExpression(context.ContextExpression).SubstringAfter("::");
                 var obj = GetLineExpression(context.ObjectExpression);
-
+                
                 return $"{obj}->{function}";
             }
             case EX_CallMath callMath:
@@ -391,9 +390,30 @@ public static class BlueprintDecompilerUtils
 
                 var classType = $"U{pkgIndex.SubstringAfter('.').SubstringBefore(':')}";
                 var functionName = pkgIndex.SubstringAfter(':').SubstringBefore("'");
-
-                // shld it be "->" or "::"
+                
                 return $"{classType}::{functionName}({parameters})";
+            }
+            case EX_SetArray setArray:
+            {
+                var variable = GetLineExpression(setArray.AssigningProperty);
+                var value = string.Empty;
+
+                if (setArray.Elements.Length > 0)
+                {
+                    var values = new List<string>();
+                    foreach (var element in setArray.Elements)
+                    {
+                        values.Add(GetLineExpression(element));
+                    }
+                    
+                    value = string.Join(", ", values);
+                }
+                else
+                {
+                    value = "[]";
+                }
+
+                return $"{variable} = {value}";
             }
             case EX_IntConst intConst:
             {
@@ -412,7 +432,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_NameConst nameConst:
             {
-                return $"FName({nameConst.Value.ToString()})";
+                return $"FName(\"{nameConst.Value.ToString()}\")";
             }
             case EX_True:
             {
@@ -438,8 +458,10 @@ public static class BlueprintDecompilerUtils
                 var target = GetLineExpression(cast.Target);
                 var conversionType = cast.ConversionType switch
                 {
+                    ECastToken.CST_ObjectToBool => "bool",
                     ECastToken.CST_InterfaceToBool => "bool",
                     ECastToken.CST_DoubleToFloat => "float",
+                    ECastToken.CST_FloatToDouble => "double",
                     _ => throw new NotImplementedException($"ConversionType {cast.ConversionType} is currently not implemented")
                 };
 
@@ -482,10 +504,131 @@ public static class BlueprintDecompilerUtils
             {
                 return "return";
             }
+            case EX_StringConst stringConst:
+            {
+                return $"TEXT({stringConst.Value})";
+            }
+            case EX_SoftObjectConst objectConst:
+            {
+                var stringValue = GetLineExpression(objectConst.Value);
+                return $"FSoftObjectPath(\"{stringValue})\"";
+            }
+            case EX_DynamicCast dynamicCast:
+            {
+                var variable = GetLineExpression(dynamicCast.Target);
+                var classType = dynamicCast.ClassPtr.Name;
+
+                return $"Cast<{classType}>({variable})";
+            }
+            case EX_BindDelegate bindDelegate:
+            {
+                var delegateVar = GetLineExpression(bindDelegate.Delegate);
+                var objectTerm = GetLineExpression(bindDelegate.ObjectTerm);
+                var functionName = $"FName(\"{bindDelegate.FunctionName.ToString()}\")";
+
+                return $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
+            }
+            case EX_StructConst structConst:
+            {
+                var structName = $"F{structConst.Struct.Name}";
+                
+                var properties = new List<string>();
+                foreach (var property in structConst.Properties)
+                {
+                    properties.Add(GetLineExpression(property));
+                }
+                
+                var parameters = string.Join(", ", properties);
+                return $"{structName}({parameters})";
+            }
+            case EX_FloatConst floatConst:
+            {
+                return floatConst.Value.ToString(CultureInfo.CurrentCulture);
+            }
+            case EX_AddMulticastDelegate multicastDelegate:
+            {
+                var delegatee = GetLineExpression(multicastDelegate.Delegate);
+                var delegateToAdd = GetLineExpression(multicastDelegate.DelegateToAdd);
+                
+                return  $"{delegatee}->Add({delegateToAdd})";
+            }
+            case EX_RotationConst rotationConst:
+            {
+                var pitch = rotationConst.Value.Pitch;
+                var roll = rotationConst.Value.Roll;
+                var yaw = rotationConst.Value.Yaw;
+
+                return $"FRotator({pitch}, {roll}, {yaw})";
+            }
+            case EX_SwitchValue switchValue:
+            {
+                if (switchValue.Cases.Length == 2)
+                {
+                    var indexTerm = GetLineExpression(switchValue.IndexTerm);
+                    
+                    var case1 = GetLineExpression(switchValue.Cases[0].CaseIndexValueTerm);
+                    var case2 = GetLineExpression(switchValue.Cases[1].CaseIndexValueTerm);
+
+                    return $"{indexTerm} ? {case1} : {case2}";
+                }
+                else
+                {
+                    throw new NotImplementedException("Cases have length more or less than 2 is currently not implemented");
+                }
+                
+                // var defaultTerm = GetLineExpression(switchValue.DefaultTerm);
+                
+            }
+            case EX_DoubleConst doubleConst:
+            {
+                return doubleConst.Value.ToString(CultureInfo.CurrentCulture);
+            }
+            case EX_StructMemberContext structMemberContext:
+            {
+                if (structMemberContext.Property.New?.Path.Count > 1)
+                    throw new NotImplementedException();
+                
+                var property = structMemberContext.Property.New?.Path[0].ToString();
+                var structExpression = GetLineExpression(structMemberContext.StructExpression);
+
+                return $"{structExpression}.{property}";
+            }
+            case EX_CallMulticastDelegate callMulticastDelegate:
+            {
+                var delegatee =  GetLineExpression(callMulticastDelegate.Delegate);
+                
+                var parameters = new List<string>();
+                foreach (var parameter in callMulticastDelegate.Parameters)
+                {
+                    parameters.Add(GetLineExpression(parameter));
+                }
+                
+                var parametersString = string.Join(", ", parameters);
+                var functionName = callMulticastDelegate.StackNode.Name;
+
+                return $"{delegatee}->Broadcast({parametersString})"; // TODO: show the functionName somehow, maybe with comments added "// {funcName}"
+            }
+            case EX_SkipOffsetConst skipOffsetConst: // TODO: What the fuck is this
+            {
+                return skipOffsetConst.Value.ToString(CultureInfo.CurrentCulture);
+            }
+            case EX_MetaCast metaCast:
+            {
+                var classPtr = metaCast.ClassPtr.Name;
+                var target = GetLineExpression(metaCast.Target);
+
+                return $"Cast<U{classPtr}>({target})";
+            }
+            case EX_VectorConst vectorConst:
+            {
+                var x = vectorConst.Value.X;
+                var y = vectorConst.Value.Y;
+                var z = vectorConst.Value.Z;
+
+                return $"FVector({x}, {y}, {z})";
+            }
             default:
                 throw new NotImplementedException($"KismetExpression '{kismetExpression.GetType().Name}' is currently not supported");
         }
-        
-        return expression;
     }
 }

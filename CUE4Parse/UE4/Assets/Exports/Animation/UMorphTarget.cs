@@ -204,8 +204,7 @@ public class UMorphTarget : UObject
         if (stripFlags.IsAudioVisualDataStripped())
             return;
 
-        var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >=
-            FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
+        var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
 
         MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
 
