@@ -113,6 +113,7 @@ public class FScriptStruct
             "MovieSceneSequenceID" => type == ReadType.ZERO ? new FMovieSceneSequenceID() : Ar.Read<FMovieSceneSequenceID>(),
             "MovieSceneSequenceInstanceDataPtr" => type == ReadType.ZERO ? new FMovieSceneSequenceInstanceDataPtr() : new FMovieSceneSequenceInstanceDataPtr(Ar),
             "MovieSceneSubSequenceTree" => type == ReadType.ZERO ? new FMovieSceneSubSequenceTree() : new FMovieSceneSubSequenceTree(Ar),
+            "MovieSceneSubSectionFieldData" => type == ReadType.ZERO ? new FMovieSceneSubSectionFieldData() : new FMovieSceneSubSectionFieldData(Ar),
             "MovieSceneTimeWarpVariant" => type == ReadType.ZERO ? new FStructFallback() : new FMovieSceneTimeWarpVariant(Ar),
             "MovieSceneTrackFieldData" => type == ReadType.ZERO ? new FMovieSceneTrackFieldData() : new FMovieSceneTrackFieldData(Ar),
             "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : new FMovieSceneTrackIdentifier(Ar),
@@ -171,7 +172,7 @@ public class FScriptStruct
             "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
-
+            
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
             "FortActorRecord" => new FFortActorRecord(Ar),
@@ -260,6 +261,11 @@ public class FScriptStruct
             "VinInstancedStruct" => new FInstancedStruct(Ar),
             "VinInstancedPropertyBag" => new FInstancedPropertyBag(Ar),
             "AnyValue" => new FAnyValue(Ar),
+
+            // Strinova
+            "EveryPlatformFloat" => new FEveryPlatformFloat(Ar),
+            "EveryPlatformBool" => new FEveryPlatformBool(Ar),
+            "EveryPlatformInt" => new FEveryPlatformInt(Ar),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
