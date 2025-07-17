@@ -12,13 +12,12 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureEncoder
 {
-    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, out string ext)
+    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext)
     {
-        //always export float data as HDR
-        if (PixelFormatUtils.IsHDR(bitmap.PixelFormat))
+        if (saveHdrAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
         {
             ext = "hdr";
-            return ToHdrBitmap(bitmap);
+            return bitmap.ToHdrBitmap();
         }
 
         switch (format)

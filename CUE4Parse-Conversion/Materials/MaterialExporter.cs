@@ -86,12 +86,12 @@ namespace CUE4Parse_Conversion.Materials
             File.WriteAllTextAsync(savedFilePath, _fileData);
             label = Path.GetFileName(savedFilePath);
 
-            foreach (var (name, bitmap) in _textures)
+            foreach ((string name, CTexture? bitmap) in _textures)
             {
                 if (bitmap == null)
                     continue;
 
-                var imageData = bitmap.Encode(Options.TextureFormat, out var ext);
+                var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext);
                 var texturePath = FixAndCreatePath(baseDirectory, name, ext);
                 using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                 fs.Write(imageData, 0, imageData.Length);
