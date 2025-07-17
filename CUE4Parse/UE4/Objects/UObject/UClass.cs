@@ -126,7 +126,6 @@ public class UClass : UStruct
 
         var existingVariables = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
-
         foreach (var property in Properties)
         {
             if (!existingVariables.Add(property.Name.Text))
@@ -137,7 +136,7 @@ public class UClass : UStruct
                 Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
                 continue;
             }
-            
+
             var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
             variables[variableExpression] = EAccessMode.Public;
         }
@@ -154,27 +153,27 @@ public class UClass : UStruct
                     Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
                     continue;
                 }
-            
+
                 var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
                 variables[variableExpression] = EAccessMode.Protected;
             }
         }
-        
+
         foreach (var childProperty in ChildProperties)
         {
             if (childProperty is not FProperty property)
                 continue;
-        
+
             if (!existingVariables.Add(property.Name.Text))
                 continue;
-        
+
             var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
             if (variableType is null)
                 continue;
-        
+
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
             var variableExpression = $"{variableType} {property.Name.Text}{value};";
-        
+
             var accessMode = property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintVisible) ? EAccessMode.Protected : EAccessMode.Public;
             variables[variableExpression] = EAccessMode.Private;
         }
@@ -231,10 +230,10 @@ public class UClass : UStruct
                 var functionStringBuilder = new CustomStringBuilder();
                 functionStringBuilder.AppendLine(functionExpression);
                 functionStringBuilder.OpenBlock();
-                
+
                 foreach (var kismetExpression in function.ScriptBytecode)
                 {
-                    if (kismetExpression is EX_PushExecutionFlow or EX_EndOfScript or EX_JumpIfNot or EX_Jump
+                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot or EX_Jump
                         or EX_ComputedJump or EX_PopExecutionFlow)
                         continue;
 
@@ -243,10 +242,10 @@ public class UClass : UStruct
 #if DEBUG
                     lineExpression += $" // {kismetExpression.GetType().Name}";
 #endif
-                    
-                    functionStringBuilder.AppendLine($"{lineExpression};");
 
-                    if (lineExpression.StartsWith("if"))
+                    functionStringBuilder.AppendLine($"{lineExpression}");
+
+                    if (!lineExpression.StartsWith("return"))
                     {
                         functionStringBuilder.AppendLine();
                     }
@@ -339,7 +338,7 @@ public class UClass : UStruct
         }
     }
 }
-    
+
 public enum EAccessMode : byte
 {
     Public,
