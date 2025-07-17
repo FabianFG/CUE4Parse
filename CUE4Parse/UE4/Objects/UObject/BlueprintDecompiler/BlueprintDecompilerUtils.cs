@@ -182,7 +182,8 @@ public static class BlueprintDecompilerUtils
                 {
                     var enumValue = propertyTag.GetGenericValue<FName>().ToString();
                     value = $"\"{enumValue}\"";
-                    type = $"enum {enumValue.Split("::")[0]}"; // si? enum EFortEncounterDirection PreviousStormShieldCoreEncounterDirection = "EFortEncounterDirection::Max_None"; change if you want
+                    type =
+                        $"enum {enumValue.Split("::")[0]}"; // si? enum EFortEncounterDirection PreviousStormShieldCoreEncounterDirection = "EFortEncounterDirection::Max_None"; change if you want
                 }
                 else
                 {
@@ -252,7 +253,8 @@ public static class BlueprintDecompilerUtils
                     var innerType = scriptArray.InnerType switch
                     {
                         "BoolProperty" => "bool",
-                        _ => throw new NotImplementedException($"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
+                        _ => throw new NotImplementedException(
+                            $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
                     };
                     type = $"TArray<{innerType}>";
                 }
@@ -286,7 +288,8 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}", structType.GetType().Name);
+                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}",
+                        structType.GetType().Name);
                     return false;
                 }
 
@@ -440,73 +443,116 @@ public static class BlueprintDecompilerUtils
             }
             case FVector vector:
             {
-                value = $"FVector({vector.X}, {vector.Y}, {vector.Z})";
+                var x = vector.X;
+                var y = vector.Y;
+                var z = vector.Z;
+                value = $"FVector({x}, {y}, {z})";
                 break;
             }
             case FGuid guid:
             {
-                value = $"FGuid({guid.A}, {guid.B}, {guid.C}, {guid.D})";
+                var a = guid.A;
+                var b = guid.B;
+                var c = guid.C;
+                var d = guid.D;
+                value = $"FGuid({a}, {b}, {c}, {d})";
                 break;
             }
             case TIntVector3<int> vector3:
             {
-                value = $"FVector({vector3.X}, {vector3.Y}, {vector3.Z})";
+                var x = vector3.X;
+                var y = vector3.Y;
+                var z = vector3.Z;
+                value = $"FVector({x}, {y}, {z})";
                 break;
             }
             case FVector4 vector4:
             {
-                value = $"FVector4({vector4.X}, {vector4.Y}, {vector4.Z}, {vector4.W})";
+                var x = vector4.X;
+                var y = vector4.Y;
+                var z = vector4.Z;
+                var w = vector4.W;
+                value = $"FVector4({x}, {y}, {z}, {w})";
                 break;
             }
             case TIntVector3<float> floatVector3:
             {
-                value = $"FVector({floatVector3.X}, {floatVector3.Y}, {floatVector3.Z})";
+                var x = floatVector3.X;
+                var y = floatVector3.Y;
+                var z = floatVector3.Z;
+                value = $"FVector({x}, {y}, {z})";
                 break;
             }
             case TIntVector2<float> floatVector2:
             {
-                value = $"FVector2D({floatVector2.X}, {floatVector2.Y})";
+                var x = floatVector2.X;
+                var y = floatVector2.Y;
+                value = $"FVector2D({x}, {y})";
                 break;
             }
             case FVector2D vector2d:
             {
-                value = $"FVector2D({vector2d.X}, {vector2d.Y})";
+                var x = vector2d.X;
+                var y = vector2d.Y;
+                value = $"FVector2D({x}, {y})";
                 break;
             }
             case FQuat fQuat:
             {
-                value = $"FQuat({fQuat.X}, {fQuat.Y}, {fQuat.Z}, {fQuat.W})";
+                var x = fQuat.X;
+                var y = fQuat.Y;
+                var z = fQuat.Z;
+                var w = fQuat.W;
+                value = $"FQuat({x}, {y}, {z}, {w})";
                 break;
             }
             case FRotator rotator:
             {
-                value = $"FRotator({rotator.Pitch}, {rotator.Yaw}, {rotator.Roll})";
+                var pitch = rotator.Pitch;
+                var yaw = rotator.Yaw;
+                var roll = rotator.Roll;
+                value = $"FRotator({pitch}, {yaw}, {roll})";
                 break;
             }
             case FLinearColor linearColor:
             {
-                value = $"FLinearColor({linearColor.R}, {linearColor.G}, {linearColor.B}, {linearColor.A})";
+                var r = linearColor.R;
+                var g = linearColor.G;
+                var b = linearColor.B;
+                var a = linearColor.A;
+                value = $"FLinearColor({r}, {g}, {b}, {a})";
                 break;
             }
             case FUniqueNetIdRepl netId:
             {
-                value = $"FUniqueNetIdRepl({netId.UniqueNetId})";
+                var id = netId.UniqueNetId;
+                value = $"FUniqueNetIdRepl({id})";
                 break;
             }
             case FNavAgentSelector agent:
             {
-                value = $"FNavAgentSelector({agent.PackedBits})";
+                var bits = agent.PackedBits;
+                value = $"FNavAgentSelector({bits})";
                 break;
             }
             case FBox box:
             {
-                value =
-                    $"FBox(FVector({box.Max.X}, {box.Max.Y}, {box.Max.Z}), FVector({box.Min.X}, {box.Min.Y}, {box.Min.Z}))";
+                var maxX = box.Max.X;
+                var maxY = box.Max.Y;
+                var maxZ = box.Max.Z;
+                var minX = box.Min.X;
+                var minY = box.Min.Y;
+                var minZ = box.Min.Z;
+                value = $"FBox(FVector({maxX}, {maxY}, {maxZ}), FVector({minX}, {minY}, {minZ}))";
                 break;
             }
             case FBox2D box2D:
             {
-                value = $"FBox2D(FVector2D({box2D.Max.X}, {box2D.Max.Y}), FVector2D({box2D.Min.X}, {box2D.Min.Y}))";
+                var maxX = box2D.Max.X;
+                var maxY = box2D.Max.Y;
+                var minX = box2D.Min.X;
+                var minY = box2D.Min.Y;
+                value = $"FBox2D(FVector2D({maxX}, {maxY}), FVector2D({minX}, {minY}))";
                 break;
             }
             case FDateTime dateTime:
@@ -700,9 +746,11 @@ public static class BlueprintDecompilerUtils
             {
                 return intConst.Value.ToString();
             }
-            case EX_ByteConst byteConst:
+            case EX_ByteConst:
+            case EX_IntConstByte:
             {
-                return byteConst.Value.ToString();
+                var byteConst = (EX_ByteConst) kismetExpression; // idk i'm losing it man
+                return $"0x{byteConst.Value:X}";
             }
             case EX_ObjectConst objectConst:
             {
@@ -813,6 +861,25 @@ public static class BlueprintDecompilerUtils
 
                 return customStringBuilder.ToString();
             }
+            case EX_JumpIfNot jumpIfNot:
+            {
+                var booleanExpression = GetLineExpression(jumpIfNot.BooleanExpression);
+                var customStringBuilder = new CustomStringBuilder();
+
+                customStringBuilder.AppendLine($"if (!{booleanExpression})");
+                customStringBuilder.IncreaseIndentation();
+                customStringBuilder.Append($"goto Label_{booleanExpression}"); // CodeOffset can't be gotten
+
+                return ""; //customStringBuilder.ToString();
+            }
+            case EX_Jump jump:
+            {
+                return $"goto Label_{jump.CodeOffset}";
+            }
+            case EX_ComputedJump jump:
+            {
+                return ""; // $"goto {GetLineExpression(jump)}"; this also not possible rn
+            }
             case EX_LetObj letObj:
             {
                 var assignment = GetLineExpression(letObj.Assignment);
@@ -845,10 +912,14 @@ public static class BlueprintDecompilerUtils
                 var stringValue = GetLineExpression(objectConst.Value);
                 return $"FSoftObjectPath(\"{stringValue})\"";
             }
-            case EX_DynamicCast dynamicCast:
+            case EX_MetaCast:
+            case EX_DynamicCast:
+            case EX_CrossInterfaceCast: // check these later? REAL idk
+            case EX_InterfaceToObjCast:
             {
-                var variable = GetLineExpression(dynamicCast.Target);
-                var classType = dynamicCast.ClassPtr.Name;
+                var Cast = (EX_CastBase)kismetExpression; // i wanna throw up REAL
+                var variable = GetLineExpression(Cast.Target);
+                var classType = Cast.ClassPtr.Name;
 
                 return $"Cast<{classType}>({variable})";
             }
@@ -988,16 +1059,13 @@ public static class BlueprintDecompilerUtils
                 return $"{delegateTarget}.Clear();";
             }
             case EX_SkipOffsetConst skipOffsetConst: // TODO: What the fuck is this
-
+            {
                 return skipOffsetConst.Value.ToString(CultureInfo.CurrentCulture);
             }
-            case EX_MetaCast metaCast:
-            {
-                var classPtr = metaCast.ClassPtr.Name;
-                var target = GetLineExpression(metaCast.Target);
 
-                return $"Cast<U{classPtr}>({target})";
-            }
+            // todo:
+            //EX_PropertyConst
+            //EX_FieldPathConst
             case EX_VectorConst vectorConst:
             {
                 var x = vectorConst.Value.X;

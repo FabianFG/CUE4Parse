@@ -233,8 +233,7 @@ public class UClass : UStruct
 
                 foreach (var kismetExpression in function.ScriptBytecode)
                 {
-                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot or EX_Jump
-                        or EX_ComputedJump or EX_PopExecutionFlow)
+                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot or EX_ComputedJump or EX_PopExecutionFlow)
                         continue;
 
                     var lineExpression = $"{BlueprintDecompilerUtils.GetLineExpression(kismetExpression)};";
