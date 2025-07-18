@@ -133,6 +133,8 @@ public class UStaticMesh : UObject
         for (var i = 0; i < materials.Length; i++)
         {
             if (i >= Materials.Length) break;
+            if (materials[i].IsNull) continue;
+            
             Materials[i] = materials[i].ResolvedObject;
         }
     }
