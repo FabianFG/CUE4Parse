@@ -86,8 +86,7 @@ public class UClass : UStruct
     public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
     {
         var type = ObjectTypeRegistry.Get(Name);
-        if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
-            type = typeof(Assets.Exports.UObject);
+        if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject)) type = typeof(Assets.Exports.UObject);
         if (type != null)
         {
             try
@@ -115,7 +114,7 @@ public class UClass : UStruct
     {
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-
+        
         var superStruct = SuperStruct.Load<UStruct>();
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
@@ -126,6 +125,7 @@ public class UClass : UStruct
 
         var existingVariables = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
+        
         foreach (var property in Properties)
         {
             if (!existingVariables.Add(property.Name.Text))
@@ -133,6 +133,8 @@ public class UClass : UStruct
 
             if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
             {
+                throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
+                
                 Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
                 continue;
             }
@@ -148,8 +150,11 @@ public class UClass : UStruct
                 if (!existingVariables.Add(property.Name.Text))
                     continue;
 
+                // TODO move this shit to the fucking function itself so fucking delegate is not a bitch ffs
                 if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
                 {
+                    throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
+                    
                     Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
                     continue;
                 }
@@ -195,7 +200,7 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         var index = 1;
 
-        if (true)
+        if (false)
         {
             foreach (var (key, value) in FuncMap)
             {

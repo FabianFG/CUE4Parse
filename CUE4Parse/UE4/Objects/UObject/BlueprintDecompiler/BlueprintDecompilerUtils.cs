@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -51,10 +53,8 @@ public static class BlueprintDecompilerUtils
     }
 
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags
-                                                             .InstancedReference) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags
-                                                             .ContainsInstancedReference) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
 
     public static (string?, string?) GetPropertyType(FProperty property)
@@ -166,53 +166,55 @@ public static class BlueprintDecompilerUtils
     }
 
     private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T) propertyTag.Tag?.GenericValue!;
-
     public static bool GetPropertyTagVariable(FPropertyTag propertyTag, out string type, out string value)
     {
         type = string.Empty;
         value = string.Empty;
 
         if (!Enum.TryParse<EPropertyType>(propertyTag.PropertyType.ToString(), out var propertyType))
+        {
+            Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type", propertyTag.PropertyType.ToString());
             return false;
-
+        }
+        
         switch (propertyType)
         {
             case EPropertyType.ByteProperty:
-                if (propertyTag.Tag.GenericValue.ToString().Contains("::")) // idk how to check if FName
+            {
+                if (propertyTag.Tag?.GenericValue is FName name)
                 {
-                    var enumValue = propertyTag.GetGenericValue<FName>().ToString();
-                    value = $"\"{enumValue}\"";
-                    type =
-                        $"enum {enumValue.Split("::")[0]}"; // si? enum EFortEncounterDirection PreviousStormShieldCoreEncounterDirection = "EFortEncounterDirection::Max_None"; change if you want
+                    var enumValue = name.ToString();
+                    
+                    value = $"{enumValue}";
+                    type = $"enum {enumValue.SubstringBefore("::")}";
                 }
                 else
                 {
                     value = propertyTag.GetGenericValue<byte>().ToString();
+                    type = "byte";
                 }
 
                 break;
-
+            }
             case EPropertyType.BoolProperty:
+            {
                 type = "bool";
                 value = propertyTag.GetGenericValue<bool>().ToString().ToLowerInvariant();
                 break;
-
+            }
             case EPropertyType.IntProperty:
+            {
                 type = "int32";
                 value = propertyTag.GetGenericValue<int>().ToString();
                 break;
-
+            }
             case EPropertyType.FloatProperty:
+            {
                 type = "float";
                 value = propertyTag.GetGenericValue<float>().ToString(CultureInfo.InvariantCulture);
                 break;
-
-            case EPropertyType.WeakObjectProperty:
-            case EPropertyType.LazyObjectProperty:
-            case EPropertyType.AssetObjectProperty:
-            case EPropertyType.SoftObjectProperty:
-                break; // todo
-            case EPropertyType.ObjectProperty:
+            }
+            case EPropertyType.ObjectProperty or EPropertyType.ClassProperty:
             {
                 var pkgIndex = propertyTag.GetGenericValue<FPackageIndex>().ToString();
                 if (pkgIndex is null or "0")
@@ -228,22 +230,18 @@ public static class BlueprintDecompilerUtils
 
                 break;
             }
-
             case EPropertyType.NameProperty:
+            {
                 type = "FName";
-                value = $"\"{propertyTag.GetGenericValue<FName>()}\"";
+                value = $"FName(\"{propertyTag.GetGenericValue<FName>().ToString()}\")";
                 break;
-
-            case EPropertyType.DelegateProperty:
-                type = "FDelegateProperty";
-                value = propertyTag.GetGenericValue<FScriptDelegate>().ToString();
-                break;
-
+            }
             case EPropertyType.DoubleProperty:
+            {
                 type = "double";
                 value = propertyTag.GetGenericValue<double>().ToString(CultureInfo.InvariantCulture);
                 break;
-
+            }
             case EPropertyType.ArrayProperty:
             {
                 var scriptArray = propertyTag.GetGenericValue<UScriptArray>();
@@ -252,33 +250,35 @@ public static class BlueprintDecompilerUtils
                     value = "{}";
                     var innerType = scriptArray.InnerType switch
                     {
+                        "IntProperty" => "int",
                         "BoolProperty" => "bool",
-                        _ => throw new NotImplementedException(
-                            $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
+                        "FloatProperty" => "float",
+                        "ObjectProperty" => "UObject*",
+                        "EnumProperty" => scriptArray.InnerTagData?.EnumName,
+                        "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
+                        _ => throw new NotImplementedException($"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
                     };
+                    
                     type = $"TArray<{innerType}>";
                 }
                 else
                 {
-                    var StringBuilder = new CustomStringBuilder();
-                    StringBuilder.OpenBlock();
-                    foreach (var prop in scriptArray.Properties)
+                    var customStringBuilder = new CustomStringBuilder();
+                    customStringBuilder.OpenBlock();
+                    foreach (var property in scriptArray.Properties)
                     {
-                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(scriptArray.InnerType), prop), out type,
-                                out var innerValue))
+                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData), out type, out var innerValue))
                         {
-                            Log.Error("Failed to parse array element of type {type}",
-                                scriptArray
-                                    .InnerType); // todo: Failed to parse array element of type SoftObjectProperty
+                            Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
                             continue;
                         }
 
-                        StringBuilder.AppendLine(innerValue);
+                        customStringBuilder.AppendLine(innerValue);
                     }
 
-                    StringBuilder.CloseBlock();
+                    customStringBuilder.CloseBlock();
                     type = $"TArray<{type}>";
-                    value = StringBuilder.ToString();
+                    value = customStringBuilder.ToString();
                 }
 
                 break;
@@ -288,126 +288,154 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}",
-                        structType.GetType().Name);
+                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}", structType.GetType().Name);
                     return false;
                 }
 
                 type = $"struct F{propertyTag.TagData?.StructType}";
                 break;
             }
-
             case EPropertyType.StrProperty:
+            {
                 type = "FString";
                 value = $"\"{propertyTag.GetGenericValue<string>()}\"";
                 break;
-
+            }
             case EPropertyType.TextProperty:
+            {
+                var genericValue = propertyTag.GetGenericValue<FText>();
+
+                var flags = genericValue.Flags.ToStringBitfield();
+                var text = genericValue.Text;
+
+                // TODO: find a way to show TextHistory?
+                
                 type = "FText";
-                value = $"\"{propertyTag.GetGenericValue<FText>()}\"";
+                value = $"FText(\"{text}\", {flags})";
+                
                 break;
-
-            case EPropertyType.InterfaceProperty:
-                type = "TScriptInterface<IInterface>";
-                value = propertyTag.GetGenericValue<FScriptInterface>().ToString();
+            }
+            case EPropertyType.SoftObjectProperty or EPropertyType.SoftClassProperty:
+            {
+                var softObjectPath = propertyTag.GetGenericValue<FSoftObjectPath>();
+                
+                type = "FSoftObjectPath";
+                value = $"FSoftObjectPath(\"{softObjectPath.ToString()}\")";
+                
                 break;
-
-            case EPropertyType.MulticastDelegateProperty:
-                type = "FMulticastDelegateProperty";
-                value = propertyTag.GetGenericValue<FMulticastScriptDelegate>().ToString();
-                break;
-
+            }
             case EPropertyType.UInt64Property:
+            {
                 type = "uint64";
                 value = propertyTag.GetGenericValue<ulong>().ToString();
                 break;
-
+            }
             case EPropertyType.UInt32Property:
+            {
                 type = "uint32";
                 value = propertyTag.GetGenericValue<uint>().ToString();
                 break;
-
+            }
             case EPropertyType.UInt16Property:
+            {
                 type = "uint16";
                 value = propertyTag.GetGenericValue<ushort>().ToString();
                 break;
-
+            }
             case EPropertyType.Int64Property:
+            {
                 type = "int64";
                 value = propertyTag.GetGenericValue<long>().ToString();
                 break;
-
+            }
             case EPropertyType.Int16Property:
+            {
                 type = "int16";
                 value = propertyTag.GetGenericValue<short>().ToString();
                 break;
-
+            }
             case EPropertyType.Int8Property:
+            {
                 type = "int8";
                 value = propertyTag.GetGenericValue<sbyte>().ToString();
                 break;
-
+            }
             case EPropertyType.MapProperty:
             {
                 var scriptMap = propertyTag.GetGenericValue<UScriptMap>();
-/*
+
                 if (scriptMap.Properties.Count > 0)
                 {
-                    var StringBuilder = new CustomStringBuilder();
-                    StringBuilder.OpenBlock();
-                    foreach (var pair in scriptMap.Properties)
-                    {
-                        var key = pair.Key;
-                        var valuee = pair.Value;
+                    var keyType = string.Empty;
+                    var valueType = string.Empty;
 
-                        var keyType = key.GetType().Name;
-                        var valueType = valuee?.GetType().Name ?? "null";
-                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(keyType), pair.Key),
-                                out var keyTypeResolved, out var keyValue) ||
-                            !GetPropertyTagVariable(new FPropertyTag(new FName(valueType), pair.Value),
-                                out var valueTypeResolved, out var valueValue))
+                    var customStringBuilder = new CustomStringBuilder();
+                    var keyValueList = new List<string>();
+                    
+                    customStringBuilder.OpenBlock("{");
+                    foreach (var (mapKey, mapValue) in scriptMap.Properties)
+                    {
+                        var innerTypeData = propertyTag.TagData?.InnerTypeData;
+                        var keyProperty = new FPropertyTag(new FName(innerTypeData?.Type), mapKey, innerTypeData);
+                        
+                        if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
-                            Log.Error("Failed to parse map entry with key type {keyType} and value type {valueType}",
-                                keyType, valueType);
+                            Log.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
                             continue;
                         }
 
-                        StringBuilder.AppendLine($"[{keyValue}] = {valueValue}");
-                        type = $"TMap<{keyTypeResolved}, {valueTypeResolved}>";
+                        var valueTypeData = propertyTag.TagData?.ValueTypeData;
+                        var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type), mapValue, valueTypeData);
+                        
+                        if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
+                        {
+                            Log.Warning("Unable to get MapValue for UScriptMap of type: {type}", mapValue.GetType().Name);
+                        }
+                        
+                        keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
                     }
+                    
+                    var keyValueString = string.Join(", \n", keyValueList);
+                    
+                    customStringBuilder.AppendLine($"{keyValueString}");
+                    customStringBuilder.CloseBlock();
+                    
+                    type = $"TMap<{keyType}, {valueType}>";
+                    value = customStringBuilder.ToString();
+                }
+                else
+                {
+                    string GetScriptArrayTypes(FPropertyTagData tagType)
+                    {
+                        return tagType.Type switch
+                        { 
+                            "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
+                            "StructProperty" => $"F{tagType.StructType}",
+                            _ => throw new NotSupportedException($"PropertyType {tagType.Type} is currently not supported")
+                        };
+                    }
+                    
+                    var keyType = GetScriptArrayTypes(propertyTag.TagData.InnerTypeData);
+                    var valueType = GetScriptArrayTypes(propertyTag.TagData.ValueTypeData);
 
-                    StringBuilder.CloseBlock();
-                    value = StringBuilder.ToString();
-                }*/ // idk you do this fr
-
+                    type = $"TMap<{keyType}, {valueType}>";
+                    value = "{}";
+                }
+                
                 break;
             }
-
-            case EPropertyType.SetProperty:
-                type = $"struct TSet<F{propertyTag.TagData?.StructType}>";
-                value = "a"; // todo:
-                break;
-
             case EPropertyType.EnumProperty:
+            {
                 value = propertyTag.GetGenericValue<FName>().ToString();
                 type = $"enum {propertyTag.TagData?.EnumName}";
                 break;
-
-            case EPropertyType.FieldPathProperty:
-                type = "FFieldPath";
-                value = propertyTag.GetGenericValue<FFieldPath>().ToString();
-                break;
-
-            case EPropertyType.OptionalProperty:
-                type = $"struct TOptional<F{propertyTag.TagData?.StructType}>";
-                value = "a"; // todo:
-                break;
-
-            case EPropertyType.Utf8StrProperty:
-            case EPropertyType.AnsiStrProperty:
-                type = "FString";
-                value = $"\"{propertyTag.GetGenericValue<string>()}\"";
-                break;
+            }
+            case EPropertyType.MulticastInlineDelegateProperty:
+            {
+                // TODO: this motherfucker
+                type = "FMulticastScriptDelegate";
+                return true;
+            }
         }
 
         return !string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(value);
@@ -446,24 +474,18 @@ public static class BlueprintDecompilerUtils
                 var x = vector.X;
                 var y = vector.Y;
                 var z = vector.Z;
+                
                 value = $"FVector({x}, {y}, {z})";
                 break;
             }
             case FGuid guid:
             {
-                var a = guid.A;
-                var b = guid.B;
-                var c = guid.C;
-                var d = guid.D;
+                var a = $"0x{guid.A:X8}";
+                var b = $"0x{guid.B:X8}";
+                var c = $"0x{guid.C:X8}";
+                var d = $"0x{guid.D:X8}";
+                
                 value = $"FGuid({a}, {b}, {c}, {d})";
-                break;
-            }
-            case TIntVector3<int> vector3:
-            {
-                var x = vector3.X;
-                var y = vector3.Y;
-                var z = vector3.Z;
-                value = $"FVector({x}, {y}, {z})";
                 break;
             }
             case FVector4 vector4:
@@ -472,28 +494,15 @@ public static class BlueprintDecompilerUtils
                 var y = vector4.Y;
                 var z = vector4.Z;
                 var w = vector4.W;
+                
                 value = $"FVector4({x}, {y}, {z}, {w})";
-                break;
-            }
-            case TIntVector3<float> floatVector3:
-            {
-                var x = floatVector3.X;
-                var y = floatVector3.Y;
-                var z = floatVector3.Z;
-                value = $"FVector({x}, {y}, {z})";
-                break;
-            }
-            case TIntVector2<float> floatVector2:
-            {
-                var x = floatVector2.X;
-                var y = floatVector2.Y;
-                value = $"FVector2D({x}, {y})";
                 break;
             }
             case FVector2D vector2d:
             {
                 var x = vector2d.X;
                 var y = vector2d.Y;
+                
                 value = $"FVector2D({x}, {y})";
                 break;
             }
@@ -503,6 +512,7 @@ public static class BlueprintDecompilerUtils
                 var y = fQuat.Y;
                 var z = fQuat.Z;
                 var w = fQuat.W;
+                
                 value = $"FQuat({x}, {y}, {z}, {w})";
                 break;
             }
@@ -511,6 +521,7 @@ public static class BlueprintDecompilerUtils
                 var pitch = rotator.Pitch;
                 var yaw = rotator.Yaw;
                 var roll = rotator.Roll;
+                
                 value = $"FRotator({pitch}, {yaw}, {roll})";
                 break;
             }
@@ -520,55 +531,48 @@ public static class BlueprintDecompilerUtils
                 var g = linearColor.G;
                 var b = linearColor.B;
                 var a = linearColor.A;
+                
                 value = $"FLinearColor({r}, {g}, {b}, {a})";
                 break;
             }
-            case FUniqueNetIdRepl netId:
+            case FGameplayTagContainer gameplayTagContainer:
             {
-                var id = netId.UniqueNetId;
-                value = $"FUniqueNetIdRepl({id})";
+                var gameplayTagsList = new List<string>();
+                foreach (var gameplayTag in gameplayTagContainer.GameplayTags)
+                {
+                    gameplayTagsList.Add($"FGameplayTag::RequestGameplayTag(FName(\"{gameplayTag.TagName.ToString()}\"))");
+                }
+
+                var gameplayTags = string.Join(", \n", gameplayTagsList);
+                var customStringBuilder = new CustomStringBuilder();
+                
+                customStringBuilder.OpenBlock("FGameplayTagContainer({");
+                customStringBuilder.AppendLine(gameplayTags);
+                customStringBuilder.CloseBlock("})");
+                
+                value = customStringBuilder.ToString();
+                
                 break;
             }
-            case FNavAgentSelector agent:
+            case FSoftObjectPath softObjectPath:
             {
-                var bits = agent.PackedBits;
-                value = $"FNavAgentSelector({bits})";
+                value = $"FSoftObjectPath(\"{softObjectPath.ToString()}\")";
                 break;
             }
-            case FBox box:
+            case FColor color:
             {
-                var maxX = box.Max.X;
-                var maxY = box.Max.Y;
-                var maxZ = box.Max.Z;
-                var minX = box.Min.X;
-                var minY = box.Min.Y;
-                var minZ = box.Min.Z;
-                value = $"FBox(FVector({maxX}, {maxY}, {maxZ}), FVector({minX}, {minY}, {minZ}))";
-                break;
-            }
-            case FBox2D box2D:
-            {
-                var maxX = box2D.Max.X;
-                var maxY = box2D.Max.Y;
-                var minX = box2D.Min.X;
-                var minY = box2D.Min.Y;
-                value = $"FBox2D(FVector2D({maxX}, {maxY}), FVector2D({minX}, {minY}))";
-                break;
-            }
-            case FDateTime dateTime:
-            {
-                value = $"FDateTime({dateTime})";
-                break;
-            }
-            case FGameplayTagContainer gameplaytag:
-            {
-                value = $"FGameplayTagContainer()"; // todo:
+                var r = color.B;
+                var g = color.G;
+                var b = color.B;
+                var a = color.A;
+
+                value = $"FColor({r}, {g}, {b}, {a})";
+                
                 break;
             }
             default:
             {
-                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct",
-                    scriptStruct.StructType.GetType().Name);
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", scriptStruct.StructType.GetType().Name);
                 break;
             }
         }
