@@ -127,6 +127,15 @@ public class UStaticMesh : UObject
             _ => 0
         };
     }
+    
+    public void OverrideMaterials(FPackageIndex[] materials)
+    {
+        for (var i = 0; i < materials.Length; i++)
+        {
+            if (i >= Materials.Length) break;
+            Materials[i] = materials[i].ResolvedObject;
+        }
+    }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
