@@ -441,11 +441,12 @@ public static class BlueprintDecompilerUtils
         return !string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(value);
     }
 
-    private static bool GetPropertyTagVariable(FScriptStruct scriptStruct, out string value)
+    private static bool GetPropertyTagVariable(FScriptStruct scriptStruct, out string value) => GetPropertyTagVariable(scriptStruct.StructType, out value);
+    private static bool GetPropertyTagVariable(IUStruct uStruct, out string value)
     {
         value = string.Empty;
 
-        switch (scriptStruct.StructType)
+        switch (uStruct)
         {
             case FStructFallback fallback:
             {
@@ -516,6 +517,25 @@ public static class BlueprintDecompilerUtils
                 value = $"FQuat({x}, {y}, {z}, {w})";
                 break;
             }
+            case FBox box:
+            {
+                GetPropertyTagVariable(box.Min, out var min);
+                GetPropertyTagVariable(box.Max, out var max);
+                var isValid = box.IsValid;
+
+                value = $"FBox({min}, {max}, {isValid})";
+                break;
+            }
+            case FBox2D box2D:
+            {
+                GetPropertyTagVariable(box2D.Min, out var min);
+                GetPropertyTagVariable(box2D.Max, out var max);
+                var isValid = box2D.bIsValid;
+
+                value = $"FBox2D({min}, {max}, {isValid})";
+                
+                break;
+            }
             case FRotator rotator:
             {
                 var pitch = rotator.Pitch;
@@ -572,7 +592,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", scriptStruct.StructType.GetType().Name);
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
                 break;
             }
         }
