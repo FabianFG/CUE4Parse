@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Objects;
-using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -176,7 +174,7 @@ public static class BlueprintDecompilerUtils
             Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type", propertyTag.PropertyType.ToString());
             return false;
         }
-        
+
         switch (propertyType)
         {
             case EPropertyType.ByteProperty:
@@ -184,7 +182,7 @@ public static class BlueprintDecompilerUtils
                 if (propertyTag.Tag?.GenericValue is FName name)
                 {
                     var enumValue = name.ToString();
-                    
+
                     value = $"{enumValue}";
                     type = $"enum {enumValue.SubstringBefore("::")}";
                 }
@@ -258,7 +256,7 @@ public static class BlueprintDecompilerUtils
                         "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
                         _ => throw new NotImplementedException($"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
                     };
-                    
+
                     type = $"TArray<{innerType}>";
                 }
                 else
@@ -309,19 +307,19 @@ public static class BlueprintDecompilerUtils
                 var text = genericValue.Text;
 
                 // TODO: find a way to show TextHistory?
-                
+
                 type = "FText";
                 value = $"FText(\"{text}\", {flags})";
-                
+
                 break;
             }
             case EPropertyType.SoftObjectProperty or EPropertyType.SoftClassProperty:
             {
                 var softObjectPath = propertyTag.GetGenericValue<FSoftObjectPath>();
-                
+
                 type = "FSoftObjectPath";
                 value = $"FSoftObjectPath(\"{softObjectPath.ToString()}\")";
-                
+
                 break;
             }
             case EPropertyType.UInt64Property:
@@ -371,13 +369,13 @@ public static class BlueprintDecompilerUtils
 
                     var customStringBuilder = new CustomStringBuilder();
                     var keyValueList = new List<string>();
-                    
-                    customStringBuilder.OpenBlock("{");
+
+                    customStringBuilder.OpenBlock();
                     foreach (var (mapKey, mapValue) in scriptMap.Properties)
                     {
                         var innerTypeData = propertyTag.TagData?.InnerTypeData;
                         var keyProperty = new FPropertyTag(new FName(innerTypeData?.Type), mapKey, innerTypeData);
-                        
+
                         if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
                             Log.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
@@ -386,20 +384,20 @@ public static class BlueprintDecompilerUtils
 
                         var valueTypeData = propertyTag.TagData?.ValueTypeData;
                         var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type), mapValue, valueTypeData);
-                        
+
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
                             Log.Warning("Unable to get MapValue for UScriptMap of type: {type}", mapValue.GetType().Name);
                         }
-                        
+
                         keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
                     }
-                    
+
                     var keyValueString = string.Join(", \n", keyValueList);
-                    
+
                     customStringBuilder.AppendLine($"{keyValueString}");
                     customStringBuilder.CloseBlock();
-                    
+
                     type = $"TMap<{keyType}, {valueType}>";
                     value = customStringBuilder.ToString();
                 }
@@ -408,20 +406,20 @@ public static class BlueprintDecompilerUtils
                     string GetScriptArrayTypes(FPropertyTagData tagType)
                     {
                         return tagType.Type switch
-                        { 
+                        {
                             "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
                             "StructProperty" => $"F{tagType.StructType}",
                             _ => throw new NotSupportedException($"PropertyType {tagType.Type} is currently not supported")
                         };
                     }
-                    
+
                     var keyType = GetScriptArrayTypes(propertyTag.TagData.InnerTypeData);
                     var valueType = GetScriptArrayTypes(propertyTag.TagData.ValueTypeData);
 
                     type = $"TMap<{keyType}, {valueType}>";
                     value = "{}";
                 }
-                
+
                 break;
             }
             case EPropertyType.EnumProperty:
@@ -475,7 +473,7 @@ public static class BlueprintDecompilerUtils
                 var x = vector.X;
                 var y = vector.Y;
                 var z = vector.Z;
-                
+
                 value = $"FVector({x}, {y}, {z})";
                 break;
             }
@@ -485,7 +483,7 @@ public static class BlueprintDecompilerUtils
                 var b = $"0x{guid.B:X8}";
                 var c = $"0x{guid.C:X8}";
                 var d = $"0x{guid.D:X8}";
-                
+
                 value = $"FGuid({a}, {b}, {c}, {d})";
                 break;
             }
@@ -495,15 +493,38 @@ public static class BlueprintDecompilerUtils
                 var y = vector4.Y;
                 var z = vector4.Z;
                 var w = vector4.W;
-                
+
                 value = $"FVector4({x}, {y}, {z}, {w})";
+                break;
+            }
+            case TIntVector2<float> floatVector2:
+            {
+                var x = floatVector2.X;
+                var y = floatVector2.Y;
+                value = $"TIntVector2<float>({x}, {y})";
+                break;
+            }
+            case TIntVector3<float> floatVector3:
+            {
+                var x = floatVector3.X;
+                var y = floatVector3.Y;
+                var z = floatVector3.Z;
+                value = $"TIntVector3<float>({x}, {y}, {z})";
+                break;
+            }
+            case TIntVector4<float> floatVector3:
+            {
+                var x = floatVector3.X;
+                var y = floatVector3.Y;
+                var z = floatVector3.Z;
+                value = $"TIntVector4<float>({x}, {y}, {z})";
                 break;
             }
             case FVector2D vector2d:
             {
                 var x = vector2d.X;
                 var y = vector2d.Y;
-                
+
                 value = $"FVector2D({x}, {y})";
                 break;
             }
@@ -513,7 +534,7 @@ public static class BlueprintDecompilerUtils
                 var y = fQuat.Y;
                 var z = fQuat.Z;
                 var w = fQuat.W;
-                
+
                 value = $"FQuat({x}, {y}, {z}, {w})";
                 break;
             }
@@ -533,7 +554,7 @@ public static class BlueprintDecompilerUtils
                 var isValid = box2D.bIsValid;
 
                 value = $"FBox2D({min}, {max}, {isValid})";
-                
+
                 break;
             }
             case FRotator rotator:
@@ -541,7 +562,7 @@ public static class BlueprintDecompilerUtils
                 var pitch = rotator.Pitch;
                 var yaw = rotator.Yaw;
                 var roll = rotator.Roll;
-                
+
                 value = $"FRotator({pitch}, {yaw}, {roll})";
                 break;
             }
@@ -551,8 +572,20 @@ public static class BlueprintDecompilerUtils
                 var g = linearColor.G;
                 var b = linearColor.B;
                 var a = linearColor.A;
-                
+
                 value = $"FLinearColor({r}, {g}, {b}, {a})";
+                break;
+            }
+            case FUniqueNetIdRepl netId:
+            {
+                var id = netId.UniqueNetId;
+                value = $"FUniqueNetIdRepl({id})";
+                break;
+            }
+            case FNavAgentSelector agent:
+            {
+                var bits = agent.PackedBits;
+                value = $"FNavAgentSelector({bits})";
                 break;
             }
             case FGameplayTagContainer gameplayTagContainer:
@@ -565,13 +598,18 @@ public static class BlueprintDecompilerUtils
 
                 var gameplayTags = string.Join(", \n", gameplayTagsList);
                 var customStringBuilder = new CustomStringBuilder();
-                
+
                 customStringBuilder.OpenBlock("FGameplayTagContainer({");
                 customStringBuilder.AppendLine(gameplayTags);
                 customStringBuilder.CloseBlock("})");
-                
+
                 value = customStringBuilder.ToString();
-                
+
+                break;
+            }
+            case FDateTime dateTime:
+            {
+                value = $"FDateTime({dateTime})";
                 break;
             }
             case FSoftObjectPath softObjectPath:
@@ -587,7 +625,7 @@ public static class BlueprintDecompilerUtils
                 var a = color.A;
 
                 value = $"FColor({r}, {g}, {b}, {a})";
-                
+
                 break;
             }
             default:
@@ -605,23 +643,27 @@ public static class BlueprintDecompilerUtils
         // TODO: Everything that include Const will have the const keyword at the start **maybe**
         switch (kismetExpression)
         {
-            // whats the difference between localVariable and instanceVariable
+            // whats the difference between localVariable, instanceVariable and EX_DefaultVariable
             case EX_LocalVariable localVariable:
             {
-                return localVariable.Variable.New.Path[0].ToString();
+                return localVariable.Variable.ToString();
             }
             case EX_InstanceVariable instanceVariable:
             {
-                return instanceVariable.Variable.New.Path[0].ToString();
+                return instanceVariable.Variable.ToString();
+            }
+            case EX_DefaultVariable defaultVariable:
+            {
+                return defaultVariable.Variable.ToString();
             }
             case EX_LocalOutVariable localOutVariable:
             {
-                return $"&{localOutVariable.Variable.New.Path[0].ToString()}";
+                return $"&{localOutVariable.Variable}";
             }
             case EX_LetValueOnPersistentFrame persistent:
             {
                 var variableAssignment = GetLineExpression(persistent.AssignmentExpression);
-                var variableToBeAssigned = persistent.DestinationProperty.New.Path[0].ToString();
+                var variableToBeAssigned = persistent.DestinationProperty.ToString();
 
                 return $"{variableToBeAssigned} = {variableAssignment}";
             }
@@ -1046,7 +1088,7 @@ public static class BlueprintDecompilerUtils
                 if (structMemberContext.Property.New?.Path.Count > 1)
                     throw new NotImplementedException();
 
-                var property = structMemberContext.Property.New?.Path[0].ToString();
+                var property = structMemberContext.Property.ToString();
                 var structExpression = GetLineExpression(structMemberContext.StructExpression);
 
                 return $"{structExpression}.{property}";

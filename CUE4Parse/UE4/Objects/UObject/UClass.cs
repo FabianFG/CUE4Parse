@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject;
@@ -110,22 +111,64 @@ public class UClass : UStruct
         return null;
     }
 
-    public string DecompileBlueprintToPseudo()
+    // ignore this, this will not be here in the final verison.
+    public static string? somerandomstupidloop(string json, string functionName, string metaKey)
+    {
+        var root = JArray.Parse(json);
+
+        foreach (var item in root)
+        {
+            var functions = item["Properties"]?["FunctionsMetaData"] as JArray;
+            if (functions == null) continue;
+
+            foreach (var func in functions)
+            {
+                var key = (string?) func["Key"];
+                if (key == null || !key.Equals(functionName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var objectMetaArray = func["Value"]?["ObjectMetaData"]?["ObjectMetaData"] as JArray;
+                if (objectMetaArray == null) return null;
+
+                foreach (var meta in objectMetaArray)
+                {
+                    var metaKeyName = (string?) meta["Key"];
+                    if (metaKeyName != null && metaKeyName.Equals(metaKey, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return (string?) meta["Value"];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public string DecompileBlueprintToPseudo(string editordata)
     {
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
-        
+
         var superStruct = SuperStruct.Load<UStruct>();
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
+        ClassDefaultObject.TryLoad(out var classDefaultObject);
+        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject.Properties.Count == 0;
+
         var stringBuilder = new CustomStringBuilder();
+
+        if (emptyClass)
+        {
+            stringBuilder.Append($"class {derivedClass} : {accessSpecifier} {baseClass}");
+            return stringBuilder.ToString();
+        }
 
         stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
         stringBuilder.OpenBlock();
 
         var existingVariables = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
-        
+
         foreach (var property in Properties)
         {
             if (!existingVariables.Add(property.Name.Text))
@@ -134,16 +177,13 @@ public class UClass : UStruct
             if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
             {
                 throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
-                
-                Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
-                continue;
             }
 
             var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
             variables[variableExpression] = EAccessMode.Public;
         }
 
-        if (ClassDefaultObject.TryLoad(out var classDefaultObject))
+        if (classDefaultObject is not null)
         {
             foreach (var property in classDefaultObject.Properties)
             {
@@ -154,9 +194,6 @@ public class UClass : UStruct
                 if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
                 {
                     throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
-                    
-                    Log.Warning("Unable to get property type or value for {name} of type {propertyType}", property.Name.ToString(), property.PropertyType.ToString());
-                    continue;
                 }
 
                 var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
@@ -200,7 +237,8 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         var index = 1;
 
-        if (false)
+        // disable or enable funcs (dbg)
+        if (true)
         {
             foreach (var (key, value) in FuncMap)
             {
@@ -233,12 +271,32 @@ public class UClass : UStruct
                 var functionExpression = $"{returnType} {key.Text}({parameters})";
 
                 var functionStringBuilder = new CustomStringBuilder();
+                if (editordata.Length > 0)
+                {
+                    string? Category = somerandomstupidloop(editordata, key.Text, "Category");
+                    string? ToolTip = somerandomstupidloop(editordata, key.Text, "ToolTip");
+                    string? ModuleRelativePath = somerandomstupidloop(editordata, key.Text, "ModuleRelativePath");
+                    if (Category != null) functionStringBuilder.AppendLine($"// Category: {Category}");
+                    if (ToolTip != null)
+                        functionStringBuilder.AppendLine(string.Join(Environment.NewLine,
+                            ToolTip.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
+                                .Select(line => $"// {line}")));
+                    if (ModuleRelativePath != null)
+                        functionStringBuilder.AppendLine($"// ModuleRelativePath: {ModuleRelativePath}");
+                }
+
+                string flags =
+                    $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
+                functionStringBuilder.AppendLine($"// {flags}");
                 functionStringBuilder.AppendLine(functionExpression);
                 functionStringBuilder.OpenBlock();
 
                 foreach (var kismetExpression in function.ScriptBytecode)
                 {
-                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot or EX_ComputedJump or EX_PopExecutionFlow)
+                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst
+                        or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst
+                        or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot
+                        or EX_ComputedJump or EX_PopExecutionFlow)
                         continue;
 
                     var lineExpression = $"{BlueprintDecompilerUtils.GetLineExpression(kismetExpression)};";
