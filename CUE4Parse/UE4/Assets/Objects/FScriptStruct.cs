@@ -267,6 +267,9 @@ public class FScriptStruct
             "EveryPlatformBool" => new FEveryPlatformBool(Ar),
             "EveryPlatformInt" => new FEveryPlatformInt(Ar),
 
+            // Killing Floor 3
+            "HavokAIAnyArray" => new FHavokAIAnyArray(Ar),
+
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
     }

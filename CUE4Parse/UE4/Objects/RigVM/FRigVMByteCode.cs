@@ -40,6 +40,7 @@ public class FRigVMByteCode
         }
 
         var instructionCount = Ar.Read<int>();
+        Instructions = new List<IRigInstruction>(instructionCount);
         for (var i = 0; i < instructionCount; i++)
         {
             Instructions.Add(ReadRigVMInstruction(Ar));
@@ -87,7 +88,7 @@ public class FRigVMByteCode
                 or ERigVMOpCode.ArrayDifference or ERigVMOpCode.ArrayIntersection => Ar.Read<FRigVMTernaryOp>(),
             ERigVMOpCode.ArrayFind => Ar.Read<FRigVMQuaternaryOp>(),
             ERigVMOpCode.ArrayIterator => Ar.Read<FRigVMSenaryOp>(),
-            ERigVMOpCode.InvokeEntry => Ar.Read<FRigVMInvokeEntryOp>(),
+            ERigVMOpCode.InvokeEntry => new FRigVMInvokeEntryOp(Ar),
             ERigVMOpCode.JumpToBranch => Ar.Read<FRigVMJumpToBranchOp>(),
             ERigVMOpCode.RunInstructions => Ar.Read<FRigVMRunInstructionsOp>(),
             _ => new FRigVMBaseOp(opCode),
@@ -303,16 +304,10 @@ public readonly struct FRigVMJumpIfOp : IRigInstruction
     }
 }
 
-public readonly struct FRigVMInvokeEntryOp : IRigInstruction
+public readonly struct FRigVMInvokeEntryOp(FArchive Ar) : IRigInstruction
 {
-    public readonly ERigVMOpCode OpCode;
-    public readonly FName EntryName;
-
-    public FRigVMInvokeEntryOp(FArchive Ar)
-    {
-        OpCode = ERigVMOpCode.InvokeEntry;
-        EntryName = Ar.ReadFString();
-    }
+    public readonly ERigVMOpCode OpCode = ERigVMOpCode.InvokeEntry;
+    public readonly FName EntryName = Ar.ReadFString();
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 10)]

@@ -478,6 +478,8 @@ public class FStaticLODModel
         var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
         var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
+        if (Ar.Game == EGame.GAME_EvilWest) Ar.Position += 22;
+
         if (bHasVertexColors)
         {
             var newColorVertexBuffer = new FColorVertexBuffer(Ar);

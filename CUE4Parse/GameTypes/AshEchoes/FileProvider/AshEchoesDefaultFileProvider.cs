@@ -19,7 +19,7 @@ using CUE4Parse.Utils;
 using GenericReader;
 using static CUE4Parse.Compression.Compression;
 
-namespace CUE4Parse.UE4.Pak;
+namespace CUE4Parse.GameTypes.AshEchoes.FileProvider;
 
 public class AEDefaultFileProvider : DefaultFileProvider
 {
@@ -245,7 +245,7 @@ public class AEPakFileReader : AbstractAesVfsReader
         {
             Ar.Position = Length - 8;
             var indexLength = Ar.Read<uint>();
-            Ar.Position = Length - 8 - indexLength;
+            Ar.Position = Length - 12 - indexLength;
             var indexOffset = Ar.Position;
             var indexHash = Ar.Read<uint>();
             var entries = new List<FAssetEntry>(4);
