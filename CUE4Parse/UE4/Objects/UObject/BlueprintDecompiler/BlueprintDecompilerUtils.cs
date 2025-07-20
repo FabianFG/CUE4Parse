@@ -51,8 +51,10 @@ public static class BlueprintDecompilerUtils
     }
 
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags
+                                                             .InstancedReference) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags
+                                                             .ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
 
     public static (string?, string?) GetPropertyType(FProperty property)
@@ -164,6 +166,7 @@ public static class BlueprintDecompilerUtils
     }
 
     private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T) propertyTag.Tag?.GenericValue!;
+
     public static bool GetPropertyTagVariable(FPropertyTag propertyTag, out string type, out string value)
     {
         type = string.Empty;
@@ -171,7 +174,8 @@ public static class BlueprintDecompilerUtils
 
         if (!Enum.TryParse<EPropertyType>(propertyTag.PropertyType.ToString(), out var propertyType))
         {
-            Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type", propertyTag.PropertyType.ToString());
+            Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type",
+                propertyTag.PropertyType.ToString());
             return false;
         }
 
@@ -254,7 +258,8 @@ public static class BlueprintDecompilerUtils
                         "ObjectProperty" => "UObject*",
                         "EnumProperty" => scriptArray.InnerTagData?.EnumName,
                         "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
-                        _ => throw new NotImplementedException($"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
+                        _ => throw new NotImplementedException(
+                            $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
                     };
 
                     type = $"TArray<{innerType}>";
@@ -265,7 +270,9 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.OpenBlock();
                     foreach (var property in scriptArray.Properties)
                     {
-                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData), out type, out var innerValue))
+                        if (!GetPropertyTagVariable(
+                                new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
+                                out type, out var innerValue))
                         {
                             Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
                             continue;
@@ -286,7 +293,8 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}", structType.GetType().Name);
+                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}",
+                        structType.GetType().Name);
                     return false;
                 }
 
@@ -304,12 +312,13 @@ public static class BlueprintDecompilerUtils
                 var genericValue = propertyTag.GetGenericValue<FText>();
 
                 var flags = genericValue.Flags.ToStringBitfield();
+                var historyText = genericValue.TextHistory.Text;
                 var text = genericValue.Text;
 
-                // TODO: find a way to show TextHistory?
+                // TODO: find a way to show TextHistory? (currently as arg)
 
                 type = "FText";
-                value = $"FText(\"{text}\", {flags})";
+                value = $"FText(\"{text}\", {flags}, {historyText})";
 
                 break;
             }
@@ -387,7 +396,8 @@ public static class BlueprintDecompilerUtils
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
-                            Log.Warning("Unable to get MapValue for UScriptMap of type: {type}", mapValue.GetType().Name);
+                            Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
+                                mapValue.GetType().Name);
                         }
 
                         keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
@@ -408,8 +418,10 @@ public static class BlueprintDecompilerUtils
                         return tagType.Type switch
                         {
                             "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
+                            "NameProperty" => tagType.Name, // this?
                             "StructProperty" => $"F{tagType.StructType}",
-                            _ => throw new NotSupportedException($"PropertyType {tagType.Type} is currently not supported")
+                            _ => throw new NotSupportedException(
+                                $"PropertyType {tagType.Type} is currently not supported")
                         };
                     }
 
@@ -439,7 +451,9 @@ public static class BlueprintDecompilerUtils
         return !string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(value);
     }
 
-    private static bool GetPropertyTagVariable(FScriptStruct scriptStruct, out string value) => GetPropertyTagVariable(scriptStruct.StructType, out value);
+    private static bool GetPropertyTagVariable(FScriptStruct scriptStruct, out string value) =>
+        GetPropertyTagVariable(scriptStruct.StructType, out value);
+
     private static bool GetPropertyTagVariable(IUStruct uStruct, out string value)
     {
         value = string.Empty;
@@ -593,7 +607,8 @@ public static class BlueprintDecompilerUtils
                 var gameplayTagsList = new List<string>();
                 foreach (var gameplayTag in gameplayTagContainer.GameplayTags)
                 {
-                    gameplayTagsList.Add($"FGameplayTag::RequestGameplayTag(FName(\"{gameplayTag.TagName.ToString()}\"))");
+                    gameplayTagsList.Add(
+                        $"FGameplayTag::RequestGameplayTag(FName(\"{gameplayTag.TagName.ToString()}\"))");
                 }
 
                 var gameplayTags = string.Join(", \n", gameplayTagsList);
@@ -630,7 +645,8 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct",
+                    uStruct.GetType().Name);
                 break;
             }
         }
@@ -770,21 +786,60 @@ public static class BlueprintDecompilerUtils
 
                 return $"{classType}::{functionName}({parameters})";
             }
-            case EX_ArrayConst arrayConst:
+            case EX_SetSet setSet:
             {
-                var variableName = string.Empty;
+                var target = GetLineExpression(setSet.SetProperty);
 
-                var customStringBuilder = new CustomStringBuilder();
-                if (arrayConst.Elements.Length > 0)
+                if (setSet.Elements.Length == 0)
                 {
-                    //throw new NotImplementedException();
+                    return $"{target} = TArray {{ }};";
+                }
+
+                var values = new List<string>();
+                foreach (var element in setSet.Elements)
+                {
+                    values.Add(GetLineExpression(element));
+                }
+
+                var joined = string.Join(", ", values);
+                return $"{target} = TArray {{ {joined} }};";
+            }
+            case EX_SetConst setConst:
+            {
+                if (setConst.Elements.Length == 0)
+                {
+                    return "TArray { };";
+                }
+
+                var values = new List<string>();
+                foreach (var element in setConst.Elements)
+                {
+                    values.Add(GetLineExpression(element));
+                }
+
+                var joined = string.Join(", ", values);
+                return $"TArray {{ {joined} }};";
+            }
+            case EX_ArrayConst constArray:
+            {
+                var value = string.Empty;
+
+                if (constArray.Elements.Length > 0)
+                {
+                    var values = new List<string>();
+                    foreach (var element in constArray.Elements)
+                    {
+                        values.Add(GetLineExpression(element));
+                    }
+
+                    value = string.Join(", ", values);
                 }
                 else
                 {
-                    customStringBuilder.Append($"TArray<void> {{ }}"); //  it's array in stuff such as Func({}})
+                    value = "[]";
                 }
 
-                return customStringBuilder.ToString();
+                return $"TArray<>({value})"; // todo type
             }
             case EX_SetArray setArray:
             {
@@ -946,6 +1001,20 @@ public static class BlueprintDecompilerUtils
             {
                 return ""; // $"goto {GetLineExpression(jump)}"; this also not possible rn
             }
+            case EX_LetWeakObjPtr letWeakObj: // what's the difference? let obj, let weak obj and others?
+            {
+                var assignment = GetLineExpression(letWeakObj.Assignment);
+                var variable = GetLineExpression(letWeakObj.Variable);
+
+                return $"{variable} = {assignment}";
+            }
+            case EX_LetDelegate letDelegate: // comment above
+            {
+                var assignment = GetLineExpression(letDelegate.Assignment);
+                var variable = GetLineExpression(letDelegate.Variable);
+
+                return $"{variable} = {assignment}";
+            }
             case EX_LetObj letObj:
             {
                 var assignment = GetLineExpression(letObj.Assignment);
@@ -983,7 +1052,7 @@ public static class BlueprintDecompilerUtils
             case EX_CrossInterfaceCast: // check these later? REAL idk
             case EX_InterfaceToObjCast:
             {
-                var Cast = (EX_CastBase)kismetExpression; // i wanna throw up REAL
+                var Cast = (EX_CastBase) kismetExpression; // i wanna throw up REAL
                 var variable = GetLineExpression(Cast.Target);
                 var classType = Cast.ClassPtr.Name;
 
@@ -1028,6 +1097,62 @@ public static class BlueprintDecompilerUtils
                 var yaw = rotationConst.Value.Yaw;
 
                 return $"FRotator({pitch}, {roll}, {yaw})";
+            }
+            case EX_SetMap setMap:
+            {
+                var Target = GetLineExpression(setMap.MapProperty);
+
+                if (setMap.Elements.Length == 0)
+                {
+                    return $"{Target} = TMap {{ }}";
+                }
+
+                var StringBuilder = new CustomStringBuilder();
+                StringBuilder.Append($"{Target} = TMap {{ ");
+
+                for (int i = 0; i < setMap.Elements.Length; i++)
+                {
+                    var element = setMap.Elements[i];
+                    var elementText = GetLineExpression(element);
+
+                    StringBuilder.Append(elementText);
+
+                    bool isLast = (i == setMap.Elements.Length - 1);
+                    if (!isLast)
+                    {
+                        StringBuilder.Append(element.Token == EExprToken.EX_InstanceVariable ? ": " : ", ");
+                    }
+                }
+
+                StringBuilder.Append(" }");
+                return StringBuilder.ToString();
+            }
+            case EX_MapConst mapConst:
+            {
+                if (mapConst.Elements.Length == 0)
+                {
+                    return "TMap { }";
+                }
+
+                var StringBuilder = new CustomStringBuilder();
+                StringBuilder.Append("TMap { ");
+
+                for (int i = 0; i < mapConst.Elements.Length; i++)
+                {
+                    var element = mapConst.Elements[i];
+                    var elementText = GetLineExpression(element);
+
+                    StringBuilder.Append(elementText);
+
+                    bool isLast = (i == mapConst.Elements.Length - 1);
+                    if (!isLast)
+                    {
+                        StringBuilder.Append(element.Token == EExprToken.EX_InstanceVariable ? ": " : ", ");
+                    }
+                }
+
+                StringBuilder.Append(" }");
+                return StringBuilder.ToString();
             }
             case EX_SwitchValue switchValue:
             {
@@ -1124,14 +1249,36 @@ public static class BlueprintDecompilerUtils
                 var delegateTarget = GetLineExpression(clearMulticastDelegate.DelegateToClear);
                 return $"{delegateTarget}.Clear();";
             }
-            case EX_SkipOffsetConst skipOffsetConst: // TODO: What the fuck is this
+            // todo: just a jump but used for other reasons, when done make this jump `Jump Label_####`
+            case EX_SkipOffsetConst skipOffsetConst:
             {
                 return skipOffsetConst.Value.ToString(CultureInfo.CurrentCulture);
             }
 
-            // todo:
-            //EX_PropertyConst
-            //EX_FieldPathConst
+            // todo: are these three correct?
+            case EX_PropertyConst propertyConst:
+            {
+                return propertyConst.Property.ToString();
+            }
+            case EX_ClassSparseDataVariable classSparse:
+            {
+                return classSparse.Variable.ToString();
+            }
+            case EX_FieldPathConst fieldPathConst:
+            {
+                var value = GetLineExpression(fieldPathConst.Value);
+                return value;
+            }
+
+
+            case EX_Tracepoint:
+            {
+#if DEBUG
+                return "throw std::runtime_error(\"TracePoint hit\");"; // idk just gonna do this
+#endif
+                return "";
+                break;
+            }
             case EX_VectorConst vectorConst:
             {
                 var x = vectorConst.Value.X;
@@ -1141,8 +1288,8 @@ public static class BlueprintDecompilerUtils
                 return $"FVector({x}, {y}, {z})";
             }
             default:
-                throw new NotImplementedException(
-                    $"KismetExpression '{kismetExpression.GetType().Name}' is currently not supported");
+                throw new NotImplementedException($"KismetExpression '{kismetExpression.GetType().Name}' is currently not supported");
         }
     }
 }
+
