@@ -165,7 +165,7 @@ public static class BlueprintDecompilerUtils
         return (value, type);
     }
 
-    private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T) propertyTag.Tag?.GenericValue!;
+    private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T)propertyTag.Tag?.GenericValue!;
 
     public static bool GetPropertyTagVariable(FPropertyTag propertyTag, out string type, out string value)
     {
@@ -253,6 +253,7 @@ public static class BlueprintDecompilerUtils
                     var innerType = scriptArray.InnerType switch
                     {
                         "IntProperty" => "int",
+                        "ByteProperty" => "byte",
                         "BoolProperty" => "bool",
                         "FloatProperty" => "float",
                         "ObjectProperty" => "UObject*",
@@ -315,10 +316,13 @@ public static class BlueprintDecompilerUtils
                 var historyText = genericValue.TextHistory.Text;
                 var text = genericValue.Text;
 
-                // TODO: find a way to show TextHistory? (currently as arg)
+                // TODO: find a way to show TextHistory?
+                // none Base type ^^ as that's just text
 
                 type = "FText";
-                value = $"FText(\"{text}\", {flags}, {historyText})";
+                value = genericValue.Flags == 0
+                    ? $"FText(\"{text}\")"
+                    : $"FText(\"{text}\", {flags})";
 
                 break;
             }
@@ -472,7 +476,10 @@ public static class BlueprintDecompilerUtils
                     stringBuilder.OpenBlock();
                     foreach (var property in fallback.Properties)
                     {
-                        stringBuilder.AppendLine(property.ToString());
+                        string typetest = null;
+                        string valuee = null;
+                        GetPropertyTagVariable(property, out typetest, out valuee);
+                        stringBuilder.AppendLine($"\"{property.Name}\": {valuee}");
                     }
 
                     stringBuilder.CloseBlock();
@@ -607,16 +614,22 @@ public static class BlueprintDecompilerUtils
                 var gameplayTagsList = new List<string>();
                 foreach (var gameplayTag in gameplayTagContainer.GameplayTags)
                 {
-                    gameplayTagsList.Add(
-                        $"FGameplayTag::RequestGameplayTag(FName(\"{gameplayTag.TagName.ToString()}\"))");
+                    gameplayTagsList.Add($"FGameplayTag::RequestGameplayTag(FName(\"{gameplayTag.TagName.ToString()}\"))");
                 }
 
-                var gameplayTags = string.Join(", \n", gameplayTagsList);
                 var customStringBuilder = new CustomStringBuilder();
 
-                customStringBuilder.OpenBlock("FGameplayTagContainer({");
-                customStringBuilder.AppendLine(gameplayTags);
-                customStringBuilder.CloseBlock("})");
+                if (gameplayTagsList.Count == 0)
+                {
+                    customStringBuilder.Append("FGameplayTagContainer({})");
+                }
+                else
+                {
+                    var gameplayTags = string.Join(",\n", gameplayTagsList);
+                    customStringBuilder.OpenBlock("FGameplayTagContainer({");
+                    customStringBuilder.AppendLine(gameplayTags);
+                    customStringBuilder.CloseBlock("})");
+                }
 
                 value = customStringBuilder.ToString();
 
@@ -870,7 +883,7 @@ public static class BlueprintDecompilerUtils
             case EX_ByteConst:
             case EX_IntConstByte:
             {
-                var byteConst = (EX_ByteConst) kismetExpression; // idk i'm losing it man
+                var byteConst = (EX_ByteConst)kismetExpression; // idk i'm losing it man
                 return $"0x{byteConst.Value:X}";
             }
             case EX_ObjectConst objectConst:
@@ -1052,7 +1065,7 @@ public static class BlueprintDecompilerUtils
             case EX_CrossInterfaceCast: // check these later? REAL idk
             case EX_InterfaceToObjCast:
             {
-                var Cast = (EX_CastBase) kismetExpression; // i wanna throw up REAL
+                var Cast = (EX_CastBase)kismetExpression; // i wanna throw up REAL
                 var variable = GetLineExpression(Cast.Target);
                 var classType = Cast.ClassPtr.Name;
 
@@ -1176,7 +1189,7 @@ public static class BlueprintDecompilerUtils
                     string caseLabel;
                     if (caseItem.CaseIndexValueTerm.Token == EExprToken.EX_IntConst)
                     {
-                        caseLabel = ((EX_IntConst) caseItem.CaseIndexValueTerm).Value.ToString();
+                        caseLabel = ((EX_IntConst)caseItem.CaseIndexValueTerm).Value.ToString();
                     }
                     else
                     {
@@ -1292,4 +1305,3 @@ public static class BlueprintDecompilerUtils
         }
     }
 }
-
