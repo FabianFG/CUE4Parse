@@ -49,12 +49,11 @@ public class CMaterialParams2
             "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse",
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map",
-            "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
+            "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo", "Color_Texture",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Basecolor",
             "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
             "Tex", "Tex_Color", "Color Tex", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor",
-            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex", "ToneRimTex"
-
+            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex", "ToneRimTex",
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -93,7 +92,7 @@ public class CMaterialParams2
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map",
             "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map",
-            "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex",
+            "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA"
         ],
         ["SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK"],

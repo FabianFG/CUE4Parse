@@ -73,7 +73,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
                 EGame.GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
                 EGame.GAME_Undawn => ToaaAes.ToaaDecrypt,
-                EGame.GAME_DeadByDaylight => DBDAes.DbDDecrypt,
+                EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
                 EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
                 EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
@@ -209,7 +209,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
-        private void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
+        protected void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)
                 _requiredKeys.TryAdd(reader.EncryptionKeyGuid, null);

@@ -32,7 +32,7 @@ public class FStaticMeshSection
         bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
         if (Ar.Game == EGame.GAME_MortalKombat1) Ar.Position += 8; // "None" FName
         bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_Grounded) Ar.Position += 8;
+        if (Ar.Game is EGame.GAME_Grounded or EGame.GAME_Dauntless) Ar.Position += 8;
         bAffectDistanceFieldLighting = Ar.Game >= EGame.GAME_UE5_1 && Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_RogueCompany or EGame.GAME_Grounded or EGame.GAME_RacingMaster or EGame.GAME_MetroAwakening or EGame.GAME_Avowed) Ar.Position += 4;
         if (Ar.Game is EGame.GAME_InfinityNikki)

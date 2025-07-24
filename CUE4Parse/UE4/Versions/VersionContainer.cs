@@ -120,8 +120,8 @@ namespace CUE4Parse.UE4.Versions
             MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", null);
             MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
             MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
-            MapStructTypes["TrackSignatureToTrackIdentifier"] = Game < EGame.GAME_UE4_19
-                ? new KeyValuePair<string, string>("Guid", "FMovieSceneTrackIdentifiers")
+            MapStructTypes["TrackSignatureToTrackIdentifier"] = Game < GAME_UE4_19
+                ? new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifiers")
                 : new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
             MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
 

@@ -90,19 +90,22 @@ public class USceneComponent : UActorComponent
         return GetComponentToWorld();
     }
 
-    public FVector GetRelativeLocation()
-    {
-        return GetOrDefault<FVector>("RelativeLocation");
-    }
+    public FVector GetRelativeLocation() => DeepGet("RelativeLocation", FVector.ZeroVector);
+    public FRotator GetRelativeRotation() => DeepGet("RelativeRotation", FRotator.ZeroRotator);
+    public FVector GetRelativeScale3D() => DeepGet("RelativeScale3D", FVector.OneVector);
 
-    public FRotator GetRelativeRotation()
+    private T DeepGet<T>(string name, T fallback)
     {
-        return GetOrDefault("RelativeRotation", FRotator.ZeroRotator);
-    }
-
-    public FVector GetRelativeScale3D()
-    {
-        return GetOrDefault("RelativeScale3D", FVector.OneVector);
+        var ret = fallback;
+        var current = this;
+        while (true)
+        {
+            if (current is null) break;
+            ret = current.GetOrDefault(name, ret);
+            if (current.Template == null) break;
+            current = current.Template.Load<USceneComponent>();
+        }
+        return ret;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

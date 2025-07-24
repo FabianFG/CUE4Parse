@@ -401,12 +401,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
     private void ProcessIndex(StringComparer pathComparer)
     {
         if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
-        if (Game == EGame.GAME_Brickadia)
-        {
-            GenerateBrickadiaIndex(pathComparer);
-            return;
-        }
-
         using var directoryIndex = new GenericBufferReader(DecryptIfEncrypted(TocResource.DirectoryIndexBuffer, IsEncrypted, true));
 
         string mountPoint;
