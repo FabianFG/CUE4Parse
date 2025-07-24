@@ -123,7 +123,7 @@ public class UClass : UStruct
 
             foreach (var func in functions)
             {
-                var key = (string?) func["Key"];
+                var key = (string?)func["Key"];
                 if (key == null || !key.Equals(functionName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -132,10 +132,10 @@ public class UClass : UStruct
 
                 foreach (var meta in objectMetaArray)
                 {
-                    var metaKeyName = (string?) meta["Key"];
+                    var metaKeyName = (string?)meta["Key"];
                     if (metaKeyName != null && metaKeyName.Equals(metaKey, StringComparison.OrdinalIgnoreCase))
                     {
-                        return (string?) meta["Value"];
+                        return (string?)meta["Value"];
                     }
                 }
             }
@@ -298,18 +298,21 @@ public class UClass : UStruct
                         or EX_DeprecatedOp4A or EX_EndOfScript or EX_PushExecutionFlow or EX_JumpIfNot
                         or EX_ComputedJump or EX_PopExecutionFlow)
                         continue;
+                    var expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
 
-                    var lineExpression = $"{BlueprintDecompilerUtils.GetLineExpression(kismetExpression)};";
+                    if (!string.IsNullOrWhiteSpace(expression) && expression.Length > 0)
+                    {
+                        var lineExpression = $"{expression};";
 
 #if DEBUG
-                    lineExpression += $" // {kismetExpression.GetType().Name}";
+    lineExpression += $" // {kismetExpression.GetType().Name}";
 #endif
 
-                    functionStringBuilder.AppendLine($"{lineExpression}");
-
-                    if (!lineExpression.StartsWith("return"))
-                    {
-                        functionStringBuilder.AppendLine();
+                        functionStringBuilder.AppendLine(lineExpression);
+                        if (!lineExpression.StartsWith("return"))
+                        {
+                            functionStringBuilder.AppendLine();
+                        }
                     }
                 }
 

@@ -20,6 +20,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         {
             MaterialInterface = new FPackageIndex(Ar).ResolvedObject;
             MaterialSlotName = Ar.ReadFName();
+            if (!Ar.IsFilterEditorOnly)
+            {
+                ImportedMaterialSlotName = Ar.ReadFName();
+            }
+
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
 

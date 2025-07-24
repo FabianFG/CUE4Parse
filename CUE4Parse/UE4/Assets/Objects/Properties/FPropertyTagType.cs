@@ -134,6 +134,7 @@ public abstract class FPropertyTagType
             "SoftClassProperty" => new SoftObjectProperty(Ar, type),
             "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
             "StrProperty" => new StrProperty(Ar, type),
+            "Utf8StrProperty" => new Utf8StrProperty(Ar, type),
             "StructProperty" => new StructProperty(Ar, tagData, type),
             "TextProperty" => new TextProperty(Ar, type),
             "UInt16Property" => new UInt16Property(Ar, type),

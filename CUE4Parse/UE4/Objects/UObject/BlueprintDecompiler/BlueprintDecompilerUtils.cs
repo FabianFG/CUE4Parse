@@ -125,6 +125,7 @@ public static class BlueprintDecompilerUtils
                 break;
             }
             case FStrProperty:
+            case FVerseStringProperty:
             {
                 type = "string";
                 break;
@@ -253,10 +254,20 @@ public static class BlueprintDecompilerUtils
                     var innerType = scriptArray.InnerType switch
                     {
                         "IntProperty" => "int",
+                        "Int8Property" => "int8",
+                        "Int16Property" => "int16",
+                        "Int64Property" => "int64",
+                        "UInt16Property" => "uint16",
+                        "UInt32Property" => "uint32",
+                        "UInt64Property" => "uint64",
                         "ByteProperty" => "byte",
                         "BoolProperty" => "bool",
+                        "StrProperty" => "string",
+                        "DoubleProperty" => "double",
+                        "NameProperty" => "FName",
                         "FloatProperty" => "float",
-                        "ObjectProperty" => "UObject*",
+                        "SoftObjectProperty" => "FSoftObjectPath",
+                        "ObjectProperty" or "ClassProperty" => "UObject*",
                         "EnumProperty" => scriptArray.InnerTagData?.EnumName,
                         "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
                         _ => throw new NotImplementedException(

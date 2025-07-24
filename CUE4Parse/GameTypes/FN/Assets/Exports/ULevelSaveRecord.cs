@@ -478,7 +478,11 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
                 writer.WriteValue(PlayerPersistenceUserWipeNumber);
             }
 
-            // TODO VkPalette
+            if (VkPalette?.LinkCodeMap is { Count: > 0 })
+            {
+                writer.WritePropertyName("VkPalette");
+                writer.WriteValue(VkPalette);
+            }
         }
 
         public void ReadFromArchive(FArchive Ar)
