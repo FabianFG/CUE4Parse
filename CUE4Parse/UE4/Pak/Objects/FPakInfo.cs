@@ -63,6 +63,8 @@ public partial class FPakInfo
 
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
     {
+        var startPosition = Ar.Position;
+
         var hottaVersion = 0u;
         if (Ar.Game == EGame.GAME_TowerOfFantasy && offsetToTry == OffsetsToTry.SizeHotta)
         {
@@ -240,6 +242,18 @@ public partial class FPakInfo
             _ = Ar.Read<uint>();
         }
 
+        if (Ar.Game == EGame.GAME_OnePieceAmbition)
+        {
+            var currentPosition = Ar.Position;
+            Ar.Position = IndexOffset;
+            var shift = Ar.Read<long>();
+            IndexOffset = Ar.Read<long>();
+            shift = ~shift;
+            IndexOffset ^= shift;
+            IndexSize = startPosition - IndexOffset - 17;
+            Ar.Position = currentPosition;
+        }
+
         if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
         {
             IndexIsFrozen = Ar.Read<byte>() != 0;
@@ -320,7 +334,7 @@ public partial class FPakInfo
         Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
         Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
         Size9 = Size8a + 1, // UE4.25
-        SizeB1 = Size9 + 1, // UE4.25
+        SizeB1 = Size9 + 1, // plus 1
         //Size10 = Size8a
 
         SizeRacingMaster = Size8 + 4, // additional int
@@ -397,7 +411,18 @@ public partial class FPakInfo
             foreach (var offset in offsetsToTry)
             {
                 reader.Seek(-(long) offset, SeekOrigin.End);
-                var info = new FPakInfo(reader, offset);
+                FPakInfo info;
+                if (Ar.Game == EGame.GAME_OnePieceAmbition)
+                {
+                    var currentOffset = Ar.Position;
+                    Ar.Position -= (long)offset;
+                    info = new FPakInfo(Ar, offset);
+                    Ar.Position = currentOffset;
+                }
+                else
+                {
+                    info = new FPakInfo(reader, offset);
+                }
 
                 var found = Ar.Game switch
                 {
