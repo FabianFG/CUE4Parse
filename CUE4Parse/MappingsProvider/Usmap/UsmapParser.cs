@@ -104,10 +104,23 @@ public class UsmapParser
 
             var enumNamesSize = Ar.Version >= EUsmapVersion.LargeEnums ? Ar.Read<ushort>() : Ar.Read<byte>();
             var enumNames = new Dictionary<int, string>(enumNamesSize);
-            for (var j = 0; j < enumNamesSize; j++)
+
+            if (Ar.Version >= EUsmapVersion.ExplicitEnumValues)
             {
-                var value = Ar.ReadName(nameLut)!;
-                enumNames[j] = value;
+                for (var j = 0; j < enumNamesSize; j++)
+                {
+                    var value = Ar.Read<long>();
+                    var name = Ar.ReadName(nameLut)!;
+                    enumNames[(int)value] = name;
+                }
+            }
+            else
+            {
+                for (var j = 0; j < enumNamesSize; j++)
+                {
+                    var value = Ar.ReadName(nameLut)!;
+                    enumNames[j] = value;
+                }
             }
 
             // Some companies man... Their duplicated enums, even with different values, have to be ignored.
