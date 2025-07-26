@@ -109,6 +109,7 @@ public enum EGame : uint
         GAME_AshEchoes = GAME_UE4_27 + 19,
         GAME_NeedForSpeedMobile = GAME_UE4_27 + 20,
         GAME_TonyHawkProSkater34 = GAME_UE4_27 + 21,
+        GAME_OnePieceAmbition = GAME_UE4_27 + 22,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
