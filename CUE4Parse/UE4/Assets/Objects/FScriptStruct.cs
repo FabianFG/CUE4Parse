@@ -270,6 +270,8 @@ public class FScriptStruct
             // Killing Floor 3
             "HavokAIAnyArray" => new FHavokAIAnyArray(Ar),
 
+            "SUDSValue" => type == ReadType.ZERO ? new FStructFallback() : new FSUDSValue(Ar),
+
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
     }

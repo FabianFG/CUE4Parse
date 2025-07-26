@@ -63,7 +63,19 @@ public class FPositionVertexBuffer
             };
             return;
         }
+        if (Ar.Game == EGame.GAME_FateTrigger)
+        {
+            var box = Ar.Read<byte>();
+            Verts = Ar.ReadBulkArray<FVector>();
+            if (box != 0)
+            {
+                Ar.Position += 24; // Box
+                Ar.SkipBulkArrayData();
+            }
+            return;
+        }
         if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
+
         Verts = Ar.ReadBulkArray<FVector>();
     }
 }

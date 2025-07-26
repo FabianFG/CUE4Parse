@@ -35,7 +35,7 @@ public class FArchiveBigEndian : FArchive
     public override string ReadString() => Encoding.UTF8.GetString(ReadArray<byte>());
     public override long Seek(long offset, SeekOrigin origin) => _baseArchive.Seek(offset, origin);
 
-    public override T Read<T>()
+    public sealed override T Read<T>()
     {
         if (_read.TryGetValue(typeof(T), out var func))
             return (T)func(this);

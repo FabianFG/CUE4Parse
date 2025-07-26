@@ -135,7 +135,7 @@ public enum EGame : uint
         GAME_DuneAwakening = GAME_UE5_2 + 6,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
-        GAME_Placeholder = GAME_UE5_3 + 2, // Placeholder for a game that hasn't been added yet
+        GAME_BlackStigma = GAME_UE5_3 + 2,
         GAME_NobodyWantsToDie = GAME_UE5_3 + 3, // no use
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Rennsport = GAME_UE5_3 + 5,
@@ -160,6 +160,7 @@ public enum EGame : uint
         GAME_Wildgate = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness = GAME_UE5_5 + 7,
+        GAME_FateTrigger = GAME_UE5_5 + 8,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
 
