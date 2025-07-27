@@ -22,17 +22,17 @@ public static class BlueprintDecompilerUtils
     // public static Dictionary<string, string> Structs = [];
     // public static Dictionary<string, string> Enums = [];
 
-    public static string GetClassWithPrefix(UStruct? struc)
+    public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
-        var prefix = GetPrefix(struc);
-        return $"{prefix}{struc?.Name}";
+        var prefix = GetPrefix(prefixClassStruct);
+        return $"{prefix}{prefixClassStruct?.Name}";
     }
 
-    private static string GetPrefix(UStruct? struc)
+    private static string GetPrefix(UStruct? prefixStruct)
     {
         while (true)
         {
-            var structName = struc?.Name;
+            var structName = prefixStruct?.Name;
             var prefix = structName switch
             {
                 "Actor" => "A",
@@ -44,7 +44,7 @@ public static class BlueprintDecompilerUtils
             if (!string.IsNullOrEmpty(prefix))
                 return prefix;
 
-            if (struc?.SuperStruct is null || !struc.SuperStruct.TryLoad(out struc))
+            if (prefixStruct?.SuperStruct is null || !prefixStruct.SuperStruct.TryLoad(out prefixStruct))
                 break;
         }
 
@@ -306,7 +306,7 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    Log.Error("Unabled to get struct value or type for FScriptStruct type {structType}",
+                    Log.Error("Unable to get struct value or type for FScriptStruct type {structType}",
                         structType.GetType().Name);
                     return false;
                 }
@@ -545,9 +545,9 @@ public static class BlueprintDecompilerUtils
                     for (int i = 0; i < fallback.Properties.Count; i++)
                     {
                         var property = fallback.Properties[i];
-                        GetPropertyTagVariable(property, out string typetest, out string valuee);
+                        GetPropertyTagVariable(property, out string _, out string tagValue);
                         bool isLast = i == fallback.Properties.Count - 1;
-                        stringBuilder.AppendLine($"\"{property.Name}\": {valuee}{(isLast ? "" : ",")}");
+                        stringBuilder.AppendLine($"\"{property.Name}\": {tagValue}{(isLast ? "" : ",")}");
                     }
 
                     stringBuilder.CloseBlock();
@@ -738,9 +738,10 @@ public static class BlueprintDecompilerUtils
     public static string GetLineExpression(KismetExpression kismetExpression)
     {
         // TODO: Everything that include Const will have the const keyword at the start **maybe**
+        // what is this comment, there is no flag const for expressions?
         switch (kismetExpression)
         {
-            // whats the difference between localVariable, instanceVariable and EX_DefaultVariable
+            // what's the difference between localVariable, instanceVariable and EX_DefaultVariable
             case EX_LocalVariable localVariable:
             {
                 return localVariable.Variable.ToString();
@@ -766,17 +767,17 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Let let:
             {
-                var assignement = GetLineExpression(let.Assignment);
+                var assignment = GetLineExpression(let.Assignment);
                 var variable = GetLineExpression(let.Variable);
 
-                return $"{variable} = {assignement}";
+                return $"{variable} = {assignment}";
             }
             case EX_LetMulticastDelegate letMulticastDelegate: // idk
             {
-                var assignement = GetLineExpression(letMulticastDelegate.Assignment);
+                var assignment = GetLineExpression(letMulticastDelegate.Assignment);
                 var variable = GetLineExpression(letMulticastDelegate.Variable);
 
-                return $"{variable} = {assignement}";
+                return $"{variable} = {assignment}";
             }
             case EX_LetBool letBool:
             {
@@ -832,7 +833,7 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var functionName = localVirtualFunction.VirtualFunctionName.ToString();
-                return $"this->{functionName}({parameters})";
+                return $"this->{functionName}({parameters})"; // sometimes "this->" is wrong
             }
             case EX_LocalFinalFunction localFinalFunction:
             {
@@ -870,7 +871,7 @@ public static class BlueprintDecompilerUtils
                     return GetLineExpression(scriptText.SourceString);
                 }
 
-                return textConst.Value?.ToString() ?? "nullptr";
+                return textConst.Value.ToString() ?? "nullptr";
             }
             case EX_FinalFunction finalFunction:
             {
@@ -972,7 +973,7 @@ public static class BlueprintDecompilerUtils
             case EX_ByteConst:
             case EX_IntConstByte:
             {
-                var byteConst = (EX_ByteConst)kismetExpression; // idk i'm losing it man
+                var byteConst = (EX_ByteConst)kismetExpression;
                 return $"0x{byteConst.Value:X}";
             }
             case EX_ObjectConst objectConst:
@@ -1088,6 +1089,10 @@ public static class BlueprintDecompilerUtils
 
                 return customStringBuilder.ToString();
             }
+            case EX_SkipOffsetConst skipOffsetConst:
+            {
+                return $"goto Label_{skipOffsetConst.Value}";
+            }
             case EX_Jump jump:
             {
                 return $"goto Label_{jump.CodeOffset}";
@@ -1161,9 +1166,9 @@ public static class BlueprintDecompilerUtils
             case EX_ObjToInterfaceCast:
             case EX_InterfaceToObjCast:
             {
-                var Cast = (EX_CastBase)kismetExpression;
-                var variable = GetLineExpression(Cast.Target);
-                var classType = Cast.ClassPtr.Name;
+                var cast = (EX_CastBase)kismetExpression;
+                var variable = GetLineExpression(cast.Target);
+                var classType = cast.ClassPtr.Name;
 
                 string castFunc;
 
@@ -1179,8 +1184,8 @@ public static class BlueprintDecompilerUtils
                         break;
                     case EExprToken.EX_ObjToInterfaceCast:
                     {
-                        var struc = $"I{Cast.ClassPtr.ToString().SubstringBeforeLast("'").SubstringAfter('.')}";
-                        return $"Cast<{classType}*>({struc})";
+                        var structCast = $"I{cast.ClassPtr.ToString().SubstringBeforeLast("'").SubstringAfter('.')}";
+                        return $"Cast<{classType}*>({structCast})";
                     }
                     default:
                         castFunc = $"Cast<{classType}>";
@@ -1231,17 +1236,17 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SetMap setMap:
             {
-                var Target = GetLineExpression(setMap.MapProperty);
+                var target = GetLineExpression(setMap.MapProperty);
 
                 if (setMap.Elements.Length == 0)
                 {
-                    return $"{Target} = TMap {{ }}";
+                    return $"{target} = TMap {{ }}";
                 }
                 //FortniteGame/Content/UI/InGame/HUD/WBP_QuickEditGrid.uasset
                 //"ValueProp": {
                 //    "Type": "ObjectProperty", add type <>
                 var StringBuilder = new CustomStringBuilder();
-                StringBuilder.Append($"{Target} = TMap {{ ");
+                StringBuilder.Append($"{target} = TMap {{ ");
 
                 for (int i = 0; i < setMap.Elements.Length; i++)
                 {
@@ -1353,7 +1358,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_CallMulticastDelegate callMulticastDelegate:
             {
-                var delegatee = GetLineExpression(callMulticastDelegate.Delegate);
+                var callDelegate = GetLineExpression(callMulticastDelegate.Delegate);
 
                 var parameters = new List<string>();
                 foreach (var parameter in callMulticastDelegate.Parameters)
@@ -1362,9 +1367,9 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var parametersString = string.Join(", ", parameters);
-                var functionName = callMulticastDelegate.StackNode.Name;
+                var functionName = callMulticastDelegate.StackNode.Name; // TODO: show the functionName somehow, maybe with comments added "// {funcName}"
 
-                return $"{delegatee}->Broadcast({parametersString})"; // TODO: show the functionName somehow, maybe with comments added "// {funcName}"
+                return $"{callDelegate}->Broadcast({parametersString})"; 
             }
             case EX_RemoveMulticastDelegate removeMulticastDelegate:
             {
@@ -1381,12 +1386,6 @@ public static class BlueprintDecompilerUtils
                 var delegateTarget = GetLineExpression(clearMulticastDelegate.DelegateToClear);
                 return $"{delegateTarget}.Clear();";
             }
-            // todo: just a jump but used for other reasons, when done make this jump `Jump Label_####`
-            case EX_SkipOffsetConst skipOffsetConst:
-            {
-                return skipOffsetConst.Value.ToString(CultureInfo.CurrentCulture);
-            }
-
             // todo: are these three correct?
             case EX_PropertyConst propertyConst:
             {
@@ -1402,7 +1401,7 @@ public static class BlueprintDecompilerUtils
                 return value;
             }
 
-            // idk just gonna do this for both
+            // good enough?
             case EX_WireTracepoint:
             case EX_Tracepoint:
             {
@@ -1410,7 +1409,6 @@ public static class BlueprintDecompilerUtils
                 return "throw std::runtime_error(\"TracePoint hit\");";
 #endif
                 return "";
-                break;
             }
             case EX_Breakpoint:
             {
@@ -1418,7 +1416,6 @@ public static class BlueprintDecompilerUtils
                 return "breakpoint;";
 #endif
                 return "";
-                break;
             }
             case EX_VectorConst vectorConst:
             {
