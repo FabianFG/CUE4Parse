@@ -126,7 +126,7 @@ public static class BlueprintDecompilerUtils
                 break;
             }
             case FStrProperty:
-            case FVerseStringProperty:
+            case FVerseStringProperty: // hm
             {
                 type = "FString";
                 break;
@@ -248,7 +248,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.ArrayProperty:
             {
-                var scriptArray = propertyTag.GetGenericValue<UScriptArray>();
+                var scriptArray = propertyTag.GetGenericValue<UScriptArray>(); // FortniteGame/Content/Athena/HUD/HUD_ReferenceRules.uasset Object reference not set to an instance of an object.
                 if (scriptArray.Properties.Count == 0)
                 {
                     value = "{}";
@@ -451,7 +451,21 @@ public static class BlueprintDecompilerUtils
                         return tagType.Type switch
                         {
                             "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
-                            "NameProperty" => tagType.Name, // this?
+                            "IntProperty" => "int",
+                            "Int8Property" => "int8",
+                            "Int16Property" => "int16",
+                            "Int64Property" => "int64",
+                            "UInt16Property" => "uint16",
+                            "UInt32Property" => "uint32",
+                            "UInt64Property" => "uint64",
+                            "ByteProperty" => "byte",
+                            "BoolProperty" => "bool",
+                            "StrProperty" => "string",
+                            "DoubleProperty" => "double",
+                            "NameProperty" => "FName",
+                            "FloatProperty" => "float",
+                            "SoftObjectProperty" => "FSoftObjectPath",
+                            "ObjectProperty" or "ClassProperty" => "UObject*",
                             "StructProperty" => $"F{tagType.StructType}",
                             _ => throw new NotSupportedException(
                                 $"PropertyType {tagType.Type} is currently not supported")
@@ -473,11 +487,36 @@ public static class BlueprintDecompilerUtils
                 type = $"enum {propertyTag.TagData?.EnumName}";
                 break;
             }
+            case EPropertyType.FieldPathProperty:
+            {
+                value = propertyTag.GetGenericValue<FFieldPath>().ToString();
+                type = "FieldPath";
+                return true;
+            }
+            case EPropertyType.WeakObjectProperty:
+            {
+                type = "WeakObject";
+                return true;
+            }
+            case EPropertyType.InterfaceProperty:
+            {
+                type = "Interface";
+                return true;
+            }
+            case EPropertyType.DelegateProperty:
+            {
+                type = "Delegate";
+                return true;
+            }
             case EPropertyType.MulticastInlineDelegateProperty:
             {
                 // TODO: this motherfucker
                 type = "FMulticastScriptDelegate";
                 return true;
+            }
+            default:
+            {
+                throw new NotImplementedException($"EPropertyType {propertyTag.TagData.Type} is currently not implemented");
             }
         }
 
@@ -687,8 +726,8 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct",
-                    uStruct.GetType().Name);
+                value = uStruct.ToString(); // real
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct",uStruct.GetType().Name);
                 break;
             }
         }
