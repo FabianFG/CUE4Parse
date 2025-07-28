@@ -111,8 +111,8 @@ public class UClass : UStruct
         return null;
     }
 
-    // ignore this, this will not be here in the final verison.
-    public static string? somerandomstupidloop(string json, string functionName, string metaKey)
+    // ignore this, this will not be here in the final version.
+    private static string? somerandomstupidloop(string json, string functionName, string metaKey)
     {
         var root = JArray.Parse(json);
 
@@ -153,7 +153,7 @@ public class UClass : UStruct
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
         ClassDefaultObject.TryLoad(out var classDefaultObject);
-        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject.Properties.Count == 0;
+        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject?.Properties.Count == 0;
 
         var stringBuilder = new CustomStringBuilder();
 
@@ -237,90 +237,135 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         var index = 1;
 
-        // disable or enable funcs (dbg)
-        if (true)
+        var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
+        foreach (var (key, value) in FuncMap.Reverse())
         {
-            foreach (var (key, value) in FuncMap)
+            if (!value.TryLoad(out var export) || export is not UFunction function)
+                continue;
+            if (function.ScriptBytecode.Length < 1) continue;
+            foreach (var kismetExpression in function.ScriptBytecode)
             {
-                if (!value.TryLoad(out var export) || export is not UFunction function)
+                string? label = null;
+                int? offset = null;
+
+                switch (kismetExpression.Token)
+                {
+                    case EExprToken.EX_JumpIfNot:
+                        label = ((EX_JumpIfNot)kismetExpression).ObjectPath.ToString().Split('.').Last().Split('[')[0];
+                        offset = (int)((EX_JumpIfNot)kismetExpression).CodeOffset;
+                        break;
+
+                    case EExprToken.EX_Jump:
+                        label = ((EX_Jump)kismetExpression).ObjectPath.ToString().Split('.').Last().Split('[')[0];
+                        offset = (int)((EX_Jump)kismetExpression).CodeOffset;
+                        break;
+
+                    case EExprToken.EX_LocalFinalFunction:
+                    {
+                        EX_FinalFunction op = (EX_FinalFunction)kismetExpression;
+                        label = op.StackNode.Name.Split('.').Last().Split('[')[0];
+
+                        if (op.Parameters.Length == 1 && op.Parameters[0] is EX_IntConst intConst) offset = intConst.Value;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(label) && offset.HasValue)
+                {
+                    if (!jumpCodeOffsetsMap.TryGetValue(label, out var list))
+                        jumpCodeOffsetsMap[label] = list = new List<int>();
+
+                    list.Add(offset.Value);
+                }
+            }
+        }
+
+        foreach (var (key, value) in FuncMap)
+        {
+            if (!value.TryLoad(out var export) || export is not UFunction function)
+                continue;
+
+            var parametersList = new List<string>();
+
+            var returnType = "void";
+            foreach (var childProperty in function.ChildProperties)
+            {
+                if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                     continue;
 
-                var parametersList = new List<string>();
+                var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableType is null)
+                    continue;
 
-                var returnType = "void";
-                foreach (var childProperty in function.ChildProperties)
+                if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
                 {
-                    if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
-                        continue;
-
-                    var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
-                    if (variableType is null)
-                        continue;
-
-                    if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
-                    {
-                        returnType = variableType;
-                        continue;
-                    }
-
-                    var parameterExpression = $"{variableType} {property.Name.Text}";
-                    parametersList.Add(parameterExpression);
+                    returnType = variableType;
+                    continue;
                 }
 
-                var parameters = string.Join(", ", parametersList);
-                var functionExpression = $"{returnType} {key.Text}({parameters})";
+                var parameterExpression = $"{variableType} {property.Name.Text}";
+                parametersList.Add(parameterExpression);
+            }
 
-                var functionStringBuilder = new CustomStringBuilder();
-                if (editordata.Length > 0)
+            var parameters = string.Join(", ", parametersList);
+            var functionExpression = $"{returnType} {key.Text}({parameters})";
+
+            var functionStringBuilder = new CustomStringBuilder();
+            if (editordata.Length > 0)
+            {
+                string? category = somerandomstupidloop(editordata, key.Text, "Category");
+                string? toolTip = somerandomstupidloop(editordata, key.Text, "ToolTip");
+                string? moduleRelativePath = somerandomstupidloop(editordata, key.Text, "ModuleRelativePath");
+                if (category != null) functionStringBuilder.AppendLine($"// Category: {category}");
+                if (toolTip != null)
+                    functionStringBuilder.AppendLine(string.Join(Environment.NewLine,
+                        toolTip.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
+                            .Select(line => $"// {line}")));
+                if (moduleRelativePath != null)
+                    functionStringBuilder.AppendLine($"// ModuleRelativePath: {moduleRelativePath}");
+            }
+
+            string flags =
+                $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
+            functionStringBuilder.AppendLine($"// {flags}");
+            functionStringBuilder.AppendLine(functionExpression);
+            functionStringBuilder.OpenBlock();
+
+            if (function.ScriptBytecode.Length < 1) functionStringBuilder.AppendLine("// No Script Bytecode");
+
+            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : new List<int>();
+            foreach (var kismetExpression in function.ScriptBytecode)
+            {
+                if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_PushExecutionFlow or EX_PopExecutionFlow)
+                    continue;
+
+                if (jumpCodeOffsets.Contains(kismetExpression.StatementIndex)) functionStringBuilder.AppendLine($"Label_{kismetExpression.StatementIndex}:");
+
+                var expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+
+                if (!string.IsNullOrWhiteSpace(expression) && expression.Length > 0)
                 {
-                    string? Category = somerandomstupidloop(editordata, key.Text, "Category");
-                    string? ToolTip = somerandomstupidloop(editordata, key.Text, "ToolTip");
-                    string? ModuleRelativePath = somerandomstupidloop(editordata, key.Text, "ModuleRelativePath");
-                    if (Category != null) functionStringBuilder.AppendLine($"// Category: {Category}");
-                    if (ToolTip != null)
-                        functionStringBuilder.AppendLine(string.Join(Environment.NewLine,
-                            ToolTip.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
-                                .Select(line => $"// {line}")));
-                    if (ModuleRelativePath != null)
-                        functionStringBuilder.AppendLine($"// ModuleRelativePath: {ModuleRelativePath}");
-                }
-
-                string flags =
-                    $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
-                functionStringBuilder.AppendLine($"// {flags}");
-                functionStringBuilder.AppendLine(functionExpression);
-                functionStringBuilder.OpenBlock();
-
-                foreach (var kismetExpression in function.ScriptBytecode)
-                {
-                    if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_PushExecutionFlow or EX_PopExecutionFlow)
-                        continue;
-                    var expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
-
-                    if (!string.IsNullOrWhiteSpace(expression) && expression.Length > 0)
-                    {
-                        var lineExpression = $"{expression};";
+                    var lineExpression = $"{expression};";
 
 #if DEBUG
-    lineExpression += $" // {kismetExpression.GetType().Name}";
+                    lineExpression += $" // {kismetExpression.GetType().Name}";
 #endif
 
-                        functionStringBuilder.AppendLine(lineExpression);
-                        if (!lineExpression.StartsWith("return"))
-                        {
-                            functionStringBuilder.AppendLine();
-                        }
+                    functionStringBuilder.AppendLine(lineExpression);
+                    if (!lineExpression.StartsWith("return"))
+                    {
+                        functionStringBuilder.AppendLine();
                     }
                 }
-
-                functionStringBuilder.CloseBlock();
-
-                var functionBlock = functionStringBuilder.ToString();
-                stringBuilder.AppendLine(functionBlock);
-                if (index < totalFuncMapCount) stringBuilder.AppendLine();
-
-                index++;
             }
+
+            functionStringBuilder.CloseBlock();
+
+            var functionBlock = functionStringBuilder.ToString();
+            stringBuilder.AppendLine(functionBlock);
+            if (index < totalFuncMapCount) stringBuilder.AppendLine();
+
+            index++;
         }
 
         stringBuilder.CloseBlock("};");
@@ -389,7 +434,7 @@ public class UClass : UStruct
         /** the pointer offset of the interface's vtable */
         public int PointerOffset;
 
-        /** whether or not this interface has been implemented via K2 */
+        /** whether this interface has been implemented via K2 */
         public bool bImplementedByK2;
 
         public FImplementedInterface(FAssetArchive Ar)

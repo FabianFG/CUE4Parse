@@ -7,20 +7,25 @@ public class CustomStringBuilder
 {
     private readonly StringBuilder _stringBuilder;
     private int _indentationLevel;
-    
-    private string Indent => new string(' ', _indentationLevel * 4);
-    
+    private string _currentIndent;
+
     public CustomStringBuilder()
     {
         _stringBuilder = new StringBuilder();
         _indentationLevel = 0;
+        UpdateIndentString();
     }
-    
+
+    private void UpdateIndentString()
+    {
+        _currentIndent = new string(' ', _indentationLevel * 4);
+    }
+
     private void AppendIndentation()
     {
-        _stringBuilder.Append(Indent);
+        _stringBuilder.Append(_currentIndent);
     }
-    
+
     public void AppendLine(string text = "")
     {
         if (string.IsNullOrEmpty(text))
@@ -55,8 +60,17 @@ public class CustomStringBuilder
         Append(text);
     }
 
-    public void IncreaseIndentation() => _indentationLevel++;
-    public void DecreaseIndentation() => _indentationLevel--;
-    
-    public new string ToString() => _stringBuilder.ToString();
+    public void IncreaseIndentation()
+    {
+        _indentationLevel++;
+        UpdateIndentString();
+    }
+
+    public void DecreaseIndentation()
+    {
+        _indentationLevel--;
+        UpdateIndentString();
+    }
+
+    public override string ToString() => _stringBuilder.ToString();
 }

@@ -29,9 +29,9 @@ public class FKismetPropertyPointer
 
     public override string ToString()
     {
-        if (New is not null)
+        if (bNew && New != null && New.Path != null && New.Path.Count > 0)
         {
-            return New?.Path[0].ToString();
+            return New.Path[0].ToString();
         }
         return Old?.ResolvedObject?.Name.ToString();
     }
