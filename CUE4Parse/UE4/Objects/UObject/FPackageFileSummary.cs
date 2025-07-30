@@ -334,7 +334,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Guid = Ar.Read<FGuid>();
             }
 
-            if (Ar.Game is EGame.GAME_Valorant or EGame.GAME_HYENAS) Ar.Position += 8;
+            if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_HYENAS) Ar.Position += 8;
 
             if (!PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
             {

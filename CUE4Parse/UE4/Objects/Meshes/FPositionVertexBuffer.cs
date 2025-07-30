@@ -31,7 +31,7 @@ public class FPositionVertexBuffer
         }
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
-        if (Ar.Game == EGame.GAME_Valorant)
+        if (Ar.Game == EGame.GAME_Valorant_PRE_11_2)
         {
             bool bUseFullPrecisionPositions = Ar.ReadBoolean();
             var bounds = new FBoxSphereBounds(Ar);

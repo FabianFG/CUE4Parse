@@ -92,7 +92,7 @@ public enum EGame : uint
         GAME_HYENAS = GAME_UE4_27 + 2,
         GAME_HogwartsLegacy = GAME_UE4_27 + 3,
         GAME_OutlastTrials = GAME_UE4_27 + 4,
-        GAME_Valorant = GAME_UE4_27 + 5,
+        GAME_Valorant_PRE_11_2 = GAME_UE4_27 + 5,
         GAME_Gollum = GAME_UE4_27 + 6,
         GAME_Grounded = GAME_UE4_27 + 7,
         GAME_DeltaForceHawkOps = GAME_UE4_27 + 8,
@@ -136,7 +136,7 @@ public enum EGame : uint
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_BlackStigma = GAME_UE5_3 + 2,
-        GAME_NobodyWantsToDie = GAME_UE5_3 + 3, // no use
+        GAME_Valorant = GAME_UE5_3 + 3,
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_AshesOfCreation = GAME_UE5_3 + 6,

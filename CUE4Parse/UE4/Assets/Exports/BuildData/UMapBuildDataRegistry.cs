@@ -154,6 +154,7 @@ public class FReflectionCaptureData
         }
 
         if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 16;
+        if (Ar.Game == EGame.GAME_Valorant) Ar.SkipFixedArray(1);
         if (Ar.Game == EGame.GAME_BlackMythWukong)
         {
             Ar.SkipFixedArray(1);
