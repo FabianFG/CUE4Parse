@@ -170,10 +170,9 @@ public class FAEPakEntry : FPakEntry
     public new readonly int StructSize;
     public new bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
 
-    public FAEPakEntry(AEPakFileReader vfs, string path, bool singleFile, long size = 0) : base(vfs, path, size)
+    public FAEPakEntry(AEPakFileReader vfs, string path, long size = 0) : base(vfs, path, size)
     {
         var Ar = vfs.Ar;
-        var entryStart = Ar.Position;
         var header = Ar.Read<FAEFileHeader>();
         Size = header.Size;
         UncompressedSize = header.Size;
@@ -197,7 +196,6 @@ public class FAEPakEntry : FPakEntry
             }
             CompressedSize = start - Offset;
         }
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,10 +234,8 @@ public class AEPakFileReader : AbstractAesVfsReader
         if (!_indexName.EndsWith('$'))
         {
             var name = FixFilePath(_indexName);
-            var entry = new FAEPakEntry(this, name, true);
-            var files = new Dictionary<string, GameFile>(1, pathComparer);
-            files[name] = entry;
-            Files = files;
+            var entry = new FAEPakEntry(this, name);
+            Files = new Dictionary<string, GameFile>(1, pathComparer) { [name] = entry };
         }
         else
         {
@@ -248,10 +244,13 @@ public class AEPakFileReader : AbstractAesVfsReader
             Ar.Position = Length - 12 - indexLength;
             var indexOffset = Ar.Position;
             var indexHash = Ar.Read<uint>();
+            var indexData = Ar.ReadArray<byte>((int)indexLength);
+            using var indexAr = new GenericBufferReader(indexData);
+            
             var entries = new List<FAssetEntry>(4);
-            while (Ar.Position < indexOffset + indexLength + 4)
+            while (indexAr.Position < indexLength)
             {
-                var entry = new FAssetEntry(Ar);
+                var entry = new FAssetEntry(indexAr);
                 entries.Add(entry);
             }
 
@@ -260,7 +259,7 @@ public class AEPakFileReader : AbstractAesVfsReader
             {
                 var name = FixFilePath(entry.Name);
                 Ar.Position = indexOffset - entry.Offset;
-                var file = new FAEPakEntry(this, name, false);
+                var file = new FAEPakEntry(this, name);
                 files[name] = file;
             }
 

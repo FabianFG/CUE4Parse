@@ -1232,9 +1232,15 @@ public class FMaterialShaderMapId
     public FPlatformTypeLayoutParameters? LayoutParams;
 
     public FMaterialShaderMapId() {}
+
     public FMaterialShaderMapId(FArchive Ar)
     {
         var bIsLegacyPackage = Ar.Ver < EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS;
+
+        if (Ar.Game == EGame.GAME_OnePieceAmbition)
+        {
+            Ar.Position += 20;
+        }
 
         if (!bIsLegacyPackage)
         {
