@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
@@ -110,41 +111,65 @@ public class UClass : UStruct
 
         return null;
     }
-
-    // ignore this, this will not be here in the final version.
-    private static string? somerandomstupidloop(string json, string functionName, string metaKey)
+    private static string? findKeyWithinMeta(Assets.Exports.UObject editorData, string functionName, string metaKey)
     {
-        var root = JArray.Parse(json);
+        var functionsMetaProp = editorData.Properties.FirstOrDefault(p => p.Name.Text == "FunctionsMetaData");
+        if (functionsMetaProp?.Tag == null) return null;
 
-        foreach (var item in root)
+        var functionsMap = functionsMetaProp.Tag.GetValue<UScriptMap>();
+        if (functionsMap == null) return null;
+
+        var matchingEntry = functionsMap.Properties
+            .FirstOrDefault(entry => entry.Key.GetValue<FName>().Text.Equals(functionName, StringComparison.OrdinalIgnoreCase));
+        if (matchingEntry.Key == null) return null;
+
+        var valueStruct = matchingEntry.Value.GetValue<FStructFallback>();
+        var objectMetaProp = valueStruct.Properties.FirstOrDefault(p => p.Name.Text == "ObjectMetaData");
+        if (objectMetaProp?.Tag == null) return null;
+
+        var innerObjectMetaStruct = objectMetaProp.Tag.GetValue<FStructFallback>();
+        var innerObjectMetaProp = innerObjectMetaStruct.Properties.FirstOrDefault(p => p.Name.Text == "ObjectMetaData");
+        if (innerObjectMetaProp?.Tag == null) return null;
+
+        var innerMap = innerObjectMetaProp.Tag.GetValue<UScriptMap>();
+        if (innerMap == null) return null;
+
+        foreach (var metaEntry in innerMap.Properties)
         {
-            var functions = item["Properties"]?["FunctionsMetaData"] as JArray;
-            if (functions == null) continue;
-
-            foreach (var func in functions)
-            {
-                var key = (string?)func["Key"];
-                if (key == null || !key.Equals(functionName, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var objectMetaArray = func["Value"]?["ObjectMetaData"]?["ObjectMetaData"] as JArray;
-                if (objectMetaArray == null) return null;
-
-                foreach (var meta in objectMetaArray)
-                {
-                    var metaKeyName = (string?)meta["Key"];
-                    if (metaKeyName != null && metaKeyName.Equals(metaKey, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return (string?)meta["Value"];
-                    }
-                }
-            }
+            if (metaEntry.Key.GetValue<FName>().Text.Equals(metaKey, StringComparison.OrdinalIgnoreCase))
+                return metaEntry.Value.GetValue<string>();
         }
 
         return null;
     }
 
-    public string DecompileBlueprintToPseudo(string editordata)
+    private static EAccessMode GetAccessMode(FProperty property)
+    {
+        if (property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintVisible))
+            return EAccessMode.Public;
+
+        if (property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintReadOnly))
+            return EAccessMode.Public;
+
+        if (property.PropertyFlags.HasFlag(EPropertyFlags.Edit))
+            return EAccessMode.Protected;
+
+        return EAccessMode.Private;
+    }
+
+    private static EAccessMode GetAccessMode(UFunction function)
+    {
+        if (function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Public))
+            return EAccessMode.Public;
+
+        if (function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Protected))
+            return EAccessMode.Protected;
+
+        return EAccessMode.Private;
+    }
+
+
+    public string DecompileBlueprintToPseudo(Assets.Exports.UObject editordata)
     {
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -153,7 +178,7 @@ public class UClass : UStruct
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
 
         ClassDefaultObject.TryLoad(out var classDefaultObject);
-        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject?.Properties.Count == 0;
+        bool emptyClass = Properties?.Count == 0 && ChildProperties?.Length == 0 && FuncMap?.Count == 0 && classDefaultObject?.Properties?.Count == 0;
 
         var stringBuilder = new CustomStringBuilder();
 
@@ -169,7 +194,7 @@ public class UClass : UStruct
         var existingVariables = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
 
-        foreach (var property in Properties)
+        foreach (var property in Properties ?? [])
         {
             if (!existingVariables.Add(property.Name.Text))
                 continue;
@@ -180,28 +205,24 @@ public class UClass : UStruct
             }
 
             var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
-            variables[variableExpression] = EAccessMode.Public;
+            variables[variableExpression] = EAccessMode.Public; // should always be public
         }
 
-        if (classDefaultObject is not null)
+        foreach (var property in classDefaultObject?.Properties ?? [])
         {
-            foreach (var property in classDefaultObject.Properties)
+            if (!existingVariables.Add(property.Name.Text))
+                continue;
+
+            if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
             {
-                if (!existingVariables.Add(property.Name.Text))
-                    continue;
-
-                // TODO move this shit to the fucking function itself so fucking delegate is not a bitch ffs
-                if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
-                {
-                    throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
-                }
-
-                var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
-                variables[variableExpression] = EAccessMode.Protected;
+                throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
             }
+
+            var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
+            variables[variableExpression] = EAccessMode.Public; // should always be public
         }
 
-        foreach (var childProperty in ChildProperties)
+        foreach (var childProperty in ChildProperties ?? [])
         {
             if (childProperty is not FProperty property)
                 continue;
@@ -216,8 +237,7 @@ public class UClass : UStruct
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
             var variableExpression = $"{variableType} {property.Name.Text}{value};";
 
-            var accessMode = property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintVisible) ? EAccessMode.Protected : EAccessMode.Public;
-            variables[variableExpression] = EAccessMode.Private;
+            variables[variableExpression] = GetAccessMode(property);
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -288,7 +308,7 @@ public class UClass : UStruct
             var parametersList = new List<string>();
 
             var returnType = "void";
-            foreach (var childProperty in function.ChildProperties)
+            foreach (var childProperty in function?.ChildProperties ?? [])
             {
                 if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                     continue;
@@ -308,14 +328,15 @@ public class UClass : UStruct
             }
 
             var parameters = string.Join(", ", parametersList);
-            var functionExpression = $"{returnType} {key.Text}({parameters})";
-
+            var accessMode = GetAccessMode(function);
+            var accessString = accessMode.ToString().ToLower();
+            var functionExpression = $"{accessString} {returnType} {key.Text}({parameters})";
             var functionStringBuilder = new CustomStringBuilder();
-            if (editordata.Length > 0)
+            if (editordata is not null)
             {
-                string? category = somerandomstupidloop(editordata, key.Text, "Category");
-                string? toolTip = somerandomstupidloop(editordata, key.Text, "ToolTip");
-                string? moduleRelativePath = somerandomstupidloop(editordata, key.Text, "ModuleRelativePath");
+                string? category = findKeyWithinMeta(editordata, key.Text, "Category");
+                string? toolTip = findKeyWithinMeta(editordata, key.Text, "ToolTip");
+                string? moduleRelativePath = findKeyWithinMeta(editordata, key.Text, "ModuleRelativePath");
                 if (category != null) functionStringBuilder.AppendLine($"// Category: {category}");
                 if (toolTip != null)
                     functionStringBuilder.AppendLine(string.Join(Environment.NewLine,
@@ -325,8 +346,7 @@ public class UClass : UStruct
                     functionStringBuilder.AppendLine($"// ModuleRelativePath: {moduleRelativePath}");
             }
 
-            string flags =
-                $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
+            string flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();

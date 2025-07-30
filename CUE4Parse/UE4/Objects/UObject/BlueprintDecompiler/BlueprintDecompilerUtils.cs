@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine.Ai;
+using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.Utils;
@@ -18,10 +19,6 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
-    // TODO: at the end
-    // public static Dictionary<string, string> Structs = [];
-    // public static Dictionary<string, string> Enums = [];
-
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
         var prefix = GetPrefix(prefixClassStruct);
@@ -119,9 +116,9 @@ public static class BlueprintDecompilerUtils
                 type = $"F{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
-            case FBoolProperty:
+            case FBoolProperty boolProperty:
             {
-                type = "bool";
+                type = boolProperty.bIsNativeBool ? "bool" : "uint8";
                 break;
             }
             case FStrProperty:
@@ -274,10 +271,11 @@ public static class BlueprintDecompilerUtils
                         "NameProperty" => "FName",
                         "TextProperty" => "FText",
                         "FloatProperty" => "float",
-                        "SoftObjectProperty" => "FSoftObjectPath",
+                        "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
                         "ObjectProperty" or "ClassProperty" => "UObject*",
                         "EnumProperty" => scriptArray.InnerTagData?.EnumName,
                         "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
+                        "InterfaceProperty" => $"F{scriptArray.InnerTagData?.InnerType}", // check
                         _ => throw new NotImplementedException(
                             $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
                     };
@@ -334,12 +332,12 @@ public static class BlueprintDecompilerUtils
 
                 if (list.Length == 0)
                 {
-                    value = "\"[]\"";
+                    value = "[]";
                 }
                 else
                 {
                     var functions = string.Join(", ", list.Select(x => $"\"{x.FunctionName}\""));
-                    value = $"\"[{functions}]\"";
+                    value = $"[{functions}]";
                 }
 
                 break;
@@ -359,6 +357,15 @@ public static class BlueprintDecompilerUtils
                 value = genericValue.Flags == 0
                     ? $"FText(\"{text}\")"
                     : $"FText(\"{text}\", {flags})";
+
+                break;
+            }
+            case EPropertyType.AssetObjectProperty: // AssetObjectProperty is the old name of SoftObjectProperty
+            {
+                var softObjectPath = propertyTag.Tag.GenericValue;
+
+                type = "FSoftObjectPath";
+                value = $"FSoftObjectPath(\"{softObjectPath}\")";
 
                 break;
             }
@@ -479,9 +486,10 @@ public static class BlueprintDecompilerUtils
                             "NameProperty" => "FName",
                             "TextProperty" => "FText",
                             "FloatProperty" => "float",
-                            "SoftObjectProperty" => "FSoftObjectPath",
+                            "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
                             "ObjectProperty" or "ClassProperty" => "UObject*",
                             "StructProperty" => $"F{tagType.StructType}",
+                            "InterfaceProperty" => $"F{tagType.StructType}", // check
                             _ => throw new NotSupportedException(
                                 $"PropertyType {tagType?.Type} is currently not supported")
                         };
@@ -663,7 +671,7 @@ public static class BlueprintDecompilerUtils
                 value = $"FBox({min}, {max}, {isValid})";
                 break;
             }
-            case FBox2D box2D:
+            case TBox2<FVector2D> box2D:
             {
                 GetPropertyTagVariable(box2D.Min, out var min);
                 GetPropertyTagVariable(box2D.Max, out var max);
@@ -751,6 +759,22 @@ public static class BlueprintDecompilerUtils
 
                 break;
             }
+            case FRichCurveKey richCurve:
+            {
+                var InterpMode = richCurve.InterpMode;
+                var TangentMode = richCurve.TangentMode;
+                var TangentWeightMode = richCurve.TangentWeightMode;
+                var Time = richCurve.Time;
+                var Value = richCurve.Value;
+                var ArriveTangent = richCurve.ArriveTangent;
+                var ArriveTangentWeight = richCurve.ArriveTangentWeight;
+                var LeaveTangent = richCurve.LeaveTangent;
+                var LeaveTangentWeight = richCurve.LeaveTangentWeight;
+
+                value = $"FRichCurveKey({InterpMode}, {TangentMode}, {TangentWeightMode}, {Time}, {Value}, {ArriveTangent}, {ArriveTangentWeight}, {LeaveTangent}, {LeaveTangentWeight})";
+
+                break;
+            }
             default:
             {
                 value = uStruct.ToString() ?? string.Empty; // real
@@ -815,8 +839,8 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context_FailSilent failSilent:
             {
-                var function = GetLineExpression(failSilent.ContextExpression).SubstringAfter("::");
-                var obj = GetLineExpression(failSilent.ObjectExpression);
+                var function = failSilent?.ContextExpression is not null ? GetLineExpression(failSilent?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
+                var obj = failSilent?.ObjectExpression is not null ? GetLineExpression(failSilent?.ObjectExpression) : "failedplaceholder";
 
                 var customStringBuilder = new CustomStringBuilder();
 
@@ -828,13 +852,8 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context context:
             {
-                var function = context.ContextExpression is not null
-                    ? GetLineExpression(context.ContextExpression).SubstringAfter("::")
-                    : "null"; // context.ContextExpression is very common to have issues (why? I assume UEFN)
-
-                var obj = context.ObjectExpression is not null
-                    ? GetLineExpression(context.ObjectExpression)
-                    : "null";
+                var function = context?.ContextExpression is not null ? GetLineExpression(context?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
+                var obj = context?.ObjectExpression is not null ? GetLineExpression(context?.ObjectExpression) : "failedplaceholder";
 
                 return $"{obj}->{function}";
             }
@@ -1170,7 +1189,7 @@ public static class BlueprintDecompilerUtils
             case EX_SoftObjectConst objectConst:
             {
                 var stringValue = GetLineExpression(objectConst.Value);
-                return $"FSoftObjectPath(\"{stringValue})\"";
+                return $"FSoftObjectPath({stringValue}";
             }
 
             case EX_MetaCast:
@@ -1350,7 +1369,7 @@ public static class BlueprintDecompilerUtils
                 stringBuilder.AppendLine($"return {GetLineExpression(switchValue.DefaultTerm)};");
                 stringBuilder.AppendLine("break;");
 
-                stringBuilder.CloseBlock();
+                stringBuilder.CloseBlock("}\n");
 
                 stringBuilder.CloseBlock();
 
