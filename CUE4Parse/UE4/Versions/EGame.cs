@@ -152,6 +152,7 @@ public enum EGame : uint
         GAME_TempestRising = GAME_UE5_4 + 8,
         GAME_MindsEye = GAME_UE5_4 + 9,
         GAME_DeadByDaylight = GAME_UE5_4 + 10,
+        GAME_Grounded2 = GAME_UE5_4 + 11,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
