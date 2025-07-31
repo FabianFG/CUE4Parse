@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Assets.Exports.Interchange;
 
-public class AssetImportData : UObject
+public class UAssetImportData : UObject
 {
     public JToken? SourceDataJson;
 
