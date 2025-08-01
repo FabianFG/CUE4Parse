@@ -276,8 +276,7 @@ public static class BlueprintDecompilerUtils
                         "EnumProperty" => scriptArray.InnerTagData?.EnumName,
                         "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
                         "InterfaceProperty" => $"F{scriptArray.InnerTagData?.InnerType}", // check
-                        _ => throw new NotImplementedException(
-                            $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray")
+                        _ => $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray"
                     };
 
                     type = $"TArray<{innerType}>";
@@ -513,7 +512,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.FieldPathProperty:
             {
-                value = propertyTag.GetGenericValue<FFieldPath>().ToString() ?? string.Empty;
+                value = $"\"{propertyTag.GetGenericValue<FFieldPath>().ToString() ?? string.Empty}\"";
                 type = "FieldPath";
                 break;
             }
@@ -551,7 +550,8 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                throw new NotImplementedException($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
+                Log.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
+                return false;
             }
         }
 

@@ -201,7 +201,7 @@ public class UClass : UStruct
 
             if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
             {
-                throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
+                Log.Warning($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
             }
 
             var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
@@ -215,7 +215,7 @@ public class UClass : UStruct
 
             if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
             {
-                throw new NotImplementedException($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
+                Log.Warning($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
             }
 
             var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
