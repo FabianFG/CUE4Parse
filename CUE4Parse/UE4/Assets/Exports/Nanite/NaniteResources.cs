@@ -109,6 +109,7 @@ public class FNaniteResources
             else
                 FailedPages.Add(pageIndex);
         }
+        
         return LoadedPages[pageIndex];
     }
 

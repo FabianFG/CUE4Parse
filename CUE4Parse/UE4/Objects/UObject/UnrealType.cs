@@ -699,6 +699,7 @@ public class FSetProperty : FProperty
 }
 
 public class FStrProperty : FProperty;
+public class FUtf8StrProperty : FProperty;
 
 public class FStructProperty : FProperty
 {
@@ -787,3 +788,5 @@ public class FVerseFunctionProperty : FProperty
 }
 
 public class FVerseDynamicProperty : FProperty;
+
+public class FReferenceProperty : FProperty;

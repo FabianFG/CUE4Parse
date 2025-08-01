@@ -231,5 +231,12 @@ public class FPropertyTag
         Tag = tag;
     }
 
+    public FPropertyTag(FName propertyType, FPropertyTagType tag, FPropertyTagData? tagData = null)
+    {
+        PropertyType = propertyType;
+        Tag = tag;
+        TagData = tagData;
+    }
+
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";
 }

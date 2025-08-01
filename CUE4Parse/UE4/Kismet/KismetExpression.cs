@@ -26,6 +26,15 @@ public class FKismetPropertyPointer
             Old = new FPackageIndex(Ar);
         }
     }
+
+    public override string ToString()
+    {
+        if (bNew && New != null && New.Path != null && New.Path.Count > 0)
+        {
+            return New.Path[0].ToString();
+        }
+        return Old?.ResolvedObject?.Name.ToString();
+    }
 }
 
 [JsonConverter(typeof(KismetExpressionConverter))]

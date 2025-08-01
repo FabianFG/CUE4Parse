@@ -32,6 +32,7 @@ namespace CUE4Parse.GameTypes.FN.Objects
             
             ActorState = (EFortBuildingPersistentState)Ar.Read<byte>();
 
+            // ActorClass is sometimes saved as FPackageIndex
             ActorClass = Ar.ReadFName();
             Transform = new FTransform(Ar);
             bSpawnedActor = Ar.ReadBoolean();

@@ -66,7 +66,7 @@ public class UStruct : UField
         }
     }
 
-    protected void DeserializeProperties(FAssetArchive Ar)
+    private void DeserializeProperties(FAssetArchive Ar)
     {
         ChildProperties = Ar.ReadArray(() =>
         {

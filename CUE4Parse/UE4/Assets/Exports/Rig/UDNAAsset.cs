@@ -21,7 +21,7 @@ public class UDNAAsset : UObject
     public DNAVersion LayerVersion;
     public IndexTable IndexTable;
     public Dictionary<string, IRawBase> Layers;
-    public Lazy<byte[]>? DNAData;
+    public Lazy<byte[]> DNAData;
     public string DnaFileName;
 
     private readonly byte[] _signature = "DNA"u8.ToArray();
