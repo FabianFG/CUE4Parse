@@ -57,6 +57,8 @@ public class UMaterialInstance : UMaterialInterface
                 Ar.Position = validPos;
             }
         }
+
+        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource) Ar.Position += 8; // 0.0f and 1.0f, for all
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
