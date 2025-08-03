@@ -60,12 +60,15 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             Ar.Index = index + 8;
         }
-        
+
         public override string ToString()
         {
+            if (Path == null || Path.Count == 0 || Path[0] == null)
+                return string.Empty;
+            
             return Path[0].ToString();
         }
-        
+
         protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             if (ResolvedOwner is null)

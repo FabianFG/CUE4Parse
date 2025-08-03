@@ -740,7 +740,7 @@ public static class BlueprintDecompilerUtils
             }
             case FDateTime dateTime:
             {
-                value = $"FDateTime({dateTime})";
+                value = $"FDateTime(\"{dateTime}\")";
                 break;
             }
             case FSoftObjectPath softObjectPath:

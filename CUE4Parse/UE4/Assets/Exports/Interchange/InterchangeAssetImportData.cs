@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Assets.Exports.Interchange;
 
-public class InterchangeAssetImportData : UAssetImportData
+public class UInterchangeAssetImportData : UAssetImportData
 {
     public byte[] CachedNodeContainer = [];
     public List<KeyValuePair<string, JToken>> CachedPipelines = [];
