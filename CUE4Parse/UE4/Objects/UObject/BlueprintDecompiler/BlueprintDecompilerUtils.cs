@@ -628,6 +628,13 @@ public static class BlueprintDecompilerUtils
                 value = $"TIntVector2<float>({x}, {y})";
                 break;
             }
+            case FIntPoint intPoint:
+            {
+                var x = intPoint.X;
+                var y = intPoint.Y;
+                value = $"FIntPoint({x}, {y})";
+                break;
+            }
             case TIntVector3<float> floatVector3:
             {
                 var x = floatVector3.X;
