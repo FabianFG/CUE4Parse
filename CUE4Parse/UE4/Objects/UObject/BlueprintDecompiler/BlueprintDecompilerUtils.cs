@@ -855,7 +855,7 @@ public static class BlueprintDecompilerUtils
                     var classType = stackNode.SubstringBefore(':').Trim();
                     var className = classType.Split('.').LastOrDefault();
 
-                    return $"{className}::{functionName}({parameters})";
+                    return $"U{className}::{functionName}({parameters})";
                 }
                 else if (expression is EX_LocalFinalFunction)
                 {
@@ -864,7 +864,7 @@ public static class BlueprintDecompilerUtils
                 else
                 {
                     var classType = stackNode.SubstringAfter('.').SubstringBefore(':');
-                    return $"{classType}::{functionName}({parameters})";
+                    return $"U{classType}::{functionName}({parameters})";
                 }
             }
             case EX_VirtualFunction virtualFunc:

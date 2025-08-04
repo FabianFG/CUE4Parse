@@ -478,7 +478,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
                 writer.WriteValue(PlayerPersistenceUserWipeNumber);
             }
 
-            if (VkPalette.LinkCodeMap is { Count: > 0 })
+            if (VkPalette?.LinkCodeMap is { Count: > 0 })
             {
                 writer.WritePropertyName("VkPalette");
                 serializer.Serialize(writer, VkPalette);
