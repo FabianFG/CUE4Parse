@@ -14,7 +14,9 @@ public struct FStructCookedMetaDataStore : IUStruct
     {
         ObjectMetaData = fallback.GetOrDefault<FObjectCookedMetaDataStore>(nameof(ObjectMetaData));
         PropertiesMetaData = new Dictionary<FName, FFieldCookedMetaDataStore?>();
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(PropertiesMetaData)).Properties)
+
+        if (!fallback.TryGetValue(out UScriptMap map, nameof(PropertiesMetaData))) return;
+        foreach (var kv in map.Properties)
         {
             PropertiesMetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<FFieldCookedMetaDataStore>();
         }

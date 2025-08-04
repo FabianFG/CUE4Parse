@@ -12,7 +12,10 @@ public struct FObjectCookedMetaDataStore : IUStruct
     public FObjectCookedMetaDataStore(FStructFallback fallback)
     {
         ObjectMetaData = new Dictionary<FName, string?>();
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(ObjectMetaData)).Properties)
+        if (!fallback.TryGetValue(out UScriptMap map, nameof(ObjectMetaData)))
+            return;
+
+        foreach (var kv in map.Properties)
         {
             ObjectMetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<string>();
         }

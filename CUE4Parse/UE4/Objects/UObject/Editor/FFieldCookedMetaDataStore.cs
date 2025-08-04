@@ -13,15 +13,21 @@ public struct FFieldCookedMetaDataStore : IUStruct
     public FFieldCookedMetaDataStore(FStructFallback fallback)
     {
         FieldMetaData = new Dictionary<FName, string?>();
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(FieldMetaData)).Properties)
+        if (fallback.TryGetValue(out UScriptMap map1, nameof(FieldMetaData)))
         {
-            FieldMetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<string>();
+            foreach (var kv in map1.Properties)
+            {
+                FieldMetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<string>();
+            }
         }
 
         SubFieldMetaData = new Dictionary<FFieldCookedMetaDataKey, FFieldCookedMetaDataValue?>();
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(SubFieldMetaData)).Properties)
+        if (fallback.TryGetValue(out UScriptMap map2, nameof(SubFieldMetaData)))
         {
-            SubFieldMetaData[kv.Key.GetValue<FFieldCookedMetaDataKey>()] = kv.Value?.GetValue<FFieldCookedMetaDataValue>();
+            foreach (var kv in map2.Properties)
+            {
+                SubFieldMetaData[kv.Key.GetValue<FFieldCookedMetaDataKey>()] = kv.Value?.GetValue<FFieldCookedMetaDataValue>();
+            }
         }
     }
 }

@@ -12,7 +12,10 @@ public struct FFieldCookedMetaDataValue : IUStruct
     public FFieldCookedMetaDataValue(FStructFallback fallback)
     {
         MetaData = new Dictionary<FName, string?>();
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(MetaData)).Properties)
+        if (!fallback.TryGetValue(out UScriptMap map, nameof(MetaData)))
+            return;
+
+        foreach (var kv in map.Properties)
         {
             MetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<string>();
         }

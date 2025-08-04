@@ -15,7 +15,9 @@ public class UClassCookedMetaData : Assets.Exports.UObject
 
         ClassMetaData = GetOrDefault<FStructCookedMetaDataStore>(nameof(ClassMetaData));
         FunctionsMetaData = new Dictionary<FName, FStructCookedMetaDataStore?>();
-        foreach (var kv in GetOrDefault<UScriptMap>(nameof(FunctionsMetaData)).Properties)
+
+        if (!TryGetValue(out UScriptMap map, nameof(FunctionsMetaData))) return;
+        foreach (var kv in map.Properties)
         {
             FunctionsMetaData[kv.Key.GetValue<FName>()] = kv.Value?.GetValue<FStructCookedMetaDataStore>();
         }
