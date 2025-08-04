@@ -29,11 +29,11 @@ public class FKismetPropertyPointer
 
     public override string ToString()
     {
-        if (bNew && New != null && New.Path != null && New.Path.Count > 0)
+        if (bNew && New is { Path.Count: > 0 })
         {
-            return New.Path[0].ToString();
+            return New.Path[0].Text;
         }
-        return Old?.ResolvedObject?.Name.ToString();
+        return Old?.ResolvedObject?.Name.Text ?? "None";
     }
 }
 
@@ -655,26 +655,25 @@ public class EX_Jump : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Jump;
     public uint CodeOffset;
-    public StringBuilder ObjectPath = new();
+
+    public readonly string ObjectName;
+    private readonly string _objectPath;
 
     public EX_Jump(FKismetArchive Ar)
     {
         CodeOffset = Ar.Read<uint>();
-        ObjectPath.Append(Ar.Owner.Name);
-        ObjectPath.Append('.');
-        ObjectPath.Append(Ar.Name);
-        ObjectPath.Append('[');
-        ObjectPath.Append(CodeOffset);
-        ObjectPath.Append(']');
+        ObjectName = Ar.Name;
+        _objectPath = $"{Ar.Owner.Name}.{ObjectName}[{CodeOffset}]";
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
         base.WriteJson(writer, serializer, bAddIndex);
+
         writer.WritePropertyName("CodeOffset");
         writer.WriteValue(CodeOffset);
         writer.WritePropertyName("ObjectPath");
-        writer.WriteValue(ObjectPath.ToString());
+        writer.WriteValue(_objectPath);
     }
 }
 

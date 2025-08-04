@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
+using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -88,7 +89,11 @@ public class UClass : UStruct
     public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
     {
         var type = ObjectTypeRegistry.Get(Name);
-        if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject)) type = typeof(Assets.Exports.UObject);
+        if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+        {
+            type = typeof(Assets.Exports.UObject);
+        }
+
         if (type != null)
         {
             try
@@ -111,123 +116,35 @@ public class UClass : UStruct
 
         return null;
     }
-    private static string? findKeyWithinMeta(Assets.Exports.UObject editorData, string functionName, string metaKey)
-    {
-        var functionsMetaProp = editorData.Properties.FirstOrDefault(p => p.Name.Text == "FunctionsMetaData");
-        if (functionsMetaProp?.Tag == null) return null;
 
-        var functionsMap = functionsMetaProp.Tag.GetValue<UScriptMap>();
-        if (functionsMap == null) return null;
-
-        var matchingEntry = functionsMap.Properties
-            .FirstOrDefault(entry => entry.Key.GetValue<FName>().Text.Equals(functionName, StringComparison.OrdinalIgnoreCase));
-        if (matchingEntry.Key == null) return null;
-
-        var valueStruct = matchingEntry.Value.GetValue<FStructFallback>();
-        var objectMetaProp = valueStruct.Properties.FirstOrDefault(p => p.Name.Text == "ObjectMetaData");
-        if (objectMetaProp?.Tag == null) return null;
-
-        var innerObjectMetaStruct = objectMetaProp.Tag.GetValue<FStructFallback>();
-        var innerObjectMetaProp = innerObjectMetaStruct.Properties.FirstOrDefault(p => p.Name.Text == "ObjectMetaData");
-        if (innerObjectMetaProp?.Tag == null) return null;
-
-        var innerMap = innerObjectMetaProp.Tag.GetValue<UScriptMap>();
-        if (innerMap == null) return null;
-
-        foreach (var metaEntry in innerMap.Properties)
-        {
-            if (metaEntry.Key.GetValue<FName>().Text.Equals(metaKey, StringComparison.OrdinalIgnoreCase))
-                return metaEntry.Value.GetValue<string>();
-        }
-
-        return null;
-    }
-
-    private static EAccessMode GetAccessMode(FProperty property)
-    {
-        if (property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintVisible))
-            return EAccessMode.Public;
-
-        if (property.PropertyFlags.HasFlag(EPropertyFlags.BlueprintReadOnly))
-            return EAccessMode.Public;
-
-        if (property.PropertyFlags.HasFlag(EPropertyFlags.Edit))
-            return EAccessMode.Protected;
-
-        return EAccessMode.Private;
-    }
-
-    private static EAccessMode GetAccessMode(UFunction function)
-    {
-        if (function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Public))
-            return EAccessMode.Public;
-
-        if (function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Protected))
-            return EAccessMode.Protected;
-
-        return EAccessMode.Private;
-    }
-
-
-    public string DecompileBlueprintToPseudo(Assets.Exports.UObject editordata)
+    public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
+        var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
 
-        var superStruct = SuperStruct.Load<UStruct>();
-        var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(superStruct);
+        var classDefaultObject = ClassDefaultObject.Load();
+        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject?.Properties.Count == 0;
 
-        ClassDefaultObject.TryLoad(out var classDefaultObject);
-        bool emptyClass = Properties?.Count == 0 && ChildProperties?.Length == 0 && FuncMap?.Count == 0 && classDefaultObject?.Properties?.Count == 0;
+        var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
+        if (emptyClass) return $"{c} {{ }};";
 
         var stringBuilder = new CustomStringBuilder();
-
-        if (emptyClass)
-        {
-            stringBuilder.Append($"class {derivedClass} : {accessSpecifier} {baseClass}");
-            return stringBuilder.ToString();
-        }
-
-        stringBuilder.AppendLine($"class {derivedClass} : {accessSpecifier} {baseClass}");
+        stringBuilder.AppendLine(c);
         stringBuilder.OpenBlock();
 
-        var existingVariables = new HashSet<string>();
+        var distinct = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
-
-        foreach (var property in Properties ?? [])
+        var combined = Properties.Concat(classDefaultObject?.Properties ?? []);
+        foreach (var property in combined)
         {
-            if (!existingVariables.Add(property.Name.Text))
-                continue;
-
-            if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
-            {
-                Log.Warning($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
-            }
-
-            var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
-            variables[variableExpression] = EAccessMode.Public; // should always be public
+            if (!distinct.Add(property.Name.Text)) continue;
+            variables.TryAdd(property.GetCppVariable(), EAccessMode.Public); // should always be public
         }
 
-        foreach (var property in classDefaultObject?.Properties ?? [])
+        foreach (var childProperty in ChildProperties)
         {
-            if (!existingVariables.Add(property.Name.Text))
-                continue;
-
-            if (!BlueprintDecompilerUtils.GetPropertyTagVariable(property, out var variableType, out var variableValue))
-            {
-                Log.Warning($"Unable to get property type or value for {property.PropertyType.ToString()} of type {property.Name.ToString()}");
-            }
-
-            var variableExpression = $"{variableType} {property.Name.ToString()} = {variableValue};";
-            variables[variableExpression] = EAccessMode.Public; // should always be public
-        }
-
-        foreach (var childProperty in ChildProperties ?? [])
-        {
-            if (childProperty is not FProperty property)
-                continue;
-
-            if (!existingVariables.Add(property.Name.Text))
+            if (childProperty is not FProperty property || !distinct.Add(property.Name.Text))
                 continue;
 
             var (variableValue, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
@@ -235,9 +152,7 @@ public class UClass : UStruct
                 continue;
 
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
-            var variableExpression = $"{variableType} {property.Name.Text}{value};";
-
-            variables[variableExpression] = GetAccessMode(property);
+            variables.TryAdd($"{variableType} {property.Name.Text}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -246,60 +161,51 @@ public class UClass : UStruct
             stringBuilder.AppendLine(group.Key.ToString().ToLower() + ":");
             stringBuilder.IncreaseIndentation();
 
-            foreach (var variable in group.Select(pair => pair.Key))
+            foreach (var variable in group)
             {
-                stringBuilder.AppendLine(variable);
+                stringBuilder.AppendLine(variable.Key);
             }
         }
 
-        if (FuncMap.Count > 0) stringBuilder.AppendLine();
-
         var totalFuncMapCount = FuncMap.Count;
-        var index = 1;
+        if (totalFuncMapCount > 0) stringBuilder.AppendLine();
+
 
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
-        foreach (var (key, value) in FuncMap.Reverse())
+        foreach (var value in FuncMap.Values.Reverse())
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
                 continue;
-            if (function.ScriptBytecode.Length < 1) continue;
-            foreach (var kismetExpression in function.ScriptBytecode)
+
+            foreach (var expression in function.ScriptBytecode)
             {
                 string? label = null;
                 int? offset = null;
 
-                switch (kismetExpression.Token)
+                switch (expression)
                 {
-                    case EExprToken.EX_JumpIfNot:
-                        label = ((EX_JumpIfNot)kismetExpression).ObjectPath.ToString().Split('.').Last().Split('[')[0];
-                        offset = (int)((EX_JumpIfNot)kismetExpression).CodeOffset;
+                    case EX_Jump jump:
+                        label = jump.ObjectName;
+                        offset = (int)jump.CodeOffset;
                         break;
-
-                    case EExprToken.EX_Jump:
-                        label = ((EX_Jump)kismetExpression).ObjectPath.ToString().Split('.').Last().Split('[')[0];
-                        offset = (int)((EX_Jump)kismetExpression).CodeOffset;
+                    case EX_LocalFinalFunction final:
+                        label = final.StackNode.Name.Split('.').Last().Split('[')[0];
+                        if (final.Parameters is [EX_IntConst intConst])
+                            offset = intConst.Value;
                         break;
-
-                    case EExprToken.EX_LocalFinalFunction:
-                    {
-                        EX_FinalFunction op = (EX_FinalFunction)kismetExpression;
-                        label = op.StackNode.Name.Split('.').Last().Split('[')[0];
-
-                        if (op.Parameters.Length == 1 && op.Parameters[0] is EX_IntConst intConst) offset = intConst.Value;
-                        break;
-                    }
                 }
 
                 if (!string.IsNullOrEmpty(label) && offset.HasValue)
                 {
                     if (!jumpCodeOffsetsMap.TryGetValue(label, out var list))
-                        jumpCodeOffsetsMap[label] = list = new List<int>();
+                        jumpCodeOffsetsMap[label] = list = [];
 
                     list.Add(offset.Value);
                 }
             }
         }
 
+        var index = 1;
         foreach (var (key, value) in FuncMap)
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
@@ -308,7 +214,7 @@ public class UClass : UStruct
             var parametersList = new List<string>();
 
             var returnType = "void";
-            foreach (var childProperty in function?.ChildProperties ?? [])
+            foreach (var childProperty in function.ChildProperties)
             {
                 if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                     continue;
@@ -327,43 +233,44 @@ public class UClass : UStruct
                 parametersList.Add(parameterExpression);
             }
 
-            var parameters = string.Join(", ", parametersList);
-            var accessMode = GetAccessMode(function);
-            var accessString = accessMode.ToString().ToLower();
-            var functionExpression = $"{accessString} {returnType} {key.Text}({parameters})";
             var functionStringBuilder = new CustomStringBuilder();
-            if (editordata is not null)
+            if (cookedMetaData != null && cookedMetaData.FunctionsMetaData.TryGetValue(key.Text, out var editorData) && editorData != null)
             {
-                string? category = findKeyWithinMeta(editordata, key.Text, "Category");
-                string? toolTip = findKeyWithinMeta(editordata, key.Text, "ToolTip");
-                string? moduleRelativePath = findKeyWithinMeta(editordata, key.Text, "ModuleRelativePath");
-                if (category != null) functionStringBuilder.AppendLine($"// Category: {category}");
-                if (toolTip != null)
-                    functionStringBuilder.AppendLine(string.Join(Environment.NewLine,
-                        toolTip.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
-                            .Select(line => $"// {line}")));
-                if (moduleRelativePath != null)
+                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("Category", out var category) && category != null)
+                {
+                    functionStringBuilder.AppendLine($"// Category: {category}");
+                }
+                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("ToolTip", out var tooltip) && tooltip != null)
+                {
+                    functionStringBuilder.AppendLine(string.Join(Environment.NewLine, tooltip.Split(["\r\n", "\n", "\r"], StringSplitOptions.None).Select(line => $"// {line}")));
+                }
+                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("ModuleRelativePath", out var moduleRelativePath) && moduleRelativePath != null)
+                {
                     functionStringBuilder.AppendLine($"// ModuleRelativePath: {moduleRelativePath}");
+                }
             }
 
-            string flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
+            var flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
+            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {returnType} {key.Text}({string.Join(", ", parametersList)})";
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
 
-            if (function.ScriptBytecode.Length < 1) functionStringBuilder.AppendLine("// No Script Bytecode");
+            if (function.ScriptBytecode.Length == 0)
+                functionStringBuilder.AppendLine("// No Script Bytecode");
 
-            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : new List<int>();
+            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
             foreach (var kismetExpression in function.ScriptBytecode)
             {
                 if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_PushExecutionFlow or EX_PopExecutionFlow)
                     continue;
 
-                if (jumpCodeOffsets.Contains(kismetExpression.StatementIndex)) functionStringBuilder.AppendLine($"Label_{kismetExpression.StatementIndex}:");
+                if (jumpCodeOffsets.Contains(kismetExpression.StatementIndex))
+                    functionStringBuilder.AppendLine($"Label_{kismetExpression.StatementIndex}:");
 
                 var expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
 
-                if (!string.IsNullOrWhiteSpace(expression) && expression.Length > 0)
+                if (!string.IsNullOrWhiteSpace(expression))
                 {
                     var lineExpression = $"{expression};";
 
@@ -381,15 +288,13 @@ public class UClass : UStruct
 
             functionStringBuilder.CloseBlock();
 
-            var functionBlock = functionStringBuilder.ToString();
-            stringBuilder.AppendLine(functionBlock);
+            stringBuilder.AppendLine(functionStringBuilder.ToString());
             if (index < totalFuncMapCount) stringBuilder.AppendLine();
 
             index++;
         }
 
         stringBuilder.CloseBlock("};");
-
         return stringBuilder.ToString();
     }
 

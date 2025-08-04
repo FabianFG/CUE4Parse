@@ -56,8 +56,8 @@ public static class BlueprintDecompilerUtils
 
     public static (string?, string?) GetPropertyType(FProperty property)
     {
-        string? type = null;
         string? value = null;
+        string? type = null;
 
         var propertyFlags = property.PropertyFlags;
         if (propertyFlags.HasFlag(EPropertyFlags.ConstParm))
@@ -793,28 +793,15 @@ public static class BlueprintDecompilerUtils
         return !string.IsNullOrWhiteSpace(value);
     }
 
-    public static string GetLineExpression(KismetExpression kismetExpression)
+    public static string GetLineExpression(KismetExpression expression)
     {
         // TODO: Everything that include Const will have the const keyword at the start **maybe**
         // what is this comment, there is no flag const for expressions?
-        switch (kismetExpression)
+        switch (expression)
         {
-            // what's the difference between localVariable, instanceVariable and EX_DefaultVariable
-            case EX_LocalVariable localVariable:
+            case EX_VariableBase variableBase:
             {
-                return localVariable.Variable.ToString();
-            }
-            case EX_InstanceVariable instanceVariable:
-            {
-                return instanceVariable.Variable.ToString();
-            }
-            case EX_DefaultVariable defaultVariable:
-            {
-                return defaultVariable.Variable.ToString();
-            }
-            case EX_LocalOutVariable localOutVariable:
-            {
-                return $"{localOutVariable.Variable}"; // it is & but makes no sense tbh
+                return variableBase.Variable.ToString();
             }
             case EX_LetValueOnPersistentFrame persistent:
             {
@@ -830,124 +817,78 @@ public static class BlueprintDecompilerUtils
 
                 return $"{variable} = {assignment}";
             }
-            case EX_LetMulticastDelegate letMulticastDelegate: // idk
+            case EX_LetBase letBase:
             {
-                var assignment = GetLineExpression(letMulticastDelegate.Assignment);
-                var variable = GetLineExpression(letMulticastDelegate.Variable);
+                var assignment = GetLineExpression(letBase.Assignment);
+                var variable = GetLineExpression(letBase.Variable);
 
                 return $"{variable} = {assignment}";
-            }
-            case EX_LetBool letBool:
-            {
-                var variable = GetLineExpression(letBool.Variable);
-                var assignment = GetLineExpression(letBool.Assignment);
-
-                return $"{variable} = {assignment}";
-            }
-            case EX_Context_FailSilent failSilent:
-            {
-                var function = failSilent?.ContextExpression is not null ? GetLineExpression(failSilent?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
-                var obj = failSilent?.ObjectExpression is not null ? GetLineExpression(failSilent?.ObjectExpression) : "failedplaceholder";
-
-                var customStringBuilder = new CustomStringBuilder();
-
-                customStringBuilder.AppendLine($"if ({obj})");
-                customStringBuilder.IncreaseIndentation();
-                customStringBuilder.Append($"{obj}->{function}");
-
-                return customStringBuilder.ToString();
             }
             case EX_Context context:
             {
                 var function = context?.ContextExpression is not null ? GetLineExpression(context?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
                 var obj = context?.ObjectExpression is not null ? GetLineExpression(context?.ObjectExpression) : "failedplaceholder";
 
-                return $"{obj}->{function}";
+                var customStringBuilder = new CustomStringBuilder();
+                if (expression is EX_Context_FailSilent)
+                {
+                    customStringBuilder.AppendLine($"if ({obj})");
+                    customStringBuilder.IncreaseIndentation();
+                }
+                customStringBuilder.Append($"{obj}->{function}");
+
+                return customStringBuilder.ToString();
             }
-            case EX_CallMath callMath:
+            case EX_FinalFunction final:
             {
-                var parametersList = new List<string>(callMath.Parameters.Length);
-                foreach (var parameter in callMath.Parameters)
+                var parametersList = new List<string>(final.Parameters.Length);
+                foreach (var parameter in final.Parameters)
                 {
                     parametersList.Add(GetLineExpression(parameter));
                 }
 
                 var parameters = string.Join(", ", parametersList);
-                var pkgIndex = callMath.StackNode.ToString();
+                var stackNode = final.StackNode.ToString();
+                var functionName = stackNode.SubstringAfter(':').Trim('\'');
+                if (expression is EX_CallMath)
+                {
+                    var classType = stackNode.SubstringBefore(':').Trim();
+                    var className = classType.Split('.').LastOrDefault();
 
-                var functionName = pkgIndex.SubstringAfter(':').Trim('\'');
-                var classType = pkgIndex.SubstringBefore(':').Trim();
-                var className = classType.Split('.').LastOrDefault();
-
-                return $"{className}::{functionName}({parameters})";
+                    return $"{className}::{functionName}({parameters})";
+                }
+                else if (expression is EX_LocalFinalFunction)
+                {
+                    return $"{functionName}({parameters})";
+                }
+                else
+                {
+                    var classType = stackNode.SubstringAfter('.').SubstringBefore(':');
+                    return $"{classType}::{functionName}({parameters})";
+                }
             }
-            case EX_LocalVirtualFunction localVirtualFunction:
+            case EX_VirtualFunction virtualFunc:
             {
-                var parametersList = new List<string>(localVirtualFunction.Parameters.Length);
-                foreach (var parameter in localVirtualFunction.Parameters)
+                var parametersList = new List<string>(virtualFunc.Parameters.Length);
+                foreach (var parameter in virtualFunc.Parameters)
                 {
                     parametersList.Add(GetLineExpression(parameter));
                 }
 
                 var parameters = string.Join(", ", parametersList);
-                var functionName = localVirtualFunction.VirtualFunctionName.ToString();
-                return $"this->{functionName}({parameters})"; // sometimes "this->" is wrong
-            }
-            case EX_LocalFinalFunction localFinalFunction:
-            {
-                var parametersList = new List<string>(localFinalFunction.Parameters.Length);
-                foreach (var parameter in localFinalFunction.Parameters)
-                {
-                    parametersList.Add(GetLineExpression(parameter));
-                }
+                var functionName = virtualFunc.VirtualFunctionName.Text;
 
-                var parameters = string.Join(", ", parametersList);
-                var stackNode = localFinalFunction.StackNode.ToString();
-                var functionName = stackNode.SubstringAfter(':').SubstringBefore("'");
-                return $"{functionName}({parameters})";
-            }
-            case EX_VirtualFunction virtualFunction:
-            {
-                var parametersList = new List<string>(virtualFunction.Parameters.Length);
-                foreach (var parameter in virtualFunction.Parameters)
-                {
-                    parametersList.Add(GetLineExpression(parameter));
-                }
-
-                var parameters = string.Join(", ", parametersList);
-                return $"{virtualFunction.VirtualFunctionName.ToString()}({parameters})";
+                return expression is EX_LocalVirtualFunction ?
+                    $"this->{functionName}({parameters})" : // sometimes "this->" is wrong
+                    $"{functionName}({parameters})";
             }
             case EX_TextConst textConst:
             {
-                if (textConst.Value is FScriptText scriptText)
-                {
-                    return scriptText.SourceString is null
-                        ? "nullptr"
-                        : GetLineExpression(scriptText.SourceString);
-                }
-
-                return textConst.Value?.ToString() ?? "nullptr";
-            }
-            case EX_FinalFunction finalFunction:
-            {
-                var parametersList = new List<string>(finalFunction.Parameters.Length);
-                foreach (var parameter in finalFunction.Parameters)
-                {
-                    parametersList.Add(GetLineExpression(parameter));
-                }
-
-                var parameters = string.Join(", ", parametersList);
-                var pkgIndex = finalFunction.StackNode.ToString();
-
-                var classType = $"{pkgIndex.SubstringAfter('.').SubstringBefore(':')}";
-                var functionName = pkgIndex.SubstringAfter(':').SubstringBefore("'");
-
-                return $"{classType}::{functionName}({parameters})";
+                return textConst.Value.SourceString is null ? "nullptr" : GetLineExpression(textConst.Value.SourceString);
             }
             case EX_SetSet setSet:
             {
                 var target = GetLineExpression(setSet.SetProperty);
-
                 if (setSet.Elements.Length == 0)
                 {
                     return $"{target} = TArray {{ }};";
@@ -980,39 +921,35 @@ public static class BlueprintDecompilerUtils
             }
             case EX_ArrayConst constArray:
             {
-                if (constArray.Elements.Length > 0)
-                {
-                    var values = new List<string>(constArray.Elements.Length);
-                    foreach (var element in constArray.Elements)
-                    {
-                        values.Add(GetLineExpression(element));
-                    }
+                if (constArray.Elements.Length == 0) return "TArray<>([])"; // todo type
 
-                    return $"TArray<>({string.Join(", ", values)})"; // todo type
-                }
-                else
+                var values = new List<string>(constArray.Elements.Length);
+                foreach (var element in constArray.Elements)
                 {
-                    return "TArray<>([])"; // todo type
+                    values.Add(GetLineExpression(element));
                 }
+
+                return $"TArray<>({string.Join(", ", values)})"; // todo type
+
             }
             case EX_SetArray setArray:
             {
                 var variable = GetLineExpression(setArray.AssigningProperty);
 
-                string value = setArray.Elements.Length > 0
-                    ? string.Join(", ", setArray.Elements.Select(element => GetLineExpression(element)))
-                    : "[]";
+                var values = new List<string>(setArray.Elements.Length);
+                foreach (var element in setArray.Elements)
+                {
+                    values.Add(GetLineExpression(element));
+                }
 
-                return $"{variable} = {value}";
+                return $"{variable} = {(values.Count > 0 ? string.Join(", ", values) : "[]")}";
             }
             case EX_IntConst intConst:
             {
                 return intConst.Value.ToString();
             }
-            case EX_ByteConst:
-            case EX_IntConstByte:
+            case KismetExpression<byte> byteConst:
             {
-                var byteConst = (EX_ByteConst)kismetExpression;
                 return $"0x{byteConst.Value:X}";
             }
             case EX_ObjectConst objectConst:
@@ -1025,26 +962,30 @@ public static class BlueprintDecompilerUtils
                     var typeName = parts[0];
                     var path = parts[1];
 
-                    var classpkgType = $"U{typeName}";
-                    return $"FindObject<{classpkgType}>(nullptr, \"{path}\")";
+                    var classPkgType = $"U{typeName}";
+                    return $"FindObject<{classPkgType}>(nullptr, \"{path}\")";
                 }
 
                 return $"FindObject<UObject>(nullptr, \"{pkgIndex}\")";
             }
             case EX_NameConst nameConst:
             {
-                return $"\"{nameConst.Value.ToString()}\"";
+                return $"\"{nameConst.Value.Text}\"";
             }
-            case EX_Vector3fConst vec3:
+            case EX_Vector3fConst vectorF:
             {
-                var value = vec3.Value;
+                var value = vectorF.Value;
                 return $"FVector3f({value.X}, {value.Y}, {value.Z})";
+            }
+            case EX_VectorConst vectorD:
+            {
+                var value = vectorD.Value;
+                return $"FVector({value.X}, {value.Y}, {value.Z})";
             }
             case EX_TransformConst xf:
             {
                 var value = xf.Value;
-                return
-                    $"FTransform(FQuat({value.Rotation.X}, {value.Rotation.Y}, {value.Rotation.Z}, {value.Rotation.W}), FVector({value.Translation.X}, {value.Translation.Y}, {value.Translation.Z}), FVector({value.Scale3D.X}, {value.Scale3D.Y}, {value.Scale3D.Z}))";
+                return $"FTransform(FQuat({value.Rotation.X}, {value.Rotation.Y}, {value.Rotation.Z}, {value.Rotation.W}), FVector({value.Translation.X}, {value.Translation.Y}, {value.Translation.Z}), FVector({value.Scale3D.X}, {value.Scale3D.Y}, {value.Scale3D.Z}))";
             }
             case EX_Int64Const i64:
             {
@@ -1058,11 +999,7 @@ public static class BlueprintDecompilerUtils
             {
                 return bit.ConstValue.ToString();
             }
-            case EX_UnicodeStringConst uni:
-            {
-                return $"\"{uni.Value}\"";
-            }
-            case EX_StringConst stringConst:
+            case KismetExpression<string> stringConst:
             {
                 return $"\"{stringConst.Value}\"";
             }
@@ -1095,13 +1032,11 @@ public static class BlueprintDecompilerUtils
                 var target = GetLineExpression(cast.Target);
                 var conversionType = cast.ConversionType switch
                 {
-                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool
-                        or ECastToken.CST_InterfaceToBool2 => "bool",
+                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => "bool",
                     ECastToken.CST_DoubleToFloat => "float",
                     ECastToken.CST_FloatToDouble => "double",
                     ECastToken.CST_ObjectToInterface => "Interface", // make sure this makes sense
-                    _ => throw new NotImplementedException(
-                        $"ConversionType {cast.ConversionType} is currently not implemented") // impossible
+                    _ => throw new NotImplementedException($"ConversionType {cast.ConversionType} is currently not implemented") // impossible
                 };
 
                 return $"Cast<{conversionType}>({target})";
@@ -1109,8 +1044,8 @@ public static class BlueprintDecompilerUtils
             case EX_PopExecutionFlowIfNot popExecutionFlowIfNot:
             {
                 var booleanExpression = GetLineExpression(popExecutionFlowIfNot.BooleanExpression);
-                var customStringBuilder = new CustomStringBuilder();
 
+                var customStringBuilder = new CustomStringBuilder();
                 customStringBuilder.AppendLine($"if (!{booleanExpression})");
                 customStringBuilder.IncreaseIndentation();
                 customStringBuilder.Append("return");
@@ -1120,21 +1055,21 @@ public static class BlueprintDecompilerUtils
             case EX_JumpIfNot jumpIfNot:
             {
                 var booleanExpression = GetLineExpression(jumpIfNot.BooleanExpression);
-                var customStringBuilder = new CustomStringBuilder();
 
+                var customStringBuilder = new CustomStringBuilder();
                 customStringBuilder.AppendLine($"if (!{booleanExpression})");
                 customStringBuilder.IncreaseIndentation();
                 customStringBuilder.Append($"goto Label_{jumpIfNot.CodeOffset}");
 
                 return customStringBuilder.ToString();
             }
-            case EX_SkipOffsetConst skipOffsetConst:
-            {
-                return $"goto Label_{skipOffsetConst.Value}";
-            }
             case EX_Jump jump:
             {
                 return $"goto Label_{jump.CodeOffset}";
+            }
+            case EX_SkipOffsetConst skipOffsetConst:
+            {
+                return $"goto Label_{skipOffsetConst.Value}";
             }
             case EX_ComputedJump computedJump:
             {
@@ -1143,29 +1078,7 @@ public static class BlueprintDecompilerUtils
                     return $"goto {GetLineExpression(computedJump.CodeOffsetExpression)}";
                 }
 
-                return GetLineExpression((EX_CallMath)computedJump.CodeOffsetExpression);
-            }
-
-            case EX_LetWeakObjPtr letWeakObj: // what's the difference? let obj, let weak obj and others?
-            {
-                var assignment = GetLineExpression(letWeakObj.Assignment);
-                var variable = GetLineExpression(letWeakObj.Variable);
-
-                return $"{variable} = {assignment}";
-            }
-            case EX_LetDelegate letDelegate: // comment above
-            {
-                var assignment = GetLineExpression(letDelegate.Assignment);
-                var variable = GetLineExpression(letDelegate.Variable);
-
-                return $"{variable} = {assignment}";
-            }
-            case EX_LetObj letObj:
-            {
-                var assignment = GetLineExpression(letObj.Assignment);
-                var variable = GetLineExpression(letObj.Variable);
-
-                return $"{variable} = {assignment}";
+                return GetLineExpression(computedJump.CodeOffsetExpression);
             }
             case EX_ArrayGetByRef arrayRef:
             {
@@ -1185,33 +1098,31 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Return returnExpr:
             {
-                var returnValue = GetLineExpression(returnExpr.ReturnExpression);
                 if (returnExpr.ReturnExpression.Token == EExprToken.EX_Nothing)
                 {
                     return "return";
                 }
 
-                return $"return {returnValue}";
+                var value = GetLineExpression(returnExpr.ReturnExpression);
+                return $"return {value}";
             }
             case EX_SoftObjectConst objectConst:
             {
-                var stringValue = GetLineExpression(objectConst.Value);
-                return $"FSoftObjectPath({stringValue}";
+                var value = GetLineExpression(objectConst.Value);
+                return $"FSoftObjectPath({value}";
             }
-
-            case EX_MetaCast:
-            case EX_DynamicCast:
-            case EX_CrossInterfaceCast:
-            case EX_ObjToInterfaceCast:
-            case EX_InterfaceToObjCast:
+            case EX_FieldPathConst fieldPathConst:
             {
-                var cast = (EX_CastBase)kismetExpression;
+                var value = GetLineExpression(fieldPathConst.Value);
+                return value;
+            }
+            case EX_CastBase cast:
+            {
                 var variable = GetLineExpression(cast.Target);
                 var classType = cast.ClassPtr.Name;
 
                 string castFunc;
-
-                switch (kismetExpression.Token)
+                switch (expression.Token)
                 {
                     case EExprToken.EX_MetaCast:
                         castFunc = $"CastClass<{classType}>";
@@ -1237,26 +1148,27 @@ public static class BlueprintDecompilerUtils
             {
                 var delegateVar = GetLineExpression(bindDelegate.Delegate);
                 var objectTerm = GetLineExpression(bindDelegate.ObjectTerm);
-                var functionName = $"FName(\"{bindDelegate.FunctionName.ToString()}\")";
+                var functionName = $"FName(\"{bindDelegate.FunctionName.Text}\")";
 
                 return $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
             }
             case EX_StructConst structConst:
             {
-                var structName = $"F{structConst.Struct.Name}";
-
                 var properties = new List<string>(structConst.Properties.Length);
                 foreach (var property in structConst.Properties)
                 {
                     properties.Add(GetLineExpression(property));
                 }
 
-                var parameters = string.Join(", ", properties);
-                return $"{structName}({parameters})";
+                return $"F{structConst.Struct.Name}({string.Join(", ", properties)})";
             }
             case EX_FloatConst floatConst:
             {
                 return floatConst.Value.ToString(CultureInfo.CurrentCulture);
+            }
+            case EX_DoubleConst doubleConst:
+            {
+                return doubleConst.Value.ToString(CultureInfo.CurrentCulture);
             }
             case EX_AddMulticastDelegate multicastDelegate:
             {
@@ -1276,7 +1188,6 @@ public static class BlueprintDecompilerUtils
             case EX_SetMap setMap:
             {
                 var target = GetLineExpression(setMap.MapProperty);
-
                 if (setMap.Elements.Length == 0)
                 {
                     return $"{target} = TMap {{ }}";
@@ -1345,23 +1256,12 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var stringBuilder = new CustomStringBuilder();
-
                 stringBuilder.AppendLine($"switch ({GetLineExpression(switchValue.IndexTerm)})");
                 stringBuilder.OpenBlock();
 
                 foreach (var caseItem in switchValue.Cases)
                 {
-                    string caseLabel;
-                    if (caseItem.CaseIndexValueTerm.Token == EExprToken.EX_IntConst)
-                    {
-                        caseLabel = ((EX_IntConst)caseItem.CaseIndexValueTerm).Value.ToString();
-                    }
-                    else
-                    {
-                        caseLabel = GetLineExpression(caseItem.CaseIndexValueTerm);
-                    }
-
-                    stringBuilder.AppendLine($"case {caseLabel}:");
+                    stringBuilder.AppendLine($"case {GetLineExpression(caseItem.CaseIndexValueTerm)}:");
                     stringBuilder.OpenBlock();
 
                     stringBuilder.AppendLine($"return {GetLineExpression(caseItem.CaseTerm)};");
@@ -1377,14 +1277,9 @@ public static class BlueprintDecompilerUtils
                 stringBuilder.AppendLine("break;");
 
                 stringBuilder.CloseBlock("}\n");
-
                 stringBuilder.CloseBlock();
 
                 return stringBuilder.ToString();
-            }
-            case EX_DoubleConst doubleConst:
-            {
-                return doubleConst.Value.ToString(CultureInfo.CurrentCulture);
             }
             case EX_StructMemberContext structMemberContext:
             {
@@ -1398,8 +1293,6 @@ public static class BlueprintDecompilerUtils
             }
             case EX_CallMulticastDelegate callMulticastDelegate:
             {
-                var callDelegate = GetLineExpression(callMulticastDelegate.Delegate);
-
                 var parameters = new List<string>(callMulticastDelegate.Parameters.Length);
                 foreach (var parameter in callMulticastDelegate.Parameters)
                 {
@@ -1409,6 +1302,7 @@ public static class BlueprintDecompilerUtils
                 var parametersString = string.Join(", ", parameters);
                 //var functionName = callMulticastDelegate.StackNode.Name; // TODO: show the functionName somehow, maybe with comments added "// {funcName}"
 
+                var callDelegate = GetLineExpression(callMulticastDelegate.Delegate);
                 return $"{callDelegate}->Broadcast({parametersString})";
             }
             case EX_RemoveMulticastDelegate removeMulticastDelegate:
@@ -1431,15 +1325,6 @@ public static class BlueprintDecompilerUtils
             {
                 return propertyConst.Property.ToString();
             }
-            case EX_ClassSparseDataVariable classSparse:
-            {
-                return classSparse.Variable.ToString();
-            }
-            case EX_FieldPathConst fieldPathConst:
-            {
-                var value = GetLineExpression(fieldPathConst.Value);
-                return value;
-            }
 
             // good enough?
             case EX_WireTracepoint:
@@ -1456,14 +1341,6 @@ public static class BlueprintDecompilerUtils
                 return "breakpoint;";
 #endif
                 return "";
-            }
-            case EX_VectorConst vectorConst:
-            {
-                var x = vectorConst.Value.X;
-                var y = vectorConst.Value.Y;
-                var z = vectorConst.Value.Z;
-
-                return $"FVector({x}, {y}, {z})";
             }
             case EX_Nothing:
             case EX_NothingInt32:
@@ -1493,7 +1370,7 @@ public static class BlueprintDecompilerUtils
                 EExprToken.EX_ClassContext it's like EX_Context
             */
             default:
-                throw new NotImplementedException($"KismetExpression '{kismetExpression.GetType().Name}' is currently not supported");
+                throw new NotImplementedException($"KismetExpression '{expression.GetType().Name}' is currently not supported");
         }
     }
 }

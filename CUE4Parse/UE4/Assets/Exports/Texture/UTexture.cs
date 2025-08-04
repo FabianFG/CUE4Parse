@@ -72,22 +72,14 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
         var stripFlags = Ar.Read<FStripDataFlags>();
 
+        // If archive is has editor only data
         if (!stripFlags.IsEditorDataStripped())
         {
-            /*
-            if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.VirtualizedBulkDataHaveUniqueGuids)
-            {
-                if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.TextureSourceVirtualization)
-                {
-
-                }
-            }
-            else
-            {
-                // this just is incorrect???? no clue
-                //new FByteBulkData(Ar);
-            }
-            */
+            // if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.VirtualizedBulkDataHaveUniqueGuids)
+            // {
+            //
+            // }
+            // throw new NotImplementedException("Non-Cooked Textures are not supported");
         }
     }
 

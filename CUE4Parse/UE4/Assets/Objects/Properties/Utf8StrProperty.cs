@@ -21,8 +21,8 @@ public class Utf8StrProperty : FPropertyTagType<string>
             _ => ReadUtf8String(Ar)
         };
     }
-    
-    public string ReadUtf8String(FArchive Ar)
+
+    private string ReadUtf8String(FArchive Ar)
     {
         int length = Ar.Read<int>();
         if (length < 0)
@@ -32,10 +32,8 @@ public class Utf8StrProperty : FPropertyTagType<string>
         {
             throw new ParserException($"Invalid Utf8String length '{length}'");
         }
-            
-        byte[] bytes = Ar.ReadBytes(length);
 
-        return Encoding.UTF8.GetString(bytes);
+        return Encoding.UTF8.GetString(Ar.ReadBytes(length));
     }
 
 }
