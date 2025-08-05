@@ -11,6 +11,7 @@ using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
+using CUE4Parse.GameTypes.TQ2.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
@@ -270,7 +271,11 @@ public class FScriptStruct
             // Killing Floor 3
             "HavokAIAnyArray" => new FHavokAIAnyArray(Ar),
 
+            // Upin&Ipin Universe
             "SUDSValue" => type == ReadType.ZERO ? new FStructFallback() : new FSUDSValue(Ar),
+
+            // Titan Quest 2
+            _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
