@@ -9,15 +9,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine;
 public class UWorldComposition : UObject
 {
     // Path to current world composition (long PackageName)
-    public string WorldRoot;
+    public string? WorldRoot;
     // List of all tiles participating in the world composition
-    public FWorldCompositionTile[] Tiles;
+    public FWorldCompositionTile[]? Tiles;
     // Streaming level objects for each tile
-    public FPackageIndex[] TilesStreaming;
+    public FPackageIndex[]? TilesStreaming;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Position >= validPos) return;
         WorldRoot = Ar.ReadFString();
         Tiles = Ar.ReadArray(() => new FWorldCompositionTile(Ar));
         TilesStreaming = Ar.ReadArray(() => new FPackageIndex(Ar));
