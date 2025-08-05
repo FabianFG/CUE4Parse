@@ -176,7 +176,8 @@ public class UClass : UStruct
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
                 continue;
-
+            if (function?.ScriptBytecode == null)
+                continue;
             foreach (var expression in function.ScriptBytecode)
             {
                 string? label = null;
@@ -256,9 +257,12 @@ public class UClass : UStruct
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
 
-            if (function.ScriptBytecode.Length == 0)
+            if (function?.ScriptBytecode == null || function?.ScriptBytecode.Length == 0)
+            {
                 functionStringBuilder.AppendLine("// No Script Bytecode");
-
+                stringBuilder.CloseBlock("};");
+                return stringBuilder.ToString();
+            }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
             foreach (var kismetExpression in function.ScriptBytecode)
             {
