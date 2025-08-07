@@ -235,17 +235,17 @@ public class UClass : UStruct
             }
 
             var functionStringBuilder = new CustomStringBuilder();
-            if (cookedMetaData != null && cookedMetaData.FunctionsMetaData.TryGetValue(key.Text, out var editorData) && editorData != null)
+            if (cookedMetaData != null && cookedMetaData.FunctionsMetaData.TryGetValue(key, out var editorData) && editorData != null)
             {
-                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("Category", out var category) && category != null)
+                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("category", out var category) && category != null)
                 {
                     functionStringBuilder.AppendLine($"// Category: {category}");
                 }
-                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("ToolTip", out var tooltip) && tooltip != null)
+                if ((editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("tooltip", out var tooltip)) && tooltip != null)
                 {
                     functionStringBuilder.AppendLine(string.Join(Environment.NewLine, tooltip.Split(["\r\n", "\n", "\r"], StringSplitOptions.None).Select(line => $"// {line}")));
                 }
-                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("ModuleRelativePath", out var moduleRelativePath) && moduleRelativePath != null)
+                if (editorData.Value.ObjectMetaData.ObjectMetaData.TryGetValue("modulerelativepath", out var moduleRelativePath) && moduleRelativePath != null)
                 {
                     functionStringBuilder.AppendLine($"// ModuleRelativePath: {moduleRelativePath}");
                 }
