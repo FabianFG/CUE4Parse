@@ -168,7 +168,9 @@ public static class MeshConverter
             switch (naniteFormat)
             {
                 case ENaniteMeshFormat.OnlyNaniteLOD:
-                    convertedMesh.LODs = [naniteMesh];
+                    foreach (var lod in convertedMesh.LODs) lod.Dispose();
+                    convertedMesh.LODs.Clear();
+                    convertedMesh.LODs.Add(naniteMesh);
                     break;
                 case ENaniteMeshFormat.AllLayersNaniteFirst:
                     convertedMesh.LODs.Insert(0, naniteMesh);
