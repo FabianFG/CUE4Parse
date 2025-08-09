@@ -82,8 +82,9 @@ public static class MeshConverter
             originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
             originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
 
-        foreach (var srcLod in originalMesh.RenderData.LODs)
+        for (var i = 0; i < originalMesh.RenderData.LODs.Length; i++)
         {
+            var srcLod = originalMesh.RenderData.LODs[i];
             if (srcLod.SkipLod) continue;
 
             var numTexCoords = srcLod.VertexBuffer!.NumTexCoords;
@@ -96,9 +97,16 @@ public static class MeshConverter
             if (numTexCoords > Constants.MAX_MESH_UV_SETS)
                 throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
 
+            var screenSize = 0.0f;
+            if (i < originalMesh.RenderData.ScreenSize.Length)
+            {
+                screenSize = originalMesh.RenderData.ScreenSize[i];
+            }
+
             var staticMeshLod = new CStaticMeshLod
             {
                 NumTexCoords = numTexCoords,
+                ScreenSize = screenSize,
                 HasNormals = true,
                 HasTangents = true,
                 IsTwoSided = srcLod.CardRepresentationData?.bMostlyTwoSided ?? false,
@@ -363,8 +371,9 @@ public static class MeshConverter
             originalMesh.ImportedBounds.Origin - originalMesh.ImportedBounds.BoxExtent,
             originalMesh.ImportedBounds.Origin + originalMesh.ImportedBounds.BoxExtent);
 
-        foreach (var srcLod in originalMesh.LODModels)
+        for (var i = 0; i < originalMesh.LODModels.Length; i++)
         {
+            var srcLod = originalMesh.LODModels[i];
             if (srcLod.SkipLod) continue;
 
             var numTexCoords = srcLod.NumTexCoords;
@@ -374,6 +383,7 @@ public static class MeshConverter
             var skeletalMeshLod = new CSkelMeshLod
             {
                 NumTexCoords = numTexCoords,
+                ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
                 HasNormals = true,
                 HasTangents = true,
                 Indices = new Lazy<FRawStaticIndexBuffer>(() => new FRawStaticIndexBuffer
