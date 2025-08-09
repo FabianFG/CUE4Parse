@@ -99,7 +99,9 @@ public class WwiseProvider
             var shortIdProp = audioEvent.Properties.FirstOrDefault(p => p.Name.Text == "ShortID");
 
             if (shortIdProp?.Tag?.GenericValue is not uint audioEventId || requiredBankProp?.Tag?.ToString() == null)
-                return results;
+            {
+                audioEventId = WwiseFnv.GetHash(audioEvent.Name);
+            }
 
             string? soundBankId = null;
             if (requiredBankProp?.Tag is ObjectProperty { Value: not null } objProp)
@@ -110,10 +112,9 @@ public class WwiseProvider
                 }
             }
 
-            if (string.IsNullOrEmpty(soundBankId))
-                return results;
+            if (!string.IsNullOrEmpty(soundBankId))
+                LoadSoundBankById(uint.Parse(soundBankId));
 
-            LoadSoundBankById(uint.Parse(soundBankId));
             foreach (var hierarchy in GetHierarchiesById(audioEventId))
             {
                 if (hierarchy.Data is HierarchyEvent hierarchyEvent)
