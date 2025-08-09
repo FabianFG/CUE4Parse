@@ -777,6 +777,19 @@ public class StrPropertyConverter : JsonConverter<StrProperty>
         throw new NotImplementedException();
     }
 }
+public class Utf8StrPropertyConverter : JsonConverter<Utf8StrProperty>
+{
+    public override void WriteJson(JsonWriter writer, Utf8StrProperty value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.Value);
+    }
+
+    public override Utf8StrProperty ReadJson(JsonReader reader, Type objectType, Utf8StrProperty existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
 
 public class VerseStringPropertyConverter : JsonConverter<VerseStringProperty>
 {

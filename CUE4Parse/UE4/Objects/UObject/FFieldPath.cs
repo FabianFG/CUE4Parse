@@ -12,11 +12,11 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FFieldPath()
         {
-            Path = new List<FName>();
+            Path = [];
             ResolvedOwner = new FPackageIndex();
         }
 
-        public FFieldPath(FAssetArchive Ar)
+        public FFieldPath(FAssetArchive Ar) : this()
         {
             var pathNum = Ar.Read<int>();
             Path = new List<FName>(pathNum);
@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
         }
 
-        public FFieldPath(FKismetArchive Ar)
+        public FFieldPath(FKismetArchive Ar) : this()
         {
             var index = Ar.Index;
             var pathNum = Ar.Read<int>();
@@ -59,6 +59,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             Ar.Index = index + 8;
+        }
+
+        public override string ToString()
+        {
+            return Path.Count == 0 ? string.Empty : Path[0].ToString();
         }
 
         protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)

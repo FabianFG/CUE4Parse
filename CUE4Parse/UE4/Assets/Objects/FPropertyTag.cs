@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
 using Serilog;
 
@@ -229,6 +230,23 @@ public class FPropertyTag
         HasPropertyGuid = hasPropertyGuid;
         PropertyGuid = propertyGuid;
         Tag = tag;
+    }
+
+    public FPropertyTag(FName propertyType, FPropertyTagType tag, FPropertyTagData? tagData = null)
+    {
+        PropertyType = propertyType;
+        Tag = tag;
+        TagData = tagData;
+    }
+
+    internal string GetCppVariable()
+    {
+        if (!BlueprintDecompilerUtils.GetPropertyTagVariable(this, out var variableType, out var variableValue))
+        {
+            Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
+        }
+
+        return $"{variableType} {Name.Text} = {variableValue};";
     }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";

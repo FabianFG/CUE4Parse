@@ -31,6 +31,17 @@ public class UFunction : UStruct
         }
     }
 
+    internal EAccessMode GetAccessMode()
+    {
+        if (FunctionFlags.HasFlag(EFunctionFlags.FUNC_Public))
+            return EAccessMode.Public;
+
+        if (FunctionFlags.HasFlag(EFunctionFlags.FUNC_Protected))
+            return EAccessMode.Protected;
+
+        return EAccessMode.Private;
+    }
+
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
