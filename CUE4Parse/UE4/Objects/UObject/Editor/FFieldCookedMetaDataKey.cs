@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Objects.UObject.Editor;
 [StructFallback]
 public struct FFieldCookedMetaDataKey : IUStruct
 {
-    public FName[] FieldPath;
+    public readonly FName[] FieldPath;
 
     public FFieldCookedMetaDataKey(FStructFallback fallback)
     {

@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.UObject.Editor;
 [StructFallback]
 public struct FFieldCookedMetaDataValue : IUStruct
 {
-    public Dictionary<FName, string?> MetaData;
+    public readonly Dictionary<FName, string?> MetaData;
 
     public FFieldCookedMetaDataValue(FStructFallback fallback)
     {

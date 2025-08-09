@@ -7,8 +7,8 @@ namespace CUE4Parse.UE4.Objects.UObject.Editor;
 [StructFallback]
 public struct FStructCookedMetaDataStore : IUStruct
 {
-    public FObjectCookedMetaDataStore ObjectMetaData;
-    public Dictionary<FName, FFieldCookedMetaDataStore?> PropertiesMetaData;
+    public readonly FObjectCookedMetaDataStore ObjectMetaData;
+    public readonly Dictionary<FName, FFieldCookedMetaDataStore?> PropertiesMetaData;
 
     public FStructCookedMetaDataStore(FStructFallback fallback)
     {
