@@ -124,8 +124,8 @@ public class UClass : UStruct
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
 
         var classDefaultObject = ClassDefaultObject.Load();
-        bool emptyClass = Properties.Count == 0 && ChildProperties.Length == 0 && FuncMap.Count == 0 && classDefaultObject?.Properties.Count == 0;
-
+        bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
+        
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
         if (emptyClass) return $"{c} {{ }};";
 
@@ -135,14 +135,14 @@ public class UClass : UStruct
 
         var distinct = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
-        var combined = Properties.Concat(classDefaultObject?.Properties ?? []);
+        
+        var combined = Properties.Concat(classDefaultObject?.Properties ?? []).Concat(classDefaultObject?.SerializedSparseClassData?.Properties ?? []);
         foreach (var property in combined)
         {
             if (!distinct.Add(property.Name.Text)) continue;
             variables.TryAdd(property.GetCppVariable(), EAccessMode.Public); // should always be public
         }
-
-        foreach (var childProperty in ChildProperties)
+        foreach (var childProperty in ChildProperties ?? [])
         {
             if (childProperty is not FProperty property || !distinct.Add(property.Name.Text))
                 continue;
@@ -215,7 +215,7 @@ public class UClass : UStruct
             var parametersList = new List<string>();
 
             var returnType = "void";
-            foreach (var childProperty in function.ChildProperties)
+            foreach (var childProperty in function.ChildProperties ?? [])
             {
                 if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                     continue;

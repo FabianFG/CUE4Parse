@@ -810,6 +810,15 @@ public static class BlueprintDecompilerUtils
 
                 return $"{(variableToBeAssigned.Contains("K2Node_") ? "UberGraphFrame->" + variableToBeAssigned : variableToBeAssigned)} = {variableAssignment}";
             }
+            case EX_LetBool letBool:
+            {
+                var assignment = GetLineExpression(letBool.Assignment);
+                var variable = GetLineExpression(letBool.Variable);
+
+                // check if var is defined already?
+                // use bIsNativeBool for "bool"?
+                return $"bool {variable} = {assignment}";
+            }
             case EX_Let let:
             {
                 var assignment = GetLineExpression(let.Assignment);
