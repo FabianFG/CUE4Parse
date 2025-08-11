@@ -49,28 +49,13 @@ public abstract class FPropertyTagType
             case FPropertyTagType<FScriptStruct> {Value.StructType: FStructFallback fallback} when type.GetCustomAttribute<StructFallback>() != null:
                 return fallback.MapToClass(type);
             case FPropertyTagType<UScriptArray> arrayProp when type.IsArray:
-            {
-                var array = arrayProp.Value!.Properties;
-                var contentType = type.GetElementType()!;
-                var result = Array.CreateInstance(contentType, array.Count);
-                for (var i = 0; i < array.Count; i++)
-                {
-                    result.SetValue(array[i].GetValue(contentType), i);
-                }
-                return result;
-            }
+                return CreateArray(type, arrayProp.Value!.Properties);
+            case FPropertyTagType<UScriptSet> setProp when type.IsArray:
+                return CreateArray(type, setProp.Value!.Properties);
             case FPropertyTagType<UScriptArray> arrayProp when typeof(IList).IsAssignableFrom(type):
-            {
-                var array = arrayProp.Value!.Properties;
-                var contentType = type.GenericTypeArguments[0];
-                var listType = typeof(List<>).MakeGenericType(contentType);
-                var result = (IList) Activator.CreateInstance(listType, array.Count)!;
-                foreach (var element in array)
-                {
-                    result.Add(element.GetValue(contentType));
-                }
-                return result;
-            }
+                return CreateList(type, arrayProp.Value!.Properties);
+            case FPropertyTagType<UScriptSet> setProp when typeof(IList).IsAssignableFrom(type):
+                return CreateList(type, setProp.Value!.Properties);
             case FPropertyTagType<FPackageIndex> objProp when typeof(UObject).IsAssignableFrom(type):
                 if (objProp.Value!.TryLoad(out var objExport) && type.IsInstanceOfType(objExport))
                     return objExport;
@@ -92,6 +77,29 @@ public abstract class FPropertyTagType
             default:
                 return null;
         }
+    }
+
+    private Array CreateArray(Type type, List<FPropertyTagType> properties)
+    {
+        var contentType = type.GetElementType()!;
+        var result = Array.CreateInstance(contentType, properties.Count);
+        for (var i = 0; i < properties.Count; i++)
+        {
+            result.SetValue(properties[i].GetValue(contentType), i);
+        }
+        return result;
+    }
+
+    private IList CreateList(Type type, List<FPropertyTagType> properties)
+    {
+        var contentType = type.GenericTypeArguments[0];
+        var listType = typeof(List<>).MakeGenericType(contentType);
+        var result = (IList) Activator.CreateInstance(listType, properties.Count)!;
+        foreach (var element in properties)
+        {
+            result.Add(element.GetValue(contentType));
+        }
+        return result;
     }
 
     public T? GetValue<T>()

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 using CUE4Parse.Utils;
@@ -117,5 +118,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                 rgbValues[rgbSwizzle[swizzleIndex][2]],
                 A);
         }
+        
+        public static implicit operator Vector4(FLinearColor color) => new(color.R, color.G, color.B, color.A);
     }
 }
