@@ -1010,7 +1010,7 @@ public static class BlueprintDecompilerUtils
             }
             case KismetExpression<string> stringConst:
             {
-                return $"\"{stringConst.Value}\"";
+                return $"\"{stringConst.Value.Replace("\r\n", "\\n").Replace("\n", "\\n")}\"";
             }
             case EX_InstanceDelegate del:
             {
