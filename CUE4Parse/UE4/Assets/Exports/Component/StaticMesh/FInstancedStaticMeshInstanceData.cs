@@ -8,7 +8,7 @@ public class FInstancedStaticMeshInstanceData
 {
     private readonly FMatrix Transform; // don't expose the raw matrix for now
 
-    public readonly FTransform TransformData = new();
+    public readonly FTransform TransformData;
 
     public FInstancedStaticMeshInstanceData(FArchive Ar)
     {
@@ -16,8 +16,8 @@ public class FInstancedStaticMeshInstanceData
 
         Ar.Position += Ar.Game switch
         {
-            EGame.GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int),
-            EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves
+            EGame.GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
+            EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves or EGame.GAME_AceCombat7
                 or EGame.GAME_DaysGone or EGame.GAME_InfinityNikki or EGame.GAME_NarutotoBorutoShinobiStriker => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
             EGame.GAME_SilentHill2Remake or EGame.GAME_StateOfDecay2 => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
             _ => 0,

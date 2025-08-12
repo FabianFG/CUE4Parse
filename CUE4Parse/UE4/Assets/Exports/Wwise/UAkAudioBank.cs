@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
@@ -12,8 +13,8 @@ public class UAkAudioBank : UAkAudioType
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Position >= validPos)
-            return;
+        if (Ar.Position >= validPos) return;
+        if (Ar.Game == EGame.GAME_HogwartsLegacy) return;
 
         SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
     }

@@ -67,7 +67,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         }
 
         // MOTO GP 24
-        if (Ar.Game == EGame.GAME_MotoGP24) 
+        if (Ar.Game == EGame.GAME_MotoGP24)
         {
             var elemSize = Ar.Read<int>();
             var elemCount = Ar.Read<int>();
@@ -96,6 +96,8 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
         }
+
+        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 4;
     }
 
     public FInstancedStaticMeshInstanceData[] GetInstances() // PerInstanceSMData
@@ -108,7 +110,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             current = current.Template?.Load<UInstancedStaticMeshComponent>();
             if (current == null) {
                 return [];
-            }                
+            }
         }
     }
 

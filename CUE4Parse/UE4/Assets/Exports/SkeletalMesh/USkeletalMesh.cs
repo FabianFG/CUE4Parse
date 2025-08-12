@@ -17,13 +17,14 @@ public partial class USkeletalMesh : UObject
     public FBoxSphereBounds ImportedBounds { get; private set; }
     public FSkeletalMaterial[] SkeletalMaterials { get; private set; }
     public FReferenceSkeleton ReferenceSkeleton { get; private set; }
+    public FSkeletalMeshLODGroupSettings[] LODInfo { get; private set; }
     public FStaticLODModel[]? LODModels { get; private set; }
     public bool bHasVertexColors { get; private set; }
     public byte NumVertexColorChannels { get; private set; }
     public FPackageIndex[] MorphTargets { get; private set; }
     public FPackageIndex[] Sockets { get; private set; }
     public FPackageIndex Skeleton { get; private set; }
-    public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
+    public ResolvedObject?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public FPackageIndex PhysicsAsset { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
     public FNaniteResources? NaniteResources;
@@ -31,7 +32,7 @@ public partial class USkeletalMesh : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Materials = [];
+        LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]>(nameof(LODInfo), []);
 
         bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
         NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));

@@ -390,7 +390,7 @@ public partial class FPakInfo
                 DecryptInZOIFPakInfo(Ar, maxOffset, buffer);
             }
 
-            var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
+            using var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
             var offsetsToTry = Ar.Game switch
             {
@@ -408,6 +408,7 @@ public partial class FPakInfo
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
             };
+
             foreach (var offset in offsetsToTry)
             {
                 reader.Seek(-(long) offset, SeekOrigin.End);

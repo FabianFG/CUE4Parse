@@ -20,7 +20,7 @@ public class FStaticMeshRenderData
     public FNaniteResources? NaniteResources;
     public FBoxSphereBounds? Bounds;
     public bool bLODsShareStaticLighting;
-    public float[]? ScreenSize;
+    public float[] ScreenSize = [];
 
     public FStaticMeshRenderData() { }
 

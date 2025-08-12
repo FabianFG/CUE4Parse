@@ -46,7 +46,7 @@ public class UMapBuildDataRegistry : UObject
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
             {
                 Ar.SkipFixedArray(1);
-                return;
+                Ar.Position -= 4;
             }
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.SkyAtmosphereStaticLightingVersioning)
@@ -142,6 +142,14 @@ public class FReflectionCaptureData
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
         if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_HogwartsLegacy)
+        {
+            var count = Ar.Read<int>();
+            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
+            count = Ar.Read<int>();
+            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
+
+        }
 
         if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile &&
             FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format)
@@ -154,6 +162,7 @@ public class FReflectionCaptureData
         }
 
         if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 16;
+        if (Ar.Game == EGame.GAME_Valorant) Ar.SkipFixedArray(1);
         if (Ar.Game == EGame.GAME_BlackMythWukong)
         {
             Ar.SkipFixedArray(1);

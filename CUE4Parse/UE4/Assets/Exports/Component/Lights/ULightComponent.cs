@@ -8,15 +8,15 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Lights;
 
-public abstract class ULightComponentBase : USceneComponent { }
+public abstract class ULightComponentBase : USceneComponent;
 
-public class ULightComponent : ULightComponentBase 
+public class ULightComponent : ULightComponentBase
 {
     public float Intensity { get; protected set; }
     public ELightUnits IntensityUnits { get; protected set; }
     public FStaticShadowDepthMapData? LegacyData { get; private set; }
 
-    public override void Deserialize(FAssetArchive Ar, long validPos) 
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         Intensity = GetOrDefault<float>(nameof(Intensity), 1.0f);
@@ -28,6 +28,8 @@ public class ULightComponent : ULightComponentBase
                 LegacyData = new FStaticShadowDepthMapData(Ar);
             }
         }
+
+        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 24; // Zero FVector, 1.0f, -1 int, 1.0f
     }
 
     public virtual double GetNitIntensity() => Intensity;
@@ -63,19 +65,19 @@ public class ULocalLightComponent : ULightComponent
     public float AttenuationRadius;
     public ELightUnits IntensityUnits;
 
-    public override void Deserialize(FAssetArchive Ar, long validPos) 
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         AttenuationRadius = GetOrDefault<float>(nameof(AttenuationRadius), 100.0f);
         IntensityUnits = GetOrDefault(nameof(IntensityUnits), Owner.Provider.DefaultLightUnit);
     }
 
-    public override double GetNitIntensity() 
+    public override double GetNitIntensity()
     {
         return Intensity;
     }
 
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer) 
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
         writer.WritePropertyName("IntensityNits");
@@ -83,7 +85,7 @@ public class ULocalLightComponent : ULightComponent
     }
 }
 
-public class USpotLightComponent : UPointLightComponent 
+public class USpotLightComponent : UPointLightComponent
 {
     public float InnerConeAngle { get; private set; }
     public float OuterConeAngle { get; private set; }
@@ -95,7 +97,7 @@ public class USpotLightComponent : UPointLightComponent
         OuterConeAngle = GetOrDefault(nameof(OuterConeAngle), 44.0f);
     }
 
-    private float GetHalfConeAngle() 
+    private float GetHalfConeAngle()
     {
         var clampedInnerConeAngle = Math.Clamp(InnerConeAngle, 0.0f, 89.0f) * MathF.PI / 180.0f;
         var clampedOuterConeAngle = Math.Clamp(OuterConeAngle * MathF.PI / 180.0f, clampedInnerConeAngle + 0.001f,
@@ -103,13 +105,13 @@ public class USpotLightComponent : UPointLightComponent
         return clampedOuterConeAngle;
     }
 
-    public float GetCosHalfConeAngle() 
+    public float GetCosHalfConeAngle()
     {
         return MathF.Cos(GetHalfConeAngle());
     }
 }
 
-public class UPointLightComponent : ULocalLightComponent 
+public class UPointLightComponent : ULocalLightComponent
 {
     public float SourceRadius { get; private set; }
     public bool bUseInverseSquaredFalloff { get; private set; }
@@ -120,17 +122,17 @@ public class UPointLightComponent : ULocalLightComponent
         SourceRadius = GetOrDefault(nameof(SourceRadius), 0f);
         bUseInverseSquaredFalloff = GetOrDefault(nameof(bUseInverseSquaredFalloff), true);
 
-        if (!bUseInverseSquaredFalloff) 
+        if (!bUseInverseSquaredFalloff)
             IntensityUnits = ELightUnits.Unitless;
     }
 
-    public override double GetNitIntensity() 
+    public override double GetNitIntensity()
     {
         if (!bUseInverseSquaredFalloff)
             return Intensity; // Unitless brightness
-        
+
         double solidAngle = 4f * Math.PI;
-        if (this is USpotLightComponent spotLightComponent) 
+        if (this is USpotLightComponent spotLightComponent)
             solidAngle = 2f * Math.PI * (1.0f - spotLightComponent.GetCosHalfConeAngle());
 
         float areaInSqMeters =
@@ -147,19 +149,19 @@ public class UPointLightComponent : ULocalLightComponent
     }
 }
 
-public class URectLightComponent : ULocalLightComponent 
+public class URectLightComponent : ULocalLightComponent
 {
     public float SourceWidth;
     public float SourceHeight;
 
-    public override void Deserialize(FAssetArchive Ar, long validPos) 
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         SourceWidth = GetOrDefault(nameof(SourceWidth), 64.0f);
         SourceHeight = GetOrDefault(nameof(SourceHeight), 64.0f);
     }
 
-    public override double GetNitIntensity() 
+    public override double GetNitIntensity()
     {
         var areaInSqMeters = (SourceWidth / 100.0f) * (SourceHeight / 100.0f);
         const double angle = Math.PI;

@@ -12,6 +12,7 @@ public class CBaseMeshLod
 {
     public int NumVerts = 0;
     public int NumTexCoords = 0;
+    public float ScreenSize = 0f;
     public bool HasNormals = false;
     public bool HasTangents = false;
     public bool IsTwoSided = false;
