@@ -345,6 +345,18 @@ public class FProperty : FField
         BlueprintReplicationCondition = (ELifetimeCondition) Ar.Read<byte>();
     }
 
+    internal EAccessMode GetAccessMode()
+    {
+        if (PropertyFlags.HasFlag(EPropertyFlags.BlueprintVisible) ||
+            PropertyFlags.HasFlag(EPropertyFlags.BlueprintReadOnly))
+            return EAccessMode.Public;
+
+        if (PropertyFlags.HasFlag(EPropertyFlags.Edit))
+            return EAccessMode.Protected;
+
+        return EAccessMode.Private;
+    }
+
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
@@ -699,6 +711,7 @@ public class FSetProperty : FProperty
 }
 
 public class FStrProperty : FProperty;
+public class FUtf8StrProperty : FProperty;
 
 public class FStructProperty : FProperty
 {
@@ -787,3 +800,5 @@ public class FVerseFunctionProperty : FProperty
 }
 
 public class FVerseDynamicProperty : FProperty;
+
+public class FReferenceProperty : FProperty;

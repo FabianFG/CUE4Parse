@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,7 +9,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -81,7 +79,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             // {
             //
             // }
-
             // throw new NotImplementedException("Non-Cooked Textures are not supported");
         }
     }

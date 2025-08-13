@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
@@ -60,6 +61,7 @@ public class FField
         "SoftClassProperty" => new FSoftClassProperty(),
         "SoftObjectProperty" => new FSoftObjectProperty(),
         "StrProperty" => new FStrProperty(),
+        "Utf8StrProperty" => new FUtf8StrProperty(),
         "StructProperty" => new FStructProperty(),
         "TextProperty" => new FTextProperty(),
         "UInt16Property" => new FUInt16Property(),
@@ -70,6 +72,7 @@ public class FField
         "VerseStringProperty" => new FVerseStringProperty(),
         "VerseFunctionProperty" => new FVerseFunctionProperty(),
         "VerseDynamicProperty" => new FVerseDynamicProperty(),
+        "ReferenceProperty" => new FReferenceProperty(),
         _ => throw new ParserException("Unsupported serialized property type " + fieldTypeName)
     };
 
