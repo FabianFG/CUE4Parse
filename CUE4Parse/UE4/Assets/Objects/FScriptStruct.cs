@@ -211,7 +211,7 @@ public class FScriptStruct
             "Core1047ReleaseFlag" => new FCore1047ReleaseFlag(Ar),
 
             // ThroneAndLiberty
-            "TLJsonGuid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+            "TLJsonGuid" => Ar.Read<FTLJsonGuid>(),
             "TLJsonVector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
             "TLJsonVector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
             "SceneFaceDefSeamline" => new FSceneFaceDefSeamline(Ar),
