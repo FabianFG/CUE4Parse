@@ -625,6 +625,23 @@ namespace CUE4Parse.FileProvider
             return false;
         }
 
+        public bool TryLoadPackages(string path, out List<IPackage> packages)
+        {
+            packages = [];
+            if (Files.TryGetValues(FixPath(path), out var files))
+            {
+                foreach (var file in files)
+                {
+                    if (TryLoadPackage(file, out var package) && package is not null)
+                    {
+                        packages.Add(package);
+                    }
+                }
+            }
+
+            return packages.Count > 0;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryLoadPackage(GameFile file, [MaybeNullWhen(false)] out IPackage package)
         {

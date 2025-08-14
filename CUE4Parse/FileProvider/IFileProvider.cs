@@ -241,6 +241,14 @@ namespace CUE4Parse.FileProvider
         public bool TryLoadPackage(string path, [MaybeNullWhen(false)] out IPackage package);
 
         /// <summary>
+        /// Attempts to loads all versions of the Package.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="packages"></param>
+        /// <returns></returns>
+        public bool TryLoadPackages(string path, out List<IPackage> packages);
+
+        /// <summary>
         /// Attempts to loads and parse a Package from the passed file.
         /// </summary>
         /// <param name="file">The package file</param>
