@@ -20,7 +20,7 @@ public readonly struct FHalfVector
     public static implicit operator FVector(FHalfVector h) => new((float)h.X, (float)h.Y, (float)h.Z);
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
 public readonly struct FHalfVector4
 {
     public readonly Half X;

@@ -29,7 +29,6 @@ public class UStaticMesh : UObject
 
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         bCooked = Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 1; // Extra byte?
         BodySetup = new FPackageIndex(Ar);
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])
@@ -74,22 +73,26 @@ public class UStaticMesh : UObject
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
-                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan)
+                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan or EGame.GAME_Farlight84)
                 {
                     Ar.SkipBulkArrayData();
                     Ar.SkipBulkArrayData();
                     if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
+                    if (Ar.Game is EGame.GAME_Farlight84 && Ar.ReadBoolean())
+                    {
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                    }
                 }
                 else
                 {
                     Ar.SkipFixedArray(12); // Vertices
                     Ar.SkipFixedArray(2); // Indices
                 }
-
             }
         }
 
-        if (Ar.Game == EGame.GAME_FateTrigger) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FateTrigger) Ar.Position += 4;
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {

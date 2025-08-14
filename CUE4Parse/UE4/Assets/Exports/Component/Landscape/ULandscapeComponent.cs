@@ -52,6 +52,8 @@ public class ULandscapeComponent: UPrimitiveComponent
             LegacyMapBuildData.ShadowMap = new FShadowMap(Ar);
         }
 
+        if (Ar.Game is EGame.GAME_Farlight84) return;
+
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA)
         {
             GrassData = new FLandscapeComponentGrassData(Ar);

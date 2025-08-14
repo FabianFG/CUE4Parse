@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.Actor;
 
@@ -27,6 +28,7 @@ public class AInstancedFoliageActor : AISMPartitionActor
         }
         else
         {
+            if (Ar.Game == EGame.GAME_MafiaTheOldCountry) Ar.Position += 4;
             FoliageInfos = Ar.ReadMap(() => new FPackageIndex(Ar), () => new FFoliageInfo(Ar));
         }
     }
@@ -92,6 +94,7 @@ public enum EFoliageImplType : byte
 
 public struct FFoliageInfo
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public EFoliageImplType Type;
     public FFoliageImpl? Implementation;
 

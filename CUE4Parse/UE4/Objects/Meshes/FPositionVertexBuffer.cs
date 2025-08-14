@@ -29,6 +29,25 @@ public class FPositionVertexBuffer
             Verts = bUseFullPrecisionPositions ? Ar.ReadBulkArray<FVector>() : Ar.ReadBulkArray<FVector>(() => Ar.Read<FVector3UnsignedShort>());
             return;
         }
+
+        if (Ar.Game is EGame.GAME_Farlight84)
+        {
+            bool bUseHalfPrecisionPositions = Ar.ReadBoolean();
+            Stride = Ar.Read<int>();
+            NumVertices = Ar.Read<int>();
+            if (bUseHalfPrecisionPositions)
+            {
+                var vectors = Ar.ReadArray<FVector>(2);
+                Verts = Ar.ReadBulkArray<FVector>(() => Ar.Read<FVector3UnsignedShort>());
+            }
+            else
+            {
+                Verts = Ar.ReadBulkArray<FVector>();
+            }
+
+            return;
+        }
+
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
         if (Ar.Game == EGame.GAME_Valorant_PRE_11_2)
