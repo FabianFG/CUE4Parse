@@ -92,20 +92,20 @@ public class USceneComponent : UActorComponent
 
     public FVector GetRelativeLocation() => DeepGet("RelativeLocation", FVector.ZeroVector);
     public FRotator GetRelativeRotation() => DeepGet("RelativeRotation", FRotator.ZeroRotator);
-    public FVector GetRelativeScale3D() => DeepGet("RelativeScale3D", FVector.OneVector);
+    public FVector GetRelativeScale3D() => GetOrDefault("RelativeScale3D", FVector.OneVector);
 
     private T DeepGet<T>(string name, T fallback)
     {
-        var ret = fallback;
+        var ret = default(T);
         var current = this;
         while (true)
         {
             if (current is null) break;
-            ret = current.GetOrDefault(name, ret);
+            if (current.TryGetValue(out ret, name)) break;
             if (current.Template == null) break;
             current = current.Template.Load<USceneComponent>();
         }
-        return ret;
+        return ret ?? fallback;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
