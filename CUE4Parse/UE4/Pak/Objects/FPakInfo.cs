@@ -374,13 +374,9 @@ public partial class FPakInfo
             {
                 EGame.GAME_DuneAwakening => (long) OffsetsToTry.SizeDuneAwakening,
                 EGame.GAME_KartRiderDrift => (long) OffsetsToTry.SizeKartRiderDrift,
-                _ => (long) OffsetsToTry.SizeMax,
+                _ => Math.Min(length, (long) OffsetsToTry.SizeMax),
             };
 
-            if (length < maxOffset)
-            {
-                throw new ParserException($"File {Ar.Name} is too small to be a pak file");
-            }
             Ar.Seek(-maxOffset, SeekOrigin.End);
             var buffer = stackalloc byte[(int) maxOffset];
             Ar.Serialize(buffer, (int) maxOffset);
@@ -411,6 +407,8 @@ public partial class FPakInfo
 
             foreach (var offset in offsetsToTry)
             {
+                if ((long)offset > maxOffset) continue;
+
                 reader.Seek(-(long) offset, SeekOrigin.End);
                 FPakInfo info;
                 if (Ar.Game == EGame.GAME_OnePieceAmbition)
