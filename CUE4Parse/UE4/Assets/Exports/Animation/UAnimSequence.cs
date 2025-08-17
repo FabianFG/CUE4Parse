@@ -67,6 +67,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
             }
 
+            if (Ar.Game is EGame.GAME_SuicideSquad) return; // custom format
             if (Ar.Game == EGame.GAME_DaysGone)
             {
                 var rawcurvedata = GetOrDefault<FStructFallback>("RawCurveData");

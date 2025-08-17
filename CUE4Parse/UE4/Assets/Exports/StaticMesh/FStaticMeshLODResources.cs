@@ -125,6 +125,7 @@ public class FStaticMeshLODResources
                 Ar.Position += Ar.Game switch
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
@@ -225,7 +226,7 @@ public class FStaticMeshLODResources
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_RogueCompany)
+        if (Ar.Game is EGame.GAME_RogueCompany)
         {
             _ = new FColorVertexBuffer(Ar);
         }

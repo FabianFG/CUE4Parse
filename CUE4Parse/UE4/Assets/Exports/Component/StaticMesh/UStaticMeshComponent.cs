@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
@@ -13,13 +14,24 @@ public class UStaticMeshComponent : UMeshComponent
     public FPackageIndex? MeshPaintTextureCooked;
     protected FPackageIndex? StaticMesh;
 
-
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         if (Ar.Position == validPos) return;
-        if (Ar.Game == Versions.EGame.GAME_Borderlands3) Ar.ReadBoolean();
+        if (Ar.Game is EGame.GAME_Borderlands3) Ar.ReadBoolean();
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
+        if (Ar.Game is EGame.GAME_SuicideSquad)
+        {
+            var count = Ar.Read<int>();
+            for (var i = 0; i < count; i++)
+            {
+                Ar.SkipFixedArray(12);
+                var idk = Ar.Read<int>();
+                Ar.Position += idk.Align(32) >> 3;
+                Ar.SkipFixedArray(2);
+            }
+
+        }
 
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshPaintTextureUsesEditorOnly)
         {
@@ -60,7 +72,7 @@ public class UStaticMeshComponent : UMeshComponent
         return mesh;
     }
 
-    public bool SetStaticMeshIfNull(FPackageIndex mesh) 
+    public bool SetStaticMeshIfNull(FPackageIndex mesh)
     {
         if (GetStaticMesh().IsNull)
         {
@@ -70,7 +82,7 @@ public class UStaticMeshComponent : UMeshComponent
         return false;
     }
 
-    public void SetStaticMesh(FPackageIndex mesh) 
+    public void SetStaticMesh(FPackageIndex mesh)
     {
         PropertyUtil.Set(this, "StaticMesh", mesh);
         StaticMesh = mesh;

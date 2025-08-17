@@ -78,10 +78,14 @@ public class UStaticMesh : UObject
                     Ar.SkipBulkArrayData();
                     Ar.SkipBulkArrayData();
                     if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
-                    if (Ar.Game is EGame.GAME_Farlight84 && Ar.ReadBoolean())
+                    if (Ar.Game is EGame.GAME_Farlight84)
                     {
-                        Ar.SkipBulkArrayData();
-                        Ar.SkipBulkArrayData();
+                        var count = Ar.Read<int>();
+                        for (var i = 0; i < count; i++)
+                        {
+                            Ar.SkipBulkArrayData();
+                            Ar.SkipBulkArrayData();
+                        }
                     }
                 }
                 else
