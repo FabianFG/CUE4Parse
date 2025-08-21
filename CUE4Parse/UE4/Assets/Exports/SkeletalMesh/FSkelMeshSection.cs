@@ -271,6 +271,7 @@ public class FSkelMeshSection
             EGame.GAME_MortalKombat1 or EGame.GAME_InfinityNikki => 12,
             EGame.GAME_FateTrigger => 15,
             EGame.GAME_Strinova => 18,
+            EGame.GAME_SuicideSquad => 11,
             _ => 0,
         };
     }

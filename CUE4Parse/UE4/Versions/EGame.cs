@@ -68,6 +68,7 @@ public enum EGame : uint
         GAME_Farlight84 = GAME_UE4_25 + 8,
         GAME_StarWarsHunters = GAME_UE4_25 + 9,
         GAME_ThePathless = GAME_UE4_25 + 10,
+        GAME_SuicideSquad = GAME_UE4_25 + 11,
     GAME_UE4_26 = GameUtils.GameUe4Base + (26 << 16),
         GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
         GAME_ReadyOrNot = GAME_UE4_26 + 2,

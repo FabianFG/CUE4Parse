@@ -1,4 +1,5 @@
 using System;
+using CUE4Parse.GameTypes.SuicideSquad.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -43,6 +44,31 @@ public class FPositionVertexBuffer
             else
             {
                 Verts = Ar.ReadBulkArray<FVector>();
+            }
+
+            return;
+        }
+
+        if (Ar.Game is EGame.GAME_SuicideSquad)
+        {
+            Stride = Ar.Read<int>();
+            NumVertices = Ar.Read<int>();
+            Ar.Position += 1;
+
+            var vectors = Ar.ReadArray<FVector>(2);
+            //second vector is extent - origin
+            if (Stride == 12)
+            {
+                Verts = Ar.ReadBulkArray<FVector>();
+            }
+            else
+            {
+                var vertsHalf = Ar.ReadBulkArray<FVectorShort>();
+                Verts = new FVector[vertsHalf.Length];
+                for (int i = 0; i < vertsHalf.Length; i++)
+                {
+                    Verts[i] = vertsHalf[i] / vectors[0] - vectors[1];
+                }
             }
 
             return;
