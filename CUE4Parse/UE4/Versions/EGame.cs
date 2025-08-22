@@ -43,6 +43,7 @@ public enum EGame : uint
         GAME_AceCombat7 = GAME_UE4_18 + 3,
         GAME_FridayThe13th = GAME_UE4_18 + 4,
         GAME_GameForPeace = GAME_UE4_18 + 5,
+        GAME_DragonQuestXI = GAME_UE4_18 + 6,
     GAME_UE4_19 = GameUtils.GameUe4Base + (19 << 16),
         GAME_Paragon = GAME_UE4_19 + 1,
         GAME_Ashen = GAME_UE4_19 + 2,

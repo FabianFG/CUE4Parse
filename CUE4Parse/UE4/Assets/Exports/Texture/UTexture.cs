@@ -86,6 +86,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
         var pixelFormatName = Ar.ReadFName();
+        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
             Enum.TryParse(pixelFormatName.Text, out EPixelFormat pixelFormat);

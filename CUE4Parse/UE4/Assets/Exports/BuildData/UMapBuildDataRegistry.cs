@@ -498,6 +498,7 @@ public class FShadowMap2D : FShadowMap
             const float LegacyValue = 1.0f / .05f;
             InvUniformPenumbraSize = new FVector4(LegacyValue);
         }
+        if (Ar.Game == EGame.GAME_Snowbreak) Ar.Position += 20;
     }
 }
 

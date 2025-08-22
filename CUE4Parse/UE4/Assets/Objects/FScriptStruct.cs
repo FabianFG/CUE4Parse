@@ -119,7 +119,7 @@ public class FScriptStruct
             "MovieSceneTimeWarpVariant" => type == ReadType.ZERO ? new FStructFallback() : new FMovieSceneTimeWarpVariant(Ar),
             "MovieSceneTrackFieldData" => type == ReadType.ZERO ? new FMovieSceneTrackFieldData() : new FMovieSceneTrackFieldData(Ar),
             "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : new FMovieSceneTrackIdentifier(Ar),
-            "MovieSceneTrackIdentifiers" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
+            "MovieSceneTrackIdentifiers" when Ar.Game is EGame.GAME_GameForPeace => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
             "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
             "FontData" => new FFontData(Ar),
             "FontCharacter" => new FFontCharacter(Ar),

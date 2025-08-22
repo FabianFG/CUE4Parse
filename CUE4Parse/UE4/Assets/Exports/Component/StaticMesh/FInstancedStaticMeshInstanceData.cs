@@ -18,7 +18,8 @@ public class FInstancedStaticMeshInstanceData
         {
             EGame.GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
             EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves or EGame.GAME_AceCombat7
-                or EGame.GAME_DaysGone or EGame.GAME_InfinityNikki or EGame.GAME_NarutotoBorutoShinobiStriker => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
+                or EGame.GAME_DaysGone or EGame.GAME_InfinityNikki or EGame.GAME_NarutotoBorutoShinobiStriker
+                or EGame.GAME_DragonQuestXI => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
             EGame.GAME_SilentHill2Remake or EGame.GAME_StateOfDecay2 => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
             _ => 0,
         };

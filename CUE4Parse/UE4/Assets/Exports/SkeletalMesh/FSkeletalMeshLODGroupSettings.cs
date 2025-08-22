@@ -9,9 +9,13 @@ public struct FSkeletalMeshLODGroupSettings : IUStruct
 {
     public readonly TPerPlatformProperty.FPerPlatformFloat ScreenSize;
     // ... other properties
-    
+
     public FSkeletalMeshLODGroupSettings(FStructFallback fallback)
     {
         ScreenSize = fallback.GetOrDefault<TPerPlatformProperty.FPerPlatformFloat>(nameof(ScreenSize));
+        if (ScreenSize is null)
+        {
+            ScreenSize = new TPerPlatformProperty.FPerPlatformFloat(fallback.GetOrDefault<float>(nameof(ScreenSize)));
+        }
     }
 }

@@ -101,6 +101,19 @@ public partial class FPakInfo
             return;
         }
 
+        if (Ar.Game == EGame.GAME_DragonQuestXI)
+        {
+            EncryptionKeyGuid = default;
+            EncryptedIndex = Ar.Read<byte>() != 0;
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC) return;
+            Version = Ar.Read<EPakFileVersion>();
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>();
+            IndexHash = new FSHAHash(Ar);
+            goto beforeCompression;
+        }
+
         if (Ar.Game == EGame.GAME_RacingMaster)
         {
             EncryptedIndex = Ar.ReadFlag();
@@ -395,7 +408,7 @@ public partial class FPakInfo
                 EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => [OffsetsToTry.SizeDbD],
                 EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                 EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
-                EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
+                EGame.GAME_GameForPeace or EGame.GAME_DragonQuestXI => [OffsetsToTry.SizeGameForPeace],
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 EGame.GAME_RacingMaster => [OffsetsToTry.SizeRacingMaster],
