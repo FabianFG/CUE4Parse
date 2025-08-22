@@ -126,15 +126,15 @@ public class CMaterialParams2
     [
         [
             "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "DiffuseColor", "tex1_CO",
-            "ColorA", "ALB", "AlbedoColor"
+            "ColorA", "ALB", "AlbedoColor", "Layer A Tint"
         ],
-        ["tex2_CO", "ColorB"],
-        ["tex3_CO", "ColorC"],
-        ["tex4_CO", "ColorD"],
-        ["tex5_CO", "ColorE"],
-        ["tex6_CO", "ColorF"],
-        ["tex7_CO", "ColorG"],
-        ["tex8_CO", "ColorH"]
+        ["tex2_CO", "ColorB", "Layer B Tint"],
+        ["tex3_CO", "ColorC", "Layer C Tint"],
+        ["tex4_CO", "ColorD", "Layer D Tint"],
+        ["tex5_CO", "ColorE", "Layer E Tint"],
+        ["tex6_CO", "ColorF", "Layer F Tint"],
+        ["tex7_CO", "ColorG", "Layer G Tint"],
+        ["tex8_CO", "ColorH", "Layer H Tint"]
     ];
 
     public static readonly string[][] EmissiveColors =
