@@ -1,8 +1,9 @@
 using System;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.VirtualFileSystem;
-using static System.Runtime.Intrinsics.X86.Aes;
 using static System.Runtime.Intrinsics.Vector128;
+using static System.Runtime.Intrinsics.X86.Aes;
+using static System.Runtime.Intrinsics.X86.Sse2;
 
 namespace CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 
@@ -11,36 +12,17 @@ namespace CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 /// </summary>
 public static class Splitgate2Aes
 {
-    // 0x062AB4E9BB0D7DDDAE9DCB5A29FB666B4968186C56424624DBC96F06158496D9
-    private static readonly Vector128<byte>[] RoundKeys =
-    [
-        Create(0xE6, 0xEA, 0xF7, 0x97, 0x6A, 0xC2, 0xD7, 0x18, 0x08, 0xC2, 0x12, 0x28, 0x8D, 0x2F, 0x51, 0xBE), // XMM4
-        Create(0x8A, 0x3C, 0x40, 0xEA, 0x80, 0x54, 0x06, 0x18, 0x86, 0x9E, 0x78, 0x3D, 0xD7, 0x84, 0x84, 0x4B), // XMM2
-        Create(0xFF, 0x12, 0xD6, 0x0E, 0x0A, 0xC1, 0xB0, 0x70, 0x4F, 0x12, 0xDD, 0x17, 0x42, 0x7F, 0xE5, 0x65), // XMM3
-        Create(0xBE, 0xF0, 0x69, 0x73, 0x0A, 0x68, 0x46, 0xF2, 0x06, 0xCA, 0x7E, 0x25, 0x51, 0x1A, 0xFC, 0x76), // XMM15
-        Create(0x94, 0x26, 0xEC, 0x60, 0xF5, 0xD3, 0x66, 0x7E, 0x45, 0xD3, 0x6D, 0x67, 0x0D, 0x6D, 0x38, 0x72), // XMM5
-        Create(0x00, 0x86, 0x5E, 0x2D, 0xB4, 0x98, 0x2F, 0x81, 0x0C, 0xA2, 0x38, 0xD7, 0x57, 0xD0, 0x82, 0x53), // XMM14
-        Create(0x57, 0x8C, 0x44, 0x33, 0x61, 0xF5, 0x8A, 0x1E, 0xB0, 0x00, 0x0B, 0x19, 0x48, 0xBE, 0x55, 0x15), // XMM13
-        Create(0xD3, 0xE3, 0x37, 0xC2, 0x36, 0x79, 0xCE, 0x2D, 0xD1, 0xF5, 0x81, 0x07, 0xF8, 0xBE, 0x5E, 0x0C), // XMM12
-        Create(0x9B, 0x25, 0xB3, 0xC2, 0x81, 0xF3, 0xEB, 0x93, 0x0C, 0x24, 0x66, 0xFA, 0xE3, 0x48, 0xAD, 0xD2), // XMM11
-        Create(0x65, 0x49, 0xF7, 0x77, 0xE5, 0x9A, 0xF9, 0xEF, 0xE7, 0x8C, 0x4F, 0x2A, 0x29, 0x4B, 0xDF, 0x0B), // XMM10
-        Create(0xCF, 0xF4, 0x71, 0xF9, 0x1A, 0xD6, 0x58, 0x51, 0x8D, 0xD7, 0x8D, 0x69, 0xEF, 0x6C, 0xCB, 0x28), // XMM9
-        Create(0xDF, 0xF5, 0xBB, 0x42, 0x80, 0xD3, 0x0E, 0x98, 0x02, 0x16, 0xB6, 0xC5, 0xCE, 0xC7, 0x90, 0x21), // XMM8
-        Create(0x9F, 0x53, 0x64, 0xFD, 0xD5, 0x22, 0x29, 0xA8, 0x97, 0x01, 0xD5, 0x38, 0x62, 0xBB, 0x46, 0x41), // XMM7
-        Create(0x06, 0x2A, 0xB4, 0xE9, 0xBB, 0x0D, 0x7D, 0xDD, 0xAE, 0x9D, 0xCB, 0x5A, 0x29, 0xFB, 0x66, 0x6B) // XMM6
-    ];
-
-    private static void DecryptWithRoundKeys(byte[] input, int index, Vector128<byte>[] roundkeys)
+    private static void DecryptWithRoundKeys(byte[] input, int index, Vector128<byte>[] roundKeys)
     {
         var state = Create(input, index);
-        var rounds = roundkeys.Length - 1;
-        state = Xor(state, roundkeys[0]);
+        var rounds = roundKeys.Length - 1;
+        state = Xor(state, roundKeys[0]);
         for (var i = 1; i < rounds; i++)
         {
-            state = Decrypt(state, roundkeys[i]);
+            state = Decrypt(state, roundKeys[i]);
         }
 
-        state = DecryptLast(state, roundkeys[rounds]);
+        state = DecryptLast(state, roundKeys[rounds]);
         state.CopyTo(input, index);
     }
 
@@ -56,11 +38,162 @@ public static class Splitgate2Aes
         var output = new byte[count];
         Array.Copy(bytes, beginOffset, output, 0, count);
 
+        var roundKeys = KeyExpansion(reader.AesKey.Key);
+
         for (var i = 0; i < count / 16; i++)
         {
-            DecryptWithRoundKeys(output, i * 16, RoundKeys);
+            DecryptWithRoundKeys(output, i * 16, roundKeys);
         }
 
         return output;
+    }
+
+    private static Vector128<byte>[] KeyExpansion(byte[] key)
+    {
+        Vector128<byte>[] roundKeys = new Vector128<byte>[14];
+
+        Vector128<int> v6, v7, v8, v10, v11, v12, v13, v15, v16, v18, v19, v21;
+        Vector128<int> v26, v27, v28, v29, v32, v33, v35, v36, v38, v39, v41;
+        Vector128<int> v47, v48, v49, v50, v51, v53, v54, v56, v57, v59, v60;
+        Vector128<int> v62, v63, v65, v66, v68, v73, v74, v75, v77, v78, v79, v80;
+        Vector128<int> v83, v84, v86, v87, v89, v92;
+        Vector128<int> xmm0, xmm3, xmm4, xmm5, xmm7, xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
+
+        var xmm6 = Create(key, 0).AsInt32();
+        var xmm2 = Create(key, 16).AsInt32();
+
+        v6 = ShiftLeftLogical128BitLane(xmm6, 4);
+        v7 = ShiftLeftLogical128BitLane(v6, 4);
+        v8 = Xor(Xor(Xor(v6, xmm6), v7), ShiftLeftLogical128BitLane(v7, 4));
+
+        xmm0 = KeygenAssist(xmm2.AsByte(), 1).AsInt32();
+        v10 = Shuffle(xmm0, 0xFF);
+        v11 = ShiftLeftLogical128BitLane(xmm2, 4);
+        v12 = Xor(v11, xmm2);
+        v13 = ShiftLeftLogical128BitLane(v11, 4);
+        xmm3 = Xor(v8, v10);
+        v15 = Xor(Xor(v12, v13), ShiftLeftLogical128BitLane(v13, 4));
+        v16 = ShiftLeftLogical128BitLane(xmm3, 4);
+
+        xmm0 = KeygenAssist(xmm3.AsByte(), 0).AsInt32();
+        v18 = Shuffle(xmm0, 0xAA);
+        v19 = ShiftLeftLogical128BitLane(v16, 4);
+        xmm4 = Xor(v15, v18);
+        v21 = Xor(Xor(Xor(v16, xmm3), v19), ShiftLeftLogical128BitLane(v19, 4));
+
+        xmm0 = KeygenAssist(xmm4.AsByte(), 2).AsInt32();
+        xmm7 = InverseMixColumns(xmm2.AsByte()).AsInt32();
+        xmm5 = Xor(v21, Shuffle(xmm0, 0xFF));
+        xmm8 = InverseMixColumns(xmm3.AsByte()).AsInt32();
+
+        v26 = ShiftLeftLogical128BitLane(xmm4, 4);
+        v27 = ShiftLeftLogical128BitLane(xmm5, 4);
+        v28 = ShiftLeftLogical128BitLane(v26, 4);
+        v29 = Xor(Xor(Xor(v26, xmm4), v28), ShiftLeftLogical128BitLane(v28, 4));
+
+        xmm9 = InverseMixColumns(xmm4.AsByte()).AsInt32();
+        xmm0 = KeygenAssist(xmm5.AsByte(), 0).AsInt32();
+
+        v32 = Shuffle(xmm0, 0xAA);
+        v33 = ShiftLeftLogical128BitLane(v27, 4);
+        xmm2 = Xor(v29, v32);
+
+        v35 = ShiftLeftLogical128BitLane(xmm2, 4);
+        v36 = Xor(Xor(Xor(v27, xmm5), v33), ShiftLeftLogical128BitLane(v33, 4));
+
+        xmm0 = KeygenAssist(xmm2.AsByte(), 4).AsInt32();
+        v38 = Shuffle(xmm0, 0xFF);
+        v39 = ShiftLeftLogical128BitLane(v35, 4);
+        xmm3 = Xor(v36, v38);
+
+        v41 = Xor(Xor(Xor(v35, xmm2), v39), ShiftLeftLogical128BitLane(v39, 4));
+
+        xmm10 = InverseMixColumns(xmm5.AsByte()).AsInt32();
+        xmm11 = InverseMixColumns(xmm2.AsByte()).AsInt32();
+        xmm12 = InverseMixColumns(xmm3.AsByte()).AsInt32();
+        xmm0 = KeygenAssist(xmm3.AsByte(), 0).AsInt32();
+
+        xmm4 = Xor(v41, Shuffle(xmm0, 0xAA));
+
+        v47 = ShiftLeftLogical128BitLane(xmm3, 4);
+        v48 = Xor(v47, xmm3);
+        v49 = ShiftLeftLogical128BitLane(v47, 4);
+        v50 = ShiftLeftLogical128BitLane(xmm4, 4);
+        v51 = Xor(Xor(v48, v49), ShiftLeftLogical128BitLane(v49, 4));
+
+        xmm0 = KeygenAssist(xmm4.AsByte(), 8).AsInt32();
+        v53 = Shuffle(xmm0, 0xFF);
+        v54 = ShiftLeftLogical128BitLane(v50, 4);
+        xmm2 = Xor(v51, v53);
+
+        v56 = Xor(Xor(Xor(v50, xmm4), v54), ShiftLeftLogical128BitLane(v54, 4));
+        v57 = ShiftLeftLogical128BitLane(xmm2, 4);
+        xmm0 = KeygenAssist(xmm2.AsByte(), 0).AsInt32();
+        v59 = Shuffle(xmm0, 0xAA);
+        v60 = ShiftLeftLogical128BitLane(v57, 4);
+        xmm3 = Xor(v56, v59);
+
+        v62 = ShiftLeftLogical128BitLane(xmm3, 4);
+        v63 = Xor(Xor(Xor(v57, xmm2), v60), ShiftLeftLogical128BitLane(v60, 4));
+        xmm0 = KeygenAssist(xmm3.AsByte(), 0x10).AsInt32();
+        v65 = Shuffle(xmm0, 0xFF);
+        v66 = ShiftLeftLogical128BitLane(v62, 4);
+        xmm5 = Xor(v63, v65);
+
+        v68 = Xor(Xor(Xor(v62, xmm3), v66), ShiftLeftLogical128BitLane(v66, 4));
+
+        xmm14 = InverseMixColumns(xmm3.AsByte()).AsInt32();
+        xmm13 = InverseMixColumns(xmm2.AsByte()).AsInt32();
+        xmm0 = KeygenAssist(xmm5.AsByte(), 0).AsInt32();
+
+        xmm4 = Xor(v68, Shuffle(xmm0, 0xAA));
+
+        v73 = ShiftLeftLogical128BitLane(xmm5, 4);
+        v74 = ShiftLeftLogical128BitLane(v73, 4);
+        v75 = Xor(Xor(Xor(v73, xmm5), v74), ShiftLeftLogical128BitLane(v74, 4));
+
+        xmm0 = KeygenAssist(xmm4.AsByte(), 0x20).AsInt32();
+        v77 = Shuffle(xmm0, 0xFF);
+        v78 = ShiftLeftLogical128BitLane(xmm4, 4);
+        v79 = Xor(v78, xmm4);
+        v80 = ShiftLeftLogical128BitLane(v78, 4);
+
+        xmm3 = Xor(v75, v77);
+
+        xmm15 = InverseMixColumns(xmm4.AsByte()).AsInt32();
+
+        v83 = Xor(Xor(v79, v80), ShiftLeftLogical128BitLane(v80, 4));
+        v84 = ShiftLeftLogical128BitLane(xmm3, 4);
+        xmm0 = KeygenAssist(xmm3.AsByte(), 0).AsInt32();
+        v86 = Shuffle(xmm0, 0xAA);
+        v87 = ShiftLeftLogical128BitLane(v84, 4);
+        xmm2 = Xor(v83, v86);
+
+        v89 = Xor(Xor(Xor(v84, xmm3), v87), ShiftLeftLogical128BitLane(v87, 4));
+
+        xmm5 = InverseMixColumns(xmm5.AsByte()).AsInt32();
+        xmm0 = KeygenAssist(xmm2.AsByte(), 0x40).AsInt32();
+
+        v92 = Xor(v89, Shuffle(xmm0, 0xFF));
+
+        xmm2 = InverseMixColumns(xmm2.AsByte()).AsInt32();
+        xmm3 = InverseMixColumns(xmm3.AsByte()).AsInt32();
+
+        roundKeys[0] = v92.AsByte();
+        roundKeys[1] = xmm2.AsByte();
+        roundKeys[2] = xmm3.AsByte();
+        roundKeys[3] = xmm15.AsByte();
+        roundKeys[4] = xmm5.AsByte();
+        roundKeys[5] = xmm14.AsByte();
+        roundKeys[6] = xmm13.AsByte();
+        roundKeys[7] = xmm12.AsByte();
+        roundKeys[8] = xmm11.AsByte();
+        roundKeys[9] = xmm10.AsByte();
+        roundKeys[10] = xmm9.AsByte();
+        roundKeys[11] = xmm8.AsByte();
+        roundKeys[12] = xmm7.AsByte();
+        roundKeys[13] = xmm6.AsByte();
+
+        return roundKeys;
     }
 }
