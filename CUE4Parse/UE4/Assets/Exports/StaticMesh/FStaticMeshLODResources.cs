@@ -76,8 +76,7 @@ public class FStaticMeshLODResources
 
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
-            if (Ar.Game >= EGame.GAME_UE5_5)
-                _ = Ar.ReadBoolean(); // bHasRayTracingGeometry
+            if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
 
             if (bInlined)
             {

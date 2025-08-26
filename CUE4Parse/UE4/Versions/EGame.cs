@@ -145,6 +145,7 @@ public enum EGame : uint
         GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_AshesOfCreation = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
+        GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,

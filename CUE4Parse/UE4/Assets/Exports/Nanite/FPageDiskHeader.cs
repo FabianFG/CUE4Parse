@@ -25,10 +25,10 @@ public readonly struct FPageDiskHeader
 
     public FPageDiskHeader(FArchive Ar)
     {
-        if (Ar.Game <= EGame.GAME_UE5_3) GpuSize = Ar.Read<uint>();
+        if (Ar.Game < EGame.GAME_UE5_4) GpuSize = Ar.Read<uint>();
         NumClusters = Ar.Read<uint>();
         NumRawFloat4s = Ar.Read<uint>();
-        if (Ar.Game <= EGame.GAME_UE5_3) NumTexCoords = Ar.Read<uint>();
+        if (Ar.Game < EGame.GAME_UE5_4) NumTexCoords = Ar.Read<uint>();
         NumVertexRefs = Ar.Read<uint>();
         DecodeInfoOffset = Ar.Read<uint>();
         StripBitmaskOffset = Ar.Read<uint>();
