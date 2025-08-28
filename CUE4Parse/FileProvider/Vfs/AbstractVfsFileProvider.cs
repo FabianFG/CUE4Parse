@@ -29,6 +29,7 @@ using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
+using CUE4Parse.GameTypes.UWO.Encryption.Aes;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
@@ -91,6 +92,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
                 EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
+                EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
                 _ => null
             };
         }

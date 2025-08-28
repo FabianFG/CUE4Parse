@@ -1,12 +1,12 @@
 using System;
 using CUE4Parse.UE4.VirtualFileSystem;
 
-namespace CUE4Parse.GameTypes.SD.Encryption.Aes;
+namespace CUE4Parse.GameTypes.UWO.Encryption.Aes;
 
 /// <summary>
 /// Reversed by spiritovod
 /// </summary>
-public static class SpectreDivideAes
+public static class UnchartedWatersOriginAes
 {
     private const int AES_KEYBITS = 256;
     private const int AES_BLOCKBYTES = 16;
@@ -449,7 +449,7 @@ public static class SpectreDivideAes
         uint temp;
 
         rk[0] = GETU32(key[..]);
-        rk[1] = GETU32(key[4..]) ^ 0x63636363;
+        rk[1] = GETU32(key[4..]);
         rk[2] = GETU32(key[8..]);
         rk[3] = GETU32(key[12..]);
         if (keybits == 128)
@@ -597,97 +597,108 @@ public static class SpectreDivideAes
         return nrounds;
     }
 
-    private static void rijndaelDecrypt(Span<uint> rk, Span<byte> a3, Span<byte> a4)
+    private static void rijndaelDecrypt(Span<uint> key, Span<byte> a3, Span<byte> a4)
     {
-        uint v24 = (uint)(rk[0] ^ a3[7] ^ ((a3[6] ^ ((a3[5] ^ (a3[4] << 8)) << 8)) << 8));
-        uint v25 = (uint)(rk[3] ^ a3[15] ^ ((a3[14] ^ ((a3[13] ^ (a3[12] << 8)) << 8)) << 8));
-        uint v26 = (uint)(rk[2] ^ a3[3] ^ ((a3[2] ^ ((a3[1] ^ (a3[0] << 8)) << 8)) << 8));
-        uint v27 = rk[7] ^ Td3[(byte)(rk[2] ^ a3[3])] ^ Td0[(uint)(a3[11] ^ ((a3[10] ^ ((a3[9] ^ (a3[8] << 8)) << 8)) << 8)) >> 24] ^ Td2[(byte)(v25 >> 8)] ^ Td1[(byte)(v24 >> 16)];
-        uint v28 = rk[6] ^ Td3[a3[11]] ^ Td0[v24 >> 24] ^ Td2[(byte)((rk[2] ^ a3[3] ^ ((a3[2] ^ ((a3[1] ^ (a3[0] << 8)) << 8)) << 8)) >> 8)] ^ Td1[(byte)(v25 >> 16)];
-        uint v29 = rk[5] ^ Td3[(byte)v24] ^ Td0[v25 >> 24] ^ Td1[(byte)(v26 >> 16)] ^ Td2[a3[10]];
-        uint v30 = rk[4] ^ Td3[(byte)v25] ^ Td0[v26 >> 24] ^ Td1[(byte)((a3[11] ^ ((a3[10] ^ ((a3[9] ^ (a3[8] << 8)) << 8)) << 8)) >> 16)] ^ Td2[(byte)(v24 >> 8)];
-        uint v31 = rk[11] ^ Td3[(byte)v30] ^ Td0[v27 >> 24] ^ Td1[(byte)(v28 >> 16)] ^ Td2[(byte)(v29 >> 8)];
-        uint v32 = rk[10] ^ Td3[(byte)v27] ^ Td0[v28 >> 24] ^ Td1[(byte)(v29 >> 16)] ^ Td2[(byte)(v30 >> 8)];
-        uint v33 = rk[9]  ^ Td3[(byte)v28] ^ Td0[v29 >> 24] ^ Td2[(byte)(v27 >> 8)] ^ Td1[(byte)(v30 >> 16)];
-        uint v34 = rk[8]  ^ Td3[(byte)v29] ^ Td0[v30 >> 24] ^ Td1[(byte)(v27 >> 16)] ^ Td2[(byte)(v28 >> 8)];
-        uint v35 = rk[15] ^ Td3[(byte)v34] ^ Td0[v31 >> 24] ^ Td1[(byte)(v32 >> 16)] ^ Td2[(byte)(v33 >> 8)];
-        uint v36 = rk[14] ^ Td3[(byte)v31] ^ Td0[v32 >> 24] ^ Td1[(byte)(v33 >> 16)] ^ Td2[(byte)(v34 >> 8)];
-        uint v37 = rk[13] ^ Td3[(byte)v32] ^ Td0[v33 >> 24] ^ Td2[(byte)(v31 >> 8)] ^ Td1[(byte)(v34 >> 16)];
-        uint v38 = rk[12] ^ Td3[(byte)v33] ^ Td0[v34 >> 24] ^ Td1[(byte)(v31 >> 16)] ^ Td2[(byte)(v32 >> 8)];
-        uint v39 = rk[19] ^ Td3[(byte)v38] ^ Td0[v35 >> 24] ^ Td1[(byte)(v36 >> 16)] ^ Td2[(byte)(v37 >> 8)];
-        uint v40 = rk[18] ^ Td3[(byte)v35] ^ Td0[v36 >> 24] ^ Td1[(byte)(v37 >> 16)] ^ Td2[(byte)(v38 >> 8)];
-        uint v41 = rk[17] ^ Td3[(byte)v36] ^ Td0[v37 >> 24] ^ Td2[(byte)(v35 >> 8)] ^ Td1[(byte)(v38 >> 16)];
-        uint v42 = rk[16] ^ Td3[(byte)v37] ^ Td0[v38 >> 24] ^ Td1[(byte)(v35 >> 16)] ^ Td2[(byte)(v36 >> 8)];
-        uint v43 = rk[23] ^ Td3[(byte)v42] ^ Td0[v39 >> 24] ^ Td1[(byte)(v40 >> 16)] ^ Td2[(byte)(v41 >> 8)];
-        uint v44 = rk[22] ^ Td3[(byte)v39] ^ Td0[v40 >> 24] ^ Td1[(byte)(v41 >> 16)] ^ Td2[(byte)(v42 >> 8)];
-        uint v45 = rk[21] ^ Td3[(byte)v40] ^ Td0[v41 >> 24] ^ Td2[(byte)(v39 >> 8)] ^ Td1[(byte)(v42 >> 16)];
-        uint v46 = rk[20] ^ Td3[(byte)v41] ^ Td0[v42 >> 24] ^ Td1[(byte)(v39 >> 16)] ^ Td2[(byte)(v40 >> 8)];
+        uint v6 = 14;
+        uint v7 = (uint)(a3[15] ^ key[3] ^ ((a3[14] ^ ((a3[13] ^ (a3[12] << 8)) << 8)) << 8) ^ 0x3B91306A);
+        uint v8 = (uint)(key[0] ^ a3[3] ^ ((a3[2] ^ ((a3[1] ^ (a3[0] << 8)) << 8)) << 8) ^ 0x9A236B90);
+        uint v9 = (uint)(a3[11] ^ key[2] ^ ((a3[10] ^ ((a3[9] ^ (a3[8] << 8)) << 8)) << 8) ^ 0x5E2E079C);
+        uint v10 = (uint)(a3[7] ^ key[1] ^ ((a3[6] ^ ((a3[5] ^ (a3[4] << 8)) << 8)) << 8) ^ 0x182FA272);
+        uint v11 = key[7] ^ Td3[(byte)(key[0] ^ a3[3]) ^ 0x90] ^ Td0[(byte)((a3[15] ^ key[3] ^ ((a3[14] ^ ((a3[13] ^ (a3[12] << 8)) << 8)) << 8) ^ 0x3B91306A) >> 24)] ^
+                   Td2[(byte)(v10 >> 8)] ^ Td1[(byte)((a3[11] ^ key[2] ^ ((a3[10] ^ ((a3[9] ^ (a3[8] << 8)) << 8)) << 8) ^ 0x5E2E079C) >> 16)];
+        uint v12 = key[6] ^ Td3[(byte) (a3[15] ^ key[3]) ^ 0x6A] ^ Td0[v9 >> 24] ^ Td1[(byte) (v10 >> 16)] ^
+                   Td2[(byte) ((ushort) (key[0] ^ a3[3] ^ (ushort) ((a3[2] ^ (ushort) ((a3[1] ^ (ushort) (a3[0] << 8)) << 8)) << 8) ^ 0x6B90) >> 8)];
+        uint v13 = key[5] ^ Td3[(byte)v9] ^ Td0[v10 >> 24] ^ Td1[(byte)(v8 >> 16)] ^ Td2[(byte)(v7 >> 8)];
+        uint v14 = key[4] ^ Td3[(byte)v10] ^ Td0[v8 >> 24] ^ Td2[(byte)(v9 >> 8)] ^ Td1[(byte)(v7 >> 16)];
+        uint v15 = key[11] ^ Td3[(byte)v14] ^ Td0[v11 >> 24] ^ Td1[(byte)(v12 >> 16)] ^ Td2[(byte)(v13 >> 8)];
+        uint v16 = key[10] ^ Td3[(byte)v11] ^ Td0[v12 >> 24] ^ Td1[(byte)(v13 >> 16)] ^ Td2[(byte)(v14 >> 8)];
+        uint v17 = key[9] ^ Td3[(byte)v12] ^ Td0[v13 >> 24] ^ Td2[(byte)(v11 >> 8)] ^ Td1[(byte)(v14 >> 16)];
+        uint v18 = key[8] ^ Td3[(byte)v13] ^ Td0[v14 >> 24] ^ Td1[(byte)(v11 >> 16)] ^ Td2[(byte)(v12 >> 8)];
+        uint v19 = key[14] ^ Td3[(byte)v15] ^ Td0[v16 >> 24] ^ Td1[(byte)(v17 >> 16)] ^ Td2[(byte)(v18 >> 8)];
+        uint v20 = key[13] ^ Td3[(byte)v16] ^ Td0[v17 >> 24] ^ Td2[(byte)(v15 >> 8)] ^ Td1[(byte)(v18 >> 16)];
+        uint v21 = key[12] ^ Td3[(byte)v17] ^ Td0[v18 >> 24] ^ Td1[(byte)(v15 >> 16)] ^ Td2[(byte)(v16 >> 8)];
+        uint v22 = key[15] ^ Td3[(byte)v18] ^ Td0[v15 >> 24] ^ Td1[(byte)(v16 >> 16)] ^ Td2[(byte)(v17 >> 8)];
+        uint v23 = key[17] ^ Td3[(byte)v19] ^ Td0[v20 >> 24] ^ Td1[(byte)(v21 >> 16)] ^ Td2[(byte)(v22 >> 8)];
+        uint v24 = key[16] ^ Td3[(byte)v20] ^ Td0[v21 >> 24] ^ Td2[(byte)(v19 >> 8)] ^ Td1[(byte)(v22 >> 16)];
+        uint v25 = key[19] ^ Td3[(byte)v21] ^ Td0[v22 >> 24] ^ Td1[(byte)(v19 >> 16)] ^ Td2[(byte)(v20 >> 8)];
+        uint v26 = key[18] ^ Td3[(byte)v22] ^ Td0[v19 >> 24] ^ Td1[(byte)(v20 >> 16)] ^ Td2[(byte)(v21 >> 8)];
+        uint v27 = key[23] ^ Td3[(byte)v24] ^ Td0[v25 >> 24] ^ Td2[(byte)(v23 >> 8)] ^ Td1[(byte)(v26 >> 16)];
+        v20 = key[22] ^ Td3[(byte)v25] ^ Td0[v26 >> 24] ^ Td1[(byte)(v23 >> 16)] ^ Td2[(byte)(v24 >> 8)];
+        uint v28 = key[21] ^ Td3[(byte)v26] ^ Td0[v23 >> 24] ^ Td1[(byte)(v24 >> 16)] ^ Td2[(byte)(v25 >> 8)];
+        uint v29 = key[20] ^ Td3[(byte)v23] ^ Td0[v24 >> 24] ^ Td1[(byte)(v25 >> 16)] ^ Td2[(byte)(v26 >> 8)];
+        uint v30 = key[26] ^ Td3[(byte)v27] ^ Td0[(key[22] ^ Td3[(byte)v25] ^ Td0[v26 >> 24] ^ Td1[(byte)(v23 >> 16)] ^
+                    Td2[(byte)(v24 >> 8)]) >> 24] ^ Td1[(byte)(v28 >> 16)] ^ Td2[(byte)((ushort)(key[20] ^
+                    Td3[(byte)v23] ^ Td0[v24 >> 24] ^ Td1[(byte)(v25 >> 16)] ^ Td2[(byte)(v26 >> 8)]) >> 8)];
+        uint v31 = key[25] ^ Td3[(byte)v20] ^ Td0[v28 >> 24] ^ Td2[(byte)((ushort)(key[23] ^ Td3[(byte)v24] ^ Td0[v25 >> 24] ^
+                    Td2[(byte)(v23 >> 8)] ^ Td1[(byte)(v26 >> 16)]) >> 8)] ^ Td1[(byte)((key[20] ^ Td3[(byte)v23] ^
+                    Td0[v24 >> 24] ^ Td1[(byte)(v25 >> 16)] ^ Td2[(byte)(v26 >> 8)]) >> 16)];
+        uint v32 = key[24] ^ Td3[(byte)v28] ^ Td0[v29 >> 24] ^ Td1[(byte)(v27 >> 16)] ^ Td2[(byte)(v20 >> 8)];
+        uint v33 = key[27] ^ Td3[(byte)v29] ^ Td0[v27 >> 24] ^ Td1[(byte)(v20 >> 16)] ^ Td2[(byte)(v28 >> 8)];
+        uint v34 = key[31] ^ Td3[(byte)v32] ^ Td0[v33 >> 24] ^ Td1[(byte)(v30 >> 16)] ^ Td2[(byte)(v31 >> 8)];
+        uint v35 = key[30] ^ Td3[(byte)v33] ^ Td0[v30 >> 24] ^ Td1[(byte)(v31 >> 16)] ^ Td2[(byte)(v32 >> 8)];
+        uint v36 = key[29] ^ Td3[(byte)v30] ^ Td0[v31 >> 24] ^ Td1[(byte)(v32 >> 16)] ^ Td2[(byte)(v33 >> 8)];
+        uint v37 = key[28] ^ Td3[(byte)v31] ^ Td0[v32 >> 24] ^ Td2[(byte)(v30 >> 8)] ^ Td1[(byte)(v33 >> 16)];
+        uint v38 = key[34] ^ Td3[(byte)v34] ^ Td0[v35 >> 24] ^ Td1[(byte)(v36 >> 16)] ^ Td2[(byte)(v37 >> 8)];
+        uint v39 = key[33] ^ Td3[(byte)v35] ^ Td0[v36 >> 24] ^ Td2[(byte)(v34 >> 8)] ^ Td1[(byte)(v37 >> 16)];
+        uint v40 = key[32] ^ Td3[(byte)v36] ^ Td0[v37 >> 24] ^ Td1[(byte)(v34 >> 16)] ^ Td2[(byte)(v35 >> 8)];
+        uint v41 = key[35] ^ Td3[(byte)v37] ^ Td0[v34 >> 24] ^ Td1[(byte)(v35 >> 16)] ^ Td2[(byte)(v36 >> 8)];
+        uint v42 = key[39] ^ Td3[(byte)v40] ^ Td0[v41 >> 24] ^ Td1[(byte)(v38 >> 16)] ^ Td2[(byte)(v39 >> 8)];
+        uint v43 = key[37] ^ Td3[(byte)v38] ^ Td0[v39 >> 24] ^ Td1[(byte)(v40 >> 16)] ^ Td2[(byte)(v41 >> 8)];
+        uint v44 = key[38] ^ Td3[(byte)v41] ^ Td0[v38 >> 24] ^ Td1[(byte)(v39 >> 16)] ^ Td2[(byte)(v40 >> 8)];
+        uint v45 = key[36] ^ Td3[(byte)v39] ^ Td0[v40 >> 24] ^ Td2[(byte)(v38 >> 8)] ^ Td1[(byte)(v41 >> 16)];
+        if ( (int)v6 > 10 )
+        {
+            uint v46 = key[39] ^ Td3[(byte)v40] ^ Td0[v41 >> 24] ^ Td1[(byte)(v38 >> 16)] ^ Td2[(byte)(v39 >> 8)];
+            uint v47 = v45 >> 24;
+            uint v48 = key[43] ^ Td3[(byte)v45] ^ Td0[v42 >> 24] ^ Td1[(byte)(v44 >> 16)] ^ Td2[(byte)(v43 >> 8)];
+            uint v49 = key[42] ^ Td3[(byte)v42] ^ Td0[v44 >> 24] ^ Td1[(byte)(v43 >> 16)] ^ Td2[(byte)(v45 >> 8)];
+            uint v50 = key[41] ^ Td3[(byte)v44] ^ Td0[v43 >> 24] ^ Td2[(byte)(v46 >> 8)] ^ Td1[(byte)(v45 >> 16)];
+            uint v51 = key[40] ^ Td3[(byte)v43] ^ Td0[v47] ^ Td1[(byte)(v46 >> 16)] ^ Td2[(byte)(v44 >> 8)];
+            v45 = key[44] ^ Td3[(byte)v50] ^ Td0[(key[40] ^ Td3[(byte)v43] ^ Td0[v47] ^ Td1[(byte)(v46 >> 16)] ^
+                    Td2[(byte)(v44 >> 8)]) >> 24] ^ Td1[(byte)(v48 >> 16)] ^ Td2[(byte)(v49 >> 8)];
+            v43 = key[45] ^ Td3[(byte)v49] ^ Td0[v50 >> 24] ^ Td2[(byte)(v48 >> 8)] ^ Td1[(byte)(v51 >> 16)];
+            v44 = key[46] ^ Td3[(byte)v48] ^ Td0[v49 >> 24] ^ Td1[(byte)(v50 >> 16)] ^ Td2[(byte)(v51 >> 8)];
+            v42 = key[47] ^ Td3[(byte)v51] ^ Td0[v48 >> 24] ^ Td1[(byte)(v49 >> 16)] ^ Td2[(byte)(v50 >> 8)];
+            if ( (int)v6 > 12 )
+            {
+                uint v52 = v42;
+                uint v53 = v45 >> 24;
+                uint v54 = key[51] ^ Td3[(byte)v45] ^ Td0[v42 >> 24] ^ Td1[(byte)(v44 >> 16)] ^ Td2[(byte)(v43 >> 8)];
+                uint v55 = key[50] ^ Td3[(byte)v42] ^ Td0[v44 >> 24] ^ Td1[(byte)(v43 >> 16)] ^ Td2[(byte)(v45 >> 8)];
+                uint v56 = key[49] ^ Td3[(byte)v44] ^ Td0[v43 >> 24] ^ Td2[(byte)(v52 >> 8)] ^ Td1[(byte)(v45 >> 16)];
+                uint v57 = key[48] ^ Td3[(byte)v43] ^ Td0[v53] ^ Td1[(byte)(v52 >> 16)] ^ Td2[(byte)(v44 >> 8)];
+                v45 = key[52] ^ Td3[(byte)v56] ^ Td0[(key[48] ^ Td3[(byte)v43] ^ Td0[v53] ^ Td1[(byte)(v52 >> 16)] ^
+                        Td2[(byte)(v44 >> 8)]) >> 24] ^ Td1[(byte)(v54 >> 16)] ^ Td2[(byte)(v55 >> 8)];
+                v43 = key[53] ^ Td3[(byte)v55] ^ Td0[v56 >> 24] ^ Td2[(byte)(v54 >> 8)] ^ Td1[(byte)(v57 >> 16)];
+                v44 = key[54] ^ Td3[(byte)v54] ^ Td0[v55 >> 24] ^ Td1[(byte)(v56 >> 16)] ^ Td2[(byte)(v57 >> 8)];
+                v42 = key[55] ^ Td3[(byte)v57] ^ Td0[v54 >> 24] ^ Td1[(byte)(v55 >> 16)] ^ Td2[(byte)(v56 >> 8)];
+            }
+        }
 
-        uint v47 = rk[27] ^ Td3[(byte)v46] ^ Td0[v43 >> 24] ^ Td1[(byte)((rk[22] ^ Td3[(byte)v39] ^ Td0[v40 >> 24] ^ Td1[(byte)(v41 >> 16)] ^ Td2[(byte)(v42 >> 8)]) >> 16)] ^ Td2[(byte)(v45 >> 8)];
-        uint v48 = rk[26] ^ Td3[(byte)v43] ^ Td0[v44 >> 24] ^ Td1[(byte)(v45 >> 16)] ^ Td2[(byte)(v46 >> 8)];
-        uint v49 = rk[25] ^ Td3[(byte)v44] ^ Td0[v45 >> 24] ^ Td2[(byte)(v43 >> 8)] ^ Td1[(byte)(v46 >> 16)];
-        uint v50 = rk[24] ^ Td3[(byte)v45] ^ Td0[v46 >> 24] ^ Td1[(byte)(v43 >> 16)] ^ Td2[(byte)(v44 >> 8)];
-        uint v51 = rk[31] ^ Td3[(byte)v50] ^ Td0[v47 >> 24] ^ Td1[(byte)(v48 >> 16)] ^ Td2[(byte)(v49 >> 8)];
-        uint v52 = rk[30] ^ Td3[(byte)v47] ^ Td0[v48 >> 24] ^ Td1[(byte)(v49 >> 16)] ^ Td2[(byte)(v50 >> 8)];
-        uint v53 = rk[29] ^ Td3[(byte)v48] ^ Td0[v49 >> 24] ^ Td2[(byte)(v47 >> 8)] ^ Td1[(byte)(v50 >> 16)];
-        uint v54 = rk[28] ^ Td3[(byte)v49] ^ Td0[v50 >> 24] ^ Td1[(byte)(v47 >> 16)] ^ Td2[(byte)(v48 >> 8)];
-        uint v55 = rk[35] ^ Td3[(byte)v54] ^ Td0[v51 >> 24] ^ Td1[(byte)(v52 >> 16)] ^ Td2[(byte)(v53 >> 8)];
-        uint v56 = rk[34] ^ Td3[(byte)v51] ^ Td0[v52 >> 24] ^ Td1[(byte)(v53 >> 16)] ^ Td2[(byte)(v54 >> 8)];
-        uint v57 = rk[33] ^ Td3[(byte)v52] ^ Td0[v53 >> 24] ^ Td2[(byte)(v51 >> 8)] ^ Td1[(byte)(v54 >> 16)];
-        uint v58 = rk[32] ^ Td3[(byte)v53] ^ Td0[v54 >> 24] ^ Td1[(byte)(v51 >> 16)] ^ Td2[(byte)(v52 >> 8)];
-        uint v59 = rk[36] ^ Td3[(byte)v57] ^ Td0[v58 >> 24] ^ Td1[(byte)(v55 >> 16)] ^ Td2[(byte)(v56 >> 8)];
-        uint v60 = rk[37] ^ Td3[(byte)v56] ^ Td0[v57 >> 24] ^ Td2[(byte)(v55 >> 8)] ^ Td1[(byte)(v58 >> 16)];
-        uint v61 = rk[38] ^ Td3[(byte)v55] ^ Td0[v56 >> 24] ^ Td1[(byte)(v57 >> 16)] ^ Td2[(byte)(v58 >> 8)];
-        uint v62 = rk[39] ^ Td3[(byte)v58] ^ Td0[v55 >> 24] ^ Td1[(byte)(v56 >> 16)] ^ Td2[(byte)(v57 >> 8)];
-
-        uint v63 = rk[43] ^ Td3[(byte)v59] ^ Td0[v62 >> 24] ^ Td1[(byte)(v61 >> 16)] ^ Td2[(byte)(v60 >> 8)];
-        uint v64 = rk[42] ^ Td3[(byte)v62] ^ Td0[v61 >> 24] ^ Td1[(byte)(v60 >> 16)] ^ Td2[(byte)(v59 >> 8)];
-        uint v65 = rk[41] ^ Td3[(byte)v61] ^ Td0[v60 >> 24] ^ Td2[(byte)(v62 >> 8)] ^ Td1[(byte)(v59 >> 16)];
-        uint v66 = rk[40] ^ Td3[(byte)v60] ^ Td0[v59 >> 24] ^ Td1[(byte)(v62 >> 16)] ^ Td2[(byte)(v61 >> 8)];
-        v59 = rk[44] ^ Td3[(byte)v65] ^ Td0[v66 >> 24] ^ Td1[(byte)(v63 >> 16)] ^ Td2[(byte)(v64 >> 8)];
-        v60 = rk[45] ^ Td3[(byte)v64] ^ Td0[v65 >> 24] ^ Td2[(byte)(v63 >> 8)] ^ Td1[(byte)(v66 >> 16)];
-        v61 = rk[46] ^ Td3[(byte)v63] ^ Td0[v64 >> 24] ^ Td1[(byte)(v65 >> 16)] ^ Td2[(byte)(v66 >> 8)];
-        v62 = rk[47] ^ Td3[(byte)v66] ^ Td0[v63 >> 24] ^ Td1[(byte)(v64 >> 16)] ^ Td2[(byte)(v65 >> 8)];
-
-        uint v67 = rk[51] ^ Td3[(byte)v59] ^ Td0[v62 >> 24] ^ Td1[(byte)(v61 >> 16)] ^ Td2[(byte)(v60 >> 8)];
-        uint v68 = rk[50] ^ Td3[(byte)v62] ^ Td0[v61 >> 24] ^ Td1[(byte)(v60 >> 16)] ^ Td2[(byte)(v59 >> 8)];
-        uint v69 = rk[49] ^ Td3[(byte)v61] ^ Td0[v60 >> 24] ^ Td2[(byte)(v62 >> 8)] ^ Td1[(byte)(v59 >> 16)];
-        uint v70 = rk[48] ^ Td3[(byte)v60] ^ Td0[v59 >> 24] ^ Td1[(byte)(v62 >> 16)] ^ Td2[(byte)(v61 >> 8)];
-        v59 = rk[52] ^ Td3[(byte)v69] ^ Td0[v70 >> 24] ^ Td1[(byte)(v67 >> 16)] ^ Td2[(byte)(v68 >> 8)];
-        v60 = rk[53] ^ Td3[(byte)v68] ^ Td0[v69 >> 24] ^ Td2[(byte)(v67 >> 8)] ^ Td1[(byte)(v70 >> 16)];
-        v61 = rk[54] ^ Td3[(byte)v67] ^ Td0[v68 >> 24] ^ Td1[(byte)(v69 >> 16)] ^ Td2[(byte)(v70 >> 8)];
-        v62 = rk[55] ^ Td3[(byte)v70] ^ Td0[v67 >> 24] ^ Td1[(byte)(v68 >> 16)] ^ Td2[(byte)(v69 >> 8)];
-
-        int result = 14;
-        uint v22 = rk[result * 4 + 1];
-        uint v80 = rk[result * 4 + 3];
-
-        uint v71 = v61;
-        uint v72 = v80 ^ (byte)Td4[(byte)v60] ^ Td4[v59 >> 24] & 0xFF000000 ^ Td4[(byte)(v61 >> 8)] & 0xFF00 ^ Td4[(byte)(v62 >> 16)] & 0xFF0000;
-        a4[3] = (byte)v72;
-        a4[0] = (byte)((v72 >> 24) & 0xFF);
-        a4[1] = (byte)(v72 >> 16);
-        a4[2] = (byte)(v72 >> 8);
-        uint v73 = v22 ^ (byte)Td4[(byte)v71] ^ Td4[v60 >> 24] & 0xFF000000 ^ Td4[(byte)(v62 >> 8)] & 0xFF00 ^ Td4[(byte)(v59 >> 16)] & 0xFF0000;
-        a4[7] = (byte)((v22 & 0xFF) ^ (Td4[(byte)v71] & 0xFF));
-        a4[4] = (byte)((v73 >> 24) & 0xFF);
-        a4[5] = (byte)(v73 >> 16);
-        a4[6] = (byte)(v73 >> 8);
-        uint v74 = (byte)Td4[(byte)v62] ^ Td4[v71 >> 24] & 0xFF000000 ^ Td4[(byte)(v59 >> 8)] & 0xFF00 ^ Td4[(byte)(v60 >> 16)] & 0xFF0000;
-        a4[8] = (byte)((v74 >> 24) & 0xFF);
-        a4[9] = (byte)(v74 >> 16);
-        a4[10] = (byte)(v74 >> 8);
-        a4[11] = (byte)v74;
-        uint v75 = Td4[v62 >> 24] & 0xFF000000 ^ Td4[(byte)(v60 >> 8)] & 0xFF00 ^ Td4[(byte)(v71 >> 16)] & 0xFF0000;
-        uint v76 = (byte)v59;
-        uint v77 = v22 ^ (byte)Td4[v76] ^ v75;
-        a4[15] = (byte)v77;
-        a4[12] = (byte)((v77 >> 24) & 0xFF);
-        a4[13] = (byte)(v77 >> 16);
-        a4[14] = (byte)(v77 >> 8);
+        uint v58 = v44;
+        uint v60 = key[56] ^ (byte)(Td4[(byte)v43]) ^ Td4[v45 >> 24] & 0xFF000000 ^ Td4[(byte)(v44 >> 8)] & 0xFF00 ^ Td4[(byte)(v42 >> 16)] & 0xFF0000;
+        a4[3] = (byte)v60;
+        a4[0] = (byte)((v60 >> 24) & 0xFF);
+        a4[1] = (byte)(v60 >> 16);
+        a4[2] = (byte)(v60 >> 8);
+        uint v61 = key[57] ^ (byte)(Td4[(byte)v58]) ^ Td4[v43 >> 24] & 0xFF000000 ^ Td4[(byte)(v45 >> 16)] & 0xFF0000 ^ Td4[(byte)(v42 >> 8)] & 0xFF00;
+        a4[7] = (byte)(key[57] ^ (byte)(Td4[(byte)v58]));
+        a4[4] = (byte)((v61 >> 24) & 0xFF);
+        a4[5] = (byte)(v61 >> 16);
+        a4[6] = (byte)(v61 >> 8);
+        uint v62 = key[58] ^ (byte)(Td4[(byte)v42]) ^ Td4[v58 >> 24] & 0xFF000000 ^ Td4[(byte)(v45 >> 8)] & 0xFF00 ^ Td4[(byte)(v43 >> 16)] & 0xFF0000;
+        a4[11] =  (byte)(key[58] ^ (byte)(Td4[(byte)v42]));
+        a4[8] = (byte)((v62 >> 24) & 0xFF);
+        a4[9] = (byte)(v62 >> 16);
+        a4[10] = (byte)(v62 >> 8);
+        uint v63 = key[59] ^ (byte)(Td4[(byte)v45]) ^ Td4[v42 >> 24] & 0xFF000000 ^ Td4[(byte)(v58 >> 16)] & 0xFF0000 ^ Td4[(byte)(v43 >> 8)] & 0xFF00;
+        a4[15] =  (byte)(key[59] ^ (byte)(Td4[(byte)v45]));
+        a4[12] = (byte)((v63 >> 24) & 0xFF);
+        a4[13] = (byte)(v63 >> 16);
+        a4[14] = (byte)(v63 >> 8);
     }
 
-    public static byte[] SpectreDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] UnchartedWatersOriginDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
