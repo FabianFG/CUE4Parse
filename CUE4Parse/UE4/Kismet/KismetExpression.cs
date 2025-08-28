@@ -29,7 +29,7 @@ public class FKismetPropertyPointer
 
     public override string ToString()
     {
-        if (bNew && New is { Path.Count: > 0 })
+        if (bNew && New is { Path.Length: > 0 })
         {
             return New.Path[0].Text;
         }

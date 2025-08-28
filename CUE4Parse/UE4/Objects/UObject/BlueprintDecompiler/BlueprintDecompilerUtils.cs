@@ -1292,7 +1292,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_StructMemberContext structMemberContext:
             {
-                if (structMemberContext.Property.New?.Path.Count > 1)
+                if (structMemberContext.Property.New?.Path.Length > 1)
                     throw new NotImplementedException();
 
                 var property = structMemberContext.Property.ToString();
