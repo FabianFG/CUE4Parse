@@ -18,3 +18,19 @@ public class UTextureCube : UTexture
         }
     }
 }
+
+public class UTextureCubeArray : UTexture
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        var stripFlags = new FStripDataFlags(Ar);
+        var bCooked = Ar.ReadBoolean();
+
+        if (bCooked)
+        {
+            DeserializeCookedPlatformData(Ar);
+        }
+    }
+}

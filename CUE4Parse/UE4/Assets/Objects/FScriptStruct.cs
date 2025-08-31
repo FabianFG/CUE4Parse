@@ -279,6 +279,14 @@ public class FScriptStruct
             "SimpleBox" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FSimpleBox>(),
             "RRotationTranslation" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FRRotationTranslation>(),
 
+            // Concord
+            "PMTimelineSectionFloatMapping" or "PMTimelineSectionEventFloatMapping" => new FPMFloatMapping(Ar),
+            "PMFloatMapping" or "PMBoundFloatMapping" or "FWAbilityResourceFloatMapping" => new FPMFloatMapping(Ar),
+            "GameplayEffectFloatMapping" or "PMTimelineFloatMapping" or "FWPerkContextFloatMapping" => new FPMFloatMapping(Ar),
+            "PMTimelineObjectBindingDef" => new FPMTimelineObjectBindingDef(Ar),
+            "GameplayEffectApplicationDataHandle" => new FGameplayEffectApplicationDataHandle(Ar),
+            "PMTimelineRelevancy" => new FPMTimelineRelevancy(Ar),
+
             // Titan Quest 2
             _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
 

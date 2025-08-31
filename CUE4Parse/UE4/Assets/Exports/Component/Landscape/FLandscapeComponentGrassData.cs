@@ -23,7 +23,7 @@ public class FLandscapeComponentGrassData
         }
         else
         {
-            if (Ar.Game <= EGame.GAME_UE4_12 && Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID)
+            if (Ar.Game < EGame.GAME_UE4_13 && Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID)
             {
                 Ar.Position +=16; // Guid
             }

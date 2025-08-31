@@ -90,6 +90,7 @@ public enum EGame : uint
         GAME_StellarBlade = GAME_UE4_26 + 16,
         GAME_EtheriaRestart = GAME_UE4_26 + 17,
         GAME_EvilWest = GAME_UE4_26 + 18,
+        GAME_ArenaBreakoutInifinite = GAME_UE4_26 + 19,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
@@ -113,6 +114,7 @@ public enum EGame : uint
         GAME_NeedForSpeedMobile = GAME_UE4_27 + 20,
         GAME_TonyHawkProSkater34 = GAME_UE4_27 + 21,
         GAME_OnePieceAmbition = GAME_UE4_27 + 22,
+        GAME_UnchartedWatersOrigin = GAME_UE4_27 + 23,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -145,6 +147,7 @@ public enum EGame : uint
         GAME_Rennsport = GAME_UE5_3 + 5,
         GAME_AshesOfCreation = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
+        GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
