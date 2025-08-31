@@ -115,6 +115,8 @@ public enum EGame : uint
         GAME_TonyHawkProSkater34 = GAME_UE4_27 + 21,
         GAME_OnePieceAmbition = GAME_UE4_27 + 22,
         GAME_UnchartedWatersOrigin = GAME_UE4_27 + 23,
+        GAME_LostSoulAside = GAME_UE4_27 + 24,
+        GAME_GhostsofTabor = GAME_UE4_27 + 25,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
