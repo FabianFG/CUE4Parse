@@ -30,7 +30,6 @@ public static class ABILua
 
         Ar.Write(_luaHeader, 0, 4);
 
-        Ar.Position = 4;
         Ar.WriteByte(_luaVersion);
 
         ReadAndDecryptBlock(Ar, 1); // LUAC_FORMAT
