@@ -81,21 +81,29 @@ public static class ABIDecryption
 
     public static byte[] AbiDecryptLua(byte[] bytes)
     {
-        if (bytes.Length < 8) throw new ArgumentException("lua file must be at least 8 bytes", nameof(bytes));
+        if (bytes.Length < 12)
+            throw new ArgumentException("Lua file must be at least 12 bytes", nameof(bytes));
 
         var magic = BitConverter.ToUInt32(bytes);
-        if (magic == 0x4d41551b) return bytes; // lua_dump, no idea how to decrypt
-        if (bytes[0] != 0x1b || bytes[2] != 0x41 || bytes[3] != 0x4d)
+
+        // If starts with this, it's encrypted with SM4, but this isn't even used
+        if (magic == 0x464d551b)
+            //var luaLength = bytes.Length - 8;
+            //var length = (luaLength >> 4) << 4;
+
+            //var output = new byte[length];
+            //Buffer.BlockCopy(bytes, 8, output, 0, length);
+
+            //Sm4SboxSwitch.SetTo48();
+            //Sm4Helper.Decrypt(Sm4Helper.GetKey(iniDecryptKey, SM4Mode.Lua), ref output, SM4Mode.A);
             return bytes;
-        var iniLength = bytes.Length - 8;
-        var length = (iniLength >> 4) << 4;
 
-        var output = new byte[length];
-        Buffer.BlockCopy(bytes, 8, output, 0, length);
+        if (magic != 0x4d41551b)
+            return bytes;
 
-        Sm4SboxSwitch.SetTo48();
-        Sm4Helper.Decrypt(Sm4Helper.GetKey(iniDecryptKey, SM4Mode.Lua), ref output, SM4Mode.A);
-        return output;
+        var decrypted = ABILua.DecryptLuaBytecode(bytes);
+
+        return decrypted;
     }
 }
 
