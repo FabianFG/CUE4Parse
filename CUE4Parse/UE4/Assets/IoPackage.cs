@@ -24,6 +24,7 @@ namespace CUE4Parse.UE4.Assets
 
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
+        public override List<byte[]> EditorThumbnails { get; }
         public override int ImportMapLength => ImportMap.Length;
         public override int ExportMapLength => ExportMap.Length;
 
