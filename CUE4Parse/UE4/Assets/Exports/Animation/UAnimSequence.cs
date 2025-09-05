@@ -67,6 +67,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
             }
 
+            if (Ar.Game is EGame.GAME_SuicideSquad) return; // custom format
             if (Ar.Game == EGame.GAME_DaysGone)
             {
                 var rawcurvedata = GetOrDefault<FStructFallback>("RawCurveData");
@@ -366,7 +367,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (AdditiveAnimType == EAdditiveAnimationType.AAT_None) return false;
             return RefPoseType switch
             {
-                EAdditiveBasePoseType.ABPT_RefPose => RefPoseSeq.Name.Text != Name,
+                EAdditiveBasePoseType.ABPT_RefPose => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefPoseSeq.Name.Text != Name && RefFrameIndex >= 0,
                 EAdditiveBasePoseType.ABPT_LocalAnimFrame => RefFrameIndex >= 0,

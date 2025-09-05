@@ -76,6 +76,9 @@ public class FNaniteResources
             PositionPrecision = Ar.Read<int>();
             if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();
             NumInputTriangles = Ar.Read<uint>();
+#if DEBUG
+            Log.Information("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
+#endif
             NumInputVertices = Ar.Read<uint>();
             if (Ar.Game < EGame.GAME_UE5_6)
             {

@@ -41,7 +41,34 @@ public class USceneComponent : UActorComponent
         }
     }
 
-    public FTransform GetRelativeTransform() => new(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+    // public FTransform GetRelativeTransform() => new(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+    public FTransform GetRelativeTransform()
+    {
+        var current = this;
+        FVector? topMostScale = null;
+        
+        while (current != null)
+        {
+            var foundLoc = current.TryGetValue(out FVector loc, "RelativeLocation");
+            var foundRot = current.TryGetValue(out FRotator rot, "RelativeRotation");
+            var foundScale = current.TryGetValue(out FVector scale, "RelativeScale3D");
+            
+            // keep the top-most scale if found
+            if (foundScale && topMostScale == null)
+            {
+                topMostScale = scale;
+            }
+
+            if (foundLoc || foundRot)
+            {
+                return new FTransform(foundRot ? rot : FRotator.ZeroRotator, foundLoc ? loc : FVector.ZeroVector, topMostScale ?? FVector.OneVector);
+            }
+
+            current = current.Template?.Load<USceneComponent>();
+        }
+
+        return new FTransform(FRotator.ZeroRotator, FVector.ZeroVector, FVector.OneVector);
+    }
 
     public FTransform GetAbsoluteTransform()
     {
@@ -90,23 +117,9 @@ public class USceneComponent : UActorComponent
         return GetComponentToWorld();
     }
 
-    public FVector GetRelativeLocation() => DeepGet("RelativeLocation", FVector.ZeroVector);
-    public FRotator GetRelativeRotation() => DeepGet("RelativeRotation", FRotator.ZeroRotator);
+    public FVector GetRelativeLocation() => GetOrDefault("RelativeLocation", FVector.ZeroVector);
+    public FRotator GetRelativeRotation() => GetOrDefault("RelativeRotation", FRotator.ZeroRotator);
     public FVector GetRelativeScale3D() => GetOrDefault("RelativeScale3D", FVector.OneVector);
-
-    private T DeepGet<T>(string name, T fallback)
-    {
-        var ret = default(T);
-        var current = this;
-        while (true)
-        {
-            if (current is null) break;
-            if (current.TryGetValue(out ret, name)) break;
-            if (current.Template == null) break;
-            current = current.Template.Load<USceneComponent>();
-        }
-        return ret ?? fallback;
-    }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

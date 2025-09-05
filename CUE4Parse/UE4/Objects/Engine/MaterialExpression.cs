@@ -129,7 +129,7 @@ public class FExpressionInput : IUStruct
         MaskG = Ar.Read<int>();
         MaskB = Ar.Read<int>();
         MaskA = Ar.Read<int>();
-        ExpressionName = Ar is { Game: <= EGame.GAME_UE5_1, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
+        ExpressionName = Ar is { Game: < EGame.GAME_UE5_2, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
     }
 
     public virtual void WriteAdditionalProperties(JsonWriter writer, JsonSerializer serializer) { }

@@ -86,6 +86,10 @@ namespace CUE4Parse.UE4.Pak
                         return GameForPeaceExtract(reader, pakEntry);
                     case EGame.GAME_Rennsport:
                         return RennsportCompressedExtract(reader, pakEntry);
+                    case EGame.GAME_DragonQuestXI:
+                        return DQXIExtract(reader, pakEntry);
+                    case EGame.GAME_ArenaBreakoutInifinite:
+                        return ABIExtract(reader, pakEntry);
                 }
 
                 var uncompressed = new byte[(int) pakEntry.UncompressedSize];
@@ -113,6 +117,10 @@ namespace CUE4Parse.UE4.Pak
                     return NetEaseExtract(reader, pakEntry);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);
+                case EGame.GAME_DragonQuestXI:
+                    return DQXIExtract(reader, pakEntry);
+                case EGame.GAME_ArenaBreakoutInifinite:
+                    return ABIExtract(reader, pakEntry);
             }
 
             // Pak Entry is written before the file data,
@@ -176,6 +184,11 @@ namespace CUE4Parse.UE4.Pak
             if (Ar.Game == EGame.GAME_GameForPeace)
             {
                 GameForPeaceReadIndex(pathComparer, index);
+                return;
+            }
+            if (Ar.Game == EGame.GAME_DragonQuestXI)
+            {
+                DQXIReadIndexLegacy(pathComparer, index);
                 return;
             }
 

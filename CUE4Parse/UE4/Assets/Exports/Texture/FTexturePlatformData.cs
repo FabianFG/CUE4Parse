@@ -88,6 +88,7 @@ public class FTexturePlatformData
 
         PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
+        if (Ar.Game == EGame.GAME_DragonQuestXI) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_FinalFantasy7Remake && (PackedData & 0xffff) == 16384)
         {
             var unk0 = Ar.Read<int>();

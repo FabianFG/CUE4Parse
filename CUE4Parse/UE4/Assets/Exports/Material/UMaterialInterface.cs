@@ -111,16 +111,19 @@ public class UMaterialInterface : UUnrealMaterial
             return;
         
         if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
+            runtimeEntries.Length > 0 &&
             runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfos"))
             for (int i = 0; i < scalarParameterInfos.Length; i++)
                 parameters.Scalars[scalarParameterInfos[i].Name.Text] = scalarValues[i];
 
         if (materialParameters.TryGetValue(out FLinearColor[] vectorValues, "VectorValues") &&
+            runtimeEntries.Length > 1 &&
             runtimeEntries[1].TryGetValue(out FMaterialParameterInfo[] vectorParameterInfos, "ParameterInfos"))
             for (int i = 0; i < vectorParameterInfos.Length; i++)
                 parameters.Colors[vectorParameterInfos[i].Name.Text] = vectorValues[i];
 
         if (materialParameters.TryGetValue(out FPackageIndex[] textureValues, "TextureValues") &&
+            runtimeEntries.Length > 2 &&
             runtimeEntries[2].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfos"))
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)
@@ -139,16 +142,19 @@ public class UMaterialInterface : UUnrealMaterial
             return;
         
         if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
+            runtimeEntries.Length > 0 &&
             runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfoSet"))
             for (int i = 0; i < scalarParameterInfos.Length; i++)
                 parameters.Scalars[scalarParameterInfos[i].Name.Text] = scalarValues[i];
 
         if (materialParameters.TryGetValue(out FLinearColor[] vectorValues, "VectorValues") &&
+            runtimeEntries.Length > 1 &&
             runtimeEntries[1].TryGetValue(out FMaterialParameterInfo[] vectorParameterInfos, "ParameterInfoSet"))
             for (int i = 0; i < vectorParameterInfos.Length; i++)
                 parameters.Colors[vectorParameterInfos[i].Name.Text] = vectorValues[i];
 
         if (materialParameters.TryGetValue(out FSoftObjectPath[] textureValues, "TextureValues") &&
+            runtimeEntries.Length > 3 &&
             runtimeEntries[3].TryGetValue(out FMaterialParameterInfo[] textureParameterInfos, "ParameterInfoSet"))
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)

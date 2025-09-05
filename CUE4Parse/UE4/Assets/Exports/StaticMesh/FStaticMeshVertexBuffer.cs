@@ -35,7 +35,7 @@ public class FStaticMeshVertexBuffer
         UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 && Ar.ReadBoolean();
 
         int customData = 0;
-        if (Ar.Game is EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DeltaForceHawkOps or EGame.GAME_SuicideSquad) Ar.Position += 4;
         if (Ar.Game is EGame.GAME_FateTrigger) customData = Ar.Read<int>();
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
