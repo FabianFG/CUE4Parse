@@ -94,7 +94,7 @@ namespace CUE4Parse.UE4.Assets
             if (Summary.ThumbnailTableOffset > 0)
             {
                 uassetAr.SeekAbsolute(Summary.ThumbnailTableOffset, SeekOrigin.Begin);
-                int count = uassetAr.Read<int>();
+                var count = uassetAr.Read<int>();
     
                 var thumbnailOffsets = new List<int>(count);
 
@@ -102,16 +102,16 @@ namespace CUE4Parse.UE4.Assets
                 {
                     uassetAr.SkipFString(); // objectShortClassName
                     uassetAr.SkipFString(); // objectPathWithoutPackageName
-                    int thumbnailOffset = uassetAr.Read<int>();
+                    var thumbnailOffset = uassetAr.Read<int>();
                     thumbnailOffsets.Add(thumbnailOffset);
                 }
                 
                 foreach (var offset in thumbnailOffsets)
                 {
                     uassetAr.SeekAbsolute(offset + 8, SeekOrigin.Begin);
-                    int totalBytes = uassetAr.Read<int>();
+                    var totalBytes = uassetAr.Read<int>();
                     if (totalBytes == 0) continue;
-                    byte[] rawImage = uassetAr.ReadBytes(totalBytes);
+                    var rawImage = uassetAr.ReadBytes(totalBytes);
                     EditorThumbnails.Add(rawImage);
                 }
             }
