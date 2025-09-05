@@ -25,9 +25,9 @@ public readonly struct FSoftObjectPath : IUStruct
 
     public FSoftObjectPath(FAssetArchive Ar)
     {
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH)
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || Ar.Game == EGame.GAME_DragonQuestXI)
         {
-            var path = Ar.ReadFString();
+            var path = Ar.Game != EGame.GAME_DragonQuestXI ? Ar.ReadFString() : Ar.ReadFName().Text;
             AssetPathName = path.SubstringBeforeLast('.');
             SubPathString = path.SubstringAfterLast('.');
             Owner = Ar.Owner;

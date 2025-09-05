@@ -49,7 +49,7 @@ public class FWorldCompositionTile
     {
         PackageName = Ar.ReadFName();
         Info = new FWorldTileInfo(Ar);
-        LODPackageNames = Ar.ReadArray<FName>();
+        LODPackageNames = Ar.ReadArray(Ar.ReadFName);
     }
 }
 

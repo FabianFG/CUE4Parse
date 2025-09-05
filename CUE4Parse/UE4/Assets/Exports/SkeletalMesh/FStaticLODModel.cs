@@ -398,7 +398,7 @@ public class FStaticLODModel
             }
         }
 
-        if (Ar.Game == EGame.GAME_ReadyOrNot)
+        if (Ar.Game is EGame.GAME_ReadyOrNot or EGame.GAME_HellLetLoose)
             Ar.Position += 4;
     }
 

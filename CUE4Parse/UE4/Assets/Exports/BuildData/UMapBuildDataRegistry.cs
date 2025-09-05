@@ -142,7 +142,7 @@ public class FReflectionCaptureData
 
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
-        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInifinite) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_HogwartsLegacy)
         {
             var count = Ar.Read<int>();
@@ -341,6 +341,8 @@ public class FMeshMapBuildData
             _ => null
         };
 
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
+
         ShadowMap = Ar.Read<EShadowMapType>() switch
         {
             EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
@@ -498,6 +500,7 @@ public class FShadowMap2D : FShadowMap
             const float LegacyValue = 1.0f / .05f;
             InvUniformPenumbraSize = new FVector4(LegacyValue);
         }
+        if (Ar.Game == EGame.GAME_Snowbreak) Ar.Position += 20;
     }
 }
 

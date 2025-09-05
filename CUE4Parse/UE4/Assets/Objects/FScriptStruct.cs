@@ -9,6 +9,7 @@ using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
+using CUE4Parse.GameTypes.SuicideSquad.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.TQ2.Objects;
@@ -118,7 +119,7 @@ public class FScriptStruct
             "MovieSceneTimeWarpVariant" => type == ReadType.ZERO ? new FStructFallback() : new FMovieSceneTimeWarpVariant(Ar),
             "MovieSceneTrackFieldData" => type == ReadType.ZERO ? new FMovieSceneTrackFieldData() : new FMovieSceneTrackFieldData(Ar),
             "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : new FMovieSceneTrackIdentifier(Ar),
-            "MovieSceneTrackIdentifiers" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
+            "MovieSceneTrackIdentifiers" when Ar.Game is EGame.GAME_GameForPeace => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
             "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
             "FontData" => new FFontData(Ar),
             "FontCharacter" => new FFontCharacter(Ar),
@@ -273,6 +274,18 @@ public class FScriptStruct
 
             // Upin&Ipin Universe
             "SUDSValue" => type == ReadType.ZERO ? new FStructFallback() : new FSUDSValue(Ar),
+
+            // Suicide Squad
+            "SimpleBox" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FSimpleBox>(),
+            "RRotationTranslation" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FRRotationTranslation>(),
+
+            // Concord
+            "PMTimelineSectionFloatMapping" or "PMTimelineSectionEventFloatMapping" => new FPMFloatMapping(Ar),
+            "PMFloatMapping" or "PMBoundFloatMapping" or "FWAbilityResourceFloatMapping" => new FPMFloatMapping(Ar),
+            "GameplayEffectFloatMapping" or "PMTimelineFloatMapping" or "FWPerkContextFloatMapping" => new FPMFloatMapping(Ar),
+            "PMTimelineObjectBindingDef" => new FPMTimelineObjectBindingDef(Ar),
+            "GameplayEffectApplicationDataHandle" => new FGameplayEffectApplicationDataHandle(Ar),
+            "PMTimelineRelevancy" => new FPMTimelineRelevancy(Ar),
 
             // Titan Quest 2
             _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

@@ -12,8 +12,6 @@ public static class SpectreDivideAes
     private const int AES_BLOCKBYTES = 16;
     private static int RKLENGTH(int keybits) => keybits / 8 + 28;
 
-
-
     private static readonly uint[] Te4 =
     [
         0x63636363U, 0x7c7c7c7cU, 0x77777777U, 0x7b7b7b7bU,

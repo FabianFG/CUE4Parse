@@ -14,7 +14,7 @@ public class UAkAudioBank : UAkAudioType
         base.Deserialize(Ar, validPos);
 
         if (Ar.Position >= validPos) return;
-        if (Ar.Game is EGame.GAME_HogwartsLegacy or EGame.GAME_Farlight84) return;
+        if (Ar.Game is EGame.GAME_HogwartsLegacy or EGame.GAME_Farlight84 or EGame.GAME_ArenaBreakoutInifinite) return;
 
         SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
     }

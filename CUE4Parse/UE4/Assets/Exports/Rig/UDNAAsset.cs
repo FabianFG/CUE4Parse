@@ -74,6 +74,8 @@ public class UDNAAsset : UObject
             if (!signature.SequenceEqual(_signature))
                 throw new InvalidDataException("Invalid layer start signature");
 
+            if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite) return;
+
             LayerVersion = new DNAVersion(endianAr);
             IndexTable = new IndexTable(endianAr);
 

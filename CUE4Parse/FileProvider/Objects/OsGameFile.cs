@@ -10,7 +10,7 @@ namespace CUE4Parse.FileProvider.Objects
         public readonly FileInfo ActualFile;
 
         public OsGameFile(DirectoryInfo baseDir, FileInfo info, string mountPoint, VersionContainer versions)
-            : base(mountPoint + info.FullName.Substring(baseDir.FullName.Length + 1).Replace('\\', '/'), info.Length, versions)
+            : base(System.IO.Path.GetRelativePath(baseDir.FullName, info.FullName).Replace('\\', '/'), info.Length, versions)
         {
             ActualFile = info;
         }
