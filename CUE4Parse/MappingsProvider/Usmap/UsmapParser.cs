@@ -109,7 +109,7 @@ public class UsmapParser
             {
                 for (var j = 0; j < enumNamesSize; j++)
                 {
-                    var value = Ar.Read<long>();
+                    var value = Ar.Read<ulong>();
                     var name = Ar.ReadName(nameLut)!;
                     enumNames[(int)value] = name;
                 }
