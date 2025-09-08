@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
 
+// Custom serialization version for all packages containing LiveLink dependent asset types
 public static class FLiveLinkCustomVersion
 {
     public enum Type
