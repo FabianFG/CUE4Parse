@@ -647,7 +647,46 @@ public static class FFortniteMainBranchObjectVersion
 
         // Cooked CPU-side morph target points are now stored internally in the same compressed format as the GPU morph data.
         MorphTargetCookedCPUDataCompressed,
-
+        
+        // AnimNext variables converted to references
+        AnimNextVariableReferences,
+        
+        // The default distortion rendering mode used by the Lens Component is now the Lens Distortion Scene View Extension
+        LensComponentDefaultToDistortionSVE,
+        
+        // Animation default blend option changed from Linear to HermiteCubic (aka SmoothStep, ease in / ease out)
+        ChangeDefaultAlphaBlendType,
+        
+        // Moved Position/Velocity/Projection Iteration Counts from FChaosVDFRigidParticleControlFlags to FChaosVDParticleDynamicMisc
+        PerParticleIterationCountMovedToDynamicMisc,
+        
+        // Added missing custom serialization for some properties in the ParticleDynamicMisc structure used by the Chaos Visual Debugger
+        AddedMissingSerializationForPropertiesInDynamicMisc,
+        
+        // Change default value for deprecated bEnableWorldPartitionGenerationSources
+        PCGDeprecateWorldPartitionGenerationSources,
+        
+        // Refactored the composite (plugin) actor scene capture management.
+        CompositeActorSceneCaptureRefactor,
+        
+        // Moved HLOD Layer properties to an editor only optional object
+        HLODLayerEditorOnlyObject,
+        
+        // Deduplicated particle debug names serialization in the Chaos Visual Debugger
+        DeduplicatedDebugNameSerializationInCVD,
+        
+        // Add BloomGaussianIntensity and BloomConvolutionIntensity
+        SpecializeBloomIntensity,
+        
+        // Add support for world partition actor component descriptors
+        WorldPartitionActorComponentDesc,
+        
+        // Migrate Non-Edit layer landscapes to use the edit layer (ULandscapeEditLayer) system
+        MigrateLandscapeNonEditLayerToEditLayer,
+        
+        // FDynamicMeshAttributeSet has Morph Targets.
+        DynamicMeshAttributesMorphTargets,
+        
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1

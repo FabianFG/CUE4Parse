@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
@@ -12,7 +11,6 @@ using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject;
@@ -74,8 +72,8 @@ public class UClass : UStruct
         // Load serialized interface classes
         Interfaces = Ar.ReadArray(() => new FImplementedInterface(Ar));
 
-        var bDeprecatedForceScriptOrder = Ar.ReadBoolean();
-        var dummy = Ar.ReadFName();
+        _ = Ar.ReadBoolean();
+        _ = Ar.ReadFName();
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_UCLASS)
         {

@@ -287,8 +287,7 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.OpenBlock();
                     foreach (var property in scriptArray.Properties)
                     {
-                        if (!GetPropertyTagVariable(
-                                new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
+                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
                             Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
@@ -489,8 +488,7 @@ public static class BlueprintDecompilerUtils
                             "ObjectProperty" or "ClassProperty" => "UObject*",
                             "StructProperty" => $"F{tagType.StructType}",
                             "InterfaceProperty" => $"F{tagType.StructType}", // check
-                            _ => throw new NotSupportedException(
-                                $"PropertyType {tagType?.Type} is currently not supported")
+                            _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
                         };
                     }
 
