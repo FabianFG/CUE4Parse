@@ -6,6 +6,14 @@ namespace CUE4Parse.GameTypes.ABI.Encryption.Aes;
 
 public static class ABILua
 {
+    private static readonly byte[] _opcodeMapping = [
+        8, 3, 13, 74, 81, 76, 12, 67, 5, 7, 0, 1, 9, 14, 68, 20,
+        18, 69, 15, 17, 75, 80, 79, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+        65, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+        49, 50, 51, 52, 53, 54, 55, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 16, 6, 11, 66, 2, 10, 73, 19, 70, 4, 77, 72,
+        71, 78, 82
+    ];
     private static readonly byte[] _luaDecryptionKey = Encoding.ASCII.GetBytes("hotbeaf\0");
     private static readonly byte[] _luaHeader = Encoding.ASCII.GetBytes("\x1bLua");
     private static readonly byte[] _luacData = [0x19, 0x93, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -73,7 +81,30 @@ public static class ABILua
         if (sizecode > int.MaxValue)
             throw new NotSupportedException("sizecode too large");
         if (sizecode > 0)
-            ReadAndDecryptBlock(Ar, checked(sizecode * 4));
+        {
+            var enc = new byte[sizecode * 4];
+            int read = Ar.Read(enc, 0, enc.Length);
+            if (read != enc.Length)
+                throw new EndOfStreamException();
+
+            var dec = DecryptBlock(enc);
+
+            for (int i = 0; i < sizecode; i++)
+            {
+                int offset = i * 4;
+                uint instr = BitConverter.ToUInt32(dec, offset);
+
+                byte opcode = (byte) (instr & 0x7F);
+                byte mapped = _opcodeMapping[opcode]; // Opcode is shuffled
+
+                instr = (instr & ~0x7Fu) | (uint) (mapped & 0x7F);
+
+                Array.Copy(BitConverter.GetBytes(instr), 0, dec, offset, 4);
+            }
+
+            Ar.Position -= enc.Length;
+            Ar.Write(dec, 0, dec.Length);
+        }
 
         int sizek = (int) UndumpSize(Ar);
         for (int i = 0; i < sizek; i++)
