@@ -175,8 +175,9 @@ public enum EGame : uint
         GAME_FateTrigger = GAME_UE5_5 + 8,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
+    GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
 
-    GAME_UE5_LATEST = GAME_UE5_6
+    GAME_UE5_LATEST = GAME_UE5_8
 }
 
 public static class GameUtils

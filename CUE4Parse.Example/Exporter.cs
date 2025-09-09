@@ -175,7 +175,7 @@ public static class Exporter
         foreach (var bitmap in bitmaps)
         {
             if (bitmap is null) continue;
-            var bytes = bitmap.Encode(options.TextureFormat, out var extension);
+            var bytes = bitmap.Encode(options.TextureFormat, false, out var extension);
             var fileName = $"{texture.Name}.{extension}";
 
             WriteToFile(folder, fileName, bytes, $"{fileName} ({bitmap.Width}x{bitmap.Height})", ref exportCount);

@@ -216,7 +216,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     Log.Warning("File version is too new or too old");
                 }
 
-                if (Ar.Ver >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+                if ((Ar.Versions.bExplicitVer ? Ar.Ver : FileVersionUE) >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
                 {
                     SavedHash = new FSHAHash(Ar);
                     TotalHeaderSize = Ar.Read<int>();
