@@ -2170,15 +2170,15 @@ public class FStaticMeshSectionConverter : JsonConverter<FStaticMeshSection>
 
         writer.WritePropertyName("bForceOpaque");
         writer.WriteValue(value.bForceOpaque);
-        
-        if (value.TranslucencySortPriority.HasValue)
-        {
-            writer.WritePropertyName("TranslucencySortPriority");
-            writer.WriteValue(value.TranslucencySortPriority.Value);
-        }
 
         writer.WritePropertyName("bVisibleInRayTracing");
         writer.WriteValue(value.bVisibleInRayTracing);
+
+        if (value.CustomData.HasValue)
+        {
+            writer.WritePropertyName("CustomData");
+            writer.WriteValue(value.CustomData.Value);
+        }
 
         writer.WriteEndObject();
     }

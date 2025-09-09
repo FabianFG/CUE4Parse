@@ -117,7 +117,7 @@ public enum EGame : uint
         GAME_UnchartedWatersOrigin = GAME_UE4_27 + 23,
         GAME_LostSoulAside = GAME_UE4_27 + 24,
         GAME_GhostsofTabor = GAME_UE4_27 + 25,
-        GAME_BLUEPROTOCOL = GAME_UE4_27 + 26,
+        GAME_BlueProtocol = GAME_UE4_27 + 26,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
