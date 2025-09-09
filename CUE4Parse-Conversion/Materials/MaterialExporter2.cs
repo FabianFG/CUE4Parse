@@ -6,7 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using SkiaSharp;
+
 
 namespace CUE4Parse_Conversion.Materials
 {
@@ -61,19 +61,10 @@ namespace CUE4Parse_Conversion.Materials
 
                 lock (_texture)
                 {
-                    var ext = Options.TextureFormat switch
-                    {
-                        ETextureFormat.Png => "png",
-                        ETextureFormat.Tga => "tga",
-                        ETextureFormat.Dds => "dds",
-                        _ => "png"
-                    };
-
+                    var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext);
                     var texturePath = FixAndCreatePath(baseDirectory,(t.Owner?.Provider?.FixPath(t.Owner.Name) ?? t.Name).SubstringBeforeLast('.'), ext);
                     using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
-                    using var data = bitmap.Encode(Options.TextureFormat, 100);
-                    using var stream = data.AsStream();
-                    stream.CopyTo(fs);
+                    fs.Write(imageData, 0, imageData.Length);
                 }
             });
 

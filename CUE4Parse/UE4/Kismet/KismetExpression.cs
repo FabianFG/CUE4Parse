@@ -26,6 +26,15 @@ public class FKismetPropertyPointer
             Old = new FPackageIndex(Ar);
         }
     }
+
+    public override string ToString()
+    {
+        if (bNew && New is { Path.Length: > 0 })
+        {
+            return New.Path[0].Text;
+        }
+        return Old?.ResolvedObject?.Name.Text ?? "None";
+    }
 }
 
 [JsonConverter(typeof(KismetExpressionConverter))]
@@ -646,26 +655,25 @@ public class EX_Jump : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_Jump;
     public uint CodeOffset;
-    public StringBuilder ObjectPath = new();
+
+    public readonly string ObjectName;
+    private readonly string _objectPath;
 
     public EX_Jump(FKismetArchive Ar)
     {
         CodeOffset = Ar.Read<uint>();
-        ObjectPath.Append(Ar.Owner.Name);
-        ObjectPath.Append('.');
-        ObjectPath.Append(Ar.Name);
-        ObjectPath.Append('[');
-        ObjectPath.Append(CodeOffset);
-        ObjectPath.Append(']');
+        ObjectName = Ar.Name;
+        _objectPath = $"{Ar.Owner.Name}.{ObjectName}[{CodeOffset}]";
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {
         base.WriteJson(writer, serializer, bAddIndex);
+
         writer.WritePropertyName("CodeOffset");
         writer.WriteValue(CodeOffset);
         writer.WritePropertyName("ObjectPath");
-        writer.WriteValue(ObjectPath.ToString());
+        writer.WriteValue(_objectPath);
     }
 }
 
@@ -1463,6 +1471,81 @@ public class EX_AutoRtfmAbortIfNot : KismetExpression
     public override EExprToken Token => EExprToken.EX_AutoRtfmAbortIfNot;
 }
 
+public class EX_WuWaInstr1 : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_Placeholder1;
+    public FVector Pos1;
+    public FVector Pos2;
+
+    public EX_WuWaInstr1(FKismetArchive Ar)
+    {
+        Pos1 = Ar.Read<FVector>();
+        Pos2 = Ar.Read<FVector>();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
+    {
+        base.WriteJson(writer, serializer, bAddIndex);
+        writer.WritePropertyName("Pos1");
+        serializer.Serialize(writer, Pos1);
+        writer.WritePropertyName("Pos2");
+        serializer.Serialize(writer, Pos2);
+    }
+}
+
+public class EX_WuWaInstr2 : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_Placeholder2;
+
+    public FQuat Rotation;
+    public FVector Pos1;
+    public FVector Pos2;
+    public FVector Scale;
+
+    public EX_WuWaInstr2(FKismetArchive Ar)
+    {
+        Rotation = Ar.Read<FQuat>();
+        Pos1 = Ar.Read<FVector>();
+        Pos2 = Ar.Read<FVector>();
+        Scale = Ar.Read<FVector>();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
+    {
+        base.WriteJson(writer, serializer, bAddIndex);
+        writer.WritePropertyName("Rotation");
+        serializer.Serialize(writer, Rotation);
+        writer.WritePropertyName("Pos1");
+        serializer.Serialize(writer, Pos1);
+        writer.WritePropertyName("Pos2");
+        serializer.Serialize(writer, Pos2);
+        writer.WritePropertyName("Scale");
+        serializer.Serialize(writer, Scale);
+    }
+}
+
+public class EX_DFInstr : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_Placeholder1;
+    public KismetExpression Left;
+    public KismetExpression Right;
+
+    public EX_DFInstr(FKismetArchive Ar)
+    {
+        Left = Ar.ReadExpression();
+        Right = Ar.ReadExpression();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
+    {
+        base.WriteJson(writer, serializer, bAddIndex);
+        writer.WritePropertyName(nameof(Left));
+        serializer.Serialize(writer, Left);
+        writer.WritePropertyName(nameof(Right));
+        serializer.Serialize(writer, Right);
+    }
+}
+
 [JsonConverter(typeof(FScriptTextConverter))]
 public class FScriptText
 {
@@ -1475,7 +1558,7 @@ public class FScriptText
 
     public FScriptText(FKismetArchive Ar)
     {
-        TextLiteralType = (EBlueprintTextLiteralType)Ar.Read<byte>();
+        TextLiteralType = Ar.Game >= EGame.GAME_UE4_12 ? (EBlueprintTextLiteralType)Ar.Read<byte>() : EBlueprintTextLiteralType.LocalizedText;
         switch (TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:

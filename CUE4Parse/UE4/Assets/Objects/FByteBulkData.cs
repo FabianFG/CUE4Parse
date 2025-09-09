@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -29,6 +29,11 @@ namespace CUE4Parse.UE4.Assets.Objects
         public FByteBulkData(byte[] data)
         {
             _data = new Lazy<byte[]>(data);
+        }
+
+        public FByteBulkData(Lazy<byte[]?> data)
+        {
+            _data = data;
         }
 
         public FByteBulkData(FAssetArchive Ar)
@@ -82,19 +87,21 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        private void CheckReadSize(int read) {
+        private void CheckReadSize(int read) 
+        {
             if (read != Header.ElementCount) {
                 Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
             }
         }
 
-        public bool ReadBulkDataInto(byte[] data, int offset = 0) {
+        public bool ReadBulkDataInto(byte[] data, int offset = 0) 
+        {
             if (data.Length - offset < Header.ElementCount) {
                 Log.Error("Data buffer is too small");
                 return false;
             }
 
-            var Ar = (FAssetArchive)_savedAr.Clone();
+            var Ar = (FAssetArchive)_savedAr.Clone(); // TODO: remove and use FArchive.ReadAt
             Ar.Position = _dataPosition;
             if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
             {
@@ -110,8 +117,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #endif
                 if (!TryGetBulkPayload(Ar, PayloadType.UPTNL, out var uptnlAr)) return false;
 
-                uptnlAr.Position = Header.OffsetInFile;
-                CheckReadSize(uptnlAr.Read(data, offset, Header.ElementCount));
+                CheckReadSize(uptnlAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));
             }
             else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
             {
@@ -120,8 +126,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 #endif
                 if (!TryGetBulkPayload(Ar, PayloadType.UBULK, out var ubulkAr)) return false;
 
-                ubulkAr.Position = Header.OffsetInFile;
-                CheckReadSize(ubulkAr.Read(data, offset, Header.ElementCount));;
+                CheckReadSize(ubulkAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));;
             }
             else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
             {
@@ -132,8 +137,7 @@ namespace CUE4Parse.UE4.Assets.Objects
                 // save archive position
                 if (Header.OffsetInFile + Header.ElementCount <= Ar.Length)
                 {
-                    Ar.Position = Header.OffsetInFile;
-                    CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
+                    CheckReadSize(Ar.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));
                 }
                 else throw new ParserException(Ar, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
             }
@@ -141,6 +145,11 @@ namespace CUE4Parse.UE4.Assets.Objects
             {
                 throw new ParserException(Ar, "TODO: CompressedZlib");
             }
+            else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable) || BulkDataFlags.HasFlag(BULKDATA_None))
+            {
+                CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
+            }
+
             Ar.Dispose();
             return true;
         }

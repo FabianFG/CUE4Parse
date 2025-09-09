@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Objects;
 
 namespace CUE4Parse.UE4.Objects.MovieScene
 {
@@ -22,5 +23,12 @@ namespace CUE4Parse.UE4.Objects.MovieScene
         public readonly FFrameNumber ForcedTime;
         /** Additional flags for evaluating this section */
         public readonly ESectionEvaluationFlags Flags;
+
+        public FSectionEvaluationData(FStructFallback fallback)
+        {
+            ImplIndex = fallback.GetOrDefault<int>(nameof(ImplIndex));
+            ForcedTime = fallback.GetOrDefault<FFrameNumber>(nameof(ForcedTime));
+            Flags = fallback.GetOrDefault<ESectionEvaluationFlags>(nameof(Flags));
+        }
     }
 }

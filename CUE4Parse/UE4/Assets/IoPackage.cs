@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
@@ -31,6 +32,7 @@ namespace CUE4Parse.UE4.Assets
         public readonly FExportMapEntry[] ExportMap;
         public readonly FBulkDataMapEntry[] BulkDataMap;
         public readonly Lazy<IoPackage?[]> ImportedPackages;
+        public readonly Lazy<IoPackage?[][]> ImportedPackagesAllVersions;
 
         public IoPackage(FArchive uasset, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IVfsFileProvider? provider = null)
             : this(
@@ -92,6 +94,17 @@ namespace CUE4Parse.UE4.Assets
                     Summary.bUnversioned = true;
                 }
 
+                FZenPackageCellOffsets cellOffsets;
+                if (summary.bHasVersioningInfo == 0 && uassetAr.Ver >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
+                {
+                    cellOffsets = uassetAr.Read<FZenPackageCellOffsets>();
+                }
+                else
+                {
+                    cellOffsets.CellImportMapOffset = summary.ExportBundleEntriesOffset;
+                    cellOffsets.CellExportMapOffset = summary.ExportBundleEntriesOffset;
+                }
+
                 // Name map
                 NameMap = FNameEntrySerialized.LoadNameBatch(uassetAr);
                 Summary.NameCount = NameMap.Length;
@@ -150,7 +163,7 @@ namespace CUE4Parse.UE4.Assets
                 ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
 
                 // Export bundle entries
-                uassetAr.Position = summary.ExportBundleEntriesOffset;
+                uassetAr.Position = cellOffsets.CellImportMapOffset;
                 exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
                 if (uassetAr.Game < EGame.GAME_UE5_3)
@@ -218,6 +231,27 @@ namespace CUE4Parse.UE4.Assets
                 for (var i = 0; i < importedPackageIds.Length; i++)
                 {
                     provider.TryLoadPackage(importedPackageIds[i], out packages[i]);
+                }
+                return packages;
+            });
+
+            ImportedPackagesAllVersions = new Lazy<IoPackage?[][]>(() =>
+            {
+                var packages = new IoPackage?[importedPackageIds.Length][];
+                for (var i = 0; i < importedPackageIds.Length; i++)
+                {
+                    var package = ImportedPackages.Value[i];
+                    if (package == null)
+                    {
+                        packages[i] = [];
+                        continue;
+                    }
+
+                    provider.TryLoadPackages(package.Name, out var packagesList);
+                    if (packagesList is not { Count: > 1 })
+                        packages[i] = [];
+                    else
+                        packages[i] = packagesList.Cast<IoPackage>().ToArray();
                 }
                 return packages;
             });
@@ -307,7 +341,7 @@ namespace CUE4Parse.UE4.Assets
         private FPackageId[] LoadGraphData(FArchive Ar)
         {
             var packageCount = Ar.Read<int>();
-            if (packageCount == 0) return Array.Empty<FPackageId>();
+            if (packageCount == 0) return [];
 
             var packageIds = new FPackageId[packageCount];
             for (var packageIndex = 0; packageIndex < packageCount; packageIndex++)
@@ -384,16 +418,50 @@ namespace CUE4Parse.UE4.Assets
                                 }
                             }
                         }
+
+                        // search all previous versions
+                        var importedPackagesAllVersions = ImportedPackagesAllVersions.Value;
+                        var packages = importedPackagesAllVersions[packageImportRef.ImportedPackageIndex];
+                        foreach (var pak in packages)
+                        {
+                            if (pak == null) continue;
+                            for (int exportIndex = 0; exportIndex < pak.ExportMap.Length; ++exportIndex)
+                            {
+                                if (pak.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
+                                {
+                                    return new ResolvedExportObject(exportIndex, pak);
+                                }
+                            }
+                        }
                     }
                 }
-                else foreach (var pkg in ImportedPackages.Value)
+                else
                 {
-                    if (pkg == null) continue;
-                    for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                    foreach (var pkg in ImportedPackages.Value)
                     {
-                        if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
+                        if (pkg == null) continue;
+                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                         {
-                            return new ResolvedExportObject(exportIndex, pkg);
+                            if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
+                            {
+                                return new ResolvedExportObject(exportIndex, pkg);
+                            }
+                        }
+                    }
+
+                    // search all previous versions
+                    foreach (var packages in ImportedPackagesAllVersions.Value)
+                    {
+                        foreach (var pak in packages)
+                        {
+                            if (pak == null) continue;
+                            for (int exportIndex = 0; exportIndex < pak.ExportMap.Length; ++exportIndex)
+                            {
+                                if (pak.ExportMap[exportIndex].GlobalImportIndex == index)
+                                {
+                                    return new ResolvedExportObject(exportIndex, pak);
+                                }
+                            }
                         }
                     }
                 }

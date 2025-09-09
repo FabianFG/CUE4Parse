@@ -1,9 +1,8 @@
-﻿namespace CUE4Parse.UE4.Wwise.Enums
+namespace CUE4Parse.UE4.Wwise.Enums;
+
+public enum ESoundType : byte
 {
-    public enum ESoundType : byte
-    {
-        SoundSfx,
-        SoundVoice,
-        StreamedSoundSfx = 0x08
-    }
+    SoundSfx,
+    SoundVoice,
+    StreamedSoundSfx = 0x08
 }

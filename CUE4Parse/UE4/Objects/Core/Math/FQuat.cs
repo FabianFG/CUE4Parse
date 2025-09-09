@@ -269,9 +269,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return v + (W * t) + FVector.CrossProduct(q, t);
         }
 
-        public FQuat Inverse() => IsNormalized
-            ? new FQuat(-X, -Y, -Z, W)
-            : throw new ArgumentException("Quat must be normalized in order to be inversed");
+        public FQuat Inverse() => IsNormalized ? new FQuat(-X, -Y, -Z, W) : GetNormalized().Inverse();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Conjugate() // public FQuat Inverse()
@@ -358,7 +356,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             !float.IsFinite(Z) ||
             !float.IsFinite(W);
 
-        public override string ToString() => $"X={X:F9} Y={Y:F9} Z={Z:F9} W={W:F9}";
+        public override string ToString() => $"X={X:F3} Y={Y:F3} Z={Z:F3} W={W:F3}";
 
         public void Serialize(FArchiveWriter Ar)
         {

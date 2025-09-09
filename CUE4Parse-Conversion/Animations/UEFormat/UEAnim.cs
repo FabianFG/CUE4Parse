@@ -88,7 +88,7 @@ public class UEAnim : UEFormatExport
         }
 
         var floatCurves = originalSequence.CompressedCurveData.FloatCurves;
-        if (floatCurves is not null)
+        if (floatCurves is not null && floatCurves.Length > 0)
         {
             using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
 

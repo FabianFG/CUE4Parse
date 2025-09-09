@@ -20,6 +20,16 @@ public class UScriptSet
 
     public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData)
     {
+        if (Ar.Game == EGame.GAME_StateOfDecay2 && tagData is not null)
+        {
+            tagData.InnerType = tagData.Name switch
+            {
+                "AllEntityIds" or "SceneNameSet" => "NameProperty",
+                "TextVarSources" => "StrProperty",
+                _ => null
+            };
+        }
+
         var innerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptSet needs inner type");
 
         if (tagData.InnerTypeData is null && !Ar.HasUnversionedProperties && innerType == "StructProperty")
@@ -35,6 +45,10 @@ public class UScriptSet
             if (Ar.Game == EGame.GAME_MetroAwakening && tagData.Name is "SoundscapePaletteCollection")
             {
                 tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
+            }
+            if (Ar.Game == EGame.GAME_Avowed && tagData.Name.EndsWith("IDs"))
+            {
+                tagData.InnerTypeData = new FPropertyTagData("Guid");
             }
         }
 

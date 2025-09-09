@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,18 +13,18 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// Note: Linear color values should always be converted to gamma space before stored in an FColor, as 8 bits of precision is not enough to store linear space colors!
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FColor : IUStruct
+    public struct FColor : IUStruct
     {
-        public readonly byte B;
-        public readonly byte G;
-        public readonly byte R;
-        public readonly byte A;
+        public byte B;
+        public byte G;
+        public byte R;
+        public byte A;
 
         public static readonly FColor Gray = new(153);
 
         public string Hex => A is byte.MaxValue or byte.MinValue ? UnsafePrint.BytesToHex(R, G, B) : UnsafePrint.BytesToHex(A, R, G, B);
 
-        public FColor(byte b) : this(b,b, b,byte.MaxValue) { }
+        public FColor(byte b) : this(b, b, b, byte.MaxValue) { }
         public FColor(byte r, byte g, byte b) : this(r, g, b, byte.MaxValue) { }
         public FColor(byte r, byte g, byte b, byte a)
         {

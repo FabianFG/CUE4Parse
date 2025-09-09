@@ -4,11 +4,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public static class PixelFormatUtils
 {
+    //Pixelformat.h IsHDR
+    public static bool IsHDR(EPixelFormat pixelFormat) => pixelFormat is EPixelFormat.PF_FloatRGBA
+                                                                        or EPixelFormat.PF_BC6H
+                                                                        or EPixelFormat.PF_R16F
+                                                                        or EPixelFormat.PF_R32_FLOAT
+                                                                        or EPixelFormat.PF_A32B32G32R32F
+                                                                        or EPixelFormat.PF_ASTC_4x4_HDR
+                                                                        or EPixelFormat.PF_ASTC_6x6_HDR
+                                                                        or EPixelFormat.PF_ASTC_8x8_HDR
+                                                                        or EPixelFormat.PF_ASTC_10x10_HDR
+                                                                        or EPixelFormat.PF_ASTC_12x12_HDR;
+
     public static FPixelFormatInfo[] PixelFormats = new FPixelFormatInfo[/*(int) EPixelFormat.PF_MAX*/]
     {
         //        Pixel Format                     Name               BlockSizeX  BlockSizeY  BlockSizeZ  BlockBytes  NumComponents  Supported by CUE4Parse
         new(EPixelFormat.PF_Unknown,            "unknown",                0,          0,          0,          0,            0,                false),
-        new(EPixelFormat.PF_A32B32G32R32F,      "A32B32G32R32F",          1,          1,          1,          16,           4,                false),
+        new(EPixelFormat.PF_A32B32G32R32F,      "A32B32G32R32F",          1,          1,          1,          16,           4,                true),
         new(EPixelFormat.PF_B8G8R8A8,           "B8G8R8A8",               1,          1,          1,          4,            4,                true),
         new(EPixelFormat.PF_G8,                 "G8",                     1,          1,          1,          1,            1,                true),
         new(EPixelFormat.PF_G16,                "G16",                    1,          1,          1,          2,            1,                true),
@@ -20,13 +32,13 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_FloatRGBA,          "FloatRGBA",              1,          1,          1,          8,            4,                true),
         new(EPixelFormat.PF_DepthStencil,       "DepthStencil",           1,          1,          1,          4,            1,                false),
         new(EPixelFormat.PF_ShadowDepth,        "ShadowDepth",            1,          1,          1,          4,            1,                false),
-        new(EPixelFormat.PF_R32_FLOAT,          "R32_FLOAT",              1,          1,          1,          4,            1,                false),
-        new(EPixelFormat.PF_G16R16,             "G16R16",                 1,          1,          1,          4,            2,                false),
-        new(EPixelFormat.PF_G16R16F,            "G16R16F",                1,          1,          1,          4,            2,                false),
-        new(EPixelFormat.PF_G16R16F_FILTER,     "G16R16F_FILTER",         1,          1,          1,          4,            2,                false),
-        new(EPixelFormat.PF_G32R32F,            "G32R32F",                1,          1,          1,          8,            2,                false),
+        new(EPixelFormat.PF_R32_FLOAT,          "R32_FLOAT",              1,          1,          1,          4,            1,                true),
+        new(EPixelFormat.PF_G16R16,             "G16R16",                 1,          1,          1,          4,            2,                true),
+        new(EPixelFormat.PF_G16R16F,            "G16R16F",                1,          1,          1,          4,            2,                true),
+        new(EPixelFormat.PF_G16R16F_FILTER,     "G16R16F_FILTER",         1,          1,          1,          4,            2,                true),
+        new(EPixelFormat.PF_G32R32F,            "G32R32F",                1,          1,          1,          8,            2,                true),
         new(EPixelFormat.PF_A2B10G10R10,        "A2B10G10R10",            1,          1,          1,          4,            4,                false),
-        new(EPixelFormat.PF_A16B16G16R16,       "A16B16G16R16",           1,          1,          1,          8,            4,                false),
+        new(EPixelFormat.PF_A16B16G16R16,       "A16B16G16R16",           1,          1,          1,          8,            4,                true),
         new(EPixelFormat.PF_D24,                "D24",                    1,          1,          1,          4,            1,                false),
         new(EPixelFormat.PF_R16F,               "PF_R16F",                1,          1,          1,          2,            1,                true),
         new(EPixelFormat.PF_R16F_FILTER,        "PF_R16F_FILTER",         1,          1,          1,          2,            1,                true),

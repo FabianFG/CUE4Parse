@@ -1,20 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
-    public class CSkeletalMesh
+    public class CSkeletalMesh : IDisposable
     {
-        public List<CSkelMeshLod> LODs;
-        public List<CSkelMeshBone> RefSkeleton;
+        public readonly List<CSkelMeshLod> LODs = [];
+        public readonly List<CSkelMeshBone> RefSkeleton = [];
+        
         public FBox BoundingBox;
         public FSphere BoundingSphere;
-
-        public CSkeletalMesh()
-        {
-            LODs = new List<CSkelMeshLod>();
-            RefSkeleton = new List<CSkelMeshBone>();
-        }
 
         public void FinalizeMesh()
         {
@@ -25,6 +21,15 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 
             // SortBones();
             // FixBoneWeights();
+        }
+
+        public void Dispose()
+        {
+            foreach (var lod in LODs)
+                lod.Dispose();
+            
+            LODs.Clear();
+            RefSkeleton.Clear();
         }
     }
 }

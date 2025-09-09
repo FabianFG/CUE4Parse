@@ -74,7 +74,7 @@ namespace CUE4Parse.UE4.Versions
             Options["MorphTarget"] = true;
 
             // structs
-            Options["Vector_NetQuantize_AsStruct"] = false;
+            Options["Vector_NetQuantize_AsStruct"] = Game >= GAME_UE5_0;
 
             // fields
             Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25 && Game != GAME_DeltaForceHawkOps;
@@ -120,7 +120,9 @@ namespace CUE4Parse.UE4.Versions
             MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", null);
             MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
             MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
-            MapStructTypes["TrackSignatureToTrackIdentifier"] = new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
+            MapStructTypes["TrackSignatureToTrackIdentifier"] = Game < GAME_UE4_19
+                ? new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifiers")
+                : new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");
             MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
 
             if (_mapStructTypesOverrides == null) return;

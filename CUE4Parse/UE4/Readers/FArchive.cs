@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -320,7 +319,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ReadString()
+        public virtual string ReadString()
         {
             var length = Read7BitEncodedInt();
             if (length <= 0)
@@ -332,6 +331,21 @@ namespace CUE4Parse.UE4.Readers
                 Serialize(ansiBytes, length);
                 return new string((sbyte*) ansiBytes, 0, length);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipFString()
+        {
+            var length = Read<int>();
+            if (length == int.MinValue)
+                throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
+
+            if (Math.Abs(length) > Length - Position)
+            {
+                throw new ParserException($"Invalid FString length '{length}'");
+            }
+
+            Position += length >= 0 ? length : -length * sizeof(ushort);
         }
 
         public virtual string ReadFString()
@@ -443,9 +457,16 @@ namespace CUE4Parse.UE4.Readers
                 bWasByteSwapped = (packageFileTag.CompressedSize != (long) ARCHIVE_V2_HEADER_TAG);
                 bReadCompressionFormat = true;
 
-                // read CompressionFormatToDecode
-                //FCompressionUtil.SerializeCompressorName(this, ref compressionFormatToDecode);
-                throw new NotImplementedException();
+                compressionFormatToDecode = Read<byte>() switch
+                {
+                    0 => ReadFString(),
+                    1 => "None",
+                    2 => "Oodle",
+                    3 => "Zlib",
+                    4 => "Gzip",
+                    5 => "LZ4",
+                    _ => throw new ParserException(this, $"Unknown CompressionFormatToDecode value: {compressionFormatToDecode}")
+                };
             }
             else
             {
@@ -478,7 +499,6 @@ namespace CUE4Parse.UE4.Readers
                 summary.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.UncompressedSize);
                 packageFileTag.UncompressedSize = (long) BYTESWAP_ORDER64((ulong) packageFileTag.UncompressedSize);
             }
-
 
             // Handle change in compression chunk size in backward compatible way.
             var loadingCompressionChunkSize = packageFileTag.UncompressedSize;

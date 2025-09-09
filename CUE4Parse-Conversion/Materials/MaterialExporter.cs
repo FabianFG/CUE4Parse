@@ -14,13 +14,13 @@ namespace CUE4Parse_Conversion.Materials
         private readonly string _internalFilePath;
         private readonly string _fileData;
         private readonly MaterialExporter? _parentData;
-        private readonly IDictionary<string, SKBitmap?> _textures;
+        private readonly IDictionary<string, CTexture?> _textures;
 
         public MaterialExporter()
         {
             _internalFilePath = string.Empty;
             _fileData = string.Empty;
-            _textures = new Dictionary<string, SKBitmap?>();
+            _textures = new Dictionary<string, CTexture?>();
             _parentData = null;
         }
 
@@ -86,22 +86,15 @@ namespace CUE4Parse_Conversion.Materials
             File.WriteAllTextAsync(savedFilePath, _fileData);
             label = Path.GetFileName(savedFilePath);
 
-            foreach (var (name, bitmap) in _textures)
+            foreach ((string name, CTexture? bitmap) in _textures)
             {
-                if (bitmap == null) continue;
+                if (bitmap == null)
+                    continue;
 
-                var ext = Options.TextureFormat switch
-                {
-                    ETextureFormat.Png => "png",
-                    ETextureFormat.Tga => "tga",
-                    ETextureFormat.Dds => "dds",
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext);
                 var texturePath = FixAndCreatePath(baseDirectory, name, ext);
                 using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
-                using var data = bitmap.Encode(Options.TextureFormat, 100);
-                using var stream = data.AsStream();
-                stream.CopyTo(fs);
+                fs.Write(imageData, 0, imageData.Length);
             }
 
             if (_parentData != null)

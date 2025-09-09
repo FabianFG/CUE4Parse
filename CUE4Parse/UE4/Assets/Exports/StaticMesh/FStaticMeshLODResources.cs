@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
@@ -14,9 +16,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 public class FStaticMeshLODResources
 {
     public FStaticMeshSection[] Sections { get; }
+    public FBoxSphereBounds? SourceMeshBounds;
     public FCardRepresentationData? CardRepresentationData { get; set; }
     public float MaxDeviation { get; }
-    public FPositionVertexBuffer? PositionVertexBuffer { get; private set; }
+    public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
     public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
     public FColorVertexBuffer? ColorVertexBuffer { get; set; }
     public FRawStaticIndexBuffer? IndexBuffer { get; private set; }
@@ -46,7 +49,15 @@ public class FStaticMeshLODResources
         if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
+
+        if (Ar.Game >= EGame.GAME_UE5_6)
+        {
+            SourceMeshBounds = new FBoxSphereBounds(Ar);
+        }
+
         MaxDeviation = Ar.Read<float>();
+
+        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
@@ -65,8 +76,7 @@ public class FStaticMeshLODResources
 
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
-            if (Ar.Game >= EGame.GAME_UE5_5)
-                _ = Ar.ReadBoolean(); // bHasRayTracingGeometry
+            if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
 
             if (bInlined)
             {
@@ -78,6 +88,9 @@ public class FStaticMeshLODResources
                         break;
                     case EGame.GAME_TheDivisionResurgence:
                         Ar.Position += 12;
+                        break;
+                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData == 1):
+                        _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }
             }
@@ -108,10 +121,15 @@ public class FStaticMeshLODResources
                     Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                 }
 
-                if (Ar.Game >= EGame.GAME_UE5_6)
-                    Ar.Position += 6 * 4; // RawDataHeader = 6x uint32
-
-                if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4; // bDropNormals
+                Ar.Position += Ar.Game switch
+                {
+                    >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    EGame.GAME_SuicideSquad => 29,
+                    EGame.GAME_ArenaBreakoutInifinite => 16,
+                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
+                    EGame.GAME_FateTrigger => 5,
+                    _ => 0
+                };
             }
 
             // FStaticMeshBuffersSize
@@ -152,6 +170,14 @@ public class FStaticMeshLODResources
         }
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker )
+        {
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            Ar.ReadArray(Sections.Length + 1, () => new FWeightedRandomSampler(Ar));
+            return;
+        }
 
         if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
         {
@@ -200,10 +226,11 @@ public class FStaticMeshLODResources
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_RogueCompany)
+        if (Ar.Game is EGame.GAME_RogueCompany)
         {
             _ = new FColorVertexBuffer(Ar);
         }
+        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 20;
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
@@ -225,6 +252,12 @@ public class FStaticMeshLODResources
         {
             if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != EGame.GAME_FinalFantasy7Rebirth)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+        }
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        {
+            _ = new FRawStaticIndexBuffer(Ar);
+            _ = new FRawStaticIndexBuffer(Ar);
         }
 
         if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth)
@@ -249,12 +282,7 @@ public class FStaticMeshLODResources
         }
 
         // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547
-        var areaWeightedSectionSamplers = new FWeightedRandomSampler[Sections.Length];
-        for (var i = 0; i < Sections.Length; i++)
-        {
-            areaWeightedSectionSamplers[i] = new FWeightedRandomSampler(Ar);
-        }
-
+        _ = Ar.ReadArray(Sections.Length, () => new FWeightedRandomSampler(Ar)); // areaWeightedSectionSamplers
         _ = new FWeightedRandomSampler(Ar); // areaWeightedSampler
     }
 }

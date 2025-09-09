@@ -1,5 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Numerics;
+using System.Runtime.InteropServices;
+
 using CUE4Parse.Utils;
+
 using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
@@ -8,12 +11,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// A linear, 32-bit/component floating point RGBA color.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct FLinearColor : IUStruct
+    public readonly struct FLinearColor : IUStruct
     {
-        public float R;
-        public float G;
-        public float B;
-        public float A;
+        public readonly float R;
+        public readonly float G;
+        public readonly float B;
+        public readonly float A;
 
         public static readonly FLinearColor Gray = new(0.6f, 0.6f, 0.6f, 1f);
 
@@ -64,6 +67,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public override string ToString() => Hex;
 
+        public FLinearColor WithAlpha(float alpha) => new(R, G, B, alpha);
+
         public FLinearColor LinearRGBToHsv()
         {
             var rgbMin = UnrealMath.Min3(R, G, B);
@@ -113,5 +118,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                 rgbValues[rgbSwizzle[swizzleIndex][2]],
                 A);
         }
+        
+        public static implicit operator Vector4(FLinearColor color) => new(color.R, color.G, color.B, color.A);
     }
 }

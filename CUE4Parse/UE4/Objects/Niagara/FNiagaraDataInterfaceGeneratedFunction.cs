@@ -18,6 +18,7 @@ public class FNiagaraDataInterfaceGeneratedFunction
 
     public FNiagaraVariableCommonReference[] VariadicInputs;
     public FNiagaraVariableCommonReference[] VariadicOutputs;
+    public ushort MiscUsageBitMask;
 
     public FNiagaraDataInterfaceGeneratedFunction(FAssetArchive Ar)
     {
@@ -30,6 +31,9 @@ public class FNiagaraDataInterfaceGeneratedFunction
             VariadicInputs = Ar.ReadArray(() => new FNiagaraVariableCommonReference(Ar));
             VariadicOutputs = Ar.ReadArray(() => new FNiagaraVariableCommonReference(Ar));
         }
+
+        if (FNiagaraCustomVersion.Get(Ar) >= FNiagaraCustomVersion.Type.SerializeUsageBitMaskToGPUFunctionInfo)
+            MiscUsageBitMask = Ar.Read<ushort>();
     }
 }
 

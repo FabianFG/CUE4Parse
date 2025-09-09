@@ -1,6 +1,5 @@
 using System;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -30,7 +29,6 @@ public class UStaticMesh : UObject
 
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         bCooked = Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 1; // Extra byte?
         BodySetup = new FPackageIndex(Ar);
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])
@@ -56,26 +54,48 @@ public class UStaticMesh : UObject
 
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
-            RenderData = new FStaticMeshRenderData(Ar);
+        {
+            RenderData = Ar.Game switch
+            {
+                EGame.GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
+                _ => RenderData = new FStaticMeshRenderData(Ar)
+            };
+        }
+
+        if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
+        {
+            Ar.Position += 64; // 8 per-platform floats
+        }
 
         if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
-                if (Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean())
+                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan or EGame.GAME_Farlight84)
                 {
                     Ar.SkipBulkArrayData();
                     Ar.SkipBulkArrayData();
+                    if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
+                    if (Ar.Game is EGame.GAME_Farlight84)
+                    {
+                        var count = Ar.Read<int>();
+                        for (var i = 0; i < count; i++)
+                        {
+                            Ar.SkipBulkArrayData();
+                            Ar.SkipBulkArrayData();
+                        }
+                    }
                 }
                 else
                 {
-                    Ar.ReadArray<FVector>(); // Vertices
-                    Ar.ReadArray<ushort>();  // Indices
+                    Ar.SkipFixedArray(12); // Vertices
+                    Ar.SkipFixedArray(2); // Indices
                 }
-
             }
         }
+
+        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor) Ar.Position += 4;
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {
@@ -107,8 +127,24 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-        if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 4;
+        Ar.Position += Ar.Game switch
+        {
+            EGame.GAME_OutlastTrials => 1,
+            EGame.GAME_Farlight84 or EGame.GAME_DuneAwakening => 4,
+            EGame.GAME_DaysGone => Ar.Read<int>() * 4,
+            _ => 0
+        };
+    }
+
+    public void OverrideMaterials(FPackageIndex[] materials)
+    {
+        for (var i = 0; i < materials.Length; i++)
+        {
+            if (i >= Materials.Length) break;
+            if (materials[i].IsNull) continue;
+
+            Materials[i] = materials[i].ResolvedObject;
+        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

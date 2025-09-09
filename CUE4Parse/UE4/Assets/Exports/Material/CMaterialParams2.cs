@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -46,11 +47,14 @@ public class CMaterialParams2
     [
         [
             "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse",
-            "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "DiffuseLayer1",
-            "1 - Albedo", "Albedo", "ALB", "TextureAlbedo",
-            "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Base Texture Color", "BaseColorA", "BC", "Color", "CO", "CO_", "CO_1", "Base_CO",
-            "Tex", "Tex_Color", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap",
-            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse"
+            "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A",
+            "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map",
+            "DiffuseLayer1", "1 - Albedo", "Albedo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "T_BaseColor", "color", "Base_D",
+            "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC",
+            "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
+            "Tex", "Tex_Color", "Color Tex", "TexColor", "Tex_BaseColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor",
+            "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex", "ToneRimTex",
+            "Primary Base Color", "BaseColor_NonVT", "L0_B/BM", "B/BM",
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -64,11 +68,15 @@ public class CMaterialParams2
     public static readonly string[][] Normals =
     [
         [
-            "Trunk_Normal",
-            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal A Map", "T_Normal", "Normals Top", "Normals Side", "Fallback Normal",
-            "Base_Normal", "Base Normal", "Normal Base", "TextureNormal", "Tex_BakedNormal", "TexNor", "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map",
-            "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base",
-            "Texture A Normal", "CliffNormal", "Skin Normal"
+            "Trunk_Normal", "T_Normal",
+            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
+            "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
+            "Base_Normal", "BaseNormal", "Base Normal", "Normal Base", "TextureNormal", "Tex_BakedNormal", "TexNor",
+            "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map", "Tex_NM","TexA_NM",
+            "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base", "NRH",
+            "Texture A Normal", "CliffNormal", "Skin Normal", "Normal_MAIN","Main_T_Normal(B：SSSMask)", "PBREmissiveTex",
+            "Primary Normal Map", "ORN" /*ABI*/,
+
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -84,11 +92,12 @@ public class CMaterialParams2
         [
             "Trunk_Specular", "PackedTexture",
             "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
-            "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP",
-            "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map",
-            "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM",
-            "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask",
-            "Cliff Spec Texture", "PhysicalMap", "KizokMap"
+            "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*",
+            "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
+            "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map",
+            "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
+            "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH",
+            "Primary ARME", "CombineTex(HRA)", "ORN",
         ],
         ["SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK"],
         ["SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK"],
@@ -103,7 +112,7 @@ public class CMaterialParams2
     [
         [
             "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
-            "EmmisiveColor_A", "TextureEmissive", "TexEm"
+            "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive"
         ],
         ["L1_Emissive", "EmmisiveColor_B"],
         ["L2_Emissive", "EmmisiveColor_C"],
@@ -118,15 +127,15 @@ public class CMaterialParams2
     [
         [
             "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "DiffuseColor", "tex1_CO",
-            "ColorA", "ALB", "AlbedoColor"
+            "ColorA", "ALB", "AlbedoColor", "Layer A Tint"
         ],
-        ["tex2_CO", "ColorB"],
-        ["tex3_CO", "ColorC"],
-        ["tex4_CO", "ColorD"],
-        ["tex5_CO", "ColorE"],
-        ["tex6_CO", "ColorF"],
-        ["tex7_CO", "ColorG"],
-        ["tex8_CO", "ColorH"]
+        ["tex2_CO", "ColorB", "Layer B Tint"],
+        ["tex3_CO", "ColorC", "Layer C Tint"],
+        ["tex4_CO", "ColorD", "Layer D Tint"],
+        ["tex5_CO", "ColorE", "Layer E Tint"],
+        ["tex6_CO", "ColorF", "Layer F Tint"],
+        ["tex7_CO", "ColorG", "Layer G Tint"],
+        ["tex8_CO", "ColorH", "Layer H Tint"]
     ];
 
     public static readonly string[][] EmissiveColors =
@@ -226,7 +235,7 @@ public class CMaterialParams2
         return mapping;
     }
 
-    public bool TryGetTexture2d(out UTexture? texture, params string[] names)
+    public bool TryGetTexture2d([MaybeNullWhen(false)] out UTexture texture, params string[] names)
     {
         foreach (var name in names)
         {

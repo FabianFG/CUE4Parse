@@ -126,5 +126,6 @@ public class UsmapParser
         }
 
         Mappings = mappings;
+        archive.Dispose();
     }
 }

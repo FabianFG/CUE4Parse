@@ -12,9 +12,11 @@ using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Landscape;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.PoseAsset;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse.UE4.Assets.Exports.Actor;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
 
 namespace CUE4Parse_Conversion
 {
@@ -22,7 +24,9 @@ namespace CUE4Parse_Conversion
     {
         public ELodFormat LodFormat;
         public EMeshFormat MeshFormat;
+        public ENaniteMeshFormat NaniteMeshFormat;
         public EAnimFormat AnimFormat;
+        public EPoseFormat PoseFormat;
         public EMaterialFormat MaterialFormat;
         public ETextureFormat TextureFormat;
         public EFileCompressionFormat CompressionFormat;
@@ -30,11 +34,13 @@ namespace CUE4Parse_Conversion
         public ESocketFormat SocketFormat;
         public bool ExportMorphTargets;
         public bool ExportMaterials;
+        public bool ExportHdrTexturesAsHdr;
 
         public ExporterOptions()
         {
             LodFormat = ELodFormat.FirstLod;
             MeshFormat = EMeshFormat.ActorX;
+            NaniteMeshFormat = ENaniteMeshFormat.OnlyNaniteLOD;
             AnimFormat = EAnimFormat.ActorX;
             MaterialFormat = EMaterialFormat.AllLayersNoRef;
             TextureFormat = ETextureFormat.Png;
@@ -43,6 +49,7 @@ namespace CUE4Parse_Conversion
             SocketFormat = ESocketFormat.Bone;
             ExportMorphTargets = true;
             ExportMaterials = true;
+            ExportHdrTexturesAsHdr = true;
         }
     }
 
@@ -79,13 +86,13 @@ namespace CUE4Parse_Conversion
         public abstract void AppendToZip();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected string GetExportSavePath() 
+        protected string GetExportSavePath()
         {
             return GetExportSavePath(PackagePath, ExportName);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetExportSavePath(string packagePath, string exportName) 
+        public static string GetExportSavePath(string packagePath, string exportName)
         {
             var path = packagePath.SubstringAfterLast('/').Equals(exportName, StringComparison.InvariantCulture) ? packagePath : packagePath + '/' + exportName;
             return path[0] == '/' ? path[1..] : path;

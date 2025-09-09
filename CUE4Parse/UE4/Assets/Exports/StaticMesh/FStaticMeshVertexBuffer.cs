@@ -33,7 +33,10 @@ public class FStaticMeshVertexBuffer
         NumVertices = Ar.Read<int>();
         UseFullPrecisionUVs = Ar.ReadBoolean();
         UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 && Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+
+        int customData = 0;
+        if (Ar.Game is EGame.GAME_DeltaForceHawkOps or EGame.GAME_SuicideSquad) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FateTrigger) customData = Ar.Read<int>();
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
@@ -59,6 +62,11 @@ public class FStaticMeshVertexBuffer
                 tempTangents = Ar.ReadArray(NumVertices, () => FStaticMeshUVItem.SerializeTangents(Ar, UseHighPrecisionTangentBasis));
                 if (Ar.Position - position != itemCount * itemSize)
                     throw new ParserException($"Read incorrect amount of tangent bytes, at {Ar.Position}, should be: {position + itemSize * itemCount} behind: {position + (itemSize * itemCount) - Ar.Position}");
+
+                if (Ar.Game == EGame.GAME_FateTrigger && customData > 0)
+                {
+                    Ar.SkipBulkArrayData();
+                }
 
                 texture_coordinates:
                 itemSize = Ar.Read<int>();

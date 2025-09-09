@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -32,6 +33,13 @@ public struct FZenPackageVersioningInfo
     }
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct FZenPackageCellOffsets
+{
+    public int CellImportMapOffset;
+    public int CellExportMapOffset;
+}
+
 public readonly struct FZenPackageSummary
 {
     public readonly uint bHasVersioningInfo;
@@ -64,7 +72,6 @@ public readonly struct FZenPackageSummary
         {
             DependencyBundleHeadersOffset = Ar.Read<int>();
             DependencyBundleEntriesOffset = Ar.Read<int>();
-
             ImportedPackageNamesOffset = Ar.Read<int>();
         }
         else

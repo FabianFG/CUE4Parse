@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
@@ -14,6 +15,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
+using GenericReader;
 using OffiUtils;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
@@ -37,14 +39,24 @@ namespace CUE4Parse.UE4.Pak
             this.Ar = Ar;
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
-            if (Info.Version > PakFile_Version_Latest &&
-                Ar.Game != EGame.GAME_TowerOfFantasy && Ar.Game != EGame.GAME_MeetYourMaker &&
-                Ar.Game != EGame.GAME_Snowbreak && Ar.Game != EGame.GAME_TheDivisionResurgence &&
-                Ar.Game != EGame.GAME_TorchlightInfinite && Ar.Game != EGame.GAME_DeadByDaylight &&
-                Ar.Game != EGame.GAME_QQ && Ar.Game != EGame.GAME_DreamStar) // These games use version >= 12 to indicate their custom formats
+
+            if (Info.Version > PakFile_Version_Latest && !UsingCustomPakVersion())
             {
                 Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
+        }
+
+        // These games use version >= 12 to indicate their custom formats
+        private bool UsingCustomPakVersion()
+        {
+            return Ar.Game switch
+            {
+                EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight or EGame.GAME_WutheringWaves
+                    or EGame.GAME_Snowbreak or EGame.GAME_TorchlightInfinite or EGame.GAME_TowerOfFantasy
+                    or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar
+                    or EGame.GAME_EtheriaRestart or EGame.GAME_DeadByDaylight_Old => true,
+                _ => false
+            };
         }
 
         public PakFileReader(string filePath, VersionContainer? versions = null)
@@ -68,12 +80,16 @@ namespace CUE4Parse.UE4.Pak
 #endif
                 switch (Game)
                 {
-                    case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse:
+                    case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
                         return NetEaseCompressedExtract(reader, pakEntry);
                     case EGame.GAME_GameForPeace:
                         return GameForPeaceExtract(reader, pakEntry);
                     case EGame.GAME_Rennsport:
                         return RennsportCompressedExtract(reader, pakEntry);
+                    case EGame.GAME_DragonQuestXI:
+                        return DQXIExtract(reader, pakEntry);
+                    case EGame.GAME_ArenaBreakoutInifinite:
+                        return ABIExtract(reader, pakEntry);
                 }
 
                 var uncompressed = new byte[(int) pakEntry.UncompressedSize];
@@ -97,10 +113,14 @@ namespace CUE4Parse.UE4.Pak
 
             switch (Game)
             {
-                case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse:
+                case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
                     return NetEaseExtract(reader, pakEntry);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);
+                case EGame.GAME_DragonQuestXI:
+                    return DQXIExtract(reader, pakEntry);
+                case EGame.GAME_ArenaBreakoutInifinite:
+                    return ABIExtract(reader, pakEntry);
             }
 
             // Pak Entry is written before the file data,
@@ -146,7 +166,7 @@ namespace CUE4Parse.UE4.Pak
         private void ReadIndexLegacy(StringComparer pathComparer)
         {
             Ar.Position = Info.IndexOffset;
-            var index = new FByteArchive($"{Name} - Index", ReadAndDecrypt((int) Info.IndexSize), Versions);
+            var index = new FByteArchive($"{Name} - Index", ReadAndDecryptIndex((int) Info.IndexSize), Versions);
 
             string mountPoint;
             try
@@ -166,8 +186,15 @@ namespace CUE4Parse.UE4.Pak
                 GameForPeaceReadIndex(pathComparer, index);
                 return;
             }
+            if (Ar.Game == EGame.GAME_DragonQuestXI)
+            {
+                DQXIReadIndexLegacy(pathComparer, index);
+                return;
+            }
 
             var fileCount = index.Read<int>();
+            if (Ar.Game == EGame.GAME_TransformersOnline) fileCount -= 100;
+            
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
             for (var i = 0; i < fileCount; i++)
             {
@@ -191,7 +218,7 @@ namespace CUE4Parse.UE4.Pak
 
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
-            FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+            using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
 
             int fileCount = 0;
             EncryptedFileCount = 0;
@@ -242,50 +269,71 @@ namespace CUE4Parse.UE4.Pak
                 primaryIndex.Position -= 4;
                 encodedPakEntriesSize = (int) (primaryIndex.Length - primaryIndex.Position - 6);
             }
-            var encodedPakEntries = primaryIndex.ReadBytes(encodedPakEntriesSize);
 
-            if (primaryIndex.Read<int>() < 0)
+            var encodedPakEntriesData = primaryIndex.ReadBytes(encodedPakEntriesSize);
+            using var encodedPakEntries = new GenericBufferReader(encodedPakEntriesData);
+
+            var FilesNum = primaryIndex.Read<int>();
+            if (FilesNum < 0)
                 throw new ParserException("Corrupt pak PrimaryIndex detected");
+
+            var NonEncodedEntries = primaryIndex.ReadArray(FilesNum, () => new FPakEntry(this, "", primaryIndex));
 
             // Read FDirectoryIndex
             Ar.Position = directoryIndexOffset;
-            var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
-            if (Ar.Game == EGame.GAME_Rennsport)
-            {
-                Ar.Position = directoryIndexOffset;
-                directoryIndex = new FByteArchive($"{Name} - Directory Index",
-                    RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0,
-                        (int) directoryIndexSize, true, this, true));
-            }
-            var directoryIndexLength = directoryIndex.Read<int>();
+            var data = Ar.Game != EGame.GAME_Rennsport
+                ? ReadAndDecryptIndex((int) directoryIndexSize)
+                : RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true);
+            using var directoryIndex = new GenericBufferReader(data);
 
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
-            unsafe
+
+            const int poolLength = 256;
+            var mountPointSpan = MountPoint.AsSpan();
+            using var charsPool = SpanOwner<char>.Allocate(poolLength * 2);
+            var charsSpan = charsPool.Span;
+            var dirPoolSpan = charsSpan[..poolLength];
+            var fileNamePoolSpan = charsSpan[poolLength..];
+            var directoryIndexLength = directoryIndex.Read<int>();
+            for (var dirIndex = 0; dirIndex < directoryIndexLength; dirIndex++)
             {
-                fixed (byte* ptr = encodedPakEntries)
+                var dirSpan = dirPoolSpan;
+                var dir = directoryIndex.ReadFStringMemory();
+                var dirLength = dir.GetEncoding().GetChars(dir.GetSpan(), dirSpan);
+                var trimDir = !mountPointSpan.IsEmpty && dirSpan[0] == '/' && mountPointSpan[^1] == '/';
+                dirSpan = dirSpan[(trimDir ? 1 : 0)..dirLength];
+
+                var fileEntries = directoryIndex.Read<int>();
+                for (var fileIndex = 0; fileIndex < fileEntries; fileIndex++)
                 {
-                    for (var i = 0; i < directoryIndexLength; i++)
+                    var fileNameSpan = fileNamePoolSpan;
+                    var fileName = directoryIndex.ReadFStringMemory();
+                    var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
+                    fileNameSpan = fileNameSpan[..fileNameLength];
+                    var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
+
+                    var offset = directoryIndex.Read<int>();
+                    if (offset == int.MinValue) continue;
+
+                    FPakEntry entry;
+                    if (offset >= 0)
                     {
-                        var dir = directoryIndex.ReadFString();
-                        var dirDictLength = directoryIndex.Read<int>();
-
-                        for (var j = 0; j < dirDictLength; j++)
-                        {
-                            var name = directoryIndex.ReadFString();
-                            string path;
-                            if (mountPoint.EndsWith('/') && dir.StartsWith('/'))
-                                path = dir.Length == 1 ? string.Concat(mountPoint, name) : string.Concat(mountPoint, dir[1..], name);
-                            else
-                                path = string.Concat(mountPoint, dir, name);
-
-                            var offset = directoryIndex.Read<int>();
-                            if (offset == int.MinValue) continue;
-
-                            var entry = new FPakEntry(this, path, ptr + offset);
-                            if (entry.IsEncrypted) EncryptedFileCount++;
-                            files[path] = entry;
-                        }
+                        entry = new FPakEntry(this, path, encodedPakEntries, offset);
                     }
+                    else
+                    {
+                        var index = -offset - 1;
+                        if (index <0 || index >= NonEncodedEntries.Length)
+                        {
+                            Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
+                            continue;
+                        }
+
+                        entry = NonEncodedEntries[index];
+                        entry.Path = path;
+                    }
+                    if (entry.IsEncrypted) EncryptedFileCount++;
+                    files[path] = entry;
                 }
             }
 
@@ -339,6 +387,8 @@ namespace CUE4Parse.UE4.Pak
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override byte[] ReadAndDecryptIndex(int length) => ReadAndDecryptIndex(length, Ar, IsEncrypted);
 
         public override byte[] MountPointCheckBytes()
         {

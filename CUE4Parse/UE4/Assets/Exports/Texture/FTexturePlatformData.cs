@@ -64,7 +64,7 @@ public class FTexturePlatformData
         VTData = null;
     }
 
-    public FTexturePlatformData(FAssetArchive Ar, UTexture Owner)
+    public FTexturePlatformData(FAssetArchive Ar, UTexture Owner, bool bSerializeMipData = true)
     {
         if (Ar is { Game: >= EGame.GAME_UE5_0, IsFilterEditorOnly: true })
         {
@@ -88,6 +88,7 @@ public class FTexturePlatformData
 
         PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
+        if (Ar.Game == EGame.GAME_DragonQuestXI) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_FinalFantasy7Remake && (PackedData & 0xffff) == 16384)
         {
             var unk0 = Ar.Read<int>();
@@ -122,10 +123,12 @@ public class FTexturePlatformData
             Ar.Position += 4;
         }
 
+        if (Ar.Game == EGame.GAME_DaysGone) Ar.Position += 8;
+
         Mips = new FTexture2DMipMap[mipCount];
         for (var i = 0; i < Mips.Length; i++)
         {
-            Mips[i] = new FTexture2DMipMap(Ar);
+            Mips[i] = new FTexture2DMipMap(Ar, bSerializeMipData);
 
             if (Owner is UVolumeTexture or UTextureCube)
             {

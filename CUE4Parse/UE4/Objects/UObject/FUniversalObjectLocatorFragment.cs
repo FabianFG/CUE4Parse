@@ -27,7 +27,7 @@ public struct FUniversalObjectLocatorFragment: IUStruct
     private static Dictionary<string, string> FragmentTypeRegistry = new()
     {
         { "actor", "DirectPathObjectLocator" },
-        { "animinst", "DirectPathObjectLocator" },
+        { "animinst", "AnimInstanceLocatorFragment" },
         { "subobj", "SubObjectLocator" },
     };
 }

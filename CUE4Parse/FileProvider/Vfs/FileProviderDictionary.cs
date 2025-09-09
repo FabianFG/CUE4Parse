@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -122,6 +122,20 @@ namespace CUE4Parse.FileProvider.Vfs
 
             value = null;
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetValues(string key, out List<GameFile> values)
+        {
+            values = [];
+            foreach (var files in _indicesBag.OrderByDescending(kvp => kvp.Key))
+            {
+                if (files.Value.TryGetValue(key, out var value))
+                {
+                    values.Add(value);
+                }
+            }
+            return values.Count > 0;
         }
 
         public GameFile this[string path] => TryGetValue(path, out var value) ? value : throw new KeyNotFoundException();

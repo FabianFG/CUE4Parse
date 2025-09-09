@@ -30,6 +30,7 @@ public abstract class TPerPlatformProperty : IUStruct
         public override object Value => Default;
 
         public FPerPlatformFloat() { }
+        public FPerPlatformFloat(float value) { Default = value; }
 
         public FPerPlatformFloat(FAssetArchive Ar)
         {

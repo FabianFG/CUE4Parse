@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using FIoBlockHash = uint;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -11,7 +12,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly string EncryptionKeyGuid;
         public readonly FOnDemandTocEntry[] Entries;
         public readonly uint[] BlockSizes;
-        public readonly uint[] BlockHashes; // FIoBlockHash is just uint32
+        public readonly FIoBlockHash[] BlockHashes; // FIoBlockHash is just uint32
+        public readonly byte[] Header;
         public readonly FSHAHash UTocHash;
         public readonly EOnDemandContainerFlags ContainerFlags;
 
@@ -21,21 +23,26 @@ namespace CUE4Parse.UE4.IO.Objects
             {
                 ContainerId = Ar.Read<FIoContainerId>();
             }
-            
+
             ContainerName = Ar.ReadFString();
             EncryptionKeyGuid = Ar.ReadFString();
             Entries = Ar.ReadArray(() => new FOnDemandTocEntry(Ar));
             BlockSizes = Ar.ReadArray<uint>();
-            BlockHashes = Ar.ReadArray<uint>();
+            BlockHashes = Ar.ReadArray<FIoBlockHash>();
             UTocHash = new FSHAHash(Ar);
-            
+
             if (version >= EOnDemandTocVersion.ContainerFlags)
             {
                 ContainerFlags = Ar.Read<EOnDemandContainerFlags>();
             }
+
+            if (version >= EOnDemandTocVersion.ContainerHeader)
+            {
+                Header = Ar.ReadArray<byte>();
+            }
         }
     }
-    
+
     [Flags]
     public enum EOnDemandContainerFlags : byte
     {
@@ -45,6 +52,8 @@ namespace CUE4Parse.UE4.IO.Objects
         StreamOnDemand			= (1 << 2),
         InstallOnDemand			= (1 << 3),
         Encrypted				= (1 << 4),
-        Count
+        WithSoftReferences		= (1 << 5),
+        PendingHostGroup		= (1 << 6),
+        Last = PendingHostGroup
     }
 }

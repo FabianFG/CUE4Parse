@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.RigVM;
 
-public struct FRigVMFunctionCompilationData
+public class FRigVMFunctionCompilationData
 {
     public FRigVMByteCode ByteCode;
     public FName[] FunctionNames;
@@ -21,7 +21,7 @@ public struct FRigVMFunctionCompilationData
     public Dictionary<string, FRigVMOperand> Operands;
     public uint Hash;
     public bool bEncounteredSurpressedErrors;
-    public Dictionary<FRigVMOperand, FRigVMOperand[]> OperandToDebugRegisters;
+    public Dictionary<FRigVMOperand, FRigVMOperand[]>? OperandToDebugRegisters;
 
     public FRigVMFunctionCompilationData(FAssetArchive Ar)
     {
@@ -36,20 +36,8 @@ public struct FRigVMFunctionCompilationData
         ExternalPropertyDescriptions = Ar.ReadArray(() => new FRigVMFunctionCompilationPropertyDescription(Ar));
         ExternalPropertyPathDescriptions = Ar.ReadArray(() => new FRigVMFunctionCompilationPropertyPath(Ar));
 
-        var num = Ar.Read<int>();
-        ExternalRegisterIndexToVariable = [];
-        for (var i = 0; i < num; i++)
-        {
-            ExternalRegisterIndexToVariable[Ar.Read<int>()] = Ar.ReadFName();
-        }
-
-        num = Ar.Read<int>();
-        Operands = [];
-        for (var i = 0; i < num; i++)
-        {
-            Operands[Ar.ReadFString()] = Ar.Read<FRigVMOperand>();
-        }
-
+        ExternalRegisterIndexToVariable = Ar.ReadMap(Ar.Read<int>, Ar.ReadFName);
+        Operands = Ar.ReadMap(Ar.ReadFString, Ar.Read<FRigVMOperand>);
         Hash = Ar.Read<uint>();
         bEncounteredSurpressedErrors = false;
 
@@ -57,12 +45,6 @@ public struct FRigVMFunctionCompilationData
             FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
             return;
 
-
-        num = Ar.Read<byte>();
-        OperandToDebugRegisters = [];
-        for (var i = 0; i < num; i++)
-        {
-            OperandToDebugRegisters[Ar.Read<FRigVMOperand>()] = Ar.ReadArray(Ar.Read<byte>(),Ar.Read<FRigVMOperand>);
-        }
+        OperandToDebugRegisters = Ar.ReadMap(Ar.Read<byte>(), Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<byte>(), Ar.Read<FRigVMOperand>));
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -172,11 +172,10 @@ public static class Exporter
                 break;
         }
 
-        var extension = options.TextureFormat.ToString().ToLower();
         foreach (var bitmap in bitmaps)
         {
             if (bitmap is null) continue;
-            var bytes = bitmap.Encode(options.TextureFormat, 100).ToArray();
+            var bytes = bitmap.Encode(options.TextureFormat, false, out var extension);
             var fileName = $"{texture.Name}.{extension}";
 
             WriteToFile(folder, fileName, bytes, $"{fileName} ({bitmap.Width}x{bitmap.Height})", ref exportCount);

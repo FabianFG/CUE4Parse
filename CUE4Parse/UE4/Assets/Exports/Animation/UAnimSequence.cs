@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public ResolvedObject? CurveCompressionSettings; // UAnimCurveCompressionSettings
 
         #region FCompressedAnimSequence CompressedData
-        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable; // used for compressed data, missing before 4.12
+        public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable = []; // used for compressed data, missing before 4.12
         public FSmartName[] CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
         public byte[]? CompressedCurveByteStream;
@@ -65,6 +65,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (BoneCompressionSettings == null && Ar.Game == EGame.GAME_RogueCompany)
             {
                 BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
+            }
+
+            if (Ar.Game is EGame.GAME_SuicideSquad) return; // custom format
+            if (Ar.Game == EGame.GAME_DaysGone)
+            {
+                var rawcurvedata = GetOrDefault<FStructFallback>("RawCurveData");
+                if (rawcurvedata is not null && rawcurvedata.TryGet("FloatCurves", out FStructFallback[] array, []))
+                {
+                    Ar.Position += array.Length * sizeof(short);
+                }
             }
 
             var stripFlags = new FStripDataFlags(Ar);
@@ -109,7 +119,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 // UE4.12+
                 var bSerializeCompressedData = Ar.ReadBoolean();
-
+                if (Ar.Game == EGame.GAME_GameForPeace && GetOrDefault<bool>("bUseStreamable")) Ar.Position += 24;
                 if (bSerializeCompressedData)
                 {
                     if (Ar.Game < EGame.GAME_UE4_23)
@@ -119,7 +129,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     else
                         SerializeCompressedData3(Ar);
 
-                    bUseRawDataOnly = Ar.ReadBoolean();
+                    if (Ar.Position + 4 <= validPos) bUseRawDataOnly = Ar.ReadBoolean();
                 }
             }
 
@@ -357,7 +367,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (AdditiveAnimType == EAdditiveAnimationType.AAT_None) return false;
             return RefPoseType switch
             {
-                EAdditiveBasePoseType.ABPT_RefPose => true,
+                EAdditiveBasePoseType.ABPT_RefPose => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimScaled => RefPoseSeq != null && RefPoseSeq.Name.Text != Name,
                 EAdditiveBasePoseType.ABPT_AnimFrame => RefPoseSeq != null && RefPoseSeq.Name.Text != Name && RefFrameIndex >= 0,
                 EAdditiveBasePoseType.ABPT_LocalAnimFrame => RefFrameIndex >= 0,

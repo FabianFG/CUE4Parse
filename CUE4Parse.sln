@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse-Conversion", "CUE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CUE4Parse.Example", "CUE4Parse.Example\CUE4Parse.Example.csproj", "{8B4BC38A-9D3A-4DF5-9DB2-73ED20C73655}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUE4Parse.Tests", "CUE4Parse.Tests\CUE4Parse.Tests.csproj", "{15CA6962-9B05-4A72-8946-6EDB4E736C65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{8B4BC38A-9D3A-4DF5-9DB2-73ED20C73655}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B4BC38A-9D3A-4DF5-9DB2-73ED20C73655}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B4BC38A-9D3A-4DF5-9DB2-73ED20C73655}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15CA6962-9B05-4A72-8946-6EDB4E736C65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15CA6962-9B05-4A72-8946-6EDB4E736C65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15CA6962-9B05-4A72-8946-6EDB4E736C65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15CA6962-9B05-4A72-8946-6EDB4E736C65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

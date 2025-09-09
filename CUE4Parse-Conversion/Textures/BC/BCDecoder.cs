@@ -7,7 +7,8 @@ namespace CUE4Parse_Conversion.Textures.BC
     {
         public static byte[] BC4(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4];
+            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4]; // BGRA32 (4 bytes per pixel)
+
             unsafe
             {
                 fixed (byte* bytePtr = inp)
@@ -23,19 +24,29 @@ namespace CUE4Parse_Conversion.Textures.BC
                                 var r_bytes = DecodeBCBlock(temp, ref index);
                                 for (int i = 0; i < 16; i++)
                                 {
-                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0)] = r_bytes[i];
+                                    int pixelLoc = GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0);
+
+                                    byte gray = r_bytes[i]; // Grayscale value from BC4
+
+                                    ret[pixelLoc] = gray;     // Blue
+                                    ret[pixelLoc + 1] = gray; // Green
+                                    ret[pixelLoc + 2] = gray; // Red
+                                    ret[pixelLoc + 3] = 0xFF; // Alpha (fully opaque)
                                 }
                             }
                         }
                     }
                 }
             }
+
             return ret;
         }
 
+
         public static byte[] BC5(byte[] inp, int sizeX, int sizeY, int sizeZ)
         {
-            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4];
+            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4]; // BGRA32 (4 bytes per pixel)
+
             unsafe
             {
                 fixed (byte* bytePtr = inp)
@@ -48,21 +59,31 @@ namespace CUE4Parse_Conversion.Textures.BC
                         {
                             for (int x = 0; x < sizeX / 4; x++)
                             {
+                                // Decode the Red and Green channels
                                 var r_bytes = DecodeBCBlock(temp, ref index);
                                 var g_bytes = DecodeBCBlock(temp, ref index);
+
                                 for (int i = 0; i < 16; i++)
                                 {
-                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0)] = r_bytes[i];
-                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 1)] = g_bytes[i];
-                                    ret[GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 2)] = GetZNormal(r_bytes[i], g_bytes[i]);
+                                    int pixelLoc = GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0);
+
+                                    byte red = r_bytes[i];
+                                    byte green = g_bytes[i];
+
+                                    ret[pixelLoc] = 0xFF; // Blue channel (calculated later on using red and green channels)
+                                    ret[pixelLoc + 1] = green; // Green channel
+                                    ret[pixelLoc + 2] = red; // Red channel
+                                    ret[pixelLoc + 3] = 0xFF; // Alpha (fully opaque)
                                 }
                             }
                         }
                     }
                 }
             }
+
             return ret;
         }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetPixelLoc(int width, int height, int x, int y, int z, int bpp, int off) => (z * width * height * bpp) + (y * width * bpp) + (x * bpp) + off;

@@ -506,6 +506,39 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FQuat ToQuat() => new(this);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MakeFrustumPlane(float A, float B, float C, float D, out FPlane plane)
+        {
+            var	LengthSquared = A * A + B * B + C * C;
+            if (LengthSquared > 0.00001f * 0.00001f)
+            {
+                var	InvLength = LengthSquared.InvSqrt();
+                plane = new FPlane(-A * InvLength, -B * InvLength, -C * InvLength, D * InvLength);
+                return true;
+            }
+
+            plane = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumNearPlane(out FPlane plane) => MakeFrustumPlane(M03 - M02, M13 - M12, M23 - M22, M33 - M32, out plane);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumFarPlane(out FPlane plane) => MakeFrustumPlane(M02, M12, M22, M32, out plane);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumLeftPlane(out FPlane plane) => MakeFrustumPlane(M03 + M00, M13 + M10, M23 + M20, M33 + M30, out plane);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumRightPlane(out FPlane plane) => MakeFrustumPlane(M03 - M00, M13 - M10, M23 - M20, M33 - M30, out plane);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumTopPlane(out FPlane plane) => MakeFrustumPlane(M03 - M01, M13 - M11, M23 - M21, M33 - M31, out plane);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetFrustumBottomPlane(out FPlane plane) => MakeFrustumPlane(M03 + M01, M13 + M11, M23 + M21, M33 + M31, out plane);
+
         public override string ToString() => $"[{M00:F1} {M01:F1} {M02:F1} {M03:F1}] [{M10:F1} {M11:F1} {M12:F1} {M13:F1}] [{M20:F1} {M21:F1} {M22:F1} {M23:F1}] [{M30:F1} {M31:F1} {M32:F1} {M33:F1}]";
     }
 }

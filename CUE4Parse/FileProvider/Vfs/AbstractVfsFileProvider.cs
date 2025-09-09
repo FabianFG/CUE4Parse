@@ -9,19 +9,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
+using CUE4Parse.GameTypes.INikki.Encryption.Aes;
+using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.MJS.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
+using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
+using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
+using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
+using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
+using CUE4Parse.GameTypes.UWO.Encryption.Aes;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
@@ -67,15 +76,25 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
                 EGame.GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
                 EGame.GAME_Undawn => ToaaAes.ToaaDecrypt,
-                EGame.GAME_DeadByDaylight => DBDAes.DbDDecrypt,
+                EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
                 EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
                 EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
                 EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
+                EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
                 EGame.GAME_MonsterJamShowdown => MonsterJamShowdownAes.MonsterJamShowdownDecrypt,
+                EGame.GAME_MotoGP25 => MotoGP25Aes.MotoGP25Decrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
-                EGame.GAME_TonyHawkProSkater12 => THPS12Aes.THPS12Decrypt,
+                EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
+                EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
+                EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
+                EGame.GAME_Splitgate2 => Splitgate2Aes.Splitgate2Decrypt,
+                EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
+                EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
+                EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
+                EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
+                EGame.GAME_ArenaBreakoutInifinite => ABIDecryption.ABIDecrypt,
                 _ => null
             };
         }
@@ -196,14 +215,18 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
-        private void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
+        protected void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)
                 _requiredKeys.TryAdd(reader.EncryptionKeyGuid, null);
 
             _unloadedVfs[reader] = null;
             reader.IsConcurrent = isConcurrent;
-            reader.CustomEncryption = CustomEncryption;
+            if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
+            {
+                reader.CustomEncryption = CustomEncryption;
+            }
+
             VfsRegistered?.Invoke(reader, _unloadedVfs.Count);
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -56,6 +57,7 @@ namespace CUE4Parse.FileProvider
         public ITypeMappingsProvider? MappingsContainer { get; set; }
         public bool ReadScriptData { get; set; }
         public bool ReadShaderMaps { get; set; }
+        public bool ReadNaniteData { get; set; }
         public bool SkipReferencedTextures { get; set; }
         public bool UseLazyPackageSerialization { get; set; } = true;
 
@@ -68,7 +70,7 @@ namespace CUE4Parse.FileProvider
 
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
-            VirtualPaths = new Dictionary<string, string>(PathComparer);
+            VirtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
             DefaultGame = new CustomConfigIni(nameof(DefaultGame));
             DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }
@@ -343,36 +345,53 @@ namespace CUE4Parse.FileProvider
             };
         }
 
+        private static readonly string[] pluginExtensions = [".uplugin", ".upluginmanifest", "Assetregisty.bin"];
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
-        public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
+        public virtual int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{ProjectName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var arregex = new Regex($"^{ProjectName}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
-
-            var i = 0;
-            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !Files.Any(file => file.Key.EndsWith(".upluginmanifest"));
-            foreach ((string filePath, GameFile gameFile) in Files)
+            ConcurrentBag<KeyValuePair<string, GameFile>> matchingPlugins = [];
+            Parallel.ForEach(Files, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (useIndividualPlugin) // < 4.18 or no .upluginmanifest
+                foreach (var suffix in pluginExtensions)
+                {
+                    if (kvp.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchingPlugins.Add(kvp);
+                        break;
+                    }
+                }
+            });
+
+            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !matchingPlugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
+
+            foreach ((string filePath, GameFile gameFile) in matchingPlugins)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (arregex.IsMatch(filePath))
+                {
+                    var virtPath = gameFile.Directory.SubstringAfterLast('/');
+                    var path = gameFile.Directory;
+
+                    VirtualPaths[virtPath] = path;
+                    continue;
+                }
+
+                if (useIndividualPlugin)
                 {
                     if (!filePath.EndsWith(".uplugin")) continue;
                     if (!TryCreateReader(gameFile.Path, out var stream)) continue;
                     using var reader = new StreamReader(stream);
                     var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
                     if (!pluginFile!.CanContainContent) continue;
-                    var virtPath = gameFile.Path.SubstringAfterLast('/').SubstringBeforeLast('.');
-                    var path = gameFile.Path.SubstringBeforeLast('/');
 
-                    if (!VirtualPaths.ContainsKey(virtPath))
-                    {
-                        VirtualPaths.Add(virtPath, path);
-                        i++; // Only increment if we don't have the path already
-                    }
-                    else
-                    {
-                        VirtualPaths[virtPath] = path;
-                    }
+                    var virtPath = gameFile.NameWithoutExtension;
+                    var path = gameFile.Directory;
+                    VirtualPaths[virtPath] = path;
                 }
                 else
                 {
@@ -386,23 +405,15 @@ namespace CUE4Parse.FileProvider
                         cancellationToken.ThrowIfCancellationRequested();
 
                         if (!content.Descriptor.CanContainContent) continue;
+
                         var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
                         var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
-
-                        if (!VirtualPaths.ContainsKey(virtPath))
-                        {
-                            VirtualPaths.Add(virtPath, path);
-                            i++; // Only increment if we don't have the path already
-                        }
-                        else
-                        {
-                            VirtualPaths[virtPath] = path;
-                        }
+                        VirtualPaths[virtPath] = path;
                     }
                 }
             }
 
-            return i;
+            return VirtualPaths.Count;
         }
 
         protected bool LoadIniConfigs()
@@ -559,7 +570,7 @@ namespace CUE4Parse.FileProvider
         #region LoadPackage Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IPackage LoadPackage(string path) => LoadPackage(this[path]);
-        public IPackage LoadPackage(GameFile file)
+        public virtual IPackage LoadPackage(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -581,7 +592,7 @@ namespace CUE4Parse.FileProvider
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IPackage> LoadPackageAsync(string path) => LoadPackageAsync(this[path]);
-        public async Task<IPackage> LoadPackageAsync(GameFile file)
+        public virtual async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -612,6 +623,23 @@ namespace CUE4Parse.FileProvider
 
             package = null;
             return false;
+        }
+
+        public bool TryLoadPackages(string path, out List<IPackage> packages)
+        {
+            packages = [];
+            if (Files.TryGetValues(FixPath(path), out var files))
+            {
+                foreach (var file in files)
+                {
+                    if (TryLoadPackage(file, out var package) && package is not null)
+                    {
+                        packages.Add(package);
+                    }
+                }
+            }
+
+            return packages.Count > 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -780,7 +808,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> SafeLoadPackageObjectAsync<T>(string path, string objectName) where T : UObject => await SafeLoadPackageObjectAsync<T>((path, objectName)).ConfigureAwait(false);
 
-        private async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
+        protected async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
         {
             try
             {

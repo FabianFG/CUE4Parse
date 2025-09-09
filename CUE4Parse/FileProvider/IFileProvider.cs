@@ -70,6 +70,11 @@ namespace CUE4Parse.FileProvider
         public bool ReadShaderMaps { get; set; }
 
         /// <summary>
+        /// Whether file provider should read the Nanite pages
+        /// </summary>
+        public bool ReadNaniteData { get; set; }
+
+        /// <summary>
         /// Whether UMaterial loading should skip loading ReferencedTextures
         /// </summary>
         public bool SkipReferencedTextures { get; set; }
@@ -234,6 +239,14 @@ namespace CUE4Parse.FileProvider
         /// <param name="package">The parsed package content if it could be parsed; default otherwise</param>
         /// <returns>true if the package could be parsed; false otherwise</returns>
         public bool TryLoadPackage(string path, [MaybeNullWhen(false)] out IPackage package);
+
+        /// <summary>
+        /// Attempts to loads all versions of the Package.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="packages"></param>
+        /// <returns></returns>
+        public bool TryLoadPackages(string path, out List<IPackage> packages);
 
         /// <summary>
         /// Attempts to loads and parse a Package from the passed file.

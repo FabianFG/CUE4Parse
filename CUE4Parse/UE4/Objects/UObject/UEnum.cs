@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.UObject
 {
     [SkipObjectRegistration]
-    public class UEnum : Assets.Exports.UObject
+    public class UEnum : UField
     {
         /** List of pairs of all enum names and values. */
         public (FName, long)[] Names;
@@ -28,6 +28,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
             else if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.EnumProperties)
             {
+                if (Ar.Game == EGame.GAME_StateOfDecay2) Ar.Position += 4;
                 var oldNames = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<byte>()));
                 Names = new (FName, long)[oldNames.Length];
                 for (var value = 0; value < oldNames.Length; value++)

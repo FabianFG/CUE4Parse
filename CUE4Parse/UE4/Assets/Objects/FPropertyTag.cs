@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
 using Serilog;
 
@@ -81,6 +82,7 @@ public class FPropertyTag
     public FName PropertyType;
     public int Size;
     public int ArrayIndex;
+    public int? ArraySize;
     public FPropertyTagData? TagData;
     public bool HasPropertyGuid;
     public FGuid? PropertyGuid;
@@ -92,16 +94,22 @@ public class FPropertyTag
             : PropertyTagFlags.HasFlag(EPropertyTagFlags.HasBinaryOrNativeSerialize)
                 ? EPropertyTagSerializeType.BinaryOrNative : EPropertyTagSerializeType.Property;
 
+    /// <summary>
+    /// EPropertyTagFlags.HasArrayIndex is only reliable on UE5 games
+    /// ArrayIndex > 0 is used as a fallback for UE4 games but in this case IsIndexed will be false on the first element of the array
+    /// </summary>
+    public bool IsIndexed => PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) || ArrayIndex > 0;
 
     public FPropertyTag(FAssetArchive Ar, PropertyInfo info, ReadType type)
     {
         Name = new FName(info.Name);
         PropertyType = new FName(info.MappingType.Type);
         ArrayIndex = info.Index;
+        ArraySize = info.ArraySize;
         TagData = new FPropertyTagData(info.MappingType);
         HasPropertyGuid = false;
         PropertyGuid = null;
-        PropertyTagFlags = info.ArraySize > 1 ? EPropertyTagFlags.HasArrayIndex : EPropertyTagFlags.None;
+        PropertyTagFlags = ArraySize > 1 ? EPropertyTagFlags.HasArrayIndex : EPropertyTagFlags.None;
 
         var pos = Ar.Position;
         try
@@ -188,7 +196,7 @@ public class FPropertyTag
         var finalPos = pos + Size;
         try
         {
-            Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL);
+            Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, ReadType.NORMAL, Size);
 #if DEBUG
             if (finalPos != Ar.Position)
             {
@@ -211,7 +219,7 @@ public class FPropertyTag
             Ar.Position = finalPos;
         }
     }
-    
+
     public FPropertyTag(FName name, FName propertyType, int size, int arrayIndex, FPropertyTagData? tagData, bool hasPropertyGuid, FGuid? propertyGuid, FPropertyTagType? tag)
     {
         Name = name;
@@ -222,6 +230,23 @@ public class FPropertyTag
         HasPropertyGuid = hasPropertyGuid;
         PropertyGuid = propertyGuid;
         Tag = tag;
+    }
+
+    public FPropertyTag(FName propertyType, FPropertyTagType tag, FPropertyTagData? tagData = null)
+    {
+        PropertyType = propertyType;
+        Tag = tag;
+        TagData = tagData;
+    }
+
+    internal string GetCppVariable()
+    {
+        if (!BlueprintDecompilerUtils.GetPropertyTagVariable(this, out var variableType, out var variableValue))
+        {
+            Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
+        }
+
+        return $"{variableType} {Name.Text} = {variableValue};";
     }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";
