@@ -249,12 +249,6 @@ public class FScriptStruct
             // State of Decay 2
             "ItemsBitArray" when Ar.Game == EGame.GAME_StateOfDecay2 => type == ReadType.ZERO ? new FItemsBitArray() : new FItemsBitArray(Ar),
 
-            // Dune Awakening
-            "BodyInstance" when Ar.Game == EGame.GAME_DuneAwakening => new FBodyInstance(Ar),
-            "GenericTeamId" when Ar.Game == EGame.GAME_DuneAwakening => new FGenericTeamId(Ar),
-            "UniqueID" when Ar.Game == EGame.GAME_DuneAwakening => new FUniqueID(Ar),
-            "BotAutoBorderCrossingConfig" when Ar.Game == EGame.GAME_DuneAwakening => new FBotAutoBorderCrossingConfig(Ar),
-
             // MindsEye
             "UgcData" when Ar.Game == EGame.GAME_MindsEye => new FUgcData(Ar),
             "JsonObjectWrapper" when Ar.Game == EGame.GAME_MindsEye => new FJsonObjectWrapper(Ar),
@@ -290,6 +284,9 @@ public class FScriptStruct
 
             // Titan Quest 2
             _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
+
+            // Dune Awakening
+            _ when Ar.Game is EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
 
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
