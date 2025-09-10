@@ -89,7 +89,7 @@ public class FStaticMeshLODResources
                     case EGame.GAME_TheDivisionResurgence:
                         Ar.Position += 12;
                         break;
-                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData == 1):
+                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData.HasValue && x.CustomData.Value == 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }

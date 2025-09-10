@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -34,6 +35,12 @@ public class FTexture2DMipMap
             SizeX = Ar.Read<ushort>();
             SizeY = Ar.Read<ushort>();
             SizeZ = Ar.Read<ushort>();
+        }
+        else if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+        {
+            SizeX = (int)(Ar.Read<uint>() ^ 0xa537ea93);
+            SizeY = Ar.Read<int>();
+            SizeZ = BinaryPrimitives.ReverseEndianness(Ar.Read<int>());
         }
         else
         {

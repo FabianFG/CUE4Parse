@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -38,18 +39,15 @@ public class UScriptSet
             {
                 tagData.InnerTypeData = new FPropertyTagData("Guid");
             }
-            if (Ar.Game == EGame.GAME_ThroneAndLiberty && tagData.Name is "ExcludeMeshes" or "IncludeMeshes")
+
+            tagData.InnerTypeData = Ar.Game switch
             {
-                tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
-            }
-            if (Ar.Game == EGame.GAME_MetroAwakening && tagData.Name is "SoundscapePaletteCollection")
-            {
-                tagData.InnerTypeData = new FPropertyTagData("SoftObjectPath");
-            }
-            if (Ar.Game == EGame.GAME_Avowed && tagData.Name.EndsWith("IDs"))
-            {
-                tagData.InnerTypeData = new FPropertyTagData("Guid");
-            }
+                EGame.GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
+                EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
+                EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
+                EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
+                _ => tagData.InnerTypeData
+            };
         }
 
         var numElementsToRemove = Ar.Read<int>();

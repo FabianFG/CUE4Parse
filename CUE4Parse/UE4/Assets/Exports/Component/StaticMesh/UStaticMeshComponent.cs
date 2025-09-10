@@ -19,6 +19,7 @@ public class UStaticMeshComponent : UMeshComponent
         base.Deserialize(Ar, validPos);
         if (Ar.Position == validPos) return;
         if (Ar.Game is EGame.GAME_Borderlands3) Ar.ReadBoolean();
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
         if (Ar.Game is EGame.GAME_SuicideSquad)
         {
@@ -30,7 +31,6 @@ public class UStaticMeshComponent : UMeshComponent
                 Ar.Position += idk.Align(32) >> 3;
                 Ar.SkipFixedArray(2);
             }
-
         }
 
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshPaintTextureUsesEditorOnly)

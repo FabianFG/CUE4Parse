@@ -108,6 +108,18 @@ public class FPakEntry : VfsEntry
                 CompressionBlocks = Ar.ReadArray<FPakCompressedBlock>();
             Flags = (uint) Ar.ReadByte();
             CompressionBlockSize = Ar.Read<uint>();
+            if (Ar.Game == GAME_ConanExiles)
+            {
+                if (CompressionMethod != CompressionMethod.None && (path.EndsWith("gtp") || path.EndsWith("gts")))
+                {
+                    // Conan Exiles has a bug where it stores the CompressionBlocks for gpt files, but doesn't use them.
+                    // It also doesn't use CompressionBlockSize, so we can ignore it.
+                    CompressionBlocks = [];
+                    CompressionBlockSize = 0;
+                    CompressionMethod = CompressionMethod.None;
+        }
+                Ar.Position += 4;
+            }
         }
 
         if (Ar.Game == GAME_TEKKEN7) Flags = (uint) (Flags & ~Flag_Encrypted);

@@ -29,6 +29,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
+            if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
             // UObject Properties
             if (TryGetValue(out FStructFallback[] boneTree, nameof(BoneTree)))
             {
@@ -50,6 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.FIX_ANIMATIONBASEPOSE_SERIALIZATION)
             {
                 var numOfRetargetSources = Ar.Read<int>();
+                if (Ar.Game == EGame.GAME_WorldofJadeDynasty) numOfRetargetSources ^= 0x0a8a8fd1;
                 AnimRetargetSources = new Dictionary<FName, FReferencePose>(numOfRetargetSources);
                 for (var i = 0; i < numOfRetargetSources; i++)
                 {

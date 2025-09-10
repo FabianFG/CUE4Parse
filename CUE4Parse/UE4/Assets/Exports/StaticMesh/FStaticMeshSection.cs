@@ -17,7 +17,7 @@ public class FStaticMeshSection
     public bool bForceOpaque;
     public bool bVisibleInRayTracing;
     public bool bAffectDistanceFieldLighting;
-    public int CustomData;
+    public int? CustomData;
 
     public FStaticMeshSection(FArchive Ar)
     {
@@ -31,6 +31,7 @@ public class FStaticMeshSection
         if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) Ar.Position += 5; // byte + int
         bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
         if (Ar.Game == EGame.GAME_MortalKombat1) Ar.Position += 8; // "None" FName
+        if (Ar.Game == EGame.GAME_BlueProtocol) CustomData = Ar.Read<short>(); // Must be read before bVisibleInRayTracing
         bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_Grounded or EGame.GAME_Dauntless) Ar.Position += 8;
         bAffectDistanceFieldLighting = Ar.Game >= EGame.GAME_UE5_1 && Ar.ReadBoolean();

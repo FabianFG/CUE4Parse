@@ -13,7 +13,7 @@ public class UBlueprintGeneratedClass : UClass
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.BPGCCookedEditorTags)
         {
             if (validPos - Ar.Position > 4)

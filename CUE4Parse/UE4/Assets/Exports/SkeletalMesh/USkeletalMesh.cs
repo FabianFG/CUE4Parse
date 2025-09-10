@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -31,6 +32,7 @@ public partial class USkeletalMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
         base.Deserialize(Ar, validPos);
         LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]>(nameof(LODInfo), []);
 
@@ -116,6 +118,15 @@ public partial class USkeletalMesh : UObject
                     var numInlinedLODs = Ar.Read<byte>();
                     var numNonOptionalLODs = Ar.Read<byte>();
                 }
+            }
+        }
+
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+        {
+            _ = Ar.Read<FStripDataFlags>();
+            for (var i = 0; i < LODModels.Length; i++)
+            {
+                if (Ar.ReadBoolean() && GetOrDefault<bool>("bGenerateMeshDistanceField")) _ = new FDistanceFieldVolumeData5(Ar);
             }
         }
 

@@ -30,6 +30,7 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
         MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
@@ -104,12 +105,12 @@ public class UMaterialInterface : UUnrealMaterial
             ParseCachedData(parameters, CachedExpressionData);
         }
     }
-    
+
     private void ParseCachedDataLegacy(CMaterialParams2 parameters, FStructFallback materialParameters)
     {
         if (!materialParameters.TryGetAllValues(out FStructFallback[] runtimeEntries, "RuntimeEntries"))
             return;
-        
+
         if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
             runtimeEntries.Length > 0 &&
             runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfos"))
@@ -135,12 +136,12 @@ public class UMaterialInterface : UUnrealMaterial
             }
         }
     }
-    
+
     private void ParseCachedData(CMaterialParams2 parameters, FStructFallback materialParameters)
     {
         if (!materialParameters.TryGetAllValues(out FStructFallback[] runtimeEntries, "RuntimeEntries"))
             return;
-        
+
         if (materialParameters.TryGetValue(out float[] scalarValues, "ScalarValues") &&
             runtimeEntries.Length > 0 &&
             runtimeEntries[0].TryGetValue(out FMaterialParameterInfo[] scalarParameterInfos, "ParameterInfoSet"))

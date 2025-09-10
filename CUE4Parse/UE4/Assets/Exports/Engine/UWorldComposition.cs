@@ -17,6 +17,7 @@ public class UWorldComposition : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         if (Ar.Position >= validPos) return;
         WorldRoot = Ar.ReadFString();
@@ -92,12 +93,19 @@ public class FWorldTileInfo
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_LOD_LIST)
         {
-            LODList = Ar.ReadArray<FWorldTileLODInfo>();
+            LODList = Ar.ReadArray(() => new FWorldTileLODInfo(Ar));
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_ZORDER)
         {
             ZOrder = Ar.Read<int>();
+        }
+
+        if (Ar.Game is EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DuneAwakening)
+        {
+            Ar.SkipFString();
+            Ar.SkipFString();
         }
 
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
@@ -143,4 +151,11 @@ public struct FWorldTileLODInfo
     [JsonIgnore] public float Reserved1;
     [JsonIgnore] public int Reserved2;
     [JsonIgnore] public int Reserved3;
+
+    public FWorldTileLODInfo(FAssetArchive Ar)
+    {
+        if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 4;
+        RelativeStreamingDistance = Ar.Read<int>();
+        Ar.Position += 16;
+    }
 }
