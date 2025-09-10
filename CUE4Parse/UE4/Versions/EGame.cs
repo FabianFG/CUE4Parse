@@ -174,6 +174,7 @@ public enum EGame : uint
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness = GAME_UE5_5 + 7,
         GAME_FateTrigger = GAME_UE5_5 + 8,
+        GAME_Squad = GAME_UE5_5 + 9,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),

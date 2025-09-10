@@ -34,8 +34,8 @@ public class FStaticMeshRenderData
         Ar.Position += Ar.Game switch
         {
             EGame.GAME_HYENAS => 1,
-            EGame.GAME_DuneAwakening => 4,
-            EGame.GAME_DaysGone => Ar.Read<int>() * 4,
+            EGame.GAME_DuneAwakening or EGame.GAME_Squad => 4,
+            EGame.GAME_DaysGone => Ar.Read<int>() * 4 + 4,
             _ => 0
         };
 

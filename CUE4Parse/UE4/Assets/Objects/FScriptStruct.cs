@@ -57,6 +57,7 @@ public class FScriptStruct
             "Box" => type == ReadType.ZERO ? new FBox() : new FBox(Ar),
             "Box2D" => type == ReadType.ZERO ? new FBox2D() : new FBox2D(Ar),
             "Box2f" => type == ReadType.ZERO ? new TBox2<float>() : new TBox2<float>(Ar),
+            "Box3f" => type == ReadType.ZERO ? new TBox3<float>() : new TBox3<float>(Ar),
             "Color" => type == ReadType.ZERO ? new FColor() : Ar.Read<FColor>(),
             "ColorMaterialInput" when FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.MaterialInputUsesLinearColor
                 => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
