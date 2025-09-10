@@ -31,6 +31,7 @@ public enum EGame : uint
         GAME_TEKKEN7 = GAME_UE4_14 + 1,
         GAME_TransformersOnline = GAME_UE4_14 + 2,
     GAME_UE4_15 = GameUtils.GameUe4Base + (15 << 16),
+        GAME_ConanExiles = GAME_UE4_15 + 1,
     GAME_UE4_16 = GameUtils.GameUe4Base + (16 << 16),
         GAME_PlayerUnknownsBattlegrounds = GAME_UE4_16 + 1,
         GAME_TrainSimWorld2020 = GAME_UE4_16 + 2,
