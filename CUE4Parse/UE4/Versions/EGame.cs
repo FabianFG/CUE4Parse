@@ -134,6 +134,7 @@ public enum EGame : uint
         GAME_TheCastingofFrankStone = GAME_UE5_1 + 3,
         GAME_SilentHill2Remake = GAME_UE5_1 + 4,
         GAME_Dauntless = GAME_UE5_1 + 5,
+        GAME_WorldofJadeDynasty = GAME_UE5_1 + 6,
     GAME_UE5_2 = GameUtils.GameUe5Base + (2 << 16),
         GAME_DeadByDaylight_Old = GAME_UE5_2 + 1,
         GAME_PaxDei = GAME_UE5_2 + 2,

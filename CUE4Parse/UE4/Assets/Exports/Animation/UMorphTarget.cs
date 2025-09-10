@@ -12,6 +12,7 @@ public class UMorphTarget : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
         base.Deserialize(Ar, validPos);
 
         if (!Ar.Versions["MorphTarget"])

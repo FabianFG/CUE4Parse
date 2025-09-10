@@ -19,6 +19,7 @@ public class UTexture2D : UTexture
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));

@@ -74,18 +74,12 @@ public class FCustomVersionContainer
 
     public static ECustomVersionSerializationFormat DetermineSerializationFormat(int legacyVersion)
     {
-        if (legacyVersion == -2)
+        return legacyVersion switch
         {
-            return ECustomVersionSerializationFormat.Enums;
-        }
-        if (legacyVersion < -2 && legacyVersion >= -5)
-        {
-            return ECustomVersionSerializationFormat.Guids;
-        }
-        if (legacyVersion < -5)
-        {
-            return ECustomVersionSerializationFormat.Optimized;
-        }
-        return ECustomVersionSerializationFormat.Unknown;
+            -2 => ECustomVersionSerializationFormat.Enums,
+            < -2 and >= -5 => ECustomVersionSerializationFormat.Guids,
+            < -5 => ECustomVersionSerializationFormat.Optimized,
+            _ => ECustomVersionSerializationFormat.Unknown
+        };
     }
 }

@@ -62,6 +62,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);

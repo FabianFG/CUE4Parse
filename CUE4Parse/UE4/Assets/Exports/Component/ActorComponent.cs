@@ -22,6 +22,7 @@ public class UActorComponent : UObject
             return;
 
         if (Ar.Game is EGame.GAME_SuicideSquad) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
 
         if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.ActorComponentUCSModifiedPropertiesSparseStorage)
         {
@@ -209,7 +210,25 @@ public class UPaperTerrainComponent : UPrimitiveComponent;
 public class UPaperTerrainSplineComponent : USplineComponent;
 public class UPaperTileMapComponent : UMeshComponent;
 public class UPaperTileMapRenderComponent : UPaperTileMapComponent;
-public class UParticleSystemComponent : UFXSystemComponent;
+
+public class UParticleSystemComponent : UFXSystemComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        base.Deserialize(Ar, validPos);
+    }
+}
+
+public class UParticleSystem : UObject
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
+        base.Deserialize(Ar, validPos);
+    }
+}
+
 public class UPathFollowingComponent : UActorComponent;
 public class UPawnActionsComponent : UActorComponent;
 public class UPawnMovementComponent : UNavMovementComponent;

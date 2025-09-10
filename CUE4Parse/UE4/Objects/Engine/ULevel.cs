@@ -108,6 +108,7 @@ public class ULevel : Assets.Exports.UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
         if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray) Ar.Position += 4;
         Actors = Ar.ReadArray(() => new FPackageIndex(Ar));

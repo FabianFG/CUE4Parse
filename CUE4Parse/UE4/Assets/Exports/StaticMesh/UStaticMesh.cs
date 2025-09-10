@@ -23,6 +23,7 @@ public class UStaticMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         Materials = [];
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);

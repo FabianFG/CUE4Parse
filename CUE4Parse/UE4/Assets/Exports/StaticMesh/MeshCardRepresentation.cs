@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public FCardRepresentationData(FArchive Ar)
         {
             Bounds = new FBox(Ar);
-            MaxLodLevel = Ar.Game < EGame.GAME_UE5_1 ? Ar.Read<int>() : 0;
+            MaxLodLevel = Ar.Game < EGame.GAME_UE5_1 || Ar.Game== EGame.GAME_WorldofJadeDynasty ? Ar.Read<int>() : 0;
             bMostlyTwoSided = Ar.Game >= EGame.GAME_UE5_2 && Ar.ReadBoolean();
             CardBuildData = Ar.ReadArray(() => new FLumenCardBuildData(Ar));
         }

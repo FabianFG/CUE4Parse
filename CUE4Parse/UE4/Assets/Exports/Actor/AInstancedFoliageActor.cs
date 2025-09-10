@@ -18,6 +18,7 @@ public class AInstancedFoliageActor : AISMPartitionActor
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
         if (FFoliageCustomVersion.Get(Ar) < FFoliageCustomVersion.Type.CrossLevelBase)
         {
             FoliageMeshes_Deprecated = Ar.ReadMap(() => new FPackageIndex(Ar), () => new FFoliageMeshInfo_Deprecated(Ar));

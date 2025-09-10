@@ -23,6 +23,7 @@ public class UMaterialInstance : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");

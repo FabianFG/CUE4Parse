@@ -507,7 +507,7 @@ public static class MeshConverter
                 var scale = v.Infs.bUse16BitBoneWeight ? Constants.UShort_Bone_Scale : Constants.Byte_Bone_Scale;
                 foreach (var (weight, boneIndex) in v.Infs.BoneWeight.Zip(v.Infs.BoneIndex))
                 {
-                    if (weight != 0f)
+                    if (weight != 0)
                     {
                         var bone = boneMap[boneIndex];
                         skeletalMeshLod.Verts[vert].AddInfluence(bone, weight, weight * scale);

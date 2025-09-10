@@ -119,6 +119,11 @@ public class FPositionVertexBuffer
             }
             return;
         }
+        if (Ar.Game is EGame.GAME_WorldofJadeDynasty)
+        {
+            Stride = (int)(Stride ^ 0xdbb1054f);
+            NumVertices >>= 9;
+        }
         if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
 
         Verts = Ar.ReadBulkArray<FVector>();

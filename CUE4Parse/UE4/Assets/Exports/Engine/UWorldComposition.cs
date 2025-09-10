@@ -17,6 +17,7 @@ public class UWorldComposition : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         if (Ar.Position >= validPos) return;
         WorldRoot = Ar.ReadFString();
@@ -99,6 +100,8 @@ public class FWorldTileInfo
         {
             ZOrder = Ar.Read<int>();
         }
+
+        if (Ar.Game is EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
 
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
         {

@@ -29,6 +29,7 @@ public class UMaterial : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         TwoSided = GetOrDefault<bool>(nameof(TwoSided));
         bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));

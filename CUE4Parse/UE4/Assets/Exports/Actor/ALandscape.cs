@@ -39,5 +39,5 @@ public class ALandscapeProxy : APartitionActor
     }
 }
 
-public class ALandscape: ALandscapeProxy { }
-public class ALandscapeStreamingProxy: ALandscapeProxy { }
+public class ALandscape : ALandscapeProxy;
+public class ALandscapeStreamingProxy : ALandscapeProxy;
