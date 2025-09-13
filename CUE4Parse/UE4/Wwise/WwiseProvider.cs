@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -44,7 +46,9 @@ public class WwiseProvider
     private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
     private readonly List<uint> _wwiseLoadedSoundBanks = [];
+    private readonly Dictionary<uint, WwiseReader> _multiReferenceLibraryCache = [];
     private bool _completedWwiseFullBnkInit = false;
+    private bool _loadedMultiRefLibrary = false;
 
     public WwiseProvider(AbstractVfsFileProvider provider, int maxBankFiles)
         : this(provider, new WwiseProviderConfiguration(maxBankFiles: maxBankFiles))
@@ -54,6 +58,8 @@ public class WwiseProvider
     {
         _provider = provider;
         _configuration = configuration ?? new WwiseProviderConfiguration();
+
+        LoadMultiReferenceLibrary();
 
         if (_configuration.MaxBankFiles > 0)
         {
@@ -137,7 +143,8 @@ public class WwiseProvider
                 if (!soundBank.bContainsMedia)
                     continue;
 
-                var soundBankName = soundBank.SoundBankPathName.Text;
+                var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
+
                 var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
                 TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
 
@@ -150,10 +157,23 @@ public class WwiseProvider
 
             foreach (var media in eventData.Value.Media)
             {
-                var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, media.MediaPathName.Text);
+                var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
 
-                if (!_provider.TrySaveAsset(mediaRelativePath, out byte[]? data))
-                    continue;
+                var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
+
+                byte[] data = [];
+                if (media.PackagedFile?.BulkData?.WemFile.Length > 0)
+                {
+                    data = media.PackagedFile.BulkData.WemFile;
+                }
+                else if (_provider.TrySaveAsset(mediaRelativePath, out var providerData))
+                {
+                    data = providerData;
+                }
+                else if (_multiReferenceLibraryCache.TryGetValue(media.PackagedFile?.Hash ?? 0, out var multiRefReader))
+                {
+                    data = multiRefReader.WemFile;
+                }
 
                 var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text)
                     ? media.DebugName.Text.SubstringBeforeLast('.')
@@ -167,7 +187,7 @@ public class WwiseProvider
                 results.Add(new WwiseExtractedSound
                 {
                     OutputPath = namedPath.Replace('\\', '/'),
-                    Extension = Path.GetExtension(mediaRelativePath).TrimStart('.'),
+                    Extension = media.MediaPathName.IsNone ? "wem" : Path.GetExtension(mediaRelativePath).TrimStart('.'),
                     Data = data,
                 });
             }
@@ -335,23 +355,22 @@ public class WwiseProvider
         var soundBankName = eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString() ?? string.Empty;
         var mediaPathName = eventData?.Media.FirstOrDefault().MediaPathName.Text ?? string.Empty;
 
-        if (!string.IsNullOrEmpty(soundBankName))
+        var targets = new[]
         {
-            var matchingFile = files.FirstOrDefault(f => f.Path.Contains(soundBankName));
-            if (matchingFile != null)
-            {
-                var matchingDirectory = matchingFile.Path.SubstringBefore(soundBankName);
-                _baseWwiseAudioPath = matchingDirectory.Replace('/', Path.DirectorySeparatorChar);
-                return;
-            }
-        }
+            eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString(),
+            eventData?.Media.FirstOrDefault().MediaPathName.Text
+        };
 
-        if (!string.IsNullOrEmpty(mediaPathName))
+        foreach (var target in targets)
         {
-            var matchingFile = files.FirstOrDefault(f => f.Path.Contains(mediaPathName));
+            if (string.IsNullOrEmpty(target) || target == "None")
+                continue;
+
+            var matchingFile = files.FirstOrDefault(f => f.Path.Contains(target) &&
+                                                         !f.Path.StartsWith("Engine/", StringComparison.OrdinalIgnoreCase));
             if (matchingFile != null)
             {
-                var matchingDirectory = matchingFile.Path.SubstringBefore(mediaPathName);
+                var matchingDirectory = matchingFile.Path.SubstringBefore(target);
                 _baseWwiseAudioPath = matchingDirectory.Replace('/', Path.DirectorySeparatorChar);
                 return;
             }
@@ -459,6 +478,69 @@ public class WwiseProvider
             if (!_wwiseEncodedMedia.ContainsKey(kv.Key))
                 _wwiseEncodedMedia[kv.Key] = kv.Value;
         }
+    }
+
+    private void LoadMultiReferenceLibrary()
+    {
+        if (_loadedMultiRefLibrary)
+            return;
+
+        _loadedMultiRefLibrary = true;
+
+        var assetFile = _provider.Files.Values.FirstOrDefault(f =>
+            f.Path.EndsWith("WwiseMultiReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase));
+
+        if (assetFile == null)
+        {
+            Log.Warning("WwiseMultiReferenceAssetLibrary.uasset not found in provider");
+            return;
+        }
+
+        try
+        {
+            var package = _provider.LoadPackage(assetFile.Path);
+
+            var wwiseAssetLib = package.GetExports()
+                .OfType<UWwiseAssetLibrary>()
+                .FirstOrDefault();
+
+            if (wwiseAssetLib == null)
+            {
+                Log.Warning("No UWwiseAssetLibrary found in the package");
+                return;
+            }
+
+            if (wwiseAssetLib.CookedData?.PackagedFiles != null)
+            {
+                foreach (var pf in wwiseAssetLib.CookedData.PackagedFiles)
+                {
+                    if (pf.BulkData != null && !_multiReferenceLibraryCache.ContainsKey(pf.Hash))
+                    {
+                        _multiReferenceLibraryCache[pf.Hash] = pf.BulkData;
+                    }
+                }
+            }
+
+            Log.Information("Loaded WwiseMultiReferenceAssetLibrary and cached {Count} packaged files",
+                _multiReferenceLibraryCache.Count);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to load WwiseMultiReferenceAssetLibrary.uasset");
+        }
+    }
+
+    private static string ResolveWwisePath(string path, FWwisePackagedFile? packagedFile, bool isPathNone)
+    {
+        if (packagedFile != null && isPathNone && !packagedFile.PathName.IsNone)
+        {
+            path = packagedFile.PathName.ToString();
+        }
+
+        const string prefix = "WwiseAudio/";
+        return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? path[prefix.Length..]
+            : path;
     }
 
     private IEnumerable<Hierarchy> GetHierarchiesById(uint id)

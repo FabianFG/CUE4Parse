@@ -19,6 +19,8 @@ public class UAkAudioEvent : UAkAudioType
         if (Ar.Position >= validPos) return;
 
         EventCookedData = new FWwiseLocalizedEventCookedData(new FStructFallback(Ar, "WwiseLocalizedEventCookedData"));
+        EventCookedData?.SerializeBulkData(Ar);
+
         MaximumDuration = Ar.Read<float>();
         MinimumDuration = Ar.Read<float>();
         IsInfinite = Ar.ReadBoolean();

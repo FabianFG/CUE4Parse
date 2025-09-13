@@ -27,6 +27,7 @@ public class WwiseReader
     public Dictionary<string, byte[]> WwiseEncodedMedias { get; } = [];
     public GlobalSettings? GlobalSettings { get; }
     public EnvSettings? EnvSettings { get; }
+    public byte[] WemFile { get; } = [];
     private uint Version => Header.Version;
 
     public WwiseReader(FArchive Ar)
@@ -100,7 +101,9 @@ public class WwiseReader
                     Hierarchies = Ar.ReadArray(() => new Hierarchy(Ar));
                     break;
                 case ESectionIdentifier.RIFF:
-                    // read byte[sectionLength] it's simply a wem file
+                    Ar.Position -= 8;
+                    var wemData = Ar.ReadBytes(8 + sectionLength);
+                    WemFile = wemData;
                     break;
                 case ESectionIdentifier.STID:
                     Ar.Position += 4;
