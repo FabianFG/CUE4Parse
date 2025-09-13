@@ -1408,6 +1408,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         writer.WritePropertyName("Platform");
         writer.WriteValue(value.Platform);
 
+        if (value.WemFile is { Length: > 0 })
+        {
+            writer.WritePropertyName("IsWemFile");
+            writer.WriteValue(true);
+        }
+
         writer.WriteEndObject();
     }
 
@@ -3231,3 +3237,43 @@ public class BankHeaderConverter : JsonConverter<BankHeader>
         throw new NotImplementedException("Deserialization is not implemented.");
     }
 }
+
+public class FWwisePackagedFileConverter : JsonConverter<FWwisePackagedFile>
+{
+    public override void WriteJson(JsonWriter writer, FWwisePackagedFile value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Hash));
+        writer.WriteValue(value.Hash);
+
+        if (!value.PathName.IsNone)
+        {
+            writer.WritePropertyName(nameof(value.PathName));
+            writer.WriteValue(value.PathName.ToString());
+        }
+
+        if (!value.ModularGameplayName.IsNone)
+        {
+            writer.WritePropertyName(nameof(value.ModularGameplayName));
+            writer.WriteValue(value.ModularGameplayName.ToString());
+        }
+
+        writer.WritePropertyName(nameof(value.bStreaming));
+        writer.WriteValue(value.bStreaming);
+
+        if (value.BulkData != null)
+        {
+            writer.WritePropertyName(nameof(value.BulkData));
+            serializer.Serialize(writer, value.BulkData);
+        }
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwisePackagedFile? ReadJson(JsonReader reader, Type objectType, FWwisePackagedFile? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+

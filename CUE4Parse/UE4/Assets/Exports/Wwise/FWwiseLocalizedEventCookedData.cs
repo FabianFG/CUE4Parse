@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
@@ -24,5 +25,13 @@ public readonly struct FWwiseLocalizedEventCookedData
 
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
         EventId = fallback.GetOrDefault<int>(nameof(EventId));
+    }
+
+    public void SerializeBulkData(FAssetArchive Ar)
+    {
+        foreach (var lang in EventLanguageMap.Values)
+        {
+            lang?.SerializeBulkData(Ar);
+        }
     }
 }
