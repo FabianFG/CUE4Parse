@@ -28,6 +28,8 @@ public class UMaterialInterface : UUnrealMaterial
     public FMaterialTextureInfo[] TextureStreamingData = Array.Empty<FMaterialTextureInfo>();
     public List<FMaterialResource> LoadedMaterialResources = new();
 
+    public UObject? Parent;
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
@@ -42,6 +44,8 @@ public class UMaterialInterface : UUnrealMaterial
 
         TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
+        Parent = GetOrDefault<UObject>(nameof(Parent));
+        
         var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
         if (bSavedCachedExpressionData)
         {

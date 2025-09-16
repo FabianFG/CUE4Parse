@@ -14,12 +14,15 @@ namespace CUE4Parse_Conversion.Materials
     {
         public Dictionary<string, string> Textures;
         public CMaterialParams2 Parameters;
+        public string Parent;
+        public string Type;
     }
 
     public class MaterialExporter2 : ExporterBase
     {
         private readonly string _internalFilePath;
         private readonly MaterialData _materialData;
+        private readonly MaterialExporter2? _ParentObjectExporter;
 
         public MaterialExporter2(ExporterOptions options)
         {
@@ -42,6 +45,14 @@ namespace CUE4Parse_Conversion.Materials
             foreach ((string key, UUnrealMaterial value) in _materialData.Parameters.Textures)
             {
                 _materialData.Textures[key] = value.GetPathName();
+            }
+            _materialData.Type = unrealMaterial.ExportType;
+            if (unrealMaterial is UMaterialInterface uMaterial)
+            {
+                _materialData.Parent = uMaterial.Parent?.GetFullName() ?? "None";
+
+                var ParentMaterial = uMaterial.Parent as UUnrealMaterial;
+                _ParentObjectExporter = new MaterialExporter2(ParentMaterial, options);
             }
         }
 
@@ -67,7 +78,10 @@ namespace CUE4Parse_Conversion.Materials
                     fs.Write(imageData, 0, imageData.Length);
                 }
             });
-
+            if (_ParentObjectExporter != null)
+            {
+                _ParentObjectExporter.TryWriteToDir(baseDirectory, out var temp0, out var temp1);
+            }
             return true;
         }
 
