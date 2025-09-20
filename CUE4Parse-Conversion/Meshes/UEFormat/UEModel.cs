@@ -246,10 +246,10 @@ public class UEModel : UEFormatExport
 
     private void SerializeSkeletonData(FArchiveWriter archive, USkeleton? skeleton, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
     {
-        using (var metaDataChunk = new FDataChunk("METADATA"))
+        using (var metaDataChunk = new FDataChunk("METADATA", 1))
         {
             metaDataChunk.WriteFString(skeleton?.GetPathName() ?? string.Empty);
-            metaDataChunk.Serialize(Ar);
+            metaDataChunk.Serialize(archive);
         }
         
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
