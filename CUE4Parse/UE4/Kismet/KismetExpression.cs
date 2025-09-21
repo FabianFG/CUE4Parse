@@ -1342,16 +1342,6 @@ public class EX_UInt64Const : KismetExpression<ulong>
     }
 }
 
-public class EX_FixedPointConst : KismetExpression<long>
-{
-    public override EExprToken Token => EExprToken.EX_FixedPointConst;
-
-    public EX_FixedPointConst(FKismetArchive Ar)
-    {
-        Value = Ar.Read<long>();
-    }
-}
-
 public class EX_UnicodeStringConst : KismetExpression<string>
 {
     public override EExprToken Token => EExprToken.EX_UnicodeStringConst;
@@ -1479,81 +1469,6 @@ public class EX_AutoRtfmTransact : KismetExpression
 public class EX_AutoRtfmAbortIfNot : KismetExpression
 {
     public override EExprToken Token => EExprToken.EX_AutoRtfmAbortIfNot;
-}
-
-public class EX_WuWaInstr1 : KismetExpression
-{
-    public override EExprToken Token => EExprToken.EX_Placeholder1;
-    public FVector Pos1;
-    public FVector Pos2;
-
-    public EX_WuWaInstr1(FKismetArchive Ar)
-    {
-        Pos1 = Ar.Read<FVector>();
-        Pos2 = Ar.Read<FVector>();
-    }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName("Pos1");
-        serializer.Serialize(writer, Pos1);
-        writer.WritePropertyName("Pos2");
-        serializer.Serialize(writer, Pos2);
-    }
-}
-
-public class EX_WuWaInstr2 : KismetExpression
-{
-    public override EExprToken Token => EExprToken.EX_Placeholder2;
-
-    public FQuat Rotation;
-    public FVector Pos1;
-    public FVector Pos2;
-    public FVector Scale;
-
-    public EX_WuWaInstr2(FKismetArchive Ar)
-    {
-        Rotation = Ar.Read<FQuat>();
-        Pos1 = Ar.Read<FVector>();
-        Pos2 = Ar.Read<FVector>();
-        Scale = Ar.Read<FVector>();
-    }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName("Rotation");
-        serializer.Serialize(writer, Rotation);
-        writer.WritePropertyName("Pos1");
-        serializer.Serialize(writer, Pos1);
-        writer.WritePropertyName("Pos2");
-        serializer.Serialize(writer, Pos2);
-        writer.WritePropertyName("Scale");
-        serializer.Serialize(writer, Scale);
-    }
-}
-
-public class EX_DFInstr : KismetExpression
-{
-    public override EExprToken Token => EExprToken.EX_Placeholder1;
-    public KismetExpression Left;
-    public KismetExpression Right;
-
-    public EX_DFInstr(FKismetArchive Ar)
-    {
-        Left = Ar.ReadExpression();
-        Right = Ar.ReadExpression();
-    }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
-    {
-        base.WriteJson(writer, serializer, bAddIndex);
-        writer.WritePropertyName(nameof(Left));
-        serializer.Serialize(writer, Left);
-        writer.WritePropertyName(nameof(Right));
-        serializer.Serialize(writer, Right);
-    }
 }
 
 [JsonConverter(typeof(FScriptTextConverter))]

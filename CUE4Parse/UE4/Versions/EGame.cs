@@ -166,6 +166,7 @@ public enum EGame : uint
         GAME_DeadByDaylight = GAME_UE5_4 + 10,
         GAME_Grounded2 = GAME_UE5_4 + 11,
         GAME_MafiaTheOldCountry = GAME_UE5_4 + 12,
+        GAME_2XKO = GAME_UE5_4 + 13,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,

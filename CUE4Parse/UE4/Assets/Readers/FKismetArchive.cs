@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CUE4Parse.GameTypes._2XKO.Kismet;
+using CUE4Parse.GameTypes.DFHO.Kismet;
+using CUE4Parse.GameTypes.WuWa.Kismet;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.UObject;
@@ -131,10 +134,12 @@ public class FKismetArchive : FArchive
             EExprToken.EX_AutoRtfmStopTransact => new EX_AutoRtfmStopTransact(this),
             EExprToken.EX_AutoRtfmTransact => new EX_AutoRtfmTransact(this),
             EExprToken.EX_AutoRtfmAbortIfNot => new EX_AutoRtfmAbortIfNot(),
-            EExprToken.EX_Placeholder1 when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr1(this),
-            EExprToken.EX_Placeholder1 when Versions.Game == EGame.GAME_DeltaForceHawkOps => new EX_DFInstr(this),
-            EExprToken.EX_Placeholder2 when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr2(this),
-            EExprToken.EX_FixedPointConst => new EX_FixedPointConst(this),
+
+            EExprToken.EX_6E when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr1(this),
+            EExprToken.EX_6F when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr2(this),
+            EExprToken.EX_6E when Versions.Game == EGame.GAME_DeltaForceHawkOps => new EX_DFInstr(this),
+            EExprToken.EX_FD when Versions.Game == EGame.GAME_2XKO => new EX_FixedPointConst(this),
+
             _ => throw new ParserException($"Unknown EExprToken {token}")
         };
         expression.StatementIndex = index;

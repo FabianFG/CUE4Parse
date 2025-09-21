@@ -59,6 +59,7 @@ public class UEAnim : UEFormatExport
                         track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
 
+                    // for Arc System Works custom compression format AnimCompress_Constant
                     if (originalSequence.GetOrDefault<bool>("bConstantAnimation"))
                     {
                         if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))

@@ -113,12 +113,15 @@ public enum EExprToken : byte
     EX_ArrayGetByRef		= 0x6B,
     EX_ClassSparseDataVariable = 0x6C, // Sparse data variable
     EX_FieldPathConst		= 0x6D,
-    EX_Placeholder1			= 0x6E,
-    EX_Placeholder2			= 0x6F,
+    EX_6E		         	= 0x6E,
+    EX_6F	        		= 0x6F,
     EX_AutoRtfmTransact     = 0x70, // AutoRTFM: run following code in a transaction
     EX_AutoRtfmStopTransact = 0x71, // AutoRTFM: if in a transaction, abort or break, otherwise no operation
     EX_AutoRtfmAbortIfNot   = 0x72, // AutoRTFM: evaluate bool condition, abort transaction on false
-    EX_FixedPointConst		= 0xFD,
+
+    EX_F9                   = 0xF9, // Borderland4
+    EX_FD                   = 0xFD, // Borderland4, 2XKO
+    EX_FE                   = 0xFE, // Borderland4
     EX_Max					= 0xFF,
 };
 
