@@ -2,11 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
 using CUE4Parse.GameTypes.FN.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
@@ -154,6 +156,10 @@ public abstract class FPropertyTagType
             "VerseStringProperty" => new VerseStringProperty(Ar, type),
             "VerseFunctionProperty" => null,
             "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
+
+            "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
+            "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
+
             _ => null
         };
 #if DEBUG

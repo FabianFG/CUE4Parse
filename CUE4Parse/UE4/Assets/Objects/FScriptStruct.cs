@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
+using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
@@ -177,6 +178,7 @@ public class FScriptStruct
             "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
+            "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
             
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
@@ -284,17 +286,20 @@ public class FScriptStruct
             "GameplayEffectApplicationDataHandle" => new FGameplayEffectApplicationDataHandle(Ar),
             "PMTimelineRelevancy" => new FPMTimelineRelevancy(Ar),
 
+            // Lost Soul Aside
+            "LSAAudioSectionkey" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             // 2XKO
             "FixedPoint" => new FFixedPoint(Ar),
 
-            // Titan Quest 2
-            _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
-
-            // Dune Awakening
-            _ when Ar.Game is EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
-
+            _ => Ar.Game switch
+            {
+                EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
+                EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
+                EGame.GAME_Borderlands4 => Borderlands4Structs.ParseBl4Struct(Ar, structName, struc, type),
             _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+            },
         };
     }
 

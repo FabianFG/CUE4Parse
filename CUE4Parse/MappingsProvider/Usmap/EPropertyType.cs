@@ -1,4 +1,4 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap
+namespace CUE4Parse.MappingsProvider.Usmap
 {
     public enum EPropertyType : byte
     {
@@ -33,11 +33,13 @@
         OptionalProperty,
         Utf8StrProperty,
         AnsiStrProperty,
-        
+
         ClassProperty,
         MulticastInlineDelegateProperty,
         SoftClassProperty,
 
+        CustomProperty_FD = 0xFD,
+        CustomProperty_FE = 0xFE,
         Unknown = 0xFF
     }
 }

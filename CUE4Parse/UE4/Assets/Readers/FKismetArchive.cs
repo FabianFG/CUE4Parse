@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.GameTypes._2XKO.Kismet;
+using CUE4Parse.GameTypes.Borderlands4.Kismet;
 using CUE4Parse.GameTypes.DFHO.Kismet;
 using CUE4Parse.GameTypes.WuWa.Kismet;
 using CUE4Parse.UE4.Exceptions;
@@ -139,6 +140,9 @@ public class FKismetArchive : FArchive
             EExprToken.EX_6F when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr2(this),
             EExprToken.EX_6E when Versions.Game == EGame.GAME_DeltaForceHawkOps => new EX_DFInstr(this),
             EExprToken.EX_FD when Versions.Game == EGame.GAME_2XKO => new EX_FixedPointConst(this),
+            EExprToken.EX_F9 when Versions.Game == EGame.GAME_Borderlands4 => new EX_DamageSourceContainer(this),
+            EExprToken.EX_FD when Versions.Game == EGame.GAME_Borderlands4 => new EX_GbxDefPtr(this),
+            EExprToken.EX_FE when Versions.Game == EGame.GAME_Borderlands4 => new EX_GameDataHandle(this),
 
             _ => throw new ParserException($"Unknown EExprToken {token}")
         };

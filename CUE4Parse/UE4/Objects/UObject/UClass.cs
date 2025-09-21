@@ -51,25 +51,14 @@ public class UClass : UStruct
 
         if (Ar.Game == EGame.GAME_AWayOut) Ar.Position += 4;
 
-        // serialize the function map
-        FuncMap = new Dictionary<FName, FPackageIndex>();
-        var funcMapNum = Ar.Read<int>();
-        for (var i = 0; i < funcMapNum; i++)
-        {
-            FuncMap[Ar.ReadFName()] = new FPackageIndex(Ar);
-        }
-
-        // Class flags first.
+        FuncMap = Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar));
         ClassFlags = Ar.Read<EClassFlags>();
 
-        // Variables.
         if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor or EGame.GAME_AshesOfCreation) Ar.Position += 4;
+
         ClassWithin = new FPackageIndex(Ar);
         ClassConfigName = Ar.ReadFName();
-
         ClassGeneratedBy = new FPackageIndex(Ar);
-
-        // Load serialized interface classes
         Interfaces = Ar.ReadArray(() => new FImplementedInterface(Ar));
 
         _ = Ar.ReadBoolean();
@@ -80,8 +69,8 @@ public class UClass : UStruct
             bCooked = Ar.ReadBoolean();
         }
 
-        // Defaults.
         ClassDefaultObject = new FPackageIndex(Ar);
+        if (Ar.Game == EGame.GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
     }
 
     public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
@@ -123,7 +112,7 @@ public class UClass : UStruct
 
         var classDefaultObject = ClassDefaultObject.Load();
         bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
-        
+
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
         if (emptyClass) return $"{c} {{ }};";
 
@@ -133,7 +122,7 @@ public class UClass : UStruct
 
         var distinct = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
-        
+
         var combined = Properties.Concat(classDefaultObject?.Properties ?? []).Concat(classDefaultObject?.SerializedSparseClassData?.Properties ?? []);
         foreach (var property in combined)
         {
