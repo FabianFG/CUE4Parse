@@ -134,6 +134,7 @@ public class FKismetArchive : FArchive
             EExprToken.EX_Placeholder1 when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr1(this),
             EExprToken.EX_Placeholder1 when Versions.Game == EGame.GAME_DeltaForceHawkOps => new EX_DFInstr(this),
             EExprToken.EX_Placeholder2 when Versions.Game == EGame.GAME_WutheringWaves => new EX_WuWaInstr2(this),
+            EExprToken.EX_FixedPointConst => new EX_FixedPointConst(this),
             _ => throw new ParserException($"Unknown EExprToken {token}")
         };
         expression.StatementIndex = index;

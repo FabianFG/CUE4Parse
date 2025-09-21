@@ -1342,6 +1342,16 @@ public class EX_UInt64Const : KismetExpression<ulong>
     }
 }
 
+public class EX_FixedPointConst : KismetExpression<long>
+{
+    public override EExprToken Token => EExprToken.EX_FixedPointConst;
+
+    public EX_FixedPointConst(FKismetArchive Ar)
+    {
+        Value = Ar.Read<long>();
+    }
+}
+
 public class EX_UnicodeStringConst : KismetExpression<string>
 {
     public override EExprToken Token => EExprToken.EX_UnicodeStringConst;

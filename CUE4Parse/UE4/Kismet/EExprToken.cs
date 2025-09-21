@@ -118,6 +118,7 @@ public enum EExprToken : byte
     EX_AutoRtfmTransact     = 0x70, // AutoRTFM: run following code in a transaction
     EX_AutoRtfmStopTransact = 0x71, // AutoRTFM: if in a transaction, abort or break, otherwise no operation
     EX_AutoRtfmAbortIfNot   = 0x72, // AutoRTFM: evaluate bool condition, abort transaction on false
+    EX_FixedPointConst		= 0xFD,
     EX_Max					= 0xFF,
 };
 
