@@ -6,6 +6,8 @@
         Initial = 0,
         /** Added complete list of cultures compiled for the localization target. */
         AddedCompiledCultures,
+        /** Added bIsUGC flag */
+        AddedIsUGC,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
