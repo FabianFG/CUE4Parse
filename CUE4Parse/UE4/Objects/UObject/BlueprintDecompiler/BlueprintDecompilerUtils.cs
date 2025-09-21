@@ -1332,6 +1332,10 @@ public static class BlueprintDecompilerUtils
             {
                 return propertyConst.Property.ToString();
             }
+            case EX_FixedPointConst fp:
+            {
+                return fp.Value.ToString();
+            }
 
             // good enough?
             case EX_WireTracepoint:
