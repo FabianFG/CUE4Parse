@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
             Value = type switch
             {
                 ReadType.ZERO => new UScriptSet(),
-                _ => new UScriptSet(Ar, tagData)
+                _ => new UScriptSet(Ar, tagData, type)
             };
         }
     }

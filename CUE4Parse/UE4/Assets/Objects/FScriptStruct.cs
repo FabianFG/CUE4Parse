@@ -20,6 +20,7 @@ using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.ChaosCaching;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -292,6 +293,7 @@ public class FScriptStruct
             // Dune Awakening
             _ when Ar.Game is EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
 
+            _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
     }
