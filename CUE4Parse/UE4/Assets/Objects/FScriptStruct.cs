@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Brickadia.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
@@ -281,6 +282,9 @@ public class FScriptStruct
             "PMTimelineObjectBindingDef" => new FPMTimelineObjectBindingDef(Ar),
             "GameplayEffectApplicationDataHandle" => new FGameplayEffectApplicationDataHandle(Ar),
             "PMTimelineRelevancy" => new FPMTimelineRelevancy(Ar),
+
+            // 2XKO
+            "FixedPoint" => new FFixedPoint(Ar),
 
             // Titan Quest 2
             _ when Ar.Game is EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
