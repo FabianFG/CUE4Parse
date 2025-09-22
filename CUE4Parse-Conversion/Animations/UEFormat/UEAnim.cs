@@ -21,14 +21,14 @@ public class UEAnim : UEFormatExport
         {
             metaDataChunk.Write(sequence.NumFrames);
             metaDataChunk.Write(sequence.FramesPerSecond);
-            
+
             var referencePath = originalSequence.RefPoseSeq?.GetPathName() ?? string.Empty;
             metaDataChunk.WriteFString(referencePath);
-            
+
             metaDataChunk.Write((byte) originalSequence.AdditiveAnimType); // EAdditiveAnimationType
             metaDataChunk.Write((byte) originalSequence.RefPoseType); // EAdditiveBasePoseType
             metaDataChunk.Write(originalSequence.RefFrameIndex);
-            
+
             metaDataChunk.Serialize(Ar);
         }
 
@@ -59,23 +59,59 @@ public class UEAnim : UEFormatExport
                         track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
 
-                    // dupe key reduction, could be better but it works for now
-                    if (prevPos is null || prevPos != translation)
+                    // for Arc System Works custom compression format AnimCompress_Constant
+                    if (originalSequence.GetOrDefault<bool>("bConstantAnimation"))
                     {
-                        positionKeys.Add(new FVectorKey(frame, translation));
-                        prevPos = translation;
-                    }
+                        if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))
+                        {
+                            if (prevPos != null)
+                            {
+                                positionKeys.Add(new FVectorKey(frame - 1, (FVector)prevPos));
+                            }
+                            positionKeys.Add(new FVectorKey(frame, translation));
+                            prevPos = translation;
+                        }
 
-                    if (prevRot is null || prevRot != rotation)
-                    {
-                        rotationKeys.Add(new FQuatKey(frame, rotation));
-                        prevRot = rotation;
-                    }
+                        if (prevRot is null || (prevRot != rotation && track.KeyQuatTime.Contains(frame)))
+                        {
+                            if (prevRot != null)
+                            {
+                                rotationKeys.Add(new FQuatKey(frame - 1, (FQuat)prevRot));
+                            }
+                            rotationKeys.Add(new FQuatKey(frame, rotation));
+                            prevRot = rotation;
+                        }
 
-                    if (prevScale is null || prevScale != scale)
+                        if (prevScale is null || (prevScale != scale && track.KeyScaleTime.Contains(frame)))
+                        {
+                            if (prevScale != null)
+                            {
+                                scaleKeys.Add(new FVectorKey(frame - 1, (FVector)prevScale));
+                            }
+                            scaleKeys.Add(new FVectorKey(frame, scale));
+                            prevScale = scale;
+                        }
+                    }
+                    else
                     {
-                        scaleKeys.Add(new FVectorKey(frame, scale));
-                        prevScale = scale;
+                        // dupe key reduction, could be better but it works for now
+                        if (prevPos is null || prevPos != translation)
+                        {
+                            positionKeys.Add(new FVectorKey(frame, translation));
+                            prevPos = translation;
+                        }
+
+                        if (prevRot is null || prevRot != rotation)
+                        {
+                            rotationKeys.Add(new FQuatKey(frame, rotation));
+                            prevRot = rotation;
+                        }
+
+                        if (prevScale is null || prevScale != scale)
+                        {
+                            scaleKeys.Add(new FVectorKey(frame, scale));
+                            prevScale = scale;
+                        }
                     }
                 }
 

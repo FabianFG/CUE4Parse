@@ -17,8 +17,7 @@ public class ByteProperty : FPropertyTagType<byte>
             ReadType.MAP when Ar.Versions["ByteProperty.TMap64Bit"] => (byte) Ar.Read<ulong>(),
             ReadType.MAP when Ar.Versions["ByteProperty.TMap16Bit"] => (byte) Ar.Read<ushort>(),
             ReadType.MAP when Ar.Versions["ByteProperty.TMap8Bit"] => Ar.Read<byte>(),
-            ReadType.MAP => Ar.Read<byte>(),
-            ReadType.ARRAY => Ar.Read<byte>(),
+            ReadType.MAP or ReadType.ARRAY or ReadType.RAW => Ar.Read<byte>(),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

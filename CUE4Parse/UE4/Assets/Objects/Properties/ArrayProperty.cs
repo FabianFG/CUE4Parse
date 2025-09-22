@@ -11,7 +11,7 @@ public class ArrayProperty : FPropertyTagType<UScriptArray>
         Value = type switch
         {
             ReadType.ZERO => new UScriptArray(tagData?.InnerType ?? "ZeroUnknown"),
-            _ => new UScriptArray(Ar, tagData, size)
+            _ => new UScriptArray(Ar, tagData, type, size)
         };
     }
 }

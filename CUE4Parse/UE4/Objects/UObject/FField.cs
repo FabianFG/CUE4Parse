@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
@@ -73,6 +74,9 @@ public class FField
         "VerseFunctionProperty" => new FVerseFunctionProperty(),
         "VerseDynamicProperty" => new FVerseDynamicProperty(),
         "ReferenceProperty" => new FReferenceProperty(),
+
+        "GameDataHandleProperty" => new FGameDataHandleProperty(),
+        "GbxDefPtrProperty" => new FGbxDefPtrProperty(),
         _ => throw new ParserException("Unsupported serialized property type " + fieldTypeName)
     };
 

@@ -19,7 +19,7 @@ public class UScriptSet
         Properties = [];
     }
 
-    public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData)
+    public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData, ReadType readType)
     {
         if (Ar.Game == EGame.GAME_StateOfDecay2 && tagData is not null)
         {
@@ -50,17 +50,21 @@ public class UScriptSet
             };
         }
 
-        var numElementsToRemove = Ar.Read<int>();
-        for (var i = 0; i < numElementsToRemove; i++)
+        if (readType != ReadType.RAW)
         {
-            FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            var numElementsToRemove = Ar.Read<int>();
+            for (var i = 0; i < numElementsToRemove; i++)
+            {
+                FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            }
         }
 
+        var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.ARRAY;
         var num = Ar.Read<int>();
         Properties = new List<FPropertyTagType>(num);
         for (var i = 0; i < num; i++)
         {
-            var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, type);
             if (property != null)
                 Properties.Add(property);
             else

@@ -14,6 +14,7 @@ namespace CUE4Parse.UE4.Localization
         public readonly string NativeCulture;
         public readonly string NativeLocRes;
         public readonly string[]? CompiledCultures;
+        public readonly bool bIsUGC;
 
         public FTextLocalizationMetaDataResource(FArchive Ar)
         {
@@ -39,6 +40,8 @@ namespace CUE4Parse.UE4.Localization
             NativeLocRes = Ar.ReadFString();
 
             CompiledCultures = versionNumber >= ELocMetaVersion.AddedCompiledCultures ? Ar.ReadArray(Ar.ReadFString) : null;
+
+            bIsUGC = versionNumber >= ELocMetaVersion.AddedIsUGC && Ar.ReadBoolean();
         }
     }
 }

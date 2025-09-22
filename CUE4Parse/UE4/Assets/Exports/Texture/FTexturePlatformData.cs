@@ -132,8 +132,10 @@ public class FTexturePlatformData
 
             if (Owner is UVolumeTexture or UTextureCube)
             {
-                Mips[i].SizeY *= GetNumSlices();
-                Mips[i].SizeZ = Mips[i].SizeZ == GetNumSlices() ? 1 : Mips[i].SizeZ;
+                var slices = GetNumSlices();
+                if (Ar.Game == EGame.GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
+                Mips[i].SizeY *= slices;
+                Mips[i].SizeZ = Mips[i].SizeZ == slices ? 1 : Mips[i].SizeZ;
             }
         }
 

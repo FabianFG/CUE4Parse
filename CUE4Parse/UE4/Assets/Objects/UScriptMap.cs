@@ -19,7 +19,7 @@ public class UScriptMap
         Properties = [];
     }
 
-    public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData)
+    public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData, ReadType readType)
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.PROPERTY_TAG_SET_MAP_SUPPORT)
         {
@@ -40,12 +40,16 @@ public class UScriptMap
             if (!string.IsNullOrEmpty(mapStructTypes.Value)) tagData.ValueTypeData = new FPropertyTagData(mapStructTypes.Value);
         }
 
-        var numKeysToRemove = Ar.Read<int>();
-        for (var i = 0; i < numKeysToRemove; i++)
+        if (readType != ReadType.RAW)
         {
-            FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+            var numKeysToRemove = Ar.Read<int>();
+            for (var i = 0; i < numKeysToRemove; i++)
+            {
+                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+            }
         }
 
+        var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.MAP;
         var numEntries = Ar.Read<int>();
         Properties = new Dictionary<FPropertyTagType, FPropertyTagType?>(numEntries);
         for (var i = 0; i < numEntries; i++)
@@ -53,14 +57,14 @@ public class UScriptMap
             var isReadingValue = false;
             try
             {
-                var key = FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+                var key = FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, type);
                 isReadingValue = true;
-                var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, ReadType.MAP);
+                var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, type);
                 Properties[key ?? new StrProperty($"UNK_Entry_{i}")] = value;
             }
             catch (ParserException e)
             {
-                throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
+                 throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
             }
         }
     }

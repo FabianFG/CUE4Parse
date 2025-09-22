@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties
             {
                 if (tagData == null)
                     throw new ParserException(Ar, "Can't load MapProperty without tag data");
-                Value = new UScriptMap(Ar, tagData);
+                Value = new UScriptMap(Ar, tagData, type);
             }
         }
     }

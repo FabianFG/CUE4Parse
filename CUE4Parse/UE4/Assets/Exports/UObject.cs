@@ -346,6 +346,53 @@ public class UObject : AbstractPropertyHolder
         }
     }
 
+    internal static void DeserializeRawProperties(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc, FRawHeader? header, ReadType readType = ReadType.NORMAL)
+    {
+        var type = struc.Name;
+        Struct? propMappings = null;
+        if (struc is UScriptClass)
+            Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
+        else
+            propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
+
+        if (propMappings is null)
+        {
+            if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + type);
+            return;
+        }
+
+        header ??= FRawHeader.FullRead;
+
+        var readtype = readType;
+        if (readType == ReadType.RAW || header.Flags.HasFlag(ERawHeaderFlags.RawProperties))
+        {
+            readtype = ReadType.RAW;
+        }
+
+        var indices = header.BuildIndices(propMappings);
+        foreach (var index in indices)
+        {
+            if (propMappings.TryGetValue(index, out var propertyInfo))
+            {
+                if (propertyInfo.MappingType.Type is "StructProperty" && readtype is ReadType.RAW && header.Flags.HasFlag(ERawHeaderFlags.RawPropertiesExceptStructs))
+                {
+                    readtype = ReadType.NORMAL;
+                }
+                var tag = new FPropertyTag(Ar, propertyInfo, readtype);
+                if (tag.Tag != null)
+                    properties.Add(tag);
+                else
+                {
+                    throw new ParserException(Ar, $"{type}: Failed to serialize property {propertyInfo.MappingType.Type} {propertyInfo.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
+                }
+            }
+            else
+            {
+                throw new ParserException(Ar, $"{type}: Unknown property with value {index}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
+            }
+        }
+    }
+
     protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         var package = Owner;

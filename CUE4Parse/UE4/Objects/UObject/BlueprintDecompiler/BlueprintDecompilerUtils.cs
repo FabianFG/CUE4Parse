@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using CUE4Parse.GameTypes._2XKO.Kismet;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Kismet;
@@ -1331,6 +1332,10 @@ public static class BlueprintDecompilerUtils
             case EX_PropertyConst propertyConst:
             {
                 return propertyConst.Property.ToString();
+            }
+            case EX_FixedPointConst fp:
+            {
+                return fp.Value.ToString();
             }
 
             // good enough?

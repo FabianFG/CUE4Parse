@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
+using FixedMathSharp;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -580,5 +581,6 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         public static implicit operator Vector3(FVector v) => new(v.X, v.Y, v.Z);
+        public static implicit operator FVector(Vector3d v) => new((float)v.x, (float)v.y, (float)v.z);
     }
 }

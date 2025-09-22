@@ -2,30 +2,20 @@
 using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(BoolPropertyConverter))]
+public class BoolProperty : FPropertyTagType<bool>
 {
-    [JsonConverter(typeof(BoolPropertyConverter))]
-    public class BoolProperty : FPropertyTagType<bool>
+    public BoolProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
     {
-        public BoolProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
+        Value = type switch
         {
-            switch (type)
-            {
-                case ReadType.NORMAL when !Ar.HasUnversionedProperties:
-                    Value = tagData?.Bool == true;
-                    break;
-                case ReadType.NORMAL:
-                case ReadType.MAP:
-                case ReadType.ARRAY:
-                case ReadType.OPTIONAL:
-                    Value = Ar.ReadFlag();
-                    break;
-                case ReadType.ZERO:
-                    Value = tagData?.Bool == true;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
-        }
+            ReadType.NORMAL when !Ar.HasUnversionedProperties => tagData?.Bool == true,
+            ReadType.NORMAL or ReadType.MAP or ReadType.ARRAY or ReadType.OPTIONAL => Ar.ReadFlag(),
+            ReadType.ZERO => tagData?.Bool == true,
+            ReadType.RAW => Ar.ReadBoolean(),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 }
