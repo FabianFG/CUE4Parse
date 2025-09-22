@@ -74,7 +74,7 @@ public static class WwiseVersions
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
         140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis
-        145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH, 2XKO
+        145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight, Splitgate 2, Byte Breakers, Le Dernier Don
         154     // Off The Grid
     ];
