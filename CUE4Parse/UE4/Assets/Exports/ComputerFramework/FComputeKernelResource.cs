@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.ComputerFramework;
 
 public class FComputeKernelResource
 {
-    public FComputeKernelShaderMap GameThreadShaderMap;
+    public FComputeKernelShaderMap? GameThreadShaderMap;
     
     public FComputeKernelResource(FArchive Ar)
     {
