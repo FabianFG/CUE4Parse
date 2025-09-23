@@ -46,7 +46,7 @@ public class FGlobalShaderCache
     public FGlobalShaderCache(FArchive Ar)
     {
         var numLoadedResources = Ar.Read<int>();
-        var resourceAr = new FMaterialResourceProxyReader(Ar, true);
+        var resourceAr = new FMaterialResourceProxyReader(Ar, false);
         LoadedShaderMaps = new FGlobalShaderMap[numLoadedResources];
         if (numLoadedResources > 0)
         {
@@ -75,7 +75,6 @@ public abstract class FShaderMapBase
 
     public void Deserialize(FMaterialResourceProxyReader Ar)
     {
-        var bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
         FrozenArchive = new FMemoryImageResult();
         FrozenArchive.LoadFromArchive(Ar);
 
@@ -85,11 +84,11 @@ public abstract class FShaderMapBase
         });
 
         var bShareCode = Ar.ReadBoolean();
-        if (bUseNewFormat)
+        if (Ar.bUseNewFormat)
         {
             if (Ar.Game >= EGame.GAME_UE5_2)
             {
-                var shaderPlatform = Ar.isGlobal ? Ar.ReadFString() : Ar.ReadFName().PlainText;
+                var shaderPlatform = Ar.ReadFString();
                 Enum.TryParse("SP_" + shaderPlatform, out ShaderPlatform);
             }
             else
@@ -573,13 +572,15 @@ public class FUniformExpressionSet
             >= EGame.GAME_UE5_0 => 6,
             _ => 5,
         };
+        
         UniformTextureParameters = new FMaterialTextureParameterInfo[EMaterialTextureParameterTypeCount][];
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
-            // if (Ar.Game >= EGame.GAME_UE5_6)
-            // {
-            //     UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
-            // }
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
+            }
+            
             UniformPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
             UniformPreshaderFields = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : [];
             UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
@@ -649,10 +650,22 @@ public class FHashedMaterialParameterInfo
     }
 }
 
-public class FMaterialTextureCollectionParameterInfo(FMemoryImageArchive Ar)
+public class FMaterialTextureCollectionParameterInfo
 {
-    public FHashedMaterialParameterInfo ParameterInfo = new(Ar);
-    public int TextureCollectionIndex = Ar.Read<int>();
+    public FHashedMaterialParameterInfo ParameterInfo;
+    public int TextureCollectionIndex;
+    public bool bisVirtualCollection;
+
+    public FMaterialTextureCollectionParameterInfo(FMemoryImageArchive Ar)
+    {
+        ParameterInfo = new FHashedMaterialParameterInfo(Ar);
+        TextureCollectionIndex = Ar.Read<int>();
+
+        if (Ar.Game >= EGame.GAME_UE5_7)
+        {
+            bisVirtualCollection = Ar.ReadBoolean();
+        }
+    }
 }
 
 public class FMemoryImageMaterialParameterInfo
@@ -764,8 +777,7 @@ public class FMaterialUniformPreshaderHeader
 public struct FMaterialUniformPreshaderField
 {
     public uint BufferOffset, ComponentIndex;
-    [JsonConverter(typeof(StringEnumConverter))]
-    public EShaderValueType Type;
+    [JsonConverter(typeof(StringEnumConverter))] public EShaderValueType Type;
 }
 
 public enum EShaderValueType : byte
@@ -1043,16 +1055,14 @@ public class FMemoryImageResult()
 
     public void LoadFromArchive(FMaterialResourceProxyReader Ar)
     {
-        var bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
-
-        LayoutParameters = bUseNewFormat ? new FPlatformTypeLayoutParameters(Ar) : new();
+        LayoutParameters = Ar.bUseNewFormat ? new FPlatformTypeLayoutParameters(Ar) : new();
 
         var frozenSize = Ar.Read<uint>();
         FrozenObject = Ar.ReadBytes((int) frozenSize);
 
-        if (bUseNewFormat)
+        if (Ar.bUseNewFormat)
         {
-            PointerTable.LoadFromArchive(Ar, true);
+            PointerTable.LoadFromArchive(Ar);
         }
 
         var numVTables = Ar.Read<int>();
@@ -1062,9 +1072,9 @@ public class FMemoryImageResult()
         ScriptNames = Ar.ReadArray(numScriptNames, () => new FMemoryImageName(Ar));
         MinimalNames = Ar.ReadArray(numMinimalNames, () => new FMemoryImageName(Ar));
 
-        if (!bUseNewFormat)
+        if (!Ar.bUseNewFormat)
         {
-            PointerTable.LoadFromArchive(Ar, false);
+            PointerTable.LoadFromArchive(Ar);
         }
     }
 
@@ -1115,11 +1125,7 @@ public class FMemoryImageName
 
     public FMemoryImageName(FArchive Ar)
     {
-        Name = Ar switch
-        {
-            FMaterialResourceProxyReader proxy when proxy.isGlobal => Ar.ReadFString(),
-            _ => Ar.ReadFName()
-        };
+        Name = Ar.ReadFString();
         Patches = Ar.ReadArray<FMemoryImageNamePatch>();
     }
 
@@ -1138,14 +1144,14 @@ public class FShaderMapPointerTable : FPointerTableBase
         VFTypes = [];
     }
 
-    public override void LoadFromArchive(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
+    public override void LoadFromArchive(FMaterialResourceProxyReader Ar)
     {
-        if (bUseNewFormat) base.LoadFromArchive(Ar, bUseNewFormat);
+        if (Ar.bUseNewFormat) base.LoadFromArchive(Ar);
         var NumTypes = Ar.Read<int>();
         var NumVFTypes = Ar.Read<int>();
         Types = Ar.ReadArray<FHashedName>(NumTypes);
         VFTypes = Ar.ReadArray<FHashedName>(NumVFTypes);
-        if (!bUseNewFormat) base.LoadFromArchive(Ar, bUseNewFormat);
+        if (!Ar.bUseNewFormat) base.LoadFromArchive(Ar);
     }
 }
 
@@ -1163,37 +1169,21 @@ public class FPointerTableBase
         TypeDependencies = [];
     }
 
-    public virtual void LoadFromArchive(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
+    public virtual void LoadFromArchive(FMaterialResourceProxyReader Ar)
     {
-        TypeDependencies = Ar.ReadArray(() => new FTypeLayoutDesc(Ar, bUseNewFormat));
+        TypeDependencies = Ar.ReadArray(() => new FTypeLayoutDesc(Ar));
     }
 }
 
 public class FTypeLayoutDesc
 {
-    public readonly FName? Name;
-    public readonly string? StringName;
-    public readonly FHashedName? NameHash;
+    public readonly object Name;
     public readonly uint SavedLayoutSize;
     public readonly FSHAHash SavedLayoutHash;
 
-    public FTypeLayoutDesc(FMaterialResourceProxyReader Ar, bool bUseNewFormat)
+    public FTypeLayoutDesc(FMaterialResourceProxyReader Ar)
     {
-        if (Ar.isGlobal && bUseNewFormat)
-        {
-            StringName = Ar.ReadFString();
-        }
-        else
-        {
-            if (bUseNewFormat)
-            {
-                Name = Ar.ReadFName();
-            }
-            else
-            {
-                NameHash = Ar.Read<FHashedName>();
-            }
-        }
+        Name = Ar.bUseNewFormat ? Ar.ReadFString() : Ar.Read<FHashedName>();
         SavedLayoutSize = Ar.Read<uint>();
         SavedLayoutHash = new FSHAHash(Ar);
     }
