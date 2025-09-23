@@ -8,12 +8,6 @@ public class FComputeKernelResourceSet
     
     public FComputeKernelResourceSet(FAssetArchive Ar)
     {
-        var numResources = Ar.Read<int>();
-        
-        KernelResources = new FComputeKernelResource[numResources];
-        for (int i = 0; i < KernelResources.Length; i++)
-        {
-            KernelResources[i] = new FComputeKernelResource(Ar);
-        }
+        KernelResources = Ar.ReadArray(() => new FComputeKernelResource(Ar));
     }
 }
