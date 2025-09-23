@@ -70,6 +70,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly int SoftPackageReferencesOffset;
         public readonly int SearchableNamesOffset;
         public readonly int ThumbnailTableOffset;
+        public readonly int ImportTypeHierarchiesCount;
+        public readonly int ImportTypeHierarchiesOffset;
         public FSHAHash SavedHash;
         public readonly FGuid Guid;
         public readonly FGuid PersistentGuid;
@@ -329,6 +331,17 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             ThumbnailTableOffset = Ar.Read<int>();
 
+            if (FileVersionUE >= EUnrealEngineObjectUE5Version.IMPORT_TYPE_HIERARCHIES)
+            {
+                ImportTypeHierarchiesCount = Ar.Read<int>();
+                ImportTypeHierarchiesOffset = Ar.Read<int>();
+            }
+            else
+            {
+                ImportTypeHierarchiesCount = 0;
+                ImportTypeHierarchiesOffset = 0;
+            }
+            
             if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
             {
                 Guid = Ar.Read<FGuid>();

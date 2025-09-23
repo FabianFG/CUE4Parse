@@ -64,6 +64,9 @@ namespace CUE4Parse.UE4.Versions
 
         // OS shadow serialization of subobjects
         OS_SUB_OBJECT_SHADOW_SERIALIZATION,
+        
+        // Adds a table of hierarchical type information for imports in a package
+        IMPORT_TYPE_HIERARCHIES,
 
         // -----<new versions can be added before this line>-------------------------------------------------
         // - this needs to be the last line (see note below)

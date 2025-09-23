@@ -213,6 +213,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
+                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }
