@@ -218,19 +218,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                     Log.Warning("File version is too new or too old");
                 }
 
-                if ((Ar.Versions.bExplicitVer ? Ar.Ver : FileVersionUE) >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
-                {
-                    SavedHash = new FSHAHash(Ar);
-                    TotalHeaderSize = Ar.Read<int>();
-                }
-
-                CustomVersionContainer = new FCustomVersionContainer(Ar, FCustomVersionContainer.DetermineSerializationFormat(legacyFileVersion));
-
-                if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Versions.Length > 0)
-                {
-                    Ar.Versions.CustomVersions = CustomVersionContainer;
-                }
-
                 if (FileVersionUE.FileVersionUE4 == 0 && FileVersionUE.FileVersionUE5 == 0 && FileVersionLicenseeUE == 0)
                 {
                     // this file is unversioned, remember that, then use current versions
@@ -246,6 +233,19 @@ namespace CUE4Parse.UE4.Objects.UObject
                     {
                         Ar.Ver = FileVersionUE;
                     }
+                }
+
+                if ((Ar.Versions.bExplicitVer ? Ar.Ver : FileVersionUE) >= EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+                {
+                    SavedHash = new FSHAHash(Ar);
+                    TotalHeaderSize = Ar.Read<int>();
+                }
+
+                CustomVersionContainer = new FCustomVersionContainer(Ar, FCustomVersionContainer.DetermineSerializationFormat(legacyFileVersion));
+
+                if (Ar.Versions.CustomVersions == null && CustomVersionContainer.Versions.Length > 0)
+                {
+                    Ar.Versions.CustomVersions = CustomVersionContainer;
                 }
             }
             else
