@@ -1,4 +1,6 @@
+using System;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -12,7 +14,7 @@ public class AkEntry
     public readonly uint Offset;
     public readonly uint FolderId;
     public string? Path;
-    public bool IsSoundBank;
+    public bool IsSoundBank => Data is { Length: >= 4 } && BitConverter.ToUInt32(Data) == (uint)ChunkID.BankHeader;
     public byte[]? Data;
 
     public AkEntry(FArchive Ar)
@@ -22,5 +24,7 @@ public class AkEntry
         Size = Ar.Read<int>();
         Offset = Ar.Read<uint>();
         FolderId = Ar.Read<uint>();
+        // or should be Offset*OffsetMultiplier
+        Data = Ar.ReadBytesAt(Offset, Size);
     }
 }

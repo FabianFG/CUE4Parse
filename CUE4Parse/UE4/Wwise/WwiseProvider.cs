@@ -140,59 +140,82 @@ public class WwiseProvider
 
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
-                if (!soundBank.bContainsMedia)
-                    continue;
-
-                var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
-
-                var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
-                TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
-
-                if (_wwiseHierarchyTables.TryGetValue((uint) eventData.Value.EventId, out var eventHierarchy) &&
-                    eventHierarchy.Data is HierarchyEvent hierarchyEvent)
-                {
-                    LoopThroughEventActions(hierarchyEvent, results, soundBankPath.SubstringBeforeLast('.'), debugName);
-                }
+                ProcessSoundBankCookedData(soundBank, eventData, results);
             }
 
             foreach (var media in eventData.Value.Media)
             {
-                var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
+                ProcessMediaCookedData(media, languageData, results);
+            }
 
-                var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
-
-                byte[] data = [];
-                if (media.PackagedFile?.BulkData?.WemFile.Length > 0)
+            foreach (var leaf in eventData.Value.SwitchContainerLeaves)
+            {
+                foreach (var soundBank in leaf.SoundBanks)
                 {
-                    data = media.PackagedFile.BulkData.WemFile;
-                }
-                else if (_provider.TrySaveAsset(mediaRelativePath, out var providerData))
-                {
-                    data = providerData;
-                }
-                else if (_multiReferenceLibraryCache.TryGetValue(media.PackagedFile?.Hash ?? 0, out var multiRefReader))
-                {
-                    data = multiRefReader.WemFile;
+                    ProcessSoundBankCookedData(soundBank, eventData, results);
                 }
 
-                var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text)
-                    ? media.DebugName.Text.SubstringBeforeLast('.')
-                    : Path.GetFileNameWithoutExtension(mediaRelativePath);
-
-                var namedPath = Path.Combine(
-                    _baseWwiseAudioPath,
-                    $"{mediaDebugName} ({languageData.LanguageName.Text})"
-                );
-
-                results.Add(new WwiseExtractedSound
+                foreach (var media in leaf.Media)
                 {
-                    OutputPath = namedPath.Replace('\\', '/'),
-                    Extension = media.MediaPathName.IsNone ? "wem" : Path.GetExtension(mediaRelativePath).TrimStart('.'),
-                    Data = data,
-                });
+                    ProcessMediaCookedData(media, languageData, results);
+                }
             }
         }
         return results;
+    }
+
+    private void ProcessMediaCookedData(FWwiseMediaCookedData media, FWwiseLanguageCookedData languageData, List<WwiseExtractedSound> results)
+    {
+        var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
+
+        var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
+
+        byte[] data = [];
+        if (media.PackagedFile?.BulkData?.WemFile.Length > 0)
+        {
+            data = media.PackagedFile.BulkData.WemFile;
+        }
+        else if (_provider.TrySaveAsset(mediaRelativePath, out var providerData))
+        {
+            data = providerData;
+        }
+        else if (_multiReferenceLibraryCache.TryGetValue(media.PackagedFile?.Hash ?? 0, out var multiRefReader))
+        {
+            data = multiRefReader.WemFile;
+        }
+
+        var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text)
+            ? media.DebugName.Text.SubstringBeforeLast('.')
+            : Path.GetFileNameWithoutExtension(mediaRelativePath);
+
+        var namedPath = Path.Combine(
+            _baseWwiseAudioPath,
+            $"{mediaDebugName} ({languageData.LanguageName.Text})"
+        );
+
+        results.Add(new WwiseExtractedSound
+        {
+            OutputPath = namedPath.Replace('\\', '/'),
+            Extension = media.MediaPathName.IsNone ? "wem" : Path.GetExtension(mediaRelativePath).TrimStart('.'),
+            Data = data,
+        });
+    }
+
+    private void ProcessSoundBankCookedData(FWwiseSoundBankCookedData soundBank, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results)
+    {
+        if (!soundBank.bContainsMedia) return;
+
+        var debugName = soundBank.DebugName.Text;
+        var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
+
+        var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
+        TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
+
+        if (_wwiseHierarchyTables.TryGetValue((uint) eventData!.Value.EventId, out var eventHierarchy) &&
+            eventHierarchy.Data is HierarchyEvent hierarchyEvent)
+        {
+            LoopThroughEventActions(hierarchyEvent, results, soundBankPath.SubstringBeforeLast('.'), debugName);
+        }
     }
 
     private void LoadSoundBankById(uint soundBankId)

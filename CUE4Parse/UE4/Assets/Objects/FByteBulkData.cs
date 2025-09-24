@@ -87,14 +87,14 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
         }
 
-        private void CheckReadSize(int read) 
+        private void CheckReadSize(int read)
         {
             if (read != Header.ElementCount) {
                 Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
             }
         }
 
-        public bool ReadBulkDataInto(byte[] data, int offset = 0) 
+        public bool ReadBulkDataInto(byte[] data, int offset = 0)
         {
             if (data.Length - offset < Header.ElementCount) {
                 Log.Error("Data buffer is too small");
@@ -175,5 +175,25 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDataSize() => Header.ElementCount;
+
+        public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData)
+        {
+            combinedData = [];
+            try
+            {
+                var secondChunk = new FByteBulkData(Ar);
+                if (Data is null || secondChunk.Data is null) return false;
+
+                combinedData = new byte[GetDataSize() + secondChunk.GetDataSize()];
+                Buffer.BlockCopy(Data, 0, combinedData, 0, GetDataSize());
+                Buffer.BlockCopy(secondChunk.Data, 0, combinedData, GetDataSize(), secondChunk.GetDataSize());
+                return true;
+            }
+            catch
+            {
+
+                return false;
+            }
+        }
     }
 }
