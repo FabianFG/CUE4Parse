@@ -1,4 +1,4 @@
-﻿namespace CUE4Parse.MappingsProvider.Usmap
+namespace CUE4Parse.MappingsProvider.Usmap
 {
     public enum EUsmapVersion : byte
     {
@@ -13,6 +13,9 @@
 
         /* Adds support for enums with more than 255 values */
         LargeEnums,
+
+        /* Adds support for explicit enum values */
+        ExplicitEnumValues,
 
         LatestPlusOne,
         Latest = LatestPlusOne - 1
