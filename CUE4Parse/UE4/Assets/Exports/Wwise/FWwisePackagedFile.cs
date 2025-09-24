@@ -2,6 +2,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
 using Serilog;
@@ -56,11 +57,10 @@ public class FWwisePackagedFile : FStructFallback
     public void SerializeBulkData(FAssetArchive Ar)
     {
         var name = PathName.IsNone ? Hash.ToString() : PathName.ToString();
-        if (PackagingStrategy == EWwisePackagingStrategy.BulkData)
+        if (PackagingStrategy is EWwisePackagingStrategy.BulkData)
         {
             var bulkData = new FByteBulkData(Ar);
-            if (bulkData.Data is null)
-                return;
+            if (bulkData.Data is null) return;
 
             if (!bulkData.Header.BulkDataFlags.HasFlag(EBulkDataFlags.BULKDATA_PayloadInSeperateFile))
                 Ar.Position += bulkData.Data.Length;
@@ -70,14 +70,37 @@ public class FWwisePackagedFile : FStructFallback
                 using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
                 BulkData = new WwiseReader(reader);
             }
+            // i know it's ugly, but i don't see other solution without rewriting everything
+            catch (RIFFSectionSizeException e)
+            {
+                if (bulkData.TryCombineBulkData(Ar, out var combinedData))
+                {
+                    try
+                    {
+                        using var reader = new FByteArchive("AkAssetData", combinedData, Ar.Versions);
+                        BulkData = new WwiseReader(reader);
+                    }
+                    catch
+                    {
+                        Log.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
+                    }
+                }
+            }
             catch
             {
-                Log.Error("Failed to read Wwise bank data for {Name}", name);
+                Log.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
             }
+        }
+        else if (PackagingStrategy is EWwisePackagingStrategy.External)
+        {
+#if DEBUG
+            Log.Warning("Wwise bank data for {Name} uses External packing strategy", name);
+#endif
         }
         else
         {
-            Log.Warning("Wwise bank data for {Name} is not in bulk data format", name);
+            Log.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
+                PackagingStrategy.ToString());
         }
     }
 }

@@ -1265,16 +1265,16 @@ public class AkFolderConverter : JsonConverter<AkFolder>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Offset");
+        writer.WritePropertyName(nameof(value.Offset));
         writer.WriteValue(value.Offset);
 
-        writer.WritePropertyName("Id");
+        writer.WritePropertyName(nameof(value.Id));
         writer.WriteValue(value.Id);
 
-        writer.WritePropertyName("Name");
+        writer.WritePropertyName(nameof(value.Name));
         writer.WriteValue(value.Name);
 
-        writer.WritePropertyName("Entries");
+        writer.WritePropertyName(nameof(value.Entries));
         serializer.Serialize(writer, value.Entries);
 
         writer.WriteEndObject();
@@ -1384,29 +1384,50 @@ public class WwiseConverter : JsonConverter<WwiseReader>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Header");
+        writer.WritePropertyName(nameof(value.Header));
         serializer.Serialize(writer, value.Header);
 
-        writer.WritePropertyName("Folders");
-        serializer.Serialize(writer, value.Folders);
+        if (value.Folders is { Length: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.Folders));
+            serializer.Serialize(writer, value.Folders);
+        }
 
-        writer.WritePropertyName("Initialization");
-        serializer.Serialize(writer, value.Initialization);
+        if (value.AKPluginList is { Count: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.AKPluginList));
+            serializer.Serialize(writer, value.AKPluginList);
+        }
 
-        writer.WritePropertyName("WemIndexes");
-        serializer.Serialize(writer, value.WemIndexes);
+        if (value.WemIndexes is { Length: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.WemIndexes));
+            serializer.Serialize(writer, value.WemIndexes);
+        }
 
-        writer.WritePropertyName("Hierarchies");
-        serializer.Serialize(writer, value.Hierarchies);
+        if (value.Hierarchies is { Length: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.Hierarchies));
+            serializer.Serialize(writer, value.Hierarchies);
+        }
 
-        writer.WritePropertyName("EnvSettings");
-        serializer.Serialize(writer, value.EnvSettings);
+        if (value.EnvSettings is not null)
+        {
+            writer.WritePropertyName(nameof(value.EnvSettings));
+            serializer.Serialize(writer, value.EnvSettings);
+        }
 
-        writer.WritePropertyName("IdToString");
-        serializer.Serialize(writer, value.IdToString);
+        if (value.BankIDToFileName is { Count: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.BankIDToFileName));
+            serializer.Serialize(writer, value.BankIDToFileName);
+        }
 
-        writer.WritePropertyName("Platform");
-        writer.WriteValue(value.Platform);
+        if (!string.IsNullOrEmpty(value.Platform))
+        {
+            writer.WritePropertyName(nameof(value.Platform));
+            writer.WriteValue(value.Platform);
+        }
 
         if (value.WemFile is { Length: > 0 })
         {
