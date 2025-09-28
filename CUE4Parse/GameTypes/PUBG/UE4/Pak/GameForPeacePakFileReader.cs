@@ -92,7 +92,7 @@ public partial class PakFileReader
         var entries = index.ReadArray(() => new FPakEntry(this, "", index, Game));
         var files = new Dictionary<string, GameFile>(entries.Length, pathComparer);
 
-        var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) Ar.Read<long>()));
+        using var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) Ar.Read<long>()));
 
         var directoryIndexLength = (int) directoryIndex.Read<long>();
         for (var i = 0; i < directoryIndexLength; i++)

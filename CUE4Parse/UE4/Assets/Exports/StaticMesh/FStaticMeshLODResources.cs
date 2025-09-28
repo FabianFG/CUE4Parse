@@ -99,9 +99,8 @@ public class FStaticMeshLODResources
                 var bulkData = new FByteBulkData(assetArchive);
                 if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
                 {
-                    var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
+                    using var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
                     SerializeBuffers(tempAr);
-                    tempAr.Dispose();
                 }
 
                 // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560

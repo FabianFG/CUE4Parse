@@ -49,7 +49,7 @@ public class FStaticMeshRenderData
                 var bulkData = new FByteBulkData(Ar);
                 if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
                 {
-                    var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
+                    using var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
                     LODs[i] = new FStaticMeshLODResources(tempAr);
                 }
                 else

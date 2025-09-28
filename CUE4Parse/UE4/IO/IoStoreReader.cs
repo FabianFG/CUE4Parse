@@ -466,7 +466,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     private FIoContainerHeader ReadContainerHeader()
     {
         var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
-        var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
+        using var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
         return new FIoContainerHeader(Ar);
     }
 

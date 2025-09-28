@@ -61,7 +61,7 @@ namespace CUE4Parse.UE4.VirtualFileCache.Manifest
             }
             reader.Dispose();
 
-            var manifest = new FByteArchive("manifest", data);
+            using var manifest = new FByteArchive("manifest", data);
             var startPos = (int)manifest.Position;
             var dataSize = manifest.Read<int>();
             // metadata

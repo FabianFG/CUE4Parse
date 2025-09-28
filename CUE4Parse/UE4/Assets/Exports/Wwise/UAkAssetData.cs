@@ -17,7 +17,7 @@ public class UAkAssetData : UObject
         var bulkData = new FByteBulkData(Ar);
         if (bulkData.Data is null) return;
 
-        var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
+        using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
         Data = new WwiseReader(reader);
     }
 
