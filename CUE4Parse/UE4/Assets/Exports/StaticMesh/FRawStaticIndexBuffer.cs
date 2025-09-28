@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             {
                 var is32bit = Ar.ReadBoolean();
                 var data = Ar.ReadBulkArray<byte>();
-                var tempAr = new FByteArchive("IndicesReader", data, Ar.Versions);
+                using var tempAr = new FByteArchive("IndicesReader", data, Ar.Versions);
 
                 if (Ar.Versions["RawIndexBuffer.HasShouldExpandTo32Bit"])
                 {
@@ -48,7 +48,17 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                     var count = (int)tempAr.Length / 2;
                     Indices16 = tempAr.ReadArray<ushort>(count);
                 }
-                tempAr.Dispose();
+
+                if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+                {
+                    var cur = 0;
+                    for (var i = 0; i < Indices16.Length; i++)
+                    {
+                        cur += (short)Indices16[i];
+                        Indices16[i] = (ushort)cur;
+                    }
+                }
+
             }
         }
 

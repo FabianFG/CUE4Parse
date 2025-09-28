@@ -9,6 +9,7 @@ using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
+using CUE4Parse.GameTypes.PUBG.Assets.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
 using CUE4Parse.GameTypes.SuicideSquad.Objects;
@@ -291,6 +292,12 @@ public class FScriptStruct
 
             // 2XKO
             "FixedPoint" => new FFixedPoint(Ar),
+
+            // PUBG
+            "TslSomeSKStruct" => new FTslSomeSKStruct(Ar),
+
+            // Train Sim World 6
+            "PowerQuantity" or "ForceQuantity" or "TimeUnit" or "PressureQuantity" or "VolumeQuantity" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
 
             _ => Ar.Game switch
             {

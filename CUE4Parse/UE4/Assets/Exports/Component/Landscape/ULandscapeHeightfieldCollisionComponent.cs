@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -12,8 +13,11 @@ public class ULandscapeHeightfieldCollisionComponent : USceneComponent
         var bCooked = Ar.ReadBoolean();
         if (bCooked)
         {
-            if (Ar.Game >= Versions.EGame.GAME_UE4_14)
-                Ar.SkipBulkArrayData(); // CookedCollisionData
+            if (Ar.Game >= EGame.GAME_UE4_14)
+                if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+                    _ = new FByteBulkData(Ar);
+                else
+                    Ar.SkipBulkArrayData(); // CookedCollisionData
             else
                 Ar.SkipFixedArray(1);
         }

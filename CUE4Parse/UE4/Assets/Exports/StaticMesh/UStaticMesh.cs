@@ -73,12 +73,16 @@ public class UStaticMesh : UObject
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
-                if ((Ar.Game is EGame.GAME_FragPunk && Ar.ReadBoolean()) || Ar.Game is EGame.GAME_CrystalOfAtlan or EGame.GAME_Farlight84)
+                switch (Ar.Game)
                 {
-                    Ar.SkipBulkArrayData();
-                    Ar.SkipBulkArrayData();
-                    if (Ar.Game is EGame.GAME_CrystalOfAtlan) Ar.SkipBulkArrayData();
-                    if (Ar.Game is EGame.GAME_Farlight84)
+                    case EGame.GAME_CrystalOfAtlan:
+                    case EGame.GAME_FragPunk:
+                        if (Ar.Game is EGame.GAME_FragPunk && !Ar.ReadBoolean()) break;
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
+                        break;
+                    case EGame.GAME_Farlight84:
                     {
                         var count = Ar.Read<int>();
                         for (var i = 0; i < count; i++)
@@ -86,12 +90,13 @@ public class UStaticMesh : UObject
                             Ar.SkipBulkArrayData();
                             Ar.SkipBulkArrayData();
                         }
+
+                        break;
                     }
-                }
-                else
-                {
-                    Ar.SkipFixedArray(12); // Vertices
-                    Ar.SkipFixedArray(2); // Indices
+                    default:
+                        Ar.SkipFixedArray(12); // Vertices
+                        Ar.SkipFixedArray(2); // Indices
+                        break;
                 }
             }
         }
