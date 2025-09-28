@@ -125,7 +125,7 @@ public class FStaticMeshLODResources
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     EGame.GAME_SuicideSquad => 29,
-                    EGame.GAME_ArenaBreakoutInifinite => 16,
+                    EGame.GAME_ArenaBreakoutInfinite => 16,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
@@ -254,7 +254,7 @@ public class FStaticMeshLODResources
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
