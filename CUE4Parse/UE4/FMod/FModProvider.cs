@@ -33,9 +33,16 @@ public static class FModProvider
         var fguid = assetGuidProp.Tag?.GetValue<FGuid>() ?? throw new InvalidOperationException();
         var eventGuid = new FModGuid(fguid);
 
+        if (gameDirectory.EndsWith(@"\Paks", StringComparison.OrdinalIgnoreCase))
+        {
+            var parent = Directory.GetParent(gameDirectory);
+            if (parent != null)
+                gameDirectory = parent.FullName;
+        }
+
         string fmodDir = Directory
             .GetDirectories(gameDirectory, "FMOD", SearchOption.AllDirectories)
-            .Select(dir => Path.Combine(dir, "Desktop"))
+            .SelectMany(fmodFolder => Directory.GetDirectories(fmodFolder, "Desktop", SearchOption.AllDirectories))
             .FirstOrDefault(Directory.Exists)
             ?? throw new DirectoryNotFoundException($"FMOD Desktop directory not found under {gameDirectory}");
 
