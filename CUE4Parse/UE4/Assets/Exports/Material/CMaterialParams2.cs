@@ -128,7 +128,7 @@ public class CMaterialParams2
     public static readonly string[][] DiffuseColors =
     [
         [
-            "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "DiffuseColor", "tex1_CO",
+            "ColorMult", "Color_mul", "Base Color", "BaseColor", "Color", "color", "DiffuseColor", "tex1_CO",
             "ColorA", "ALB", "AlbedoColor", "Layer A Tint"
         ],
         ["tex2_CO", "ColorB", "Layer B Tint"],

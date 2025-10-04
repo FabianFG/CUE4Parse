@@ -170,6 +170,8 @@ public class UMediaComponent : UActorComponent;
 public class UMediaPlateComponent : UActorComponent;
 public class UMediaSoundComponent : USynthComponent;
 public class UMeshComponent : UPrimitiveComponent;
+public class UWaterBodyComponent : UPrimitiveComponent;
+public class UWaterMeshComponent : UMeshComponent;
 public class UMeshWireframeComponent : UMeshComponent;
 public class UMockDataMeshTrackerComponent : USceneComponent;
 public class UMockGameplayTasksComponent : UGameplayTasksComponent;
