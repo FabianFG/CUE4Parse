@@ -53,7 +53,8 @@
     <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
   </PropertyGroup>
 
-  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" AfterTargets="AfterBuild">
+  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" AfterTargets="AfterBuild"        
+    Condition="'$(CUE4PARSE_SKIP_NATIVE)' != 'true' and '$(CUE4PARSE_SKIP_NATIVE)' != '1' and '$(CUE4PARSE_SKIP_NATIVE)' != 'True'">
     <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
     <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)" IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
