@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -62,7 +63,23 @@ public class UBasicLineSetComponentBase : UMeshComponent;
 public class UBasicPointSetComponentBase : UMeshComponent;
 public class UBasicTriangleSetComponentBase : UMeshComponent;
 public class UBehaviorTreeComponent : UBrainComponent;
-public class UBillboardComponent : UPrimitiveComponent;
+
+public class UBillboardComponent : UPrimitiveComponent
+{
+    public UTexture2D? GetSprite()
+    {
+        var current = this;
+        while (current != null)
+        {
+            var sprite = current.GetOrDefault<UTexture2D?>("Sprite");
+            if (sprite != null) return sprite;
+            
+            current = current.Template?.Load<UBillboardComponent>();
+        }
+        
+        return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
+    }
+}
 public class UBlackboardComponent : UActorComponent;
 public class UBoundsCopyComponent : UActorComponent;
 public class UBoxComponent : UShapeComponent;
