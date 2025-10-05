@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.FMod.Nodes;
@@ -20,6 +19,13 @@ public static class EventNodesResolver
                 result[eventGuid] = samples;
         }
         return result;
+    }
+
+    public static List<FmodSample> ExtractTracks(FModReader reader)
+    {
+        return reader.WavEntries.Values
+            .Where(entry => entry.SoundBankIndex < reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
+            .Select(entry => reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex]).ToList();
     }
 
     private static List<FmodSample> ResolveEventNodesWithAudio(FModReader reader, EventNode evNode)
@@ -140,7 +146,7 @@ public static class EventNodesResolver
 
     public static void LogMissingSamples(FModReader reader, Dictionary<FModGuid, List<FmodSample>> resolvedEvents)
     {
-        Log.Debug($"----------------");
+        Log.Debug("----------------");
         int sampleCount = resolvedEvents.Values.Sum(samples => samples?.Count ?? 0);
 
         Log.Debug($"+ Resolved {sampleCount} audio sample(s)");

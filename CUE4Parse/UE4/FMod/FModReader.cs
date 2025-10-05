@@ -42,7 +42,7 @@ public class FModReader
         ParseNodes(Ar, Ar.BaseStream.Position, Ar.BaseStream.Length);
     }
 
-    private static void ParseHeader(BinaryReader Ar)
+    private void ParseHeader(BinaryReader Ar)
     {
         if (Ar.BaseStream.Length < 12)
             throw new Exception("File too small to be a valid RIFF header");
@@ -275,11 +275,46 @@ public class FModReader
 #endif
                 Ar.BaseStream.Position = nextNode;
             }
-            //else
-            //{
-            //    Console.WriteLine($"Chunk {nodeId} parsed successfully ({nodeStart} -> {nextNode})");
-            //}
         }
+    }
+
+    public FModGuid GetBankGuid()
+    {
+        return BankInfo?.BaseGuid ?? new FModGuid();
+    }
+
+    public void Merge(FModReader src)
+    {
+        foreach (var kv in src.EventNodes)
+            EventNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.TimelineNodes)
+            TimelineNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.PlaylistNodes)
+            PlaylistNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.InstrumentNodes)
+            InstrumentNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.WavEntries)
+            WavEntries[kv.Key] = kv.Value;
+        foreach (var kv in src.ScattererInstrumentNodes)
+            ScattererInstrumentNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.ParameterNodes)
+            ParameterNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.ModulatorNodes)
+            ModulatorNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.CurveNodes)
+            CurveNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.PropertyNodes)
+            PropertyNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.MappingNodes)
+            MappingNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.ParameterLayoutNodes)
+            ParameterLayoutNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.WaveformInstrumentNodes)
+            WaveformInstrumentNodes[kv.Key] = kv.Value;
+        foreach (var kv in src.ControllerNodes)
+            ControllerNodes[kv.Key] = kv.Value;
+
+        SoundBankData.AddRange(src.SoundBankData);
     }
 
     #region Global Readers
