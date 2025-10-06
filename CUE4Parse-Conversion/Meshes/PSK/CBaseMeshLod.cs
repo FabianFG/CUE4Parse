@@ -17,12 +17,12 @@ public class CBaseMeshLod : IDisposable
     public bool HasTangents = false;
     public bool IsTwoSided = false;
     public bool IsNanite = false;
-    public Lazy<CMeshSection[]> Sections;
-    public Lazy<FMeshUVFloat[][]> ExtraUV;
+    public Lazy<CMeshSection[]>? Sections;
+    public Lazy<FMeshUVFloat[][]>? ExtraUV;
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
-    public Lazy<uint[]> Indices;
-    public bool SkipLod => Sections.Value.Length < 1 || Indices.Value.Length < 1;
+    public Lazy<uint[]>? Indices;
+    public bool SkipLod => Sections?.Value.Length < 1 || Indices?.Value.Length < 1;
 
     public void AllocateUVBuffers()
     {
@@ -69,18 +69,20 @@ public class CBaseMeshLod : IDisposable
 
     public virtual void Dispose()
     {
-        if (Sections.IsValueCreated)
+        if (Sections is not null && Sections.IsValueCreated)
         {
             Array.Clear(Sections.Value);
+            Sections = null;
         }
 
-        if (ExtraUV.IsValueCreated)
+        if (ExtraUV is not null && ExtraUV.IsValueCreated)
         {
             foreach (var uv in ExtraUV.Value)
             {
                 Array.Clear(uv);
             }
             Array.Clear(ExtraUV.Value);
+            ExtraUV = null;
         }
 
         if (VertexColors is not null)
@@ -99,20 +101,25 @@ public class CBaseMeshLod : IDisposable
             ExtraVertexColors = null;
         }
 
-        if (Indices.IsValueCreated)
+        if (Indices is not null && Indices.IsValueCreated)
         {
             Array.Clear(Indices.Value);
+            Indices = null;
         }
     }
 }
 
-public readonly struct CVertexColor(string name, FColor[]? colorData) : IDisposable
+public struct CVertexColor(string name, FColor[]? colorData) : IDisposable
 {
     public readonly string Name = name;
-    public readonly FColor[] ColorData = colorData ?? [];
+    public FColor[]? ColorData = colorData;
 
     public void Dispose()
     {
-        Array.Clear(ColorData);
+        if (ColorData is not null)
+        {
+            Array.Clear(ColorData);
+            ColorData = null;
+        }
     }
 }
