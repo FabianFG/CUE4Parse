@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public class CBaseMeshLod
+public class CBaseMeshLod : IDisposable
 {
     public int NumVerts = 0;
     public int NumTexCoords = 0;
@@ -66,16 +66,53 @@ public class CBaseMeshLod
         }
         return materials;
     }
+
+    public virtual void Dispose()
+    {
+        if (Sections.IsValueCreated)
+        {
+            Array.Clear(Sections.Value);
+        }
+
+        if (ExtraUV.IsValueCreated)
+        {
+            foreach (var uv in ExtraUV.Value)
+            {
+                Array.Clear(uv);
+            }
+            Array.Clear(ExtraUV.Value);
+        }
+
+        if (VertexColors is not null)
+        {
+            Array.Clear(VertexColors);
+            VertexColors = null;
+        }
+
+        if (ExtraVertexColors is not null)
+        {
+            foreach (var vc in ExtraVertexColors)
+            {
+                vc.Dispose();
+            }
+            Array.Clear(ExtraVertexColors);
+            ExtraVertexColors = null;
+        }
+        
+        if (Indices.IsValueCreated)
+        {
+            Indices.Value.Dispose();
+        }
+    }
 }
 
-public readonly struct CVertexColor
+public readonly struct CVertexColor(string name, FColor[]? colorData) : IDisposable
 {
-    public readonly string Name;
-    public readonly FColor[] ColorData;
+    public readonly string Name = name;
+    public readonly FColor[] ColorData = colorData ?? [];
 
-    public CVertexColor(string name, FColor[]? colorData)
+    public void Dispose()
     {
-        Name = name;
-        ColorData = colorData ?? Array.Empty<FColor>();
+        Array.Clear(ColorData);
     }
 }
