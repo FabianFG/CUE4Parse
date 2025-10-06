@@ -110,7 +110,7 @@ public static class MeshConverter
                 HasNormals = true,
                 HasTangents = true,
                 IsTwoSided = srcLod.CardRepresentationData?.bMostlyTwoSided ?? false,
-                Indices = new Lazy<uint[]>(srcLod.IndexBuffer?.ToArray() ?? []),
+                Indices = new Lazy<uint[]>(srcLod.IndexBuffer?.Buffer ?? []),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
                     var sections = new CMeshSection[srcLod.Sections.Length];
@@ -386,7 +386,7 @@ public static class MeshConverter
                 ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
                 HasNormals = true,
                 HasTangents = true,
-                Indices = new Lazy<uint[]>(() => srcLod.Indices?.ToArray() ?? []),
+                Indices = new Lazy<uint[]>(() => srcLod.Indices?.Buffer ?? []),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
                     var sections = new CMeshSection[srcLod.Sections.Length];

@@ -268,7 +268,7 @@ public class FStaticMeshLODResources
                 {
                     Sections[i].NumTriangles = sections[i];
                 }
-                IndexBuffer.Indices32 = indexBuffer;
+                IndexBuffer.SetIndices(indexBuffer);
             }
         }
 
