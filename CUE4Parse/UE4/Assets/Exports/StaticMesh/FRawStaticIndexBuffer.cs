@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
-public class FRawStaticIndexBuffer() : IDisposable
+public class FRawStaticIndexBuffer()
 {
     public ushort[]? Indices16; // LegacyIndices
     public uint[]? Indices32;
@@ -56,6 +56,22 @@ public class FRawStaticIndexBuffer() : IDisposable
         }
     }
 
+    public uint[] ToArray()
+    {
+        if (Indices32 is not null)
+            return Indices32;
+        
+        if (Indices16 is not null)
+        {
+            var arr = new uint[Indices16.Length];
+            for (var i = 0; i < Indices16.Length; i++)
+                arr[i] = Indices16[i];
+            return arr;
+        }
+        
+        return [];
+    }
+
     public int Length
     {
         get
@@ -89,21 +105,6 @@ public class FRawStaticIndexBuffer() : IDisposable
             if (Indices16 is not null)
                 return Indices16[i];
             throw new IndexOutOfRangeException();
-        }
-    }
-
-    public void Dispose()
-    {
-        if (Indices16 is not null)
-        {
-            Array.Clear(Indices16);
-            Indices16 = null;
-        }
-
-        if (Indices32 is not null)
-        {
-            Array.Clear(Indices32);
-            Indices32 = null;
         }
     }
 }

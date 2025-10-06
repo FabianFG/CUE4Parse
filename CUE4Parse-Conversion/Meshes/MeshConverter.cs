@@ -110,7 +110,7 @@ public static class MeshConverter
                 HasNormals = true,
                 HasTangents = true,
                 IsTwoSided = srcLod.CardRepresentationData?.bMostlyTwoSided ?? false,
-                Indices = new Lazy<FRawStaticIndexBuffer>(srcLod.IndexBuffer!),
+                Indices = new Lazy<uint[]>(srcLod.IndexBuffer?.ToArray() ?? []),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
                     var sections = new CMeshSection[srcLod.Sections.Length];
@@ -274,7 +274,7 @@ public static class MeshConverter
             HasNormals = true,
             HasTangents = bHasTangents,
             IsTwoSided = true,
-            Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer() { Indices32 = triBuffer }),
+            Indices = new Lazy<uint[]>(triBuffer),
             Sections = new Lazy<CMeshSection[]>(matSections)
         };
         outMesh.AllocateVerts((int) numVerts);
@@ -386,10 +386,7 @@ public static class MeshConverter
                 ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
                 HasNormals = true,
                 HasTangents = true,
-                Indices = new Lazy<FRawStaticIndexBuffer>(() => new FRawStaticIndexBuffer
-                {
-                    Indices16 = srcLod.Indices.Indices16, Indices32 = srcLod.Indices.Indices32
-                }),
+                Indices = new Lazy<uint[]>(() => srcLod.Indices?.ToArray() ?? []),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
                     var sections = new CMeshSection[srcLod.Sections.Length];
@@ -806,7 +803,7 @@ public static class MeshConverter
             }
         }
 
-        landscapeLod.Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer { Indices32 = meshIndices.ToArray() });
+        landscapeLod.Indices = new Lazy<uint[]>(meshIndices.ToArray());
         meshIndices.Clear();
 
         convertedMesh = new CStaticMesh();

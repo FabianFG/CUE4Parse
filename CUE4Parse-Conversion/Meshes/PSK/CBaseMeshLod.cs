@@ -21,7 +21,7 @@ public class CBaseMeshLod : IDisposable
     public Lazy<FMeshUVFloat[][]> ExtraUV;
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
-    public Lazy<FRawStaticIndexBuffer> Indices;
+    public Lazy<uint[]> Indices;
     public bool SkipLod => Sections.Value.Length < 1 || Indices.Value.Length < 1;
 
     public void AllocateUVBuffers()
@@ -98,10 +98,10 @@ public class CBaseMeshLod : IDisposable
             Array.Clear(ExtraVertexColors);
             ExtraVertexColors = null;
         }
-        
+
         if (Indices.IsValueCreated)
         {
-            Indices.Value.Dispose();
+            Array.Clear(Indices.Value);
         }
     }
 }
