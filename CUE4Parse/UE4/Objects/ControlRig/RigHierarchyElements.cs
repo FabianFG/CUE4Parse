@@ -665,8 +665,10 @@ public struct FRigConnectionRuleStash(FArchive Ar)
 public struct FRigConnectorSettings
 {
     public string Description;
-    public EConnectorType Type = EConnectorType.Primary;
-    public bool bOptional = false;
+    public EConnectorType Type;
+    public bool bOptional;
+    public bool bIsArray;
+    public bool bPostConstruction;
     public FRigConnectionRuleStash[] Rules;
 
     public FRigConnectorSettings(FArchive Ar)
@@ -677,6 +679,9 @@ public struct FRigConnectorSettings
             Type = Ar.Read<EConnectorType>();
             bOptional = Ar.ReadBoolean();
         }
+
+        bIsArray = FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyArrayConnectors && Ar.ReadBoolean();
+        bPostConstruction = FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyPostConstructionConnectors && Ar.ReadBoolean();
 
         Rules = Ar.ReadArray(() => new FRigConnectionRuleStash(Ar));
     }

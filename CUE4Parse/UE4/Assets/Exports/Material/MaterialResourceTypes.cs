@@ -572,14 +572,14 @@ public class FUniformExpressionSet
 
     public FUniformExpressionSet(FMemoryImageArchive Ar)
     {
-        var EMaterialTextureParameterTypeCount = Ar.Game switch
+        var materialTextureParameterTypeCount = Ar.Game switch
         {
             >= EGame.GAME_UE5_3 => 7,
             >= EGame.GAME_UE5_0 => 6,
             _ => 5,
         };
         
-        UniformTextureParameters = new FMaterialTextureParameterInfo[EMaterialTextureParameterTypeCount][];
+        UniformTextureParameters = new FMaterialTextureParameterInfo[materialTextureParameterTypeCount][];
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
             if (Ar.Game >= EGame.GAME_UE5_6)
@@ -608,13 +608,11 @@ public class FUniformExpressionSet
                 {
                     EMaterialParameterType.Scalar => dv.Read<float>(),
                     EMaterialParameterType.Vector => dv.Read<FLinearColor>(),
-                    EMaterialParameterType.DoubleVector => (dv.Read<FLinearColor>(), dv.Read<FLinearColor>()),
-                    _ => throw new NotImplementedException($"Unknown EMaterialParameterType : {parameter.ParameterType}"),
+                    EMaterialParameterType.DoubleVector => new FVector4(Ar),
+                    EMaterialParameterType.StaticSwitch => dv.ReadFlag(),
+                    _ => throw new NotImplementedException($"Unknown EMaterialParameterType: {parameter.ParameterType}"),
                 };
             }
-            VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
-            ParameterCollections = Ar.ReadArray<FGuid>();
-            UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
         }
         else
         {
@@ -626,10 +624,11 @@ public class FUniformExpressionSet
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
-            VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
-            ParameterCollections = Ar.ReadArray<FGuid>();
-            UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
         }
+
+        VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
+        ParameterCollections = Ar.ReadArray<FGuid>();
+        UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
     }
 }
 
@@ -856,13 +855,17 @@ public enum EMaterialParameterType : byte
     Vector,
     DoubleVector,
     Texture,
+    TextureCollection,
     Font,
     RuntimeVirtualTexture,
+    SparseVolumeTexture,
+    StaticSwitch,
+    ParameterCollection,
 
     NumRuntime, // Runtime parameter types must go above here, and editor-only ones below
 
-    StaticSwitch = NumRuntime,
-    StaticComponentMask,
+    // TODO - Would be nice to make static parameter values editor-only, but will save that for a future-refactor
+    StaticComponentMask = NumRuntime,
 
     Num,
     None = 0xff,

@@ -99,7 +99,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ChunkIds = Array.Empty<int>();
         }
 
-        internal FPackageFileSummary(FArchive Ar)
+        public FPackageFileSummary(FArchive Ar)
         {
             Tag = Ar.Read<uint>();
 

@@ -63,7 +63,7 @@ public class URigHierarchy : UObject
         for (var elementIndex = 0; elementIndex < elementCount; elementIndex++)
         {
             var key = new FRigElementKey(archiveForElements);
-            FRigBaseElement element = key.Type switch
+            var element = key.Type switch
             {
                 ERigElementType.Bone => new FRigBoneElement(),
                 ERigElementType.Null => new FRigNullElement(),

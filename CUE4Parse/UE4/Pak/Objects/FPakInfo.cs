@@ -23,6 +23,7 @@ public enum EPakFileVersion
     PakFile_Version_FrozenIndex = 9,
     PakFile_Version_PathHashIndex = 10,
     PakFile_Version_Fnv64BugFix = 11,
+    PakFile_Version_Utf8PakDirectory = 12,
 
 
     PakFile_Version_Last,
