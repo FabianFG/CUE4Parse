@@ -312,7 +312,6 @@ public class USynthComponentMonoWaveTable : USynthComponent;
 public class USynthComponentToneGenerator : USynthComponent;
 public class USynthSamplePlayer : USynthComponent;
 public class UTestPhaseComponent : USceneComponent;
-public class UTextRenderComponent : UPrimitiveComponent;
 public class UTimelineComponent : UActorComponent;
 public class UToFloatField : UFieldNodeFloat;
 public class UToIntegerField : UFieldNodeInt;

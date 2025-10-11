@@ -15,3 +15,9 @@ public class ULevelStreaming : Assets.Exports.UObject
 }
 
 public class ULevelStreamingDynamic : ULevelStreaming;
+public class ULevelStreamingAlwaysLoaded : ULevelStreaming;
+public class ULevelStreamingPersistent : ULevelStreaming;
+public class ULevelStreamingLevelInstanceEditor : ULevelStreamingAlwaysLoaded;
+public class UWorldPartitionLevelStreamingDynamic : ULevelStreamingDynamic;
+public class ULevelStreamingLevelInstance : ULevelStreamingDynamic;
+public class ULevelStreamingLevelInstanceEditorPropertyOverride : ULevelStreamingDynamic;
