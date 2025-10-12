@@ -1,25 +1,25 @@
 using System.IO;
 
-namespace CUE4Parse.UE4.FMod.Nodes;
+namespace CUE4Parse.UE4.FMod.Metadata;
 
-public class SoundDataHeaderNode
+public class SoundDataInfo
 {
     public readonly FSoundDataHeader[] Header;
 
-    public SoundDataHeaderNode(BinaryReader Ar)
+    public SoundDataInfo(BinaryReader Ar)
     {
         Header = FModReader.ReadElemListImp<FSoundDataHeader>(Ar);
     }
 
     public readonly struct FSoundDataHeader
     {
-        public readonly int FSBOffset;
-        public readonly int IdkOffset;
+        public readonly uint FSBOffset;
+        public readonly uint Length;
 
         public FSoundDataHeader(BinaryReader Ar)
         {
-            FSBOffset = Ar.ReadInt32();
-            IdkOffset = Ar.ReadInt32();
+            FSBOffset = Ar.ReadUInt32();
+            Length = Ar.ReadUInt32();
         }
     }
 }

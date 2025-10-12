@@ -12,8 +12,8 @@ public class PlaylistNode
 
     public PlaylistNode(BinaryReader Ar)
     {
-        PlayMode = (EPlaylistPlayMode) Ar.ReadInt32();
-        SelectionMode = (EPlaylistSelectionMode) Ar.ReadInt32();
+        PlayMode = (EPlaylistPlayMode)Ar.ReadInt32();
+        SelectionMode = (EPlaylistSelectionMode)Ar.ReadInt32();
         Entries = FModReader.ReadElemListImp<FPlaylistEntry>(Ar);
     }
 }

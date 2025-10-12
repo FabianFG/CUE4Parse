@@ -1,9 +1,9 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
 
-namespace CUE4Parse.UE4.FMod.Nodes;
+namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
-public class ScattererInstrumentNode
+public class ScattererInstrumentNode : BaseInstrumentNode
 {
     public readonly FModGuid BaseGuid;
     public readonly int MaximumSpawnPolyphony;
@@ -12,6 +12,7 @@ public class ScattererInstrumentNode
     public readonly int SpawnPolyphonyLimitBehavior;
     public readonly float SpawnRate;
     public readonly FQuantization? SpawnQuantization;
+    public PlaylistNode? PlaylistBody;
 
     public ScattererInstrumentNode(BinaryReader Ar)
     {

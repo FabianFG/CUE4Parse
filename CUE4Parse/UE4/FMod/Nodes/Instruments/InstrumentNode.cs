@@ -1,7 +1,8 @@
-using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using System.Collections.Generic;
+using System.IO;
 
-namespace CUE4Parse.UE4.FMod.Nodes;
+namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
 public class InstrumentNode
 {
@@ -18,11 +19,12 @@ public class InstrumentNode
     public readonly float AutoPitchReference;
     public readonly float InitialSeekPosition;
     public readonly int MaximumPolyphony;
-    //public readonly int PolyphonyLimitBehavior;
-    //public readonly uint LeftTrimOffset;
-    //public readonly float InitialSeekPercent;
-    //public readonly float AutoPitchAtMinimum;
-    //public readonly FEvaluatorList Evaluators;
+    public readonly FRoutable Routable;
+    public readonly int PolyphonyLimitBehavior;
+    public readonly uint LeftTrimOffset;
+    public readonly float InitialSeekPercent;
+    public readonly float AutoPitchAtMinimum;
+    public readonly List<FEvaluator> Evaluators = [];
 
     public InstrumentNode(BinaryReader Ar)
     {
@@ -35,7 +37,7 @@ public class InstrumentNode
         {
             Flags = Ar.ReadInt32();
         }
-        else
+        else 
         {
             Flags = Ar.ReadByte();
         }
@@ -48,32 +50,31 @@ public class InstrumentNode
         AutoPitchReference = Ar.ReadSingle();
         InitialSeekPosition = Ar.ReadSingle();
         MaximumPolyphony = Ar.ReadInt32();
+        Routable = new FRoutable(Ar);
 
-        // TODO: more to read
+        if (FModReader.Version >= 0x35)
+        {
+            PolyphonyLimitBehavior = Ar.ReadInt32();
+        }
 
-        //if (FModReader.Version >= 0x35)
-        //{
-        //    PolyphonyLimitBehavior = Ar.ReadInt32();
-        //}
+        if (FModReader.Version >= 0x47)
+        {
+            LeftTrimOffset = Ar.ReadUInt32();
+        }
 
-        //if (FModReader.Version >= 0x47)
-        //{
-        //    LeftTrimOffset = Ar.ReadUInt32();
-        //}
+        if (FModReader.Version >= 0x48)
+        {
+            InitialSeekPercent = Ar.ReadSingle();
+        }
 
-        //if (FModReader.Version >= 0x48)
-        //{
-        //    InitialSeekPercent = Ar.ReadSingle();
-        //}
+        if (FModReader.Version >= 0x50)
+        {
+            AutoPitchAtMinimum = Ar.ReadSingle();
+        }
 
-        //if (FModReader.Version >= 0x50)
-        //{
-        //    AutoPitchAtMinimum = Ar.ReadSingle();
-        //}
-
-        //if (FModReader.Version >= 0x82)
-        //{
-        //    Evaluators = new FEvaluatorList(Ar);
-        //}
+        if (FModReader.Version >= 0x82)
+        {
+            Evaluators = FEvaluator.ReadEvaluatorList(Ar);
+        }
     }
 }

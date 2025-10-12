@@ -15,7 +15,7 @@ public partial class FRadixTreePacked
             ChildInfo = Ar.ReadUInt32();
         }
 
-        public readonly int StringOffset => (int) (KeyInfo & 0x00FFFFFF);
+        public readonly int StringOffset => (int)(KeyInfo & 0x00FFFFFF);
         public readonly bool HasString => StringOffset != Sentinel24;
     }
 }

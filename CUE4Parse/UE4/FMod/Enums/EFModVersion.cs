@@ -2,8 +2,9 @@ namespace CUE4Parse.UE4.FMod.Enums;
 
 /// <summary>
 /// Tested Unreal Engine games:
-/// - Dispatch Demo (UE 4.27), Militsioner (UE 5.3), Deadly Days: Roadtrip Demo (UE 5.5) - [Version: 0x8E]
-/// - Dead as Disco Demo (UE 5.5), Rage Quit (UE 5.5) - [Version: 0x92]
+/// [Version: 0x87] -> Train Life - A Railway Simulator (UE 4.27)
+/// [Version: 0x8E] -> Dispatch Demo (UE 4.27), Militsioner (UE 5.3), Deadly Days: Roadtrip Demo (UE 5.5), Daimon Blades (UE 5.5), The Day Before (UE 5.2), UNYIELDER (UE 5.3), Firefighting Simulator Ignite (UE 5.4), Ghostrunner2 (UE 4.27), Disney Epic Mickey Rebrushed Demo (UE 4.27)
+/// [Version: 0x92] -> Dead as Disco Demo (UE 5.5), Rage Quit (UE 5.5)
 /// </summary>
 public enum EFModVersion : int
 {

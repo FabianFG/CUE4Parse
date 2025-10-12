@@ -1,16 +1,16 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
 
-namespace CUE4Parse.UE4.FMod.Nodes;
+namespace CUE4Parse.UE4.FMod.Metadata;
 
-public class BankInfoNode
+public readonly struct FBankInfo
 {
     public readonly FModGuid BaseGuid;
     public readonly ulong Hash;
     public readonly int FileVersion;
     public readonly int ExportFlags;
 
-    public BankInfoNode(BinaryReader Ar)
+    public FBankInfo(BinaryReader Ar)
     {
         BaseGuid = new FModGuid(Ar);
         Hash = Ar.ReadUInt64();

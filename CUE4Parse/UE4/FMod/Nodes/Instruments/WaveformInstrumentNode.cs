@@ -1,9 +1,9 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
 
-namespace CUE4Parse.UE4.FMod.Nodes;
+namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
-public class WaveformInstrumentNode
+public class WaveformInstrumentNode : BaseInstrumentNode
 {
     public readonly FModGuid BaseGuid;
     public readonly FModGuid WaveformResourceGuid;

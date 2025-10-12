@@ -1,6 +1,6 @@
 using System.IO;
-using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.FMod.Enums;
+using CUE4Parse.UE4.FMod.Objects;
 
 namespace CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
 
@@ -17,7 +17,7 @@ public class SpectralSidechainModulatorNode
     public SpectralSidechainModulatorNode(BinaryReader Ar)
     {
         Amount = Ar.ReadSingle();
-        Mode = (ESpectralSidechainModulatorMode) Ar.ReadInt32();
+        Mode = (ESpectralSidechainModulatorMode)Ar.ReadInt32();
         ThresholdMinimum = Ar.ReadSingle();
         ThresholdMaximum = Ar.ReadSingle();
         AttackTime = Ar.ReadSingle();

@@ -25,9 +25,9 @@ public class EventNode
     public readonly float? TriggerCooldown;
     public readonly uint? Flags;
 
-    public readonly FModGuid[]? NonMasterTracks;
-    public readonly FParameterId[]? ParameterIds;
-    public readonly FModGuid[]? EventTriggeredInstruments;
+    public readonly FModGuid[] NonMasterTracks = [];
+    public readonly FParameterId[] ParameterIds = [];
+    public readonly FModGuid[] EventTriggeredInstruments = [];
 
     public readonly float? MinimumDistance;
     public readonly float? MaximumDistance;
@@ -50,63 +50,20 @@ public class EventNode
         UserPropertyFloatList = FModReader.ReadElemListImp<FUserPropertyFloat>(Ar);
         UserPropertyStringList = FModReader.ReadElemListImp<FUserPropertyString>(Ar);
 
-        if (FModReader.Version >= 0x30)
-            DopplerScale = Ar.ReadSingle();
-        if (FModReader.Version >= 0x34)
-            PolyphonyLimitBehavior = Ar.ReadInt32() != 0;
+        if (FModReader.Version >= 0x30) DopplerScale = Ar.ReadSingle();
+        if (FModReader.Version >= 0x34) PolyphonyLimitBehavior = Ar.ReadInt32() != 0;
 
-        if (FModReader.Version >= 0x4e)
-            TriggerCooldown = Ar.ReadSingle();
-        if (FModReader.Version >= 0x61)
-            Flags = Ar.ReadUInt32();
+        if (FModReader.Version >= 0x4e) TriggerCooldown = Ar.ReadSingle();
+        if (FModReader.Version >= 0x61) Flags = Ar.ReadUInt32();
 
-        if (FModReader.Version >= 0x6b)
-            NonMasterTracks = FModReader.ReadElemListImp<FModGuid>(Ar);
-        if (FModReader.Version >= 0x76)
-            ParameterIds = FModReader.ReadElemListImp<FParameterId>(Ar);
-        if (FModReader.Version >= 0x83)
-            EventTriggeredInstruments = FModReader.ReadElemListImp<FModGuid>(Ar);
+        if (FModReader.Version >= 0x6b) NonMasterTracks = FModReader.ReadElemListImp<FModGuid>(Ar);
+        if (FModReader.Version >= 0x76) ParameterIds = FModReader.ReadElemListImp<FParameterId>(Ar);
+        if (FModReader.Version >= 0x83) EventTriggeredInstruments = FModReader.ReadElemListImp<FModGuid>(Ar);
 
         if (FModReader.Version >= 0x89)
         {
             MinimumDistance = Ar.ReadSingle();
             MaximumDistance = Ar.ReadSingle();
-        }
-    }
-
-    public readonly struct FUserPropertyFloat
-    {
-        public readonly string Name;
-        public readonly float Value;
-
-        public FUserPropertyFloat(BinaryReader Ar)
-        {
-            Name = FModReader.ReadSerializedString(Ar);
-            Value = Ar.ReadSingle();
-        }
-    }
-
-    public readonly struct FUserPropertyString
-    {
-        public readonly string Key;
-        public readonly string Value;
-
-        public FUserPropertyString(BinaryReader Ar)
-        {
-            Key = FModReader.ReadSerializedString(Ar);
-            Value = FModReader.ReadSerializedString(Ar);
-        }
-    }
-
-    public readonly struct FParameterId
-    {
-        public readonly uint Data1;
-        public readonly uint Data2;
-
-        public FParameterId(BinaryReader Ar)
-        {
-            Data1 = Ar.ReadUInt32();
-            Data2 = Ar.ReadUInt32();
         }
     }
 }

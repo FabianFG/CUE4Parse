@@ -10,7 +10,7 @@ public readonly struct FQuantization
 
     public FQuantization(BinaryReader Ar)
     {
-        Unit = (EQuantizationUnit) Ar.ReadUInt32();
+        Unit = (EQuantizationUnit)Ar.ReadUInt32();
 
         if (Unit <= EQuantizationUnit.EighthNote)
         {

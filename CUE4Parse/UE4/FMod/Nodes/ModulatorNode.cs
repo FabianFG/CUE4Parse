@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
-using CUE4Parse.UE4.FMod.Enums;
+using CUE4Parse.UE4.FMod.Objects;
+using Serilog;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
@@ -19,25 +19,24 @@ public class ModulatorNode
 
     public ModulatorNode(BinaryReader Ar)
     {
-        Ar.ReadUInt16(); // Unknown
+        Ar.ReadUInt16(); // Payload size
         BaseGuid = new FModGuid(Ar);
         OwnerGuid = new FModGuid(Ar);
 
         PropertyIndex = Ar.ReadInt32();
-        Type = (EModulatorType) Ar.ReadInt32();
+        Type = (EModulatorType)Ar.ReadInt32();
 
         if (FModReader.Version < 0x55)
         {
-            PropertyType = (EPropertyType) Ar.ReadInt32();
-            ClockSource = (EClockSource) Ar.ReadInt32();
+            PropertyType = (EPropertyType)Ar.ReadInt32();
+            ClockSource = (EClockSource)Ar.ReadInt32();
         }
         else
         {
-            PropertyType = EPropertyType.PropertyType_Normal;
-            ClockSource = EClockSource.ClockSource_Local;
+            PropertyType = (EPropertyType)Ar.ReadInt32();
+            ClockSource = FModReader.Version >= 0x90 ? (EClockSource)Ar.ReadInt32() : EClockSource.ClockSource_Local;
         }
 
-        // TODO: something is still off
         switch (Type)
         {
             case EModulatorType.ADSR:
@@ -59,13 +58,8 @@ public class ModulatorNode
                 Subnode = new SpectralSidechainModulatorNode(Ar);
                 break;
             default:
-                Console.WriteLine($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
+                Log.Error($"Unhandled modulator type {Type} ({(int)Type}) at stream position {Ar.BaseStream.Position}");
                 break;
-        }
-
-        if (Subnode is not RandomModulatorNode && Subnode is not LFOModulatorNode)
-        {
-            Ar.ReadBytes(8); // Unknown
         }
     }
 }
