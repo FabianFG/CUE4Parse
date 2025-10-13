@@ -22,13 +22,6 @@ public static class EventNodesResolver
         return result;
     }
 
-    public static List<FmodSample> ExtractTracks(FModReader reader)
-    {
-        return reader.WavEntries.Values
-            .Where(entry => entry.SoundBankIndex < reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
-            .Select(entry => reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex]).ToList();
-    }
-
     private static List<FmodSample> ResolveEventNodesWithAudio(FModReader reader, EventNode evNode)
     {
         var result = new HashSet<FmodSample>();

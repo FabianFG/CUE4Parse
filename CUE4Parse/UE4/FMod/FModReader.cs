@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System;
+using System.Linq;
 using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
@@ -578,6 +579,11 @@ public class FModReader
                 }
                 break;
         }
+    }
+
+    public List<FmodSample> ExtractTracks()
+    {
+        return SoundBankData.SelectMany(bank => bank.Samples).ToList();
     }
 
     public FModGuid GetBankGuid()

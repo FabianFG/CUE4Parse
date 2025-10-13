@@ -67,7 +67,8 @@ public class FModProvider
 
     public void LoadFileBanks(string gameDirectory)
     {
-        if (Directory.GetParent(gameDirectory) is {} parentInfo && parentInfo.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase))
+        var dir = new DirectoryInfo(gameDirectory);
+        if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(gameDirectory) is {} parentInfo)
             gameDirectory = parentInfo.FullName;
 
         string? fmodDir = Directory.GetDirectories(gameDirectory, "FMOD", SearchOption.AllDirectories)
@@ -187,7 +188,7 @@ public class FModProvider
         }
 
         var bankName = audioBank.Name;
-        var samples = EventNodesResolver.ExtractTracks(bank);
+        var samples = bank.ExtractTracks();
         var extracted = new List<FModExtractedSound>();
         for (var i = 0; i < samples.Count; i++)
         {
