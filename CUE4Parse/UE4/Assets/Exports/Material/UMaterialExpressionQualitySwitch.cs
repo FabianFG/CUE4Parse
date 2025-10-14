@@ -10,39 +10,32 @@ public class UMaterialExpressionQualitySwitch : UMaterialExpression
 {
     public List<FExpressionInput> Inputs = new((int) EMaterialQualityLevel.Num);
 
+    public UMaterialExpressionQualitySwitch()
+    {
+        for (int i = 0; i < (int) EMaterialQualityLevel.Num; i++)
+        {
+            Inputs.Add(null!);
+        }
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        var toRemove = new List<FPropertyTag>();
-
         foreach (var property in Properties)
         {
-            if (property.Tag?.GenericValue is FScriptStruct { StructType: FExpressionInput input } && property.Name.Text == "Inputs")
+            if (property.Name.Text != "Inputs") continue;
+            if (property.Tag?.GenericValue is not FScriptStruct { StructType: FExpressionInput input }) continue;
+
+            var index = property.ArrayIndex;
+            if (index < 0) continue;
+
+            if (index >= Inputs.Count)
             {
-                Inputs.Add(input);
-                toRemove.Add(property);
+                Inputs.AddRange(new FExpressionInput?[index - Inputs.Count + 1]!);
             }
+
+            Inputs[index] = input;
         }
-
-        foreach (var remove in toRemove)
-        {
-            Properties.Remove(remove);
-        }
-    }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        base.WriteJson(writer, serializer);
-
-        writer.WritePropertyName("Inputs");
-        writer.WriteStartArray();
-
-        foreach (var input in Inputs)
-        {
-            serializer.Serialize(writer, input);
-        }
-
-        writer.WriteEndArray();
     }
 }
