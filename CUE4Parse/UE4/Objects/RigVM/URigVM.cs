@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -111,6 +113,16 @@ public class URigVM : Assets.Exports.UObject
         {
             DefaultWorkMemoryStorage = new FRigVMMemoryStorageStruct(Ar);
             DefaultDebugMemoryStorage = new FRigVMMemoryStorageStruct(Ar);
+        }
+
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.LocalizedRegistry)
+        {
+            var bStoredLocalizedRegistry = Ar.ReadBoolean();
+
+            if (bStoredLocalizedRegistry)
+            {
+                throw new NotSupportedException("Localized registry is currently not supported");
+            }
         }
     }
 

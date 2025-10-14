@@ -59,7 +59,8 @@ public class FMaterialResourceProxyReader : FArchive
         return new FName(_nameMap[nameIndex], nameIndex, number);
     }
 
-    public override string ReadFString() => _readNameMap ? ReadFName().PlainText : base.ReadFString();
+    public string ReadFString(bool bReadNameMap) => bReadNameMap ? ReadFName().PlainText : base.ReadFString();
+    public override string ReadFString() => ReadFString(_readNameMap);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int Read(byte[] buffer, int offset, int count)

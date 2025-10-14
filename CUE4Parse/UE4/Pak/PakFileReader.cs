@@ -307,7 +307,7 @@ namespace CUE4Parse.UE4.Pak
                 for (var fileIndex = 0; fileIndex < fileEntries; fileIndex++)
                 {
                     var fileNameSpan = fileNamePoolSpan;
-                    var fileName = directoryIndex.ReadFStringMemory();
+                    var fileName = directoryIndex.ReadFStringMemory(); // supports PakFile_Version_Utf8PakDirectory too
                     var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
                     fileNameSpan = fileNameSpan[..fileNameLength];
                     var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
