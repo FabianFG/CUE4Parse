@@ -120,6 +120,7 @@ public enum EGame : uint
         GAME_LostSoulAside = GAME_UE4_27 + 24,
         GAME_GhostsofTabor = GAME_UE4_27 + 25,
         GAME_BlueProtocol = GAME_UE4_27 + 26,
+        GAME_LittleNightmares3 = GAME_UE4_27 + 27,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,

@@ -14,17 +14,21 @@ public class UAkAudioBank : UAkAudioType
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Position >= validPos) return;
-        if (Ar.Game is EGame.GAME_HogwartsLegacy or EGame.GAME_Farlight84 or EGame.GAME_ArenaBreakoutInfinite) return;
-
-        if (Ar.Game == EGame.GAME_FateTrigger)
+        if (Ar.Position >= validPos - 4) return;
+        switch (Ar.Game)
         {
-            var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
-            Properties.AddRange(idk.Properties);
-            return;
+            case EGame.GAME_HogwartsLegacy or EGame.GAME_Farlight84 or EGame.GAME_ArenaBreakoutInfinite or EGame.GAME_LittleNightmares3:
+                return;
+            case EGame.GAME_FateTrigger:
+            {
+                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
+                Properties.AddRange(idk.Properties);
+                return;
+            }
+            default:
+                SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
+                break;
         }
-
-        SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

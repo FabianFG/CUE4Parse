@@ -301,6 +301,13 @@ public class FScriptStruct
             // Train Sim World 6
             "PowerQuantity" or "ForceQuantity" or "TimeUnit" or "PressureQuantity" or "VolumeQuantity" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
 
+            // Daimon Blades
+            "SOS_GDValue" => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+
+            // Little Nightmares 3
+            "SoftEnumName" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+            "KosmosHangTraversalData" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
