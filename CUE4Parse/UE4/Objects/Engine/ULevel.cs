@@ -120,7 +120,7 @@ public class ULevel : Assets.Exports.UObject
         NavListStart = new FPackageIndex(Ar);
         NavListEnd = new FPackageIndex(Ar);
         if (Ar.Game == EGame.GAME_MetroAwakening && GetOrDefault<bool>("bIsLightingScenario")) return;
-        if (Ar.Game == EGame.GAME_StateOfDecay2 && Ar.ReadBoolean()) return;
+        if (Ar.Game is EGame.GAME_StateOfDecay2 or EGame.GAME_WeHappyFew && Ar.ReadBoolean()) return;
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
     }

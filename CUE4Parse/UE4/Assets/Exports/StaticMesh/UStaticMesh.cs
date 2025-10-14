@@ -59,6 +59,7 @@ public class UStaticMesh : UObject
             RenderData = Ar.Game switch
             {
                 EGame.GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
+                EGame.GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
                 _ => RenderData = new FStaticMeshRenderData(Ar)
             };
         }

@@ -13,6 +13,7 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
     {
         if (bIsStreamable)
         {
+            if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 4; //ubulk lods count
             var size = Ar.Read<int>();
             LODs = new FStaticMeshLODResources[size];
             for (var i = 0; i < size; i++)
@@ -28,6 +29,16 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
         else
         {
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
+        }
+
+        if (Ar.Game == EGame.GAME_WeHappyFew)
+        {
+            Bounds = new FBoxSphereBounds(Ar);
+            if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"]) bLODsShareStaticLighting = Ar.ReadBoolean();
+            Ar.Position += 40; // some floats
+            ScreenSize = Ar.ReadArray<float>(MAX_STATIC_LODS_UE4);
+            Ar.Position += 4;
+            return;
         }
 
         var stripDataFlags = Ar.Read<FStripDataFlags>();
