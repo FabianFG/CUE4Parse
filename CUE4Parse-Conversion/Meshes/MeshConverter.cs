@@ -110,7 +110,15 @@ public static class MeshConverter
                 HasNormals = true,
                 HasTangents = true,
                 IsTwoSided = srcLod.CardRepresentationData?.bMostlyTwoSided ?? false,
-                Indices = new Lazy<FRawStaticIndexBuffer>(srcLod.IndexBuffer!),
+                Indices = new Lazy<uint[]>(() =>
+                {
+                    if (srcLod.IndexBuffer?.Buffer == null)
+                        throw new ParserException("Static mesh LOD has no index buffer");
+                    
+                    var copy = new uint[srcLod.IndexBuffer.Buffer.Length];
+                    Array.Copy(srcLod.IndexBuffer.Buffer, copy, copy.Length);
+                    return copy;
+                }),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
                     var sections = new CMeshSection[srcLod.Sections.Length];
@@ -274,7 +282,7 @@ public static class MeshConverter
             HasNormals = true,
             HasTangents = bHasTangents,
             IsTwoSided = true,
-            Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer() { Indices32 = triBuffer }),
+            Indices = new Lazy<uint[]>(triBuffer),
             Sections = new Lazy<CMeshSection[]>(matSections)
         };
         outMesh.AllocateVerts((int) numVerts);
@@ -386,9 +394,14 @@ public static class MeshConverter
                 ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
                 HasNormals = true,
                 HasTangents = true,
-                Indices = new Lazy<FRawStaticIndexBuffer>(() => new FRawStaticIndexBuffer
+                Indices = new Lazy<uint[]>(() =>
                 {
-                    Indices16 = srcLod.Indices.Indices16, Indices32 = srcLod.Indices.Indices32
+                    if (srcLod.Indices?.Buffer == null)
+                        throw new ParserException("Skeletal mesh LOD has no index buffer");
+                    
+                    var copy = new uint[srcLod.Indices.Buffer.Length];
+                    Array.Copy(srcLod.Indices.Buffer, copy, copy.Length);
+                    return copy;
                 }),
                 Sections = new Lazy<CMeshSection[]>(() =>
                 {
@@ -774,40 +787,41 @@ public static class MeshConverter
             new CMeshSection(0, 0, triangleCount, mat?.Name ?? "DefaultMaterial", landscapeMaterial.ResolvedObject)
         });
 
-        var meshIndices = new List<uint>(triangleCount * 3); // TODO: replace with ArrayPool.Shared.Rent
-        // https://github.com/EpicGames/UnrealEngine/blob/5de4acb1f05e289620e0a66308ebe959a4d63468/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxMainExport.cpp#L4657
-        for (int componentIndex = 0; componentIndex < numComponents; componentIndex++)
+        landscapeLod.Indices = new Lazy<uint[]>(() =>
         {
-            int baseVertIndex = componentIndex * vertexCountPerComponent;
-
-            for (int Y = 0; Y < componentSizeQuads; Y++)
+            var meshIndices = new List<uint>(triangleCount * 3); // TODO: replace with ArrayPool.Shared.Rent
+            // https://github.com/EpicGames/UnrealEngine/blob/5de4acb1f05e289620e0a66308ebe959a4d63468/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxMainExport.cpp#L4657
+            for (int componentIndex = 0; componentIndex < numComponents; componentIndex++)
             {
-                for (int X = 0; X < componentSizeQuads; X++)
+                int baseVertIndex = componentIndex * vertexCountPerComponent;
+
+                for (int Y = 0; Y < componentSizeQuads; Y++)
                 {
-                    if (true) // (VisibilityData[BaseVertIndex + Y * (ComponentSizeQuads + 1) + X] < VisThreshold)
+                    for (int X = 0; X < componentSizeQuads; X++)
                     {
-                        var w1 = baseVertIndex + (X + 0) + (Y + 0) * (componentSizeQuads + 1);
-                        var w2 = baseVertIndex + (X + 1) + (Y + 1) * (componentSizeQuads + 1);
-                        var w3 = baseVertIndex + (X + 1) + (Y + 0) * (componentSizeQuads + 1);
+                        if (true) // (VisibilityData[BaseVertIndex + Y * (ComponentSizeQuads + 1) + X] < VisThreshold)
+                        {
+                            var w1 = baseVertIndex + (X + 0) + (Y + 0) * (componentSizeQuads + 1);
+                            var w2 = baseVertIndex + (X + 1) + (Y + 1) * (componentSizeQuads + 1);
+                            var w3 = baseVertIndex + (X + 1) + (Y + 0) * (componentSizeQuads + 1);
 
-                        meshIndices.Add((uint)w1);
-                        meshIndices.Add((uint)w2);
-                        meshIndices.Add((uint)w3);
+                            meshIndices.Add((uint)w1);
+                            meshIndices.Add((uint)w2);
+                            meshIndices.Add((uint)w3);
 
-                        var w4 = baseVertIndex + (X + 0) + (Y + 0) * (componentSizeQuads + 1);
-                        var w5 = baseVertIndex + (X + 0) + (Y + 1) * (componentSizeQuads + 1);
-                        var w6 = baseVertIndex + (X + 1) + (Y + 1) * (componentSizeQuads + 1);
+                            var w4 = baseVertIndex + (X + 0) + (Y + 0) * (componentSizeQuads + 1);
+                            var w5 = baseVertIndex + (X + 0) + (Y + 1) * (componentSizeQuads + 1);
+                            var w6 = baseVertIndex + (X + 1) + (Y + 1) * (componentSizeQuads + 1);
 
-                        meshIndices.Add((uint)w4);
-                        meshIndices.Add((uint)w5);
-                        meshIndices.Add((uint)w6);
+                            meshIndices.Add((uint)w4);
+                            meshIndices.Add((uint)w5);
+                            meshIndices.Add((uint)w6);
+                        }
                     }
                 }
             }
-        }
-
-        landscapeLod.Indices = new Lazy<FRawStaticIndexBuffer>(new FRawStaticIndexBuffer { Indices32 = meshIndices.ToArray() });
-        meshIndices.Clear();
+            return meshIndices.ToArray();
+        });
 
         convertedMesh = new CStaticMesh();
 

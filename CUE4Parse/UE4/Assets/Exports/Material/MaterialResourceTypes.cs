@@ -586,7 +586,7 @@ public class FUniformExpressionSet
             {
                 UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
             }
-            
+
             UniformPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
             UniformPreshaderFields = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : [];
             UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
@@ -600,7 +600,7 @@ public class FUniformExpressionSet
             Ar.Position = Ar.Position.Align(8);
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
             DefaultValues = Ar.ReadArray<byte>();
-            var dv = new FByteArchive("DefaultValues", DefaultValues, Ar.Versions);
+            using var dv = new FByteArchive("DefaultValues", DefaultValues, Ar.Versions);
             foreach (var parameter in UniformNumericParameters)
             {
                 dv.Seek(parameter.DefaultValueOffset, System.IO.SeekOrigin.Begin);

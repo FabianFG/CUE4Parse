@@ -73,11 +73,11 @@ public static class FF7FStaticLodModel
             tempAr.Position = IndicesBufferOffset;
             if (b32Bit)
             {
-                Indices.Indices32 = tempAr.ReadArray<uint>(CachedNumIndices);
+                Indices.SetIndices(tempAr.ReadArray<uint>(CachedNumIndices));
             }
             else
             {
-                Indices.Indices16 = tempAr.ReadArray<ushort>(CachedNumIndices);
+                Indices.SetIndices(tempAr.ReadArray<ushort>(CachedNumIndices));
             }
 
             tempAr.Position = PositionBufferOffset;

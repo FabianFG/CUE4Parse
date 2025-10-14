@@ -184,6 +184,12 @@ namespace CUE4Parse.UE4.Assets.Objects
                 var secondChunk = new FByteBulkData(Ar);
                 if (Data is null || secondChunk.Data is null) return false;
 
+                if (Data.Length < secondChunk.Data.Length && secondChunk.Data.AsSpan()[..Data.Length].SequenceEqual(Data))
+                {
+                    combinedData = secondChunk.Data;
+                    return true;
+                }
+
                 combinedData = new byte[GetDataSize() + secondChunk.GetDataSize()];
                 Buffer.BlockCopy(Data, 0, combinedData, 0, GetDataSize());
                 Buffer.BlockCopy(secondChunk.Data, 0, combinedData, GetDataSize(), secondChunk.GetDataSize());

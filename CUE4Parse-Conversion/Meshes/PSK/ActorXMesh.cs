@@ -117,7 +117,7 @@ public class ActorXMesh
     }
 
     private void ExportCommonMeshData(CMeshSection[] sections, CMeshVertex[] verts,
-        FRawStaticIndexBuffer indices, CVertexShare share, List<MaterialExporter2>? materialExports)
+        uint[] indices, CVertexShare share, List<MaterialExporter2>? materialExports)
     {
         var mainHdr = new VChunkHeader();
         var ptsHdr = new VChunkHeader();
@@ -199,7 +199,7 @@ public class ActorXMesh
             {
                 for (var j = 0; j < sections[i].NumFaces; j++)
                 {
-                    var wedgeIndex = new int[3];
+                    var wedgeIndex = new uint[3];
                     for (var k = 0; k < wedgeIndex.Length; k++)
                     {
                         wedgeIndex[k] = indices[sections[i].FirstIndex + j * 3 + k];

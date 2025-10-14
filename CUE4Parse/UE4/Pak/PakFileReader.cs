@@ -88,7 +88,7 @@ namespace CUE4Parse.UE4.Pak
                         return RennsportCompressedExtract(reader, pakEntry);
                     case EGame.GAME_DragonQuestXI:
                         return DQXIExtract(reader, pakEntry);
-                    case EGame.GAME_ArenaBreakoutInifinite:
+                    case EGame.GAME_ArenaBreakoutInfinite:
                         return ABIExtract(reader, pakEntry);
                 }
 
@@ -119,7 +119,7 @@ namespace CUE4Parse.UE4.Pak
                     return RennsportExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:
                     return DQXIExtract(reader, pakEntry);
-                case EGame.GAME_ArenaBreakoutInifinite:
+                case EGame.GAME_ArenaBreakoutInfinite:
                     return ABIExtract(reader, pakEntry);
             }
 

@@ -205,16 +205,14 @@ public class WwiseProvider
     {
         if (!soundBank.bContainsMedia) return;
 
-        var debugName = soundBank.DebugName.Text;
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
-
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
         TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
 
         if (_wwiseHierarchyTables.TryGetValue((uint) eventData!.Value.EventId, out var eventHierarchy) &&
             eventHierarchy.Data is HierarchyEvent hierarchyEvent)
         {
-            LoopThroughEventActions(hierarchyEvent, results, soundBankPath.SubstringBeforeLast('.'), debugName);
+            LoopThroughEventActions(hierarchyEvent, results, soundBankPath.SubstringBeforeLast('.'), eventData.Value.DebugName.Text);
         }
     }
 

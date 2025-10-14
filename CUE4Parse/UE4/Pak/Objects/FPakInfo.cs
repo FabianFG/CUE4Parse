@@ -103,7 +103,7 @@ public partial class FPakInfo
             return;
         }
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
         {
             EncryptionKeyGuid = Ar.Read<FGuid>();
             Magic = Ar.Read<uint>();
@@ -464,7 +464,7 @@ public partial class FPakInfo
                     EGame.GAME_CrystalOfAtlan when info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan => true,
                     EGame.GAME_PromiseMascotAgency when info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency => true,
                     EGame.GAME_WildAssault when info.Magic == PAK_FILE_MAGIC_WildAssault => true,
-                    EGame.GAME_ArenaBreakoutInifinite when info.Magic == PAK_FILE_MAGIC_ArenaBreakoutInfinite => true,
+                    EGame.GAME_ArenaBreakoutInfinite when info.Magic == PAK_FILE_MAGIC_ArenaBreakoutInfinite => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
                 if (found) return info;

@@ -55,6 +55,21 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                             throw new ParserException(Ar, $"Unknown element size {elementSize}");
                     }
                     break;
+                case EGame.GAME_PlayerUnknownsBattlegrounds:
+                    elementSize = Ar.Read<int>();
+                    Ar.Position -= sizeof(int);
+                    if (elementSize is 100)
+                    {
+                        PerInstanceSMData = Ar.ReadBulkArray(() =>
+                        {
+                            var data = new FInstancedStaticMeshInstanceData(Ar);
+                            Ar.Position += 20;
+                            return data;
+                        });
+                    }
+                    else
+                        PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                    break;
                 default:
                     PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
                     break;
