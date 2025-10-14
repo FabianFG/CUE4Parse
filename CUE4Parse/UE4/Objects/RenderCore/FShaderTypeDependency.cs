@@ -10,15 +10,24 @@ public class FShaderTypeDependency
     public FHashedName ShaderTypeName;
     public FSHAHash SourceHash;
     public int PermutationId;
-    
+
     public FShaderTypeDependency(FArchive Ar)
     {
         ShaderTypeName = new FHashedName(Ar);
         SourceHash = new FSHAHash(Ar);
-
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.ShaderPermutationId)
         {
             PermutationId = Ar.Read<int>();
         }
+    }
+
+    public FShaderTypeDependency(FMemoryImageArchive Ar)
+    {
+        ShaderTypeName = new FHashedName(Ar);
+        if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.ShaderPermutationId)
+        {
+            PermutationId = Ar.Read<int>();
+        }
+        SourceHash = new FSHAHash(Ar);
     }
 }
