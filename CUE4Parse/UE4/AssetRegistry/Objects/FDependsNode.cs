@@ -1,150 +1,65 @@
 using System.Collections;
-using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.AssetRegistry.Objects
+namespace CUE4Parse.UE4.AssetRegistry.Objects;
+
+[JsonConverter(typeof(FDependsNodeConverter))]
+public class FDependsNode
 {
-    [JsonConverter(typeof(FDependsNodeConverter))]
-    public class FDependsNode
+    private static readonly BitArray EmptyBitArray = new BitArray(0);
+
+    private const int PackageFlagWidth = 3;
+    private const int PackageFlagSetWidth = 5; // FPropertyCombinationPack3::StorageBitCount
+    private const int ManageFlagWidth = 1;
+    private const int ManageFlagSetWidth = 1; // TPropertyCombinationSet<1>::StorageBitCount
+
+    public FAssetIdentifier? Identifier;
+    public int[] PackageDependencies;
+    public int[] NameDependencies;
+    public int[] ManageDependencies;
+    public int[] Referencers;
+    public BitArray PackageFlags;
+    public BitArray ManageFlags;
+
+    internal readonly int _index;
+
+    public FDependsNode(int index)
     {
-        private const int PackageFlagWidth = 3;
-        private const int PackageFlagSetWidth = 5; // FPropertyCombinationPack3::StorageBitCount
-        private const int ManageFlagWidth = 1;
-        private const int ManageFlagSetWidth = 1; // TPropertyCombinationSet<1>::StorageBitCount
+        _index = index;
+    }
 
-        public FAssetIdentifier? Identifier;
-        public List<FDependsNode>? PackageDependencies;
-        public List<FDependsNode>? NameDependencies;
-        public List<FDependsNode>? ManageDependencies;
-        public List<FDependsNode>? Referencers;
-        public BitArray? PackageFlags;
-        public BitArray? ManageFlags;
+    public void SerializeLoad(FAssetRegistryArchive Ar)
+    {
+        Identifier = new FAssetIdentifier(Ar);
+        PackageDependencies = Ar.ReadArray<int>();
+        var numFlagWords = (PackageFlagSetWidth * PackageDependencies.Length).DivideAndRoundUp(32);
+        PackageFlags = numFlagWords != 0 ? new BitArray(Ar.ReadArray<int>(numFlagWords)) : EmptyBitArray;
+        NameDependencies = Ar.ReadArray<int>();
+        ManageDependencies = Ar.ReadArray<int>();
+        numFlagWords = (ManageFlagSetWidth * ManageDependencies.Length).DivideAndRoundUp(32);
+        ManageFlags = numFlagWords != 0 ? new BitArray(Ar.ReadArray<int>(numFlagWords)) : EmptyBitArray;
+        Referencers = Ar.ReadArray<int>();
+    }
 
-        internal readonly int _index;
+    public void SerializeLoad_BeforeFlags(FAssetRegistryArchive Ar)
+    {
+        Identifier = new FAssetIdentifier(Ar);
 
-        public FDependsNode(int index)
-        {
-            _index = index;
-        }
+        var numHard = Ar.Read<int>();
+        var numSoft = Ar.Read<int>();
+        var numName = Ar.Read<int>();
+        var numSoftManage = Ar.Read<int>();
+        var numHardManage = Ar.Header.Version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
+        var numReferencers = Ar.Read<int>();
 
-        public void SerializeLoad(FAssetRegistryArchive Ar, FDependsNode[] preallocatedDependsNodeDataBuffer)
-        {
-            Identifier = new FAssetIdentifier(Ar);
-
-            void ReadDependencies(ref List<FDependsNode>? outDependencies, ref BitArray? outFlagBits, int flagSetWidth)
-            {
-                var sortIndexes = new List<int>();
-                var pointerDependencies = new List<FDependsNode>();
-
-                var inDependencies = Ar.ReadArray<int>();
-                var numDependencies = inDependencies.Length;
-                var numFlagBits = flagSetWidth * numDependencies;
-                var numFlagWords = numFlagBits.DivideAndRoundUp(32);
-                var inFlagBits = numFlagWords != 0 ? new BitArray(Ar.ReadArray<int>(numFlagWords)) : new BitArray(0);
-
-                foreach (var serializeIndex in inDependencies)
-                {
-                    if (serializeIndex < 0 || preallocatedDependsNodeDataBuffer.Length <= serializeIndex)
-                        throw new ParserException($"Index {serializeIndex} doesn't exist in 'PreallocatedDependsNodeDataBuffers'");
-                    var dependsNode = preallocatedDependsNodeDataBuffer[serializeIndex];
-                    pointerDependencies.Add(dependsNode);
-                }
-
-                for (var i = 0; i < numDependencies; i++)
-                {
-                    sortIndexes.Add(i);
-                }
-
-                sortIndexes.Sort((a, b) => pointerDependencies[a]._index - pointerDependencies[b]._index);
-
-                outDependencies = new List<FDependsNode>(numDependencies);
-                foreach (var index in sortIndexes)
-                {
-                    outDependencies.Add(pointerDependencies[index]);
-                }
-
-                outFlagBits = new BitArray(numFlagBits);
-                for (var writeIndex = 0; writeIndex < numDependencies; writeIndex++)
-                {
-                    var readIndex = sortIndexes[writeIndex];
-                    outFlagBits.SetRangeFromRange(writeIndex * flagSetWidth, flagSetWidth, inFlagBits, readIndex * flagSetWidth);
-                }
-            }
-
-            void ReadDependenciesNoFlags(ref List<FDependsNode>? outDependencies)
-            {
-                var sortIndexes = new List<int>();
-                var pointerDependencies = new List<FDependsNode>();
-
-                var inDependencies = Ar.ReadArray<int>();
-                var numDependencies = inDependencies.Length;
-
-                foreach (var serializeIndex in inDependencies)
-                {
-                    if (serializeIndex < 0 || preallocatedDependsNodeDataBuffer.Length <= serializeIndex)
-                        throw new ParserException($"Index {serializeIndex} doesn't exist in 'PreallocatedDependsNodeDataBuffers'");
-                    var dependsNode = preallocatedDependsNodeDataBuffer[serializeIndex];
-                    pointerDependencies.Add(dependsNode);
-                }
-
-                for (var i = 0; i < numDependencies; i++)
-                {
-                    sortIndexes.Add(i);
-                }
-
-                sortIndexes.Sort((a, b) => pointerDependencies[a]._index - pointerDependencies[b]._index);
-
-                outDependencies = new List<FDependsNode>(numDependencies);
-                foreach (var index in sortIndexes)
-                {
-                    outDependencies.Add(pointerDependencies[index]);
-                }
-            }
-
-            ReadDependencies(ref PackageDependencies, ref PackageFlags, PackageFlagSetWidth);
-            ReadDependenciesNoFlags(ref NameDependencies);
-            ReadDependencies(ref ManageDependencies, ref ManageFlags, ManageFlagSetWidth);
-            ReadDependenciesNoFlags(ref Referencers);
-        }
-
-        public void SerializeLoad_BeforeFlags(FAssetRegistryArchive Ar, FDependsNode[] preallocatedDependsNodeDataBuffer)
-        {
-            Identifier = new FAssetIdentifier(Ar);
-
-            var numHard = Ar.Read<int>();
-            var numSoft = Ar.Read<int>();
-            var numName = Ar.Read<int>();
-            var numSoftManage = Ar.Read<int>();
-            var numHardManage = Ar.Header.Version >= FAssetRegistryVersionType.AddedHardManage ? Ar.Read<int>() : 0;
-            var numReferencers = Ar.Read<int>();
-
-            PackageDependencies = new List<FDependsNode>(numHard + numSoft);
-            NameDependencies = new List<FDependsNode>(numName);
-            ManageDependencies = new List<FDependsNode>(numSoftManage + numHardManage);
-            Referencers = new List<FDependsNode>(numReferencers);
-
-            void SerializeNodeArray(int num, ref List<FDependsNode> outNodes)
-            {
-                for (var dependencyIndex = 0; dependencyIndex < num; ++dependencyIndex)
-                {
-                    var index = Ar.Read<int>();
-                    if (index < 0 || index >= preallocatedDependsNodeDataBuffer.Length)
-                        throw new ParserException($"Index {index} doesn't exist in 'PreallocatedDependsNodeDataBuffers'");
-                    var dependsNode = preallocatedDependsNodeDataBuffer[index];
-                    outNodes.Add(dependsNode);
-                }
-            }
-
-            SerializeNodeArray(numHard, ref PackageDependencies);
-            SerializeNodeArray(numSoft, ref PackageDependencies);
-            SerializeNodeArray(numName, ref NameDependencies);
-            SerializeNodeArray(numSoftManage, ref ManageDependencies);
-            SerializeNodeArray(numHardManage, ref ManageDependencies);
-            SerializeNodeArray(numReferencers, ref Referencers);
-        }
+        PackageDependencies = Ar.ReadArray<int>(numHard + numSoft);
+        NameDependencies = Ar.ReadArray<int>(numName);
+        ManageDependencies = Ar.ReadArray<int>(numSoftManage + numHardManage);
+        Referencers = Ar.ReadArray<int>(numReferencers);
+        PackageFlags = EmptyBitArray;
+        ManageFlags = EmptyBitArray;
     }
 }

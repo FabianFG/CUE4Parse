@@ -843,7 +843,7 @@ public class FMaterialNumericParameterInfo
     public FMaterialNumericParameterInfo(FMemoryImageArchive Ar)
     {
         ParameterInfo = new FMemoryImageMaterialParameterInfo(Ar);
-        ParameterType = Ar.Read<EMaterialParameterType>();
+        ParameterType = Ar.ReadMaterialParameterType();
         Ar.Position = Ar.Position.Align(4);
         DefaultValueOffset = Ar.Read<uint>();
     }

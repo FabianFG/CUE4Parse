@@ -252,7 +252,7 @@ public partial class FPakInfo
             (IndexOffset, IndexSize) = (IndexSize, IndexOffset);
         }
 
-        if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeHotta && Version >= EPakFileVersion.PakFile_Version_Latest)
+        if (Ar.Game == EGame.GAME_MeetYourMaker && offsetToTry == OffsetsToTry.SizeHotta && Version >= EPakFileVersion.PakFile_Version_Fnv64BugFix)
         {
             var mymVersion = Ar.Read<uint>(); // I assume this is a version, only 0 right now.
         }

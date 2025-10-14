@@ -93,9 +93,6 @@ public class FWwisePackagedFile : FStructFallback
         }
         else if (PackagingStrategy is EWwisePackagingStrategy.External)
         {
-#if DEBUG
-            Log.Warning("Wwise bank data for {Name} uses External packing strategy", name);
-#endif
         }
         else
         {

@@ -2767,44 +2767,23 @@ public class FDependsNodeConverter : JsonConverter<FDependsNode>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Identifier");
+        writer.WritePropertyName(nameof(value.Identifier));
         serializer.Serialize(writer, value.Identifier);
+        writer.WritePropertyName(nameof(value.PackageDependencies));
+        serializer.Serialize(writer, value.PackageDependencies);
+        writer.WritePropertyName(nameof(value.NameDependencies));
+        serializer.Serialize(writer, value.NameDependencies);
+        writer.WritePropertyName(nameof(value.ManageDependencies));
+        serializer.Serialize(writer, value.ManageDependencies);
+        writer.WritePropertyName(nameof(value.Referencers));
+        serializer.Serialize(writer, value.Referencers);
 
-        WriteDependsNodeList("PackageDependencies", writer, value.PackageDependencies);
-        WriteDependsNodeList("NameDependencies", writer, value.NameDependencies);
-        WriteDependsNodeList("ManageDependencies", writer, value.ManageDependencies);
-        WriteDependsNodeList("Referencers", writer, value.Referencers);
-
-        if (value.PackageFlags != null)
-        {
-            writer.WritePropertyName("PackageFlags");
-            serializer.Serialize(writer, value.PackageFlags);
-        }
-
-        if (value.ManageFlags != null)
-        {
-            writer.WritePropertyName("ManageFlags");
-            serializer.Serialize(writer, value.ManageFlags);
-        }
+        writer.WritePropertyName(nameof(value.PackageFlags));
+        serializer.Serialize(writer, value.PackageFlags);
+        writer.WritePropertyName(nameof(value.ManageFlags));
+        serializer.Serialize(writer, value.ManageFlags);
 
         writer.WriteEndObject();
-    }
-
-    /** Custom serializer to avoid circular reference */
-    private static void WriteDependsNodeList(string name, JsonWriter writer, List<FDependsNode>? dependsNodeList)
-    {
-        if (dependsNodeList == null || dependsNodeList.Count == 0)
-        {
-            return;
-        }
-
-        writer.WritePropertyName(name);
-        writer.WriteStartArray();
-        foreach (var dependsNode in dependsNodeList)
-        {
-            writer.WriteValue(dependsNode._index);
-        }
-        writer.WriteEndArray();
     }
 
     public override FDependsNode ReadJson(JsonReader reader, Type objectType, FDependsNode existingValue, bool hasExistingValue,
@@ -2834,43 +2813,43 @@ public class FAssetDataConverter : JsonConverter<FAssetData>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("ObjectPath");
-        serializer.Serialize(writer, value.ObjectPath);
+        writer.WritePropertyName(nameof(value.ObjectPath));
+        writer.WriteValue(value.ObjectPath);
 
-        writer.WritePropertyName("PackageName");
-        serializer.Serialize(writer, value.PackageName);
+        writer.WritePropertyName(nameof(value.PackageName));
+        writer.WriteValue(value.PackageName.Text);
 
-        writer.WritePropertyName("PackagePath");
-        serializer.Serialize(writer, value.PackagePath);
+        writer.WritePropertyName(nameof(value.PackagePath));
+        writer.WriteValue(value.PackagePath.Text);
 
-        writer.WritePropertyName("AssetName");
-        serializer.Serialize(writer, value.AssetName);
+        writer.WritePropertyName(nameof(value.AssetName));
+        writer.WriteValue(value.AssetName.Text);
 
-        writer.WritePropertyName("AssetClass");
-        serializer.Serialize(writer, value.AssetClass);
+        writer.WritePropertyName(nameof(value.AssetClass));
+        writer.WriteValue(value.AssetClass.Text);
 
         if (value.TagsAndValues.Count > 0)
         {
-            writer.WritePropertyName("TagsAndValues");
+            writer.WritePropertyName(nameof(value.TagsAndValues));
             serializer.Serialize(writer, value.TagsAndValues);
         }
 
         if (value.TaggedAssetBundles.Bundles.Length > 0)
         {
-            writer.WritePropertyName("TaggedAssetBundles");
+            writer.WritePropertyName(nameof(value.TaggedAssetBundles));
             serializer.Serialize(writer, value.TaggedAssetBundles);
         }
 
         if (value.ChunkIDs.Length > 0)
         {
-            writer.WritePropertyName("ChunkIDs");
+            writer.WritePropertyName(nameof(value.ChunkIDs));
             serializer.Serialize(writer, value.ChunkIDs);
         }
 
         if (value.PackageFlags != 0)
         {
-            writer.WritePropertyName("PackageFlags");
-            serializer.Serialize(writer, value.PackageFlags);
+            writer.WritePropertyName(nameof(value.PackageFlags));
+            writer.WriteValue(value.PackageFlags);
         }
 
         writer.WriteEndObject();
@@ -3059,13 +3038,13 @@ public class FAssetRegistryStateConverter : JsonConverter<FAssetRegistryState>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("PreallocatedAssetDataBuffers");
+        writer.WritePropertyName(nameof(value.PreallocatedAssetDataBuffers));
         serializer.Serialize(writer, value.PreallocatedAssetDataBuffers);
 
-        writer.WritePropertyName("PreallocatedDependsNodeDataBuffers");
+        writer.WritePropertyName(nameof(value.PreallocatedDependsNodeDataBuffers));
         serializer.Serialize(writer, value.PreallocatedDependsNodeDataBuffers);
 
-        writer.WritePropertyName("PreallocatedPackageDataBuffers");
+        writer.WritePropertyName(nameof(value.PreallocatedPackageDataBuffers));
         serializer.Serialize(writer, value.PreallocatedPackageDataBuffers);
 
         writer.WriteEndObject();

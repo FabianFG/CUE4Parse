@@ -23,7 +23,7 @@ public partial class PakFileReader
     {
         bDecrypted = true;
         Ar.Position = Info.IndexOffset;
-        FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
+        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecrypt((int) Info.IndexSize));
 
         EncryptedFileCount = 0;
         var fileCount = primaryIndex.Read<int>();
@@ -44,7 +44,7 @@ public partial class PakFileReader
         var PathHashSeed = primaryIndex.Read<ulong>();
 
         var encodedPakEntriesSize = primaryIndex.Read<int>();
-        var encodedEntries = new GenericBufferReader(primaryIndex.ReadBytes(encodedPakEntriesSize));
+        using var encodedEntries = new GenericBufferReader(primaryIndex.ReadBytes(encodedPakEntriesSize));
 
         primaryIndex.Position += 8;
         if (!primaryIndex.ReadBoolean())
@@ -53,7 +53,7 @@ public partial class PakFileReader
         var directoryIndexSize = primaryIndex.Read<long>();
 
         Ar.Position = directoryIndexOffset;
-        var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
+        using var directoryIndex = new FByteArchive($"{Name} - Directory Index", ReadAndDecrypt((int) directoryIndexSize));
         var directoryIndexLength = directoryIndex.Read<int>();
 
         string FixCoAPackagePath(string path, StringComparer PathComparer)
