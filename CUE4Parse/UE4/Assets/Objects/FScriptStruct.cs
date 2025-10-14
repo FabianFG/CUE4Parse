@@ -177,6 +177,8 @@ public class FScriptStruct
             "AnimationAttributeIdentifier" => new FAnimationAttributeIdentifier(Ar),
             "AttributeCurve" => new FAttributeCurve(Ar),
             "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
+            "PCGDataPtrWrapper" => new FPCGDataPtrWrapper(Ar),
+            "PCGPointArray" => new FPCGPointArray(Ar),
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
