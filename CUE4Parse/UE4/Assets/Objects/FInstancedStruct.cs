@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
@@ -10,7 +11,9 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FInstancedStructConverter))]
 public class FInstancedStruct : IUStruct
 {
-    public readonly FStructFallback? NonConstStruct;
+    public FStructFallback NonConstStruct => NonConstIUSturct as FStructFallback ?? new FStructFallback();
+    public readonly IUStruct? NonConstIUSturct;
+    public readonly string? StringData;
 
     public FInstancedStruct(FAssetArchive Ar)
     {
@@ -28,6 +31,12 @@ public class FInstancedStruct : IUStruct
             _ = Ar.Read<byte>(); // Old Version
         }
 
+        if (Ar.Game is EGame.GAME_VEIN)
+        {
+            StringData = Ar.ReadFString();
+            return;
+        }
+
         var strucindex = new FPackageIndex(Ar);
         var serialSize = Ar.Read<int>();
         var savedPos = Ar.Position;
@@ -40,13 +49,10 @@ public class FInstancedStruct : IUStruct
 
         try
         {
-            if (strucindex.TryLoad<UStruct>(out var struc))
+            var structName = strucindex.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            if (strucindex.TryLoad<UStruct>(out var struc) || structName != null)
             {
-                NonConstStruct = new FStructFallback(Ar, struc);
-            }
-            else if (strucindex.ResolvedObject is { } obj)
-            {
-                NonConstStruct = new FStructFallback(Ar, obj.Name.ToString());
+                NonConstIUSturct = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL).StructType;
             }
             else
             {

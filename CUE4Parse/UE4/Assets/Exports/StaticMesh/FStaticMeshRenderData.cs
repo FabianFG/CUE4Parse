@@ -140,7 +140,7 @@ public class FStaticMeshRenderData
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game >= EGame.GAME_UE5_6)
+            if (Ar.Game is >= EGame.GAME_UE5_6 or EGame.GAME_GreyZoneWarfare)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;

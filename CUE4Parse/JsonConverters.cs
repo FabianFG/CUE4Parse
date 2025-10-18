@@ -2381,7 +2381,18 @@ public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
     public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        serializer.Serialize(writer, value?.NonConstStruct);
+        if (value.StringData != null)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName(nameof(value.StringData));
+            serializer.Serialize(writer, value.StringData);
+
+            writer.WriteEndObject();
+            return;
+        }
+
+        serializer.Serialize(writer, value?.NonConstIUSturct);
     }
 
     public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)

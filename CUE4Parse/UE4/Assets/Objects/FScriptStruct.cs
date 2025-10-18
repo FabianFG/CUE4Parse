@@ -308,6 +308,18 @@ public class FScriptStruct
             "SoftEnumName" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
             "KosmosHangTraversalData" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            // Reanimal
+            "EnumName" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+            "AbstractEnum" or "EnumName" or "JumpParams" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "ChalkboardSectionKey" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(0,2), (2, 2)]), ReadType.RAW),
+            "LedgeMetaData" when Ar.Game is EGame.GAME_Reanimal => new FFixedSizeStruct(Ar, 1),
+
+            //VEIN
+            "ItemDataContainer" when Ar.Game is EGame.GAME_VEIN => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            //SpongeBob SquarePants: Titans of the Tide
+            "GG_CrowdGeneratorLocations" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
