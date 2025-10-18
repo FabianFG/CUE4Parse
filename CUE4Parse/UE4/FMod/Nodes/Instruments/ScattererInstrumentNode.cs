@@ -34,6 +34,12 @@ public class ScattererInstrumentNode : BaseInstrumentNode
 
         SpawnTime = new FRangeFloat(Ar);
 
+        if (FModReader.Version < 0x68)
+        {
+            Ar.ReadSingle(); // Legacy value 1
+            Ar.ReadSingle(); // Legacy value 2
+        }
+
         if (FModReader.Version >= 0x39)
         {
             SpawnPolyphonyLimitBehavior = Ar.ReadInt32();

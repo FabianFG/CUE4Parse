@@ -14,6 +14,7 @@ public class ControllerNode
     {
         BaseGuid = new FModGuid(Ar);
         PropertyOwnerGuid = new FModGuid(Ar);
+        if (FModReader.Version < 0x5a) new FModGuid(Ar);
         CurveGuid = new FModGuid(Ar);
         PropertyIndex = Ar.ReadInt32();
     }

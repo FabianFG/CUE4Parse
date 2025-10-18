@@ -9,9 +9,9 @@ public class BaseBusNode
     public readonly FRoutable Routable;
     public BusNode? BusBody;
 
-    public BaseBusNode(BinaryReader Ar)
+    public BaseBusNode(BinaryReader Ar, bool includeRoutable)
     {
         BaseGuid = new FModGuid(Ar);
-        Routable = new FRoutable(Ar);
+        if (includeRoutable) Routable = new FRoutable(Ar);
     }
 }

@@ -21,6 +21,7 @@ public class FModReader
     public static int Version => FormatInfo.FileVersion;
     public static FFormatInfo FormatInfo;
     public static SoundDataInfo? SoundDataInfo;
+    public static byte[]? EncryptionKey;
     public StringTable? StringTable;
     public SoundTable? SoundTable;
     public FBankInfo? BankInfo;
@@ -46,8 +47,9 @@ public class FModReader
     public readonly Dictionary<FModGuid, VCANode> VCANodes = [];
     public readonly List<FModGuid> ControllerOwnerNodes = [];
 
-    public FModReader(BinaryReader Ar)
+    public FModReader(BinaryReader Ar, byte[]? encryptionKey = null)
     {
+        if (encryptionKey != null) EncryptionKey = encryptionKey;
         ParseHeader(Ar);
         ParseNodes(Ar, Ar.BaseStream.Position, Ar.BaseStream.Length);
     }
@@ -70,7 +72,7 @@ public class FModReader
         if (actualSize < expectedSize)
             throw new Exception($"Truncated file: expected {expectedSize} bytes, got {actualSize}");
         else if (actualSize > expectedSize)
-            Log.Warning($"Warning: file larger than RIFF size (expected {expectedSize}, got {actualSize})");
+            Log.Warning($"File larger than RIFF size (expected {expectedSize}, got {actualSize})");
     }
 
     private void ParseNodes(BinaryReader Ar, long start, long end)
@@ -190,6 +192,7 @@ public class FModReader
                     }
                     break;
 
+                case ENodeId.CHUNKID_MODULATOR:
                 case ENodeId.CHUNKID_MODULATORBODY: // Modulator Node
                     {
                         var node = new ModulatorNode(Ar);
@@ -284,7 +287,7 @@ public class FModReader
                     break;
 
                 default:
-                    Console.WriteLine($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
+                    Log.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
                     break;
             }
 
@@ -296,7 +299,7 @@ public class FModReader
 
             if (Ar.BaseStream.Position != nextNode)
             {
-                Console.WriteLine($"Warning: chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
+                Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
                 Ar.BaseStream.Position = nextNode;
             }
         }
@@ -670,9 +673,9 @@ public class FModReader
 
         var result = new T[count];
 
-        _ = Ar.ReadUInt16(); // Payload size
         for (int i = 0; i < count; i++)
         {
+            _ = Ar.ReadUInt16(); // Payload size
             if (readElem != null)
             {
                 result[i] = readElem(Ar);
@@ -681,8 +684,6 @@ public class FModReader
             {
                 result[i] = (T)Activator.CreateInstance(typeof(T), Ar)!;
             }
-
-            if (i < count - 1) _ = Ar.ReadUInt16(); // Payload size
         }
 
         return result;

@@ -20,8 +20,19 @@ public class SoundDataNode
 
         byte[] fsbBytes = sndChunk[relativeOffset..];
 
-        // TODO: Fmod5Sharp doesn't support more than 2 audio channels
-        // we can either fix this by falling back to vgmstream which does or try to fix it in Fmod5Sharp
+        // In case FSB5 is encrypted
+        if (!Fsb5Decryption.IsFSB5Header(fsbBytes))
+        {
+#if DEBUG
+            Log.Debug($"Found encrypted FSB5 header at {fsbOffset}");
+#endif
+
+            if (FModReader.EncryptionKey == null)
+                throw new Exception("FSB5 is encrypted, but encryption key wasn't provided, cannot decrypt");
+
+            Fsb5Decryption.Decrypt(fsbBytes, FModReader.EncryptionKey);
+        }
+
         try
         {
             if (FsbLoader.TryLoadFsbFromByteArray(fsbBytes, out var bank) && bank != null)
@@ -33,9 +44,6 @@ public class SoundDataNode
                 for (int i = 0; i < bank.Samples.Count; i++)
                 {
                     var sample = bank.Samples[i];
-#if DEBUG
-                    Log.Debug($"Sample: {sample.Name}, Index: {i}");
-#endif
                 }
             }
             else

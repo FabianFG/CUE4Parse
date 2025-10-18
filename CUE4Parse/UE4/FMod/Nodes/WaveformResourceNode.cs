@@ -17,6 +17,7 @@ public class WaveformResourceNode
         Ar.ReadUInt16(); // It's payload size after guid
         SubsoundIndex = Ar.ReadInt32();
         SoundBankIndex = Ar.ReadInt32();
+
         if (FModReader.Version >= 0x46)
         {
             LoadingMode = (EWaveformLoadingMode)Ar.ReadUInt32();

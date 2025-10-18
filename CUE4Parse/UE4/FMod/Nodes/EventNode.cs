@@ -47,6 +47,8 @@ public class EventNode
 
         ParameterLayouts = FModReader.ReadElemListImp<FModGuid>(Ar);
 
+        if (FModReader.Version < 0x3C) Ar.ReadUInt16(); // Dummy elem list
+
         UserPropertyFloatList = FModReader.ReadElemListImp<FUserPropertyFloat>(Ar);
         UserPropertyStringList = FModReader.ReadElemListImp<FUserPropertyString>(Ar);
 
