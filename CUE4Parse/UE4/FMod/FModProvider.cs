@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
 using Serilog;
+using UE4Config.Parsing;
 
 namespace CUE4Parse.UE4.FMod;
 
@@ -28,9 +29,11 @@ public class FModProvider
 {
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
     private Dictionary<FModGuid, FModReader> _mergedReaders = [];
+    private static byte[]? _encryptionKey;
 
     public FModProvider(IFileProvider provider, string gameDirectory)
     {
+        LoadEncryptionKey(provider);
         LoadPakBanks(provider);
         LoadFileBanks(gameDirectory);
         UpdateEventCache();
@@ -44,6 +47,8 @@ public class FModProvider
 
         foreach (var group in banks)
         {
+            FModReader? mergedBank = null;
+            var guids = new HashSet<FModGuid>();
             foreach (var file in group)
             {
                 if (!provider.TrySaveAsset(file, out var data)) continue;
@@ -53,19 +58,35 @@ public class FModProvider
                     continue;
                 }
 
-                if (_mergedReaders.TryGetValue(fmodBank.GetBankGuid(), out var merged))
+                if (mergedBank == null)
                 {
-                    merged.Merge(fmodBank);
+                    mergedBank = fmodBank;
                 }
                 else
                 {
-                    _mergedReaders[fmodBank.GetBankGuid()] = fmodBank;
+                    mergedBank.Merge(fmodBank);
+                }
+
+                guids.Add(fmodBank.GetBankGuid());
+            }
+
+            if (mergedBank == null) continue;
+
+            foreach (var guid in guids)
+            {
+                if (_mergedReaders.TryGetValue(guid, out var existing))
+                {
+                    existing.Merge(mergedBank);
+                }
+                else
+                {
+                    _mergedReaders[guid] = mergedBank;
                 }
             }
         }
     }
 
-    public void LoadFileBanks(string gameDirectory)
+    private void LoadFileBanks(string gameDirectory)
     {
         var dir = new DirectoryInfo(gameDirectory);
         if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(gameDirectory) is {} parentInfo)
@@ -86,6 +107,8 @@ public class FModProvider
 
         foreach (var group in banks)
         {
+            FModReader? mergedBank = null;
+            var guids = new HashSet<FModGuid>();
             foreach (var file in group)
             {
                 if (!TryLoadBank(File.OpenRead(file), out var fmodBank))
@@ -94,15 +117,65 @@ public class FModProvider
                     continue;
                 }
 
-                if (_mergedReaders.TryGetValue(fmodBank.GetBankGuid(), out var merged))
+                if (mergedBank == null)
                 {
-                    merged.Merge(fmodBank);
+                    mergedBank = fmodBank;
                 }
                 else
                 {
-                    _mergedReaders[fmodBank.GetBankGuid()] = fmodBank;
+                    mergedBank.Merge(fmodBank);
+                }
+
+                guids.Add(fmodBank.GetBankGuid());
+            }
+
+            if (mergedBank == null) continue;
+            
+            foreach (var guid in guids)
+            {
+                if (_mergedReaders.TryGetValue(guid, out var existing))
+                {
+                    existing.Merge(mergedBank);
+                }
+                else
+                {
+                    _mergedReaders[guid] = mergedBank;
                 }
             }
+        }
+    }
+
+    private void LoadEncryptionKey(IFileProvider provider)
+    {
+        if (!provider.TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
+            return;
+
+        var engineConfig = new ConfigIni(nameof(defaultEngine));
+
+        if (defaultEngine.TryCreateReader(out var engineAr))
+        {
+            using (engineAr) engineConfig.Read(new StreamReader(engineAr));
+        }
+
+        var fmodSection = engineConfig.Sections
+            .FirstOrDefault(s => s.Name == "/Script/FMODStudio.FMODSettings");
+
+        var token = fmodSection?.Tokens
+            .OfType<InstructionToken>()
+            .FirstOrDefault(t => t.Key == "StudioBankKey");
+
+        if (!string.IsNullOrEmpty(token?.Value))
+        {
+            _encryptionKey = System.Text.Encoding.UTF8.GetBytes(token.Value);
+#if DEBUG
+            Log.Debug($"FMod encryption key found: {token.Value}");
+#endif
+        }
+        else
+        {
+#if DEBUG
+            Log.Debug("FMod encryption key not found in DefaultEngine.ini. Soundbanks might not be encrypted");
+#endif
         }
     }
 
@@ -112,7 +185,7 @@ public class FModProvider
         try
         {
             using var reader = new BinaryReader(stream);
-            fmodReader = new FModReader(reader);
+            fmodReader = new FModReader(reader, _encryptionKey);
             return true;
         }
         catch (Exception e)

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
@@ -19,22 +18,22 @@ public class ModulatorNode
 
     public ModulatorNode(BinaryReader Ar)
     {
-        Ar.ReadUInt16(); // Payload size
+        if (FModReader.Version >= 0x55)Ar.ReadUInt16(); // Payload size
+
         BaseGuid = new FModGuid(Ar);
         OwnerGuid = new FModGuid(Ar);
 
         PropertyIndex = Ar.ReadInt32();
-        Type = (EModulatorType)Ar.ReadInt32();
+        Type = (EModulatorType) Ar.ReadInt32();
 
         if (FModReader.Version < 0x55)
         {
-            PropertyType = (EPropertyType)Ar.ReadInt32();
-            ClockSource = (EClockSource)Ar.ReadInt32();
+            Ar.ReadInt16(); // Payload size
         }
         else
         {
-            PropertyType = (EPropertyType)Ar.ReadInt32();
-            ClockSource = FModReader.Version >= 0x90 ? (EClockSource)Ar.ReadInt32() : EClockSource.ClockSource_Local;
+            PropertyType = (EPropertyType) Ar.ReadInt32();
+            ClockSource = FModReader.Version >= 0x90 ? (EClockSource) Ar.ReadInt32() : EClockSource.ClockSource_Local;
         }
 
         switch (Type)
@@ -58,7 +57,7 @@ public class ModulatorNode
                 Subnode = new SpectralSidechainModulatorNode(Ar);
                 break;
             default:
-                Log.Error($"Unhandled modulator type {Type} ({(int)Type}) at stream position {Ar.BaseStream.Position}");
+                Log.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
                 break;
         }
     }
