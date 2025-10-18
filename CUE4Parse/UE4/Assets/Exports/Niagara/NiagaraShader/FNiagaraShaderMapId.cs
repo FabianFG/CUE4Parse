@@ -1,5 +1,4 @@
-﻿using System.Text;
-using CUE4Parse.UE4.Assets.Exports.Material;
+﻿using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;

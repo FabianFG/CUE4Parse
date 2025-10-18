@@ -1,11 +1,15 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Exports.Niagara.NiagaraShader;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Shaders;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -450,7 +454,7 @@ public class FMaterialShaderMapContent : FShaderMapContent
     public override void Deserialize(FMemoryImageArchive Ar)
     {
         base.Deserialize(Ar);
-        
+
         OrderedMeshShaderMaps = Ar.ReadArrayOfPtrs(() =>
         {
             var meshMaterialShaderMap = new FMeshMaterialShaderMap();
@@ -458,7 +462,7 @@ public class FMaterialShaderMapContent : FShaderMapContent
 
             return meshMaterialShaderMap;
         });
-        
+
         MaterialCompilationOutput = new FMaterialCompilationOutput(Ar);
         ShaderContentHash = new FSHAHash(Ar);
 
@@ -479,7 +483,7 @@ public class FMeshMaterialShaderMap : FShaderMapContent
     public override void Deserialize(FMemoryImageArchive Ar)
     {
         base.Deserialize(Ar);
-        
+
         VertexFactoryTypeName = Ar.Read<FHashedName>();
     }
 }
@@ -578,7 +582,7 @@ public class FUniformExpressionSet
             >= EGame.GAME_UE5_0 => 6,
             _ => 5,
         };
-        
+
         UniformTextureParameters = new FMaterialTextureParameterInfo[materialTextureParameterTypeCount][];
         if (Ar.Game >= EGame.GAME_UE5_0)
         {
@@ -836,7 +840,7 @@ public enum EShaderValueType : byte
 public class FMaterialNumericParameterInfo
 {
     public FMemoryImageMaterialParameterInfo ParameterInfo;
-    public EMaterialParameterType ParameterType;
+    [JsonConverter(typeof(StringEnumConverter))] public EMaterialParameterType ParameterType;
     public uint DefaultValueOffset;
     public object? Value;
 
@@ -962,7 +966,7 @@ public class FRHIUniformBufferLayoutInitializer
     public uint ConstantBufferSize = 0;
     public ushort RenderTargetsOffset = ushort.MaxValue;
     public byte /*FUniformBufferStaticSlot*/ StaticSlot = 255;
-    public EUniformBufferBindingFlags BindingFlags = EUniformBufferBindingFlags.Shader;
+    [JsonConverter(typeof(StringEnumConverter))] public EUniformBufferBindingFlags BindingFlags = EUniformBufferBindingFlags.Shader;
     public bool bHasNonGraphOutputs = false;
     public bool bNoEmulatedUniformBuffer = false;
     public bool bUniformView = false;
@@ -1035,14 +1039,136 @@ public class FShaderMapResourceCode(FArchive Ar)
 {
     public FSHAHash ResourceHash = new FSHAHash(Ar);
     public FSHAHash[] ShaderHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-    public FShaderEntry[] ShaderEntries = Ar.ReadArray(() => new FShaderEntry(Ar));
+    public FShaderEntry[] ShaderEntries = Ar.Game < EGame.GAME_UE5_6 ? Ar.ReadArray(() => new FShaderEntry(Ar)) : [];
+    public FShaderCodeResource[] ShaderCodeResources = Ar.Game >= EGame.GAME_UE5_6 ? Ar.ReadArray(() => new FShaderCodeResource(Ar)) : [];
 }
 
 public class FShaderEntry(FArchive Ar)
 {
-    public byte[] Code = Ar.ReadArray<byte>(); // Don't Serialize
+    public byte[] Code = Ar.ReadArray<byte>();
     public int UncompressedSize = Ar.Read<int>();
-    public byte Frequency = Ar.Read<byte>(); // Enum
+    [JsonConverter(typeof(StringEnumConverter))]
+    public EShaderFrequency Frequency = Ar.Read<EShaderFrequency>();
+}
+
+public class FShaderCodeResource
+{
+    public struct FHeader
+    {
+        int UncompressedSize = 0;		// full size of code array before compression
+        int ShaderCodeSize = 0;		// uncompressed size excluding optional data
+        [JsonConverter(typeof(StringEnumConverter))]
+        EShaderFrequency Frequency = EShaderFrequency.SF_NumFrequencies;
+        byte _Pad0 = 0;
+        ushort _Pad1 = 0;
+
+        public FHeader() { }
+    };
+
+    FHeader Header;		// The above FHeader struct persisted in a shared buffer
+    FSharedBuffer Code;			// The bytecode buffer as constructed by FShaderCode::FinalizeShaderCode
+    FCompressedBuffer Symbols;	// Buffer containing the symbols for this bytecode; will be empty if symbols are disabled
+
+    public FShaderCodeResource(FArchive Ar)
+    {
+        var headerBuffer = new FSharedBuffer(Ar);
+        using var headerAr = new FByteArchive("FShaderCodeResource::Header", headerBuffer.Data, Ar.Versions);
+        Header = headerAr.Read<FHeader>();
+        Code = new FSharedBuffer(Ar);
+        Symbols = new FCompressedBuffer(Ar);
+    }
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct FCompressedBufferHeader
+{
+    public const uint ExpectedMagic = 0xb7756362;
+
+    /** A magic number to identify a compressed buffer. Always 0xb7756362. */
+    public uint Magic = ExpectedMagic;
+    /** A CRC-32 used to check integrity of the buffer. Uses the polynomial 0x04c11db7. */
+    public uint Crc32 = 0;
+    /** The method used to compress the buffer. Affects layout of data following the header. */
+    [JsonConverter(typeof(StringEnumConverter))]
+    public EMethod Method = EMethod.None;
+    /** The method-specific compressor used to compress the buffer. */
+    public byte Compressor = 0;
+    /** The method-specific compression level used to compress the buffer. */
+    public byte CompressionLevel = 0;
+    /** The power of two size of every uncompressed block except the last. Size is 1 << BlockSizeExponent. */
+    public byte BlockSizeExponent = 0;
+    /** The number of blocks that follow the header. */
+    public uint BlockCount = 0;
+    /** The total size of the uncompressed data. */
+    public ulong TotalRawSize = 0;
+    /** The total size of the compressed data including the header. */
+    public ulong TotalCompressedSize = 0;
+    /** The hash of the uncompressed data. */
+    public byte[] RawHash;
+
+    public FCompressedBufferHeader() { }
+
+    public FCompressedBufferHeader(FArchive Ar)
+    {
+        Magic = BinaryPrimitives.ReverseEndianness(Ar.Read<uint>());
+        if (Magic != ExpectedMagic)
+        {
+            throw new Exception($"FCompressedBuffer has invalid magic number: 0x{Magic:X8}");
+        }
+
+        Crc32 = BinaryPrimitives.ReverseEndianness(Ar.Read<uint>());
+        Method = Ar.Read<EMethod>();
+        Compressor = Ar.Read<byte>();
+        CompressionLevel = Ar.Read<byte>();
+        BlockSizeExponent = Ar.Read<byte>();
+        BlockCount = BinaryPrimitives.ReverseEndianness(Ar.Read<uint>());
+        TotalRawSize = BinaryPrimitives.ReverseEndianness(Ar.Read<ulong>());
+        TotalCompressedSize = BinaryPrimitives.ReverseEndianness(Ar.Read<ulong>());
+        RawHash = Ar.ReadArray<byte>(32);
+    }
+
+    public enum EMethod : byte
+    {
+        None = 0,
+        Oodle = 3,
+        LZ4 = 4,
+    }
+};
+
+public class FCompressedBuffer
+{
+    public FCompressedBufferHeader Header;
+    public byte[] Data;
+
+    public FCompressedBuffer(FArchive Ar)
+    {
+        Header = new FCompressedBufferHeader(Ar);
+
+        const ulong MaxCompressedSize = (ulong)1 << 48;
+        ulong headerSize = 64; // hardcode for now
+        if (Header.Magic == FCompressedBufferHeader.ExpectedMagic &&
+            Header.TotalCompressedSize >= headerSize &&
+            Header.TotalCompressedSize <= MaxCompressedSize)
+        {
+            Data = Ar.ReadArray<byte>((int)(Header.TotalCompressedSize - headerSize));
+        }
+        else
+        {
+            Data = [];
+        }
+    }
+}
+
+public class FSharedBuffer
+{
+    public long Len;
+    public byte[] Data;
+
+    public FSharedBuffer(FArchive Ar)
+    {
+        Len = Ar.Read<long>();
+        Data = Ar.ReadArray<byte>((int)Len);
+    }
 }
 
 public class FMemoryImageResult
@@ -1144,7 +1270,7 @@ public class FShaderMapPointerTable : FPointerTableBase
         var NumVFTypes = Ar.Read<int>();
         Types = Ar.ReadArray<FHashedName>(NumTypes);
         VFTypes = Ar.ReadArray<FHashedName>(NumVFTypes);
-        if (!Ar.bUseNewFormat) base.LoadFromArchive(Ar);
+        if (!Ar.bUseNewFormat && this is not FNiagaraShaderMapPointerTable) base.LoadFromArchive(Ar);
     }
 }
 
@@ -1158,6 +1284,11 @@ public class FPointerTableBase
     public FTypeLayoutDesc[] TypeDependencies;
 
     public virtual void LoadFromArchive(FMaterialResourceProxyReader Ar)
+    {
+        TypeDependencies = Ar.ReadArray(() => new FTypeLayoutDesc(Ar));
+    }
+
+    protected void BaseLoadFromArchive(FMaterialResourceProxyReader Ar)
     {
         TypeDependencies = Ar.ReadArray(() => new FTypeLayoutDesc(Ar));
     }
@@ -1237,6 +1368,7 @@ public class FMaterialShaderMapId
 public class FPlatformTypeLayoutParameters
 {
     public uint MaxFieldAlignment;
+    [JsonConverter(typeof(StringEnumConverter))]
     public EFlags Flags;
 
     public FPlatformTypeLayoutParameters()
@@ -1247,6 +1379,7 @@ public class FPlatformTypeLayoutParameters
     public FPlatformTypeLayoutParameters(FArchive Ar)
     {
         MaxFieldAlignment = Ar.Read<uint>();
+        // Todo: need remap for old flag values
         Flags = Ar.Read<EFlags>();
     }
 
