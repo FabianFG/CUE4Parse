@@ -32,6 +32,7 @@ using CUE4Parse.UE4.Objects.Engine.Ai;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.ComputeFramework;
 using CUE4Parse.UE4.Objects.Engine.Curves;
+using CUE4Parse.UE4.Objects.Engine.EdGraph;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.Engine.Material;
 using CUE4Parse.UE4.Objects.GameplayTags;
@@ -182,6 +183,7 @@ public class FScriptStruct
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
+            "EdGraphPinType" => new FEdGraphPinType(Ar),
             
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
