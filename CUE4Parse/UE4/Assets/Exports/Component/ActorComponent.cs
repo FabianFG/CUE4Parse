@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -49,7 +50,19 @@ public class UArrowComponent : UPrimitiveComponent;
 public class UAsyncPhysicsInputComponent : UActorComponent;
 public class UAtmosphericFogComponent : USkyAtmosphereComponent;
 public class UAudioCaptureComponent : USynthComponent;
-public class UAudioComponent : USceneComponent;
+
+public class UAudioComponent : USceneComponent
+{
+    public USoundBase? Sound { get; protected set; }
+    
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+        
+        Sound = GetOrDefault<USoundBase?>(nameof(Sound));
+    }
+}
+
 public class UAudioCurveSourceComponent : UAudioComponent;
 public class UAxisGizmoHandleGroup : UGizmoHandleGroup;
 public class UBaseDynamicMeshComponent : UMeshComponent;
