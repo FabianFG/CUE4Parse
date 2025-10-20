@@ -31,8 +31,6 @@ namespace CUE4Parse.UE4.Objects.Engine.Curves
                     FloatCurves[i] = new FRichCurve(fallback);
                 }
             }
-
-            if (FloatCurves.Length > 0) Properties.Clear(); // Don't write these for this object
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
