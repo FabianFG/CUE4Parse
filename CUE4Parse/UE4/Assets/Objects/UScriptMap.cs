@@ -37,6 +37,12 @@ public class UScriptMap
             };
         }
 
+        if (Ar.Game == EGame.GAME_UE4_27 && tagData.Name == "LinecodeTable") // Psychonauts 2
+        {
+            tagData.InnerType = "LinecodeProperty";
+            tagData.ValueType = "UInt32Property";
+        }
+
         if (tagData.InnerType == null || tagData.ValueType == null)
             throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
 

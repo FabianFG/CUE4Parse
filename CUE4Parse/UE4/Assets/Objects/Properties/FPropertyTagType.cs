@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
+using CUE4Parse.GameTypes.Psychonauts2.Assets.Objects.Properties;
 using CUE4Parse.GameTypes.FN.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -159,6 +160,8 @@ public abstract class FPropertyTagType
 
             "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
             "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
+
+            "LinecodeProperty" when Ar.Game == EGame.GAME_UE4_27 => new LinecodeProperty(Ar, type), // Psychonauts 2
 
             _ => null
         };
