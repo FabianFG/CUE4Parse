@@ -161,7 +161,7 @@ public abstract class FPropertyTagType
             "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
             "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
 
-            "LinecodeProperty" when Ar.Game == EGame.GAME_UE4_27 => new LinecodeProperty(Ar, type), // Psychonauts 2
+            "Linecode" or "LinecodeProperty" => new LinecodeProperty(Ar, type), // Psychonauts 2
 
             _ => null
         };

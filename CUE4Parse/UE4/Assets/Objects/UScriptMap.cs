@@ -37,7 +37,7 @@ public class UScriptMap
             };
         }
 
-        if (Ar.Game == EGame.GAME_UE4_27 && tagData.Name == "LinecodeTable") // Psychonauts 2
+        if (tagData.Name == "LinecodeTable") // Psychonauts 2
         {
             tagData.InnerType = "LinecodeProperty";
             tagData.ValueType = "UInt32Property";
