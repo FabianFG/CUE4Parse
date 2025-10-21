@@ -238,6 +238,8 @@ public class FStaticMeshLODResources
             ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
+        if (Ar.Game is EGame.GAME_OutlastTrials) Ar.Position += 4;
+
         DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
         if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
@@ -252,6 +254,8 @@ public class FStaticMeshLODResources
             if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != EGame.GAME_FinalFantasy7Rebirth)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
+
+        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
 
         if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
         {
