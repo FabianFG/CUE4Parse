@@ -142,6 +142,7 @@ public class FModReader
                     var listCount = Ar.ReadUInt32(); // Not needed; Im using custom structure
                     break;
 
+                case ENodeId.CHUNKID_OUTPUTPORTBODY:
                 case ENodeId.CHUNKID_RETURNBUSBODY:
                 case ENodeId.CHUNKID_INPUTBUSBODY:
                 case ENodeId.CHUNKID_GROUPBUSBODY:
@@ -309,6 +310,14 @@ public class FModReader
     {
         switch (nodeId)
         {
+            case ENodeId.CHUNKID_OUTPUTPORTBODY: // Output Port Node
+                {
+                    var node = new OutputPortNode(Ar);
+                    BusNodes[node.BaseGuid] = node;
+                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+                }
+                break;
+
             case ENodeId.CHUNKID_RETURNBUSBODY: // Return Bus Node
                 {
                     var node = new ReturnBusNode(Ar);
@@ -346,7 +355,8 @@ public class FModReader
                     busParent.NodeId is ENodeId.CHUNKID_INPUTBUSBODY or
                         ENodeId.CHUNKID_GROUPBUSBODY or
                         ENodeId.CHUNKID_MASTERBUSBODY or
-                        ENodeId.CHUNKID_RETURNBUSBODY)
+                        ENodeId.CHUNKID_RETURNBUSBODY or
+                        ENodeId.CHUNKID_OUTPUTPORTBODY)
                 {
                     var node = new BusNode(Ar);
                     if (BusNodes.TryGetValue(busParent.Guid, out var baseBus))
