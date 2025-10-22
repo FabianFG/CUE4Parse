@@ -327,6 +327,24 @@ public class WwiseProvider
                         foreach (var childId in layerContainer.ChildIds)
                             TraverseAndSave(childId);
                         break;
+                    case HierarchyActorMixer mixerContainer:
+                        foreach (var childId in mixerContainer.ChildIds)
+                            TraverseAndSave(childId);
+                        break;
+                    case HierarchyEvent eventContainer:
+                        foreach (var actionId in eventContainer.EventActionIds)
+                        {
+                            if (!_wwiseHierarchyTables.TryGetValue(actionId, out var actionHierarchy) ||
+                                actionHierarchy.Data is not HierarchyEventAction eventAction)
+                                continue;
+
+                            TraverseAndSave(eventAction.ReferencedId);
+
+                        }
+                        break;
+                    default:
+                        Log.Warning("Unhandled hierarchy type {0}, while traversing through EventActions", hierarchy.Type);
+                        break;
                 }
             }
         }
