@@ -184,7 +184,7 @@ public class FScriptStruct
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
             "EdGraphPinType" => new FEdGraphPinType(Ar),
-            
+
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
             "FortActorRecord" => new FFortActorRecord(Ar),
@@ -236,11 +236,9 @@ public class FScriptStruct
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
 
-            // Gothic 1 Remake
             "WaynetNode" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetNode(Ar),
             "WaynetPath" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetPath(Ar),
 
-            // Brickadia
             "BrickStudGroup" when Ar.Game == EGame.GAME_Brickadia => new FBrickStudGroup(Ar),
             "BRGuid" when Ar.Game == EGame.GAME_Brickadia => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
 
@@ -255,10 +253,8 @@ public class FScriptStruct
             // Avowed
             "NiagaraUserParameterModifier" => new NiagaraUserParameterModifier(Ar),
 
-            // State of Decay 2
             "ItemsBitArray" when Ar.Game == EGame.GAME_StateOfDecay2 => type == ReadType.ZERO ? new FItemsBitArray() : new FItemsBitArray(Ar),
 
-            // MindsEye
             "UgcData" when Ar.Game == EGame.GAME_MindsEye => new FUgcData(Ar),
             "JsonObjectWrapper" when Ar.Game == EGame.GAME_MindsEye => new FJsonObjectWrapper(Ar),
             "UGCPropertyDefaultValueOverride" when Ar.Game == EGame.GAME_MindsEye => new FUGCPropertyDefaultValueOverride(Ar),
@@ -279,7 +275,6 @@ public class FScriptStruct
             // Upin&Ipin Universe
             "SUDSValue" => type == ReadType.ZERO ? new FStructFallback() : new FSUDSValue(Ar),
 
-            // Suicide Squad
             "SimpleBox" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FSimpleBox>(),
             "RRotationTranslation" when Ar.Game == EGame.GAME_SuicideSquad => Ar.Read<FRRotationTranslation>(),
 
@@ -306,29 +301,29 @@ public class FScriptStruct
             // Daimon Blades
             "SOS_GDValue" => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
 
-            // Little Nightmares 3
             "SoftEnumName" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
             "KosmosHangTraversalData" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
-            // Reanimal
             "EnumName" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
             "AbstractEnum" or "EnumName" or "JumpParams" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "ChalkboardSectionKey" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(0,2), (2, 2)]), ReadType.RAW),
             "LedgeMetaData" when Ar.Game is EGame.GAME_Reanimal => new FFixedSizeStruct(Ar, 1),
 
-            //VEIN
             "ItemDataContainer" when Ar.Game is EGame.GAME_VEIN => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             //SpongeBob SquarePants: Titans of the Tide
             "GG_CrowdGeneratorLocations" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "Linecode" when Ar.Game is EGame.GAME_Psychonauts2 => new FLinecode(Ar),
+            "P2Attribute" when Ar.Game is EGame.GAME_Psychonauts2 => new FP2Attribute(Ar),
 
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
                 EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
                 EGame.GAME_Borderlands4 => Borderlands4Structs.ParseBl4Struct(Ar, structName, struc, type),
-            _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+                _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
             },
         };
     }

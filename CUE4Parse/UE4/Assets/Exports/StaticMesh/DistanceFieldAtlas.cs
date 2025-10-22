@@ -68,6 +68,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 bBuiltAsIfTwoSided = Ar.ReadBoolean();
                 bMeshWasPlane = Ar.Game != EGame.GAME_FragPunk && Ar.ReadBoolean();
                 DistanceFieldVolume = [];
+                if (Ar.Game == EGame.GAME_Psychonauts2) Ar.Position += 22;
             }
             else
             {
