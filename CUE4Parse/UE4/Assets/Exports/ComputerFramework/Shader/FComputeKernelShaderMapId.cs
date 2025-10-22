@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -11,13 +11,12 @@ public class FComputeKernelShaderMapId
     public ulong ShaderCodeHash;
     public FShaderTypeDependency[] ShaderTypeDependencies;
     public FPlatformTypeLayoutParameters LayoutParams;
-    
+
     public FComputeKernelShaderMapId(FMemoryImageArchive Ar)
     {
         FeatureLevel = Ar.Read<ERHIFeatureLevel>();
-        ShaderCodeHash = Ar.Read<ulong>();
-        
         Ar.Position = Ar.Position.Align(8);
+        ShaderCodeHash = Ar.Read<ulong>();
         ShaderTypeDependencies = Ar.ReadArray(() => new FShaderTypeDependency(Ar));
         LayoutParams = new FPlatformTypeLayoutParameters(Ar);
     }
