@@ -35,6 +35,7 @@ using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.Engine.EdGraph;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.Engine.Material;
+using CUE4Parse.UE4.Objects.Engine.Midi;
 using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.LevelSequence;
 using CUE4Parse.UE4.Objects.MovieScene;
@@ -91,6 +92,7 @@ public class FScriptStruct
             "PerPlatformFString" => type == ReadType.ZERO ? new TPerPlatformProperty.FPerPlatformFString() : new TPerPlatformProperty.FPerPlatformFString(Ar),
             "PerQualityLevelInt" => type == ReadType.ZERO ? new FPerQualityLevelInt() : new FPerQualityLevelInt(Ar),
             "PerQualityLevelFloat" => type == ReadType.ZERO ? new FPerQualityLevelFloat() : new FPerQualityLevelFloat(Ar),
+            "PannerDetails" => new FPannerDetails(Ar),
             "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
             "IntPoint" or "Int32Point" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
             "IntVector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
@@ -127,6 +129,7 @@ public class FScriptStruct
             "MovieSceneTrackIdentifier" => type == ReadType.ZERO ? new FMovieSceneTrackIdentifier() : new FMovieSceneTrackIdentifier(Ar),
             "MovieSceneTrackIdentifiers" when Ar.Game is EGame.GAME_GameForPeace => type == ReadType.ZERO ? new FMovieSceneTrackIdentifiers() : new FMovieSceneTrackIdentifiers(Ar),
             "MovieSceneTrackImplementationPtr" => new FMovieSceneTrackImplementationPtr(Ar),
+            "MidiEvent" => new FMidiEvent(Ar),
             "FontData" => new FFontData(Ar),
             "FontCharacter" => new FFontCharacter(Ar),
             "Plane" => type == ReadType.ZERO ? new FPlane() : new FPlane(Ar),
@@ -150,6 +153,7 @@ public class FScriptStruct
             "Timespan" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
             "Transform3f" => type == ReadType.ZERO ? new FTransform() : Ar.Read<FTransform>(),
             "TwoVectors" => type == ReadType.ZERO ? new FTwoVectors() : new FTwoVectors(Ar),
+            "TypedParameter" => new FTypedParameter(Ar),
             "UniqueNetIdRepl" => new FUniqueNetIdRepl(Ar),
             "Vector" => type == ReadType.ZERO ? new FVector() : new FVector(Ar),
             "Vector2D" => type == ReadType.ZERO ? new FVector2D() : new FVector2D(Ar),
