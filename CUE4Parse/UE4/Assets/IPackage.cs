@@ -17,7 +17,8 @@ public interface IPackage
 
     public FPackageFileSummary Summary { get; }
     public FNameEntrySerialized[] NameMap { get; }
-    public List<byte[]> EditorThumbnails { get; }
+
+    public List<byte[]> EditorThumbnails { get; set; }
     public int ImportMapLength { get; }
     public int ExportMapLength { get; }
 

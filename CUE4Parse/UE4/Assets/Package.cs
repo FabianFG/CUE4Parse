@@ -24,7 +24,6 @@ namespace CUE4Parse.UE4.Assets
         public override int ImportMapLength => ImportMap.Length;
         public override int ExportMapLength => ExportMap.Length;
 
-        public List<byte[]> EditorThumbnails { get; }
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
         public FPackageIndex[][]? DependsMap { get; }
