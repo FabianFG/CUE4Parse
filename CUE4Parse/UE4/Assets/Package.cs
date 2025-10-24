@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.UE4.Assets.Exports;
@@ -87,6 +88,32 @@ namespace CUE4Parse.UE4.Assets
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
             ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
+
+            EditorThumbnails = new List<byte[]>();
+            if (Summary.ThumbnailTableOffset > 0)
+            {
+                uassetAr.SeekAbsolute(Summary.ThumbnailTableOffset, SeekOrigin.Begin);
+                var count = uassetAr.Read<int>();
+
+                var thumbnailOffsets = new List<int>(count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    uassetAr.SkipFString(); // objectShortClassName
+                    uassetAr.SkipFString(); // objectPathWithoutPackageName
+                    var thumbnailOffset = uassetAr.Read<int>();
+                    thumbnailOffsets.Add(thumbnailOffset);
+                }
+
+                foreach (var offset in thumbnailOffsets)
+                {
+                    uassetAr.SeekAbsolute(offset + 8, SeekOrigin.Begin);
+                    var totalBytes = uassetAr.Read<int>();
+                    if (totalBytes == 0) continue;
+                    var rawImage = uassetAr.ReadBytes(totalBytes);
+                    EditorThumbnails.Add(rawImage);
+                }
+            }
 
             if (!useLazySerialization && Summary is { DependsOffset: > 0, ExportCount: > 0 })
             {
