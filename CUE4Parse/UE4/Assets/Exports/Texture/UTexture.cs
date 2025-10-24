@@ -27,8 +27,8 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public FPackageIndex[] AssetUserData { get; private set; } = [];
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
-    public FEditorBulkData EditorData { get; private set; }
-    
+    public FEditorBulkData? EditorData { get; private set; }
+
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
     public bool IsHDR => CompressionSettings is

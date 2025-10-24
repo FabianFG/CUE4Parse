@@ -21,10 +21,10 @@ namespace CUE4Parse.UE4.Assets
     {
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
-        public override List<byte[]> EditorThumbnails { get; }
         public override int ImportMapLength => ImportMap.Length;
         public override int ExportMapLength => ExportMap.Length;
 
+        public List<byte[]> EditorThumbnails { get; }
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
         public FPackageIndex[][]? DependsMap { get; }
@@ -95,7 +95,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 uassetAr.SeekAbsolute(Summary.ThumbnailTableOffset, SeekOrigin.Begin);
                 var count = uassetAr.Read<int>();
-    
+
                 var thumbnailOffsets = new List<int>(count);
 
                 for (int i = 0; i < count; i++)
@@ -105,7 +105,7 @@ namespace CUE4Parse.UE4.Assets
                     var thumbnailOffset = uassetAr.Read<int>();
                     thumbnailOffsets.Add(thumbnailOffset);
                 }
-                
+
                 foreach (var offset in thumbnailOffsets)
                 {
                     uassetAr.SeekAbsolute(offset + 8, SeekOrigin.Begin);
