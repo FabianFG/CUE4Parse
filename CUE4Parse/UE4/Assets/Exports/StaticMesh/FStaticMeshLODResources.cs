@@ -99,9 +99,8 @@ public class FStaticMeshLODResources
                 var bulkData = new FByteBulkData(assetArchive);
                 if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
                 {
-                    var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
+                    using var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
                     SerializeBuffers(tempAr);
-                    tempAr.Dispose();
                 }
 
                 // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
@@ -125,7 +124,7 @@ public class FStaticMeshLODResources
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     EGame.GAME_SuicideSquad => 29,
-                    EGame.GAME_ArenaBreakoutInifinite => 16,
+                    EGame.GAME_ArenaBreakoutInfinite => 16,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
@@ -239,6 +238,8 @@ public class FStaticMeshLODResources
             ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
+        if (Ar.Game is EGame.GAME_OutlastTrials) Ar.Position += 4;
+
         DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
         if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
@@ -254,7 +255,9 @@ public class FStaticMeshLODResources
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
@@ -269,7 +272,7 @@ public class FStaticMeshLODResources
                 {
                     Sections[i].NumTriangles = sections[i];
                 }
-                IndexBuffer.Indices32 = indexBuffer;
+                IndexBuffer.SetIndices(indexBuffer);
             }
         }
 

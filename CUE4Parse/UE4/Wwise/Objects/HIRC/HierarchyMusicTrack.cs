@@ -7,10 +7,10 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class HierarchyMusicTrack : AbstractHierarchy
 {
-    public readonly EMusicFlags Flags;
-    public readonly List<AkBankSourceData> Sources = [];
-    public readonly List<AkTrackSrcInfo> Playlist = [];
-    public readonly List<AkClipAutomation> ClipAutomations = [];
+    public readonly EMusicFlags MusicFlags;
+    public readonly AkBankSourceData[] Sources = [];
+    public readonly AkTrackSrcInfo[] Playlist = [];
+    public readonly AkClipAutomation[] ClipAutomations = [];
     public readonly BaseHierarchy BaseParams;
     public readonly short Loop;
     public readonly short LoopModMin;
@@ -25,25 +25,31 @@ public class HierarchyMusicTrack : AbstractHierarchy
     {
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 112)
         {
-            Flags = Ar.Read<EMusicFlags>();
+            MusicFlags = Ar.Read<EMusicFlags>();
         }
         else if (WwiseVersions.Version <= 152)
         {
-            Flags = Ar.Read<EMusicFlags>();
+            MusicFlags = Ar.Read<EMusicFlags>();
         }
 
         var numSources = Ar.Read<uint>();
+        Sources = new AkBankSourceData[numSources];
         if (WwiseVersions.Version <= 26)
         {
             for (int i = 0; i < numSources; i++)
             {
-                Sources.Add(new AkBankSourceData(Ar));
+                Sources[i] = new AkBankSourceData(Ar);
             }
         }
 
         for (int i = 0; i < numSources; i++)
         {
-            Sources.Add(new AkBankSourceData(Ar));
+            Sources[i] = new AkBankSourceData(Ar);
+        }
+
+        if (WwiseVersions.Version > 152)
+        {
+            MusicFlags = Ar.Read<EMusicFlags>();
         }
 
         if (WwiseVersions.Version > 26)
@@ -51,9 +57,10 @@ public class HierarchyMusicTrack : AbstractHierarchy
             var numPlaylistItems = Ar.Read<uint>();
             if (numPlaylistItems > 0)
             {
+                Playlist = new AkTrackSrcInfo[numPlaylistItems];
                 for (int i = 0; i < numPlaylistItems; i++)
                 {
-                    Playlist.Add(new AkTrackSrcInfo(Ar));
+                    Playlist[i] = new AkTrackSrcInfo(Ar);
                 }
 
                 Ar.Read<uint>(); // numSubTrack
@@ -63,9 +70,10 @@ public class HierarchyMusicTrack : AbstractHierarchy
         if (WwiseVersions.Version > 62)
         {
             var numClipAutomationItems = Ar.Read<uint>();
+            ClipAutomations = new AkClipAutomation[numClipAutomationItems];
             for (int i = 0; i < numClipAutomationItems; i++)
             {
-                ClipAutomations.Add(new AkClipAutomation(Ar));
+                ClipAutomations[i] = new AkClipAutomation(Ar);
             }
         }
 
@@ -100,10 +108,10 @@ public class HierarchyMusicTrack : AbstractHierarchy
             uint numPlaylistItems = Ar.Read<uint>();
             if (numPlaylistItems > 0)
             {
+                Playlist = new AkTrackSrcInfo[numPlaylistItems];
                 for (int i = 0; i < numPlaylistItems; i++)
                 {
-                    var playlistItem = new AkTrackSrcInfo(Ar);
-                    Playlist.Add(playlistItem);
+                    Playlist[i] = new AkTrackSrcInfo(Ar);
                 }
             }
 
@@ -115,8 +123,8 @@ public class HierarchyMusicTrack : AbstractHierarchy
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Flags");
-        writer.WriteValue(Flags.ToString());
+        writer.WritePropertyName("MusicFlags");
+        writer.WriteValue(MusicFlags.ToString());
 
         writer.WritePropertyName("Sources");
         serializer.Serialize(writer, Sources);

@@ -28,7 +28,7 @@ namespace CUE4Parse.UE4.IO
 
                 var nameCount = (int) (nameHashesChunk.Length / sizeof(ulong) - 1);
 
-                var nameAr = new FByteArchive("LoaderGlobalNames", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNames)));
+                using var nameAr = new FByteArchive("LoaderGlobalNames", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderGlobalNames)));
                 GlobalNameMap = FNameEntrySerialized.LoadNameBatch(nameAr, nameCount);
 
                 metaAr = new FByteArchive("LoaderInitialLoadMeta", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType.LoaderInitialLoadMeta)));

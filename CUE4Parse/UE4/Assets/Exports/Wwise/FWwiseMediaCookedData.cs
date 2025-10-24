@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -14,6 +15,7 @@ public readonly struct FWwiseMediaCookedData
     public readonly bool bDeviceMemory;
     public readonly bool bStreaming;
     public readonly FName DebugName;
+    public readonly FWwisePackagedFile? PackagedFile;
 
     public FWwiseMediaCookedData(FStructFallback fallback)
     {
@@ -24,5 +26,11 @@ public readonly struct FWwiseMediaCookedData
         bDeviceMemory = fallback.GetOrDefault<bool>(nameof(bDeviceMemory));
         bStreaming = fallback.GetOrDefault<bool>(nameof(bStreaming));
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
+        PackagedFile = FWwisePackagedFile.CreatePackagedFile(fallback, nameof(PackagedFile));
+    }
+
+    public void SerializeBulkData(FAssetArchive Ar)
+    {
+        PackagedFile?.SerializeBulkData(Ar);
     }
 }

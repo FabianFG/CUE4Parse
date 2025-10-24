@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Objects.RenderCore;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
-    public class CSkelMeshLod : CBaseMeshLod, IDisposable
+    public class CSkelMeshLod : CBaseMeshLod
     {
         public CSkelMeshVertex[]? Verts;
         
@@ -35,8 +35,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             HasTangents = true;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
+            
             if (Verts is null)
                 return;
             

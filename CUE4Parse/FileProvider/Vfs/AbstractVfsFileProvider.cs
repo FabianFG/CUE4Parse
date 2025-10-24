@@ -94,7 +94,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
                 EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
-                EGame.GAME_ArenaBreakoutInifinite => ABIDecryption.ABIDecrypt,
+                EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 _ => null
             };
         }

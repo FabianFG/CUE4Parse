@@ -23,11 +23,17 @@ public class UScriptMap
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.PROPERTY_TAG_SET_MAP_SUPPORT)
         {
-            _ = Ar.Game switch
+            (tagData.InnerType, tagData.ValueType) = Ar.Game switch
             {
-                EGame.GAME_DaysGone => DaysGoneProperties.GetMapPropertyTypes(tagData.Name, out tagData.InnerType, out tagData.ValueType),
-                EGame.GAME_StateOfDecay2 => SOD2Properties.GetMapPropertyTypes(tagData.Name, out tagData.InnerType, out tagData.ValueType),
-                _ => false,
+                EGame.GAME_DaysGone => DaysGoneProperties.GetMapPropertyTypes(tagData.Name),
+                EGame.GAME_StateOfDecay2 => SOD2Properties.GetMapPropertyTypes(tagData.Name),
+                EGame.GAME_WeHappyFew => tagData.Name switch
+                {
+                    "PointMap" or "JunctionMap" or "RoadMap" => ("IntProperty", "StructProperty"),
+                    "States" => ("NameProperty", "StructProperty"),
+                    _ => (null, null)
+                },
+                _ => (null, null)
             };
         }
 

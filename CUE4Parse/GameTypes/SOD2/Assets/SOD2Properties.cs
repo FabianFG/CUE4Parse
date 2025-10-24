@@ -2,8 +2,10 @@ namespace CUE4Parse.GameTypes.SOD2.Assets;
 
 public static class SOD2Properties
 {
-    public static bool GetMapPropertyTypes(string? name, out string? keyType, out string? valueType)
+    public static (string?, string?) GetMapPropertyTypes(string? name)
     {
+        string? keyType;
+        string? valueType;
         switch (name)
         {
             case "ThreadsByName":
@@ -58,8 +60,9 @@ public static class SOD2Properties
             default:
                 keyType = null;
                 valueType = null;
-                return false;
+                break;
         }
-        return true;
+
+        return (keyType, valueType);
     }
 }

@@ -48,7 +48,7 @@ public class URigHierarchy : UObject
                 OodleHelper.Decompress(compressedBytes, 0, compressedBytes.Length, uncompressedBytes, 0, uncompressedBytes.Length);
             }
 
-            var baseArchive = new FByteArchive("Archive for elements", bStoreCompressedBytes ? uncompressedBytes : compressedBytes, Ar.Versions);
+            using var baseArchive = new FByteArchive("Archive for elements", bStoreCompressedBytes ? uncompressedBytes : compressedBytes, Ar.Versions);
             archiveForElements = new FRigHierarchyArchive(baseArchive, uniqueNames);
         }
         else
@@ -63,7 +63,7 @@ public class URigHierarchy : UObject
         for (var elementIndex = 0; elementIndex < elementCount; elementIndex++)
         {
             var key = new FRigElementKey(archiveForElements);
-            FRigBaseElement element = key.Type switch
+            var element = key.Type switch
             {
                 ERigElementType.Bone => new FRigBoneElement(),
                 ERigElementType.Null => new FRigNullElement(),

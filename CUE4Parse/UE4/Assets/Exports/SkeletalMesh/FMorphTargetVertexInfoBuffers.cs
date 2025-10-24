@@ -78,7 +78,7 @@ public class FMorphTargetVertexInfoBuffers
 
     public FMorphTargetVertexInfoBuffers(FArchive Ar)
     {
-        var packed = new FByteArchive("PackedMorphData", Ar.ReadArray<byte>(Ar.Read<int>() * sizeof(uint)), Ar.Versions);
+        using var packed = new FByteArchive("PackedMorphData", Ar.ReadArray<byte>(Ar.Read<int>() * sizeof(uint)), Ar.Versions);
         MinimumValuePerMorph = Ar.ReadArray<FVector4>();
         MaximumValuePerMorph = Ar.ReadArray<FVector4>();
         BatchStartOffsetPerMorph = Ar.ReadArray<uint>();

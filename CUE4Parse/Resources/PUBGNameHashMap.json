@@ -267,5 +267,27 @@
     "*7fe753501c": "Downscale",
     "*a55bbf2889": "AutomaticViewMipBias",
     "*678d19b341": "SlateWidgetStyleAsset",
-    "*4340706c09": "CustomStyle"
+    "*4340706c09": "CustomStyle",
+
+    "*d423467bb4": "bUseHighPrecisionTangentBasis",
+    "*2f55944cb6": "bHasVertexColors",
+    "*ca453688fb": "ComponentSizeQuads",
+    "*9f40fdd12c": "SubsectionSizeQuads",
+    "*b050520184": "NumSubsections",
+
+    "*b2e22958c4": "SequenceID",
+    "*9c0bb2d553": "MovieSceneTrackImplementationPtr",
+    "*98dc2f75f5": "TrackTemplate",
+    "*55aa072bee": "ActorSequenceObjectReferenceMap",
+    "*395b10b40e": "ObjectReferences",
+    "*6fdc1319d0": "FontData",
+    "*ce40b0c5e2": "GridInstancedStaticMeshComponent",
+    "*1ab970fe3e": "LevelSequenceBindingReferenceArray",
+    "*59031e1b34": "LevelSequenceBindingReferences",
+    "*d91ddc79eb": "MovieSceneSegment",
+    "*3fac4fef4d": "MovieSceneEvalTemplatePtr",
+    "*b5e79b1b15": "ChildTemplates",
+    "*b37642c767": "MovieSceneSequenceID",
+    "*b321fa453b": "TslSomeSKStruct",
+    "*4c48b9109d": "InstancedStaticMeshComponent"
 }

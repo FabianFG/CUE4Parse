@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Objects.RenderCore;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
-    public class CStaticMeshLod : CBaseMeshLod, IDisposable
+    public class CStaticMeshLod : CBaseMeshLod
     {
         public CMeshVertex[]? Verts;
 
@@ -28,8 +28,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             HasNormals = true;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
+            
             if (Verts is null)
                 return;
             

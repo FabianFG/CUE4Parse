@@ -27,6 +27,7 @@ public enum EGame : uint
     GAME_UE4_12 = GameUtils.GameUe4Base + (12 << 16),
     GAME_UE4_13 = GameUtils.GameUe4Base + (13 << 16),
         GAME_StateOfDecay2 = GAME_UE4_13 + 1,
+        GAME_WeHappyFew = GAME_UE4_13 + 2,
     GAME_UE4_14 = GameUtils.GameUe4Base + (14 << 16),
         GAME_TEKKEN7 = GAME_UE4_14 + 1,
         GAME_TransformersOnline = GAME_UE4_14 + 2,
@@ -91,7 +92,8 @@ public enum EGame : uint
         GAME_StellarBlade = GAME_UE4_26 + 16,
         GAME_EtheriaRestart = GAME_UE4_26 + 17,
         GAME_EvilWest = GAME_UE4_26 + 18,
-        GAME_ArenaBreakoutInifinite = GAME_UE4_26 + 19,
+        GAME_ArenaBreakoutInfinite = GAME_UE4_26 + 19,
+        GAME_Psychonauts2 = GAME_UE4_26 + 20,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
@@ -119,6 +121,7 @@ public enum EGame : uint
         GAME_LostSoulAside = GAME_UE4_27 + 24,
         GAME_GhostsofTabor = GAME_UE4_27 + 25,
         GAME_BlueProtocol = GAME_UE4_27 + 26,
+        GAME_LittleNightmares3 = GAME_UE4_27 + 27,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -167,6 +170,9 @@ public enum EGame : uint
         GAME_Grounded2 = GAME_UE5_4 + 11,
         GAME_MafiaTheOldCountry = GAME_UE5_4 + 12,
         GAME_2XKO = GAME_UE5_4 + 13,
+        GAME_Reanimal = GAME_UE5_4 + 14,
+        GAME_VEIN = GAME_UE5_4 + 15,
+        GAME_GrayZoneWarfare = GAME_UE5_4 + 16,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
@@ -213,6 +219,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
+                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }

@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public class CBaseMeshLod
+public class CBaseMeshLod : IDisposable
 {
     public int NumVerts = 0;
     public int NumTexCoords = 0;
@@ -17,12 +17,12 @@ public class CBaseMeshLod
     public bool HasTangents = false;
     public bool IsTwoSided = false;
     public bool IsNanite = false;
-    public Lazy<CMeshSection[]> Sections;
-    public Lazy<FMeshUVFloat[][]> ExtraUV;
+    public Lazy<CMeshSection[]>? Sections;
+    public Lazy<FMeshUVFloat[][]>? ExtraUV;
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
-    public Lazy<FRawStaticIndexBuffer> Indices;
-    public bool SkipLod => Sections.Value.Length < 1 || Indices.Value.Length < 1;
+    public Lazy<uint[]>? Indices;
+    public bool SkipLod => Sections?.Value.Length < 1 || Indices?.Value.Length < 1;
 
     public void AllocateUVBuffers()
     {
@@ -66,16 +66,60 @@ public class CBaseMeshLod
         }
         return materials;
     }
+
+    public virtual void Dispose()
+    {
+        if (Sections is not null && Sections.IsValueCreated)
+        {
+            Array.Clear(Sections.Value);
+            Sections = null;
+        }
+
+        if (ExtraUV is not null && ExtraUV.IsValueCreated)
+        {
+            foreach (var uv in ExtraUV.Value)
+            {
+                Array.Clear(uv);
+            }
+            Array.Clear(ExtraUV.Value);
+            ExtraUV = null;
+        }
+
+        if (VertexColors is not null)
+        {
+            Array.Clear(VertexColors);
+            VertexColors = null;
+        }
+
+        if (ExtraVertexColors is not null)
+        {
+            foreach (var vc in ExtraVertexColors)
+            {
+                vc.Dispose();
+            }
+            Array.Clear(ExtraVertexColors);
+            ExtraVertexColors = null;
+        }
+
+        if (Indices is not null && Indices.IsValueCreated)
+        {
+            Array.Clear(Indices.Value);
+            Indices = null;
+        }
+    }
 }
 
-public readonly struct CVertexColor
+public struct CVertexColor(string name, FColor[]? colorData) : IDisposable
 {
-    public readonly string Name;
-    public readonly FColor[] ColorData;
+    public readonly string Name = name;
+    public FColor[]? ColorData = colorData;
 
-    public CVertexColor(string name, FColor[]? colorData)
+    public void Dispose()
     {
-        Name = name;
-        ColorData = colorData ?? Array.Empty<FColor>();
+        if (ColorData is not null)
+        {
+            Array.Clear(ColorData);
+            ColorData = null;
+        }
     }
 }

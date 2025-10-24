@@ -139,6 +139,7 @@ public partial class USkeletalMesh : UObject
         var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
 
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
+        if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 20;
 
         if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
         {

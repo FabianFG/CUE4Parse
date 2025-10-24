@@ -49,7 +49,7 @@ public class FStaticMeshRenderData
                 var bulkData = new FByteBulkData(Ar);
                 if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
                 {
-                    var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
+                    using var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
                     LODs[i] = new FStaticMeshLODResources(tempAr);
                 }
                 else
@@ -120,7 +120,7 @@ public class FStaticMeshRenderData
             }
         }
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
         {
             var flags = new FStripDataFlags(Ar);
             if (Ar.ReadBoolean())
@@ -140,7 +140,7 @@ public class FStaticMeshRenderData
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game >= EGame.GAME_UE5_6)
+            if (Ar.Game is >= EGame.GAME_UE5_6 or EGame.GAME_GrayZoneWarfare)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;

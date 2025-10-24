@@ -3,6 +3,8 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Sound;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -48,7 +50,19 @@ public class UArrowComponent : UPrimitiveComponent;
 public class UAsyncPhysicsInputComponent : UActorComponent;
 public class UAtmosphericFogComponent : USkyAtmosphereComponent;
 public class UAudioCaptureComponent : USynthComponent;
-public class UAudioComponent : USceneComponent;
+
+public class UAudioComponent : USceneComponent
+{
+    public USoundBase? Sound { get; protected set; }
+    
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+        
+        Sound = GetOrDefault<USoundBase?>(nameof(Sound));
+    }
+}
+
 public class UAudioCurveSourceComponent : UAudioComponent;
 public class UAxisGizmoHandleGroup : UGizmoHandleGroup;
 public class UBaseDynamicMeshComponent : UMeshComponent;
@@ -62,7 +76,23 @@ public class UBasicLineSetComponentBase : UMeshComponent;
 public class UBasicPointSetComponentBase : UMeshComponent;
 public class UBasicTriangleSetComponentBase : UMeshComponent;
 public class UBehaviorTreeComponent : UBrainComponent;
-public class UBillboardComponent : UPrimitiveComponent;
+
+public class UBillboardComponent : UPrimitiveComponent
+{
+    public UTexture2D? GetSprite()
+    {
+        var current = this;
+        while (current != null)
+        {
+            var sprite = current.GetOrDefault<UTexture2D?>("Sprite");
+            if (sprite != null) return sprite;
+            
+            current = current.Template?.Load<UBillboardComponent>();
+        }
+        
+        return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
+    }
+}
 public class UBlackboardComponent : UActorComponent;
 public class UBoundsCopyComponent : UActorComponent;
 public class UBoxComponent : UShapeComponent;
@@ -170,6 +200,8 @@ public class UMediaComponent : UActorComponent;
 public class UMediaPlateComponent : UActorComponent;
 public class UMediaSoundComponent : USynthComponent;
 public class UMeshComponent : UPrimitiveComponent;
+public class UWaterBodyComponent : UPrimitiveComponent;
+public class UWaterMeshComponent : UMeshComponent;
 public class UMeshWireframeComponent : UMeshComponent;
 public class UMockDataMeshTrackerComponent : USceneComponent;
 public class UMockGameplayTasksComponent : UGameplayTasksComponent;
@@ -293,7 +325,6 @@ public class USynthComponentMonoWaveTable : USynthComponent;
 public class USynthComponentToneGenerator : USynthComponent;
 public class USynthSamplePlayer : USynthComponent;
 public class UTestPhaseComponent : USceneComponent;
-public class UTextRenderComponent : UPrimitiveComponent;
 public class UTimelineComponent : UActorComponent;
 public class UToFloatField : UFieldNodeFloat;
 public class UToIntegerField : UFieldNodeInt;

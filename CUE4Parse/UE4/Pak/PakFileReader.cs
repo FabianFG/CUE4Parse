@@ -40,7 +40,9 @@ namespace CUE4Parse.UE4.Pak
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
 
-            if (Info.Version > PakFile_Version_Latest && !UsingCustomPakVersion())
+            var hasUnsupportedVersion = (Ar.Game < EGame.GAME_UE5_8 && Info.Version > PakFile_Version_Fnv64BugFix)
+                || (Ar.Game >= EGame.GAME_UE5_8 && Info.Version > PakFile_Version_Latest);
+            if (hasUnsupportedVersion && !UsingCustomPakVersion())
             {
                 Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
             }
@@ -88,7 +90,7 @@ namespace CUE4Parse.UE4.Pak
                         return RennsportCompressedExtract(reader, pakEntry);
                     case EGame.GAME_DragonQuestXI:
                         return DQXIExtract(reader, pakEntry);
-                    case EGame.GAME_ArenaBreakoutInifinite:
+                    case EGame.GAME_ArenaBreakoutInfinite:
                         return ABIExtract(reader, pakEntry);
                 }
 
@@ -119,7 +121,7 @@ namespace CUE4Parse.UE4.Pak
                     return RennsportExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:
                     return DQXIExtract(reader, pakEntry);
-                case EGame.GAME_ArenaBreakoutInifinite:
+                case EGame.GAME_ArenaBreakoutInfinite:
                     return ABIExtract(reader, pakEntry);
             }
 
@@ -307,7 +309,7 @@ namespace CUE4Parse.UE4.Pak
                 for (var fileIndex = 0; fileIndex < fileEntries; fileIndex++)
                 {
                     var fileNameSpan = fileNamePoolSpan;
-                    var fileName = directoryIndex.ReadFStringMemory();
+                    var fileName = directoryIndex.ReadFStringMemory(); // supports PakFile_Version_Utf8PakDirectory too
                     var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
                     fileNameSpan = fileNameSpan[..fileNameLength];
                     var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);

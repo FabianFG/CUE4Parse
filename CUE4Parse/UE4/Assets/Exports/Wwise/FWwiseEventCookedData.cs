@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -27,5 +27,17 @@ public readonly struct FWwiseEventCookedData
         RequiredGroupValueSet = fallback.GetOrDefault<UScriptSet>(nameof(RequiredGroupValueSet));
         DestroyOptions = fallback.GetOrDefault<EWwiseEventDestroyOptions>(nameof(DestroyOptions));
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
+    }
+
+    public void SerializeBulkData(FAssetArchive Ar)
+    {
+        foreach (var sb in SoundBanks)
+            sb.SerializeBulkData(Ar);
+
+        foreach (var media in Media)
+            media.SerializeBulkData(Ar);
+
+        foreach (var leaf in SwitchContainerLeaves)
+            leaf.SerializeBulkData(Ar);
     }
 }

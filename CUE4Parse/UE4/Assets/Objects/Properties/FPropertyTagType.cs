@@ -154,7 +154,7 @@ public abstract class FPropertyTagType
             "WeakObjectProperty" => new WeakObjectProperty(Ar, type),
             "OptionalProperty" => new OptionalProperty(Ar, tagData, type),
             "VerseStringProperty" => new VerseStringProperty(Ar, type),
-            "VerseFunctionProperty" => null,
+            "VerseFunctionProperty" => new ObjectProperty(Ar, type),
             "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
 
             "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),

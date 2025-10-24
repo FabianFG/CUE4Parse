@@ -108,6 +108,8 @@ public class FWorldTileInfo
             Ar.SkipFString();
         }
 
+        if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) return;
+
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
         {
             Ar.Position += 8; // idk
@@ -129,7 +131,7 @@ public class FWorldTileLayer
     {
         Name = Ar.ReadFString();
         Reserved0 = Ar.Read<int>();
-        Reserved1 = Ar.Read<FIntPoint>();
+        Reserved1 = Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds ? new FIntPoint() :Ar.Read<FIntPoint>();
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_UPDATED)
         {
             StreamingDistance = Ar.Read<int>();
