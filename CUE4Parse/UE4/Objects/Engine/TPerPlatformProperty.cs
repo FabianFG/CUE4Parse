@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Engine;
@@ -12,6 +14,7 @@ public abstract class TPerPlatformProperty : IUStruct
     {
         public readonly bool bCooked;
         public readonly bool Default;
+        public readonly Dictionary<FName, bool> PerPlatform;
         public override object Value => Default;
 
         public FPerPlatformBool() { }
@@ -20,6 +23,10 @@ public abstract class TPerPlatformProperty : IUStruct
         {
             bCooked = Ar.ReadBoolean();
             Default = Ar.ReadBoolean();
+            if (Ar.IsFilterEditorOnly && !bCooked)
+            {
+                PerPlatform = Ar.ReadMap(Ar.ReadFName, Ar.Read<bool>);
+            }
         }
     }
 
@@ -27,6 +34,7 @@ public abstract class TPerPlatformProperty : IUStruct
     {
         public readonly bool bCooked;
         public readonly float Default;
+        public readonly Dictionary<FName, float> PerPlatform;
         public override object Value => Default;
 
         public FPerPlatformFloat() { }
@@ -36,6 +44,10 @@ public abstract class TPerPlatformProperty : IUStruct
         {
             bCooked = Ar.ReadBoolean();
             Default = Ar.Read<float>();
+            if (Ar.IsFilterEditorOnly && !bCooked)
+            {
+                PerPlatform = Ar.ReadMap(Ar.ReadFName, Ar.Read<float>);
+            }
         }
     }
 
@@ -43,6 +55,7 @@ public abstract class TPerPlatformProperty : IUStruct
     {
         public readonly bool bCooked;
         public readonly int Default;
+        public readonly Dictionary<FName, int> PerPlatform;
         public override object Value => Default;
 
         public FPerPlatformInt() { }
@@ -51,6 +64,10 @@ public abstract class TPerPlatformProperty : IUStruct
         {
             bCooked = Ar.ReadBoolean();
             Default = Ar.Read<int>();
+            if (Ar.IsFilterEditorOnly && !bCooked)
+            {
+                PerPlatform = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
+            }
         }
     }
 
