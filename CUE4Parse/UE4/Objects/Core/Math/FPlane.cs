@@ -69,14 +69,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FPlane(FArchive Ar)
         {
             Vector = new FVector(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                W = (float) Ar.Read<double>();
-            }
-            else
-            {
-                W = Ar.Read<float>();
-            }
+            W = Ar.ReadFReal();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

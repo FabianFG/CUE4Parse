@@ -19,6 +19,7 @@ using CUE4Parse.GameTypes.TQ2.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.Harmonix;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Objects.Properties;
@@ -142,6 +143,7 @@ public class FScriptStruct
             "Rotator3f" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>()),
             "Rotator3d" => type == ReadType.ZERO ? new FRotator() : new FRotator(Ar.Read<double>(), Ar.Read<double>(), Ar.Read<double>()),
             "RawAnimSequenceTrack" => new FRawAnimSequenceTrack(Ar),
+            "Spline" => type == ReadType.ZERO ? new FSpline() : new FSpline(Ar),
             "Sphere" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar),
             "Sphere3f" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<float>>(), Ar.Read<float>()),
             "Sphere3d" => type == ReadType.ZERO ? new FSphere() : new FSphere(Ar.Read<TIntVector3<double>>(), Ar.Read<double>()),
@@ -171,7 +173,7 @@ public class FScriptStruct
             "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
             "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
             "Matrix" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar),
-            "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar, false),
+            "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : Ar.Read<FMatrix>(),
             "InstancedStruct" => new FInstancedStruct(Ar),
             "InstancedStructContainer" => new FInstancedStructContainer(Ar),
             "InstancedPropertyBag" => new FInstancedPropertyBag(Ar),

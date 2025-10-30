@@ -35,19 +35,12 @@ public struct FVector4 : IUStruct, IEquatable<FVector4>
     {
     }
 
-    public FVector4(FArchive Ar) {
-        if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) {
-            X = (float)Ar.Read<double>();
-            Y = (float)Ar.Read<double>();
-            Z = (float)Ar.Read<double>();
-            W = (float)Ar.Read<double>();
-        }
-        else {
-            X = Ar.Read<float>();
-            Y = Ar.Read<float>();
-            Z = Ar.Read<float>();
-            W = Ar.Read<float>();
-        }
+    public FVector4(FArchive Ar)
+    {
+        X = Ar.ReadFReal();
+        Y = Ar.ReadFReal();
+        Z = Ar.ReadFReal();
+        W = Ar.ReadFReal();
     }
 
     /// <summary>

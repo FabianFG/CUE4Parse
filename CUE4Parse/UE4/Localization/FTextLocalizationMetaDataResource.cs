@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Localization
             else
             {
                 Ar.Position = 0;
-                Log.Warning($"LocMeta '{Ar.Name}' failed the magic number check!");
+                Log.Warning("LocMeta '{name}' failed the magic number check!", Ar.Name);
             }
 
             // Is this LocRes file too new to load?
@@ -40,7 +40,6 @@ namespace CUE4Parse.UE4.Localization
             NativeLocRes = Ar.ReadFString();
 
             CompiledCultures = versionNumber >= ELocMetaVersion.AddedCompiledCultures ? Ar.ReadArray(Ar.ReadFString) : null;
-
             bIsUGC = versionNumber >= ELocMetaVersion.AddedIsUGC && Ar.ReadBoolean();
         }
     }
