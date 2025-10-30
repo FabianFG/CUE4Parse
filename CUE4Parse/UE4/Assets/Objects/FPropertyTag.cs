@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
@@ -100,6 +101,8 @@ public class FPropertyTag
     /// </summary>
     public bool IsIndexed => PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) || ArrayIndex > 0;
 
+    public FPropertyTag() { }
+
     public FPropertyTag(FAssetArchive Ar, PropertyInfo info, ReadType type)
     {
         Name = new FName(info.Name);
@@ -142,7 +145,7 @@ public class FPropertyTag
             }
             while (remaining > 0);
 
-            var typeName = nodes.ToArray().AsSpan();
+            var typeName = CollectionsMarshal.AsSpan(nodes);
             PropertyType = typeName.GetName();
             TagData = new FPropertyTagData(typeName, Name.Text);
 

@@ -9,6 +9,7 @@ using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.OtherGames.Objects;
+using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
@@ -320,6 +321,11 @@ public class FScriptStruct
 
             "Linecode" when Ar.Game is EGame.GAME_Psychonauts2 => new FLinecode(Ar),
             "P2Attribute" when Ar.Game is EGame.GAME_Psychonauts2 => new FP2Attribute(Ar),
+
+            "AIBehaviorTreeReference" when Ar.Game is EGame.GAME_OuterWorlds2 => new FAIBehaviorTreeReference(Ar),
+            "BlueprintFunctionLibraryConditional" when Ar.Game is EGame.GAME_OuterWorlds2 => new FBlueprintFunctionLibraryConditional(Ar, true),
+            "BlueprintDefinedScript" when Ar.Game is EGame.GAME_OuterWorlds2 => new FBlueprintFunctionLibraryConditional(Ar, false),
+            "AIGroupBehaviorClassSelector" when Ar.Game is EGame.GAME_OuterWorlds2 => new FSoftObjectPath(Ar),
 
             _ => Ar.Game switch
             {
