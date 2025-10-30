@@ -30,6 +30,7 @@ public class FModProvider
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
     private Dictionary<FModGuid, FModReader> _mergedReaders = [];
     private static byte[]? _encryptionKey;
+    private string? _BankOutputDirectory;
 
     public FModProvider(IFileProvider provider, string gameDirectory)
     {
@@ -92,9 +93,17 @@ public class FModProvider
         if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(gameDirectory) is {} parentInfo)
             gameDirectory = parentInfo.FullName;
 
-        string? fmodDir = Directory.GetDirectories(gameDirectory, "FMOD", SearchOption.AllDirectories)
-            .SelectMany(fmodFolder => Directory.GetDirectories(fmodFolder, "Desktop", SearchOption.AllDirectories))
-            .FirstOrDefault(Directory.Exists);
+        string? fmodDir = null!;
+        if (!string.IsNullOrEmpty(_BankOutputDirectory))
+        {
+            var potentialPath = Path.Combine(gameDirectory, _BankOutputDirectory);
+            if (Directory.Exists(potentialPath))
+                fmodDir = potentialPath;
+        }
+
+        fmodDir ??= Directory.EnumerateDirectories(gameDirectory, "FMOD", SearchOption.AllDirectories)
+                .SelectMany(fmodFolder => Directory.GetDirectories(fmodFolder, "Desktop", SearchOption.AllDirectories))
+                .FirstOrDefault(Directory.Exists);
 
         if (fmodDir is null)
         {
@@ -157,6 +166,14 @@ public class FModProvider
             using (engineAr) engineConfig.Read(new StreamReader(engineAr));
         }
 
+        var values = new List<string>();
+        engineConfig.EvaluatePropertyValues("/Script/FMODStudio.FMODSettings", "BankOutputDirectory", values);
+        var path = values.FirstOrDefault()?.SubstringAfter("Path=\"").SubstringBefore("\")");
+        if (!string.IsNullOrEmpty(path))
+        {
+            _BankOutputDirectory = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        }
+
         var fmodSection = engineConfig.Sections
             .FirstOrDefault(s => s.Name == "/Script/FMODStudio.FMODSettings");
 
@@ -167,9 +184,7 @@ public class FModProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _encryptionKey = System.Text.Encoding.UTF8.GetBytes(token.Value);
-#if DEBUG
-            Log.Debug($"FMod encryption key found: {token.Value}");
-#endif
+            Log.Information($"FMod encryption key found: {token.Value}");
         }
         else
         {
