@@ -246,7 +246,7 @@ public class FPropertyTag
             Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
         }
 
-        return $"var {variableType} {Name.Text} = {variableValue};";
+        return $"{variableType} {Name.Text} = {variableValue};";
     }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";

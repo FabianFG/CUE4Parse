@@ -23,7 +23,7 @@ public static class BlueprintDecompilerUtils
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
         var prefix = GetPrefix(prefixClassStruct);
-        return $"{prefixClassStruct?.Name}"; //{prefix}
+        return $"{{prefix}} {prefixClassStruct?.Name}";
     }
 
     private static string GetPrefix(UStruct? prefixStruct)
