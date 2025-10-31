@@ -20,10 +20,11 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
+    public static UFunction Function { get; set; }
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
         var prefix = GetPrefix(prefixClassStruct);
-        return $"{{prefix}} {prefixClassStruct?.Name}";
+        return $"{prefix}{prefixClassStruct?.Name}";
     }
 
     private static string GetPrefix(UStruct? prefixStruct)
@@ -1106,16 +1107,31 @@ public static class BlueprintDecompilerUtils
             case EX_JumpIfNot jumpIfNot:
             {
                 var booleanExpression = GetLineExpression(jumpIfNot.BooleanExpression);
-
                 var customStringBuilder = new CustomStringBuilder();
                 customStringBuilder.AppendLine($"if (!{booleanExpression})");
                 customStringBuilder.IncreaseIndentation();
-                customStringBuilder.Append($"goto Label_{jumpIfNot.CodeOffset}");
+                var targetIndex = (int)jumpIfNot.CodeOffset;
+                targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                {
+                    customStringBuilder.Append($"return");
+                }
+                else
+                {
+                    customStringBuilder.Append($"goto Label_{jumpIfNot.CodeOffset}");
+                }
 
                 return customStringBuilder.ToString();
             }
             case EX_Jump jump:
             {
+                var targetIndex = (int)jump.CodeOffset;
+                targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                {
+                    return "return";
+                }
+
                 return $"goto Label_{jump.CodeOffset}";
             }
             case EX_SkipOffsetConst skipOffsetConst:
