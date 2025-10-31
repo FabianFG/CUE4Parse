@@ -61,7 +61,7 @@ public class ULandscapeComponent: UPrimitiveComponent
 
         if (Ar.IsFilterEditorOnly)
         {
-            Ar.Read<int>(); // SelectedType
+            Ar.Position += sizeof(int); // SelectedType
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.LANDSCAPE_PLATFORMDATA_COOKING)
