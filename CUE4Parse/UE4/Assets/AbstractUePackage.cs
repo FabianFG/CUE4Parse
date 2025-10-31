@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ public abstract class AbstractUePackage : UObject, IPackage
     public abstract FNameEntrySerialized[] NameMap { get; }
     public abstract int ImportMapLength { get; }
     public abstract int ExportMapLength { get; }
+
+    public List<byte[]> EditorThumbnails { get; set; }
 
     public Lazy<UObject>[] ExportsLazy { get; protected init; }
     public bool IsFullyLoaded { get; protected init; }
