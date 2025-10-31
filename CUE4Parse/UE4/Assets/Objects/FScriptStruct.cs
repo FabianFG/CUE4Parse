@@ -49,6 +49,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using FRawUIntStruct = CUE4Parse.UE4.Objects.StructUtils.FRawStruct<uint>;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -189,6 +190,9 @@ public class FScriptStruct
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
             "EdGraphPinType" => new FEdGraphPinType(Ar),
+
+            // Custom struct types for simple structs in tagged TMap
+            "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
