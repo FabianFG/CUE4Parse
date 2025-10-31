@@ -43,7 +43,6 @@ public class ULandscapeComponent: UPrimitiveComponent
         WeightmapLayerAllocations = GetOrDefault(nameof(WeightmapLayerAllocations), Array.Empty<FWeightmapLayerAllocationInfo>());
         CachedLocalBox = GetOrDefault<FBox>(nameof(CachedLocalBox));
         MapBuildDataId = GetOrDefault<FGuid>(nameof(MapBuildDataId));
-        // throw new NotImplementedException();
         WeightmapTextures = new Lazy<UTexture2D[]>(() => GetOrDefault<UTexture2D[]>("WeightmapTextures", []));
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
@@ -58,6 +57,11 @@ public class ULandscapeComponent: UPrimitiveComponent
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA)
         {
             GrassData = new FLandscapeComponentGrassData(Ar);
+        }
+
+        if (Ar.IsFilterEditorOnly)
+        {
+            Ar.Read<int>(); // SelectedType
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.LANDSCAPE_PLATFORMDATA_COOKING)

@@ -37,6 +37,9 @@ namespace CUE4Parse.MappingsProvider.Usmap
         ClassProperty,
         MulticastInlineDelegateProperty,
         SoftClassProperty,
+        VerseStringProperty,
+        VerseDynamicProperty,
+        VerseFunctionProperty,
 
         CustomProperty_FD = 0xFD,
         CustomProperty_FE = 0xFE,
