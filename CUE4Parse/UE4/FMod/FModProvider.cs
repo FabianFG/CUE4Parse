@@ -49,11 +49,10 @@ public class FModProvider
         foreach (var group in banks)
         {
             FModReader? mergedBank = null;
-            var guids = new HashSet<FModGuid>();
             foreach (var file in group)
             {
                 if (!provider.TrySaveAsset(file, out var data)) continue;
-                if (!TryLoadBank(new MemoryStream(data), out var fmodBank))
+                if (!TryLoadBank(new MemoryStream(data), file.Name, out var fmodBank))
                 {
                     Log.Error("Failed to serialize FMOD Bank file {bank}", file);
                     continue;
@@ -67,22 +66,18 @@ public class FModProvider
                 {
                     mergedBank.Merge(fmodBank);
                 }
-
-                guids.Add(fmodBank.GetBankGuid());
             }
 
             if (mergedBank == null) continue;
 
-            foreach (var guid in guids)
+            var guid = mergedBank.GetBankGuid();
+            if (_mergedReaders.TryGetValue(guid, out var existing))
             {
-                if (_mergedReaders.TryGetValue(guid, out var existing))
-                {
-                    existing.Merge(mergedBank);
-                }
-                else
-                {
-                    _mergedReaders[guid] = mergedBank;
-                }
+                existing.Merge(mergedBank);
+            }
+            else
+            {
+                _mergedReaders[guid] = mergedBank;
             }
         }
     }
@@ -117,10 +112,9 @@ public class FModProvider
         foreach (var group in banks)
         {
             FModReader? mergedBank = null;
-            var guids = new HashSet<FModGuid>();
             foreach (var file in group)
             {
-                if (!TryLoadBank(File.OpenRead(file), out var fmodBank))
+                if (!TryLoadBank(File.OpenRead(file), Path.GetFileNameWithoutExtension(file), out var fmodBank))
                 {
                     Log.Error("Failed to serialize FMOD Bank file {bank}", file);
                     continue;
@@ -134,22 +128,18 @@ public class FModProvider
                 {
                     mergedBank.Merge(fmodBank);
                 }
-
-                guids.Add(fmodBank.GetBankGuid());
             }
 
             if (mergedBank == null) continue;
-            
-            foreach (var guid in guids)
+
+            var guid = mergedBank.GetBankGuid();
+            if (_mergedReaders.TryGetValue(guid, out var existing))
             {
-                if (_mergedReaders.TryGetValue(guid, out var existing))
-                {
-                    existing.Merge(mergedBank);
-                }
-                else
-                {
-                    _mergedReaders[guid] = mergedBank;
-                }
+                existing.Merge(mergedBank);
+            }
+            else
+            {
+                _mergedReaders[guid] = mergedBank;
             }
         }
     }
@@ -194,13 +184,13 @@ public class FModProvider
         }
     }
 
-    public static bool TryLoadBank(Stream stream, [NotNullWhen(true)]out FModReader? fmodReader)
+    public static bool TryLoadBank(Stream stream, string bankName, [NotNullWhen(true)]out FModReader? fmodReader)
     {
         fmodReader = null;
         try
         {
             using var reader = new BinaryReader(stream);
-            fmodReader = new FModReader(reader, _encryptionKey);
+            fmodReader = new FModReader(reader, bankName, _encryptionKey);
             return true;
         }
         catch (Exception e)
@@ -245,23 +235,7 @@ public class FModProvider
             return [];
         }
 
-        var eventName = audioEvent.Name;
-        var extracted = new List<FModExtractedSound>(samples.Count);
-        for (var i = 0; i < samples.Count; i++)
-        {
-            var sample = samples[i];
-            if (!sample.RebuildAsStandardFileFormat(out var dataBytes, out var fileExtension))
-                continue;
-
-            extracted.Add(new FModExtractedSound
-            {
-                Name = sample.Name ?? $"{eventName}_{i}",
-                Extension = fileExtension,
-                Data = dataBytes
-            });
-        }
-
-        return extracted;
+        return ExtractAudioSamples(samples, audioEvent.Name);
     }
 
     public List<FModExtractedSound> ExtractBankSounds(UFMODBank audioBank)
@@ -275,9 +249,17 @@ public class FModProvider
             return [];
         }
 
-        var bankName = audioBank.Name;
         var samples = bank.ExtractTracks();
-        var extracted = new List<FModExtractedSound>();
+
+        return ExtractAudioSamples(samples, audioBank.Name);
+    }
+
+    public List<FModExtractedSound> ExtractBankSounds(FModReader fmodReader)
+       => ExtractAudioSamples(fmodReader.ExtractTracks(), fmodReader.BankName);
+    
+    private List<FModExtractedSound> ExtractAudioSamples(List<FmodSample> samples, string fallbackSampleName)
+    {
+        var extracted = new List<FModExtractedSound>(samples.Count);
         for (var i = 0; i < samples.Count; i++)
         {
             var sample = samples[i];
@@ -286,7 +268,7 @@ public class FModProvider
 
             extracted.Add(new FModExtractedSound
             {
-                Name = sample.Name ?? $"{bankName}_{i}",
+                Name = sample.Name ?? $"{fallbackSampleName}_{i}",
                 Extension = fileExtension,
                 Data = dataBytes
             });
