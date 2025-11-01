@@ -4,6 +4,65 @@ using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
 
+/// <summary>
+/// Known encryption keys:
+/// 
+/// - Godbreakers: 06U8A&w5#PnsW&GA
+/// - The Darkest Files: JNM-zHdO49i_s)p&rG8`a:{)GMI6O*U:Jq\"1E8k0£%O*AyxXFL
+/// - PAPERHEAD EP0: 666Paperhead999
+/// - Delverium Demo: D3lv3rium FTW!
+/// - Mr. Nomad Demo: vanillaicecream
+/// 
+/// Credits to https://github.com/vgmstream/vgmstream/blob/master/src/meta/fsb_keys.h and other sources:
+/// - Double Fine Productions: DFm3t4lFTW
+/// - DJ Hero 2 (X360): nos71RiT
+/// - N++ (PC?): H$#FJa%7gRZZOlxLiN50&g5Q
+/// - Slightly Mad Studios (Project CARS, World of Speed): sTOoeJXI2LjK8jBMOk8h5IDRNZl3jq3I
+/// - Ghost in the Shell: First Assault (PC): %lAn2{Pi*Lhw3T}@7*!kV=?qS$@iNlJ
+/// - RevHeadz Engine Sounds (Mobile): 1^7%82#&5$~/8sz
+/// - Dark Souls 3 (PC): FDPrVuT4fAFvdHJYAgyMzRF4EcBAnKg
+/// - Need for Speed Shift 2 Unleashed (PC): p&oACY^c4LK5C2v^x5nIO6kg5vNH$tlj
+/// - Mortal Kombat X/XL (PC): 996164B5FC0F402983F61F220BB51DC6
+/// - Mirror War: Reincarnation of Holiness (PC): logicsounddesignmwsdev
+/// - Xian Xia Chuan (PC): gat@tcqs2010
+/// - Critter Crunch / Superbrothers: Sword & Sworcery (PC): j1$Mk0Libg3#apEr42mo
+/// - Cyphers: @kdj43nKDN^k*kj3ndf02hd95nsl(NJG
+/// - Xuan Dou Zhi Wang / King of Combat: Xiayuwu69252.Sonicli81223#$*@*0
+/// - Ji Feng Zhi Ren / Kritika Online: kri_tika_5050_
+/// - Invisible Inc. (PC?): mint78run52
+/// - Guitar Hero 3: 5atu6w4zaw
+/// - Supreme Commander 2 (PC): B2A7BB00
+/// - Cookie Run: Ovenbreak: ghfxhslrghfxhslr
+/// - Monster Jam (PS2): truck/impact/carbody
+/// - Sekiro: Shadows Die Twice (PC): G0KTrWjS9syqF7vVD6RaVXlFD91gMgkC
+/// - SCP: Unity (PC): BasicEncryptionKey
+/// - Worms Rumble Beta (PC): FXnTffGJ9LS855Gc
+/// - Bubble Fighter (PC): qjvkeoqkrdhkdckd
+/// - Fall Guys (PC) ~2021-11: p@4_ih*srN:UJk&8
+/// - Fall Guys (PC) ~2022-07: ,&.XZ8]fLu%caPF+
+/// - Fall Guys (PC) ~2023-05: ^*4[hE>K]x90Vj
+/// - Achilles: Legends Untold (PC): Achilles_0_15_DpG
+/// - Cult of the Lamb Demo (PC): 4FB8CC894515617939F4E1B7D50972D27213B8E6
+/// - Signalis (PC): X3EK%Bbga-%Y9HZZ%gkc*C512*$$DhRxWTGgjUG@=rUD
+/// - Ash Echoes beta (Android): 281ad163160cfc16f9a22c6755a64fad
+/// - Afterimage demo (PC): Aurogon666
+/// - Blanc (PC/Switch): IfYouLikeThosesSoundsWhyNotRenumerateTheir2Authors?
+/// - Nishuihan Mobile (Android): L36nshM520
+/// - Forza Motorsport (PC): Forza2!
+/// - JDM: Japanese Drift Master (PC): cbfjZTlUPaZI
+/// - Ys Online: The Call of Solum (PC): tkdnsem000
+/// - Test Drive: Ferrari Racing Legends (PC): 4DxgpNV3pQLPD6GT7g9Gf6eWU7SXutGQ
+/// - Hello Kitty: Island Adventure (iOS): AjaxIsTheGoodestBoy
+/// - Rivals of Aether 2 (PC): resoforce
+/// - Final Fantasy XV: War for Eos (Android): 3cfe772db5b55b806541d3faf894020e
+/// - Forza Motorsport 2023 (PC): aj#$kLucf2lh}eqh
+/// - AirRider CrazyRacing (PC): dpdjeoqkr
+/// - Wanderstop (PC): weareAbsolutelyUnsure2018
+/// - UNBEATABLE Demo (PC): .xW3uXQ8q79yunvMjL6nahLXts9esEXX2VgetuPCxdLrAjUUbZAmB7R*A6KjW24NU_8ifMZ8TC4Qk@_oEsjsK2QLpAaG-Fy!wYKP
+/// - Rennsport (PC): ,H9}:p?`bRlQG5_yJ""/L,X_{:=Gs1
+/// - Gunner, HEAT, PC! (PC): K50j8B2H4pVUfzt7yxfTprg9wdr9zIH6
+/// - Duet Night Abyss (PC) beta: Panshen666
+/// </summary>
 public class Fsb5Decryption
 {
     private static readonly byte[] _reverseBitsTable =

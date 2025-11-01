@@ -10,9 +10,9 @@ public class SoundDataNode
 {
     public readonly FmodSoundBank? SoundBank;
 
-    public SoundDataNode(BinaryReader Ar, long nodeStart, int size, int soundDataIndex)
+    public SoundDataNode(BinaryReader Ar, long nodeStart, uint size, int soundDataIndex)
     {
-        byte[] sndChunk = Ar.ReadBytes(size);
+        byte[] sndChunk = Ar.ReadBytes((int)size);
 
         uint fsbOffset = FModReader.SoundDataInfo!.Header[soundDataIndex].FSBOffset;
 

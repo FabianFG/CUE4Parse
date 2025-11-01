@@ -15,5 +15,6 @@ public class PlaylistNode
         PlayMode = (EPlaylistPlayMode)Ar.ReadInt32();
         SelectionMode = (EPlaylistSelectionMode)Ar.ReadInt32();
         Entries = FModReader.ReadElemListImp<FPlaylistEntry>(Ar);
+        if (FModReader.Version >= 0x65 && FModReader.Version <= 0x67) Ar.ReadBoolean();
     }
 }
