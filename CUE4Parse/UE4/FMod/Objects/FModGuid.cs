@@ -2,9 +2,11 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Objects;
 
+[JsonConverter(typeof(FModGuidConverter))]
 public readonly struct FModGuid
 {
     public readonly uint Data1;

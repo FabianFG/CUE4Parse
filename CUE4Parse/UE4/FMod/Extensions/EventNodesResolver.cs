@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.FMod.Nodes;
 using CUE4Parse.UE4.FMod.Nodes.Instruments;
+using CUE4Parse.UE4.FMod.Nodes.Transitions;
 using CUE4Parse.UE4.FMod.Objects;
 using Fmod5Sharp.FmodTypes;
 using Serilog;
@@ -16,7 +17,8 @@ public static class EventNodesResolver
         foreach (var (eventGuid, evNode) in reader.EventNodes)
         {
             var samples = ResolveEventNodesWithAudio(reader, evNode);
-            if (samples.Count > 0) result[eventGuid] = samples;
+            if (samples.Count > 0)
+                result[eventGuid] = samples;
         }
 
         return result;
@@ -30,10 +32,14 @@ public static class EventNodesResolver
 
         if (reader.TimelineNodes.TryGetValue(evNode.TimelineGuid, out var tmlNode))
         {
-            foreach (var box in tmlNode.TriggerBoxes) stack.Push(box.Guid);
-            foreach (var box in tmlNode.TimeLockedTriggerBoxes) stack.Push(box.Guid);
-            foreach (var namedMarker in tmlNode.TimelineNamedMarkers) stack.Push(namedMarker.BaseGuid);
-            foreach (var tempoMarker in tmlNode.TimelineTempoMarkers) stack.Push(tempoMarker.BaseGuid);
+            foreach (var box in tmlNode.TriggerBoxes)
+                stack.Push(box.Guid);
+            foreach (var box in tmlNode.TimeLockedTriggerBoxes)
+                stack.Push(box.Guid);
+            foreach (var namedMarker in tmlNode.TimelineNamedMarkers)
+                stack.Push(namedMarker.BaseGuid);
+            foreach (var tempoMarker in tmlNode.TimelineTempoMarkers)
+                stack.Push(tempoMarker.BaseGuid);
         }
         else
         {
@@ -45,28 +51,39 @@ public static class EventNodesResolver
             stack.Push(paramGuid);
             if (reader.ParameterLayoutNodes.TryGetValue(paramGuid, out var paramLayoutNode))
             {
-                foreach (var instGuid in paramLayoutNode.Instruments) stack.Push(instGuid);
-                foreach (var controllerGuid in paramLayoutNode.Controllers) stack.Push(controllerGuid);
-                foreach (var triggerBoxGuid in paramLayoutNode.TriggerBoxes) stack.Push(triggerBoxGuid);
+                foreach (var instGuid in paramLayoutNode.Instruments)
+                    stack.Push(instGuid);
+                foreach (var triggerBoxGuid in paramLayoutNode.TriggerBoxes)
+                    stack.Push(triggerBoxGuid.InstrumentGuid);
             }
         }
 
-        foreach (var inst in evNode.EventTriggeredInstruments) stack.Push(inst);
+        foreach (var inst in evNode.EventTriggeredInstruments)
+            stack.Push(inst);
+
+        var destinationLookup = reader.TransitionNodes.Values
+            .OfType<TransitionRegionNode>()
+            .ToLookup(n => n.DestinationGuid);
 
         while (stack.Count > 0)
         {
             var guid = stack.Pop();
-            if (!visited.Add(guid)) continue;
+            if (!visited.Add(guid))
+                continue;
 
             if (reader.TimelineNodes.TryGetValue(guid, out var tmlNode2))
             {
-                foreach (var box in tmlNode2.TriggerBoxes) stack.Push(box.Guid);
-                foreach (var box in tmlNode2.TimeLockedTriggerBoxes) stack.Push(box.Guid);
-                foreach (var namedMarker in tmlNode2.TimelineNamedMarkers) stack.Push(namedMarker.BaseGuid);
-                foreach (var tempoMarker in tmlNode2.TimelineTempoMarkers) stack.Push(tempoMarker.BaseGuid);
+                foreach (var box in tmlNode2.TriggerBoxes)
+                    stack.Push(box.Guid);
+                foreach (var box in tmlNode2.TimeLockedTriggerBoxes)
+                    stack.Push(box.Guid);
+                foreach (var namedMarker in tmlNode2.TimelineNamedMarkers)
+                    stack.Push(namedMarker.BaseGuid);
+                foreach (var tempoMarker in tmlNode2.TimelineTempoMarkers)
+                    stack.Push(tempoMarker.BaseGuid);
             }
 
-            if (reader.TransitionNodes.TryGetValue(guid, out var transTimeline))
+            foreach (var transTimeline in destinationLookup[guid])
             {
                 if (transTimeline.TransitionBody != null)
                 {
@@ -76,8 +93,11 @@ public static class EventNodesResolver
                         stack.Push(fade.ControllerGuid);
                     }
 
-                    foreach (var box in transTimeline.TransitionBody.TriggeredTriggerBoxes) stack.Push(box.Guid);
-                    foreach (var box in transTimeline.TransitionBody.TimeLockedTriggerBoxes) stack.Push(box.Guid);
+                    foreach (var box in transTimeline.TransitionBody.TriggeredTriggerBoxes)
+                        stack.Push(box.Guid);
+
+                    foreach (var box in transTimeline.TransitionBody.TimeLockedTriggerBoxes)
+                        stack.Push(box.Guid);
                 }
             }
 
@@ -86,16 +106,6 @@ public static class EventNodesResolver
                 if (baseInstrNode.InstrumentBody != null)
                 {
                     stack.Push(baseInstrNode.InstrumentBody.TimelineGuid);
-                }
-
-                if (baseInstrNode is WaveformInstrumentNode wavInstr)
-                {
-                    if (reader.WavEntries.TryGetValue(wavInstr.WaveformResourceGuid, out var entry) &&
-                        reader.SoundBankData.Count > 0 &&
-                        entry.SoundBankIndex < reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
-                    {
-                        result.Add(reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex]);
-                    }
                 }
 
                 if (baseInstrNode is MultiInstrumentNode multiInst && multiInst.PlaylistBody != null)
@@ -107,6 +117,17 @@ public static class EventNodesResolver
                 {
                     foreach (var plEntry in scatterInst.PlaylistBody.Entries)
                         stack.Push(plEntry.Guid);
+                }
+
+                if (baseInstrNode is WaveformInstrumentNode wavInstr)
+                {
+                    if (reader.WavEntries.TryGetValue(wavInstr.WaveformResourceGuid, out var entry) &&
+                        reader.SoundBankData.Count > 0 &&
+                        entry.SubsoundIndex < reader.SoundBankData.Count &&
+                        entry.SoundBankIndex < reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
+                    {
+                        result.Add(reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex]);
+                    }
                 }
             }
         }

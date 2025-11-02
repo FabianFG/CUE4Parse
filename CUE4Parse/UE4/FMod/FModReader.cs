@@ -13,11 +13,14 @@ using System.IO;
 using System;
 using System.Linq;
 using Serilog;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod;
 
+[JsonConverter(typeof(FModConverter))]
 public class FModReader
 {
+    public readonly string BankName;
     public static int Version => FormatInfo.FileVersion;
     public static FFormatInfo FormatInfo;
     public static SoundDataInfo? SoundDataInfo;
@@ -47,8 +50,9 @@ public class FModReader
     public readonly Dictionary<FModGuid, VCANode> VCANodes = [];
     public readonly List<FModGuid> ControllerOwnerNodes = [];
 
-    public FModReader(BinaryReader Ar, byte[]? encryptionKey = null)
+    public FModReader(BinaryReader Ar, string bankName, byte[]? encryptionKey = null)
     {
+        BankName = bankName;
         if (encryptionKey != null) EncryptionKey = encryptionKey;
         ParseHeader(Ar);
         ParseNodes(Ar, Ar.BaseStream.Position, Ar.BaseStream.Length);
@@ -62,7 +66,7 @@ public class FModReader
         string riff = Encoding.ASCII.GetString(Ar.ReadBytes(4));
         if (riff != "RIFF") throw new Exception("Not a valid RIFF file");
 
-        int riffSize = Ar.ReadInt32();
+        uint riffSize = Ar.ReadUInt32();
         string fileType = Encoding.ASCII.GetString(Ar.ReadBytes(4));
         if (fileType != "FEV ") throw new Exception("Not a valid FMOD bank");
 
@@ -98,7 +102,7 @@ public class FModReader
             }
 
             var nodeId = (ENodeId)rawNodeValue;
-            int nodeSize = Ar.ReadInt32();
+            uint nodeSize = Ar.ReadUInt32();
             long nextNode = nodeStart + 8 + nodeSize;
 
             if (nodeSize == 0)
@@ -236,6 +240,7 @@ public class FModReader
                     }
                     break;
 
+                case ENodeId.CHUNKID_VCA:
                 case ENodeId.CHUNKID_VCABODY: // VCA Node
                     {
                         var node = new VCANode(Ar);
@@ -300,7 +305,9 @@ public class FModReader
 
             if (Ar.BaseStream.Position != nextNode)
             {
-                Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
+                if (nodeId is not ENodeId.CHUNKID_LIST)
+                    Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
+
                 Ar.BaseStream.Position = nextNode;
             }
         }
@@ -572,11 +579,8 @@ public class FModReader
             case ENodeId.CHUNKID_TRANSITIONREGIONBODY: // Transition Region Node
                 {
                     var node = new TransitionRegionNode(Ar);
-                    if (!TransitionNodes.ContainsKey(node.DestinationGuid))
-                    {
-                        TransitionNodes[node.DestinationGuid] = node;
-                    }
-                    parentStack.Push(new FParentContext(nodeId, node.DestinationGuid)); // Points to transition timeline node
+                    TransitionNodes[node.BaseGuid] = node;
+                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to transition timeline node
                 }
                 break;
 
@@ -595,14 +599,10 @@ public class FModReader
     }
 
     public List<FmodSample> ExtractTracks()
-    {
-        return SoundBankData.SelectMany(bank => bank.Samples).ToList();
-    }
+        => [.. SoundBankData.SelectMany(bank => bank.Samples)];
 
     public FModGuid GetBankGuid()
-    {
-        return BankInfo?.BaseGuid ?? new FModGuid();
-    }
+        => BankInfo?.BaseGuid ?? new FModGuid();
 
     public void Merge(FModReader src)
     {

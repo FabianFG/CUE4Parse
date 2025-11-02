@@ -89,13 +89,14 @@ public class UStaticMesh : UObject
                         break;
                     case EGame.GAME_Farlight84:
                     {
+                        Ar.SkipBulkArrayData();
+                        Ar.SkipBulkArrayData();
                         var count = Ar.Read<int>();
                         for (var i = 0; i < count; i++)
                         {
                             Ar.SkipBulkArrayData();
                             Ar.SkipBulkArrayData();
                         }
-
                         break;
                     }
                     default:

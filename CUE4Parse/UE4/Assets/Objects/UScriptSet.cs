@@ -45,6 +45,7 @@ public class UScriptSet
                 EGame.GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
+                EGame.GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
                 _ => tagData.InnerTypeData
             };
