@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
@@ -39,6 +40,7 @@ public class FAssetRegistryState
             default:
             {
                 var reader = new FAssetRegistryReader(Ar, header);
+                reader.IsFilterEditorOnly = header.bFilterEditorOnlyData;
                 Load(reader);
                 break;
             }
@@ -75,10 +77,19 @@ public class FAssetRegistryState
             {
                 PreallocatedDependsNodeDataBuffers[i] = new FDependsNode(i);
             }
-            if (localNumDependsNodes > 0)
+
+            try
             {
-                LoadDependencies(Ar);
+                if (localNumDependsNodes > 0)
+                {
+                    LoadDependencies(Ar);
+                }
             }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
+            }
+
             Ar.Position = dependencySectionEnd;
         }
 

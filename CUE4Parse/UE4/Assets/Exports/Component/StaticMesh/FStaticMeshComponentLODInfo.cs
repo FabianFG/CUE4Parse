@@ -83,7 +83,7 @@ public class FStaticMeshComponentLODInfo
             }
         }
 
-        if (!stripFlags.IsEditorDataStripped())
+        if (!stripFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
         {
             PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
         }

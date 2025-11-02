@@ -32,6 +32,10 @@ public class FAssetData
         }
         PackageName = Ar.ReadFName();
         AssetName = Ar.ReadFName();
+        if (Ar.Header.Version >= FAssetRegistryVersionType.RemoveAssetPathFNames && !Ar.IsFilterEditorOnly)
+        {
+            Ar.ReadFName(); // OptionalOuterPath, always "None"
+        }
 
         Ar.SerializeTagsAndBundles(this);
 

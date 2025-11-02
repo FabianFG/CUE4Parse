@@ -1,5 +1,6 @@
 using System.Collections;
 using CUE4Parse.UE4.AssetRegistry.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -14,7 +15,7 @@ public class FDependsNode
     private const int PackageFlagWidth = 3;
     private const int PackageFlagSetWidth = 5; // FPropertyCombinationPack3::StorageBitCount
     private const int ManageFlagWidth = 1;
-    private const int ManageFlagSetWidth = 1; // TPropertyCombinationSet<1>::StorageBitCount
+    private int ManageFlagSetWidth(FArchive Ar) => Ar.Game >= EGame.GAME_UE5_7 ? 3 : 1;
 
     public FAssetIdentifier? Identifier;
     public int[] PackageDependencies;
@@ -39,7 +40,7 @@ public class FDependsNode
         PackageFlags = numFlagWords != 0 ? new BitArray(Ar.ReadArray<int>(numFlagWords)) : EmptyBitArray;
         NameDependencies = Ar.ReadArray<int>();
         ManageDependencies = Ar.ReadArray<int>();
-        numFlagWords = (ManageFlagSetWidth * ManageDependencies.Length).DivideAndRoundUp(32);
+        numFlagWords = (ManageFlagSetWidth(Ar) * ManageDependencies.Length).DivideAndRoundUp(32);
         ManageFlags = numFlagWords != 0 ? new BitArray(Ar.ReadArray<int>(numFlagWords)) : EmptyBitArray;
         Referencers = Ar.ReadArray<int>();
     }
