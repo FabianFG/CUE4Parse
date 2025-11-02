@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;

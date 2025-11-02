@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Niagara.NiagaraShader;
 using CUE4Parse.UE4.Readers;
@@ -22,7 +22,7 @@ public class FNiagaraShaderScript
         {
             ShaderStageToPermutation = Ar.ReadMap(Ar.Read<int>, Ar.Read<int>);
         }
-        if (Ar.Game >= EGame.GAME_UE5_2)
+        if (Ar.Game >= EGame.GAME_UE5_2 || Ar.Game is EGame.GAME_DuetNightAbyss)
         {
             BaseCompileHash = new FNiagaraCompileHash(Ar);
         }

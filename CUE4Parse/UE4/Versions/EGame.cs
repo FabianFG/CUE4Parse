@@ -122,6 +122,8 @@ public enum EGame : uint
         GAME_GhostsofTabor = GAME_UE4_27 + 25,
         GAME_BlueProtocol = GAME_UE4_27 + 26,
         GAME_LittleNightmares3 = GAME_UE4_27 + 27,
+        GAME_Raven2 = GAME_UE4_27 + 28,
+        GAME_DuetNightAbyss = GAME_UE4_27 + 29,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -173,6 +175,7 @@ public enum EGame : uint
         GAME_Reanimal = GAME_UE5_4 + 14,
         GAME_VEIN = GAME_UE5_4 + 15,
         GAME_GrayZoneWarfare = GAME_UE5_4 + 16,
+        GAME_OuterWorlds2 = GAME_UE5_4 + 17,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,

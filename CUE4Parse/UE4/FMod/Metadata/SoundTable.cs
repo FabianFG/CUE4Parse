@@ -6,6 +6,7 @@ namespace CUE4Parse.UE4.FMod.Metadata;
 public class SoundTable
 {
     public readonly uint HeaderFlag;
+    public readonly uint SoundbankIndex;
     public readonly long[] Keys;
     public readonly FUInt24[] Indices;
     public readonly uint Flags;
@@ -13,11 +14,11 @@ public class SoundTable
     public SoundTable(BinaryReader Ar)
     {
         HeaderFlag = Ar.ReadUInt32();
-        Ar.ReadUInt32();
-
+        SoundbankIndex = Ar.ReadUInt32();
         Keys = ReadSimpleArrayImp(Ar);
         Indices = FModReader.ReadSimpleArray24(Ar);
-        Flags = Ar.ReadUInt32();
+        if (FModReader.Version >= 0x7c)
+            Flags = Ar.ReadUInt32();
     }
 
     #region Readers
