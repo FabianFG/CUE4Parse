@@ -85,9 +85,9 @@ public class FAssetRegistryState
                     LoadDependencies(Ar);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // ignored
+                Log.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
             }
 
             Ar.Position = dependencySectionEnd;
