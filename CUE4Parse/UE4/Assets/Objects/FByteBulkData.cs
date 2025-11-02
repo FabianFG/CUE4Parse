@@ -50,7 +50,7 @@ public class FByteBulkData
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
+        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
         {
             Ar.Position += Header.ElementCount;
         }

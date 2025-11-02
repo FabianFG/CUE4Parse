@@ -26,7 +26,7 @@ public class FNiagaraDataInterfaceGeneratedFunction
         InstanceName = Ar.ReadFString();
         Specifiers = Ar.ReadArray(() => (Ar.ReadFName(), Ar.ReadFName()));
 
-        if (FNiagaraCustomVersion.Get(Ar) >= FNiagaraCustomVersion.Type.AddVariadicParametersToGPUFunctionInfo)
+        if (FNiagaraCustomVersion.Get(Ar) >= FNiagaraCustomVersion.Type.AddVariadicParametersToGPUFunctionInfo || Ar.Game is EGame.GAME_DuetNightAbyss)
         {
             VariadicInputs = Ar.ReadArray(() => new FNiagaraVariableCommonReference(Ar));
             VariadicOutputs = Ar.ReadArray(() => new FNiagaraVariableCommonReference(Ar));
