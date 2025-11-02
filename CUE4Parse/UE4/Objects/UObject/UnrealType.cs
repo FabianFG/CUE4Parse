@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.UObject;
 
 [Flags]
+[JsonConverter(typeof(EnumConverter<EPropertyFlags>))]
 public enum EPropertyFlags : ulong
 {
     None = 0,

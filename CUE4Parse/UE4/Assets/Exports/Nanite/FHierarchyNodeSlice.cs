@@ -1,6 +1,8 @@
 using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteUtils;
 
@@ -28,6 +30,7 @@ public class FHierarchyNodeSlice
     {
         NodeIndex = index;
         SliceIndex = sliceIndex;
+        
         LODBounds = Ar.Read<FVector4>();
         BoxBoundsCenter = Ar.Read<FVector>();
         MinLODError = (float) Ar.Read<Half>();
@@ -35,12 +38,21 @@ public class FHierarchyNodeSlice
         BoxBoundsExtent = Ar.Read<FVector>();
         ChildStartReference = Ar.Read<uint>();
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
-        var misc2 = Ar.Read<uint>();
-        NumChildren = GetBits(misc2, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
-        NumPages = GetBits(misc2, NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
-        StartPageIndex = GetBits(misc2, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NANITE_MAX_GROUP_PARTS_BITS);
-        bEnabled = misc2 != 0u;
-        bLeaf = misc2 != 0xFFFFFFFFu;
+
+        if (Ar.Game >= EGame.GAME_UE5_7)
+        {
+            var resourcePageRangeKey = Ar.Read<uint>();
+            var groupPartSize_AssemblyPartIndex = Ar.Read<uint>();
+        }
+        else
+        {
+            var misc2 = Ar.Read<uint>();
+            NumChildren = GetBits(misc2, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
+            NumPages = GetBits(misc2, NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
+            StartPageIndex = GetBits(misc2, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NANITE_MAX_GROUP_PARTS_BITS);
+            bEnabled = misc2 != 0u;
+            bLeaf = misc2 != 0xFFFFFFFFu;
+        }
         // #if NANITE_ASSEMBLY_DATA 5.6+ but set to 0
         //         Ar << Node.Misc2[ i ].AssemblyPartIndex;
         // #endif

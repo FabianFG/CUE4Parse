@@ -281,7 +281,7 @@ public class FStaticMeshLODResources
             if (Ar.Game >= EGame.GAME_UE5_6)
                 Ar.Position += 6 * sizeof(uint); // RawDataHeader = 6x uint32
 
-            _ = Ar.ReadBulkArray<byte>(); // rayTracingGeometry
+            Ar.SkipBulkArrayData(); // rayTracingGeometry
         }
 
         // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L547

@@ -173,7 +173,7 @@ public class FScriptStruct
             "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
             "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
             "Matrix" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar),
-            "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : Ar.Read<FMatrix>(),
+            "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar, false),
             "InstancedStruct" => new FInstancedStruct(Ar),
             "InstancedStructContainer" => new FInstancedStructContainer(Ar),
             "InstancedPropertyBag" => new FInstancedPropertyBag(Ar),

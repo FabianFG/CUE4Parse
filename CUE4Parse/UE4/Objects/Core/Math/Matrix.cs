@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -67,24 +68,48 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M30 = inW.X; M31 = inW.Y; M32 = inW.Z; M33 = 1.0f;
         }
         
-        public FMatrix(FArchive Ar)
+        public FMatrix(FArchive Ar) : this(Ar, Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) { }
+
+        public FMatrix(FArchive Ar, bool readDouble)
         {
-            M00 = Ar.ReadFReal();
-            M01 = Ar.ReadFReal();
-            M02 = Ar.ReadFReal();
-            M03 = Ar.ReadFReal();
-            M10 = Ar.ReadFReal();
-            M11 = Ar.ReadFReal();
-            M12 = Ar.ReadFReal();
-            M13 = Ar.ReadFReal();
-            M20 = Ar.ReadFReal();
-            M21 = Ar.ReadFReal();
-            M22 = Ar.ReadFReal();
-            M23 = Ar.ReadFReal();
-            M30 = Ar.ReadFReal();
-            M31 = Ar.ReadFReal();
-            M32 = Ar.ReadFReal();
-            M33 = Ar.ReadFReal();
+            if (readDouble)
+            {
+                M00 = (float) Ar.Read<double>();
+                M01 = (float) Ar.Read<double>();
+                M02 = (float) Ar.Read<double>();
+                M03 = (float) Ar.Read<double>();
+                M10 = (float) Ar.Read<double>();
+                M11 = (float) Ar.Read<double>();
+                M12 = (float) Ar.Read<double>();
+                M13 = (float) Ar.Read<double>();
+                M20 = (float) Ar.Read<double>();
+                M21 = (float) Ar.Read<double>();
+                M22 = (float) Ar.Read<double>();
+                M23 = (float) Ar.Read<double>();
+                M30 = (float) Ar.Read<double>();
+                M31 = (float) Ar.Read<double>();
+                M32 = (float) Ar.Read<double>();
+                M33 = (float) Ar.Read<double>();
+            }
+            else
+            {
+                M00 = Ar.Read<float>();
+                M01 = Ar.Read<float>();
+                M02 = Ar.Read<float>();
+                M03 = Ar.Read<float>();
+                M10 = Ar.Read<float>();
+                M11 = Ar.Read<float>();
+                M12 = Ar.Read<float>();
+                M13 = Ar.Read<float>();
+                M20 = Ar.Read<float>();
+                M21 = Ar.Read<float>();
+                M22 = Ar.Read<float>();
+                M23 = Ar.Read<float>();
+                M30 = Ar.Read<float>();
+                M31 = Ar.Read<float>();
+                M32 = Ar.Read<float>();
+                M33 = Ar.Read<float>();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -23,7 +23,15 @@ public class FNaniteResources
     [JsonIgnore] public FPageStreamingState[] PageStreamingStates = [];
     [JsonIgnore] public uint[] PageDependencies = [];
     public FMatrix3x4[] AssemblyTransforms = [];
+    public uint[] AssemblyBoneAttachmentData;
+    public ulong VoxelMaterialsMask;
     public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
+    
+    /// <summary>
+    /// Dictionary of page ranges relevant to streaming requests and fixups
+    /// </summary>
+    public FPageRangeKey[] PageRangeLookup;
+    
     /// <summary>The number of root pages found outside of the bulk page.</summary>
     public int NumRootPages = 0;
     /// <summary>The precision which which vertex positions are recorded with.</summary>
@@ -44,7 +52,7 @@ public class FNaniteResources
 
     [JsonIgnore] public FNaniteStreamableData?[] LoadedPages = [];
     [JsonIgnore] public readonly FAssetArchive Archive;
-    [JsonIgnore] private byte[] RootPages = [];
+    [JsonIgnore] private byte[] RootData = [];
     private List<uint> FailedPages = [];
 
     public FNaniteResources(FAssetArchive Ar)
@@ -55,7 +63,7 @@ public class FNaniteResources
         {
             ResourceFlags = Ar.Read<NaniteConstants.NANITE_RESOURCE_FLAG>();
             StreamablePages = new FByteBulkData(Ar);
-            RootPages = Ar.ReadArray<byte>();
+            RootData = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
             // TODO: revert no normal array, as we don't use Hierarchy
             var count = Ar.Read<uint>();
@@ -69,6 +77,13 @@ public class FNaniteResources
             if (Ar.Game >= EGame.GAME_UE5_6)
             {
                 AssemblyTransforms = Ar.ReadArray<FMatrix3x4>();
+
+                if (Ar.Game >= EGame.GAME_UE5_7)
+                {
+                    AssemblyBoneAttachmentData = Ar.ReadArray<uint>();
+                    PageRangeLookup = Ar.ReadArray<FPageRangeKey>();
+                }
+                
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
             ImposterAtlas = Ar.ReadArray<ushort>();
@@ -86,6 +101,7 @@ public class FNaniteResources
                 NumInputTexCoords = Ar.Read<ushort>();
             }
             if (Ar.Game >= EGame.GAME_UE5_1) NumClusters = Ar.Read<uint>();
+            if (Ar.Game >= EGame.GAME_UE5_7) VoxelMaterialsMask = Ar.Read<ulong>();
         }
     }
 
@@ -137,7 +153,7 @@ public class FNaniteResources
         {
             if (pageIndex < NumRootPages)
             {
-                Buffer.BlockCopy(RootPages, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
+                Buffer.BlockCopy(RootData, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
             }
             else
             {
