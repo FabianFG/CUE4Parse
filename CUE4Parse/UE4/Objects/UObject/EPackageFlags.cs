@@ -1,9 +1,11 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
     /** Package flags, passed into UPackage::SetPackageFlags and related functions */
     [Flags]
+    [JsonConverter(typeof(EnumConverter<EPackageFlags>))]
     public enum EPackageFlags : uint
     {
         PKG_None						= 0x00000000,  ///< No flags

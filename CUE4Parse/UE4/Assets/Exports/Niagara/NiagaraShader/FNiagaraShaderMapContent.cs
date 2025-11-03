@@ -14,16 +14,13 @@ public class FNiagaraShaderMapContent : FShaderMapContent
     {
         base.Deserialize(Ar);
 
-        if (Ar.Game >= EGame.GAME_UE5_4)
-        {
-            ShaderMapId = new FNiagaraShaderMapId(Ar);
-        }
-        else
+        if (Ar.Game < EGame.GAME_UE5_4)
         {
             FriendlyName = Ar.ReadFString();
             DebugDescription = Ar.ReadFString();
-            ShaderMapId = new FNiagaraShaderMapId(Ar);
             // empty struct NiagaraCompilationOutput = new FNiagaraComputeShaderCompilationOutput(Ar);
         }
+
+        ShaderMapId = new FNiagaraShaderMapId(Ar);
     }
 }

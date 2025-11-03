@@ -178,7 +178,22 @@ public static class FUE5ReleaseStreamObjectVersion
 
         // Fixed the missing bounds for cloth assets that don't have them serialized
         RecalculateClothAssetSerializedBounds,
+        
+        // Composite plugin now uses its own derived scene capture components
+        CompositePluginDerivedSceneCaptures,
+        
+        // Add option to output attributes on the PCG Duplicate Cross Section node on the Data domain
+        ExtraOutputAttributesOnDataDomainPCG,
 
+        // Media Profile: Changed storage of capture cameras list from lazy to soft pointers
+        MediaProfilePluginCaptureCameraSoftPtr,
+        
+        // Reparameterize Spline in SplineComponent based on SplineCurves parameterization
+        SplineComponentReparameterizeOnLoad,
+        
+        // Add solver and fabric property support to the schema based Cloth USD importer
+        AddSimulationPropertySupportToClothUSDImportNodeV2,
+        
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1

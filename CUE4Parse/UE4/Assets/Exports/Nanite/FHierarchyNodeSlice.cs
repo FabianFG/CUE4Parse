@@ -18,16 +18,13 @@ public class FHierarchyNodeSlice
     public uint StartPageIndex;
     public uint NumPages;
     public uint AssemblyTransformIndex;
+    public uint ResourcePageRangeKey;
     public bool bEnabled;
     public bool bLoaded;
     public bool bLeaf;
-    public uint NodeIndex;
-    public uint SliceIndex;
 
-    public FHierarchyNodeSlice(FArchive Ar, uint index, uint sliceIndex)
+    public FHierarchyNodeSlice(FArchive Ar)
     {
-        NodeIndex = index;
-        SliceIndex = sliceIndex;
         LODBounds = Ar.Read<FVector4>();
         BoxBoundsCenter = Ar.Read<FVector>();
         MinLODError = (float) Ar.Read<Half>();
@@ -35,14 +32,33 @@ public class FHierarchyNodeSlice
         BoxBoundsExtent = Ar.Read<FVector>();
         ChildStartReference = Ar.Read<uint>();
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
-        var misc2 = Ar.Read<uint>();
-        NumChildren = GetBits(misc2, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
-        NumPages = GetBits(misc2, NANITE_MAX_GROUP_PARTS_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
-        StartPageIndex = GetBits(misc2, NANITE_MAX_RESOURCE_PAGES_BITS, NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NANITE_MAX_GROUP_PARTS_BITS);
-        bEnabled = misc2 != 0u;
-        bLeaf = misc2 != 0xFFFFFFFFu;
-        // #if NANITE_ASSEMBLY_DATA 5.6+ but set to 0
-        //         Ar << Node.Misc2[ i ].AssemblyPartIndex;
-        // #endif
+        if (Ar.Game >= Versions.EGame.GAME_UE5_7)
+        {
+            var misc2 = Ar.Read<TIntVector2<uint>>();
+            AssemblyTransformIndex = GetBits(misc2.Y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
+            NumChildren = GetBits(misc2.Y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
+
+            bLeaf = misc2.X != 0xFFFFFFFFu;
+            if (bLeaf)
+            {
+                ResourcePageRangeKey = misc2.X;
+                bEnabled = ResourcePageRangeKey != NANITE_PAGE_RANGE_KEY_EMPTY_RANGE || NumChildren > 0;
+            }
+            else
+            {
+                ResourcePageRangeKey = NANITE_PAGE_RANGE_KEY_EMPTY_RANGE;
+                bEnabled = true;
+            }
+        }
+        else
+        {
+            var misc2 = Ar.Read<uint>();
+            NumChildren = GetBits(misc2, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, 0);
+            NumPages = GetBits(misc2, NANITE_MAX_GROUP_PARTS_BITS(Ar.Game), NANITE_MAX_CLUSTERS_PER_GROUP_BITS);
+            StartPageIndex = GetBits(misc2, NANITE_MAX_RESOURCE_PAGES_BITS(Ar.Game), NANITE_MAX_CLUSTERS_PER_GROUP_BITS + NANITE_MAX_GROUP_PARTS_BITS(Ar.Game));
+            bEnabled = misc2 != 0u;
+            bLeaf = misc2 != 0xFFFFFFFFu;
+            AssemblyTransformIndex = 0xFFFFFFFFu;
+        }
     }
 }

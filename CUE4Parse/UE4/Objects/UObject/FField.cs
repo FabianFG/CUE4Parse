@@ -70,6 +70,7 @@ public class FField
         "WeakObjectProperty" => new FWeakObjectProperty(),
         "OptionalProperty" => new FOptionalProperty(),
         "VerseStringProperty" => new FVerseStringProperty(),
+        "VerseClassProperty" => new FVerseClassProperty(),
         "VerseFunctionProperty" => new FVerseFunctionProperty(),
         "VerseDynamicProperty" => new FVerseDynamicProperty(),
         "ReferenceProperty" => new FReferenceProperty(),

@@ -48,88 +48,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse;
 
-public class DNAVersionConverter : JsonConverter<DNAVersion>
-{
-    public override void WriteJson(JsonWriter writer, DNAVersion value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Generation");
-        serializer.Serialize(writer, value.Generation);
-
-        writer.WritePropertyName("Version");
-        serializer.Serialize(writer, value.Version);
-
-        writer.WritePropertyName("FileVersion");
-        serializer.Serialize(writer, $"FileVersion::{value.FileVersion.ToString()}");
-
-        writer.WriteEndObject();
-    }
-
-    public override DNAVersion ReadJson(JsonReader reader, Type objectType, DNAVersion existingValue,
-        bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class RawDescriptorConverter : JsonConverter<RawDescriptor>
-{
-    public override void WriteJson(JsonWriter writer, RawDescriptor value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Name");
-        serializer.Serialize(writer, value.Name);
-
-        writer.WritePropertyName("Archetype");
-        serializer.Serialize(writer, $"EArchetype::{value.Archetype}");
-
-        writer.WritePropertyName("Gender");
-        serializer.Serialize(writer, $"EGender::{value.Gender}");
-
-        writer.WritePropertyName("Age");
-        serializer.Serialize(writer, value.Age);
-
-        writer.WritePropertyName("Metadata");
-        writer.WriteStartArray();
-        foreach (var meta in value.Metadata)
-        {
-            serializer.Serialize(writer, meta);
-        }
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("TranslationUnit");
-        serializer.Serialize(writer, $"ETranslationUnit::{value.TranslationUnit}");
-
-        writer.WritePropertyName("RotationUnit");
-        serializer.Serialize(writer, $"ERotationUnit::{value.RotationUnit}");
-
-        writer.WritePropertyName("CoordinateSystem");
-        serializer.Serialize(writer, value.CoordinateSystem);
-
-        writer.WritePropertyName("LODCount");
-        serializer.Serialize(writer, value.LODCount);
-
-        writer.WritePropertyName("MaxLOD");
-        serializer.Serialize(writer, value.MaxLOD);
-
-        writer.WritePropertyName("Complexity");
-        serializer.Serialize(writer, value.Complexity);
-
-        writer.WritePropertyName("DBName");
-        serializer.Serialize(writer, value.DBName);
-
-        writer.WriteEndObject();
-    }
-
-    public override RawDescriptor ReadJson(JsonReader reader, Type objectType, RawDescriptor existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 public class FTextConverter : JsonConverter<FText>
 {
     public override void WriteJson(JsonWriter writer, FText value, JsonSerializer serializer)
@@ -2863,7 +2781,7 @@ public class FAssetDataConverter : JsonConverter<FAssetData>
         if (value.PackageFlags != 0)
         {
             writer.WritePropertyName(nameof(value.PackageFlags));
-            writer.WriteValue(value.PackageFlags);
+            writer.WriteValue(value.PackageFlags.ToStringBitfield());
         }
 
         writer.WriteEndObject();
@@ -3131,7 +3049,8 @@ public class EnumConverter<T> : JsonConverter<T> where T : Enum
 {
     public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
     {
-        serializer.Serialize(writer, value.ToStringBitfield(true));
+        var type = value.GetType();
+        writer.WriteValue(type.IsDefined(typeof(FlagsAttribute), inherit: false) ? value.ToStringBitfield(true) : $"{type.Name}::{value}");
     }
 
     public override T ReadJson(JsonReader reader, Type objectType, T existingValue, bool hasExistingValue,

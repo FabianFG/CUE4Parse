@@ -25,6 +25,7 @@ public class FNaniteStreamableData
     public FNaniteStreamableData(FByteArchive Ar, FNaniteResources resources, uint pageIndex)
     {
         FixupChunk = new FFixupChunk(Ar);
+        
         // origin of all the offsets in the page cluster header
         PageDiskHeaderOffset = Ar.Position;
         PageDiskHeader = new FPageDiskHeader(Ar);
@@ -77,6 +78,7 @@ public class FNaniteStreamableData
 /// <summary>A header that describes the cluster at the same index as itself.</summary>
 public readonly struct FClusterDiskHeader
 {
+    public readonly uint DecodeInfoOffset;
     /// <summary>The offset from the disk page header where the triangle indices for this cluster starts.</summary>
     public readonly uint IndexDataOffset;
     /// <summary>The offset from the disk page header the reference vertex page mapping for this cluster starts.</summary>
@@ -103,6 +105,7 @@ public readonly struct FClusterDiskHeader
 
     public FClusterDiskHeader(FArchive Ar)
     {
+        if (Ar.Game >= EGame.GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
         IndexDataOffset = Ar.Read<uint>();
         PageClusterMapOffset = Ar.Read<uint>();
         VertexRefDataOffset = Ar.Read<uint>();

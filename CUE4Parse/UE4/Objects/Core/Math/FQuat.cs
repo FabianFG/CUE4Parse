@@ -68,20 +68,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FQuat(FArchive Ar)
         {
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                X = (float) Ar.Read<double>();
-                Y = (float) Ar.Read<double>();
-                Z = (float) Ar.Read<double>();
-                W = (float) Ar.Read<double>();
-            }
-            else
-            {
-                X = Ar.Read<float>();
-                Y = Ar.Read<float>();
-                Z = Ar.Read<float>();
-                W = Ar.Read<float>();
-            }
+            X = Ar.ReadFReal();
+            Y = Ar.ReadFReal();
+            Z = Ar.ReadFReal();
+            W = Ar.ReadFReal();
         }
 
         private static int[] matrixNxt = {1, 2, 0};

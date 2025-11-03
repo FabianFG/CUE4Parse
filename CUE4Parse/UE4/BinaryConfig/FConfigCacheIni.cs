@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.BinaryConfig.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.BinaryConfig;
 
@@ -22,7 +23,7 @@ public class FConfigCacheIni
         var num = Ar.Read<int>();
         OtherFiles = new Dictionary<string, FConfigBranch>(num);
         OtherFileNames = new string[num];
-        for (int i = 0; i < num; i++)
+        for (var i = 0; i < num; i++)
         {
             var fileName = Ar.ReadFString();
             var branch = new FConfigBranch(Ar);
@@ -39,15 +40,13 @@ public class FConfigCacheIni
         StagedPluginConfigCache = Ar.ReadMap(Ar.ReadFName, () => Ar.ReadArray(Ar.ReadFString));
 
         var bHasGlobalCache = Ar.ReadBoolean();
-        if (bHasGlobalCache)
-        {
-            StagedGlobalConfigCache = Ar.ReadArray(Ar.ReadFString);
-        }
+        if (bHasGlobalCache) StagedGlobalConfigCache = Ar.ReadArray(Ar.ReadFString);
 
         // there are 4 bytes at the end and I don't know what it is
     }
 }
 
+[JsonConverter(typeof(EnumConverter<EConfigCacheType>))]
 public enum EConfigCacheType : byte
 {
     // this type of config cache will write its files to disk during Flush (i.e. GConfig)

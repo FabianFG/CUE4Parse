@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.UObject;
 
 [Flags]
+[JsonConverter(typeof(EnumConverter<EPropertyFlags>))]
 public enum EPropertyFlags : ulong
 {
     None = 0,
@@ -779,6 +780,31 @@ public class FVerseFunctionProperty : FProperty
 
         writer.WritePropertyName("Struct");
         serializer.Serialize(writer, Function);
+    }
+}
+
+public class FVerseClassProperty : FClassProperty
+{
+    public bool bRequiresConcrete;
+    public bool bRequiresCastable;
+    
+    public override void Deserialize(FAssetArchive Ar)
+    {
+        base.Deserialize(Ar);
+
+        bRequiresConcrete = Ar.ReadBoolean();
+        bRequiresCastable = Ar.ReadBoolean();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+        
+        writer.WritePropertyName(nameof(bRequiresConcrete));
+        serializer.Serialize(writer, bRequiresConcrete);
+        
+        writer.WritePropertyName(nameof(bRequiresCastable));
+        serializer.Serialize(writer, bRequiresCastable);
     }
 }
 
