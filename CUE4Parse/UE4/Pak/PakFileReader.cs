@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Pak
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
 
-            var hasUnsupportedVersion = (Ar.Game < EGame.GAME_UE5_8 && Info.Version > PakFile_Version_Utf8PakDirectory)
+            var hasUnsupportedVersion = (Ar.Game < EGame.GAME_UE5_8 && Info.Version > PakFile_Version_Fnv64BugFix)
                 || (Ar.Game >= EGame.GAME_UE5_8 && Info.Version > PakFile_Version_Latest);
             if (hasUnsupportedVersion && !UsingCustomPakVersion())
             {
