@@ -578,6 +578,7 @@ public class FUniformExpressionSet
     {
         var materialTextureParameterTypeCount = Ar.Game switch
         {
+            EGame.GAME_InfinityNikki => 8,
             >= EGame.GAME_UE5_3 => 7,
             >= EGame.GAME_UE5_0 => 6,
             _ => 5,
@@ -612,7 +613,7 @@ public class FUniformExpressionSet
                 {
                     EMaterialParameterType.Scalar => dv.Read<float>(),
                     EMaterialParameterType.Vector => dv.Read<FLinearColor>(),
-                    EMaterialParameterType.DoubleVector => new FVector4(Ar),
+                    EMaterialParameterType.DoubleVector => new FVector4(dv),
                     EMaterialParameterType.StaticSwitch => dv.ReadFlag(),
                     _ => throw new NotImplementedException($"Unknown EMaterialParameterType: {parameter.ParameterType}"),
                 };

@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.VirtualFileSystem;
 using AesProvider = CUE4Parse.Encryption.Aes.Aes;
 
@@ -7,6 +6,7 @@ namespace CUE4Parse.GameTypes.INikki.Encryption.Aes;
 
 public static class InfinityNikkiAes
 {
+    private const int AesBlockSize = 16;
     public static byte[] InfinityNikkiDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
         if (bytes.Length < beginOffset + count)
@@ -16,18 +16,16 @@ public static class InfinityNikkiAes
         if (reader.AesKey == null)
             throw new NullReferenceException("reader.AesKey");
 
-        var output = AesProvider.Decrypt(bytes, beginOffset, count, reader.AesKey);
+        var key = reader.AesKey;
+        var data = AesProvider.Decrypt(bytes, beginOffset, count, key);
 
-        if (reader is PakFileReader || isIndex)
+        for (var i = 0; i < data.Length; i += AesBlockSize)
         {
-            var key = reader.AesKey.Key;
-            for (var i = 0; i < count >> 4; i++)
-            {
-                output[i * 16] ^= key[0];
-                output[i * 16 + 15] ^= key[31];
-            }
+            data[i] ^= key.Key[^1];
+            if (data.Length >= i + AesBlockSize)
+                data[i + AesBlockSize - 1] ^= key.Key[0];
         }
 
-        return output;
+        return data;
     }
 }

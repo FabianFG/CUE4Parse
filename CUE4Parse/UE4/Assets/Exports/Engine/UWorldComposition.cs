@@ -107,6 +107,11 @@ public class FWorldTileInfo
             Ar.SkipFString();
             Ar.SkipFString();
         }
+        if (Ar.Game is EGame.GAME_InfinityNikki)
+        {
+            Ar.Position += 12;
+            Ar.SkipFString();
+        }
 
         if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) return;
 
