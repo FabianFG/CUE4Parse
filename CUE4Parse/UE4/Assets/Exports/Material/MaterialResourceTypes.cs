@@ -571,6 +571,7 @@ public class FUniformExpressionSet
     public FMaterialPreshaderData UniformPreshaderData;
     public byte[]? DefaultValues;
     public FMaterialVirtualTextureStack[] VTStacks;
+    public FMaterialCacheTagStack[]? MaterialCacheTagStacks;
     public FGuid[] ParameterCollections;
     public FRHIUniformBufferLayoutInitializer UniformBufferLayoutInitializer;
 
@@ -631,9 +632,19 @@ public class FUniformExpressionSet
         }
 
         VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
+        if (Ar.Game >= EGame.GAME_UE5_7)
+        {
+            MaterialCacheTagStacks = Ar.ReadArray<FMaterialCacheTagStack>();
+        }
         ParameterCollections = Ar.ReadArray<FGuid>();
         UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
     }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct FMaterialCacheTagStack
+{
+    public FGuid TagGuid;
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 4)]
