@@ -1,53 +1,33 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Objects.Engine
+namespace CUE4Parse.UE4.Objects.Engine;
+
+public class FPerQualityLevelProperty<T> : IUStruct where T : struct
 {
-    public class FPerQualityLevelInt : IUStruct
+    public readonly bool bCooked;
+    public readonly T Default;
+    public readonly Dictionary<int, T> PerQuality = [];
+
+    public FPerQualityLevelProperty() { }
+
+    public FPerQualityLevelProperty(FArchive Ar)
     {
-        public readonly bool bCooked;
-        public readonly int Default;
-        public readonly Dictionary<int, int> PerQuality;
-
-        public FPerQualityLevelInt(FArchive Ar)
-        {
-            bCooked = Ar.ReadBoolean();
-            Default = Ar.Read<int>();
-            PerQuality = new Dictionary<int, int>();
-            int perQualityNum = Ar.Read<int>();
-            for (int i = 0; i < perQualityNum; i++)
-            {
-                PerQuality[Ar.Read<int>()] = Ar.Read<int>();
-            }
-        }
-
-        public FPerQualityLevelInt()
-        {
-            PerQuality = new Dictionary<int, int>();
-        }
+        bCooked = Ar.ReadBoolean();
+        Default = Ar.Read<T>();
+        PerQuality = Ar.ReadMap(Ar.Read<int>, Ar.Read<T>);
     }
+}
 
-    public class FPerQualityLevelFloat : IUStruct
-    {
-        public readonly bool bCooked;
-        public readonly float Default;
-        public readonly Dictionary<int, float> PerQuality;
+public class FPerQualityLevelInt : FPerQualityLevelProperty<int>
+{
+    public FPerQualityLevelInt() { }
+    public FPerQualityLevelInt(FArchive Ar) : base(Ar) { }  
+}
 
-        public FPerQualityLevelFloat(FArchive Ar)
-        {
-            bCooked = Ar.ReadBoolean();
-            Default = Ar.Read<float>();
-            PerQuality = new Dictionary<int, float>();
-            int perQualityNum = Ar.Read<int>();
-            for (int i = 0; i < perQualityNum; i++)
-            {
-                PerQuality[Ar.Read<int>()] = Ar.Read<float>();
-            }
-        }
 
-        public FPerQualityLevelFloat()
-        {
-            PerQuality = new Dictionary<int, float>();
-        }
-    }
+public class FPerQualityLevelFloat : FPerQualityLevelProperty<float>
+{
+    public FPerQualityLevelFloat() { }
+    public FPerQualityLevelFloat(FArchive Ar) : base(Ar) { } 
 }
