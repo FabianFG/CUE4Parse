@@ -30,7 +30,7 @@ public readonly struct FPageDiskHeader
         NumRawFloat4s = Ar.Read<uint>();
         if (Ar.Game < EGame.GAME_UE5_4) NumTexCoords = Ar.Read<uint>();
         NumVertexRefs = Ar.Read<uint>();
-        DecodeInfoOffset = Ar.Read<uint>();
+        if (Ar.Game < EGame.GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
         StripBitmaskOffset = Ar.Read<uint>();
         VertexRefBitmaskOffset = Ar.Read<uint>();
     }

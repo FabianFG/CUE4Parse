@@ -7,6 +7,7 @@ public static class NaniteConstants
     public const ushort NANITE_FIXUP_MAGIC = 0x464E;
 
     public const int NANITE_MAX_BVH_NODE_FANOUT_BITS = 2;
+    public const int NANITE_MAX_BVH_NODE_FANOUT_MASK = (1 << NANITE_MAX_BVH_NODE_FANOUT_BITS) - 1;
     public const int NANITE_MAX_BVH_NODE_FANOUT = 1 << NANITE_MAX_BVH_NODE_FANOUT_BITS;
 
     public const int NANITE_MAX_CLUSTERS_PER_GROUP_BITS = 9;
