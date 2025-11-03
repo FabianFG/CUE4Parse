@@ -138,7 +138,7 @@ public partial class USkeletalMesh : UObject
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
-        _ = Ar.ReadArray(() => new FPackageIndex(Ar));
+        _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {

@@ -67,7 +67,9 @@ public class FStaticMeshRenderData
         // In Fortnite S8, engine is 4.22, but has static mesh from 4.23.
         // Comment this check out to fix.
         if (Ar.Game >= EGame.GAME_UE4_23)
-            Ar.Position += 1; // NumInlinedLODs
+        {
+            var numInlinedLODs = Ar.Read<byte>();
+        }
 
         if (Ar.Game >= EGame.GAME_UE5_0)
         {

@@ -66,13 +66,7 @@ public class FNaniteResources
             StreamablePages = new FByteBulkData(Ar);
             RootData = Ar.ReadArray<byte>();
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
-            // TODO: revert no normal array, as we don't use Hierarchy
-            var count = Ar.Read<uint>();
-            HierarchyNodes = new FPackedHierarchyNode[count];
-            for (uint i = 0; i < count; i++)
-            {
-                HierarchyNodes[i] = new FPackedHierarchyNode(Ar, i);
-            }
+            HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
             HierarchyRootOffsets = Ar.ReadArray<uint>();
             PageDependencies = Ar.ReadArray(() => Ar.Game >= EGame.GAME_UE5_7 ? Ar.Read<ushort>() : Ar.Read<uint>());
             if (Ar.Game >= EGame.GAME_UE5_6)

@@ -2,6 +2,7 @@ using System.IO;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
+using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteUtils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
@@ -63,8 +64,8 @@ public class FHierarchyFixup
         ClusterGroupPartStartIndex = Ar.Read<uint>();
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
-        PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS;
-        PageDependencyNum = pageDependencyStartAndNum & NANITE_MAX_GROUP_PARTS_MASK;
+        PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS(Ar.Game);
+        PageDependencyNum = pageDependencyStartAndNum & NANITE_MAX_GROUP_PARTS_MASK(Ar.Game);
     }
 }
 
@@ -78,11 +79,11 @@ public class FClusterFixup
     public FClusterFixup(FArchive Ar)
     {
         var pageAndClusterIndex = Ar.Read<uint>();
-        PageIndex = pageAndClusterIndex >> NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE_BITS(Ar.Game);
-        ClusterIndex = pageAndClusterIndex & (uint) (NaniteUtils.NANITE_MAX_CLUSTERS_PER_PAGE(Ar.Game) - 1);
+        PageIndex = pageAndClusterIndex >> NANITE_MAX_CLUSTERS_PER_PAGE_BITS(Ar.Game);
+        ClusterIndex = pageAndClusterIndex & (uint) (NANITE_MAX_CLUSTERS_PER_PAGE(Ar.Game) - 1);
 
         var pageDependencyStartAndNum = Ar.Read<uint>();
-        PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS;
-        PageDependencyNum = pageDependencyStartAndNum & NANITE_MAX_GROUP_PARTS_MASK;
+        PageDependencyStart = pageDependencyStartAndNum >> NANITE_MAX_GROUP_PARTS_BITS(Ar.Game);
+        PageDependencyNum = pageDependencyStartAndNum & NANITE_MAX_GROUP_PARTS_MASK(Ar.Game);
     }
 }
