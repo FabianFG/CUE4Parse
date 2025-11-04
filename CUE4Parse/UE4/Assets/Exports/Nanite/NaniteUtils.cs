@@ -68,6 +68,33 @@ public class NaniteUtils
         };
     }
 
+    public static int NANITE_MAX_GROUP_PARTS_BITS(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_BITS_505,
+            _ => NANITE_MAX_GROUP_PARTS_BITS_500
+        };
+    }
+
+    public static uint NANITE_MAX_GROUP_PARTS_MASK(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_MASK_505,
+            _ => NANITE_MAX_GROUP_PARTS_MASK_500
+        };
+    }
+
+    public static int NANITE_MAX_RESOURCE_PAGES_BITS(EGame ver)
+    {
+        return ver switch
+        {
+            >= EGame.GAME_UE5_5 => NANITE_MAX_RESOURCE_PAGES_BITS_505,
+            _ => NANITE_MAX_RESOURCE_PAGES_BITS_500
+        };
+    }
+
     public readonly static ImmutableDictionary<int, float> PrecisionScales;
 
     static NaniteUtils()

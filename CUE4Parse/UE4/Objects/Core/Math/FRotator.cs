@@ -46,18 +46,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FRotator(FArchive Ar)
         {
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                Pitch = (float) Ar.Read<double>();
-                Yaw = (float) Ar.Read<double>();
-                Roll = (float) Ar.Read<double>();
-            }
-            else
-            {
-                Pitch = Ar.Read<float>();
-                Yaw = Ar.Read<float>();
-                Roll = Ar.Read<float>();
-            }
+            Pitch = Ar.ReadFReal();
+            Yaw = Ar.ReadFReal();
+            Roll = Ar.ReadFReal();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

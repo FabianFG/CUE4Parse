@@ -80,7 +80,7 @@ public class FStaticMeshRenderData
                 var bHasRayTracingProxy = Ar.ReadBoolean();
                 if (bHasRayTracingProxy)
                 {
-                    var rayTracingProxy = new FStaticMeshRayTracingProxy(Ar);
+                    _ = new FStaticMeshRayTracingProxy(Ar); // RayTracingProxy
                 }
             }
 

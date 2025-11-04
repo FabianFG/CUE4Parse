@@ -13,6 +13,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
         protected readonly FArchive baseArchive;
         public FAssetRegistryHeader Header;
         public FNameEntrySerialized[] NameMap;
+        public bool IsFilterEditorOnly { get; set; }
 
         public abstract void SerializeTagsAndBundles(FAssetData assetData);
 
@@ -25,12 +26,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Readers
 
         public override string ReadFString()
         {
-            if (Header.Version >= FAssetRegistryVersionType.MarshalledTextAsUTF8String)
-            {
-                return Encoding.UTF8.GetString(ReadBytes(Read<int>()));
-            }
-
-            return baseArchive.ReadFString();
+            return Header.Version >= FAssetRegistryVersionType.MarshalledTextAsUTF8String ? baseArchive.ReadFUtf8String() : baseArchive.ReadFString();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

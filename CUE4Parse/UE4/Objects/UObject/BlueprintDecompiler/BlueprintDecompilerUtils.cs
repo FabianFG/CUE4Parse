@@ -20,6 +20,7 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
+    public static UFunction Function { get; set; }
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
         var prefix = GetPrefix(prefixClassStruct);
@@ -123,7 +124,7 @@ public static class BlueprintDecompilerUtils
                 break;
             }
             case FStrProperty:
-            case FVerseStringProperty: // hm
+            case FVerseStringProperty:
             {
                 type = "FString";
                 break;
@@ -138,14 +139,32 @@ public static class BlueprintDecompilerUtils
                 type = "FName";
                 break;
             }
-            case FMapProperty:
+            case FMapProperty mapProperty:
             {
-                type = "FMap";
+                var (_, keyinnerType) = GetPropertyType(mapProperty.KeyProp!);
+                var (_, valueinnerType) = GetPropertyType(mapProperty.ValueProp!);
+                type = $"TMap<{keyinnerType}, {valueinnerType}>";
                 break;
             }
             case FEnumProperty:
             {
                 type = "Enum";
+                break;
+            }
+            case FVerseDynamicProperty:
+            {
+                type = "DynamicVerse";
+                break;
+            }
+            case FVerseFunctionProperty:
+            {
+                type = "VerseFunc";
+                break;
+            }
+            case FOptionalProperty optionalProperty:
+            {
+                var (_, keyinnerType) = GetPropertyType(optionalProperty.ValueProperty!);
+                type = $"TOptional<{keyinnerType}>";
                 break;
             }
             default:
@@ -164,7 +183,7 @@ public static class BlueprintDecompilerUtils
         return (value, type);
     }
 
-    private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T)propertyTag.Tag?.GenericValue!;
+    private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T) propertyTag.Tag?.GenericValue!;
 
     public static bool GetPropertyTagVariable(FPropertyTag propertyTag, out string type, out string value)
     {
@@ -268,6 +287,7 @@ public static class BlueprintDecompilerUtils
                         "ByteProperty" => "byte",
                         "BoolProperty" => "bool",
                         "StrProperty" => "string",
+                        "VerseStringProperty" => "string",
                         "DoubleProperty" => "double",
                         "NameProperty" => "FName",
                         "TextProperty" => "FText",
@@ -286,16 +306,26 @@ public static class BlueprintDecompilerUtils
                 {
                     var customStringBuilder = new CustomStringBuilder();
                     customStringBuilder.OpenBlock();
-                    foreach (var property in scriptArray.Properties)
+                    for (int i = 0; i < scriptArray.Properties.Count; i++)
                     {
-                        if (!GetPropertyTagVariable(new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
+                        var property = scriptArray.Properties[i];
+                        if (!GetPropertyTagVariable(
+                                new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
                             Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
                             continue;
                         }
 
-                        customStringBuilder.AppendLine(innerValue);
+                        if (scriptArray.InnerType == "EnumProperty")
+                        {
+                            innerValue = innerValue.SubstringAfter("::");
+                        }
+
+                        if (i < scriptArray.Properties.Count - 1)
+                            customStringBuilder.AppendLine(innerValue + ",");
+                        else
+                            customStringBuilder.AppendLine(innerValue);
                     }
 
                     customStringBuilder.CloseBlock();
@@ -319,6 +349,12 @@ public static class BlueprintDecompilerUtils
                 break;
             }
             case EPropertyType.StrProperty:
+            {
+                type = "FString";
+                value = $"\"{propertyTag.GetGenericValue<string>()}\"";
+                break;
+            }
+            case EPropertyType.VerseStringProperty:
             {
                 type = "FString";
                 value = $"\"{propertyTag.GetGenericValue<string>()}\"";
@@ -505,7 +541,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.EnumProperty:
             {
-                value = propertyTag.GetGenericValue<FName>().ToString();
+                value = propertyTag.GetGenericValue<FName>().ToString().SubstringAfter("::");
                 type = $"enum {propertyTag.TagData?.EnumName}";
                 break;
             }
@@ -543,8 +579,12 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.MulticastInlineDelegateProperty:
             {
-                // TODO: this motherfucker
                 type = "FMulticastScriptDelegate";
+                return true;
+            }
+            case EPropertyType.VerseFunctionProperty:
+            {
+                type = "VerseFunction";
                 return true;
             }
             default:
@@ -794,8 +834,6 @@ public static class BlueprintDecompilerUtils
 
     public static string GetLineExpression(KismetExpression expression)
     {
-        // TODO: Everything that include Const will have the const keyword at the start **maybe**
-        // what is this comment, there is no flag const for expressions?
         switch (expression)
         {
             case EX_VariableBase variableBase:
@@ -806,7 +844,6 @@ public static class BlueprintDecompilerUtils
             {
                 var variableAssignment = GetLineExpression(persistent.AssignmentExpression);
                 var variableToBeAssigned = persistent.DestinationProperty.ToString();
-
                 return $"{(variableToBeAssigned.Contains("K2Node_") ? "UberGraphFrame->" + variableToBeAssigned : variableToBeAssigned)} = {variableAssignment}";
             }
             case EX_LetBool letBool:
@@ -814,8 +851,6 @@ public static class BlueprintDecompilerUtils
                 var assignment = GetLineExpression(letBool.Assignment);
                 var variable = GetLineExpression(letBool.Variable);
 
-                // check if var is defined already?
-                // use bIsNativeBool for "bool"?
                 return $"bool {variable} = {assignment}";
             }
             case EX_Let let:
@@ -843,7 +878,15 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.AppendLine($"if ({obj})");
                     customStringBuilder.IncreaseIndentation();
                 }
-                customStringBuilder.Append($"{obj}->{function}");
+
+                if (obj == "FindObject<UObject>(nullptr, this)")
+                {
+                    customStringBuilder.Append(function);
+                }
+                else
+                {
+                    customStringBuilder.Append($"{obj}->{function}");
+                }
 
                 return customStringBuilder.ToString();
             }
@@ -852,7 +895,11 @@ public static class BlueprintDecompilerUtils
                 var parametersList = new List<string>(final.Parameters.Length);
                 foreach (var parameter in final.Parameters)
                 {
-                    parametersList.Add(GetLineExpression(parameter));
+                    var prm = GetLineExpression(parameter);
+                    if (!string.IsNullOrWhiteSpace(prm))
+                    {
+                        parametersList.Add(prm);
+                    }
                 }
 
                 var parameters = string.Join(", ", parametersList);
@@ -886,8 +933,9 @@ public static class BlueprintDecompilerUtils
                 var parameters = string.Join(", ", parametersList);
                 var functionName = virtualFunc.VirtualFunctionName.Text;
 
-                return expression is EX_LocalVirtualFunction ?
-                    $"this->{functionName}({parameters})" : // sometimes "this->" is wrong
+                return expression is EX_LocalVirtualFunction
+                    ? $"this->{functionName}({parameters})"
+                    : // sometimes "this->" is wrong
                     $"{functionName}({parameters})";
             }
             case EX_TextConst textConst:
@@ -929,16 +977,12 @@ public static class BlueprintDecompilerUtils
             }
             case EX_ArrayConst constArray:
             {
-                if (constArray.Elements.Length == 0) return "TArray<>([])"; // todo type
-
                 var values = new List<string>(constArray.Elements.Length);
                 foreach (var element in constArray.Elements)
                 {
                     values.Add(GetLineExpression(element));
                 }
-
-                return $"TArray<>({string.Join(", ", values)})"; // todo type
-
+                return $"TArray<{constArray.InnerProperty.ToString()}>({string.Join(", ", values)})";
             }
             case EX_SetArray setArray:
             {
@@ -950,7 +994,7 @@ public static class BlueprintDecompilerUtils
                     values.Add(GetLineExpression(element));
                 }
 
-                return $"{variable} = {(values.Count > 0 ? string.Join(", ", values) : "[]")}";
+                return $"{variable} = {(values.Count > 0 ? "[ " + string.Join(", ", values) + " ]" : "[]")}";
             }
             case EX_IntConst intConst:
             {
@@ -974,7 +1018,7 @@ public static class BlueprintDecompilerUtils
                     return $"FindObject<{classPkgType}>(nullptr, \"{path}\")";
                 }
 
-                return $"FindObject<UObject>(nullptr, \"{pkgIndex}\")";
+                return $"FindObject<UObject>(nullptr, \"{pkgIndex}\")"; // package not found, sometimes it also means "this"
             }
             case EX_NameConst nameConst:
             {
@@ -1063,16 +1107,31 @@ public static class BlueprintDecompilerUtils
             case EX_JumpIfNot jumpIfNot:
             {
                 var booleanExpression = GetLineExpression(jumpIfNot.BooleanExpression);
-
                 var customStringBuilder = new CustomStringBuilder();
                 customStringBuilder.AppendLine($"if (!{booleanExpression})");
                 customStringBuilder.IncreaseIndentation();
-                customStringBuilder.Append($"goto Label_{jumpIfNot.CodeOffset}");
+                var targetIndex = (int)jumpIfNot.CodeOffset;
+                targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                {
+                    customStringBuilder.Append($"return");
+                }
+                else
+                {
+                    customStringBuilder.Append($"goto Label_{jumpIfNot.CodeOffset}");
+                }
 
                 return customStringBuilder.ToString();
             }
             case EX_Jump jump:
             {
+                var targetIndex = (int)jump.CodeOffset;
+                targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                {
+                    return "return";
+                }
+
                 return $"goto Label_{jump.CodeOffset}";
             }
             case EX_SkipOffsetConst skipOffsetConst:
@@ -1117,7 +1176,7 @@ public static class BlueprintDecompilerUtils
             case EX_SoftObjectConst objectConst:
             {
                 var value = GetLineExpression(objectConst.Value);
-                return $"FSoftObjectPath({value}";
+                return $"FSoftObjectPath({value})";
             }
             case EX_FieldPathConst fieldPathConst:
             {
@@ -1142,8 +1201,7 @@ public static class BlueprintDecompilerUtils
                         break;
                     case EExprToken.EX_ObjToInterfaceCast:
                     {
-                        var structCast = $"I{cast.ClassPtr.ToString().SubstringBeforeLast("'").SubstringAfter('.')}";
-                        return $"Cast<{classType}*>({structCast})";
+                        return $"Cast<{classType}*>({variable})";
                     }
                     default:
                         castFunc = $"Cast<{classType}>";
@@ -1257,8 +1315,8 @@ public static class BlueprintDecompilerUtils
                 {
                     var indexTerm = GetLineExpression(switchValue.IndexTerm);
 
-                    var case1 = GetLineExpression(switchValue.Cases[0].CaseIndexValueTerm);
-                    var case2 = GetLineExpression(switchValue.Cases[1].CaseIndexValueTerm);
+                    var case1 = GetLineExpression(switchValue.Cases[0].CaseTerm);
+                    var case2 = GetLineExpression(switchValue.Cases[1].CaseTerm);
 
                     return $"{indexTerm} ? {case1} : {case2}";
                 }
@@ -1364,6 +1422,7 @@ public static class BlueprintDecompilerUtils
             case EX_EndMap:
             case EX_EndMapConst:
             case EX_EndSetConst:
+            case EX_EndOfScript:
             case EX_PushExecutionFlow:
             case EX_PopExecutionFlow:
             case EX_AutoRtfmStopTransact:

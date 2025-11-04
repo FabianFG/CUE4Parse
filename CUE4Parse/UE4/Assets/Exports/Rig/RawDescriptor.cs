@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-[JsonConverter(typeof(RawDescriptorConverter))]
 public class RawDescriptor : IRawBase
 {
     public string Name;
@@ -37,6 +36,7 @@ public class RawDescriptor : IRawBase
     }
 }
 
+[JsonConverter(typeof(EnumConverter<EArchetype>))]
 public enum EArchetype : byte
 {
     Asian,
@@ -47,6 +47,7 @@ public enum EArchetype : byte
     Other
 }
 
+[JsonConverter(typeof(EnumConverter<EGender>))] 
 public enum EGender : byte
 {
     Male,
@@ -54,12 +55,14 @@ public enum EGender : byte
     Other
 }
 
+[JsonConverter(typeof(EnumConverter<ETranslationUnit>))]
 public enum ETranslationUnit : byte
 {
     CM,
     M
 }
 
+[JsonConverter(typeof(EnumConverter<ERotationUnit>))]
 public enum ERotationUnit : byte
 {
     Degrees,

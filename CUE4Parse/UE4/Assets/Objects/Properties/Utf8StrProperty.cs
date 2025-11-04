@@ -18,22 +18,7 @@ public class Utf8StrProperty : FPropertyTagType<string>
         Value = type switch
         {
             ReadType.ZERO => string.Empty,
-            _ => ReadUtf8String(Ar)
+            _ => Ar.ReadFUtf8String()
         };
     }
-
-    private string ReadUtf8String(FArchive Ar)
-    {
-        int length = Ar.Read<int>();
-        if (length < 0)
-            throw new ParserException($"Negative Utf8String length '{length}'");
-
-        if (length > Ar.Length - Ar.Position)
-        {
-            throw new ParserException($"Invalid Utf8String length '{length}'");
-        }
-
-        return Encoding.UTF8.GetString(Ar.ReadBytes(length));
-    }
-
 }

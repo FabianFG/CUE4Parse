@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
             if (!bCooked) return;
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.STORE_HASCOOKEDDATA_FOR_BODYSETUP)
             {
-                var _ = Ar.ReadBoolean(); // bTemp
+                _ = Ar.ReadBoolean(); // bTemp
             }
 
             CookedFormatData = new FFormatContainer(Ar);

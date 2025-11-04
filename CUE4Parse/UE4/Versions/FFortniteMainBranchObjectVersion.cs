@@ -687,6 +687,27 @@ public static class FFortniteMainBranchObjectVersion
         // FDynamicMeshAttributeSet has Morph Targets.
         DynamicMeshAttributesMorphTargets,
         
+        // Introduce landscape advanced weight blending
+        LandscapeAdvancedWeightBlending,
+        
+        // Add support for FastGeo transformer setting assets
+        FastGeoTransformerSettingAssets,
+        
+        // UAF can now generate procedural systems for assets
+        UAFProceduralSystems,
+        
+        // Firefight: version 228 was introduced and backed out, adding it back to allow assets created in the meantime to load
+        Firefight_228,
+        
+        // Add default runtime state to FDataLayerInstanceDes
+        WorldPartitionDataLayerDefaultRuntimeState,
+        
+        // Introducing FGuid to UAF variable entries
+        UAFVariablesGuid,
+        
+        // Introducing FGuid cached to FAnimNext(Soft)VariableReference
+        UAFVariableReferenceGUID,
+        
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -717,6 +738,7 @@ public static class FFortniteMainBranchObjectVersion
             < EGame.GAME_UE5_5 => Type.SkeletalHalfEdgeData,
             < EGame.GAME_UE5_6 => Type.SolverIterationsDataSupportInChaosVisualDebugger,
             < EGame.GAME_UE5_7 => Type.PCGChangedSurfaceSamplerDefaultGridCreationMode,
+            < EGame.GAME_UE5_8 => Type.LandscapeAdvancedWeightBlending,
             _ => Type.LatestVersion
         };
     }
