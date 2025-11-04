@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-[JsonConverter(typeof(DNAVersionConverter))]
 public class DNAVersion
 {
     public ushort Generation;
@@ -18,6 +17,7 @@ public class DNAVersion
     }
 }
 
+[JsonConverter(typeof(EnumConverter<FileVersion>))]
 public enum FileVersion : ulong
 {
     unknown = 0u,

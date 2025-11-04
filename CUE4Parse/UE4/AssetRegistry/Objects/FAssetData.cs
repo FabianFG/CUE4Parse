@@ -16,7 +16,7 @@ public class FAssetData
     public IDictionary<FName, string> TagsAndValues;
     public FAssetBundleData TaggedAssetBundles;
     public readonly int[] ChunkIDs;
-    public readonly uint PackageFlags;
+    public readonly EPackageFlags PackageFlags;
 
     public FAssetData(FAssetRegistryArchive Ar)
     {
@@ -32,6 +32,10 @@ public class FAssetData
         }
         PackageName = Ar.ReadFName();
         AssetName = Ar.ReadFName();
+        if (Ar.Header.Version >= FAssetRegistryVersionType.RemoveAssetPathFNames && !Ar.IsFilterEditorOnly)
+        {
+            Ar.ReadFName(); // OptionalOuterPath, always "None"
+        }
 
         Ar.SerializeTagsAndBundles(this);
 
@@ -50,7 +54,7 @@ public class FAssetData
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT)
         {
-            PackageFlags = Ar.Read<uint>();
+            PackageFlags = Ar.Read<EPackageFlags>();
         }
     }
 

@@ -26,6 +26,7 @@ public partial class USkeletalMesh : UObject
     public FPackageIndex[] Sockets { get; private set; }
     public FPackageIndex Skeleton { get; private set; }
     public ResolvedObject?[] Materials { get; private set; } = []; // UMaterialInterface[]
+    public bool bEnablePerPolyCollision { get; private set; }
     public FPackageIndex PhysicsAsset { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
     public FNaniteResources? NaniteResources;
@@ -34,13 +35,14 @@ public partial class USkeletalMesh : UObject
     {
         if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
         base.Deserialize(Ar, validPos);
-        LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]>(nameof(LODInfo), []);
+        LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]?>(nameof(LODInfo)) ?? GetOrDefault<FSkeletalMeshLODGroupSettings[]>("SourceModels", []); ;
 
         bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
         NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
         MorphTargets = GetOrDefault(nameof(MorphTargets), Array.Empty<FPackageIndex>());
         Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
         Skeleton = GetOrDefault(nameof(Skeleton), new FPackageIndex());
+        bEnablePerPolyCollision = GetOrDefault<bool>(nameof(bEnablePerPolyCollision));
         PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
         AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
 
@@ -136,7 +138,17 @@ public partial class USkeletalMesh : UObject
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
-        var dummyObjs = Ar.ReadArray(() => new FPackageIndex(Ar));
+        _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
+
+        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
+        {
+            Ar.SkipFixedArray(sizeof(float));
+        }
+
+        // if (bEnablePerPolyCollision)
+        // {
+        //     var bodySetup = new FPackageIndex(Ar);
+        // }
 
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
         if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 20;

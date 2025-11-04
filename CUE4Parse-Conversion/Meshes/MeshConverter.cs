@@ -95,7 +95,7 @@ public static class MeshConverter
             }
 
             if (numTexCoords > Constants.MAX_MESH_UV_SETS)
-                throw new ParserException($"Static mesh has too many UV sets ({numTexCoords})");
+                Log.Warning($"Static mesh has too many UV sets ({numTexCoords})");
 
             var screenSize = 0.0f;
             if (i < originalMesh.RenderData.ScreenSize.Length)
@@ -386,7 +386,7 @@ public static class MeshConverter
 
             var numTexCoords = srcLod.NumTexCoords;
             if (numTexCoords > Constants.MAX_MESH_UV_SETS)
-                throw new ParserException($"Skeletal mesh has too many UV sets ({numTexCoords})");
+                Log.Warning($"Skeletal mesh has too many UV sets ({numTexCoords})");
 
             var skeletalMeshLod = new CSkelMeshLod
             {

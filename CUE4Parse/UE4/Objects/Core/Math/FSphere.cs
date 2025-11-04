@@ -34,14 +34,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FSphere(FArchive Ar)
         {
             Center = new FVector(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                W = (float) Ar.Read<double>();
-            }
-            else
-            {
-                W = Ar.Read<float>();
-            }
+            W = Ar.ReadFReal();
         }
 
         public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);

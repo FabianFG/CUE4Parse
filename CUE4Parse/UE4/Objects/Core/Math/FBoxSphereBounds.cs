@@ -25,14 +25,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             Origin = new FVector(Ar);
             BoxExtent = new FVector(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
-            {
-                SphereRadius = (float) Ar.Read<double>();
-            }
-            else
-            {
-                SphereRadius = Ar.Read<float>();
-            }
+            SphereRadius = Ar.ReadFReal();
         }
 
         public FBoxSphereBounds(FVector origin, FVector boxExtent, float sphereRadius)

@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -228,7 +229,6 @@ public class ANavLinkProxy : AActor;
 public class ANavMeshBoundsVolume : AVolume;
 public class ANavModifierVolume : AVolume;
 public class ANavSystemConfigOverride : AActor;
-public class ANavigationData : AActor;
 public class ANavigationDataChunkActor : APartitionActor;
 public class ANavigationGraph : ANavigationData;
 public class ANavigationGraphNode : AActor;
@@ -296,7 +296,6 @@ public class APropertyEditorTestActor : AActor;
 public class ARB_ConstraintActor : APhysicsConstraintActor;
 public class ARB_Thruster : APhysicsThruster;
 public class ARadialForceActor : ARigidBodyBase;
-public class ARecastNavMesh : ANavigationData;
 public class ARectLight : ALight;
 public class AReflectionCapture : AActor;
 public class ARemoteControlPresetActor : AActor;

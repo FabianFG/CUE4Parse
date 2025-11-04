@@ -20,6 +20,8 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.FMod;
+using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Objects.Core.i18N;
@@ -40,92 +42,11 @@ using CUE4Parse.UE4.Wwise;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
+using Fmod5Sharp.FmodTypes;
 using Newtonsoft.Json;
 #pragma warning disable CS8765
 
 namespace CUE4Parse;
-
-public class DNAVersionConverter : JsonConverter<DNAVersion>
-{
-    public override void WriteJson(JsonWriter writer, DNAVersion value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Generation");
-        serializer.Serialize(writer, value.Generation);
-
-        writer.WritePropertyName("Version");
-        serializer.Serialize(writer, value.Version);
-
-        writer.WritePropertyName("FileVersion");
-        serializer.Serialize(writer, $"FileVersion::{value.FileVersion.ToString()}");
-
-        writer.WriteEndObject();
-    }
-
-    public override DNAVersion ReadJson(JsonReader reader, Type objectType, DNAVersion existingValue,
-        bool hasExistingValue, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class RawDescriptorConverter : JsonConverter<RawDescriptor>
-{
-    public override void WriteJson(JsonWriter writer, RawDescriptor value, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Name");
-        serializer.Serialize(writer, value.Name);
-
-        writer.WritePropertyName("Archetype");
-        serializer.Serialize(writer, $"EArchetype::{value.Archetype}");
-
-        writer.WritePropertyName("Gender");
-        serializer.Serialize(writer, $"EGender::{value.Gender}");
-
-        writer.WritePropertyName("Age");
-        serializer.Serialize(writer, value.Age);
-
-        writer.WritePropertyName("Metadata");
-        writer.WriteStartArray();
-        foreach (var meta in value.Metadata)
-        {
-            serializer.Serialize(writer, meta);
-        }
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("TranslationUnit");
-        serializer.Serialize(writer, $"ETranslationUnit::{value.TranslationUnit}");
-
-        writer.WritePropertyName("RotationUnit");
-        serializer.Serialize(writer, $"ERotationUnit::{value.RotationUnit}");
-
-        writer.WritePropertyName("CoordinateSystem");
-        serializer.Serialize(writer, value.CoordinateSystem);
-
-        writer.WritePropertyName("LODCount");
-        serializer.Serialize(writer, value.LODCount);
-
-        writer.WritePropertyName("MaxLOD");
-        serializer.Serialize(writer, value.MaxLOD);
-
-        writer.WritePropertyName("Complexity");
-        serializer.Serialize(writer, value.Complexity);
-
-        writer.WritePropertyName("DBName");
-        serializer.Serialize(writer, value.DBName);
-
-        writer.WriteEndObject();
-    }
-
-    public override RawDescriptor ReadJson(JsonReader reader, Type objectType, RawDescriptor existingValue, bool hasExistingValue,
-        JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-}
 
 public class FTextConverter : JsonConverter<FText>
 {
@@ -2860,7 +2781,7 @@ public class FAssetDataConverter : JsonConverter<FAssetData>
         if (value.PackageFlags != 0)
         {
             writer.WritePropertyName(nameof(value.PackageFlags));
-            writer.WriteValue(value.PackageFlags);
+            writer.WriteValue(value.PackageFlags.ToStringBitfield());
         }
 
         writer.WriteEndObject();
@@ -3128,7 +3049,8 @@ public class EnumConverter<T> : JsonConverter<T> where T : Enum
 {
     public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
     {
-        serializer.Serialize(writer, value.ToStringBitfield(true));
+        var type = value.GetType();
+        writer.WriteValue(type.IsDefined(typeof(FlagsAttribute), inherit: false) ? value.ToStringBitfield(true) : $"{type.Name}::{value}");
     }
 
     public override T ReadJson(JsonReader reader, Type objectType, T existingValue, bool hasExistingValue,
@@ -3291,3 +3213,165 @@ public class FWwisePackagedFileConverter : JsonConverter<FWwisePackagedFile>
     }
 }
 
+public class FModConverter : JsonConverter<FModReader>
+{
+    public override void WriteJson(JsonWriter writer, FModReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.BankName));
+        writer.WriteValue(value.BankName);
+
+        writer.WritePropertyName(nameof(value.BankInfo));
+        serializer.Serialize(writer, value.BankInfo);
+
+        writer.WritePropertyName(nameof(FModReader.FormatInfo));
+        serializer.Serialize(writer, FModReader.FormatInfo);
+
+        if (FModReader.SoundDataInfo is not null)
+        {
+            writer.WritePropertyName(nameof(FModReader.SoundDataInfo));
+            serializer.Serialize(writer, FModReader.SoundDataInfo);
+        }
+
+        if (FModReader.EncryptionKey is not null)
+        {
+            writer.WritePropertyName(nameof(FModReader.EncryptionKey));
+            serializer.Serialize(writer, FModReader.EncryptionKey);
+        }
+
+        if (value.StringTable is not null)
+        {
+            writer.WritePropertyName(nameof(value.StringTable));
+            serializer.Serialize(writer, value.StringTable);
+        }
+
+        if (value.SoundTable is not null)
+        {
+            writer.WritePropertyName(nameof(value.SoundTable));
+            serializer.Serialize(writer, value.SoundTable);
+        }
+
+        if (value.PlatformInfo is not null)
+        {
+            writer.WritePropertyName(nameof(value.PlatformInfo));
+            serializer.Serialize(writer, value.PlatformInfo);
+        }
+
+        writer.WritePropertyName(nameof(value.HashData));
+        serializer.Serialize(writer, value.HashData);
+
+        writer.WritePropertyName(nameof(value.SoundBankData));
+        writer.WriteStartArray();
+        foreach (var bank in value.SoundBankData)
+        {
+            serializer.Serialize(writer, bank, typeof(FmodSoundBank));
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.EventNodes));
+        serializer.Serialize(writer, value.EventNodes);
+
+        writer.WritePropertyName(nameof(value.BusNodes));
+        serializer.Serialize(writer, value.BusNodes);
+
+        writer.WritePropertyName(nameof(value.EffectNodes));
+        serializer.Serialize(writer, value.EffectNodes);
+
+        writer.WritePropertyName(nameof(value.TimelineNodes));
+        serializer.Serialize(writer, value.TimelineNodes);
+
+        writer.WritePropertyName(nameof(value.TransitionNodes));
+        serializer.Serialize(writer, value.TransitionNodes);
+
+        writer.WritePropertyName(nameof(value.InstrumentNodes));
+        serializer.Serialize(writer, value.InstrumentNodes);
+
+        writer.WritePropertyName(nameof(value.WavEntries));
+        serializer.Serialize(writer, value.WavEntries);
+
+        writer.WritePropertyName(nameof(value.ParameterNodes));
+        serializer.Serialize(writer, value.ParameterNodes);
+
+        writer.WritePropertyName(nameof(value.ModulatorNodes));
+        serializer.Serialize(writer, value.ModulatorNodes);
+
+        writer.WritePropertyName(nameof(value.CurveNodes));
+        serializer.Serialize(writer, value.CurveNodes);
+
+        writer.WritePropertyName(nameof(value.PropertyNodes));
+        serializer.Serialize(writer, value.PropertyNodes);
+
+        writer.WritePropertyName(nameof(value.MappingNodes));
+        serializer.Serialize(writer, value.MappingNodes);
+
+        writer.WritePropertyName(nameof(value.ParameterLayoutNodes));
+        serializer.Serialize(writer, value.ParameterLayoutNodes);
+
+        writer.WritePropertyName(nameof(value.ControllerNodes));
+        serializer.Serialize(writer, value.ControllerNodes);
+
+        writer.WritePropertyName(nameof(value.SnapshotNodes));
+        serializer.Serialize(writer, value.SnapshotNodes);
+
+        writer.WritePropertyName(nameof(value.VCANodes));
+        serializer.Serialize(writer, value.VCANodes);
+
+        writer.WritePropertyName(nameof(value.ControllerOwnerNodes));
+        serializer.Serialize(writer, value.ControllerOwnerNodes);
+
+        writer.WriteEndObject();
+    }
+
+    public override FModReader ReadJson(JsonReader reader, System.Type objectType, FModReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FModGuidConverter : JsonConverter<FModGuid>
+{
+    public override void WriteJson(JsonWriter writer, FModGuid value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.ToString());
+    }
+
+    public override FModGuid ReadJson(JsonReader reader, Type objectType, FModGuid existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FmodSoundBankConverter : JsonConverter<FmodSoundBank>
+{
+    public override void WriteJson(JsonWriter writer, FmodSoundBank value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Header));
+        serializer.Serialize(writer, value.Header);
+
+        writer.WritePropertyName(nameof(value.Samples));
+        writer.WriteStartArray();
+        foreach (var sample in value.Samples)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName(nameof(sample.Metadata));
+            serializer.Serialize(writer, sample.Metadata);
+
+            writer.WritePropertyName(nameof(sample.Name));
+            writer.WriteValue(sample.Name);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WriteEndObject();
+    }
+
+    public override FmodSoundBank ReadJson(JsonReader reader, Type objectType, FmodSoundBank existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}

@@ -29,5 +29,6 @@ public struct FUniversalObjectLocatorFragment: IUStruct
         { "actor", "DirectPathObjectLocator" },
         { "animinst", "AnimInstanceLocatorFragment" },
         { "subobj", "SubObjectLocator" },
+        { "ls_lazy_obj_ptr", "LegacyLazyObjectPtrFragment" },
     };
 }

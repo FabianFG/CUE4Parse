@@ -7,10 +7,14 @@ public static class NaniteConstants
     public const ushort NANITE_FIXUP_MAGIC = 0x464E;
 
     public const int NANITE_MAX_BVH_NODE_FANOUT_BITS = 2;
+    public const int NANITE_MAX_BVH_NODE_FANOUT_MASK = (1 << NANITE_MAX_BVH_NODE_FANOUT_BITS) - 1;
     public const int NANITE_MAX_BVH_NODE_FANOUT = 1 << NANITE_MAX_BVH_NODE_FANOUT_BITS;
 
     public const int NANITE_MAX_CLUSTERS_PER_GROUP_BITS = 9;
-    public const int NANITE_MAX_RESOURCE_PAGES_BITS = 20;
+    public const int NANITE_MAX_RESOURCE_PAGES_BITS_500 = 20;
+    public const int NANITE_MAX_RESOURCE_PAGES_BITS_505 = 16;
+    public const int NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS = 16;
+    public const uint NANITE_PAGE_RANGE_KEY_EMPTY_RANGE = 0u;
 
     /// <summary>The maximum amount of UVs a nanite mesh can have</summary>
     public const int NANITE_MAX_UVS = 4;
@@ -50,9 +54,18 @@ public static class NaniteConstants
     public const int NANITE_MAX_CLUSTER_INDICES_MASK = NANITE_MAX_CLUSTER_INDICES - 1;
 
     public const int NANITE_MAX_HIERACHY_CHILDREN_BITS = 6;
-    public const int NANITE_MAX_GROUP_PARTS_BITS = 3;
     public const int NANITE_MAX_HIERACHY_CHILDREN = (1 << NANITE_MAX_HIERACHY_CHILDREN_BITS);
-    public const int NANITE_MAX_GROUP_PARTS_MASK = ((1 << NANITE_MAX_GROUP_PARTS_BITS) - 1);
+    // before 5.5
+    public const int NANITE_MAX_GROUP_PARTS_BITS_500 = 3;
+    public const int NANITE_MAX_GROUP_PARTS_MASK_500 = ((1 << NANITE_MAX_GROUP_PARTS_BITS_500) - 1);
+    // 5.5+
+    public const int NANITE_MAX_GROUP_PARTS_BITS_505 = 5;
+    public const int NANITE_MAX_GROUP_PARTS_MASK_505 = ((1 << NANITE_MAX_GROUP_PARTS_BITS_505) - 1);
+    
+    public const int NANITE_PAGE_RANGE_KEY_COUNT_BITS = NANITE_MAX_GROUP_PARTS_BITS_505;
+    public const uint NANITE_PAGE_RANGE_KEY_FLAG_MULTI_RANGE = 1u << 31;
+    public const uint NANITE_PAGE_RANGE_KEY_FLAG_HAS_STREAMING_PAGES = 1u << 30; // used by the GPU to prevent superfluous streaming requests
+
 
     public const int NANITE_UV_FLOAT_NUM_EXPONENT_BITS = 5;
     public const int NANITE_UV_FLOAT_MAX_MANTISSA_BITS = 14;

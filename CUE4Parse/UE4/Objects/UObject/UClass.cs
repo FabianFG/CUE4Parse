@@ -199,6 +199,7 @@ public class UClass : UStruct
             if (!value.TryLoad(out var export) || export is not UFunction function)
                 continue;
 
+            BlueprintDecompilerUtils.Function = function;
             var parametersList = new List<string>();
 
             var returnType = "void";

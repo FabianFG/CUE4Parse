@@ -72,6 +72,8 @@ public class FTexturePlatformData
             Ar.Position += PlaceholderDerivedDataSize;
         }
 
+        if (Ar.Game == EGame.GAME_InfinityNikki) Ar.Position += 4;
+
         if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
         {
             SizeX = Ar.Read<short>();

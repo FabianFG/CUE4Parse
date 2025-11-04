@@ -7,6 +7,7 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.StructUtils;
 
+[JsonConverter(typeof(EnumConverter<EPropertyBagPropertyType>))]
 public enum EPropertyBagPropertyType : byte
 {
     None,
@@ -31,6 +32,7 @@ public enum EPropertyBagPropertyType : byte
     Count
 };
 
+[JsonConverter(typeof(EnumConverter<EPropertyBagContainerType>))]
 public enum EPropertyBagContainerType : byte
 {
     None,
@@ -82,13 +84,14 @@ public struct FPropertyBagPropertyDesc
     public FPackageIndex ValueTypeObject;
     public FGuid ID;
     public FName Name;
-    [JsonConverter(typeof(StringEnumConverter))]
     public EPropertyBagPropertyType ValueType;
-    [JsonConverter(typeof(StringEnumConverter))]
     public EPropertyBagContainerType ContainerType;
+    public EPropertyFlags PropertyFlags;
     public FPropertyBagContainerTypes ContainerTypes;
-    public FPropertyBagPropertyDescMetaData[] MetaData;
-    public FPackageIndex MetaClass;
+    public FPropertyBagPropertyDescMetaData[]? MetaData;
+    public FPackageIndex? MetaClass;
+    public EPropertyBagPropertyType KeyType;
+    public FPackageIndex? KeyTypeObject;
 
     public FPropertyBagPropertyDesc(FAssetArchive Ar)
     {
@@ -116,6 +119,17 @@ public struct FPropertyBagPropertyDesc
             {
                 MetaClass = new FPackageIndex(Ar);
             }
+        }
+
+        if (FPropertyBagCustomVersion.Get(Ar) >= FPropertyBagCustomVersion.Type.PropertyFlags)
+        {
+            PropertyFlags = Ar.Read<EPropertyFlags>();
+        }
+
+        if (FPropertyBagCustomVersion.Get(Ar) >= FPropertyBagCustomVersion.Type.KeyTypes)
+        {
+            KeyType = Ar.Read<EPropertyBagPropertyType>();
+            KeyTypeObject = new FPackageIndex(Ar);
         }
     }
 }

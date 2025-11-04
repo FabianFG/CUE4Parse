@@ -127,6 +127,12 @@ public static class FControlRigObjectVersion
 
         // New setting for connectors to optionally specify their use only during post construction
         RigHierarchyPostConstructionConnectors,
+        
+        // Overrides store TOC data for properties to solidify loading of data when the definition has changed
+        OverridesStoreTOCDataForProperties,
+        
+        // Overrides the skip offset as int64 - previous versions stored it as int32
+        OverridesStoreDatSkipOffsetAsInt64,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -154,6 +160,7 @@ public static class FControlRigObjectVersion
             < EGame.GAME_UE5_5 => Type.RigPoseWithParentKey,
             < EGame.GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
             < EGame.GAME_UE5_7 => Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
+            < EGame.GAME_UE5_8 => Type.OverridesStoreTOCDataForProperties,
             _ => Type.LatestVersion
         };
     }

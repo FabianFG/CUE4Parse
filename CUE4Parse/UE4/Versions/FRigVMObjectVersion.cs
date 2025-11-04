@@ -68,6 +68,9 @@ public static class FRigVMObjectVersion
 
         // The VM stores a local snapshot registry to use in cooked environments instead of the shared global registry
         LocalizedRegistry,
+        
+        // The VM stores a relative seek offset to be able to skip the registry during load
+        LocalizedRegistryWithRelativeSeekOffset,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -89,6 +92,7 @@ public static class FRigVMObjectVersion
             < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
             < EGame.GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
             < EGame.GAME_UE5_7 => Type.ByteCodeCleanup,
+            < EGame.GAME_UE5_8 => Type.LocalizedRegistry,
             _ => Type.LatestVersion
         };
     }

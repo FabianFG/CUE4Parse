@@ -25,7 +25,6 @@ public enum EPakFileVersion
     PakFile_Version_Fnv64BugFix = 11,
     PakFile_Version_Utf8PakDirectory = 12,
 
-
     PakFile_Version_Last,
     PakFile_Version_Invalid,
     PakFile_Version_Latest = PakFile_Version_Last - 1

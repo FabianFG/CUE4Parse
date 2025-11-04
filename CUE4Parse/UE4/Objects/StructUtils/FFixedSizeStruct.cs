@@ -14,3 +14,8 @@ public class FFixedSizeStruct : IUStruct
         Data = len > 0 ? Ar.ReadBytes(len) : [];
     }
 }
+
+public struct FRawStruct<T> : IUStruct
+{
+    public T Value;
+}

@@ -1,4 +1,5 @@
 using System.IO;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Objects;
 
@@ -6,6 +7,7 @@ public readonly struct FEffectParameter
 {
     public readonly int Type;
     public readonly float FloatValue;
+    [JsonIgnore]
     public readonly byte[]? Buffer;
 
     public FEffectParameter(BinaryReader Ar)

@@ -15,6 +15,8 @@ public static class FPropertyBagCustomVersion
         ContainerTypes = 1,
         NestedContainerTypes = 2,
         MetaClass = 3,
+        PropertyFlags = 4,
+        KeyTypes = 5,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -35,6 +37,7 @@ public static class FPropertyBagCustomVersion
             < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE5_3 => Type.ContainerTypes,
             < EGame.GAME_UE5_4 => Type.NestedContainerTypes,
+            < EGame.GAME_UE5_8 => Type.MetaClass,
             _ => Type.LatestVersion
         };
     }
