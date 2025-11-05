@@ -25,8 +25,6 @@ public class UTexture2D : UTexture
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
         AddressY = GetOrDefault<TextureAddress>(nameof(AddressY));
         
-        if (Ar.Position == Ar.Length) return; // Textures in Editor Archives don't have data below
-        
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)

@@ -25,8 +25,6 @@ public abstract class AbstractUePackage : UObject, IPackage
     public abstract int ImportMapLength { get; }
     public abstract int ExportMapLength { get; }
 
-    public List<byte[]> EditorThumbnails { get; set; }
-
     public Lazy<UObject>[] ExportsLazy { get; protected init; }
     public bool IsFullyLoaded { get; protected init; }
     public bool CanDeserialize

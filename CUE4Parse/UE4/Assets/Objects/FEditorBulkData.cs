@@ -40,13 +40,12 @@ public enum EFlags
 
 public class FEditorBulkData
 {
-    public FCompressedBufferHeader Header { get; private set; }
     public EFlags Flags { get; set; }
     public FGuid BulkDataId { get; set; }
     public FSHAHash PayloadContentId { get; set; }
     public long PayloadSize { get; set; }
-    public int Offset { get; set; }
-    public byte[] RawData { get; set; }
+    public long OffsetInFile { get; set; }
+    public FCompressedBuffer Payload { get; set; }
 
     public FEditorBulkData(FAssetArchive Ar)
     {
@@ -56,16 +55,43 @@ public class FEditorBulkData
         PayloadSize = Ar.Read<long>();
         if (Flags.HasFlag(EFlags.StoredInPackageTrailer))
         {
-            // Seems to be something like bulkdata payloads? not sure
-            Log.Error("EditorBulkData: Stored In Package Trailer is not supported.");
+            if (Ar.Owner is Package package && package.Trailer is not null)
+            {
+                OffsetInFile = package.Trailer.FindPayloadOffsetInFile(PayloadContentId);
+            }
+            else
+            {
+                Log.Warning("BulkData marked as stored in package trailer, but package has no trailer");
+                Payload = new FCompressedBuffer();
+                return;
+            }
+        }
+        else
+        {
+            OffsetInFile = Ar.Read<long>();
+        }
+
+        if (OffsetInFile == -1)
+        {
+            Payload = new FCompressedBuffer();
             return;
         }
-        Offset = Ar.Read<int>();
 
-        Ar.Position = Offset;
-
-        Header = new FCompressedBufferHeader(Ar);
-        RawData = Ar.ReadBytes((int)Header.TotalRawSize);
-        Ar.Read<int>(); // FPackage Magic
+        var savedPos = Ar.Position;
+        try
+        {
+            Ar.Position = OffsetInFile;
+            Payload = new FCompressedBuffer(Ar);
+        } 
+        catch (Exception e) 
+        { 
+            Log.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile); 
+            Payload = new FCompressedBuffer(); 
+            return; 
+        }
+        finally
+        {
+            Ar.Position = savedPos;
+        }
     }
 }

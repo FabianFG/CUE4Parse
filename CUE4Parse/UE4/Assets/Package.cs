@@ -29,6 +29,8 @@ namespace CUE4Parse.UE4.Assets
         public FPackageIndex[][]? DependsMap { get; }
         public FPackageIndex[]? PreloadDependencies { get; }
         public FObjectDataResource[]? DataResourceMap { get; }
+        public List<byte[]>? EditorThumbnails { get; }
+        public FPackageTrailer? Trailer { get; }
 
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
@@ -89,9 +91,9 @@ namespace CUE4Parse.UE4.Assets
             ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
-            EditorThumbnails = new List<byte[]>();
             if (Summary.ThumbnailTableOffset > 0)
             {
+                EditorThumbnails = new List<byte[]>();
                 uassetAr.SeekAbsolute(Summary.ThumbnailTableOffset, SeekOrigin.Begin);
                 var count = uassetAr.Read<int>();
 
@@ -141,6 +143,12 @@ namespace CUE4Parse.UE4.Assets
                 {
                     DataResourceMap = uassetAr.ReadArray(() => new FObjectDataResource(uassetAr, dataResourceVersion));
                 }
+            }
+
+            if (!Summary.PackageFlags.HasFlag(EPackageFlags.PKG_Cooked) && Summary.PayloadTocOffset > 0)
+            {
+                uassetAr.SeekAbsolute(Summary.PayloadTocOffset, SeekOrigin.Begin);
+                Trailer = new FPackageTrailer(uassetAr);
             }
 
             if (!CanDeserialize) return;
@@ -327,7 +335,7 @@ namespace CUE4Parse.UE4.Assets
                 "SharpClass" => new(() => new USharpClass(Name.Text)),
                 "PythonClass" => new(() => new UPythonClass(Name.Text)),
                 "ASClass" => new(() => new UASClass(Name.Text)),
-                "ScriptStruct" => new (() => new UScriptClass(Name.Text)),
+                "ScriptStruct" => new(() => new UScriptClass(Name.Text)),
                 _ => null
             };
         }

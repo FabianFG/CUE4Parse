@@ -7,6 +7,12 @@ public class FCompressedBuffer
     public FCompressedBufferHeader Header;
     public byte[] Data;
 
+    public FCompressedBuffer()
+    {
+        Header = new FCompressedBufferHeader();
+        Data = [];
+    }
+
     public FCompressedBuffer(FArchive Ar)
     {
         Header = new FCompressedBufferHeader(Ar);
