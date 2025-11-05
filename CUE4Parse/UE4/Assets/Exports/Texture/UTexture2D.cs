@@ -24,7 +24,7 @@ public class UTexture2D : UTexture
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
         AddressY = GetOrDefault<TextureAddress>(nameof(AddressY));
-
+        
         var stripDataFlags = Ar.Read<FStripDataFlags>();
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
