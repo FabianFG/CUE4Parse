@@ -16,11 +16,11 @@ public class HcaWaveStream : WaveStream
 
     private long _samplePosition;
 
-    public HcaWaveStream(Stream hcaFile, ulong key)
+    public HcaWaveStream(Stream hcaFile, ulong key, ulong subkey)
     {
         _hcaFileStream = hcaFile;
         _hcaFileReader = new(hcaFile);
-        _decoder = new(hcaFile, key);
+        _decoder = new(hcaFile, key, subkey);
         _info = _decoder.HcaInfo;
         _dataStart = hcaFile.Position;
 

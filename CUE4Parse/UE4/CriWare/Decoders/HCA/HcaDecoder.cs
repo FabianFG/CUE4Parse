@@ -10,12 +10,12 @@ public class HcaDecoder
 {
     private readonly HcaContext _hca;
 
-    public HcaDecoder(Stream hcaStream, ulong key)
+    public HcaDecoder(Stream hcaStream, ulong key, ulong subkey)
     {
         InitializeTables();
 
         _hca = new HcaContext(hcaStream);
-        _hca.SetKey(key);
+        _hca.SetKey(key, subkey);
 
         HcaInfo = new HcaInfo()
         {

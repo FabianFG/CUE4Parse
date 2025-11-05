@@ -289,8 +289,13 @@ internal class HcaContext
         if (MsStereo > 0) throw new Exception();
     }
     
-    public void SetKey(ulong key)
+    public void SetKey(ulong key, ulong subKey)
     {
+        if (subKey != 0)
+        {
+            key = key * (((ulong) subKey << 16) | ((ushort) (~subKey + 2)));
+        }
+
         KeyCode = key;
         CipherTable = Cipher.Init(CiphType, KeyCode);
     }

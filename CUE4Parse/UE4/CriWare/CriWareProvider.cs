@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.CriWare;
-using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.CriWare.Decoders.HCA;
 using CUE4Parse.UE4.CriWare.Readers;
 using NAudio.Wave;
@@ -146,7 +145,7 @@ public class CriWareProvider
             // TODO: for testing build audio as wav
             // change this later to output as hca and only decode to wav when audio is played
             // because this is going to be slow
-            using var hcaWaveStream = new HcaWaveStream(waveStream, _decryptionKey);
+            using var hcaWaveStream = new HcaWaveStream(waveStream, _decryptionKey, awb.Subkey);
             using var wavStream = new MemoryStream();
             using (var writer = new WaveFileWriter(wavStream, hcaWaveStream.WaveFormat))
             {
@@ -180,10 +179,10 @@ public class CriWareProvider
                 engineConfig.Read(new StreamReader(engineAr));
         }
 
-        var fmodSection = engineConfig.Sections
+        var criwareSection = engineConfig.Sections
             .FirstOrDefault(s => s.Name == "/Script/CriWareRuntime.CriWarePluginSettings");
 
-        var token = fmodSection?.Tokens
+        var token = criwareSection?.Tokens
             .OfType<InstructionToken>()
             .FirstOrDefault(t => t.Key == "ContentDir");
 
