@@ -10,7 +10,6 @@ namespace CUE4Parse.UE4.Assets.Exports.CriWare;
 public class USoundAtomCueSheet : UObject
 {
     public AcbReader? AcbReader;
-    public Dictionary<string, List<Dictionary<string, object?>>>? TableData;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -24,7 +23,6 @@ public class USoundAtomCueSheet : UObject
 
         using var bulkAr = new FByteArchive("bulk", bulkData.Data);
         AcbReader = new AcbReader(bulkAr);
-        TableData = AcbReader.TableData;
 
         if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
         {
@@ -36,10 +34,10 @@ public class USoundAtomCueSheet : UObject
     {
         base.WriteJson(writer, serializer);
 
-        if (TableData == null)
+        if (AcbReader == null)
             return;
 
-        writer.WritePropertyName(nameof(TableData));
-        serializer.Serialize(writer, TableData);
+        writer.WritePropertyName(nameof(AcbReader.AtomCueSheetData));
+        serializer.Serialize(writer, AcbReader.AtomCueSheetData);
     }
 }

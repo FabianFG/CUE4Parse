@@ -16,7 +16,7 @@ public sealed class AcbReader : IDisposable
 
     private readonly AcbParser _acbParser;
 
-    public Dictionary<string, List<Dictionary<string, object?>>> TableData => _acbParser.TableData;
+    public Dictionary<string, List<Dictionary<string, object?>>> AtomCueSheetData => _acbParser.TableData;
 
     public AcbReader(Stream acbStream) : this(acbStream, 0) { }
 
@@ -55,7 +55,7 @@ public sealed class AcbReader : IDisposable
     {
         if (_awbLength <= 0)
         {
-            Log.Warning("AWB length is 0, skipping");
+            Log.Warning("Memory AWB length is 0, skipping");
             return null;
         }
 
@@ -70,7 +70,7 @@ public sealed class AcbReader : IDisposable
 
     public object? TryGetTableValue(string tableName, string key)
     {
-        if (TableData?.TryGetValue(tableName, out var list) != true || list == null)
+        if (AtomCueSheetData?.TryGetValue(tableName, out var list) != true || list == null)
             return null;
 
         foreach (var dict in list)

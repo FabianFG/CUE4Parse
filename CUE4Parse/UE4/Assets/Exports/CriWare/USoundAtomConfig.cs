@@ -7,9 +7,10 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.CriWare;
 
+public class UAtomConfig : USoundAtomConfig;
 public class USoundAtomConfig : UObject
 {
-    public Dictionary<string, List<Dictionary<string, object?>>>? TableData;
+    public AcbReader? AcbReader;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -22,9 +23,7 @@ public class USoundAtomConfig : UObject
             return;
 
         using var bulkAr = new FByteArchive("bulk", bulkData.Data);
-        using var acbReader = new AcbReader(bulkAr);
-
-        TableData = acbReader.TableData;
+        AcbReader = new AcbReader(bulkAr);
 
         if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
         {
@@ -36,7 +35,10 @@ public class USoundAtomConfig : UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName(nameof(TableData));
-        serializer.Serialize(writer, TableData);
+        if (AcbReader == null)
+            return;
+
+        writer.WritePropertyName(nameof(AcbReader.AtomCueSheetData));
+        serializer.Serialize(writer, AcbReader.AtomCueSheetData);
     }
 }

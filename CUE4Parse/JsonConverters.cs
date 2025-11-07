@@ -3383,13 +3383,34 @@ public class AcbReaderConverter : JsonConverter<AcbReader>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName(nameof(value.TableData));
-        serializer.Serialize(writer, value.TableData);
+        writer.WritePropertyName(nameof(value.AtomCueSheetData));
+        serializer.Serialize(writer, value.AtomCueSheetData);
 
         writer.WriteEndObject();
     }
 
     public override AcbReader ReadJson(JsonReader reader, Type objectType, AcbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AwbReaderConverter : JsonConverter<AwbReader>
+{
+    public override void WriteJson(JsonWriter writer, AwbReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Waves));
+        serializer.Serialize(writer, value.Waves);
+
+        writer.WritePropertyName(nameof(value.Subkey));
+        serializer.Serialize(writer, value.Subkey);
+
+        writer.WriteEndObject();
+    }
+
+    public override AwbReader ReadJson(JsonReader reader, Type objectType, AwbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

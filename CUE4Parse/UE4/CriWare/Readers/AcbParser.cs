@@ -544,7 +544,8 @@ public class AcbParser
         PreloadAcbTrack();
 
         if (index > _trackRows)
-            throw new ArgumentOutOfRangeException(nameof(index));
+            return;
+            //throw new ArgumentOutOfRangeException(nameof(index));
 
         if (_track is null)
             return;
@@ -653,7 +654,8 @@ public class AcbParser
         PreloadAcbBlock();
 
         if (index > _blockRows)
-            throw new ArgumentOutOfRangeException(nameof(index));
+            return;
+            //throw new ArgumentOutOfRangeException(nameof(index));
 
         if (_block is null)
             return;
