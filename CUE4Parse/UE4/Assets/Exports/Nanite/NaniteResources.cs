@@ -142,6 +142,13 @@ public class FNaniteResources
             return true;
         }
 
+        var versionContainer = Archive.Versions;
+        if (Archive.Game == EGame.GAME_TheFirstDescendant)
+        {
+            versionContainer = (VersionContainer) versionContainer.Clone();
+            versionContainer.Game = EGame.GAME_UE5_3;
+        }
+
         var page = PageStreamingStates[pageIndex];
         byte[] buffer = ArrayPool<byte>.Shared.Rent((int)page.BulkSize);
         try
@@ -155,7 +162,7 @@ public class FNaniteResources
                 Buffer.BlockCopy(StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
             }
 
-            using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, Archive.Versions);
+            using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, versionContainer);
             outPage = new FNaniteStreamableData(pageArchive, this, pageIndex);
         }
         catch (Exception ex)
