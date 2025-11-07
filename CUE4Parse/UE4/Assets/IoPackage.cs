@@ -32,7 +32,7 @@ namespace CUE4Parse.UE4.Assets
         public readonly FExportMapEntry[] ExportMap;
         public readonly FBulkDataMapEntry[] BulkDataMap;
         public readonly Lazy<IoPackage?[]> ImportedPackages;
-        public readonly Lazy<IoPackage?[][]> ImportedPackagesAllVersions;
+        public readonly Lazy<IPackage?[][]> ImportedPackagesAllVersions;
 
         public IoPackage(FArchive uasset, FIoContainerHeader? containerHeader = null, FArchive? ubulk = null, FArchive? uptnl = null, IVfsFileProvider? provider = null)
             : this(
@@ -235,9 +235,9 @@ namespace CUE4Parse.UE4.Assets
                 return packages;
             });
 
-            ImportedPackagesAllVersions = new Lazy<IoPackage?[][]>(() =>
+            ImportedPackagesAllVersions = new Lazy<IPackage?[][]>(() =>
             {
-                var packages = new IoPackage?[importedPackageIds.Length][];
+                var packages = new IPackage?[importedPackageIds.Length][];
                 for (var i = 0; i < importedPackageIds.Length; i++)
                 {
                     var package = ImportedPackages.Value[i];
@@ -247,11 +247,7 @@ namespace CUE4Parse.UE4.Assets
                         continue;
                     }
 
-                    provider.TryLoadPackages(package.Name, out var packagesList);
-                    if (packagesList is not { Count: > 1 })
-                        packages[i] = [];
-                    else
-                        packages[i] = packagesList.Cast<IoPackage>().ToArray();
+                    packages[i] = provider.TryLoadPackages(package.Name, out var packagesList) ? [.. packagesList] : [];
                 }
                 return packages;
             });
@@ -424,14 +420,27 @@ namespace CUE4Parse.UE4.Assets
                         // search all previous versions
                         var importedPackagesAllVersions = ImportedPackagesAllVersions.Value;
                         var packages = importedPackagesAllVersions[packageImportRef.ImportedPackageIndex];
-                        foreach (var pak in packages)
+                        foreach (var asset in packages)
                         {
-                            if (pak == null) continue;
-                            for (int exportIndex = 0; exportIndex < pak.ExportMap.Length; ++exportIndex)
+                            if (asset is IoPackage ioPackage)
                             {
-                                if (pak.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
+                                for (int exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
                                 {
-                                    return new ResolvedExportObject(exportIndex, pak);
+                                    if (ioPackage.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
+                                    {
+                                        return new ResolvedExportObject(exportIndex, ioPackage);
+                                    }
+                                }
+                            }
+                            else if (asset is Package package)
+                            {
+                                Log.Information("Searching Pak package {0} for PublicExportHash 0x{1:X}", package.Name, ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex]);
+                                for (int exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
+                                {
+                                    if (package.ExportMap[exportIndex].GetPublicExportHash() == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
+                                    {
+                                        return new ResolvedPakExportObject(exportIndex, package);
+                                    }
                                 }
                             }
                         }
@@ -454,14 +463,26 @@ namespace CUE4Parse.UE4.Assets
                     // search all previous versions
                     foreach (var packages in ImportedPackagesAllVersions.Value)
                     {
-                        foreach (var pak in packages)
+                        foreach (var asset in packages)
                         {
-                            if (pak == null) continue;
-                            for (int exportIndex = 0; exportIndex < pak.ExportMap.Length; ++exportIndex)
+                            if (asset is IoPackage ioPackage)
                             {
-                                if (pak.ExportMap[exportIndex].GlobalImportIndex == index)
+                                for (int exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
                                 {
-                                    return new ResolvedExportObject(exportIndex, pak);
+                                    if (ioPackage.ExportMap[exportIndex].GlobalImportIndex == index)
+                                    {
+                                        return new ResolvedExportObject(exportIndex, ioPackage);
+                                    }
+                                }
+                            }
+                            else if (asset is Package package)
+                            {
+                                for (int exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
+                                {
+                                    if (package.ExportMap[exportIndex].GetGlobalImportIndex() == index)
+                                    {
+                                        return new ResolvedPakExportObject(exportIndex, package);
+                                    }
                                 }
                             }
                         }
@@ -475,6 +496,21 @@ namespace CUE4Parse.UE4.Assets
             }
 
             return null;
+        }
+
+        private class ResolvedPakExportObject : ResolvedObject
+        {
+            private readonly FObjectExport _export;
+
+            public ResolvedPakExportObject(int exportIndex, Package package) : base(package, exportIndex)
+            {
+                _export = package.ExportMap[exportIndex];
+            }
+
+            public override FName Name => _export?.ObjectName ?? "None";
+            public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+            public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
+            public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
         }
 
         private class ResolvedExportObject : ResolvedObject
