@@ -59,7 +59,7 @@ public class ULandscapeComponent: UPrimitiveComponent
             GrassData = new FLandscapeComponentGrassData(Ar);
         }
 
-        if (Ar.IsFilterEditorOnly)
+        if (!Ar.IsFilterEditorOnly)
         {
             Ar.Position += sizeof(int); // SelectedType
         }

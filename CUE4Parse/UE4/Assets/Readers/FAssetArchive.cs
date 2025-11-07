@@ -24,6 +24,7 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public bool HasUnversionedProperties => Owner?.HasFlags(EPackageFlags.PKG_UnversionedProperties) ?? false;
         public bool IsFilterEditorOnly => Owner?.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ?? false;
+        public bool IsLoadingFromCookedPackage => Owner?.HasFlags(EPackageFlags.PKG_Cooked) ?? false;
 
         public FAssetArchive(FArchive baseArchive, IPackage? owner, int absoluteOffset = 0, Dictionary<PayloadType, Lazy<FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
         {
