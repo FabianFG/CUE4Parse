@@ -6,16 +6,22 @@ using static CUE4Parse.UE4.CriWare.Decoders.HCA.Tables;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
 
+public class CriwareDecryptionException : Exception
+{
+    public CriwareDecryptionException(string message) : base(message) { }
+    public CriwareDecryptionException(string message, Exception inner) : base(message, inner) { }
+}
+
 public class HcaDecoder
 {
     private readonly HcaContext _hca;
 
-    public HcaDecoder(Stream hcaStream, ulong key, ulong subkey)
+    public HcaDecoder(Stream hcaStream, ulong key, ushort subKey)
     {
         InitializeTables();
 
         _hca = new HcaContext(hcaStream);
-        _hca.SetKey(key, subkey);
+        _hca.SetKey(key, subKey);
 
         HcaInfo = new HcaInfo()
         {
@@ -38,7 +44,7 @@ public class HcaDecoder
         };
 
         if (HcaInfo.EncryptionEnabled && key == 0)
-            throw new InvalidDataException("CriWare audio is encrypted. You need to provide correct 8-byte decryption key (e.g. 0x1234567890ABCDEF) to extract it.");
+            throw new CriwareDecryptionException("CRIWARE audio is encrypted. Provide the correct decryption key in settings (numeric or hexadecimal format, up to 20 digits / 8 bytes).");
     }
 
     public HcaInfo HcaInfo { get; }

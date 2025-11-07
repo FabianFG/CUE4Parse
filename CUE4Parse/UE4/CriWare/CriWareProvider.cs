@@ -7,7 +7,6 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.CriWare;
 using CUE4Parse.UE4.CriWare.Decoders.HCA;
 using CUE4Parse.UE4.CriWare.Readers;
-using NAudio.Wave;
 using Serilog;
 using UE4Config.Parsing;
 
@@ -30,15 +29,13 @@ public class CriWareProvider
     private IFileProvider _provider;
     private readonly string _gameDirectory;
     private string? _criWareContentDir;
-    private ulong _decryptionKey;
 
-    public CriWareProvider(IFileProvider provider, string gameDirectory, ulong key = 32105414741057402) // TODO: add criware key to settings
+    public CriWareProvider(IFileProvider provider, string gameDirectory)
     {
         _provider = provider;
         _gameDirectory = gameDirectory;
         LoadCriWareConfig(provider);
         CreateAwbLookupTable(provider);
-        _decryptionKey = key;
     }
 
     // TODO: grab hca wave by cue name provided with soundAtomCue
@@ -117,7 +114,6 @@ public class CriWareProvider
             }
 
             awb = new AwbReader(awbStream);
-            acb.HasMemoryAwb = false; // TODO
         }
 
         return awb == null ? [] : ExtractFromAwb(awb, cueSheetName, acb);
@@ -133,7 +129,7 @@ public class CriWareProvider
 
             // TODO: how to handle if acb has memory awb and also has streaming awb?
             string waveName = $"{baseName}_{i:D4}";
-            if (acb != null && acb.HasMemoryAwb)
+            if (acb != null)
                 acb.GetWaveName(i, 0, acb.HasMemoryAwb);
 
             if (waveStream.Length == 0)
@@ -142,24 +138,13 @@ public class CriWareProvider
                 continue;
             }
 
-            // TODO: for testing build audio as wav
-            // change this later to output as hca and only decode to wav when audio is played
-            // because this is going to be slow
-            using var hcaWaveStream = new HcaWaveStream(waveStream, _decryptionKey, awb.Subkey);
-            using var wavStream = new MemoryStream();
-            using (var writer = new WaveFileWriter(wavStream, hcaWaveStream.WaveFormat))
-            {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = hcaWaveStream.Read(buffer, 0, buffer.Length)) > 0)
-                    writer.Write(buffer, 0, bytesRead);
-            }
+            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, awb.Subkey);
 
             results.Add(new CriWareExtractedSound
             {
                 Name = waveName,
-                Extension = "wav",
-                Data = wavStream.ToArray(),
+                Extension = "hca",
+                Data = hcaData
             });
         }
 

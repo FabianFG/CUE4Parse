@@ -72,76 +72,76 @@ public class AcbParser
 {
     public readonly Dictionary<string, List<Dictionary<string, object?>>> TableData = [];
 
-    private Stream acbStream;
+    private readonly Stream _acbStream;
 
-    private UtfTable header;
-    private UtfTable cueNames;
+    private readonly UtfTable _header;
+    private UtfTable? _cueNames;
 
-    private BinaryReaderEndian cueReader;
-    private BinaryReaderEndian cueNameReader;
-    private BinaryReaderEndian blockSequenceReader;
-    private BinaryReaderEndian blockReader;
-    private BinaryReaderEndian sequenceReader;
-    private BinaryReaderEndian trackReader;
-    private BinaryReaderEndian trackCommandReader;
-    private BinaryReaderEndian synthReader;
-    private BinaryReaderEndian waveformReader;
+    private BinaryReaderEndian? _cueReader;
+    private BinaryReaderEndian? _cueNameReader;
+    private BinaryReaderEndian? _blockSequenceReader;
+    private BinaryReaderEndian? _blockReader;
+    private BinaryReaderEndian? _sequenceReader;
+    private BinaryReaderEndian? _trackReader;
+    private BinaryReaderEndian? _trackCommandReader;
+    private BinaryReaderEndian? _synthReader;
+    private BinaryReaderEndian? _waveformReader;
 
-    private Cue[] cue;
-    private CueName[] cueName;
-    private BlockSequence[] blockSequence;
-    private Block[] block;
-    private Sequence[] sequence;
-    private Track[] track;
-    private TrackCommand[] trackCommand;
-    private Synth[] synth;
-    private Waveform[] waveform;
+    private Cue[] _cue = [];
+    private CueName[] _cueName = [];
+    private BlockSequence[] _blockSequence = [];
+    private Block[] _block = [];
+    private Sequence[] _sequence = [];
+    private Track[] _track = [];
+    private TrackCommand[] _trackCommand = [];
+    private Synth[] _synth = [];
+    private Waveform[] _waveform = [];
 
-    private int cueRows;
-    private int cueNameRows;
-    private int blockSequenceRows;
-    private int blockRows;
-    private int sequenceRows;
-    private int trackRows;
-    private int trackCommandRows;
-    private int synthRows;
-    private int waveFormRows;
+    private int _cueRows;
+    private int _cueNameRows;
+    private int _blockSequenceRows;
+    private int _blockRows;
+    private int _sequenceRows;
+    private int _trackRows;
+    private int _trackCommandRows;
+    private int _synthRows;
+    private int _waveFormRows;
 
-    private bool isMemory;
-    private int targetWaveId;
-    private int targetPort;
-    private int targetCueId;
+    private bool _isMemory;
+    private int _targetWaveId;
+    private int _targetPort;
+    private int _targetCueId;
 
-    private int synthDepth;
-    private int sequenceDepth;
+    private int _synthDepth;
+    private int _sequenceDepth;
 
-    private short cueNameIndex;
-    private string cueNameName = "";
-    private int awbNameCount;
-    private List<short> awbNameList = new List<short>();
-    private string name;
+    private short _cueNameIndex;
+    private string _cueNameName = string.Empty;
+    private int _awbNameCount;
+    private readonly List<short> _awbNameList = [];
+    private string _name = string.Empty;
 
-    private uint currentCueId;
-    private int waveIdFromCueId;
-    private bool cueOnly;
+    private uint _currentCueId;
+    private int _waveIdFromCueId;
+    private bool _cueOnly;
 
     public AcbParser(Stream acb)
     {
-        acbStream = acb;
-        header = new UtfTable(acb, (uint)acbStream.Position);
+        _acbStream = acb;
+        _header = new UtfTable(acb, (uint) _acbStream.Position);
         StoreAllUtfTableRows();
     }
 
     private void StoreAllUtfTableRows()
     {
-        foreach (var col in header.Schema)
+        foreach (var col in _header.Schema)
         {
             if (col.Type != ColumnType.VLData)
                 continue;
 
             UtfTable? sub = null;
             try
-            { sub = header.OpenSubtable(col.Name); }
+            { sub = _header.OpenSubtable(col.Name); }
             catch { }
 
             if (sub == null || sub.Rows == 0)
@@ -231,10 +231,10 @@ public class AcbParser
 
     bool OpenUtfSubtable(out BinaryReaderEndian tableReader, out UtfTable table, string tableName, out int rows)
     {
-        if (!header.Query(0, tableName, out VLData data))
+        if (!_header.Query(0, tableName, out VLData data))
             throw new ArgumentException("Error reading table.");
 
-        tableReader = new BinaryReaderEndian(acbStream);
+        tableReader = new BinaryReaderEndian(_acbStream);
         table = new UtfTable(tableReader.BaseStream, data.Offset, out rows, out string _);
 
         return true;
@@ -242,40 +242,42 @@ public class AcbParser
 
     void AddAcbName(byte streaming)
     {
-        if (cueNameName.Length == 0)
+        if (_cueNameName.Length == 0)
             return;
 
-        for (int i = 0; i < awbNameCount; i++)
+        for (int i = 0; i < _awbNameCount; i++)
         {
-            if (awbNameList[i] == cueNameIndex)
+            if (_awbNameList[i] == _cueNameIndex)
                 return;
         }
 
-        if (awbNameCount > 0)
+        if (_awbNameCount > 0)
         {
-            name += "; ";
-            name += cueNameName;
+            _name += "; ";
+            _name += _cueNameName;
         }
         else
-            name = cueNameName;
+            _name = _cueNameName;
 
-        if (streaming == 2 && isMemory)
-            name += " [pre]";
+        if (streaming == 2 && _isMemory)
+            _name += " [pre]";
 
-        awbNameList.Add(cueNameIndex);
-        awbNameCount++;
+        _awbNameList.Add(_cueNameIndex);
+        _awbNameCount++;
     }
 
     void PreloadAcbWaveForm()
     {
-        ref int rows = ref waveFormRows;
+        ref int rows = ref _waveFormRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out waveformReader, out UtfTable table, "WaveformTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _waveformReader, out UtfTable table, "WaveformTable", out rows))
             throw new Exception("Failure opening Waveform table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        waveform = new Waveform[rows];
+        _waveform = new Waveform[rows];
 
         int cId = table.GetColumn("Id");
         int cMemoryAwbId = table.GetColumn("MemoryAwbId");
@@ -285,14 +287,14 @@ public class AcbParser
 
         for (int i = 0; i < rows; i++)
         {
-            ref Waveform r = ref waveform[i];
+            ref Waveform r = ref _waveform[i];
 
             if (!table.Query(i, cId, out r.Id))
             {
-                if (isMemory)
+                if (_isMemory)
                 {
                     table.Query(i, cMemoryAwbId, out r.Id);
-                    waveform[i].PortNo = 0xFFFF;
+                    _waveform[i].PortNo = 0xFFFF;
                 }
                 else
                 {
@@ -301,7 +303,7 @@ public class AcbParser
                 }
             }
             else
-                waveform[i].PortNo = 0xFFFF;
+                _waveform[i].PortNo = 0xFFFF;
 
             table.Query(i, cStreaming, out r.Streaming);
         }
@@ -311,25 +313,27 @@ public class AcbParser
     {
         PreloadAcbWaveForm();
 
-        if (index > waveFormRows)
+        if (index > _waveFormRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (waveform is null) return;
-
-        ref Waveform r = ref waveform[index];
-
-        if (currentCueId == targetCueId)
-            waveIdFromCueId = r.Id;
-
-        if (cueOnly) return;
-
-        if (r.Id != targetWaveId)
+        if (_waveform is null)
             return;
 
-        if (targetPort >= 0 && r.PortNo != 0xFFFF && r.PortNo != targetPort)
+        ref Waveform r = ref _waveform[index];
+
+        if (_currentCueId == _targetCueId)
+            _waveIdFromCueId = r.Id;
+
+        if (_cueOnly)
             return;
 
-        if ((isMemory && r.Streaming == 1) || (!isMemory && r.Streaming == 0))
+        if (r.Id != _targetWaveId)
+            return;
+
+        if (_targetPort >= 0 && r.PortNo != 0xFFFF && r.PortNo != _targetPort)
+            return;
+
+        if ((_isMemory && r.Streaming == 1) || (!_isMemory && r.Streaming == 0))
             return;
 
         AddAcbName(r.Streaming);
@@ -339,21 +343,23 @@ public class AcbParser
 
     void PreloadAcbSynth()
     {
-        ref int rows = ref synthRows;
+        ref int rows = ref _synthRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out synthReader, out UtfTable table, "SynthTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _synthReader, out UtfTable table, "SynthTable", out rows))
             throw new Exception("Failure opening Synth table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        synth = new Synth[rows];
+        _synth = new Synth[rows];
 
         int cType = table.GetColumn("Type");
         int cReferenceItems = table.GetColumn("ReferenceItems");
 
         for (int i = 0; i < rows; i++)
         {
-            ref Synth r = ref synth[i];
+            ref Synth r = ref _synth[i];
 
             table.Query(i, cType, out r.Type);
             table.Query(i, cReferenceItems, out r.ReferenceItemsOffset, out r.ReferenceItemsSize);
@@ -364,26 +370,28 @@ public class AcbParser
     {
         PreloadAcbSynth();
 
-        if (index > synthRows)
+        if (index > _synthRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (synth is null) return;
-        if (synthReader is null) return;
+        if (_synth is null)
+            return;
+        if (_synthReader is null)
+            return;
 
-        ref Synth r = ref synth[index];
+        ref Synth r = ref _synth[index];
 
-        synthDepth++;
+        _synthDepth++;
 
-        if (synthDepth > 3)
+        if (_synthDepth > 3)
             throw new Exception("Synth depth too high");
 
-        int count = (int)(r.ReferenceItemsSize / 4);
+        int count = (int) (r.ReferenceItemsSize / 4);
         for (int i = 0; i < count; i++)
         {
-            synthReader.BaseStream.Position = r.ReferenceItemsOffset + i * 4;
+            _synthReader.BaseStream.Position = r.ReferenceItemsOffset + i * 4;
 
-            ushort itemType = synthReader.ReadUInt16BE();
-            ushort itemIndex = synthReader.ReadUInt16BE();
+            ushort itemType = _synthReader.ReadUInt16BE();
+            ushort itemIndex = _synthReader.ReadUInt16BE();
 
             switch (itemType)
             {
@@ -410,7 +418,7 @@ public class AcbParser
             }
         }
 
-        synthDepth--;
+        _synthDepth--;
     }
 
     void LoadAcbCommandTlvs(BinaryReaderEndian reader, uint commandOffset, uint commandSize)
@@ -466,23 +474,25 @@ public class AcbParser
 
     void PreloadAcbTrackCommand()
     {
-        ref int rows = ref trackCommandRows;
+        ref int rows = ref _trackCommandRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out trackCommandReader, out UtfTable table, "TrackEventTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _trackCommandReader, out UtfTable table, "TrackEventTable", out rows))
         {
-            if (!OpenUtfSubtable(out trackCommandReader, out table, "CommandTable", out rows))
+            if (!OpenUtfSubtable(out _trackCommandReader, out table, "CommandTable", out rows))
                 throw new Exception("Failure opening Command table.");
         }
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        trackCommand = new TrackCommand[rows];
+        _trackCommand = new TrackCommand[rows];
 
         int cCommand = table.GetColumn("Command");
 
         for (int i = 0; i < rows; i++)
         {
-            ref TrackCommand r = ref trackCommand[i];
+            ref TrackCommand r = ref _trackCommand[i];
 
             table.Query(i, cCommand, out r.CommandOffset, out r.CommandSize);
         }
@@ -492,34 +502,38 @@ public class AcbParser
     {
         PreloadAcbTrackCommand();
 
-        if (index > trackCommandRows)
+        if (index > _trackCommandRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (trackCommandReader is null) return;
-        if (trackCommand is null) return;
+        if (_trackCommandReader is null)
+            return;
+        if (_trackCommand is null)
+            return;
 
         LoadAcbCommandTlvs(
-            trackCommandReader,
-            trackCommand[index].CommandOffset,
-            trackCommand[index].CommandSize);
+            _trackCommandReader,
+            _trackCommand[index].CommandOffset,
+            _trackCommand[index].CommandSize);
     }
 
     void PreloadAcbTrack()
     {
-        ref int rows = ref trackRows;
+        ref int rows = ref _trackRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out trackReader, out UtfTable table, "TrackTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _trackReader, out UtfTable table, "TrackTable", out rows))
             throw new Exception("Failure opening Track table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        track = new Track[rows];
+        _track = new Track[rows];
 
         int cEventIndex = table.GetColumn("EventIndex");
 
         for (int i = 0; i < rows; i++)
         {
-            ref Track r = ref track[i];
+            ref Track r = ref _track[i];
 
             table.Query(i, cEventIndex, out r.EventIndex);
         }
@@ -529,12 +543,13 @@ public class AcbParser
     {
         PreloadAcbTrack();
 
-        if (index > trackRows)
+        if (index > _trackRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (track is null) return;
+        if (_track is null)
+            return;
 
-        ref Track r = ref track[index];
+        ref Track r = ref _track[index];
 
         if (r.EventIndex == 65535)
             return;
@@ -544,14 +559,16 @@ public class AcbParser
 
     void PreloadAcbSequence()
     {
-        ref int rows = ref sequenceRows;
+        ref int rows = ref _sequenceRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out sequenceReader, out UtfTable table, "SequenceTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _sequenceReader, out UtfTable table, "SequenceTable", out rows))
             throw new Exception("Failure opening Sequence table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        sequence = new Sequence[rows];
+        _sequence = new Sequence[rows];
 
         int cNumTracks = table.GetColumn("NumTracks");
         int cTrackIndex = table.GetColumn("TrackIndex");
@@ -559,7 +576,7 @@ public class AcbParser
 
         for (int i = 0; i < rows; i++)
         {
-            ref Sequence r = ref sequence[i];
+            ref Sequence r = ref _sequence[i];
 
             table.Query(i, cNumTracks, out r.NumTracks);
             table.Query(i, cTrackIndex, out r.TrackIndexOffset, out r.TrackIndexSize);
@@ -571,17 +588,19 @@ public class AcbParser
     {
         PreloadAcbSequence();
 
-        if (index > sequenceRows)
+        if (index > _sequenceRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (sequence is null) return;
-        if (sequenceReader is null) return;
+        if (_sequence is null)
+            return;
+        if (_sequenceReader is null)
+            return;
 
-        ref Sequence r = ref sequence[index];
+        ref Sequence r = ref _sequence[index];
 
-        sequenceDepth++;
+        _sequenceDepth++;
 
-        if (sequenceDepth > 3)
+        if (_sequenceDepth > 3)
             throw new Exception("Sequence depth too high.");
 
         if (r.NumTracks * 2 > r.TrackIndexSize)
@@ -592,34 +611,36 @@ public class AcbParser
             default:
                 for (int i = 0; i < r.NumTracks; i++)
                 {
-                    sequenceReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
+                    _sequenceReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
 
-                    short trackIndexIndex = sequenceReader.ReadInt16BE();
-                    LoadAcbTrack((ushort)trackIndexIndex);
+                    short trackIndexIndex = _sequenceReader.ReadInt16BE();
+                    LoadAcbTrack((ushort) trackIndexIndex);
                 }
                 break;
         }
 
-        sequenceDepth--;
+        _sequenceDepth--;
     }
 
     void PreloadAcbBlock()
     {
-        ref int rows = ref blockRows;
+        ref int rows = ref _blockRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out blockReader, out UtfTable table, "BlockTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _blockReader, out UtfTable table, "BlockTable", out rows))
             throw new Exception("Failure opening Block table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        block = new Block[rows];
+        _block = new Block[rows];
 
         int cNumTracks = table.GetColumn("NumTracks");
         int cTrackIndex = table.GetColumn("TrackIndex");
 
         for (int i = 0; i < rows; i++)
         {
-            ref Block r = ref block[i];
+            ref Block r = ref _block[i];
             table.Query(i, cNumTracks, out r.NumTracks);
             table.Query(i, cTrackIndex, out VLData data);
             r.TrackIndexOffset = data.Offset;
@@ -631,36 +652,40 @@ public class AcbParser
     {
         PreloadAcbBlock();
 
-        if (index > blockRows)
+        if (index > _blockRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (block is null) return;
-        if (blockReader is null) return;
+        if (_block is null)
+            return;
+        if (_blockReader is null)
+            return;
 
-        ref Block r = ref block[index];
+        ref Block r = ref _block[index];
 
         if (r.NumTracks * 2 > r.TrackIndexSize)
             throw new Exception("Wrong Block.TrackIndex size.");
 
         for (int i = 0; i < r.NumTracks; i++)
         {
-            blockReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
+            _blockReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
 
-            short trackIndexIndex = blockReader.ReadInt16BE();
-            LoadAcbTrack((ushort)trackIndexIndex);
+            short trackIndexIndex = _blockReader.ReadInt16BE();
+            LoadAcbTrack((ushort) trackIndexIndex);
         }
     }
 
     void PreloadAcbBlockSequence()
     {
-        ref int rows = ref blockSequenceRows;
+        ref int rows = ref _blockSequenceRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out blockSequenceReader, out UtfTable table, "BlockSequenceTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _blockSequenceReader, out UtfTable table, "BlockSequenceTable", out rows))
             throw new Exception("Failure opening BlockSequence table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        blockSequence = new BlockSequence[rows];
+        _blockSequence = new BlockSequence[rows];
 
         int cNumTracks = table.GetColumn("NumTracks");
         int cTrackIndex = table.GetColumn("TrackIndex");
@@ -669,7 +694,7 @@ public class AcbParser
 
         for (int i = 0; i < rows; i++)
         {
-            ref BlockSequence r = ref blockSequence[i];
+            ref BlockSequence r = ref _blockSequence[i];
 
             table.Query(i, cNumTracks, out r.NumTracks);
             table.Query(i, cTrackIndex, out r.TrackIndexOffset, out r.TrackIndexSize);
@@ -682,23 +707,25 @@ public class AcbParser
     {
         PreloadAcbBlockSequence();
 
-        if (index > blockSequenceRows)
+        if (index > _blockSequenceRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (blockSequence is null) return;
-        if (blockSequenceReader is null) return;
+        if (_blockSequence is null)
+            return;
+        if (_blockSequenceReader is null)
+            return;
 
-        ref BlockSequence r = ref blockSequence[index];
+        ref BlockSequence r = ref _blockSequence[index];
 
         if (r.NumTracks * 2 > r.TrackIndexSize)
             throw new Exception("Wrong BlockSequence.TrackIndex size.");
 
         for (int i = 0; i < r.NumTracks; i++)
         {
-            blockSequenceReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
+            _blockSequenceReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
 
-            short trackIndexIndex = blockSequenceReader.ReadInt16();
-            LoadAcbTrack((ushort)trackIndexIndex);
+            short trackIndexIndex = _blockSequenceReader.ReadInt16();
+            LoadAcbTrack((ushort) trackIndexIndex);
         }
 
         if (r.NumBlocks * 2 > r.BlockIndexSize)
@@ -706,23 +733,25 @@ public class AcbParser
 
         for (int i = 0; i < r.NumBlocks; i++)
         {
-            blockSequenceReader.BaseStream.Position = r.BlockIndexOffset + i * 2;
+            _blockSequenceReader.BaseStream.Position = r.BlockIndexOffset + i * 2;
 
-            short blockIndexIndex = blockSequenceReader.ReadInt16();
-            LoadAcbBlock((ushort)blockIndexIndex);
+            short blockIndexIndex = _blockSequenceReader.ReadInt16();
+            LoadAcbBlock((ushort) blockIndexIndex);
         }
     }
 
     void PreloadAcbCue()
     {
-        ref int rows = ref cueRows;
+        ref int rows = ref _cueRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out cueReader, out UtfTable table, "CueTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _cueReader, out UtfTable table, "CueTable", out rows))
             throw new Exception("Failure opening Cue table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        cue = new Cue[rows];
+        _cue = new Cue[rows];
 
         int cCueId = table.GetColumn("CueId");
         int cReferenceType = table.GetColumn("ReferenceType");
@@ -730,7 +759,7 @@ public class AcbParser
 
         for (int i = 0; i < rows; i++)
         {
-            ref Cue r = ref cue[i];
+            ref Cue r = ref _cue[i];
 
             table.Query(i, cCueId, out r.Id);
             table.Query(i, cReferenceType, out r.ReferenceType);
@@ -742,14 +771,15 @@ public class AcbParser
     {
         PreloadAcbCue();
 
-        if (index > cueRows)
+        if (index > _cueRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (cue is null) return;
+        if (_cue is null)
+            return;
 
-        ref Cue r = ref cue[index];
+        ref Cue r = ref _cue[index];
 
-        currentCueId = r.Id;
+        _currentCueId = r.Id;
 
         switch (r.ReferenceType)
         {
@@ -776,22 +806,24 @@ public class AcbParser
 
     void PreloadAcbCueName()
     {
-        ref UtfTable table = ref cueNames;
-        ref int rows = ref cueNameRows;
+        ref UtfTable? table = ref _cueNames;
+        ref int rows = ref _cueNameRows;
 
-        if (rows != 0) return;
-        if (!OpenUtfSubtable(out cueNameReader, out table, "CueNameTable", out rows))
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _cueNameReader, out table, "CueNameTable", out rows))
             throw new Exception("Failure opening CueName table.");
-        if (rows == 0) return;
+        if (rows == 0)
+            return;
 
-        cueName = new CueName[rows];
+        _cueName = new CueName[rows];
 
         int cCueIndex = table.GetColumn("CueIndex");
         int cCueName = table.GetColumn("CueName");
 
         for (int i = 0; i < rows; i++)
         {
-            ref CueName r = ref cueName[i];
+            ref CueName r = ref _cueName[i];
 
             table.Query(i, cCueIndex, out r.CueIndex);
             table.Query(i, cCueName, out string name);
@@ -803,51 +835,52 @@ public class AcbParser
     {
         PreloadAcbCueName();
 
-        if (index > cueNameRows)
+        if (index > _cueNameRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        if (cueName is null) return;
+        if (_cueName is null)
+            return;
 
-        ref CueName r = ref cueName[index];
+        ref CueName r = ref _cueName[index];
 
-        cueNameIndex = (short)index;
-        cueNameName = r.Name;
+        _cueNameIndex = (short) index;
+        _cueNameName = r.Name;
 
         LoadAcbCue(r.CueIndex);
     }
 
     public string LoadWaveName(int waveId, int port, bool memory)
     {
-        targetWaveId = waveId;
-        targetPort = port;
-        isMemory = memory;
+        _targetWaveId = waveId;
+        _targetPort = port;
+        _isMemory = memory;
 
-        name = "";
-        awbNameCount = 0;
+        _name = "";
+        _awbNameCount = 0;
 
         PreloadAcbCueName();
-        for (ushort i = 0; i < cueNameRows; i++)
+        for (ushort i = 0; i < _cueNameRows; i++)
         {
             LoadAcbCueName(i);
         }
 
-        return name;
+        return _name;
     }
 
     public int WaveIdFromCueId(int cueId)
     {
-        targetCueId = cueId;
+        _targetCueId = cueId;
 
-        cueOnly = true;
+        _cueOnly = true;
 
         PreloadAcbCue();
-        for (ushort i = 0; i < cueRows; i++)
+        for (ushort i = 0; i < _cueRows; i++)
         {
             LoadAcbCue(i);
         }
 
-        cueOnly = false;
+        _cueOnly = false;
 
-        return waveIdFromCueId;
+        return _waveIdFromCueId;
     }
 }
