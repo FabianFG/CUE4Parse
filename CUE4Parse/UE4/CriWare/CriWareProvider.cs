@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.CriWare.Decoders.HCA;
 using CUE4Parse.UE4.CriWare.Readers;
+using NAudio.Wave;
 using Serilog;
 using UE4Config.Parsing;
 
@@ -32,10 +33,11 @@ public class CriWareProvider
     private readonly string _gameDirectory;
     private string? _criWareContentDir;
 
-    private readonly struct CriWareAtomCues(int waveId, string name)
+    private readonly struct CriWareAtomCues(int waveId, string name, bool isStreamed)
     {
         public int WaveId { get; } = waveId;
         public string Name { get; } = name;
+        public bool IsStreamed { get; } = isStreamed;
     }
 
     public CriWareProvider(IFileProvider provider, string gameDirectory)
@@ -51,13 +53,13 @@ public class CriWareProvider
     public List<CriWareExtractedSound> ExtractCriWareSounds(AcbReader acb, string acbName)
         => ExtractCriWareSoundsInternal(acb, acbName, [], null);
     public List<CriWareExtractedSound> ExtractCriWareSounds(AwbReader awb, string awbName)
-        => ExtractFromAwb(awb, awbName, null, []);
+        => ExtractFromAwb(awb, null, awbName, null, []);
     public List<CriWareExtractedSound> ExtractCriWareSounds(UAtomWaveBank awb)
     {
         if (awb?.AtomWaveBankData == null)
             return [];
 
-        return ExtractFromAwb(awb.AtomWaveBankData, awb.Name, null, []);
+        return ExtractFromAwb(awb.AtomWaveBankData, null, awb.Name, null, []);
     }
     public List<CriWareExtractedSound> ExtractCriWareSounds(UAtomCueSheet cueSheet)
     {
@@ -82,52 +84,49 @@ public class CriWareProvider
         var atomCues = new List<CriWareAtomCues>();
         if (soundCues?.Tag is ArrayProperty array && array.Value != null)
         {
-            foreach (var entry in array.Value.Properties)
+            for (int i = 0; i < array.Value.Properties.Count; i++)
             {
-                var atomCue = entry.GetValue<UAtomSoundCue>();
-
-                if (atomCue == null)
+                var entry = array.Value.Properties[i];
+                if (entry.GetValue<UAtomSoundCue>() is not { } atomCue)
                     continue;
 
-                var waveInfoProp = atomCue.Properties.FirstOrDefault(p => p.Name.Text == "WaveInfo");
+                var waveInfo = atomCue.Properties
+                    .FirstOrDefault(p => p.Name.Text == "WaveInfo")
+                    ?.Tag?.GetValue<FStructFallback>();
 
-                var waveInfoStruct = waveInfoProp?.Tag?.GetValue<FStructFallback>();
-                if (waveInfoStruct?.TryGetValue(out int waveId, "WaveID") == null)
+                if (waveInfo?.TryGetValue(out int waveId, "WaveID") != true)
                     continue;
 
-                var cueInfoProp = atomCue.Properties.FirstOrDefault(p => p.Name.Text == "CueInfo");
+                var cueInfo = atomCue.Properties
+                    .FirstOrDefault(p => p.Name.Text == "CueInfo")
+                    ?.Tag?.GetValue<FStructFallback>();
 
-                var cueName = string.Empty;
-                var cueInfoStruct = cueInfoProp?.Tag?.GetValue<FStructFallback>();
-                cueInfoStruct?.TryGetValue(out cueName, "Name");
+                string cueName = $"{Path.GetFileNameWithoutExtension(cueSheet.Name)}_{i:D4}";
 
-                atomCues.Add(new CriWareAtomCues(waveId, cueName ?? string.Empty));
+                cueInfo?.TryGetValue(out cueName, "Name");
+                waveInfo.TryGetValue(out bool isStreamed, "bIsStreamed");
+
+                atomCues.Add(new CriWareAtomCues(waveId, cueName, isStreamed));
             }
         }
 
         return ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, atomCues, awb);
     }
-    private List<CriWareExtractedSound> ExtractCriWareSoundsInternal(AcbReader? acb, string cueSheetName, List<CriWareAtomCues> atomCues, AwbReader? awb)
+    private List<CriWareExtractedSound> ExtractCriWareSoundsInternal(AcbReader? acb, string cueSheetName, List<CriWareAtomCues> atomCues, AwbReader? streamingAwb)
     {
         if (acb == null)
             return [];
 
-        if (awb == null)
-        {
-            awb = acb.GetAwb();
-            var streamingAwb = LoadStreamingAwb(acb);
+        var memoryAwb = acb.GetAwb();
+        streamingAwb ??= LoadStreamingAwb(acb);
 
-            if (streamingAwb != null)
-                awb = streamingAwb;
-        }
-
-        return awb == null ? [] : ExtractFromAwb(awb, cueSheetName, acb, atomCues);
+        return ExtractFromAwb(memoryAwb, streamingAwb, cueSheetName, acb, atomCues);
     }
 
-    private List<CriWareExtractedSound> ExtractFromAwb(AwbReader awb, string baseName, AcbReader? acb, List<CriWareAtomCues> atomCues)
+    private List<CriWareExtractedSound> ExtractFromAwb(AwbReader? memoryAwb, AwbReader? streamingAwb, string baseName, AcbReader? acb, List<CriWareAtomCues> atomCues)
     {
         var results = new List<CriWareExtractedSound>();
-        var visitedWaveIds = new HashSet<int>();
+        var visitedWaveIds = new HashSet<(int WaveId, bool IsStreaming)>();
 
         if (acb != null)
         {
@@ -136,48 +135,38 @@ public class CriWareProvider
             foreach (var cueRow in cueTable)
             {
                 int cueId = Convert.ToInt32(cueRow["CueId"]);
-                var waveId = acb.GetWaveIdFromCueId(cueId, acb.HasMemoryAwb);
+                var (waveId, isStreaming) = acb.GetWaveIdFromCueId(cueId);
 
-                if (!visitedWaveIds.Add(waveId))
+                if (!visitedWaveIds.Add((waveId, isStreaming)))
                     continue;
 
-                var matchingWaves = awb.Waves.Where(w => w.WaveId == waveId).ToList();
-                if (matchingWaves.Count == 0)
-                    continue;
+                var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, waveId, isStreaming);
 
-                foreach (var wave in matchingWaves)
+                if (hcaData == null || hcaData.Length == 0)
+                    return [];
+
+                string waveName = acb.GetWaveName(waveId, 0, !isStreaming);
+                if (string.IsNullOrWhiteSpace(waveName))
+                    waveName = $"{Path.GetFileNameWithoutExtension(baseName)}_{waveId:D4}";
+
+                results.Add(new CriWareExtractedSound
                 {
-                    using var waveStream = awb.GetWaveSubfileStream(wave);
-                    if (waveStream.Length == 0)
-                        continue;
-
-                    string waveName = acb.GetWaveName(waveId, 0, acb.HasMemoryAwb);
-                    if (string.IsNullOrWhiteSpace(waveName))
-                        waveName = $"{Path.GetFileNameWithoutExtension(baseName)}_{waveId:D4}";
-
-                    var hcaData = HcaWaveStream.EmbedSubKey(waveStream, awb.Subkey);
-                    results.Add(new CriWareExtractedSound
-                    {
-                        Name = waveName,
-                        Extension = "hca",
-                        Data = hcaData
-                    });
-                }
+                    Name = waveName,
+                    Extension = "hca",
+                    Data = hcaData
+                });
             }
         }
 
         foreach (var atomCue in atomCues)
         {
-            if (!visitedWaveIds.Add(atomCue.WaveId))
+            if (!visitedWaveIds.Add((atomCue.WaveId, atomCue.IsStreamed)))
                 continue;
 
-            var wave = awb.Waves.FirstOrDefault(w => w.WaveId == atomCue.WaveId);
+            var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, atomCue.WaveId, atomCue.IsStreamed);
 
-            using var waveStream = awb.GetWaveSubfileStream(wave);
-            if (waveStream.Length == 0)
-                return [];
-
-            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, awb.Subkey);
+            if (hcaData == null || hcaData.Length == 0)
+                continue;
 
             results.Add(new CriWareExtractedSound
             {
@@ -187,20 +176,43 @@ public class CriWareProvider
             });
         }
 
-        for (int i = 0; i < awb.Waves.Count; i++)
+        for (int i = 0; i < memoryAwb?.Waves.Count; i++)
         {
-            var wave = awb.Waves[i];
+            var wave = memoryAwb.Waves[i];
 
-            if (!visitedWaveIds.Add(wave.WaveId))
+            if (!visitedWaveIds.Add((wave.WaveId, false)))
                 continue;
 
-            using var waveStream = awb.GetWaveSubfileStream(wave);
+            using var waveStream = memoryAwb.GetWaveSubfileStream(wave);
             if (waveStream.Length == 0)
                 continue;
 
             string waveName = $"{Path.GetFileNameWithoutExtension(baseName)}_{wave.WaveId:D4}";
 
-            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, awb.Subkey);
+            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, memoryAwb.Subkey);
+
+            results.Add(new CriWareExtractedSound
+            {
+                Name = waveName,
+                Extension = "hca",
+                Data = hcaData
+            });
+        }
+
+        for (int i = 0; i < streamingAwb?.Waves.Count; i++)
+        {
+            var wave = streamingAwb.Waves[i];
+
+            if (!visitedWaveIds.Add((wave.WaveId, true)))
+                continue;
+
+            using var waveStream = streamingAwb.GetWaveSubfileStream(wave);
+            if (waveStream.Length == 0)
+                continue;
+
+            string waveName = $"{Path.GetFileNameWithoutExtension(baseName)}_{wave.WaveId:D4}";
+
+            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, streamingAwb.Subkey);
 
             results.Add(new CriWareExtractedSound
             {
@@ -225,14 +237,8 @@ public class CriWareProvider
             if (acb == null)
                 return [];
 
-            var awb = acb.GetAwb();
+            var memoryAwb = acb.GetAwb();
             var streamingAwb = LoadStreamingAwb(acb);
-
-            if (streamingAwb != null)
-                awb = streamingAwb;
-
-            if (awb == null)
-                return [];
 
             var cueNameTable = acb.AtomCueSheetData["CueName"];
             var cueNameRow = cueNameTable.FirstOrDefault(cue =>
@@ -245,15 +251,12 @@ public class CriWareProvider
             var cueRow = acb.AtomCueSheetData["Cue"][cueIndex];
 
             int cueId = Convert.ToInt32(cueRow["CueId"]);
-            var waveId = acb.GetWaveIdFromCueId(cueId, acb.HasMemoryAwb);
+            var (waveId, isStreaming) = acb.GetWaveIdFromCueId(cueId);
 
-            var wave = awb.Waves.FirstOrDefault(w => w.WaveId == waveId);
+            var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, waveId, isStreaming);
 
-            using var waveStream = awb.GetWaveSubfileStream(wave);
-            if (waveStream.Length == 0)
+            if (hcaData == null || hcaData.Length == 0)
                 return [];
-
-            var hcaData = HcaWaveStream.EmbedSubKey(waveStream, awb.Subkey);
 
             return [
                 new CriWareExtractedSound
@@ -266,6 +269,18 @@ public class CriWareProvider
         }
 
         return [];
+    }
+
+    private byte[]? TryLoadHcaData(AwbReader? awb, AwbReader? streamingAwb, int waveId, bool isStreaming)
+    {
+        var reader = isStreaming ? streamingAwb : awb;
+        if (reader == null)
+            return null;
+
+        var wave = reader.Waves.FirstOrDefault(w => w.WaveId == waveId);
+
+        using var waveStream = reader.GetWaveSubfileStream(wave);
+        return HcaWaveStream.EmbedSubKey(waveStream, reader.Subkey);
     }
 
     private AwbReader? LoadStreamingAwb(AcbReader acb)

@@ -66,6 +66,7 @@ struct Waveform
     public ushort Id;
     public ushort PortNo;
     public byte Streaming;
+    public bool IsStreaming;
 }
 
 public class AcbParser
@@ -107,6 +108,7 @@ public class AcbParser
     private int _synthRows;
     private int _waveFormRows;
 
+    private bool _isStreaming;
     private bool _isMemory;
     private int _targetWaveId;
     private int _targetPort;
@@ -290,20 +292,20 @@ public class AcbParser
             ref Waveform r = ref _waveform[i];
 
             if (!table.Query(i, cId, out r.Id))
+                r.Id = 0xFFFF;
+
+            table.Query(i, cMemoryAwbId, out r.Id);
+
+            if (r.Id == 0xFFFF)
             {
-                if (_isMemory)
-                {
-                    table.Query(i, cMemoryAwbId, out r.Id);
-                    _waveform[i].PortNo = 0xFFFF;
-                }
-                else
-                {
-                    table.Query(i, cStreamAwbId, out r.Id);
-                    table.Query(i, cStreamAwbPortNo, out r.PortNo);
-                }
+                r.IsStreaming = true;
+                table.Query(i, cStreamAwbId, out r.Id);
+                table.Query(i, cStreamAwbPortNo, out r.PortNo);
             }
             else
-                _waveform[i].PortNo = 0xFFFF;
+            {
+                r.PortNo = 0xFFFF;
+            }
 
             table.Query(i, cStreaming, out r.Streaming);
         }
@@ -322,7 +324,10 @@ public class AcbParser
         ref Waveform r = ref _waveform[index];
 
         if (_currentCueId == _targetCueId)
+        {
             _waveIdFromCueId = r.Id;
+            _isStreaming = r.IsStreaming;
+        }
 
         if (_cueOnly)
             return;
@@ -869,10 +874,9 @@ public class AcbParser
         return _name;
     }
 
-    public int WaveIdFromCueId(int cueId, bool memory)
+    public (int, bool) WaveIdFromCueId(int cueId)
     {
         _targetCueId = cueId;
-        _isMemory = memory;
 
         _cueOnly = true;
 
@@ -884,6 +888,6 @@ public class AcbParser
 
         _cueOnly = false;
 
-        return _waveIdFromCueId;
+        return (_waveIdFromCueId, _isStreaming);
     }
 }
