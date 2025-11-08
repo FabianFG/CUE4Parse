@@ -25,7 +25,7 @@ public class AActor : UObject
                 ActorLabel = Ar.ReadFString();
         }
 
-        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.LevelInstanceStaticLightingSupport)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.LevelInstanceStaticLightingSupport && Ar.IsLoadingFromCookedPackage)
         {
             ActorInstanceGuid = new FActorInstanceGuid(Ar);
         }

@@ -1286,7 +1286,7 @@ public class FMaterialShaderMapId
         {
             var legacyQualityLevel = (EMaterialQualityLevel) Ar.Read<byte>(); // Is it enum?
         }
-
+        if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 4;
         CookedShaderMapIdHash = new FSHAHash(Ar);
 
         if (!bIsLegacyPackage)
