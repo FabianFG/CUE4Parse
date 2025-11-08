@@ -869,9 +869,10 @@ public class AcbParser
         return _name;
     }
 
-    public int WaveIdFromCueId(int cueId)
+    public int WaveIdFromCueId(int cueId, bool memory)
     {
         _targetCueId = cueId;
+        _isMemory = memory;
 
         _cueOnly = true;
 

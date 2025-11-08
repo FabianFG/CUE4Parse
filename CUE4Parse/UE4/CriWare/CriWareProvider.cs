@@ -117,7 +117,7 @@ public class CriWareProvider
             foreach (var cueRow in cueTable)
             {
                 int cueId = Convert.ToInt32(cueRow["CueId"]);
-                var waveId = acb.GetWaveIdFromCueId(cueId);
+                var waveId = acb.GetWaveIdFromCueId(cueId, acb.HasMemoryAwb);
 
                 if (!visitedWaveIds.Add(waveId))
                     continue;

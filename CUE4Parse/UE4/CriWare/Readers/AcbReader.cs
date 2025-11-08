@@ -88,10 +88,10 @@ public sealed class AcbReader : IDisposable
         return _acbParser.LoadWaveName(waveId, port, memory);
     }
 
-    public int GetWaveIdFromCueId(int cueId)
+    public int GetWaveIdFromCueId(int cueId, bool memory)
     {
         _outerStream.Position = _offset;
-        return _acbParser.WaveIdFromCueId(cueId);
+        return _acbParser.WaveIdFromCueId(cueId, memory);
     }
 
     public void Dispose()
