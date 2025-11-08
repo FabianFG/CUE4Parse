@@ -226,7 +226,7 @@ public class CriWareProvider
             var cueRow = acb.AtomCueSheetData["Cue"][cueIndex];
 
             int cueId = Convert.ToInt32(cueRow["CueId"]);
-            var waveId = acb.GetWaveIdFromCueId(cueId);
+            var waveId = acb.GetWaveIdFromCueId(cueId, acb.HasMemoryAwb);
 
             var wave = awb.Waves.FirstOrDefault(w => w.WaveId == waveId);
 
