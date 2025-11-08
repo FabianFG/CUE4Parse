@@ -47,9 +47,9 @@ public class CriWareProvider
     }
 
     public List<CriWareExtractedSound> ExtractCriWareSounds(USoundAtomCueSheet cueSheet)
-        => ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, []);
+        => ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, [], null);
     public List<CriWareExtractedSound> ExtractCriWareSounds(AcbReader acb, string acbName)
-        => ExtractCriWareSoundsInternal(acb, acbName, []);
+        => ExtractCriWareSoundsInternal(acb, acbName, [], null);
     public List<CriWareExtractedSound> ExtractCriWareSounds(AwbReader awb, string awbName)
         => ExtractFromAwb(awb, awbName, null, []);
     public List<CriWareExtractedSound> ExtractCriWareSounds(UAtomWaveBank awb)
@@ -61,6 +61,22 @@ public class CriWareProvider
     }
     public List<CriWareExtractedSound> ExtractCriWareSounds(UAtomCueSheet cueSheet)
     {
+        var waveBanks = cueSheet.Properties.FirstOrDefault(p => p.Name.Text == "WaveBanks");
+
+        AwbReader? awb = null;
+        if (waveBanks?.Tag is ArrayProperty waveBankArray && waveBankArray.Value != null)
+        {
+            foreach (var waveBankEntry in waveBankArray.Value.Properties)
+            {
+                var atomWaveBank = waveBankEntry.GetValue<UAtomWaveBank>();
+
+                if (atomWaveBank == null)
+                    continue;
+
+                awb = atomWaveBank.AtomWaveBankData;
+            }
+        }
+
         var soundCues = cueSheet.Properties.FirstOrDefault(p => p.Name.Text == "SoundCues");
 
         var atomCues = new List<CriWareAtomCues>();
@@ -89,18 +105,21 @@ public class CriWareProvider
             }
         }
 
-        return ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, atomCues);
+        return ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, atomCues, awb);
     }
-    private List<CriWareExtractedSound> ExtractCriWareSoundsInternal(AcbReader? acb, string cueSheetName, List<CriWareAtomCues> atomCues)
+    private List<CriWareExtractedSound> ExtractCriWareSoundsInternal(AcbReader? acb, string cueSheetName, List<CriWareAtomCues> atomCues, AwbReader? awb)
     {
         if (acb == null)
             return [];
 
-        var awb = acb.GetAwb();
-        var streamingAwb = LoadStreamingAwb(acb);
+        if (awb == null)
+        {
+            awb = acb.GetAwb();
+            var streamingAwb = LoadStreamingAwb(acb);
 
-        if (streamingAwb != null)
-            awb = streamingAwb;
+            if (streamingAwb != null)
+                awb = streamingAwb;
+        }
 
         return awb == null ? [] : ExtractFromAwb(awb, cueSheetName, acb, atomCues);
     }
