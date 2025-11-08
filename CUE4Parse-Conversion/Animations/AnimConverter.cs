@@ -236,23 +236,39 @@ namespace CUE4Parse_Conversion.Animations
         public static CAnimSequence ConvertAdditive(this CAnimSequence animSeq, UAnimSequence? refPoseSeq, USkeleton skeleton)
         {
             var refFrameIndex = animSeq.OriginalSequence.RefFrameIndex;
-            var refPoseSkel = refPoseSeq?.Skeleton.Load<USkeleton>() ?? skeleton;
-            var refAnimSet = refPoseSkel.ConvertAnims(refPoseSeq);
+            var refPoseType = animSeq.OriginalSequence.RefPoseType;
 
-            FCompactPose[] additivePoses = FAnimationRuntime.LoadAsPoses(animSeq, skeleton);
-            FCompactPose[] referencePoses = animSeq.OriginalSequence.RefPoseType switch
+            CAnimSet? refAnimSet = null;
+            FCompactPose[] referencePoses;
+            switch (refPoseType)
             {
-                EAdditiveBasePoseType.ABPT_RefPose => FAnimationRuntime.LoadRestAsPoses(skeleton),
-                EAdditiveBasePoseType.ABPT_AnimScaled => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel),
-                EAdditiveBasePoseType.ABPT_AnimFrame => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel, refFrameIndex),
-                EAdditiveBasePoseType.ABPT_LocalAnimFrame => FAnimationRuntime.LoadAsPoses(animSeq, skeleton, refFrameIndex),
-                _ => throw new ArgumentOutOfRangeException("Unsupported additive type " + animSeq.OriginalSequence.RefPoseType)
-            };
+                case EAdditiveBasePoseType.ABPT_RefPose:
+                    referencePoses = FAnimationRuntime.LoadRestAsPoses(skeleton);
+                    break;
+                case EAdditiveBasePoseType.ABPT_LocalAnimFrame:
+                    referencePoses = FAnimationRuntime.LoadAsPoses(animSeq, skeleton, refFrameIndex);
+                    break;
+                default:
+                {
+                    var refPoseSkel = refPoseSeq?.Skeleton.Load<USkeleton>() ?? skeleton;
+                    refAnimSet = refPoseSkel.ConvertAnims(refPoseSeq);
+
+                    referencePoses = refPoseType switch
+                    {
+                        EAdditiveBasePoseType.ABPT_AnimScaled => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel),
+                        EAdditiveBasePoseType.ABPT_AnimFrame => FAnimationRuntime.LoadAsPoses(refAnimSet.Sequences[0], refPoseSkel, refFrameIndex),
+                        _ => throw new ArgumentOutOfRangeException("Unsupported additive type " + refPoseType)
+                    };
+                    break;
+                }
+            }
+
+            var additivePoses = FAnimationRuntime.LoadAsPoses(animSeq, skeleton);
 
             // reset tracks and their size to avoid empty additive track on filled ref track
             // or the other way around, that way we are sure all tracks can receive all frames
             animSeq.Tracks = new List<CAnimTrack>(additivePoses[0].Bones.Length);
-            for (int i = 0; i < additivePoses[0].Bones.Length; i++)
+            for (var i = 0; i < additivePoses[0].Bones.Length; i++)
             {
                 animSeq.Tracks.Add(new CAnimTrack(additivePoses.Length));
             }
@@ -261,7 +277,7 @@ namespace CUE4Parse_Conversion.Animations
             for (var frameIndex = 0; frameIndex < additivePoses.Length; frameIndex++)
             {
                 var addPose = additivePoses[frameIndex];
-                var refPose = (FCompactPose)referencePoses[animSeq.OriginalSequence.RefPoseType switch
+                var refPose = (FCompactPose)referencePoses[refPoseType switch
                 {
                     EAdditiveBasePoseType.ABPT_AnimScaled => frameIndex % maxRefPosFrame,
                     _ => refFrameIndex
@@ -280,7 +296,7 @@ namespace CUE4Parse_Conversion.Animations
                 refPose.PushTransformAtFrame(animSeq.Tracks, frameIndex);
             }
 
-            if (refPoseSeq != null) // for FindTrackForBoneIndex
+            if (refAnimSet != null) // for FindTrackForBoneIndex
                 animSeq.OriginalSequence = refAnimSet.Sequences[0].OriginalSequence;
             return animSeq;
         }
