@@ -61,12 +61,19 @@ struct Synth
     public uint ReferenceItemsSize;
 }
 
-struct Waveform
+public struct Waveform
 {
     public ushort Id;
+    public ushort StreamId;
     public ushort PortNo;
-    public byte Streaming;
-    public bool IsStreaming;
+    public WaveformStreamType Streaming;
+}
+
+public enum WaveformStreamType : byte
+{
+    Memory = 0,
+    Streaming = 1,
+    Both = 2
 }
 
 public class AcbParser
@@ -108,7 +115,6 @@ public class AcbParser
     private int _synthRows;
     private int _waveFormRows;
 
-    private bool _isStreaming;
     private bool _isMemory;
     private int _targetWaveId;
     private int _targetPort;
@@ -124,7 +130,7 @@ public class AcbParser
     private string _name = string.Empty;
 
     private uint _currentCueId;
-    private int _waveIdFromCueId;
+    private readonly List<Waveform> _waveIdsFromCueId = [];
     private bool _cueOnly;
 
     public AcbParser(Stream acb)
@@ -242,7 +248,7 @@ public class AcbParser
         return true;
     }
 
-    void AddAcbName(byte streaming)
+    void AddAcbName(WaveformStreamType streaming)
     {
         if (_cueNameName.Length == 0)
             return;
@@ -261,7 +267,7 @@ public class AcbParser
         else
             _name = _cueNameName;
 
-        if (streaming == 2 && _isMemory)
+        if (streaming is WaveformStreamType.Both && _isMemory)
             _name += " [pre]";
 
         _awbNameList.Add(_cueNameIndex);
@@ -291,23 +297,11 @@ public class AcbParser
         {
             ref Waveform r = ref _waveform[i];
 
-            if (!table.Query(i, cId, out r.Id))
-                r.Id = 0xFFFF;
-
             table.Query(i, cMemoryAwbId, out r.Id);
-
-            if (r.Id == 0xFFFF)
-            {
-                r.IsStreaming = true;
-                table.Query(i, cStreamAwbId, out r.Id);
-                table.Query(i, cStreamAwbPortNo, out r.PortNo);
-            }
-            else
-            {
-                r.PortNo = 0xFFFF;
-            }
-
-            table.Query(i, cStreaming, out r.Streaming);
+            table.Query(i, cStreamAwbId, out r.StreamId);
+            table.Query(i, cStreamAwbPortNo, out r.PortNo);
+            table.Query(i, cStreaming, out byte streaming);
+            r.Streaming = (WaveformStreamType) streaming;
         }
     }
 
@@ -325,8 +319,7 @@ public class AcbParser
 
         if (_currentCueId == _targetCueId)
         {
-            _waveIdFromCueId = r.Id;
-            _isStreaming = r.IsStreaming;
+            _waveIdsFromCueId.Add(r);
         }
 
         if (_cueOnly)
@@ -338,7 +331,7 @@ public class AcbParser
         if (_targetPort >= 0 && r.PortNo != 0xFFFF && r.PortNo != _targetPort)
             return;
 
-        if ((_isMemory && r.Streaming == 1) || (!_isMemory && r.Streaming == 0))
+        if ((_isMemory && r.Streaming is WaveformStreamType.Streaming) || (!_isMemory && r.Streaming is WaveformStreamType.Memory))
             return;
 
         AddAcbName(r.Streaming);
@@ -874,10 +867,10 @@ public class AcbParser
         return _name;
     }
 
-    public (int, bool) WaveIdFromCueId(int cueId)
+    public List<Waveform> WaveIdFromCueId(int cueId)
     {
         _targetCueId = cueId;
-
+        _waveIdsFromCueId.Clear();
         _cueOnly = true;
 
         PreloadAcbCue();
@@ -888,6 +881,6 @@ public class AcbParser
 
         _cueOnly = false;
 
-        return (_waveIdFromCueId, _isStreaming);
+        return _waveIdsFromCueId;
     }
 }

@@ -74,17 +74,10 @@ public class HcaWaveStream : WaveStream
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        using var memoryStream = new MemoryStream();
-        stream.Position = 0;
+        using var memoryStream = new MemoryStream((int)(stream.Length+sizeof(ushort)));
         stream.CopyTo(memoryStream);
-
-        var data = memoryStream.ToArray();
-        var result = new byte[data.Length + SubKeySize];
-
-        Buffer.BlockCopy(data, 0, result, 0, data.Length);
-        BitConverter.TryWriteBytes(result.AsSpan(data.Length, SubKeySize), subKey);
-
-        return result;
+        stream.Write(BitConverter.GetBytes(subKey));
+        return memoryStream.GetBuffer();
     }
 
     private static (ushort subKey, byte[] audioData) ExtractSubKey(byte[] data)
