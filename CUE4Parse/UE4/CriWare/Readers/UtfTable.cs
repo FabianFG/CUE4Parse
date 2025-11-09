@@ -411,16 +411,24 @@ public sealed class UtfTable
 
     private string GetStringFromTable(uint offset)
     {
-        if (offset > stringsSize)
+        if (offset >= stringsSize)
             throw new InvalidDataException("Invalid string offset.");
 
-        StringBuilder stringBuilder = new StringBuilder();
+        var stringBuilder = new StringBuilder();
 
         int i = 0;
-        while (i < stringsSize)
+        while (true)
         {
-            stringBuilder.Append((char)stringTable[offset + i++]);
-            if ((offset + i) >= stringTable.Length || stringTable[offset + i] == '\0') break;
+            byte b = stringTable[offset + i];
+
+            if (b == 0)
+                break;
+
+            stringBuilder.Append((char) b);
+            i++;
+
+            if (offset + i >= stringsSize)
+                break;
         }
 
         return stringBuilder.ToString();
