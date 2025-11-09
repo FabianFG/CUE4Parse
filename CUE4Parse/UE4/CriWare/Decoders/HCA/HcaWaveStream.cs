@@ -76,7 +76,7 @@ public class HcaWaveStream : WaveStream
 
         using var memoryStream = new MemoryStream((int)(stream.Length+sizeof(ushort)));
         stream.CopyTo(memoryStream);
-        stream.Write(BitConverter.GetBytes(subKey));
+        memoryStream.Write(BitConverter.GetBytes(subKey));
         return memoryStream.GetBuffer();
     }
 

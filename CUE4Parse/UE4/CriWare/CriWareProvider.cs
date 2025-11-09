@@ -52,7 +52,18 @@ public class CriWareProvider
     }
 
     public List<CriWareExtractedSound> ExtractCriWareSounds(USoundAtomCueSheet cueSheet)
-        => ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, [], null);
+    {
+        var awbDirectory = cueSheet.Properties
+                    .FirstOrDefault(p => p.Name.Text == "AwbDirectory")
+                    ?.Tag?.GetValue<FStructFallback>();
+
+        if (awbDirectory?.TryGetValue(out string awbDir, "Path") == true)
+        {
+            CreateAwbLookupTable(_provider, awbDir);
+        }
+
+        return ExtractCriWareSoundsInternal(cueSheet.AcbReader, cueSheet.Name, [], null);
+    }
     public List<CriWareExtractedSound> ExtractCriWareSounds(AcbReader acb, string acbName)
         => ExtractCriWareSoundsInternal(acb, acbName, [], null);
     public List<CriWareExtractedSound> ExtractCriWareSounds(AwbReader awb, string awbName)
@@ -129,7 +140,7 @@ public class CriWareProvider
     private List<CriWareExtractedSound> ExtractFromAwb(AwbReader? memoryAwb, AwbReader? streamingAwb, string baseName, AcbReader? acb, List<CriWareAtomCues> atomCues)
     {
         var results = new List<CriWareExtractedSound>();
-        var visitedWaveIds = new HashSet<Waveform>();
+        var visitedWaveforms = new HashSet<Waveform>();
 
         if (acb != null)
         {
@@ -149,7 +160,7 @@ public class CriWareProvider
                 var index = 0;
                 foreach (var wave in waveIds)
                 {
-                    if (!visitedWaveIds.Add(wave))
+                    if (!visitedWaveforms.Add(wave))
                         continue;
 
                     var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
@@ -166,6 +177,13 @@ public class CriWareProvider
                 }
             }
         }
+
+        int waveformsCount = memoryAwb?.Waves.Count ?? 0 + streamingAwb?.Waves.Count ?? 0;
+        if (visitedWaveforms.Count < waveformsCount)
+        {
+            Log.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");
+        }
+
         /*
         foreach (var atomCue in atomCues)
         {
@@ -231,6 +249,7 @@ public class CriWareProvider
             });
         }
         */
+
         return results;
     }
 
@@ -355,16 +374,24 @@ public class CriWareProvider
         }
     }
 
-    public void CreateAwbLookupTable(IFileProvider provider)
+    public void CreateAwbLookupTable(IFileProvider provider, string? overrideAwbDir = null)
     {
+        if (_streamingAwbLookup.Count != 0)
+            return;
+        if (string.IsNullOrEmpty(_criWareContentDir) && string.IsNullOrEmpty(overrideAwbDir))
+            return;
+
         var awbLookup = new Dictionary<string, AwbLocation>();
 
-        if (string.IsNullOrEmpty(_criWareContentDir))
-            return;
+        var searchDirs = new List<string>();
+        if (!string.IsNullOrEmpty(_criWareContentDir))
+            searchDirs.Add(_criWareContentDir);
+        if (!string.IsNullOrEmpty(overrideAwbDir))
+            searchDirs.Add(overrideAwbDir);
 
         // From file system
         var awbFiles = Directory.EnumerateFiles(_gameDirectory, "*.awb", SearchOption.AllDirectories)
-            .Where(f => f.Replace('\\', '/').Contains(_criWareContentDir));
+            .Where(f => searchDirs.Any(d => f.Replace('\\', '/').Contains(d)));
 
         foreach (var file in awbFiles)
         {
@@ -378,7 +405,7 @@ public class CriWareProvider
         // From provider
         var providerAwbFiles = provider.Files
             .Where(kv => kv.Key.EndsWith(".awb", StringComparison.OrdinalIgnoreCase)
-                         && kv.Key.Replace('\\', '/').Contains(_criWareContentDir));
+                         && searchDirs.Any(d => kv.Key.Replace('\\', '/').Contains(d)));
 
         foreach (var (path, gameFile) in providerAwbFiles)
         {
