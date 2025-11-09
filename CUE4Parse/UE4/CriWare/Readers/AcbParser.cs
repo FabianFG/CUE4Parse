@@ -130,7 +130,7 @@ public class AcbParser
     private string _name = string.Empty;
 
     private uint _currentCueId;
-    private readonly List<Waveform> _waveIdsFromCueId = [];
+    private readonly List<Waveform> _waveformsFromCueId = [];
     private bool _cueOnly;
 
     public AcbParser(Stream acb)
@@ -319,7 +319,7 @@ public class AcbParser
 
         if (_currentCueId == _targetCueId)
         {
-            _waveIdsFromCueId.Add(r);
+            _waveformsFromCueId.Add(r);
         }
 
         if (_cueOnly)
@@ -867,10 +867,10 @@ public class AcbParser
         return _name;
     }
 
-    public List<Waveform> WaveIdFromCueId(int cueId)
+    public List<Waveform> WaveformsFromCueId(int cueId)
     {
         _targetCueId = cueId;
-        _waveIdsFromCueId.Clear();
+        _waveformsFromCueId.Clear();
         _cueOnly = true;
 
         PreloadAcbCue();
@@ -881,6 +881,6 @@ public class AcbParser
 
         _cueOnly = false;
 
-        return _waveIdsFromCueId;
+        return _waveformsFromCueId;
     }
 }

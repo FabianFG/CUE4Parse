@@ -151,14 +151,14 @@ public class CriWareProvider
             {
                 int cueId = Convert.ToInt32(cueRow["CueId"]);
                 int refId = Convert.ToInt32(cueRow["ReferenceIndex"]);
-                var waveIds = acb.GetWaveIdFromCueId(cueId);
+                var waveforms = acb.GetWaveformsFromCueId(cueId);
                 var cueNameRow = cueNameTable.FirstOrDefault(cue => Convert.ToInt32(cue["CueIndex"]) == refId);
                 var name = cueNameRow != null && cueNameRow["CueName"] is string cueName
                     ? cueName
                     : $"{Path.GetFileNameWithoutExtension(baseName)}_{refId:D4}";
 
                 var index = 0;
-                foreach (var wave in waveIds)
+                foreach (var wave in waveforms)
                 {
                     if (!visitedWaveforms.Add(wave))
                         continue;
@@ -170,7 +170,7 @@ public class CriWareProvider
 
                     results.Add(new CriWareExtractedSound
                     {
-                        Name = waveIds.Count == 1 ? name : $"{name}_{index++:D4}",
+                        Name = waveforms.Count == 1 ? name : $"{name}_{index++:D4}",
                         Extension = "hca",
                         Data = hcaData
                     });
@@ -272,15 +272,15 @@ public class CriWareProvider
             var cueRow = acb.AtomCueSheetData["Cue"][cueIndex];
 
             int cueId = Convert.ToInt32(cueRow["CueId"]);
-            var waveIds = acb.GetWaveIdFromCueId(cueId);
-            if (waveIds.Count == 0)
+            var waveforms = acb.GetWaveformsFromCueId(cueId);
+            if (waveforms.Count == 0)
                 return results;
 
             var memoryAwb = acb.GetAwb();
             var streamingAwb = LoadStreamingAwb(acb);
 
             var index = 0;
-            foreach (var wave in waveIds)
+            foreach (var wave in waveforms)
             {
                 var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
 
@@ -290,7 +290,7 @@ public class CriWareProvider
                 results.Add(
                     new CriWareExtractedSound
                     {
-                        Name = waveIds.Count == 1 ? cueName : $"{cueName}_{index++:D4}",
+                        Name = waveforms.Count == 1 ? cueName : $"{cueName}_{index++:D4}",
                         Extension = "hca",
                         Data = hcaData
                     }
