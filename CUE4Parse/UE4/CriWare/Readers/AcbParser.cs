@@ -375,7 +375,6 @@ public class AcbParser
 
         if (index > _waveFormRows)
             throw new ArgumentOutOfRangeException(nameof(index));
-
         if (_waveform is null)
             return;
 
@@ -388,13 +387,10 @@ public class AcbParser
 
         if (_cueOnly)
             return;
-
         if (r.Id != _targetWaveId)
             return;
-
         if (_targetPort >= 0 && r.PortNo != 0xFFFF && r.PortNo != _targetPort)
             return;
-
         if ((_isMemory && r.Streaming is EWaveformStreamType.Streaming) || (!_isMemory && r.Streaming is EWaveformStreamType.Memory))
             return;
 
@@ -671,9 +667,7 @@ public class AcbParser
         PreloadAcbTrack();
 
         if (index > _trackRows)
-            return;
-            //throw new ArgumentOutOfRangeException(nameof(index));
-
+            throw new ArgumentOutOfRangeException(nameof(index));
         if (_track is null)
             return;
 
@@ -723,7 +717,6 @@ public class AcbParser
 
         if (index > _sequenceRows)
             throw new ArgumentOutOfRangeException(nameof(index));
-
         if (_sequence is null)
             return;
         if (_sequenceReader is null)
@@ -735,7 +728,6 @@ public class AcbParser
 
         if (_sequenceDepth > 3)
             throw new Exception("Sequence depth too high.");
-
         if (r.NumTracks * 2 > r.TrackIndexSize)
             throw new Exception("Wrong Sequence.TrackIndex size.");
 
@@ -790,9 +782,7 @@ public class AcbParser
         PreloadAcbBlock();
 
         if (index > _blockRows)
-            return;
-            //throw new ArgumentOutOfRangeException(nameof(index));
-
+            throw new ArgumentOutOfRangeException(nameof(index));
         if (_block is null)
             return;
         if (_blockReader is null)
@@ -845,9 +835,8 @@ public class AcbParser
     {
         PreloadAcbBlockSequence();
 
-        if (index > _blockSequenceRows)
+        if (index >= _blockSequenceRows)
             throw new ArgumentOutOfRangeException(nameof(index));
-
         if (_blockSequence is null)
             return;
         if (_blockSequenceReader is null)
@@ -862,7 +851,7 @@ public class AcbParser
         {
             _blockSequenceReader.BaseStream.Position = r.TrackIndexOffset + i * 2;
 
-            short trackIndexIndex = _blockSequenceReader.ReadInt16();
+            short trackIndexIndex = _blockSequenceReader.ReadInt16BE();
             LoadAcbTrack((ushort) trackIndexIndex);
         }
 
@@ -873,7 +862,7 @@ public class AcbParser
         {
             _blockSequenceReader.BaseStream.Position = r.BlockIndexOffset + i * 2;
 
-            short blockIndexIndex = _blockSequenceReader.ReadInt16();
+            short blockIndexIndex = _blockSequenceReader.ReadInt16BE();
             LoadAcbBlock((ushort) blockIndexIndex);
         }
     }
@@ -912,7 +901,6 @@ public class AcbParser
 
         if (index > _cueRows)
             throw new ArgumentOutOfRangeException(nameof(index));
-
         if (_cue is null)
             return;
 
@@ -976,7 +964,6 @@ public class AcbParser
 
         if (index > _cueNameRows)
             throw new ArgumentOutOfRangeException(nameof(index));
-
         if (_cueName is null)
             return;
 
