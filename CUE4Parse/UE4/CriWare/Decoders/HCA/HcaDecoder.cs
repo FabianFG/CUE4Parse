@@ -255,8 +255,8 @@ public class HcaDecoder
             {
                 for (int ch = 0; ch < _hca.ChannelCount - 1; ch++)
                 {
-                    ApplyIntensityStereo(_hca.Channels, ch * 2, subframe, _hca.BaseBandCount, _hca.TotalBandCount);
-                    ApplyMsStereo(_hca.Channels, ch * 2, _hca.MsStereo, _hca.BaseBandCount, _hca.TotalBandCount, subframe);
+                    ApplyIntensityStereo(_hca.Channels, subframe, _hca.BaseBandCount, _hca.TotalBandCount);
+                    ApplyMsStereo(_hca.Channels, _hca.MsStereo, _hca.BaseBandCount, _hca.TotalBandCount, subframe);
                 }
             }
 
@@ -572,14 +572,14 @@ public class HcaDecoder
         channel.Spectra[subframe][highBand - 1] = 0.0F;
     }
 
-    private static void ApplyIntensityStereo(Channel[] channelPair, int channelOffset, int subframe, int baseBandCount, int totalBandCount)
+    private static void ApplyIntensityStereo(Channel[] channelPair, int subframe, int baseBandCount, int totalBandCount)
     {
-        if (channelPair[channelOffset + 0].Type != ChannelType.StereoPrimary) return;
+        if (channelPair[0].Type != ChannelType.StereoPrimary) return;
 
-        float ratioL = IntensityRatioTable[channelPair[channelOffset + 1].Intensity[subframe]];
+        float ratioL = IntensityRatioTable[channelPair[1].Intensity[subframe]];
         float ratioR = 2.0F - ratioL;
-        float[] spectraL = channelPair[channelOffset + 0].Spectra[subframe];
-        float[] spectraR = channelPair[channelOffset + 1].Spectra[subframe];
+        float[] spectraL = channelPair[0].Spectra[subframe];
+        float[] spectraR = channelPair[1].Spectra[subframe];
 
         for (int band = baseBandCount; band < totalBandCount; band++)
         {
@@ -590,14 +590,14 @@ public class HcaDecoder
         }
     }
 
-    private static void ApplyMsStereo(Channel[] channelPair, int channelOffset, int msStereo, int baseBandCount, int totalBandCount, int subframe)
+    private static void ApplyMsStereo(Channel[] channelPair, int msStereo, int baseBandCount, int totalBandCount, int subframe)
     {
         if (msStereo != 0) return;
-        if (channelPair[channelOffset + 0].Type != ChannelType.StereoPrimary) return;
+        if (channelPair[0].Type != ChannelType.StereoPrimary) return;
 
         float ratio = MsStereoRatio;
-        float[] spectraL = channelPair[channelOffset + 0].Spectra[subframe];
-        float[] spectraR = channelPair[channelOffset + 1].Spectra[subframe];
+        float[] spectraL = channelPair[0].Spectra[subframe];
+        float[] spectraR = channelPair[1].Spectra[subframe];
 
         for (int band = baseBandCount; band < totalBandCount; band++)
         {
