@@ -14,7 +14,7 @@ struct CueName
 struct Cue
 {
     public uint Id;
-    public byte ReferenceType;
+    public EReferenceType ReferenceType;
     public ushort ReferenceIndex;
 }
 
@@ -33,6 +33,8 @@ struct Block
     public ushort NumTracks;
     public uint TrackIndexOffset;
     public uint TrackIndexSize;
+    public ushort ActionTrackStartIndex;
+    public ushort NumActionTracks;
 }
 
 struct Sequence
@@ -40,7 +42,21 @@ struct Sequence
     public ushort NumTracks;
     public uint TrackIndexOffset;
     public uint TrackIndexSize;
-    public byte Type;
+    public ESequenceType Type;
+    public ushort ActionTrackStartIndex;
+    public ushort NumActionTracks;
+}
+
+struct ActionTrack
+{
+    public ushort EventIndex;
+    public ushort CommandIndex;
+    public ETargetType TargetType;
+    public string TargetName;
+    public uint TargetId;
+    public string TargetAcbName;
+    public byte Scope;
+    public ushort TargetTrackNo;
 }
 
 struct Track
@@ -59,6 +75,8 @@ struct Synth
     public byte Type;
     public uint ReferenceItemsOffset;
     public uint ReferenceItemsSize;
+    public ushort ActionTrackStartIndex;
+    public ushort NumActionTracks;
 }
 
 public struct Waveform
@@ -66,14 +84,54 @@ public struct Waveform
     public ushort Id;
     public ushort StreamId;
     public ushort PortNo;
-    public WaveformStreamType Streaming;
+    public EWaveformStreamType Streaming;
+    public EEncodeType EncodeType;
 }
 
-public enum WaveformStreamType : byte
+public enum EEncodeType : byte
+{
+    ADX = 0,
+    HCA = 2,
+    HCA_ALT = 6,
+    VAG = 7,
+    ATRAC3 = 8,
+    BCWAV = 9,
+    ATRAC9 = 11,
+    DSP = 13,
+    None = 255
+}
+
+public enum EWaveformStreamType : byte
 {
     Memory = 0,
     Streaming = 1,
     Both = 2
+}
+
+public enum EReferenceType : byte
+{
+    Waveform = 1,
+    Synth = 2,
+    Sequence = 3,
+    BlockSequence = 8,
+    Nothing = 255
+}
+
+public enum ETargetType : byte
+{
+    AnyAcb = 0,
+    SpecificAcb = 1
+}
+
+public enum ESequenceType : byte
+{
+    Polyphonic = 0,
+    Sequential = 1,
+    Shuffle = 2,
+    Random = 3,
+    RandomNoRepeat = 4,
+    Switch = 5,
+    ComboSequential = 6
 }
 
 public class AcbParser
@@ -90,6 +148,7 @@ public class AcbParser
     private BinaryReaderEndian? _blockSequenceReader;
     private BinaryReaderEndian? _blockReader;
     private BinaryReaderEndian? _sequenceReader;
+    private BinaryReaderEndian? _actionTrackReader;
     private BinaryReaderEndian? _trackReader;
     private BinaryReaderEndian? _trackCommandReader;
     private BinaryReaderEndian? _synthReader;
@@ -100,6 +159,7 @@ public class AcbParser
     private BlockSequence[] _blockSequence = [];
     private Block[] _block = [];
     private Sequence[] _sequence = [];
+    private ActionTrack[] _actionTrack = [];
     private Track[] _track = [];
     private TrackCommand[] _trackCommand = [];
     private Synth[] _synth = [];
@@ -110,6 +170,7 @@ public class AcbParser
     private int _blockSequenceRows;
     private int _blockRows;
     private int _sequenceRows;
+    private int _actionTrackRows;
     private int _trackRows;
     private int _trackCommandRows;
     private int _synthRows;
@@ -248,7 +309,7 @@ public class AcbParser
         return true;
     }
 
-    void AddAcbName(WaveformStreamType streaming)
+    void AddAcbName(EWaveformStreamType streaming)
     {
         if (_cueNameName.Length == 0)
             return;
@@ -267,7 +328,7 @@ public class AcbParser
         else
             _name = _cueNameName;
 
-        if (streaming is WaveformStreamType.Both && _isMemory)
+        if (streaming is EWaveformStreamType.Both && _isMemory)
             _name += " [pre]";
 
         _awbNameList.Add(_cueNameIndex);
@@ -292,6 +353,7 @@ public class AcbParser
         int cStreamAwbId = table.GetColumn("StreamAwbId");
         int cStreamAwbPortNo = table.GetColumn("StreamAwbPortNo");
         int cStreaming = table.GetColumn("Streaming");
+        int cEncodeType = table.GetColumn("EncodeType");
 
         for (int i = 0; i < rows; i++)
         {
@@ -301,7 +363,9 @@ public class AcbParser
             table.Query(i, cStreamAwbId, out r.StreamId);
             table.Query(i, cStreamAwbPortNo, out r.PortNo);
             table.Query(i, cStreaming, out byte streaming);
-            r.Streaming = (WaveformStreamType) streaming;
+            table.Query(i, cEncodeType, out byte encodeType);
+            r.Streaming = (EWaveformStreamType) streaming;
+            r.EncodeType = (EEncodeType) encodeType;
         }
     }
 
@@ -331,7 +395,7 @@ public class AcbParser
         if (_targetPort >= 0 && r.PortNo != 0xFFFF && r.PortNo != _targetPort)
             return;
 
-        if ((_isMemory && r.Streaming is WaveformStreamType.Streaming) || (!_isMemory && r.Streaming is WaveformStreamType.Memory))
+        if ((_isMemory && r.Streaming is EWaveformStreamType.Streaming) || (!_isMemory && r.Streaming is EWaveformStreamType.Memory))
             return;
 
         AddAcbName(r.Streaming);
@@ -354,6 +418,8 @@ public class AcbParser
 
         int cType = table.GetColumn("Type");
         int cReferenceItems = table.GetColumn("ReferenceItems");
+        int cActionTrackStartIndex = table.GetColumn("ActionTrackStartIndex");
+        int cNumActionTracks = table.GetColumn("NumActionTracks");
 
         for (int i = 0; i < rows; i++)
         {
@@ -361,6 +427,8 @@ public class AcbParser
 
             table.Query(i, cType, out r.Type);
             table.Query(i, cReferenceItems, out r.ReferenceItemsOffset, out r.ReferenceItemsSize);
+            table.Query(i, cActionTrackStartIndex, out r.ActionTrackStartIndex);
+            table.Query(i, cNumActionTracks, out r.NumActionTracks);
         }
     }
 
@@ -514,6 +582,67 @@ public class AcbParser
             _trackCommand[index].CommandSize);
     }
 
+    void PreloadAcbActionTrack()
+    {
+        ref int rows = ref _actionTrackRows;
+
+        if (rows != 0)
+            return;
+        if (!OpenUtfSubtable(out _actionTrackReader, out UtfTable table, "ActionTrackTable", out rows))
+            return;
+        if (rows == 0)
+            return;
+
+        _actionTrack = new ActionTrack[rows];
+
+        int cEventIndex = table.GetColumn("EventIndex");
+        int cCommandIndex = table.GetColumn("CommandIndex");
+        int cTargetType = table.GetColumn("TargetType");
+        int cTargetName = table.GetColumn("TargetName");
+        int cTargetId = table.GetColumn("TargetId");
+        int cTargetAcbName = table.GetColumn("TargetAcbName");
+        int cScope = table.GetColumn("Scope");
+        int cTargetTrackNo = table.GetColumn("TargetTrackNo");
+
+        for (int i = 0; i < rows; i++)
+        {
+            ref ActionTrack r = ref _actionTrack[i];
+
+            table.Query(i, cEventIndex, out r.EventIndex);
+            table.Query(i, cCommandIndex, out r.CommandIndex);
+            table.Query(i, cTargetType, out byte targetType);
+            r.TargetType = (ETargetType) targetType;
+            table.Query(i, cTargetName, out r.TargetName);
+            table.Query(i, cTargetId, out r.TargetId);
+            table.Query(i, cTargetAcbName, out r.TargetAcbName);
+            table.Query(i, cScope, out r.Scope);
+            table.Query(i, cTargetTrackNo, out r.TargetTrackNo);
+        }
+    }
+
+    void LoadAcbActionTrack(ushort index)
+    {
+        PreloadAcbActionTrack();
+
+        if (index >= _actionTrackRows)
+            return;
+
+        if (_actionTrack is null)
+            return;
+
+        ref ActionTrack r = ref _actionTrack[index];
+
+        if (r.EventIndex != 0xFFFF)
+        {
+            LoadAcbTrackCommand(r.EventIndex);
+        }
+
+        if (r.CommandIndex != 0xFFFF)
+        {
+            LoadAcbTrackCommand(r.CommandIndex);
+        }
+    }
+
     void PreloadAcbTrack()
     {
         ref int rows = ref _trackRows;
@@ -572,6 +701,8 @@ public class AcbParser
         int cNumTracks = table.GetColumn("NumTracks");
         int cTrackIndex = table.GetColumn("TrackIndex");
         int cType = table.GetColumn("Type");
+        int cActionTrackStartIndex = table.GetColumn("ActionTrackStartIndex");
+        int cNumActionTracks = table.GetColumn("NumActionTracks");
 
         for (int i = 0; i < rows; i++)
         {
@@ -579,7 +710,10 @@ public class AcbParser
 
             table.Query(i, cNumTracks, out r.NumTracks);
             table.Query(i, cTrackIndex, out r.TrackIndexOffset, out r.TrackIndexSize);
-            table.Query(i, cType, out r.Type);
+            table.Query(i, cType, out byte type);
+            r.Type = (ESequenceType) type;
+            table.Query(i, cActionTrackStartIndex, out r.ActionTrackStartIndex);
+            table.Query(i, cNumActionTracks, out r.NumActionTracks);
         }
     }
 
@@ -636,6 +770,8 @@ public class AcbParser
 
         int cNumTracks = table.GetColumn("NumTracks");
         int cTrackIndex = table.GetColumn("TrackIndex");
+        int cActionTrackStartIndex = table.GetColumn("ActionTrackStartIndex");
+        int cNumActionTracks = table.GetColumn("NumActionTracks");
 
         for (int i = 0; i < rows; i++)
         {
@@ -644,6 +780,8 @@ public class AcbParser
             table.Query(i, cTrackIndex, out VLData data);
             r.TrackIndexOffset = data.Offset;
             r.TrackIndexSize = data.Size;
+            table.Query(i, cActionTrackStartIndex, out r.ActionTrackStartIndex);
+            table.Query(i, cNumActionTracks, out r.NumActionTracks);
         }
     }
 
@@ -762,7 +900,8 @@ public class AcbParser
             ref Cue r = ref _cue[i];
 
             table.Query(i, cCueId, out r.Id);
-            table.Query(i, cReferenceType, out r.ReferenceType);
+            table.Query(i, cReferenceType, out byte referenceType);
+            r.ReferenceType = (EReferenceType) referenceType;
             table.Query(i, cReferenceIndex, out r.ReferenceIndex);
         }
     }
@@ -783,19 +922,19 @@ public class AcbParser
 
         switch (r.ReferenceType)
         {
-            case 1:
+            case EReferenceType.Waveform:
                 LoadAcbWaveForm(r.ReferenceIndex);
                 break;
 
-            case 2:
+            case EReferenceType.Synth:
                 LoadAcbSynth(r.ReferenceIndex);
                 break;
 
-            case 3:
+            case EReferenceType.Sequence:
                 LoadAcbSequence(r.ReferenceIndex);
                 break;
 
-            case 8:
+            case EReferenceType.BlockSequence:
                 LoadAcbBlockSequence(r.ReferenceIndex);
                 break;
 

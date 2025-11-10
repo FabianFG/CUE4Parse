@@ -305,8 +305,8 @@ public class CriWareProvider
     {
         (AwbReader? reader, ushort waveId) = waveform.Streaming switch
         {
-            WaveformStreamType.Memory  => (awb, waveform.Id),
-            WaveformStreamType.Streaming or WaveformStreamType.Both => (streamingAwb,waveform.StreamId),
+            EWaveformStreamType.Memory  => (awb, waveform.Id),
+            EWaveformStreamType.Streaming or EWaveformStreamType.Both => (streamingAwb,waveform.StreamId),
             _ => (null, 0),
         };
         if (reader == null) return null;
