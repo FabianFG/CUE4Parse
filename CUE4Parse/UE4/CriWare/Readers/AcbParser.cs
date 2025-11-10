@@ -174,7 +174,7 @@ public class AcbParser
                             break;
                         case ColumnType.UInt16:
                             sub.Query(i, fieldCol.Name, out ushort usval);
-                            val = usval;
+                            val = usval == 0xFFFF ? -1 : usval;
                             break;
                         case ColumnType.Int16:
                             sub.Query(i, fieldCol.Name, out short sval);
@@ -182,7 +182,7 @@ public class AcbParser
                             break;
                         case ColumnType.UInt32:
                             sub.Query(i, fieldCol.Name, out uint uval);
-                            val = uval;
+                            val = uval == 0xFFFFFFFF ? -1 : uval;
                             break;
                         case ColumnType.Int32:
                             sub.Query(i, fieldCol.Name, out int ival);

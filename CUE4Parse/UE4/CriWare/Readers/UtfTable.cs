@@ -40,7 +40,7 @@ public struct Column
     public string Name;
     public uint Offset;
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         return Name;
     }
@@ -51,7 +51,7 @@ public struct VLData
     public uint Offset;
     public uint Size;
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         return $"Offset: {Offset}, Length: {Size}";
     }
@@ -65,31 +65,31 @@ public struct Result
 
 public sealed class UtfTable
 {
-    private readonly BinaryReaderEndian binaryReader;
-    private readonly uint tableOffset;
+    private readonly BinaryReaderEndian _binaryReader;
+    private readonly uint _tableOffset;
 
-    private readonly uint tableSize;
-    private readonly ushort version;
-    private readonly ushort rowsOffset;
-    private readonly uint stringsOffset;
-    private readonly uint dataOffset;
-    private readonly uint nameOffset;
+    private readonly uint _tableSize;
+    private readonly ushort _version;
+    private readonly ushort _rowsOffset;
+    private readonly uint _stringsOffset;
+    private readonly uint _dataOffset;
+    private readonly uint _nameOffset;
 
-    private readonly ushort columns;
-    private readonly ushort rowWidth;
-    private readonly uint rows;
+    private readonly ushort _columns;
+    private readonly ushort _rowWidth;
+    private readonly uint _rows;
 
-    private readonly byte[] schemaBuffer;
-    private readonly Column[] schema;
+    private readonly byte[] _schemaBuffer;
+    private readonly Column[] _schema;
 
-    private readonly uint schemaOffset;
-    private readonly uint schemaSize;
-    private readonly uint rowsSize;
-    private readonly uint dataSize;
-    private readonly uint stringsSize;
+    private readonly uint _schemaOffset;
+    private readonly uint _schemaSize;
+    private readonly uint _rowsSize;
+    private readonly uint _dataSize;
+    private readonly uint _stringsSize;
 
-    private readonly byte[] stringTable;
-    private readonly string tableName;
+    private readonly byte[] _stringTable;
+    private readonly string _tableName;
 
     public UtfTable(Stream utfTableStream, out int utfTableRows, out string utfTableRowName) :
         this(utfTableStream, 0, out utfTableRows, out utfTableRowName)
@@ -101,72 +101,72 @@ public sealed class UtfTable
 
     public UtfTable(Stream utfTableStream, uint offset, out int utfTableRows, out string rowName)
     {
-        binaryReader = new BinaryReaderEndian(utfTableStream);
-        tableOffset = offset;
+        _binaryReader = new BinaryReaderEndian(utfTableStream);
+        _tableOffset = offset;
 
-        binaryReader.BaseStream.Position = offset;
+        _binaryReader.BaseStream.Position = offset;
 
-        if (!binaryReader.ReadChars(4).SequenceEqual("@UTF"))
+        if (!_binaryReader.ReadChars(4).SequenceEqual("@UTF"))
             throw new InvalidDataException("Incorrect magic.");
-        tableSize = binaryReader.ReadUInt32BE() + 0x08;
-        version = binaryReader.ReadUInt16BE();
-        rowsOffset = (ushort)(binaryReader.ReadUInt16BE() + 0x08);
-        stringsOffset = binaryReader.ReadUInt32BE() + 0x08;
-        dataOffset = binaryReader.ReadUInt32BE() + 0x08;
-        nameOffset = binaryReader.ReadUInt32BE();
-        columns = binaryReader.ReadUInt16BE();
-        rowWidth = binaryReader.ReadUInt16BE();
-        rows = binaryReader.ReadUInt32BE();
+        _tableSize = _binaryReader.ReadUInt32BE() + 0x08;
+        _version = _binaryReader.ReadUInt16BE();
+        _rowsOffset = (ushort)(_binaryReader.ReadUInt16BE() + 0x08);
+        _stringsOffset = _binaryReader.ReadUInt32BE() + 0x08;
+        _dataOffset = _binaryReader.ReadUInt32BE() + 0x08;
+        _nameOffset = _binaryReader.ReadUInt32BE();
+        _columns = _binaryReader.ReadUInt16BE();
+        _rowWidth = _binaryReader.ReadUInt16BE();
+        _rows = _binaryReader.ReadUInt32BE();
 
-        schemaOffset = 0x20;
-        schemaSize = rowsOffset - schemaOffset;
-        rowsSize = stringsOffset - rowsOffset;
-        stringsSize = dataOffset - stringsOffset;
-        dataSize = tableSize - dataOffset;
+        _schemaOffset = 0x20;
+        _schemaSize = _rowsOffset - _schemaOffset;
+        _rowsSize = _stringsOffset - _rowsOffset;
+        _stringsSize = _dataOffset - _stringsOffset;
+        _dataSize = _tableSize - _dataOffset;
 
-        if (version != 0x00 && version != 0x01)
+        if (_version != 0x00 && _version != 0x01)
             throw new InvalidDataException("Unknown @UTF version.");
-        if (tableOffset + tableSize > utfTableStream.Length)
+        if (_tableOffset + _tableSize > utfTableStream.Length)
             throw new InvalidDataException("Table size exceeds bounds of file.");
-        if (rowsOffset > tableSize || stringsOffset > tableSize || dataOffset > tableSize)
+        if (_rowsOffset > _tableSize || _stringsOffset > _tableSize || _dataOffset > _tableSize)
             throw new InvalidDataException("Offsets out of bounds.");
-        if (stringsSize <= 0 || nameOffset > stringsSize)
+        if (_stringsSize <= 0 || _nameOffset > _stringsSize)
             throw new InvalidDataException("Invalid string table size.");
         if (Columns <= 0)
             throw new InvalidDataException("Table has no columns.");
 
-        schemaBuffer = new byte[schemaSize];
-        binaryReader.BaseStream.Position = tableOffset + schemaOffset;
-        if (binaryReader.Read(schemaBuffer, 0, (int)schemaSize) != schemaSize)
+        _schemaBuffer = new byte[_schemaSize];
+        _binaryReader.BaseStream.Position = _tableOffset + _schemaOffset;
+        if (_binaryReader.Read(_schemaBuffer, 0, (int)_schemaSize) != _schemaSize)
             throw new InvalidDataException("Failed to read schema.");
 
-        stringTable = new byte[stringsSize];
-        binaryReader.BaseStream.Position = tableOffset + stringsOffset;
-        if (binaryReader.Read(stringTable, 0, (int)stringsSize) != stringsSize)
+        _stringTable = new byte[_stringsSize];
+        _binaryReader.BaseStream.Position = _tableOffset + _stringsOffset;
+        if (_binaryReader.Read(_stringTable, 0, (int)_stringsSize) != _stringsSize)
             throw new InvalidDataException("Failed to read string table.");
 
         uint columnOffset = 0;
         uint schemaPos = 0;
 
-        tableName = GetStringFromTable(nameOffset);
+        _tableName = GetStringFromTable(_nameOffset);
 
-        schema = new Column[columns];
+        _schema = new Column[_columns];
 
-        BinaryReaderEndian bytesReader = new BinaryReaderEndian(new MemoryStream(schemaBuffer) { Position = 0 });
-        for (int i = 0; i < columns; i++)
+        BinaryReaderEndian bytesReader = new BinaryReaderEndian(new MemoryStream(_schemaBuffer) { Position = 0 });
+        for (int i = 0; i < _columns; i++)
         {
             bytesReader.BaseStream.Position = schemaPos;
 
             byte info = bytesReader.ReadByte();
             uint nameOffset = bytesReader.ReadUInt32BE();
 
-            if (nameOffset > stringsSize)
+            if (nameOffset > _stringsSize)
                 throw new InvalidDataException("String offset out of bounds.");
             schemaPos += 0x1 + 0x4;
 
             bytesReader.BaseStream.Position = schemaPos;
 
-            schema[i] = new Column()
+            _schema[i] = new Column()
             {
                 Flag = (ColumnFlag)(info & 0xF0),
                 Type = (ColumnType)(info & 0x0F),
@@ -174,14 +174,14 @@ public sealed class UtfTable
                 Offset = 0
             };
 
-            if (schema[i].Flag == 0 ||
-                !schema[i].Flag.HasFlag(ColumnFlag.Name) ||
-                 schema[i].Flag.HasFlag(ColumnFlag.Default) && schema[i].Flag.HasFlag(ColumnFlag.Row) ||
-                 schema[i].Flag.HasFlag(ColumnFlag.Undefined))
+            if (_schema[i].Flag == 0 ||
+                !_schema[i].Flag.HasFlag(ColumnFlag.Name) ||
+                 _schema[i].Flag.HasFlag(ColumnFlag.Default) && _schema[i].Flag.HasFlag(ColumnFlag.Row) ||
+                 _schema[i].Flag.HasFlag(ColumnFlag.Undefined))
                 throw new InvalidDataException("Unknown column flag combo found.");
 
             uint valueSize;
-            switch (schema[i].Type)
+            switch (_schema[i].Type)
             {
                 case ColumnType.Byte:
                 case ColumnType.SByte:
@@ -206,46 +206,46 @@ public sealed class UtfTable
                     throw new InvalidDataException("Invalid column type.");
             }
 
-            if (schema[i].Flag.HasFlag(ColumnFlag.Name))
-                schema[i].Name = GetStringFromTable(nameOffset);
+            if (_schema[i].Flag.HasFlag(ColumnFlag.Name))
+                _schema[i].Name = GetStringFromTable(nameOffset);
 
-            if (schema[i].Flag.HasFlag(ColumnFlag.Default))
+            if (_schema[i].Flag.HasFlag(ColumnFlag.Default))
             {
-                schema[i].Offset = schemaPos;
+                _schema[i].Offset = schemaPos;
                 schemaPos += valueSize;
 
                 bytesReader.BaseStream.Position = schemaPos;
 
             }
 
-            if (schema[i].Flag.HasFlag(ColumnFlag.Row))
+            if (_schema[i].Flag.HasFlag(ColumnFlag.Row))
             {
-                schema[i].Offset = columnOffset;
+                _schema[i].Offset = columnOffset;
                 columnOffset += valueSize;
             }
         }
 
-        utfTableRows = (int)rows;
-        rowName = GetStringFromTable(nameOffset);
+        utfTableRows = (int)_rows;
+        rowName = GetStringFromTable(_nameOffset);
 
         bytesReader.Dispose();
     }
 
-    public ushort Columns => columns;
+    public ushort Columns => _columns;
 
-    public uint Rows => rows;
+    public uint Rows => _rows;
 
-    public Column[] Schema => schema;
+    public Column[] Schema => _schema;
 
-    public string TableName => tableName;
+    public string TableName => _tableName;
 
-    public Stream Stream => binaryReader.BaseStream;
+    public Stream Stream => _binaryReader.BaseStream;
 
     public int GetColumn(string columnName)
     {
-        for (int i = 0; i < columns; i++)
+        for (int i = 0; i < _columns; i++)
         {
-            Column column = schema[i];
+            Column column = _schema[i];
 
             if (column.Name is null || !column.Name.Equals(columnName))
                 continue;
@@ -260,74 +260,74 @@ public sealed class UtfTable
     {
         result = new Result();
 
-        if (row >= rows || row < 0)
+        if (row >= _rows || row < 0)
             //throw new ArgumentOutOfRangeException(nameof(row));
             return false;
-        if (column >= columns || column < 0)
+        if (column >= _columns || column < 0)
             //throw new ArgumentOutOfRangeException(nameof(column));
             return false;
 
-        Column col = schema[column];
+        Column col = _schema[column];
         uint dataOffset = 0;
-        BinaryReaderEndian bytesReader = null;
+        BinaryReaderEndian? bytesReader = null;
 
         result.Type = col.Type;
 
         if (col.Flag.HasFlag(ColumnFlag.Default))
         {
-            if (schemaBuffer != null)
+            if (_schemaBuffer != null)
             {
-                bytesReader = new BinaryReaderEndian(new MemoryStream(schemaBuffer));
+                bytesReader = new BinaryReaderEndian(new MemoryStream(_schemaBuffer));
                 bytesReader.BaseStream.Position = col.Offset;
             }
             else
             {
-                dataOffset = tableOffset + schemaOffset + col.Offset;
+                dataOffset = _tableOffset + _schemaOffset + col.Offset;
             }
         }
         else if (col.Flag.HasFlag(ColumnFlag.Row))
         {
-            dataOffset = (uint)(tableOffset + rowsOffset + row * rowWidth + col.Offset);
+            dataOffset = (uint)(_tableOffset + _rowsOffset + row * _rowWidth + col.Offset);
         }
         else
             throw new InvalidDataException("Invalid flag.");
 
-        binaryReader.BaseStream.Position = dataOffset;
+        _binaryReader.BaseStream.Position = dataOffset;
 
         switch (col.Type)
         {
             case ColumnType.Byte:
-                result.Value = bytesReader != null ? bytesReader.ReadByte() : binaryReader.ReadByte();
+                result.Value = bytesReader != null ? bytesReader.ReadByte() : _binaryReader.ReadByte();
                 break;
             case ColumnType.SByte:
-                result.Value = bytesReader != null ? bytesReader.ReadSByte() : binaryReader.ReadSByte();
+                result.Value = bytesReader != null ? bytesReader.ReadSByte() : _binaryReader.ReadSByte();
                 break;
             case ColumnType.UInt16:
-                result.Value = bytesReader != null ? bytesReader.ReadUInt16BE() : binaryReader.ReadUInt16BE();
+                result.Value = bytesReader != null ? bytesReader.ReadUInt16BE() : _binaryReader.ReadUInt16BE();
                 break;
             case ColumnType.Int16:
-                result.Value = bytesReader != null ? bytesReader.ReadInt16BE() : binaryReader.ReadInt16BE();
+                result.Value = bytesReader != null ? bytesReader.ReadInt16BE() : _binaryReader.ReadInt16BE();
                 break;
             case ColumnType.UInt32:
-                result.Value = bytesReader != null ? bytesReader.ReadUInt32BE() : binaryReader.ReadUInt32BE();
+                result.Value = bytesReader != null ? bytesReader.ReadUInt32BE() : _binaryReader.ReadUInt32BE();
                 break;
             case ColumnType.Int32:
-                result.Value = bytesReader != null ? bytesReader.ReadInt32BE() : binaryReader.ReadInt32BE();
+                result.Value = bytesReader != null ? bytesReader.ReadInt32BE() : _binaryReader.ReadInt32BE();
                 break;
             case ColumnType.UInt64:
-                result.Value = bytesReader != null ? bytesReader.ReadUInt64BE() : binaryReader.ReadUInt64BE();
+                result.Value = bytesReader != null ? bytesReader.ReadUInt64BE() : _binaryReader.ReadUInt64BE();
                 break;
             case ColumnType.Int64:
-                result.Value = bytesReader != null ? bytesReader.ReadInt64BE() : binaryReader.ReadInt64BE();
+                result.Value = bytesReader != null ? bytesReader.ReadInt64BE() : _binaryReader.ReadInt64BE();
                 break;
             case ColumnType.Single:
-                result.Value = bytesReader != null ? bytesReader.ReadSingleBE() : binaryReader.ReadSingleBE();
+                result.Value = bytesReader != null ? bytesReader.ReadSingleBE() : _binaryReader.ReadSingleBE();
                 break;
             //case ColumnType.Double:
             //    break;
             case ColumnType.String:
-                uint nameOffset = bytesReader != null ? bytesReader.ReadUInt32BE() : binaryReader.ReadUInt32BE();
-                if (nameOffset > stringsSize)
+                uint nameOffset = bytesReader != null ? bytesReader.ReadUInt32BE() : _binaryReader.ReadUInt32BE();
+                if (nameOffset > _stringsSize)
                     throw new InvalidDataException("Name offset out of bounds.");
                 result.Value = GetStringFromTable(nameOffset);
                 break;
@@ -344,8 +344,8 @@ public sealed class UtfTable
                 {
                     result.Value = new VLData()
                     {
-                        Offset = binaryReader.ReadUInt32BE(),
-                        Size = binaryReader.ReadUInt32BE()
+                        Offset = _binaryReader.ReadUInt32BE(),
+                        Size = _binaryReader.ReadUInt32BE()
                     };
                 }
                 break;
@@ -365,7 +365,7 @@ public sealed class UtfTable
 
         if (!valid || !enumParseResult || result.Type != columnType)
         {
-            value = Activator.CreateInstance(type);
+            value = Activator.CreateInstance(type)!;
             return false;
         }
 
@@ -373,7 +373,7 @@ public sealed class UtfTable
 
         if (value is VLData vlData)
         {
-            vlData.Offset += tableOffset + dataOffset;
+            vlData.Offset += _tableOffset + _dataOffset;
             value = vlData;
         }
 
@@ -411,15 +411,15 @@ public sealed class UtfTable
 
     private string GetStringFromTable(uint offset)
     {
-        if (offset >= stringsSize)
+        if (offset >= _stringsSize)
             throw new InvalidDataException("Invalid string offset.");
 
-        var eos = Array.IndexOf<byte>(stringTable, 0, (int) offset);
-        eos = eos == -1 ? stringTable.Length : eos;
-        return Encoding.UTF8.GetString(stringTable.AsSpan()[(int) offset..eos]);
+        var eos = Array.IndexOf<byte>(_stringTable, 0, (int) offset);
+        eos = eos == -1 ? _stringTable.Length : eos;
+        return Encoding.UTF8.GetString(_stringTable.AsSpan()[(int) offset..eos]);
     }
 
-    public UtfTable OpenSubtable(string tableName)
+    public UtfTable? OpenSubtable(string tableName)
     {
         if (!Query(0, tableName, out VLData tableValueData))
             throw new ArgumentException("Subtable does not exist.");
@@ -427,10 +427,10 @@ public sealed class UtfTable
         if (tableValueData.Size < 1)
             return null;
 
-        binaryReader.BaseStream.Position = tableValueData.Offset;
+        _binaryReader.BaseStream.Position = tableValueData.Offset;
 
         return new UtfTable(
-            binaryReader.BaseStream,
+            _binaryReader.BaseStream,
             tableValueData.Offset,
             out int _,
             out string _);
