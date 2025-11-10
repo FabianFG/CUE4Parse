@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
-using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -72,21 +69,27 @@ public class WwiseProvider
     private readonly HashSet<(uint Id, Hierarchy Hierarchy)> _visitedHierarchies = []; // To speed things up
     private readonly HashSet<uint> _visitedWemIds = []; // To prevent duplicates
 
+    // Please don't change this, when extracting directly from .bnk we shouldn't loop through wwise hierarchy
+    // because that doesn't guarantee us to extract the audio from this given .bnk
     public List<WwiseExtractedSound> ExtractBankSounds(WwiseReader wwiseReader)
     {
         CacheSoundBank(wwiseReader);
         var ownerDirectory = wwiseReader.Path.SubstringBeforeLast('.');
 
-        var results = new List<WwiseExtractedSound>();
-        if (wwiseReader.Hierarchies != null)
+        if (wwiseReader.WwiseEncodedMedias == null)
+            return [];
+
+        var results = new List<WwiseExtractedSound>(wwiseReader.WwiseEncodedMedias.Count);
+        foreach (var media in wwiseReader.WwiseEncodedMedias)
         {
-            foreach (var h in wwiseReader.Hierarchies)
+            results.Add(new WwiseExtractedSound
             {
-                if (h.Data is not HierarchyEvent hierarchyEvent)
-                    continue;
-                LoopThroughEventActions(hierarchyEvent, results, ownerDirectory);
-            }
+                OutputPath = Path.Combine(ownerDirectory, media.Key),
+                Extension = "wem",
+                Data = media.Value,
+            });
         }
+        
         return results;
     }
 
@@ -166,8 +169,9 @@ public class WwiseProvider
 
     private void ProcessMediaCookedData(FWwiseMediaCookedData media, FWwiseLanguageCookedData languageData, List<WwiseExtractedSound> results)
     {
-        var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
+        DetermineBaseWwiseAudioPath();
 
+        var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
         var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
 
         byte[] data = [];
@@ -204,6 +208,8 @@ public class WwiseProvider
     private void ProcessSoundBankCookedData(FWwiseSoundBankCookedData soundBank, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results)
     {
         if (!soundBank.bContainsMedia) return;
+
+        DetermineBaseWwiseAudioPath();
 
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
