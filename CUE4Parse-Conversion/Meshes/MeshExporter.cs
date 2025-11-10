@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -10,6 +11,7 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
+using CUE4Parse_Conversion.Meshes.FBX;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Rig;
@@ -110,6 +112,12 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = "obj";
                         new Gltf(ExportName, lod, materialExports, Options).Save(Options.MeshFormat, Ar);
                         break;
+                    case EMeshFormat.FBX:
+                        ext = "fbx";
+                        var fbxStaticExporter = new FbxExporter();
+                        string fbxStaticContent = fbxStaticExporter.ExportStaticMesh(lod, ExportName);
+                        Ar.Write(System.Text.Encoding.ASCII.GetBytes(fbxStaticContent));
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
@@ -173,6 +181,8 @@ namespace CUE4Parse_Conversion.Meshes
                     continue;
                 }
 
+                // (Previously we limited FBX to LOD0; revert so all LODs are exported.)
+
                 using var Ar = new FArchiveWriter();
                 var materialExports = options.ExportMaterials ? new List<MaterialExporter2>() : null;
                 var ext = "";
@@ -193,6 +203,18 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.OBJ:
                         ext = "obj";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
+                    case EMeshFormat.FBX:
+                        ext = "fbx";
+                        var fbxExporter = new FbxExporter();
+                        string fbxContent = fbxExporter.ExportSkeletalMesh(
+                            lod,
+                            convertedMesh.RefSkeleton,
+                            Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
+                            lodIndex,
+                            ExportName
+                        );
+                        Ar.Write(System.Text.Encoding.ASCII.GetBytes(fbxContent));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
