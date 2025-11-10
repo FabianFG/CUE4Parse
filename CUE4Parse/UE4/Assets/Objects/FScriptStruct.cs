@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
@@ -199,6 +200,7 @@ public class FScriptStruct
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
             "FortActorRecord" => new FFortActorRecord(Ar),
+            "GameplayEventFunction" => new FGameplayEventFunction(Ar),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
@@ -310,14 +312,14 @@ public class FScriptStruct
             "PowerQuantity" or "ForceQuantity" or "TimeUnit" or "PressureQuantity" or "VolumeQuantity" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
 
             // Daimon Blades
-            "SOS_GDValue" => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+            "SOS_GDValue" => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
 
-            "SoftEnumName" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+            "SoftEnumName" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
             "KosmosHangTraversalData" when Ar.Game is EGame.GAME_LittleNightmares3 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
-            "EnumName" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(1,1)]), ReadType.RAW),
+            "EnumName" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
             "AbstractEnum" or "EnumName" or "JumpParams" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "ChalkboardSectionKey" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(0,2), (2, 2)]), ReadType.RAW),
+            "ChalkboardSectionKey" when Ar.Game is EGame.GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(0, 2), (2, 2)]), ReadType.RAW),
             "LedgeMetaData" when Ar.Game is EGame.GAME_Reanimal => new FFixedSizeStruct(Ar, 1),
 
             "ItemDataContainer" when Ar.Game is EGame.GAME_VEIN => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
@@ -332,6 +334,10 @@ public class FScriptStruct
             "BlueprintFunctionLibraryConditional" when Ar.Game is EGame.GAME_OuterWorlds2 => new FBlueprintFunctionLibraryConditional(Ar, true),
             "BlueprintDefinedScript" when Ar.Game is EGame.GAME_OuterWorlds2 => new FBlueprintFunctionLibraryConditional(Ar, false),
             "AIGroupBehaviorClassSelector" when Ar.Game is EGame.GAME_OuterWorlds2 => new FSoftObjectPath(Ar),
+
+            // The Last Caretaker 
+            "VoyagePackedLocalTransform" => new VoyagePackedLocalTransform(Ar),
+            "VoyageFloat16" => Ar.Read<FRawStruct<Half>>(),
 
             _ => Ar.Game switch
             {

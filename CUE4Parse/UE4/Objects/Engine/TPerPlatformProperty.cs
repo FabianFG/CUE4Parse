@@ -19,7 +19,7 @@ public abstract class TPerPlatformProperty<T> : IUStruct where T : notnull
     {
         bCooked = Ar.ReadBoolean();
         Default = getValue();
-        if (Ar.IsFilterEditorOnly && !bCooked)
+        if (!Ar.IsFilterEditorOnly && !bCooked)
         {
             PerPlatform = Ar.ReadMap(Ar.ReadFName, getValue);
         }
@@ -56,3 +56,6 @@ public class FPerPlatformFString : TPerPlatformProperty<string>
     public FPerPlatformFString() { }
     public FPerPlatformFString(FAssetArchive Ar) : base(Ar, Ar.ReadFString) { }
 }
+
+//FFreezablePerPlatformInt
+//FFreezablePerPlatformFloat

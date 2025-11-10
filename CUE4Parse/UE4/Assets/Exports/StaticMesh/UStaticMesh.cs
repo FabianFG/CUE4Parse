@@ -42,21 +42,23 @@ public class UStaticMesh : UObject
             {
                  var dummyThumbnailAngle = new FRotator(Ar);
                  var dummyThumbnailDistance = Ar.Read<float>();
-             }
+            }
 
-             var highResSourceMeshName = Ar.ReadFString();
-             var highResSourceMeshCRC = Ar.Read<uint>();
-
-             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
-             {
-                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();
-                 var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();
-             }
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
+            {
+                var Deprecated_HighResSourceMeshName = Ar.ReadFString();
+                var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();
+            }
         }
 
         LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
         Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
 
+        if (!Ar.IsFilterEditorOnly)
+        {
+            return; // so it doesn't throw
+        }
+        
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
         {
