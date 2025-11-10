@@ -162,6 +162,11 @@ public class CriWareProvider
                 {
                     if (!visitedWaveforms.Add(wave))
                         continue;
+                    if (wave.EncodeType is not (EEncodeType.HCA or EEncodeType.HCA_ALT))
+                    {
+                        Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                        continue;
+                    }
 
                     var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
 
@@ -282,6 +287,12 @@ public class CriWareProvider
             var index = 0;
             foreach (var wave in waveforms)
             {
+                if (wave.EncodeType is not (EEncodeType.HCA or EEncodeType.HCA_ALT))
+                {
+                    Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                    continue;
+                }
+
                 var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
 
                 if (hcaData == null || hcaData.Length == 0)
