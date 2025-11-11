@@ -6,7 +6,8 @@ internal static class Tables
 
     public static void InitializeTables()
     {
-        if (_initialized) return;
+        if (_initialized)
+            return;
 
         for (int i = 0; i < DequantizerScalingTableHex.Length; i++)
         {

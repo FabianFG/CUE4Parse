@@ -6,12 +6,6 @@ using static CUE4Parse.UE4.CriWare.Decoders.HCA.Tables;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
 
-public class CriwareDecryptionException : Exception
-{
-    public CriwareDecryptionException(string message) : base(message) { }
-    public CriwareDecryptionException(string message, Exception inner) : base(message, inner) { }
-}
-
 public class HcaDecoder
 {
     private readonly HcaContext _hca;
@@ -51,7 +45,8 @@ public class HcaDecoder
 
     public int TestBlock(byte[] data)
     {
-        if (_hca.Channels is null) return -1;
+        if (_hca.Channels is null)
+            return -1;
 
         const int frameSamples = Subframes * SamplesPerSubframe;
         const float scale = 32768.0F;
@@ -75,11 +70,13 @@ public class HcaDecoder
                 }
             }
 
-            if (isEmpty) return 0;
+            if (isEmpty)
+                return 0;
         }
 
         status = DecodeBlockUnpack(data);
-        if (status < 0) return -1;
+        if (status < 0)
+            return -1;
 
         {
             int bitsMax = _hca.FrameSize * 8;
@@ -111,7 +108,7 @@ public class HcaDecoder
                         clips++;
                     else
                     {
-                        int pSample = (int)(fSample * scale);
+                        int pSample = (int) (fSample * scale);
                         if (pSample == 0 || pSample == -1)
                         {
                             blanks++;
@@ -148,12 +145,12 @@ public class HcaDecoder
                 for (int channel = 0; channel < _hca.ChannelCount; channel++)
                 {
                     float f = _hca.Channels[channel].Wave[subframe][sample];
-                    int sInt = (int)(32768 * f);
+                    int sInt = (int) (32768 * f);
                     if (sInt > 32767)
                         sInt = 32767;
                     else if (sInt < -32767)
                         sInt = -32767;
-                    samples[channel][(SamplesPerSubframe * subframe) + sample] = (short)sInt;
+                    samples[channel][(SamplesPerSubframe * subframe) + sample] = (short) sInt;
                 }
             }
         }
@@ -169,12 +166,12 @@ public class HcaDecoder
                 for (int channel = 0; channel < _hca.ChannelCount; channel++)
                 {
                     float f = _hca.Channels[channel].Wave[subframe][sample];
-                    int sInt = (int)(32768 * f);
+                    int sInt = (int) (32768 * f);
                     if (sInt > 32767)
                         sInt = 32767;
                     else if (sInt < -32767)
                         sInt = -32767;
-                    samples[sampleIndex++] = (short)sInt;
+                    samples[sampleIndex++] = (short) sInt;
                 }
             }
         }
@@ -195,7 +192,8 @@ public class HcaDecoder
     public int DecodeBlock(byte[] data)
     {
         int result = DecodeBlockUnpack(data);
-        if (result < 0) return result;
+        if (result < 0)
+            return result;
         DecodeBlockTransform();
         return result;
     }
@@ -207,10 +205,12 @@ public class HcaDecoder
 
         BitReader bitReader = new(data);
 
-        ushort sync = (ushort)bitReader.Read(16);
-        if (sync != 0xFFFF) throw new InvalidDataException("Sync error.");
+        ushort sync = (ushort) bitReader.Read(16);
+        if (sync != 0xFFFF)
+            throw new InvalidDataException("Sync error.");
 
-        if (Crc.Crc16Checksum(data) > 0) throw new InvalidDataException("Checksum error.");
+        if (Crc.Crc16Checksum(data) > 0)
+            throw new InvalidDataException("Checksum error.");
 
         Cipher.Decrypt(_hca.CipherTable, data);
 
@@ -271,7 +271,7 @@ public class HcaDecoder
     {
         int csCount = channel.CodedCount;
         int extraCount;
-        byte deltaBits = (byte)bitReader.Read(3);
+        byte deltaBits = (byte) bitReader.Read(3);
 
         if (channel.Type == ChannelType.StereoSecondary || hfrGroupCount <= 0 || version <= Version200)
             extraCount = 0;
@@ -289,21 +289,21 @@ public class HcaDecoder
         {
             for (int i = 0; i < csCount; i++)
             {
-                channel.ScaleFactors[i] = (byte)bitReader.Read(6);
+                channel.ScaleFactors[i] = (byte) bitReader.Read(6);
             }
         }
         else if (deltaBits > 0)
         {
-            byte expectedDelta = (byte)((1 << deltaBits) - 1);
-            byte value = (byte)bitReader.Read(6);
+            byte expectedDelta = (byte) ((1 << deltaBits) - 1);
+            byte value = (byte) bitReader.Read(6);
 
             channel.ScaleFactors[0] = value;
             for (int i = 1; i < csCount; i++)
             {
-                byte delta = (byte)bitReader.Read(deltaBits);
+                byte delta = (byte) bitReader.Read(deltaBits);
 
                 if (delta == expectedDelta)
-                    value = (byte)bitReader.Read(6);
+                    value = (byte) bitReader.Read(6);
                 else
                 {
                     int scaleFactorTest = value + (delta - (expectedDelta >> 1));
@@ -311,8 +311,8 @@ public class HcaDecoder
                         return;
                     //throw new InvalidDataException("Invalid scale factor.");
 
-                    value = (byte)(value - (expectedDelta >> 1) + delta);
-                    value = (byte)(value & 0x3F);
+                    value = (byte) (value - (expectedDelta >> 1) + delta);
+                    value = (byte) (value & 0x3F);
                 }
 
                 channel.ScaleFactors[i] = value;
@@ -338,7 +338,7 @@ public class HcaDecoder
         {
             if (version <= Version200)
             {
-                byte value = (byte)bitReader.Peek(4);
+                byte value = (byte) bitReader.Peek(4);
 
                 channel.Intensity[0] = value;
                 if (value < 15)
@@ -346,41 +346,41 @@ public class HcaDecoder
                     bitReader.Skip(4);
                     for (int i = 1; i < Subframes; i++)
                     {
-                        channel.Intensity[i] = (byte)bitReader.Read(4);
+                        channel.Intensity[i] = (byte) bitReader.Read(4);
                     }
                 }
             }
             else
             {
-                byte value = (byte)bitReader.Peek(4);
+                byte value = (byte) bitReader.Peek(4);
 
                 if (value < 15)
                 {
                     bitReader.Skip(4);
 
-                    byte deltaBits = (byte)bitReader.Read(2);
+                    byte deltaBits = (byte) bitReader.Read(2);
 
                     channel.Intensity[0] = value;
                     if (deltaBits == 3)
                     {
                         for (int i = 1; i < Subframes; i++)
                         {
-                            channel.Intensity[i] = (byte)bitReader.Read(4);
+                            channel.Intensity[i] = (byte) bitReader.Read(4);
                         }
                     }
                     else
                     {
-                        byte bMax = (byte)((2 << deltaBits) - 1);
-                        byte bits = (byte)(deltaBits + 1);
+                        byte bMax = (byte) ((2 << deltaBits) - 1);
+                        byte bits = (byte) (deltaBits + 1);
 
                         for (int i = 1; i < Subframes; i++)
                         {
-                            byte delta = (byte)bitReader.Read(bits);
+                            byte delta = (byte) bitReader.Read(bits);
                             if (delta == bMax)
-                                value = (byte)bitReader.Read(4);
+                                value = (byte) bitReader.Read(4);
                             else
                             {
-                                value = (byte)(value - (bMax >> 1) + delta);
+                                value = (byte) (value - (bMax >> 1) + delta);
                                 if (value > 15)
                                     return;
                                 //throw new InvalidDataException("Intensity value out of range.");
@@ -409,7 +409,7 @@ public class HcaDecoder
 
                 for (int i = 0; i < hfrGroupCount; i++)
                 {
-                    hfrScales[hfrScalesOffset + i] = (byte)bitReader.Read(6);
+                    hfrScales[hfrScalesOffset + i] = (byte) bitReader.Read(6);
                 }
             }
         }
@@ -439,18 +439,18 @@ public class HcaDecoder
                     newResolution = 0;
 
                 if (newResolution > maxResolution)
-                    newResolution = (byte)maxResolution;
+                    newResolution = (byte) maxResolution;
                 else if (newResolution < minResolution)
-                    newResolution = (byte)minResolution;
+                    newResolution = (byte) minResolution;
 
                 if (newResolution < 1)
                 {
-                    channel.Noises[noiseCount] = (byte)i;
+                    channel.Noises[noiseCount] = (byte) i;
                     noiseCount++;
                 }
                 else
                 {
-                    channel.Noises[SamplesPerSubframe - 1 - validCount] = (byte)i;
+                    channel.Noises[SamplesPerSubframe - 1 - validCount] = (byte) i;
                     validCount++;
                 }
             }
@@ -508,9 +508,12 @@ public class HcaDecoder
 
     private static void ReconstructNoise(Channel channel, int minResolution, int msStereo, ref int random, int subframe)
     {
-        if (minResolution > 0) return;
-        if (channel.ValidCount <= 0 || channel.NoiseCount <= 0) return;
-        if (msStereo != 0 && channel.Type == ChannelType.StereoPrimary) return;
+        if (minResolution > 0)
+            return;
+        if (channel.ValidCount <= 0 || channel.NoiseCount <= 0)
+            return;
+        if (msStereo != 0 && channel.Type == ChannelType.StereoPrimary)
+            return;
 
         for (int i = 0; i < channel.NoiseCount; i++)
         {
@@ -532,8 +535,10 @@ public class HcaDecoder
     private static void ReconstructHighFrequency(Channel channel, int hfrGroupCount, int bandsPerHfrGroup,
                                          int stereoBandCount, int baseBandCount, int totalBandCount, int version, int subframe)
     {
-        if (bandsPerHfrGroup == 0) return;
-        if (channel.Type == ChannelType.StereoSecondary) return;
+        if (bandsPerHfrGroup == 0)
+            return;
+        if (channel.Type == ChannelType.StereoSecondary)
+            return;
 
         int groupLimit;
         int startBand = stereoBandCount + baseBandCount;
@@ -557,7 +562,8 @@ public class HcaDecoder
 
             for (int i = 0; i < bandsPerHfrGroup; i++)
             {
-                if (highBand >= totalBandCount || lowBand < 0) break;
+                if (highBand >= totalBandCount || lowBand < 0)
+                    break;
 
                 int scIndex = hfrScales[hfrScalesOffset + group];
                 scIndex &= ~(scIndex >> 31);
@@ -574,7 +580,8 @@ public class HcaDecoder
 
     private static void ApplyIntensityStereo(Channel[] channelPair, int subframe, int baseBandCount, int totalBandCount)
     {
-        if (channelPair[0].Type != ChannelType.StereoPrimary) return;
+        if (channelPair[0].Type != ChannelType.StereoPrimary)
+            return;
 
         float ratioL = IntensityRatioTable[channelPair[1].Intensity[subframe]];
         float ratioR = 2.0F - ratioL;
@@ -592,8 +599,10 @@ public class HcaDecoder
 
     private static void ApplyMsStereo(Channel[] channelPair, int msStereo, int baseBandCount, int totalBandCount, int subframe)
     {
-        if (msStereo != 0) return;
-        if (channelPair[0].Type != ChannelType.StereoPrimary) return;
+        if (msStereo != 0)
+            return;
+        if (channelPair[0].Type != ChannelType.StereoPrimary)
+            return;
 
         float ratio = MsStereoRatio;
         float[] spectraL = channelPair[0].Spectra[subframe];

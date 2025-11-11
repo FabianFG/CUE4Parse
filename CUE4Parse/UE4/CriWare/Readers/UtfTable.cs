@@ -110,7 +110,7 @@ public sealed class UtfTable
             throw new InvalidDataException("Incorrect magic.");
         _tableSize = _binaryReader.ReadUInt32BE() + 0x08;
         _version = _binaryReader.ReadUInt16BE();
-        _rowsOffset = (ushort)(_binaryReader.ReadUInt16BE() + 0x08);
+        _rowsOffset = (ushort) (_binaryReader.ReadUInt16BE() + 0x08);
         _stringsOffset = _binaryReader.ReadUInt32BE() + 0x08;
         _dataOffset = _binaryReader.ReadUInt32BE() + 0x08;
         _nameOffset = _binaryReader.ReadUInt32BE();
@@ -137,12 +137,12 @@ public sealed class UtfTable
 
         _schemaBuffer = new byte[_schemaSize];
         _binaryReader.BaseStream.Position = _tableOffset + _schemaOffset;
-        if (_binaryReader.Read(_schemaBuffer, 0, (int)_schemaSize) != _schemaSize)
+        if (_binaryReader.Read(_schemaBuffer, 0, (int) _schemaSize) != _schemaSize)
             throw new InvalidDataException("Failed to read schema.");
 
         _stringTable = new byte[_stringsSize];
         _binaryReader.BaseStream.Position = _tableOffset + _stringsOffset;
-        if (_binaryReader.Read(_stringTable, 0, (int)_stringsSize) != _stringsSize)
+        if (_binaryReader.Read(_stringTable, 0, (int) _stringsSize) != _stringsSize)
             throw new InvalidDataException("Failed to read string table.");
 
         uint columnOffset = 0;
@@ -168,8 +168,8 @@ public sealed class UtfTable
 
             _schema[i] = new Column()
             {
-                Flag = (ColumnFlag)(info & 0xF0),
-                Type = (ColumnType)(info & 0x0F),
+                Flag = (ColumnFlag) (info & 0xF0),
+                Type = (ColumnType) (info & 0x0F),
                 Name = "",
                 Offset = 0
             };
@@ -225,7 +225,7 @@ public sealed class UtfTable
             }
         }
 
-        utfTableRows = (int)_rows;
+        utfTableRows = (int) _rows;
         rowName = GetStringFromTable(_nameOffset);
 
         bytesReader.Dispose();
@@ -287,7 +287,7 @@ public sealed class UtfTable
         }
         else if (col.Flag.HasFlag(ColumnFlag.Row))
         {
-            dataOffset = (uint)(_tableOffset + _rowsOffset + row * _rowWidth + col.Offset);
+            dataOffset = (uint) (_tableOffset + _rowsOffset + row * _rowWidth + col.Offset);
         }
         else
             throw new InvalidDataException("Invalid flag.");
@@ -383,7 +383,7 @@ public sealed class UtfTable
     public bool Query<T>(int row, int column, out T value)
     {
         bool valid = Query(row, column, typeof(T), out object outValue);
-        value = (T)outValue;
+        value = (T) outValue;
         return valid;
     }
 

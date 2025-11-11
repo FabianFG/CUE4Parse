@@ -99,6 +99,7 @@ public class WwiseProvider
 
         _visitedHierarchies.Clear();
         _visitedWemIds.Clear();
+
         var results = new List<WwiseExtractedSound>();
 
         var wwiseData = audioEvent.EventCookedData;
@@ -139,7 +140,6 @@ public class WwiseProvider
         {
             if (!eventData.HasValue)
                 continue;
-            var debugName = eventData.Value.DebugName.Text;
 
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
@@ -164,6 +164,7 @@ public class WwiseProvider
                 }
             }
         }
+
         return results;
     }
 
@@ -171,7 +172,7 @@ public class WwiseProvider
     {
         DetermineBaseWwiseAudioPath();
 
-        var mediaPathName = ResolveWwisePath(media.MediaPathName.Text,media.PackagedFile,media.MediaPathName.IsNone);
+        var mediaPathName = ResolveWwisePath(media.MediaPathName.Text, media.PackagedFile, media.MediaPathName.IsNone);
         var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
 
         byte[] data = [];
@@ -211,7 +212,7 @@ public class WwiseProvider
 
         DetermineBaseWwiseAudioPath();
 
-        var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text,soundBank.PackagedFile,soundBank.SoundBankPathName.IsNone);
+        var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
         TryLoadAndCacheSoundBank(soundBankPath, soundBankName, (uint) soundBank.SoundBankId, out _);
 
@@ -561,6 +562,7 @@ public class WwiseProvider
                 {
                     if (pf.BulkData != null && !_multiReferenceLibraryCache.ContainsKey(pf.Hash))
                     {
+                        CacheSoundBank(pf.BulkData);
                         _multiReferenceLibraryCache[pf.Hash] = pf.BulkData;
                     }
                 }
@@ -577,6 +579,11 @@ public class WwiseProvider
 
     private static string ResolveWwisePath(string path, FWwisePackagedFile? packagedFile, bool isPathNone)
     {
+        if (isPathNone && (packagedFile == null || packagedFile.PathName.IsNone))
+        {
+            return string.Empty;
+        }
+
         if (packagedFile != null && isPathNone && !packagedFile.PathName.IsNone)
         {
             path = packagedFile.PathName.ToString();

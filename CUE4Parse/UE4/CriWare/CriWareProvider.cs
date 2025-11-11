@@ -7,7 +7,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.CriWare;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.CriWare.Decoders.HCA;
+using CUE4Parse.UE4.CriWare.Decoders;
 using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
@@ -123,7 +123,7 @@ public class CriWareProvider
                     continue;
                 }
 
-                var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
+                var hcaData = TryGetAudioData(memoryAwb, streamingAwb, wave);
 
                 if (hcaData == null || hcaData.Length == 0)
                     continue;
@@ -178,22 +178,22 @@ public class CriWareProvider
                 {
                     if (!visitedWaveforms.Add(wave))
                         continue;
-                    if (wave.EncodeType is not (EEncodeType.HCA or EEncodeType.HCA_ALT))
+                    if (!TryGetSupportedExtension(wave.EncodeType, out var extension))
                     {
                         Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
                         continue;
                     }
 
-                    var hcaData = TryLoadHcaData(memoryAwb, streamingAwb, wave);
+                    var audioData = TryGetAudioData(memoryAwb, streamingAwb, wave);
 
-                    if (hcaData == null || hcaData.Length == 0)
+                    if (audioData == null || audioData.Length == 0)
                         continue;
 
                     results.Add(new CriWareExtractedSound
                     {
                         Name = waveforms.Count == 1 ? name : $"{name}_{index++:D4}",
-                        Extension = "hca",
-                        Data = hcaData
+                        Extension = extension,
+                        Data = audioData
                     });
                 }
             }
@@ -207,6 +207,7 @@ public class CriWareProvider
         else
         {
             // If we want to extract directly from AWB
+            // Audio is never played directly through AWB so we can't know what audio encoding was used nor what's proper audio name
             for (int i = 0; i < memoryAwb?.Waves.Count; i++)
             {
                 var wave = memoryAwb.Waves[i];
@@ -217,12 +218,12 @@ public class CriWareProvider
 
                 string waveName = $"{Path.GetFileNameWithoutExtension(baseName)}_{wave.WaveId:D4}";
 
-                var hcaData = HcaWaveStream.EmbedSubKey(waveStream, memoryAwb.Subkey);
+                var hcaData = waveStream.EmbedSubKey(memoryAwb.Subkey);
 
                 results.Add(new CriWareExtractedSound
                 {
                     Name = waveName,
-                    Extension = "hca",
+                    Extension = "hca", // Most common extension, we can't know what's correct one without ACB
                     Data = hcaData
                 });
             }
@@ -231,20 +232,41 @@ public class CriWareProvider
         return results;
     }
 
-    private byte[]? TryLoadHcaData(AwbReader? awb, AwbReader? streamingAwb, Waveform waveform)
+    private static bool TryGetSupportedExtension(EEncodeType encodeType, out string extension)
+    {
+        switch (encodeType)
+        {
+            case EEncodeType.HCA:
+            case EEncodeType.HCA_ALT:
+                extension = "hca";
+                return true;
+
+            case EEncodeType.ADX:
+                extension = "adx";
+                return true;
+
+            default:
+                extension = null!;
+                return false;
+        }
+    }
+
+    private static byte[]? TryGetAudioData(AwbReader? awb, AwbReader? streamingAwb, Waveform waveform)
     {
         (AwbReader? reader, ushort waveId) = waveform.Streaming switch
         {
-            EWaveformStreamType.Memory  => (awb, waveform.Id),
-            EWaveformStreamType.Streaming or EWaveformStreamType.Both => (streamingAwb,waveform.StreamId),
+            EWaveformStreamType.Memory => (awb, waveform.Id),
+            EWaveformStreamType.Streaming or EWaveformStreamType.Both => (streamingAwb, waveform.StreamId),
             _ => (null, 0),
         };
-        if (reader == null) return null;
+
+        if (reader == null)
+            return null;
 
         var wave = reader.Waves.FirstOrDefault(w => w.WaveId == waveId);
-
         using var waveStream = reader.GetWaveSubfileStream(wave);
-        return HcaWaveStream.EmbedSubKey(waveStream, reader.Subkey);
+
+        return waveStream.EmbedSubKey(reader.Subkey);
     }
 
     private AwbReader? LoadStreamingAwb(AcbReader acb)

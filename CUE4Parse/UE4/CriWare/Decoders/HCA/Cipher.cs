@@ -14,7 +14,8 @@ internal static class Cipher
 
     public static byte[] Init(int type, ulong keyCode)
     {
-        if (type == 56 && keyCode == 0) type = 0;
+        if (type == 56 && keyCode == 0)
+            type = 0;
 
         return type switch
         {
@@ -31,7 +32,7 @@ internal static class Cipher
 
         for (int i = 0; i < 256; i++)
         {
-            cipherTable[i] = (byte)i;
+            cipherTable[i] = (byte) i;
         }
 
         return cipherTable;
@@ -50,7 +51,7 @@ internal static class Cipher
             v = (v * mul + add) & 0xFF;
             if (v == 0 || v == 0xFF)
                 v = (v * mul + add) & 0xFF;
-            cipherTable[i] = (byte)v;
+            cipherTable[i] = (byte) v;
         }
         cipherTable[0] = 0;
         cipherTable[0xFF] = 0xFF;
@@ -67,7 +68,7 @@ internal static class Cipher
 
         for (int i = 0; i < 16; i++)
         {
-            key = (byte)((key * mul + add) & 0xF);
+            key = (byte) ((key * mul + add) & 0xF);
             table[i] = key;
         }
     }
@@ -82,29 +83,30 @@ internal static class Cipher
         byte[] baseTableR = new byte[16];
         byte[] baseTableC = new byte[16];
 
-        if (keyCode != 0) keyCode--;
+        if (keyCode != 0)
+            keyCode--;
 
         for (int r = 0; r < (8 - 1); r++)
         {
-            kc[r] = (byte)(keyCode & 0xFF);
+            kc[r] = (byte) (keyCode & 0xFF);
             keyCode >>= 8;
         }
 
         seed[0x00] = kc[1];
-        seed[0x01] = (byte)(kc[1] ^ kc[6]);
-        seed[0x02] = (byte)(kc[2] ^ kc[3]);
+        seed[0x01] = (byte) (kc[1] ^ kc[6]);
+        seed[0x02] = (byte) (kc[2] ^ kc[3]);
         seed[0x03] = kc[2];
-        seed[0x04] = (byte)(kc[2] ^ kc[1]);
-        seed[0x05] = (byte)(kc[3] ^ kc[4]);
+        seed[0x04] = (byte) (kc[2] ^ kc[1]);
+        seed[0x05] = (byte) (kc[3] ^ kc[4]);
         seed[0x06] = kc[3];
-        seed[0x07] = (byte)(kc[3] ^ kc[2]);
-        seed[0x08] = (byte)(kc[4] ^ kc[5]);
+        seed[0x07] = (byte) (kc[3] ^ kc[2]);
+        seed[0x08] = (byte) (kc[4] ^ kc[5]);
         seed[0x09] = kc[4];
-        seed[0x0A] = (byte)(kc[4] ^ kc[3]);
-        seed[0x0B] = (byte)(kc[5] ^ kc[6]);
+        seed[0x0A] = (byte) (kc[4] ^ kc[3]);
+        seed[0x0B] = (byte) (kc[5] ^ kc[6]);
         seed[0x0C] = kc[5];
-        seed[0x0D] = (byte)(kc[5] ^ kc[4]);
-        seed[0x0E] = (byte)(kc[6] ^ kc[1]);
+        seed[0x0D] = (byte) (kc[5] ^ kc[4]);
+        seed[0x0E] = (byte) (kc[6] ^ kc[1]);
         seed[0x0F] = kc[6];
 
         Init56CreateTable(baseTableR, kc[0]);
@@ -113,10 +115,10 @@ internal static class Cipher
         {
             byte nb;
             Init56CreateTable(baseTableC, seed[r]);
-            nb = (byte)(baseTableR[r] << 4);
+            nb = (byte) (baseTableR[r] << 4);
             for (int c = 0; c < 16; c++)
             {
-                baseTable[r * 16 + c] = (byte)(nb | baseTableC[c]);
+                baseTable[r * 16 + c] = (byte) (nb | baseTableC[c]);
             }
         }
 

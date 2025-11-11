@@ -6,11 +6,9 @@ internal static class JaggedArray
 {
     public static T CreateJaggedArray<T>(params int[] lengths)
     {
-        Type? elementType = typeof(T).GetElementType();
+        Type? elementType = typeof(T).GetElementType() ?? throw new Exception("Type has no element type.");
 
-        if (elementType is null) throw new Exception("Type has no element type.");
-
-        return (T)InitJaggedArray(elementType, lengths, 0);
+        return (T) InitJaggedArray(elementType, lengths, 0);
     }
 
     private static object InitJaggedArray(Type type, int[] lengths, int arrayIndex)

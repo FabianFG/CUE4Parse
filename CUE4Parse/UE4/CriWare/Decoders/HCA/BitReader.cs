@@ -48,7 +48,7 @@ internal class BitReader
 
         if (bit + bits > size || bits == 0)
         {
-            return (int)value;
+            return (int) value;
         }
 
         int bitOffset = bits + bitsRemaining;
@@ -89,7 +89,7 @@ internal class BitReader
             value >>= 8 - bitsRemaining - bits;
         }
 
-        return (int)value;
+        return (int) value;
     }
 
     public int Read(int bits)

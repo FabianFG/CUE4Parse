@@ -25,7 +25,8 @@ internal class HcaContext
 
             headerSize -= 8;
         }
-        else throw new Exception("Not an HCA file.");
+        else
+            throw new Exception("Not an HCA file.");
 
         if (headerSize >= 16 && (bitReader.Peek(32) & Mask) == StringToUInt32("fmt"))
         {
@@ -47,7 +48,8 @@ internal class HcaContext
 
             headerSize -= 16;
         }
-        else throw new Exception("No format chunk.");
+        else
+            throw new Exception("No format chunk.");
 
         if (headerSize >= 16 && (bitReader.Peek(32) & Mask) == StringToUInt32("comp"))
         {
@@ -78,13 +80,15 @@ internal class HcaContext
             ChannelConfig = bitReader.Read(4);
             StereoType = bitReader.Read(8);
 
-            if (StereoType == 0) BaseBandCount = TotalBandCount;
+            if (StereoType == 0)
+                BaseBandCount = TotalBandCount;
             StereoBandCount = TotalBandCount - BaseBandCount;
             BandsPerHfrGroup = 0;
 
             headerSize -= 12;
         }
-        else throw new Exception("No compression or decode chunk.");
+        else
+            throw new Exception("No compression or decode chunk.");
 
         if (headerSize >= 8 && (bitReader.Peek(32) & Mask) == StringToUInt32("vbr"))
         {
@@ -108,7 +112,8 @@ internal class HcaContext
             bitReader.Skip(32);
             AthType = bitReader.Read(16);
         }
-        else AthType = (Version < Version200) ? 1 : 0;
+        else
+            AthType = (Version < Version200) ? 1 : 0;
 
         if (headerSize >= 16 && (bitReader.Peek(32) & Mask) == StringToUInt32("loop"))
         {
@@ -149,18 +154,20 @@ internal class HcaContext
         {
             bitReader.Skip(32);
             int rvaVolumeInt = bitReader.Read(32);
-            RvaVolume = Util.UInt32ToSingle((uint)rvaVolumeInt);
+            RvaVolume = Util.UInt32ToSingle((uint) rvaVolumeInt);
 
             headerSize -= 8;
         }
-        else RvaVolume = 1.0F;
+        else
+            RvaVolume = 1.0F;
 
         if (headerSize >= 5 && (bitReader.Peek(32) & Mask) == StringToUInt32("comm"))
         {
             bitReader.Skip(32);
             CommentLength = bitReader.Read(8);
 
-            if (CommentLength > headerSize) throw new Exception("Comment string out of bounds.");
+            if (CommentLength > headerSize)
+                throw new Exception("Comment string out of bounds.");
 
             StringBuilder commentStringBuilder = new();
 
@@ -173,7 +180,8 @@ internal class HcaContext
 
             //headerSize -= 5 + CommentLength;
         }
-        else CommentLength = 0;
+        else
+            CommentLength = 0;
 
         // IDE0059
         //if (headerSize >= 4 && (bitReader.Peek(32) & Mask) == StringToUInt32("pad"))
@@ -190,9 +198,11 @@ internal class HcaContext
                 throw new Exception("Incompatible resolution.");
         }
 
-        if (TrackCount == 0) TrackCount = 1;
+        if (TrackCount == 0)
+            TrackCount = 1;
 
-        if (TrackCount > ChannelCount) throw new Exception("Invalid track count.");
+        if (TrackCount > ChannelCount)
+            throw new Exception("Invalid track count.");
 
         if (TotalBandCount > SamplesPerSubframe ||
             BaseBandCount > SamplesPerSubframe ||
@@ -286,10 +296,11 @@ internal class HcaContext
 
         Random = DefaultRandom;
 
-        if (MsStereo > 0) throw new Exception();
+        if (MsStereo > 0)
+            throw new Exception();
     }
-    
-    public void SetKey(ulong key, ulong subKey)
+
+    public void SetKey(ulong key, ushort subKey)
     {
         if (subKey != 0)
         {
@@ -366,7 +377,8 @@ internal class HcaContext
 
     private static int HeaderCeil2(int a, int b)
     {
-        if (b < 1) return 0;
+        if (b < 1)
+            return 0;
         return a / b + ((a % b) > 0 ? 1 : 0);
     }
 
@@ -376,7 +388,7 @@ internal class HcaContext
         int bytePos = 3;
         for (int i = 0; i < value.Length; i++)
         {
-            result |= (uint)(value[i] << 8 * bytePos--);
+            result |= (uint) (value[i] << 8 * bytePos--);
         }
         return result;
     }

@@ -27,7 +27,7 @@ public sealed class AcbReader : IDisposable
 
         acbStream.Position = _offset;
 
-        UtfTable utfTable = new(acbStream, (uint)_offset, out int rows, out string name);
+        UtfTable utfTable = new(acbStream, (uint) _offset, out int rows, out string name);
 
         if (rows != 1 || !name.Equals("Header"))
             throw new InvalidDataException("No Header table.");
@@ -54,7 +54,7 @@ public sealed class AcbReader : IDisposable
     {
         if (_awbLength <= 0)
         {
-            Log.Warning("Memory AWB length is 0, skipping");
+            Log.Warning("ACB has no AWB in memory, skipping");
             return null;
         }
 

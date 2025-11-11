@@ -20,6 +20,7 @@ This library includes material developed by the following third-party libraries:
 - Fmod5Sharp (https://github.com/SamboyCoding/Fmod5Sharp/blob/master/LICENSE) - Copyright (c) 2021 Sam Byass. Licensed under the MIT License.
 - CriWareLibrary (https://github.com/MarshmallowAndroid/CriWareLibrary/blob/master/LICENSE) - Copyright (c) 2025 Jacob Tarun. Licensed under the MIT License.
 - vgmstream (https://github.com/vgmstream/vgmstream/blob/master/COPYING) - Portions Copyright (c) 2008-2025 Adam Gashlin, Fastelbja, Ronny Elfert, bnnm, Christopher Snowhill, NicknineTheEagle, bxaimc, Thealexbarney, CyberBotX, et al. Licensed under the original ISC-style license. Only portions of the library were used/ported.
+- VGAudio (https://github.com/Thealexbarney/VGAudio/blob/master/LICENSE) - Copyright (c) 2016 Thealexbarney. Licensed under the MIT License.
 
 ---------------------------------------------------------------------------
 

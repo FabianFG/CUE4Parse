@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NAudio.Wave;
+using CUE4Parse.UE4.CriWare.Decoders;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
 
@@ -16,8 +17,6 @@ public class HcaWaveStream : WaveStream
     private readonly short[][] _sampleBuffer;
 
     private long _samplePosition;
-
-    private const int SubKeySize = sizeof(ushort);
 
     public HcaWaveStream(Stream hcaFile, ulong key, ushort subKey)
     {
@@ -70,38 +69,12 @@ public class HcaWaveStream : WaveStream
         }
     }
 
-    public static byte[] EmbedSubKey(Stream stream, ushort subKey)
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-
-        using var memoryStream = new MemoryStream((int)(stream.Length+sizeof(ushort)));
-        stream.CopyTo(memoryStream);
-        memoryStream.Write(BitConverter.GetBytes(subKey));
-        return memoryStream.GetBuffer();
-    }
-
-    private static (ushort subKey, byte[] audioData) ExtractSubKey(byte[] data)
-    {
-        ArgumentNullException.ThrowIfNull(data);
-
-        if (data.Length < SubKeySize)
-            throw new InvalidDataException("HCA data too short to contain a subkey.");
-
-        int subKeyOffset = data.Length - SubKeySize;
-        ushort subKey = BitConverter.ToUInt16(data, subKeyOffset);
-
-        var audioData = new byte[subKeyOffset];
-        Buffer.BlockCopy(data, 0, audioData, 0, subKeyOffset);
-        return (subKey, audioData);
-    }
-
-    // In order not to pass subkey through various methods I embedded it directly into HCA data
     public static byte[] ConvertHcaToWav(byte[] hcaDataWithSubkey, ulong key)
     {
         if (hcaDataWithSubkey == null || hcaDataWithSubkey.Length <= sizeof(ushort))
             throw new ArgumentException("Invalid HCA data.");
 
-        var (subKey, hcaData) = ExtractSubKey(hcaDataWithSubkey);
+        var (subKey, hcaData) = hcaDataWithSubkey.ExtractSubKey();
 
         using var hcaStream = new MemoryStream(hcaData);
         using var hcaWaveStream = new HcaWaveStream(hcaStream, key, subKey);

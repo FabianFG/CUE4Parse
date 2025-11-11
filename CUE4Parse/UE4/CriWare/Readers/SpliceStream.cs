@@ -5,33 +5,33 @@ namespace CUE4Parse.UE4.CriWare.Readers;
 
 public class SpliceStream : Stream
 {
-    private readonly Stream innerStream;
-    private readonly long start;
-    private readonly long length;
-    private long position;
+    private readonly Stream _innerStream;
+    private readonly long _start;
+    private readonly long _length;
+    private long _position;
 
     public SpliceStream(Stream innerStream, long start, long length)
     {
-        this.innerStream = innerStream;
-        this.start = start;
-        this.length = length;
-        this.position = 0;
+        _innerStream = innerStream;
+        _start = start;
+        _length = length;
+        _position = 0;
     }
 
     public override bool CanRead => true;
     public override bool CanSeek => true;
     public override bool CanWrite => false;
-    public override long Length => length;
-    public override long Position { get => position; set => position = value; }
+    public override long Length => _length;
+    public override long Position { get => _position; set => _position = value; }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (position >= length)
+        if (_position >= _length)
             return 0;
-        innerStream.Position = start + position;
-        int toRead = (int) Math.Min(count, length - position);
-        int read = innerStream.Read(buffer, offset, toRead);
-        position += read;
+        _innerStream.Position = _start + _position;
+        int toRead = (int) Math.Min(count, _length - _position);
+        int read = _innerStream.Read(buffer, offset, toRead);
+        _position += read;
         return read;
     }
 
@@ -40,16 +40,16 @@ public class SpliceStream : Stream
         switch (origin)
         {
             case SeekOrigin.Begin:
-                position = offset;
+                _position = offset;
                 break;
             case SeekOrigin.Current:
-                position += offset;
+                _position += offset;
                 break;
             case SeekOrigin.End:
-                position = length + offset;
+                _position = _length + offset;
                 break;
         }
-        return position;
+        return _position;
     }
 
     public override void Flush() => throw new NotImplementedException();
