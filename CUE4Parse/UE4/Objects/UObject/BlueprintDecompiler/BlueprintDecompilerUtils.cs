@@ -1315,10 +1315,10 @@ public static class BlueprintDecompilerUtils
                 {
                     var indexTerm = GetLineExpression(switchValue.IndexTerm);
 
-                    var case1 = GetLineExpression(switchValue.Cases[0].CaseTerm);
-                    var case2 = GetLineExpression(switchValue.Cases[1].CaseTerm);
+                    var case0 = GetLineExpression(switchValue.Cases[0].CaseTerm);
+                    var case1 = GetLineExpression(switchValue.Cases[1].CaseTerm);
 
-                    return $"{indexTerm} ? {case1} : {case2}";
+                    return $"{indexTerm} ? {case1} : {case0}";
                 }
 
                 var stringBuilder = new CustomStringBuilder();
