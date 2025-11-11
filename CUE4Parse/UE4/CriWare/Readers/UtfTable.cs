@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.CriWare.Readers.Common;
+using CUE4Parse.UE4.Exceptions;
 using System;
 using System.IO;
 using System.Linq;
@@ -107,7 +108,7 @@ public sealed class UtfTable
         _binaryReader.BaseStream.Position = offset;
 
         if (!_binaryReader.ReadChars(4).SequenceEqual("@UTF"))
-            throw new InvalidDataException("Incorrect magic.");
+            throw new ParserException("Incorrect UtfTable magic.");
         _tableSize = _binaryReader.ReadUInt32BE() + 0x08;
         _version = _binaryReader.ReadUInt16BE();
         _rowsOffset = (ushort) (_binaryReader.ReadUInt16BE() + 0x08);
@@ -125,25 +126,25 @@ public sealed class UtfTable
         _dataSize = _tableSize - _dataOffset;
 
         if (_version != 0x00 && _version != 0x01)
-            throw new InvalidDataException("Unknown @UTF version.");
+            throw new ParserException("Unknown @UTF version.");
         if (_tableOffset + _tableSize > utfTableStream.Length)
-            throw new InvalidDataException("Table size exceeds bounds of file.");
+            throw new ParserException("Table size exceeds bounds of file.");
         if (_rowsOffset > _tableSize || _stringsOffset > _tableSize || _dataOffset > _tableSize)
-            throw new InvalidDataException("Offsets out of bounds.");
+            throw new ParserException("Offsets out of bounds.");
         if (_stringsSize <= 0 || _nameOffset > _stringsSize)
-            throw new InvalidDataException("Invalid string table size.");
+            throw new ParserException("Invalid string table size.");
         if (Columns <= 0)
-            throw new InvalidDataException("Table has no columns.");
+            throw new ParserException("Table has no columns.");
 
         _schemaBuffer = new byte[_schemaSize];
         _binaryReader.BaseStream.Position = _tableOffset + _schemaOffset;
         if (_binaryReader.Read(_schemaBuffer, 0, (int) _schemaSize) != _schemaSize)
-            throw new InvalidDataException("Failed to read schema.");
+            throw new ParserException("Failed to read schema.");
 
         _stringTable = new byte[_stringsSize];
         _binaryReader.BaseStream.Position = _tableOffset + _stringsOffset;
         if (_binaryReader.Read(_stringTable, 0, (int) _stringsSize) != _stringsSize)
-            throw new InvalidDataException("Failed to read string table.");
+            throw new ParserException("Failed to read string table.");
 
         uint columnOffset = 0;
         uint schemaPos = 0;
@@ -161,7 +162,7 @@ public sealed class UtfTable
             uint nameOffset = bytesReader.ReadUInt32BE();
 
             if (nameOffset > _stringsSize)
-                throw new InvalidDataException("String offset out of bounds.");
+                throw new ParserException("String offset out of bounds.");
             schemaPos += 0x1 + 0x4;
 
             bytesReader.BaseStream.Position = schemaPos;
@@ -178,7 +179,7 @@ public sealed class UtfTable
                 !_schema[i].Flag.HasFlag(ColumnFlag.Name) ||
                  _schema[i].Flag.HasFlag(ColumnFlag.Default) && _schema[i].Flag.HasFlag(ColumnFlag.Row) ||
                  _schema[i].Flag.HasFlag(ColumnFlag.Undefined))
-                throw new InvalidDataException("Unknown column flag combo found.");
+                throw new ParserException("Unknown column flag combo found.");
 
             uint valueSize;
             switch (_schema[i].Type)
@@ -203,7 +204,7 @@ public sealed class UtfTable
                     valueSize = 0x8;
                     break;
                 default:
-                    throw new InvalidDataException("Invalid column type.");
+                    throw new ParserException("Invalid column type.");
             }
 
             if (_schema[i].Flag.HasFlag(ColumnFlag.Name))
@@ -261,10 +262,8 @@ public sealed class UtfTable
         result = new Result();
 
         if (row >= _rows || row < 0)
-            //throw new ArgumentOutOfRangeException(nameof(row));
             return false;
         if (column >= _columns || column < 0)
-            //throw new ArgumentOutOfRangeException(nameof(column));
             return false;
 
         Column col = _schema[column];
@@ -290,7 +289,7 @@ public sealed class UtfTable
             dataOffset = (uint) (_tableOffset + _rowsOffset + row * _rowWidth + col.Offset);
         }
         else
-            throw new InvalidDataException("Invalid flag.");
+            throw new ParserException("Invalid column flag.");
 
         _binaryReader.BaseStream.Position = dataOffset;
 
@@ -328,7 +327,7 @@ public sealed class UtfTable
             case ColumnType.String:
                 uint nameOffset = bytesReader != null ? bytesReader.ReadUInt32BE() : _binaryReader.ReadUInt32BE();
                 if (nameOffset > _stringsSize)
-                    throw new InvalidDataException("Name offset out of bounds.");
+                    throw new ParserException("Name offset out of bounds.");
                 result.Value = GetStringFromTable(nameOffset);
                 break;
             case ColumnType.VLData:
@@ -412,7 +411,7 @@ public sealed class UtfTable
     private string GetStringFromTable(uint offset)
     {
         if (offset >= _stringsSize)
-            throw new InvalidDataException("Invalid string offset.");
+            throw new ParserException("Invalid string offset.");
 
         var eos = Array.IndexOf<byte>(_stringTable, 0, (int) offset);
         eos = eos == -1 ? _stringTable.Length : eos;

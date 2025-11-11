@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.CriWare.Readers;
@@ -42,7 +44,7 @@ public sealed class AwbReader : IDisposable
         _binaryReader.BaseStream.Position = _offset;
 
         if (!_binaryReader.ReadChars(4).SequenceEqual("AFS2"))
-            throw new InvalidDataException("Incorrect magic.");
+            throw new ParserException("Incorrect AWB magic, it might be encrypted.");
 
         _binaryReader.BaseStream.Position += 0x1;
         _offsetSize = _binaryReader.ReadByte();
@@ -53,11 +55,11 @@ public sealed class AwbReader : IDisposable
 
         _waves = new List<Wave>(_totalSubsongs);
 
-        for (int subsong = 1; subsong <= _totalSubsongs; subsong++)
+        for (int subsong = 0; subsong < _totalSubsongs; subsong++)
         {
             long currentOffset = 0x10;
 
-            long waveIdOffset = currentOffset + (subsong - 1) * _waveIdAlignment;
+            long waveIdOffset = currentOffset + subsong * _waveIdAlignment;
 
             _binaryReader.BaseStream.Position = _offset + waveIdOffset;
 
@@ -69,7 +71,7 @@ public sealed class AwbReader : IDisposable
             long subfileNext = 0;
             long fileSize = _binaryReader.BaseStream.Length;
 
-            currentOffset += (subsong - 1) * _offsetSize;
+            currentOffset += subsong * _offsetSize;
 
             _binaryReader.BaseStream.Position = _offset + currentOffset;
 
@@ -86,14 +88,11 @@ public sealed class AwbReader : IDisposable
                     break;
 
                 default:
-                    Fail();
-                    break;
+                    throw new ParserException($"Unsupported AWB offset size {_offsetSize}.");
             }
 
-            subfileOffset += subfileOffset % _offsetAlignment > 0 ?
-                _offsetAlignment - subfileOffset % _offsetAlignment : 0;
-            subfileNext += subfileNext % _offsetAlignment > 0 && subfileNext < fileSize ?
-                _offsetAlignment - subfileNext % _offsetAlignment : 0;
+            subfileOffset = subfileOffset.Align(_offsetAlignment);
+            subfileNext = subfileNext < fileSize ? subfileNext.Align(_offsetAlignment) : subfileNext;
             long subfileSize = subfileNext - subfileOffset;
 
             _waves.Add(new Wave()
@@ -114,11 +113,6 @@ public sealed class AwbReader : IDisposable
     public Stream GetWaveSubfileStream(Wave wave)
     {
         return new SpliceStream(_binaryReader.BaseStream, _offset + wave.Offset, wave.Length);
-    }
-
-    private static void Fail()
-    {
-        throw new Exception("Failure reading AWB file.");
     }
 
     public void Dispose()

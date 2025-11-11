@@ -141,6 +141,7 @@ public class CriWareProvider
 
         return results;
     }
+
     private List<CriWareExtractedSound> ExtractCriWareSoundsInternal(AcbReader? acb, AwbReader? streamingAwb, string cueSheetName)
     {
         if (acb == null)
@@ -165,13 +166,11 @@ public class CriWareProvider
             foreach (var cueRow in cueTable)
             {
                 int cueId = Convert.ToInt32(cueRow["CueId"]);
-                int refId = Convert.ToInt32(cueRow["ReferenceIndex"]);
                 var waveforms = acb.GetWaveformsFromCueId(cueId);
-
-                var cueNameRow = cueNameTable.FirstOrDefault(cue => Convert.ToInt32(cue["CueIndex"]) == refId);
+                var cueNameRow = cueNameTable.FirstOrDefault(cue => Convert.ToInt32(cue["CueIndex"]) == cueId);
                 var name = cueNameRow != null && cueNameRow["CueName"] is string cueName
                     ? cueName
-                    : $"{Path.GetFileNameWithoutExtension(baseName)}_{refId:D4}";
+                    : $"{Path.GetFileNameWithoutExtension(baseName)}_{cueId:D4}";
 
                 var index = 0;
                 foreach (var wave in waveforms)
