@@ -20,6 +20,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.FMod;
 using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;
@@ -3371,6 +3372,45 @@ public class FmodSoundBankConverter : JsonConverter<FmodSoundBank>
     }
 
     public override FmodSoundBank ReadJson(JsonReader reader, Type objectType, FmodSoundBank existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AcbReaderConverter : JsonConverter<AcbReader>
+{
+    public override void WriteJson(JsonWriter writer, AcbReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.AtomCueSheetData));
+        serializer.Serialize(writer, value.AtomCueSheetData);
+
+        writer.WriteEndObject();
+    }
+
+    public override AcbReader ReadJson(JsonReader reader, Type objectType, AcbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AwbReaderConverter : JsonConverter<AwbReader>
+{
+    public override void WriteJson(JsonWriter writer, AwbReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Waves));
+        serializer.Serialize(writer, value.Waves);
+
+        writer.WritePropertyName(nameof(value.Subkey));
+        serializer.Serialize(writer, value.Subkey);
+
+        writer.WriteEndObject();
+    }
+
+    public override AwbReader ReadJson(JsonReader reader, Type objectType, AwbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
