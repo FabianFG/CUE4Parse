@@ -6,11 +6,13 @@ public class UWorldPartitionRuntimeHash : UObject;
 
 public class UWorldPartitionRuntimeHashSet : UWorldPartitionRuntimeHash
 {
+    public FRuntimePartitionDesc[] RuntimePartitions;
     public FRuntimePartitionStreamingData[] RuntimeStreamingData;
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        RuntimePartitions = GetOrDefault<FRuntimePartitionDesc[]>(nameof(RuntimePartitions), []);
         RuntimeStreamingData = GetOrDefault<FRuntimePartitionStreamingData[]>(nameof(RuntimeStreamingData), []);
     }
 }
