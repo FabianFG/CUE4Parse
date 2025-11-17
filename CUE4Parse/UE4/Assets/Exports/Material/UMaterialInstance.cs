@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -49,6 +50,10 @@ public class UMaterialInstance : UMaterialInterface
                 try
                 {
                     DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e, "Failed to deserialize inline shader maps.");
                 }
                 finally
                 {
