@@ -49,8 +49,8 @@ public class EventNode
 
         if (FModReader.Version < 0x3C) Ar.ReadUInt16(); // Dummy elem list
 
-        UserPropertyFloatList = FModReader.ReadElemListImp<FUserPropertyFloat>(Ar);
-        UserPropertyStringList = FModReader.ReadElemListImp<FUserPropertyString>(Ar);
+        UserPropertyFloatList = FModReader.ReadVersionedElemListImp<FUserPropertyFloat>(Ar);
+        UserPropertyStringList = FModReader.ReadVersionedElemListImp<FUserPropertyString>(Ar);
 
         if (FModReader.Version >= 0x30) DopplerScale = Ar.ReadSingle();
         if (FModReader.Version >= 0x34) PolyphonyLimitBehavior = Ar.ReadInt32() != 0;

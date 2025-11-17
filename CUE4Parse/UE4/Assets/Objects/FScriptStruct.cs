@@ -339,6 +339,8 @@ public class FScriptStruct
             "VoyagePackedLocalTransform" => new VoyagePackedLocalTransform(Ar),
             "VoyageFloat16" => Ar.Read<FRawStruct<Half>>(),
 
+            "EncVector" when Ar.Game is EGame.GAME_DeltaForceHawkOps => Ar.Read<FVector>(),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

@@ -51,11 +51,12 @@ public class CMaterialParams2
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "Base Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC",
-            "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework",
+            "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework", "Bc",
             "BaseColorVT", "Tex_Color", "Color Tex", "TexColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor", "BaseColour", "Base_Texture",
             "T_BaseColor", "Decal_Texture", "PetalDetailMap", "CliffTexture", "M1_T_BC", "Skin Diffuse", "Color_MAIN", "MainTex", "ToneRimTex",
             "Primary Base Color", "BaseColor_NonVT", "L0_B/BM", "B/BM", "NRO_Base_Color","BaeColor_Tex", "Layer00_BaseColor_Tex","01. Diffuse Texture",
-            "BaseMap", "Tex_SkinBase_BC", "Tex_Core_Layer_Albedo", "BC_Texture", "RGBMap", "RGB_Map", "MW_TextureBaseColor", "Texture"
+            "BaseMap", "Tex_SkinBase_BC", "Tex_Core_Layer_Albedo", "BC_Texture", "RGBMap", "RGB_Map", "MW_TextureBaseColor", "Texture", "ColorOpacity",
+            "Simple_BaseColor_Texture", "AlbedoTexture"
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -77,6 +78,7 @@ public class CMaterialParams2
             "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base", "NRH", "MW_TextureNormal",
             "Texture A Normal", "CliffNormal", "Skin Normal", "Normal_MAIN","Main_T_Normal(B：SSSMask)", "PBREmissiveTex",
             "Primary Normal Map", "ORN" /*ABI*/, "NRO_Base_Normal", "Layer00_Normal_Tex", "Tex_SkinBase_N", "Tex_Core_Layer_Normal",
+            "Simple_Normal_Texture",
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -98,7 +100,8 @@ public class CMaterialParams2
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap",
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
-            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture"
+            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
+            "Simple_OcclRoughMet_Texture",
         ],
         ["SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK"],
         ["SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK"],
