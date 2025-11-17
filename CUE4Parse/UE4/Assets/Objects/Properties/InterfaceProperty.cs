@@ -1,19 +1,20 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(InterfacePropertyConverter))]
+public class InterfaceProperty : FPropertyTagType<FScriptInterface>
 {
-    [JsonConverter(typeof(InterfacePropertyConverter))]
-    public class InterfaceProperty : FPropertyTagType<FScriptInterface>
+    public InterfaceProperty(FScriptInterface value) => Value = value;
+
+    public InterfaceProperty(FAssetArchive Ar, ReadType type)
     {
-        public InterfaceProperty(FAssetArchive Ar, ReadType type)
+        Value = type switch
         {
-            Value = type switch
-            {
-                ReadType.ZERO => new FScriptInterface(),
-                _ => new FScriptInterface(Ar)
-            };
-        }
+            ReadType.ZERO => new FScriptInterface(),
+            _ => new FScriptInterface(Ar)
+        };
     }
 }

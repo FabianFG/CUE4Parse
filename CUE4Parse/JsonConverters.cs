@@ -430,15 +430,7 @@ public class DelegatePropertyConverter : JsonConverter<DelegateProperty>
 {
     public override void WriteJson(JsonWriter writer, DelegateProperty value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Num");
-        writer.WriteValue(value.Num);
-
-        writer.WritePropertyName("Name");
         serializer.Serialize(writer, value.Value);
-
-        writer.WriteEndObject();
     }
 
     public override DelegateProperty ReadJson(JsonReader reader, Type objectType, DelegateProperty existingValue, bool hasExistingValue,

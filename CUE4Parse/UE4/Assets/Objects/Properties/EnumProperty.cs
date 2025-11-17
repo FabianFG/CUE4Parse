@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -36,10 +36,7 @@ public class EnumProperty : FPropertyTagType<FName>
         }
     }
 
-    public EnumProperty(FName value)
-    {
-        Value = value;
-    }
+    public EnumProperty(FName value) => Value = value;
 
     private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, int index)
     {

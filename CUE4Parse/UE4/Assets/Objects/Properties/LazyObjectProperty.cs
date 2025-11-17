@@ -1,19 +1,20 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(LazyObjectPropertyConverter))]
+public class LazyObjectProperty : FPropertyTagType<FUniqueObjectGuid>
 {
-    [JsonConverter(typeof(LazyObjectPropertyConverter))]
-    public class LazyObjectProperty : FPropertyTagType<FUniqueObjectGuid>
+    public LazyObjectProperty(FUniqueObjectGuid value) => Value = value;
+
+    public LazyObjectProperty(FAssetArchive Ar, ReadType type)
     {
-        public LazyObjectProperty(FAssetArchive Ar, ReadType type)
+        Value = type switch
         {
-            Value = type switch
-            {
-                ReadType.ZERO => new FUniqueObjectGuid(),
-                _ => Ar.Read<FUniqueObjectGuid>()
-            };
-        }
+            ReadType.ZERO => new FUniqueObjectGuid(),
+            _ => Ar.Read<FUniqueObjectGuid>()
+        };
     }
 }

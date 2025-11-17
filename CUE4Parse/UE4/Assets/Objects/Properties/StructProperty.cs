@@ -11,11 +11,8 @@ public class StructProperty : FPropertyTagType<FScriptStruct>
     {
         Value = new FScriptStruct(Ar, tagData?.StructType, tagData?.Struct, type);
     }
-    
-    public StructProperty(FScriptStruct value)
-    {
-        Value = value;
-    }
+
+    public StructProperty(FScriptStruct value) => Value = value;
 
     public override string ToString() => Value is null
         ? "(null struct)"

@@ -1,18 +1,19 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(SetPropertyConverter))]
+public class SetProperty : FPropertyTagType<UScriptSet>
 {
-    [JsonConverter(typeof(SetPropertyConverter))]
-    public class SetProperty : FPropertyTagType<UScriptSet>
+    public SetProperty(UScriptSet value) => Value = value;
+
+    public SetProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
     {
-        public SetProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
+        Value = type switch
         {
-            Value = type switch
-            {
-                ReadType.ZERO => new UScriptSet(),
-                _ => new UScriptSet(Ar, tagData, type)
-            };
-        }
+            ReadType.ZERO => new UScriptSet(),
+            _ => new UScriptSet(Ar, tagData, type)
+        };
     }
 }

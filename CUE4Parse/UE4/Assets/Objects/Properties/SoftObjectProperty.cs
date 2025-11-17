@@ -7,6 +7,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties;
 [JsonConverter(typeof(SoftObjectPropertyConverter))]
 public class SoftObjectProperty : FPropertyTagType<FSoftObjectPath>
 {
+    public SoftObjectProperty(FSoftObjectPath value) => Value = value;
+
     public SoftObjectProperty(FAssetArchive Ar, ReadType type)
     {
         Value = type == ReadType.ZERO ? new FSoftObjectPath() : new FSoftObjectPath(Ar);

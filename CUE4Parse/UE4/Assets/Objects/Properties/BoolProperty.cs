@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
@@ -7,6 +7,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties;
 [JsonConverter(typeof(BoolPropertyConverter))]
 public class BoolProperty : FPropertyTagType<bool>
 {
+    public BoolProperty(bool value) => Value = value;
+
     public BoolProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
     {
         Value = type switch

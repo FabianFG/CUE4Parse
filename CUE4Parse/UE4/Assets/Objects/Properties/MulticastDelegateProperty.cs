@@ -1,30 +1,35 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Objects.Properties
+namespace CUE4Parse.UE4.Assets.Objects.Properties;
+
+[JsonConverter(typeof(MulticastDelegatePropertyConverter))]
+public class MulticastDelegateProperty : FPropertyTagType<FMulticastScriptDelegate>
 {
-    [JsonConverter(typeof(MulticastDelegatePropertyConverter))]
-    public class MulticastDelegateProperty : FPropertyTagType<FMulticastScriptDelegate>
+    public MulticastDelegateProperty(FMulticastScriptDelegate value) => Value = value;
+
+    public MulticastDelegateProperty(FAssetArchive Ar, ReadType type)
     {
-        public MulticastDelegateProperty(FAssetArchive Ar, ReadType type)
+        Value = type switch
         {
-            Value = type switch
-            {
-                ReadType.ZERO => new FMulticastScriptDelegate(Array.Empty<FScriptDelegate>()),
-                _ => new FMulticastScriptDelegate(Ar)
-            };
-        }
+            ReadType.ZERO => new FMulticastScriptDelegate(Array.Empty<FScriptDelegate>()),
+            _ => new FMulticastScriptDelegate(Ar)
+        };
     }
+}
 
-    public class MulticastInlineDelegateProperty : MulticastDelegateProperty
-    {
-        public MulticastInlineDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
-    }
+public class MulticastInlineDelegateProperty : MulticastDelegateProperty
+{
+    public MulticastInlineDelegateProperty(FMulticastScriptDelegate value) : base(value) { }
 
-    public class MulticastSparseDelegateProperty : MulticastDelegateProperty
-    {
-        public MulticastSparseDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
-    }
+    public MulticastInlineDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
+}
+
+public class MulticastSparseDelegateProperty : MulticastDelegateProperty
+{
+    public MulticastSparseDelegateProperty(FMulticastScriptDelegate value) : base(value) { }
+
+    public MulticastSparseDelegateProperty(FAssetArchive Ar, ReadType type) : base(Ar, type) { }
 }

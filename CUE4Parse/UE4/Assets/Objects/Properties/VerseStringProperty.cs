@@ -8,10 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties;
 [JsonConverter(typeof(VerseStringPropertyConverter))]
 public class VerseStringProperty : FPropertyTagType<string>
 {
-    public VerseStringProperty(string value)
-    {
-        Value = value;
-    }
+    public VerseStringProperty(string value) => Value = value;
 
     public VerseStringProperty(FArchive Ar, ReadType type)
     {

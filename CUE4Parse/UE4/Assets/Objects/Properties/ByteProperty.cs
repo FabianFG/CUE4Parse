@@ -1,6 +1,5 @@
 using System;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects.Properties;
@@ -8,6 +7,8 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties;
 [JsonConverter(typeof(BytePropertyConverter))]
 public class ByteProperty : FPropertyTagType<byte>
 {
+    public ByteProperty(byte value) => Value = value;
+
     public ByteProperty(FArchive Ar, ReadType type)
     {
         Value = type switch
