@@ -723,6 +723,7 @@ public static class FFortniteMainBranchObjectVersion
 
         return Ar.Game switch
         {
+              EGame.GAME_Aion2 => Type.WorldPartitionHLODActorDescSerializeSourceHLODLayer,
             < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE4_21 => Type.CachedMaterialQualityNodeUsage,
             < EGame.GAME_UE4_22 => Type.FoliageLazyObjPtrToSoftObjPtr,

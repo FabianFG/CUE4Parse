@@ -35,7 +35,6 @@ public struct FFrozenMemoryImagePtr
             OffsetFromThis = (long)_packed >> 1;
         }
     }
-
 }
 
 public class FMemoryImageArchive : FArchive

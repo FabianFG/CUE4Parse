@@ -87,6 +87,7 @@ public static class FRigVMObjectVersion
 
         return Ar.Game switch
         {
+              EGame.GAME_Aion2 => Type.VMMemoryStorageDefaultsGeneratedAtVM,
             < EGame.GAME_UE5_3 => (Type) (-1),
             < EGame.GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
             < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,

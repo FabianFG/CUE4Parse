@@ -82,6 +82,7 @@ public class FNaniteResources
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
             ImposterAtlas = Ar.ReadArray<ushort>();
+            if (Ar.Game is EGame.GAME_Aion2) Ar.SkipFixedArray(1); // same length as ImposterAtlas
             NumRootPages = Ar.Read<int>();
             PositionPrecision = Ar.Read<int>();
             if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();

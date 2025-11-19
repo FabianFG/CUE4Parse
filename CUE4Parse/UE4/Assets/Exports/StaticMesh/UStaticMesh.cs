@@ -109,7 +109,7 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {

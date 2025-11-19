@@ -592,6 +592,7 @@ public class FUniformExpressionSet
                 UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
             }
 
+            if (Ar.Game is EGame.GAME_Aion2) _ = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar)); // additional parameters
             UniformPreshaders = Ar.ReadArray(() => new FMaterialUniformPreshaderHeader(Ar));
             UniformPreshaderFields = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : [];
             UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
