@@ -10,13 +10,13 @@ public readonly struct FRuntimePartitionDesc : IUStruct
     public readonly FName Name;
     public readonly FPackageIndex Class;
     public readonly FPackageIndex MainLayer;
-    public readonly FPackageIndex[] HLODSetups;
+    public readonly FRuntimePartitionHLODSetup[] HLODSetups;
     
     public FRuntimePartitionDesc(FStructFallback fallback)
     {
         Name = fallback.GetOrDefault<FName>(nameof(Name));
         Class = fallback.GetOrDefault(nameof(Class), new FPackageIndex());
         MainLayer = fallback.GetOrDefault(nameof(MainLayer), new FPackageIndex());
-        HLODSetups = fallback.GetOrDefault<FPackageIndex[]>(nameof(HLODSetups), []);
+        HLODSetups = fallback.GetOrDefault<FRuntimePartitionHLODSetup[]>(nameof(HLODSetups), []);
     }
 }
