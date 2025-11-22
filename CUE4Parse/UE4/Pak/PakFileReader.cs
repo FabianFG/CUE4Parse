@@ -39,6 +39,7 @@ namespace CUE4Parse.UE4.Pak
             this.Ar = Ar;
             Length = Ar.Length;
             Info = FPakInfo.ReadFPakInfo(Ar);
+            CompressionMethods = Info.CompressionMethods.ToArray();
 
             var hasUnsupportedVersion = (Ar.Game < EGame.GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix)
                 || (Ar.Game >= EGame.GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
@@ -196,7 +197,7 @@ namespace CUE4Parse.UE4.Pak
 
             var fileCount = index.Read<int>();
             if (Ar.Game == EGame.GAME_TransformersOnline) fileCount -= 100;
-            
+
             var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
             for (var i = 0; i < fileCount; i++)
             {

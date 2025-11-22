@@ -54,6 +54,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         Length = tocStream.Length;
         TocResource = new FIoStoreTocResource(tocStream, readOptions);
+        CompressionMethods = TocResource.CompressionMethods;
 
         List<FArchive> containerStreams;
         if (TocResource.Header.PartitionCount <= 1)

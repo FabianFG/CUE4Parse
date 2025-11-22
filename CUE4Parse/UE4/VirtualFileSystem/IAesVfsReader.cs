@@ -1,4 +1,5 @@
 using System;
+using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -18,6 +19,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public CustomEncryptionDelegate? CustomEncryption { get; set; }
         public FAesKey? AesKey { get; set; }
 
+        public CompressionMethod[] CompressionMethods { get; set; }
         public bool IsEncrypted { get; }
         public int EncryptedFileCount { get; }
         public bool TestAesKey(FAesKey key);
