@@ -21,7 +21,7 @@ public class FSkinWeightVertexBuffer
         var bNewWeightFormat = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences;
 
         #region FSkinWeightDataVertexBuffer
-        var dataStripFlags = Ar.Read<FStripDataFlags>();
+        var dataStripFlags = new FStripDataFlags(Ar);
 
         #region FSkinWeightDataVertexBuffer::SerializeMetaData
         bool bVariableBonesPerVertex = false;
@@ -92,7 +92,7 @@ public class FSkinWeightVertexBuffer
         {
             uint[] LookupData = [];
 
-            var lookupStripFlags = Ar.Read<FStripDataFlags>();
+            var lookupStripFlags = new FStripDataFlags(Ar);
             var numLookupVertices = Ar.Read<int>();
 
             if (!lookupStripFlags.IsAudioVisualDataStripped())

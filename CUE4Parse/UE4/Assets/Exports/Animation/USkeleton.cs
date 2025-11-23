@@ -83,7 +83,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton)
             {
-                var stripDataFlags = Ar.Read<FStripDataFlags>();
+                var stripDataFlags = new FStripDataFlags(Ar);
                 if (!stripDataFlags.IsEditorDataStripped())
                 {
                     ExistingMarkerNames = Ar.ReadArray(Ar.ReadFName);

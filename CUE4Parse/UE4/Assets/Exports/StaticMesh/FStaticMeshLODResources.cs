@@ -44,7 +44,7 @@ public class FStaticMeshLODResources
 
     public FStaticMeshLODResources(FArchive Ar)
     {
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
 
         if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 4;
 
@@ -219,7 +219,7 @@ public class FStaticMeshLODResources
 
     public void SerializeBuffers(FArchive Ar)
     {
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
 
         PositionVertexBuffer = new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);

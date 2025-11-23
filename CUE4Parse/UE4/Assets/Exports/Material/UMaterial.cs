@@ -48,7 +48,7 @@ public class UMaterial : UMaterialInterface
             if (CachedExpressionData != null && CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))
                 ReferencedTextures.AddRange(referencedTextures);
 
-            if (TryGetValue(out referencedTextures, "ReferencedTextures")) // is this a thing ?
+            if (TryGetValue(out referencedTextures, "ReferencedTextures"))
                 ReferencedTextures.AddRange(referencedTextures);
         }
 

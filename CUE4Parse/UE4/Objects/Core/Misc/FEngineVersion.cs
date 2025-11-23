@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
 
         public FEngineVersion(ushort major, ushort minor, ushort patch, uint changelist, string branch) : base(major, minor, patch, changelist)
         {
-            _branch = branch.Replace('/', '+');;
+            _branch = branch.Replace('/', '+');
         }
 
         public void Set(ushort major, ushort minor, ushort patch, uint changelist, string branch)

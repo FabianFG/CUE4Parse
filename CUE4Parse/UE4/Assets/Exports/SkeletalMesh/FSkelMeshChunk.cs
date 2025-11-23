@@ -20,7 +20,7 @@ public class FSkelMeshChunk
 
     public FSkelMeshChunk(FArchive Ar)
     {
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
             BaseVertexIndex = Ar.Read<int>();

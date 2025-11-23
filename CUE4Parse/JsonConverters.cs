@@ -878,7 +878,7 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
         writer.WriteValue(value.FileVersionLicenseeUE.ToStringBitfield());
 
         writer.WritePropertyName("CustomVersions");
-        serializer.Serialize(writer, value.CustomVersionContainer.Versions);
+        serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
 
         writer.WritePropertyName(nameof(value.bUnversioned));
         writer.WriteValue(value.bUnversioned);
