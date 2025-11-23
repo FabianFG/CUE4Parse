@@ -1104,6 +1104,10 @@ public static class BlueprintDecompilerUtils
 
                 return customStringBuilder.ToString();
             }
+            case EX_PopExecutionFlow:
+            {
+                return "return";
+            }
             case EX_JumpIfNot jumpIfNot:
             {
                 var booleanExpression = GetLineExpression(jumpIfNot.BooleanExpression);
@@ -1424,7 +1428,6 @@ public static class BlueprintDecompilerUtils
             case EX_EndSetConst:
             case EX_EndOfScript:
             case EX_PushExecutionFlow:
-            case EX_PopExecutionFlow:
             case EX_AutoRtfmStopTransact:
             case EX_AutoRtfmTransact:
             case EX_AutoRtfmAbortIfNot:

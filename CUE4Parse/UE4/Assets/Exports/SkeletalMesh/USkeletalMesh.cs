@@ -46,7 +46,7 @@ public partial class USkeletalMesh : UObject
         PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
         AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
 
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
         ImportedBounds = new FBoxSphereBounds(Ar);
 
         SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
@@ -125,7 +125,7 @@ public partial class USkeletalMesh : UObject
 
         if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
         {
-            _ = Ar.Read<FStripDataFlags>();
+            _ = new FStripDataFlags(Ar);
             for (var i = 0; i < LODModels.Length; i++)
             {
                 if (Ar.ReadBoolean() && GetOrDefault<bool>("bGenerateMeshDistanceField")) _ = new FDistanceFieldVolumeData5(Ar);

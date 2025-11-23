@@ -19,7 +19,7 @@ public static class VersionUtils
         }
 
         var packageSummary = (Ar as FAssetArchive)?.Owner.Summary;
-        if (packageSummary is { bUnversioned: false })
+        if (packageSummary is { bUnversioned: false, CustomVersionContainer: not null })
         {
             var packageCustomVersion = packageSummary.CustomVersionContainer.GetVersion(key);
             return packageCustomVersion; // proceed so we can guess version from engine version

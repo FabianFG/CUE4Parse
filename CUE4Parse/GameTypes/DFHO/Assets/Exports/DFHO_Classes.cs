@@ -1,6 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
-using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 
 namespace CUE4Parse.GameTypes.DFHO.Assets.Exports;

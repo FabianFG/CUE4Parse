@@ -41,7 +41,7 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
             return;
         }
 
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
         var stripped = stripDataFlags.IsAudioVisualDataStripped();
         if (Ar.Game >= EGame.GAME_UE4_21)
         {

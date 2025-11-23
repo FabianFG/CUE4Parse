@@ -10,6 +10,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         BULKDATA_SerializeCompressedZLIB            = 1 << 1,
         BULKDATA_ForceSingleElementSerialization    = 1 << 2,
         BULKDATA_SingleUse                          = 1 << 3,
+        BULKDATA_CompressedLZO                      = 1 << 4,
         BULKDATA_Unused                             = 1 << 5,
         BULKDATA_ForceInlinePayload                 = 1 << 6,
         BULKDATA_SerializeCompressed                = BULKDATA_SerializeCompressedZLIB,

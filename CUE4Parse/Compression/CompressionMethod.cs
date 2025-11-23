@@ -8,6 +8,7 @@ namespace CUE4Parse.Compression
         Custom = 3,
         Oodle = 4,
         LZ4,
+        LZO,
         Zstd,
         XB1Zlib,
         XboxOneGDKZlib,
