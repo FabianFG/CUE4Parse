@@ -107,7 +107,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
                 if (obj != null)
                 {
                     var pathName = obj.GetPathName();
-                    ActorClass = new FSoftObjectPath(pathName.SubstringBeforeLast(':'), ""); // TODO SubPathString
+                    ActorClass = new FSoftObjectPath(pathName.SubstringBeforeLast(':'), pathName.SubstringAfterLast(':'));
                 }
                 else
                 {
@@ -194,7 +194,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
                 if (obj != null)
                 {
                     var pathName = obj.GetPathName();
-                    ComponentClass = new FSoftObjectPath(pathName.SubstringBeforeLast(':'), ""); // TODO SubPathString
+                    ComponentClass = new FSoftObjectPath(pathName.SubstringBeforeLast(':'), pathName.SubstringAfterLast(':'));
                 }
                 else
                 {
