@@ -47,6 +47,20 @@ namespace CUE4Parse.MappingsProvider
 
             return true;
         }
+
+        public int CountProperties(bool includeSuper)
+        {
+            int total = 0;
+            var current = this;
+
+            while (current != null)
+            {
+                total += current.PropertyCount;
+                current = includeSuper ? current.Super.Value : null;
+            }
+
+            return total;
+        }
     }
 
     public class SerializedStruct : Struct

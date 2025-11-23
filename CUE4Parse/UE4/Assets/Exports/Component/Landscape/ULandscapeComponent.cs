@@ -71,6 +71,14 @@ public class ULandscapeComponent: UPrimitiveComponent
             bCooked = Ar.ReadBoolean();
         }
 
+        if (Ar.Game is EGame.GAME_Aion2)
+        {
+            var bCookedMobileData = Ar.ReadBoolean();
+            var some = Ar.ReadBulkArray<FVector>();
+            var idk = Ar.ReadBulkArray<ushort>();
+            return;
+        }
+
         if (Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
         {
             var bCookedMobileData = Ar.ReadBoolean();

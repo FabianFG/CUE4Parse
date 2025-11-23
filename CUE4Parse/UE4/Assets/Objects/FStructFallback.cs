@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
@@ -13,10 +14,9 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [SkipObjectRegistration]
 public class FStructFallback : AbstractPropertyHolder, IUStruct
 {
-    public FStructFallback()
-    {
-        Properties = [];
-    }
+    public FStructFallback() => Properties = [];
+
+    public FStructFallback(List<FPropertyTag> properties) => Properties = properties;
 
     public FStructFallback(FAssetArchive Ar, string? structType) : this(Ar, structType != null ? new UScriptClass(structType) : null) { }
 
