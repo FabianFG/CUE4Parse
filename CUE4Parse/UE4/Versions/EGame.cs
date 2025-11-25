@@ -226,7 +226,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(0, 522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(0, 522, 1013),
                 < EGame.GAME_UE5_8 => new FPackageFileVersion(0, 522, 1017),
-                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE3Version.VER_AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }
 
@@ -268,7 +268,7 @@ public static class GameUtils
 
         return FPackageFileVersion.CreateUE3Version(game switch
         {
-            _ => (int)EUnrealEngineObjectUE3Version.VER_AUTOMATIC_VERSION
+            _ => (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION
         });
     }
 }

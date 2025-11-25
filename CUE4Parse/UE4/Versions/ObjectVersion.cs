@@ -932,6 +932,7 @@ namespace CUE4Parse.UE4.Versions
 
     public enum EUnrealEngineObjectUE3Version
     {
+        DETERMINE_BY_GAME = 0,
         // early UE3 version not documented
         Release61 = 61,
         Release62 = 62,
@@ -2269,10 +2270,10 @@ namespace CUE4Parse.UE4.Versions
         public override int GetHashCode() => HashCode.Combine(FileVersionUE3, FileVersionUE4, FileVersionUE5);
 
         public override string ToString()
-            => FileVersionUE5 >= (int)EUnrealEngineObjectUE5Version.INITIAL_VERSION
-                ? ((EUnrealEngineObjectUE5Version)FileVersionUE5).ToString()
-                : FileVersionUE4 > (int)EUnrealEngineObjectUE4Version.DETERMINE_BY_GAME
-                    ? ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString()
-                    : ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString();
+            => FileVersionUE3 > (int)EUnrealEngineObjectUE3Version.DETERMINE_BY_GAME
+                ? ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString()
+                : FileVersionUE5 >= (int)EUnrealEngineObjectUE5Version.INITIAL_VERSION
+                    ? ((EUnrealEngineObjectUE5Version)FileVersionUE5).ToString()
+                    : ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
     }
 }
