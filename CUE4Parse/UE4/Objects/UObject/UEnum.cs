@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.UObject
 {
-    [SkipObjectRegistration]
     public class UEnum : UField
     {
         /** List of pairs of all enum names and values. */
@@ -43,7 +42,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.ENUM_CLASS_SUPPORT)
             {
-                var bIsNamespace = Ar.ReadBoolean();
+                var bIsNamespace = Ar.Game >= EGame.GAME_UE4_0 && Ar.ReadBoolean();
                 CppForm = bIsNamespace ? ECppForm.Namespaced : ECppForm.Regular;
             }
             else

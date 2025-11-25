@@ -219,48 +219,56 @@ public static class GameUtils
         {
             return game switch
             {
-                < EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1004),
-                < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
-                    EGame.GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
-                < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
-                < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
-                < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
-                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
-                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                < EGame.GAME_UE5_1 => new FPackageFileVersion(0, 522, 1004),
+                < EGame.GAME_UE5_2 => new FPackageFileVersion(0, 522, 1008),
+                    EGame.GAME_TheFirstDescendant => new FPackageFileVersion(0, 522, 1002),
+                < EGame.GAME_UE5_4 => new FPackageFileVersion(0, 522, 1009),
+                < EGame.GAME_UE5_5 => new FPackageFileVersion(0, 522, 1012),
+                < EGame.GAME_UE5_6 => new FPackageFileVersion(0, 522, 1013),
+                < EGame.GAME_UE5_8 => new FPackageFileVersion(0, 522, 1017),
+                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE3Version.VER_AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }
 
-        return FPackageFileVersion.CreateUE4Version(game switch
+        if (game >= EGame.GAME_UE4_0)
         {
-            // General UE4 Versions
-            < EGame.GAME_UE4_1 => 342,
-            < EGame.GAME_UE4_2 => 352,
-            < EGame.GAME_UE4_3 => 363,
-            < EGame.GAME_UE4_4 => 382,
-            < EGame.GAME_UE4_5 => 385,
-            < EGame.GAME_UE4_6 => 401,
-            < EGame.GAME_UE4_7 => 413,
-            < EGame.GAME_UE4_8 => 434,
-            < EGame.GAME_UE4_9 => 451,
-            < EGame.GAME_UE4_10 => 482,
-            < EGame.GAME_UE4_11 => 482,
-            < EGame.GAME_UE4_12 => 498,
-            < EGame.GAME_UE4_13 => 504,
-            < EGame.GAME_UE4_14 => 505,
-            < EGame.GAME_UE4_15 => 508,
-            < EGame.GAME_UE4_16 => 510,
-            < EGame.GAME_UE4_17 => 513,
-            < EGame.GAME_UE4_18 => 513,
-            < EGame.GAME_UE4_19 => 514,
-            < EGame.GAME_UE4_20 => 516,
-            < EGame.GAME_UE4_21 => 516,
-            < EGame.GAME_UE4_22 => 517,
-            < EGame.GAME_UE4_23 => 517,
-            < EGame.GAME_UE4_24 => 517,
-            < EGame.GAME_UE4_25 => 518,
-            < EGame.GAME_UE4_26 => 518,
-            < EGame.GAME_UE4_27 => 522,
-            _ => (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION
+            return FPackageFileVersion.CreateUE4Version(game switch
+            {
+                // General UE4 Versions
+                < EGame.GAME_UE4_1 => 342,
+                < EGame.GAME_UE4_2 => 352,
+                < EGame.GAME_UE4_3 => 363,
+                < EGame.GAME_UE4_4 => 382,
+                < EGame.GAME_UE4_5 => 385,
+                < EGame.GAME_UE4_6 => 401,
+                < EGame.GAME_UE4_7 => 413,
+                < EGame.GAME_UE4_8 => 434,
+                < EGame.GAME_UE4_9 => 451,
+                < EGame.GAME_UE4_10 => 482,
+                < EGame.GAME_UE4_11 => 482,
+                < EGame.GAME_UE4_12 => 498,
+                < EGame.GAME_UE4_13 => 504,
+                < EGame.GAME_UE4_14 => 505,
+                < EGame.GAME_UE4_15 => 508,
+                < EGame.GAME_UE4_16 => 510,
+                < EGame.GAME_UE4_17 => 513,
+                < EGame.GAME_UE4_18 => 513,
+                < EGame.GAME_UE4_19 => 514,
+                < EGame.GAME_UE4_20 => 516,
+                < EGame.GAME_UE4_21 => 516,
+                < EGame.GAME_UE4_22 => 517,
+                < EGame.GAME_UE4_23 => 517,
+                < EGame.GAME_UE4_24 => 517,
+                < EGame.GAME_UE4_25 => 518,
+                < EGame.GAME_UE4_26 => 518,
+                < EGame.GAME_UE4_27 => 522,
+                _ => (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION
+            });
+        }
+
+        return FPackageFileVersion.CreateUE3Version(game switch
+        {
+            _ => (int)EUnrealEngineObjectUE3Version.VER_AUTOMATIC_VERSION
         });
     }
 }

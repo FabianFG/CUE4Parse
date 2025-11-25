@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Readers
     public class FAssetArchive : FArchive
     {
         private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads;
-        private readonly FArchive _baseArchive;
+        private FArchive _baseArchive;
 
         public readonly IPackage? Owner;
         public int AbsoluteOffset;
@@ -32,6 +32,11 @@ namespace CUE4Parse.UE4.Assets.Readers
             _baseArchive = baseArchive;
             Owner = owner;
             AbsoluteOffset = absoluteOffset;
+        }
+
+        public void SetBaseArchive(FArchive newArchive)
+        {
+            _baseArchive = newArchive;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
