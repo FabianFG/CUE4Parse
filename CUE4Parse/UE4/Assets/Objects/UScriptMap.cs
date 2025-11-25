@@ -14,10 +14,9 @@ public class UScriptMap
 {
     public Dictionary<FPropertyTagType, FPropertyTagType?> Properties;
 
-    public UScriptMap()
-    {
-        Properties = [];
-    }
+    public UScriptMap() => Properties = [];
+
+    public UScriptMap(Dictionary<FPropertyTagType, FPropertyTagType?> properties) => Properties = properties;
 
     public UScriptMap(FAssetArchive Ar, FPropertyTagData tagData, ReadType readType)
     {

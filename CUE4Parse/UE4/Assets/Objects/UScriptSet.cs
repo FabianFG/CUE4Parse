@@ -14,10 +14,9 @@ public class UScriptSet
 {
     public readonly List<FPropertyTagType> Properties;
 
-    public UScriptSet()
-    {
-        Properties = [];
-    }
+    public UScriptSet() => Properties = [];
+
+    public UScriptSet(List<FPropertyTagType> properties) => Properties = properties;
 
     public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData, ReadType readType)
     {
