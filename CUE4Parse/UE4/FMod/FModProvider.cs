@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Fmod;
@@ -173,7 +175,7 @@ public class FModProvider
 
         if (!string.IsNullOrEmpty(token?.Value))
         {
-            _encryptionKey = System.Text.Encoding.UTF8.GetBytes(token.Value);
+            _encryptionKey = Encoding.UTF8.GetBytes(Regex.Unescape(token.Value.Trim('"')));
             Log.Information($"FMod encryption key found: {token.Value}");
         }
         else

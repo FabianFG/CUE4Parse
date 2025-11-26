@@ -24,12 +24,15 @@ public class UMaterialInstance : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
         BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
         StaticParameters = GetOrDefault(nameof(StaticParameters), GetOrDefault<FStaticParameterSet>("StaticParametersRuntime"));
+
+        if (Ar.Game == EGame.GAME_DeadByDaylight)
+            Ar.ReadFString();
 
         var bSavedCachedData = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.MaterialSavedCachedData && Ar.ReadBoolean();
         if (bSavedCachedData)
