@@ -43,7 +43,7 @@ public class FPCGLandscapeCacheEntry
         var BulkData = new FByteBulkData(Ar);
         using var reader = new FByteArchive("FPCGLandscapeCacheEntry", BulkData.Data, Ar.Versions);
         PositionsAndNormals = reader.ReadArray(() => new FVector(reader));
-        LayerData = Ar.ReadArray(() => reader.ReadArray<byte>());
+        LayerData = reader.ReadArray(() => reader.ReadArray<byte>());
     }
 }
 

@@ -31,8 +31,6 @@ public class UMaterialInstance : UMaterialInterface
         BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
         StaticParameters = GetOrDefault(nameof(StaticParameters), GetOrDefault<FStaticParameterSet>("StaticParametersRuntime"));
 
-        if (Ar.Game == EGame.GAME_DeadByDaylight) Ar.SkipFString();
-
         var bSavedCachedData = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.MaterialSavedCachedData && Ar.ReadBoolean();
         if (bSavedCachedData)
         {
