@@ -48,7 +48,7 @@ public class FTexturePlatformData
     public readonly string PixelFormat;
     public readonly FOptTexturePlatformData OptData;
     public readonly int FirstMipToSerialize;
-    public readonly FTexture2DMipMap[] Mips;
+    public FTexture2DMipMap[] Mips;
     public readonly FVirtualTextureBuiltData? VTData;
     public readonly FSharedImage? CPUCopy;
 

@@ -46,6 +46,15 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FRotator(FArchive Ar)
         {
+            if (Ar.Game < EGame.GAME_UE4_0)
+            {
+                const float scale = 360f / 65536f;
+                Pitch = Ar.Read<int>() * scale;
+                Yaw   = Ar.Read<int>() * scale;
+                Roll  = Ar.Read<int>() * scale;
+                return;
+            }
+
             Pitch = Ar.ReadFReal();
             Yaw = Ar.ReadFReal();
             Roll = Ar.ReadFReal();
@@ -175,7 +184,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                                                                     MathF.Abs(NormalizeAxis(Yaw - r.Yaw)) <= tolerance &&
                                                                     MathF.Abs(NormalizeAxis(Roll - r.Roll)) <= tolerance;
 
-        public void Serialize(FArchiveWriter Ar) 
+        public void Serialize(FArchiveWriter Ar)
         {
             Ar.Write(Pitch);
             Ar.Write(Yaw);

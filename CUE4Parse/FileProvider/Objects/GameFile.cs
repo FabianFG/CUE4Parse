@@ -18,7 +18,7 @@ public abstract class GameFile
     public static readonly string[] UeKnownExtensions =
     [
         ..UePackageExtensions, ..UePackagePayloadExtensions,
-        "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
+        "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta", "wem", "bnk"
     ];
 
     // hashset for quick lookup
@@ -133,18 +133,18 @@ public abstract class GameFile
     public async Task<FArchive?> SafeCreateReaderAsync() => await Task.Run(SafeCreateReader);
 
     public override string ToString() => Path;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string InternExtension(string extension)
     {
         if (InternedExtensions.TryGetValue(extension, out var interned))
             return interned;
-        
+
         lock (InternedExtensions)
         {
             if (InternedExtensions.TryGetValue(extension, out interned))
                 return interned;
-            
+
             InternedExtensions[extension] = extension;
             return extension;
         }

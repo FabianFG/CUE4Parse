@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 
@@ -14,7 +13,7 @@ public class FKAggregateGeom
     public FKConvexElem[] ConvexElems;
     public FKTaperedCapsuleElem[] TaperedCapsuleElems;
     // level set elems go here but idk what they are for
-    
+
     public FKAggregateGeom(FStructFallback fallback)
     {
         SphereElems = fallback.GetOrDefault(nameof(SphereElems), Array.Empty<FKSphereElem>());

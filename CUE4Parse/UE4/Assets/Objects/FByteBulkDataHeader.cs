@@ -55,7 +55,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
             SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
             OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
-            if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
+            if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp) && Ar.Game >= EGame.GAME_UE4_26)
             {
                 OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
             }
