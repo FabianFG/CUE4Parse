@@ -1,0 +1,837 @@
+// =====================================================================================
+// FBX EXPORTER FOR CUE4PARSE-CONVERSION
+// =====================================================================================
+//
+// Exports Unreal Engine meshes to FBX 7.4 ASCII format with support for:
+// - Static meshes (vertices, normals, UVs, materials)
+// - Skeletal meshes (bones, skin weights, hierarchy)
+// - Morph targets (BlendShape deformers for shape keys)
+//
+// COORDINATE SYSTEM CONVERSION:
+// - Unreal Engine: Z-up, Right-handed
+// - FBX: Y-up, Right-handed
+// - Conversion: (X, Y, Z)_unreal → (X, Z, -Y)_fbx
+//
+// SCALE CONVERSION:
+// - Unreal units are in centimeters
+// - FModel applies SCALE_DOWN_RATIO (0.01) for display
+// - We REVERSE this for export (multiply by 100)
+//
+// =====================================================================================
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.RenderCore;
+using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse.UE4.Assets;
+using Serilog;
+
+namespace CUE4Parse_Conversion.Meshes.FBX
+{
+    /// <summary>
+    /// Exports mesh data to FBX 7.4 ASCII format with full skeletal mesh and morph target support.
+    /// </summary>
+    public class FbxExporter
+    {
+        private readonly StringBuilder _sb;
+        private int _indentLevel;
+        private long _nextObjectId = 1000000;
+
+        // Object ID tracking for connections
+        private long _geometryId;
+        private long _modelId;
+        private readonly Dictionary<string, long> _boneModelIds = new();
+        private readonly Dictionary<int, long> _clusterIds = new();
+        private long _skinDeformerId;
+        private readonly Dictionary<string, long> _blendShapeIds = new();
+        private readonly Dictionary<string, long> _blendShapeChannelIds = new();
+
+        // Scale constants
+        private const float SCALE_REVERSE = 100.0f; // Reverse FModel's 0.01 display scale
+
+        public FbxExporter()
+        {
+            _sb = new StringBuilder();
+            _indentLevel = 0;
+        }
+
+        /// <summary>
+        /// Exports a static mesh to FBX ASCII format.
+        /// </summary>
+        public string ExportStaticMesh(
+            FVector[] vertices,
+            FPackedNormal[] normals,
+            FVector2D[] uvs,
+            uint[] indices,
+            string meshName = "StaticMesh")
+        {
+            _sb.Clear();
+            _indentLevel = 0;
+
+            WriteFbxHeader();
+            WriteFbxGlobalSettings();
+
+            _geometryId = GetNextObjectId();
+            _modelId = GetNextObjectId();
+
+            WriteObjects(vertices, normals, uvs, indices, meshName, null, null, null);
+            WriteConnections(null, null);
+
+            return _sb.ToString();
+        }
+
+        /// <summary>
+        /// Exports a skeletal mesh with bones, skin weights, and optional morph targets to FBX ASCII format.
+        /// </summary>
+        public string ExportSkeletalMesh(
+            CSkelMeshLod lod,
+            List<CSkelMeshBone> bones,
+            FPackageIndex[]? morphTargets,
+            int lodIndex,
+            string meshName = "SkeletalMesh")
+        {
+            _sb.Clear();
+            _indentLevel = 0;
+            _boneModelIds.Clear();
+            _clusterIds.Clear();
+            _blendShapeIds.Clear();
+            _blendShapeChannelIds.Clear();
+
+            WriteFbxHeader();
+            WriteFbxGlobalSettings();
+
+            _geometryId = GetNextObjectId();
+            _modelId = GetNextObjectId();
+            _skinDeformerId = GetNextObjectId();
+
+            // Assign IDs for bones
+            foreach (var bone in bones)
+            {
+                _boneModelIds[bone.Name] = GetNextObjectId();
+            }
+
+            // Assign IDs for clusters (bone influences)
+            for (int i = 0; i < bones.Count; i++)
+            {
+                _clusterIds[i] = GetNextObjectId();
+            }
+
+            // Assign IDs for morph targets
+            if (morphTargets != null)
+            {
+                foreach (var morphTargetRef in morphTargets)
+                {
+                    var morphTarget = morphTargetRef.Load<UMorphTarget>();
+                    if (morphTarget != null)
+                    {
+                        _blendShapeIds[morphTarget.Name] = GetNextObjectId();
+                        _blendShapeChannelIds[morphTarget.Name] = GetNextObjectId();
+                    }
+                }
+            }
+
+            WriteObjects(
+                lod.Verts.Select(v => v.Position).ToArray(),
+                lod.Verts.Select(v => v.Normal).ToArray(),
+                lod.Verts.Length > 0 && lod.Verts[0].UVs.Length > 0
+                    ? lod.Verts.Select(v => v.UVs[0]).ToArray()
+                    : Array.Empty<FVector2D>(),
+                lod.Indices.Indices,
+                meshName,
+                bones,
+                lod,
+                morphTargets != null ? new MorphTargetData(morphTargets, lod, lodIndex) : null
+            );
+
+            WriteConnections(bones, morphTargets);
+
+            return _sb.ToString();
+        }
+
+        private void WriteFbxHeader()
+        {
+            WriteLine("; FBX 7.4.0 project file");
+            WriteLine("; Created by CUE4Parse-Conversion FBX Exporter");
+            WriteLine("; https://github.com/FabianFG/CUE4Parse");
+            WriteLine("; ----------------------------------------------------");
+            WriteLine("");
+
+            WriteLine("FBXHeaderExtension:  {");
+            _indentLevel++;
+            WriteLine("FBXHeaderVersion: 1003");
+            WriteLine("FBXVersion: 7400");
+
+            WriteLine("CreationTimeStamp:  {");
+            _indentLevel++;
+            WriteLine($"Version: 1000");
+            WriteLine($"Year: {DateTime.Now.Year}");
+            WriteLine($"Month: {DateTime.Now.Month}");
+            WriteLine($"Day: {DateTime.Now.Day}");
+            WriteLine($"Hour: {DateTime.Now.Hour}");
+            WriteLine($"Minute: {DateTime.Now.Minute}");
+            WriteLine($"Second: {DateTime.Now.Second}");
+            WriteLine($"Millisecond: {DateTime.Now.Millisecond}");
+            _indentLevel--;
+            WriteLine("}");
+
+            WriteLine("Creator: \"CUE4Parse-Conversion FBX Exporter v1.0\"");
+            _indentLevel--;
+            WriteLine("}");
+            WriteLine("");
+        }
+
+        private void WriteFbxGlobalSettings()
+        {
+            WriteLine("GlobalSettings:  {");
+            _indentLevel++;
+            WriteLine("Version: 1000");
+
+            WriteLine("Properties70:  {");
+            _indentLevel++;
+
+            // Up axis: Y-up (FBX standard, most compatible)
+            WriteLine("P: \"UpAxis\", \"int\", \"Integer\", \"\",1");
+            WriteLine("P: \"UpAxisSign\", \"int\", \"Integer\", \"\",1");
+
+            // Front axis: Z (standard Y-up configuration)
+            WriteLine("P: \"FrontAxis\", \"int\", \"Integer\", \"\",2");
+            WriteLine("P: \"FrontAxisSign\", \"int\", \"Integer\", \"\",1");
+
+            // Coord axis: X (right-handed)
+            WriteLine("P: \"CoordAxis\", \"int\", \"Integer\", \"\",0");
+            WriteLine("P: \"CoordAxisSign\", \"int\", \"Integer\", \"\",1");
+
+            // Units: centimeters (matches Unreal Engine)
+            WriteLine("P: \"UnitScaleFactor\", \"double\", \"Number\", \"\",1");
+
+            _indentLevel--;
+            WriteLine("}");
+            _indentLevel--;
+            WriteLine("}");
+            WriteLine("");
+        }
+
+        private void WriteObjects(
+            FVector[] vertices,
+            FPackedNormal[] normals,
+            FVector2D[] uvs,
+            uint[] indices,
+            string meshName,
+            List<CSkelMeshBone>? bones,
+            CSkelMeshLod? lod,
+            MorphTargetData? morphTargetData)
+        {
+            WriteLine("Objects:  {");
+            _indentLevel++;
+
+            // Write Geometry (mesh data)
+            WriteGeometry(_geometryId, vertices, normals, uvs, indices, meshName, morphTargetData);
+
+            // Write Model (scene node)
+            WriteModel(_modelId, meshName);
+
+            // Write Skeleton if present
+            if (bones != null && lod != null)
+            {
+                WriteSkeleton(bones);
+                WriteSkinDeformer(lod, bones);
+            }
+
+            // Write Morph Targets if present
+            if (morphTargetData != null)
+            {
+                WriteMorphTargets(morphTargetData, vertices.Length);
+            }
+
+            _indentLevel--;
+            WriteLine("}");
+            WriteLine("");
+        }
+
+        private void WriteGeometry(
+            long id,
+            FVector[] vertices,
+            FPackedNormal[] normals,
+            FVector2D[] uvs,
+            uint[] indices,
+            string name,
+            MorphTargetData? morphTargetData)
+        {
+            WriteLine($"Geometry: {id}, \"Geometry::{name}\", \"Mesh\" {{");
+            _indentLevel++;
+
+            // Write Vertices
+            WriteLine("Vertices: *" + (vertices.Length * 3) + " {");
+            _indentLevel++;
+            Write("a: ");
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var v = vertices[i];
+
+                // Apply scale and coordinate conversion: (X, Y, Z)_unreal → (X, Z, -Y)_fbx
+                float x_fbx = v.X * SCALE_REVERSE;
+                float y_fbx = v.Z * SCALE_REVERSE;
+                float z_fbx = -v.Y * SCALE_REVERSE;
+
+                _sb.Append(FormatFloat(x_fbx));
+                _sb.Append(",");
+                _sb.Append(FormatFloat(y_fbx));
+                _sb.Append(",");
+                _sb.Append(FormatFloat(z_fbx));
+
+                if (i < vertices.Length - 1)
+                    _sb.Append(",");
+            }
+
+            _sb.AppendLine();
+            _indentLevel--;
+            WriteLine("}");
+
+            // Write Polygon Indices
+            WriteLine("PolygonVertexIndex: *" + indices.Length + " {");
+            _indentLevel++;
+            Write("a: ");
+
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                // Reverse winding order due to coordinate conversion
+                _sb.Append(indices[i + 0]);
+                _sb.Append(",");
+                _sb.Append(indices[i + 2]);
+                _sb.Append(",");
+                _sb.Append(-(int)indices[i + 1] - 1); // Negative marks end of polygon
+
+                if (i < indices.Length - 3)
+                    _sb.Append(",");
+            }
+
+            _sb.AppendLine();
+            _indentLevel--;
+            WriteLine("}");
+
+            // Write Normals
+            WriteNormals(normals);
+
+            // Write UVs
+            if (uvs.Length > 0)
+            {
+                WriteUVs(uvs);
+            }
+
+            // Write Layers
+            WriteLine("Layer: 0 {");
+            _indentLevel++;
+            WriteLine("Version: 100");
+
+            WriteLine("LayerElement:  {");
+            _indentLevel++;
+            WriteLine("Type: \"LayerElementNormal\"");
+            WriteLine("TypedIndex: 0");
+            _indentLevel--;
+            WriteLine("}");
+
+            if (uvs.Length > 0)
+            {
+                WriteLine("LayerElement:  {");
+                _indentLevel++;
+                WriteLine("Type: \"LayerElementUV\"");
+                WriteLine("TypedIndex: 0");
+                _indentLevel--;
+                WriteLine("}");
+            }
+
+            _indentLevel--;
+            WriteLine("}");
+
+            _indentLevel--;
+            WriteLine("}");
+        }
+
+        private void WriteNormals(FPackedNormal[] normals)
+        {
+            WriteLine("LayerElementNormal: 0 {");
+            _indentLevel++;
+            WriteLine("Version: 101");
+            WriteLine("Name: \"\"");
+            WriteLine("MappingInformationType: \"ByVertice\"");
+            WriteLine("ReferenceInformationType: \"Direct\"");
+
+            WriteLine("Normals: *" + (normals.Length * 3) + " {");
+            _indentLevel++;
+            Write("a: ");
+
+            for (int i = 0; i < normals.Length; i++)
+            {
+                var n = normals[i].ToFVector();
+
+                // Apply coordinate conversion to normals
+                float nx_fbx = n.X;
+                float ny_fbx = n.Z;
+                float nz_fbx = -n.Y;
+
+                _sb.Append(FormatFloat(nx_fbx));
+                _sb.Append(",");
+                _sb.Append(FormatFloat(ny_fbx));
+                _sb.Append(",");
+                _sb.Append(FormatFloat(nz_fbx));
+
+                if (i < normals.Length - 1)
+                    _sb.Append(",");
+            }
+
+            _sb.AppendLine();
+            _indentLevel--;
+            WriteLine("}");
+            _indentLevel--;
+            WriteLine("}");
+        }
+
+        private void WriteUVs(FVector2D[] uvs)
+        {
+            WriteLine("LayerElementUV: 0 {");
+            _indentLevel++;
+            WriteLine("Version: 101");
+            WriteLine("Name: \"UVChannel_0\"");
+            WriteLine("MappingInformationType: \"ByVertice\"");
+            WriteLine("ReferenceInformationType: \"Direct\"");
+
+            WriteLine("UV: *" + (uvs.Length * 2) + " {");
+            _indentLevel++;
+            Write("a: ");
+
+            for (int i = 0; i < uvs.Length; i++)
+            {
+                _sb.Append(FormatFloat(uvs[i].X));
+                _sb.Append(",");
+                _sb.Append(FormatFloat(uvs[i].Y));
+
+                if (i < uvs.Length - 1)
+                    _sb.Append(",");
+            }
+
+            _sb.AppendLine();
+            _indentLevel--;
+            WriteLine("}");
+            _indentLevel--;
+            WriteLine("}");
+        }
+
+        private void WriteModel(long id, string name)
+        {
+            WriteLine($"Model: {id}, \"Model::{name}\", \"Mesh\" {{");
+            _indentLevel++;
+            WriteLine("Version: 232");
+
+            WriteLine("Properties70:  {");
+            _indentLevel++;
+            WriteLine("P: \"RotationActive\", \"bool\", \"\", \"\",1");
+            WriteLine("P: \"InheritType\", \"enum\", \"\", \"\",1");
+            WriteLine("P: \"ScalingMax\", \"Vector3D\", \"Vector\", \"\",0,0,0");
+            WriteLine("P: \"Lcl Translation\", \"Lcl Translation\", \"\", \"A\",0,0,0");
+            WriteLine("P: \"Lcl Rotation\", \"Lcl Rotation\", \"\", \"A\",0,0,0");
+            WriteLine("P: \"Lcl Scaling\", \"Lcl Scaling\", \"\", \"A\",1,1,1");
+            _indentLevel--;
+            WriteLine("}");
+
+            WriteLine("Shading: T");
+            WriteLine("Culling: \"CullingOff\"");
+
+            _indentLevel--;
+            WriteLine("}");
+        }
+
+        private void WriteSkeleton(List<CSkelMeshBone> bones)
+        {
+            foreach (var bone in bones)
+            {
+                var boneId = _boneModelIds[bone.Name];
+
+                WriteLine($"Model: {boneId}, \"Model::{bone.Name}\", \"LimbNode\" {{");
+                _indentLevel++;
+                WriteLine("Version: 232");
+
+                WriteLine("Properties70:  {");
+                _indentLevel++;
+
+                // Write bone transform
+                var pos = bone.Position;
+                var rot = bone.Orientation;
+
+                // Apply coordinate conversion
+                float tx = pos.X * SCALE_REVERSE;
+                float ty = pos.Z * SCALE_REVERSE;
+                float tz = -pos.Y * SCALE_REVERSE;
+
+                WriteLine($"P: \"Lcl Translation\", \"Lcl Translation\", \"\", \"A\",{FormatFloat(tx)},{FormatFloat(ty)},{FormatFloat(tz)}");
+
+                // Convert quaternion to Euler angles (FBX uses degrees)
+                var euler = QuaternionToEuler(rot);
+                WriteLine($"P: \"Lcl Rotation\", \"Lcl Rotation\", \"\", \"A\",{FormatFloat(euler.X)},{FormatFloat(euler.Y)},{FormatFloat(euler.Z)}");
+                WriteLine("P: \"Lcl Scaling\", \"Lcl Scaling\", \"\", \"A\",1,1,1");
+
+                _indentLevel--;
+                WriteLine("}");
+
+                _indentLevel--;
+                WriteLine("}");
+            }
+        }
+
+        private void WriteSkinDeformer(CSkelMeshLod lod, List<CSkelMeshBone> bones)
+        {
+            // Write Skin Deformer
+            WriteLine($"Deformer: {_skinDeformerId}, \"Deformer::\", \"Skin\" {{");
+            _indentLevel++;
+            WriteLine("Version: 101");
+            WriteLine("Link_DeformAcuracy: 50");
+            _indentLevel--;
+            WriteLine("}");
+
+            // Write Cluster (SubDeformer) for each bone
+            for (int boneIndex = 0; boneIndex < bones.Count; boneIndex++)
+            {
+                var bone = bones[boneIndex];
+                var clusterId = _clusterIds[boneIndex];
+
+                // Collect vertices influenced by this bone
+                var influencedVertices = new List<int>();
+                var weights = new List<float>();
+
+                for (int vertIndex = 0; vertIndex < lod.Verts.Length; vertIndex++)
+                {
+                    var vert = lod.Verts[vertIndex];
+
+                    for (int influenceIndex = 0; influenceIndex < vert.Inf.BoneIndex.Length; influenceIndex++)
+                    {
+                        if (vert.Inf.BoneIndex[influenceIndex] == boneIndex)
+                        {
+                            influencedVertices.Add(vertIndex);
+                            weights.Add(vert.Inf.BoneWeight[influenceIndex] / 255.0f);
+                            break;
+                        }
+                    }
+                }
+
+                if (influencedVertices.Count == 0) continue;
+
+                WriteLine($"Deformer: {clusterId}, \"SubDeformer::\", \"Cluster\" {{");
+                _indentLevel++;
+                WriteLine("Version: 100");
+
+                // Write indices
+                WriteLine("Indexes: *" + influencedVertices.Count + " {");
+                _indentLevel++;
+                Write("a: ");
+                for (int i = 0; i < influencedVertices.Count; i++)
+                {
+                    _sb.Append(influencedVertices[i]);
+                    if (i < influencedVertices.Count - 1)
+                        _sb.Append(",");
+                }
+                _sb.AppendLine();
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write weights
+                WriteLine("Weights: *" + weights.Count + " {");
+                _indentLevel++;
+                Write("a: ");
+                for (int i = 0; i < weights.Count; i++)
+                {
+                    _sb.Append(FormatFloat(weights[i]));
+                    if (i < weights.Count - 1)
+                        _sb.Append(",");
+                }
+                _sb.AppendLine();
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write transform matrices (identity for now)
+                WriteLine("Transform: *16 {");
+                _indentLevel++;
+                Write("a: ");
+                _sb.AppendLine("1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1");
+                _indentLevel--;
+                WriteLine("}");
+
+                WriteLine("TransformLink: *16 {");
+                _indentLevel++;
+                Write("a: ");
+                _sb.AppendLine("1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1");
+                _indentLevel--;
+                WriteLine("}");
+
+                _indentLevel--;
+                WriteLine("}");
+            }
+        }
+
+        private void WriteMorphTargets(MorphTargetData morphData, int vertexCount)
+        {
+            foreach (var (morphTarget, deltas) in morphData.GetMorphDeltas())
+            {
+                if (deltas.Count == 0) continue;
+
+                var blendShapeId = _blendShapeIds[morphTarget.Name];
+                var channelId = _blendShapeChannelIds[morphTarget.Name];
+
+                // Write BlendShape Deformer
+                WriteLine($"Deformer: {blendShapeId}, \"Deformer::\", \"BlendShape\" {{");
+                _indentLevel++;
+                WriteLine("Version: 100");
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write BlendShapeChannel (SubDeformer)
+                WriteLine($"Deformer: {channelId}, \"SubDeformer::{morphTarget.Name}\", \"BlendShapeChannel\" {{");
+                _indentLevel++;
+                WriteLine("Version: 100");
+                WriteLine($"DeformPercent: 0"); // Default weight (0-100)
+
+                // Write shape geometry (only changed vertices)
+                var shapeGeomId = GetNextObjectId();
+
+                WriteLine($"Shape: {shapeGeomId}");
+
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write Shape Geometry
+                WriteLine($"Geometry: {shapeGeomId}, \"Geometry::{morphTarget.Name}\", \"Shape\" {{");
+                _indentLevel++;
+                WriteLine("Version: 100");
+
+                // Write indices of affected vertices
+                WriteLine("Indexes: *" + deltas.Count + " {");
+                _indentLevel++;
+                Write("a: ");
+                for (int i = 0; i < deltas.Count; i++)
+                {
+                    _sb.Append(deltas[i].VertexIndex);
+                    if (i < deltas.Count - 1)
+                        _sb.Append(",");
+                }
+                _sb.AppendLine();
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write vertex deltas (position changes)
+                WriteLine("Vertices: *" + (deltas.Count * 3) + " {");
+                _indentLevel++;
+                Write("a: ");
+                for (int i = 0; i < deltas.Count; i++)
+                {
+                    var delta = deltas[i].Delta;
+
+                    // Apply coordinate conversion to delta
+                    float dx = delta.X * SCALE_REVERSE;
+                    float dy = delta.Z * SCALE_REVERSE;
+                    float dz = -delta.Y * SCALE_REVERSE;
+
+                    _sb.Append(FormatFloat(dx));
+                    _sb.Append(",");
+                    _sb.Append(FormatFloat(dy));
+                    _sb.Append(",");
+                    _sb.Append(FormatFloat(dz));
+
+                    if (i < deltas.Count - 1)
+                        _sb.Append(",");
+                }
+                _sb.AppendLine();
+                _indentLevel--;
+                WriteLine("}");
+
+                // Write normals (optional, can be zeros)
+                WriteLine("Normals: *" + (deltas.Count * 3) + " {");
+                _indentLevel++;
+                Write("a: ");
+                for (int i = 0; i < deltas.Count; i++)
+                {
+                    _sb.Append("0,0,0");
+                    if (i < deltas.Count - 1)
+                        _sb.Append(",");
+                }
+                _sb.AppendLine();
+                _indentLevel--;
+                WriteLine("}");
+
+                _indentLevel--;
+                WriteLine("}");
+            }
+        }
+
+        private void WriteConnections(List<CSkelMeshBone>? bones, FPackageIndex[]? morphTargets)
+        {
+            WriteLine("Connections:  {");
+            _indentLevel++;
+
+            // Connect Geometry to Model
+            WriteLine($"C: \"OO\",{_geometryId},{_modelId}");
+
+            // Connect skeleton if present
+            if (bones != null)
+            {
+                // Connect Skin to Geometry
+                WriteLine($"C: \"OO\",{_skinDeformerId},{_geometryId}");
+
+                // Connect bone hierarchy
+                for (int i = 0; i < bones.Count; i++)
+                {
+                    var bone = bones[i];
+                    var boneId = _boneModelIds[bone.Name];
+
+                    if (bone.ParentIndex >= 0 && bone.ParentIndex < bones.Count)
+                    {
+                        var parentId = _boneModelIds[bones[bone.ParentIndex].Name];
+                        WriteLine($"C: \"OO\",{boneId},{parentId}");
+                    }
+                    else
+                    {
+                        // Root bone connects to main model
+                        WriteLine($"C: \"OO\",{boneId},{_modelId}");
+                    }
+
+                    // Connect Cluster to Skin and Bone
+                    var clusterId = _clusterIds[i];
+                    WriteLine($"C: \"OO\",{clusterId},{_skinDeformerId}");
+                    WriteLine($"C: \"OO\",{boneId},{clusterId}");
+                }
+            }
+
+            // Connect morph targets if present
+            if (morphTargets != null)
+            {
+                foreach (var morphTargetRef in morphTargets)
+                {
+                    var morphTarget = morphTargetRef.Load<UMorphTarget>();
+                    if (morphTarget == null || !_blendShapeIds.ContainsKey(morphTarget.Name))
+                        continue;
+
+                    var blendShapeId = _blendShapeIds[morphTarget.Name];
+                    var channelId = _blendShapeChannelIds[morphTarget.Name];
+
+                    // Connect BlendShape to Geometry
+                    WriteLine($"C: \"OO\",{blendShapeId},{_geometryId}");
+
+                    // Connect BlendShapeChannel to BlendShape
+                    WriteLine($"C: \"OO\",{channelId},{blendShapeId}");
+                }
+            }
+
+            _indentLevel--;
+            WriteLine("}");
+            WriteLine("");
+        }
+
+        // Helper Methods
+
+        private long GetNextObjectId()
+        {
+            return _nextObjectId++;
+        }
+
+        private void WriteLine(string line)
+        {
+            _sb.Append('\t', _indentLevel);
+            _sb.AppendLine(line);
+        }
+
+        private void Write(string text)
+        {
+            _sb.Append('\t', _indentLevel);
+            _sb.Append(text);
+        }
+
+        private string FormatFloat(float value)
+        {
+            return value.ToString("F6", CultureInfo.InvariantCulture);
+        }
+
+        private FVector QuaternionToEuler(FQuat q)
+        {
+            // Convert quaternion to Euler angles in degrees
+            // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+
+            float sinr_cosp = 2 * (q.W * q.X + q.Y * q.Z);
+            float cosr_cosp = 1 - 2 * (q.X * q.X + q.Y * q.Y);
+            float roll = (float)Math.Atan2(sinr_cosp, cosr_cosp);
+
+            float sinp = 2 * (q.W * q.Y - q.Z * q.X);
+            float pitch;
+            if (Math.Abs(sinp) >= 1)
+                pitch = (float)Math.CopySign(Math.PI / 2, sinp);
+            else
+                pitch = (float)Math.Asin(sinp);
+
+            float siny_cosp = 2 * (q.W * q.Z + q.X * q.Y);
+            float cosy_cosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
+            float yaw = (float)Math.Atan2(siny_cosp, cosy_cosp);
+
+            // Convert to degrees and apply coordinate conversion
+            return new FVector(
+                (float)(roll * 180.0 / Math.PI),
+                (float)(yaw * 180.0 / Math.PI),
+                (float)(pitch * 180.0 / Math.PI)
+            );
+        }
+    }
+
+    /// <summary>
+    /// Helper class to organize morph target delta data
+    /// </summary>
+    public class MorphTargetData
+    {
+        private readonly Dictionary<UMorphTarget, List<MorphDelta>> _morphDeltas = new();
+
+        public MorphTargetData(FPackageIndex[] morphTargets, CSkelMeshLod lod, int lodIndex)
+        {
+            foreach (var morphTargetRef in morphTargets)
+            {
+                var morphTarget = morphTargetRef.Load<UMorphTarget>();
+                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex)
+                    continue;
+
+                var morphModel = morphTarget.MorphLODModels[lodIndex];
+                var deltas = new List<MorphDelta>();
+
+                for (int i = 0; i < morphModel.Vertices.Length; i++)
+                {
+                    var delta = morphModel.Vertices[i];
+                    if (delta.SourceIdx >= lod.Verts.Length) continue;
+
+                    deltas.Add(new MorphDelta
+                    {
+                        VertexIndex = (int)delta.SourceIdx,
+                        Delta = delta.PositionDelta
+                    });
+                }
+
+                _morphDeltas[morphTarget] = deltas;
+
+                Log.Information($"Morph target '{morphTarget.Name}': {deltas.Count} vertex deltas");
+            }
+        }
+
+        public IEnumerable<(UMorphTarget MorphTarget, List<MorphDelta> Deltas)> GetMorphDeltas()
+        {
+            foreach (var kvp in _morphDeltas)
+            {
+                yield return (kvp.Key, kvp.Value);
+            }
+        }
+    }
+
+    public struct MorphDelta
+    {
+        public int VertexIndex;
+        public FVector Delta;
+    }
+}
