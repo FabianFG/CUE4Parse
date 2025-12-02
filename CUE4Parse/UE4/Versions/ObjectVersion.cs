@@ -8,7 +8,6 @@ namespace CUE4Parse.UE4.Versions
         // Note that currently the oldest loadable package version is EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE
         // this can be enabled should we ever deprecate UE4 versions entirely
         //OLDEST_LOADABLE_PACKAGE = ???,
-
         // The original UE5 version, at the time this was added the UE4 version was 522, so UE5 will start from 1000 to show a clear difference
 
         INITIAL_VERSION = 1000,
@@ -124,7 +123,7 @@ namespace CUE4Parse.UE4.Versions
 	    // - Added material quality level switches
 	    MATERIAL_QUALITY_LEVEL_SWITCH,
 	    // - Debugging material shader uniform expression sets.
-	    VER_DEBUG_MATERIALSHADER_UNIFORM_EXPRESSIONS,
+	    DEBUG_MATERIALSHADER_UNIFORM_EXPRESSIONS,
 	    // Removed StripData
 	    REMOVED_STRIP_DATA,
 	    // Setting RF_Transactional object flag on blueprint's SimpleConstructionScript
@@ -934,15 +933,26 @@ namespace CUE4Parse.UE4.Versions
     {
         DETERMINE_BY_GAME = 0,
         // early UE3 version not documented
+        Release40 = 40,
+        Release47 = 47,
+        Release50 = 50,
+        Release51 = 51,
+        Release52 = 52,
+        Release55 = 55,
+        Release57 = 57,
+        Release58 = 58,
         Release61 = 61,
         Release62 = 62,
         Release64 = 64,
+        Release69 = 69,
         DeprecatedHeritageTable = 68,
         PanUVRemovedFromPoly = 78,
         CompMipsDeprecated = 84,
         AddedHideCategoriesToUClass = 99,
         LightMapScaleAddedToPoly = 106,
+        Release119 = 119,
         AddedCppTextToUStruct = 120,
+        Release122 = 122,
 
         // only comments exist for these three
 
@@ -960,6 +970,10 @@ namespace CUE4Parse.UE4.Versions
         temp6 = 127,
         // added DetailMode to FDecorationLayer
         temp7 = 128,
+        // empty?
+        temp8 = 128,
+        // StaticMeshActor Socket Type Added
+        temp9 = 128,
 
         MovedFriendlyNameToUFunction = 160,
         TextureDeprecatedFromPoly = 170,
@@ -981,6 +995,7 @@ namespace CUE4Parse.UE4.Versions
         AddedRawTriangles = 218,
         AddedArcheType = 220,
         AddedBulkLod = 221,
+        AddedComponentMapToExports,
         AddedInterfacesFeature = 222,
 
         // lowest found version for UE3 packages
@@ -1443,8 +1458,7 @@ namespace CUE4Parse.UE4.Versions
         // Integrated SpeedTree vertex shader rendering
         SPEEDTREE_VERTEXSHADER_RENDERING = 448,
         // Changed enum serialization to be by name
-        ENUM_VALUE_SERIALIZED_BY_NAMEV2 = 449, // krowe, i added V2
-
+        ENUM_VALUE_SERIALIZED_BY_NAMEV2 = 449, // I added v2 as the name were exact same, krowe moh
         // Force distributions to be rebuilt.
         FDISTRIBUTION_FORCE_DIRTY3 = 450,
         // Recompile DistortionApply and DepthOnly shaders to apply optimizations.
@@ -2026,7 +2040,7 @@ namespace CUE4Parse.UE4.Versions
         FOLIAGE_INSTANCE_SAVE_EDITOR_DATA = 830,
         // Removed unused lighting properties
         REMOVE_UNUSED_LIGHTING_PROPERTIES = 829,
-        // Fixing up version as VER_REMOVE_UNUSED_LIGHTING_PROPERTIES is less than VER_FOLIAGE_INSTANCE_SAVE_EDITOR_DATA and not unique.
+        // Fixing up version as REMOVE_UNUSED_LIGHTING_PROPERTIES is less than FOLIAGE_INSTANCE_SAVE_EDITOR_DATA and not unique.
         FIXED_UP_VERSION = 831,
         // SphereMask material expression hardness was defined wrong
         SPHEREMASK_HARDNESS = 832,

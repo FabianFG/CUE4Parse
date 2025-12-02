@@ -49,6 +49,7 @@ namespace CUE4Parse.FileProvider
         public FileProviderDictionary Files { get; }
         public InternationalizationDictionary Internationalization { get; }
         public IDictionary<string, string> VirtualPaths { get; }
+        public IDictionary<string, string> TextureCachePaths { get; }
         public CustomConfigIni DefaultGame { get; }
         public CustomConfigIni DefaultEngine { get; }
 
@@ -71,6 +72,7 @@ namespace CUE4Parse.FileProvider
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
             VirtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
+            TextureCachePaths = new ConcurrentDictionary<string, string>(PathComparer);
             DefaultGame = new CustomConfigIni(nameof(DefaultGame));
             DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }

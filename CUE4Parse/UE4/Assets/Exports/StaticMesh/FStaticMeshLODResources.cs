@@ -54,14 +54,16 @@ public class FStaticMeshLODResources
         {
             SourceMeshBounds = new FBoxSphereBounds(Ar);
         }
-
+        if (Ar.Game >= EGame.GAME_UE4_0)
+        {
         MaxDeviation = Ar.Read<float>();
+        }
 
         if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
-            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
             {
                 SerializeBuffersLegacy(Ar, stripDataFlags);
             }
@@ -170,7 +172,7 @@ public class FStaticMeshLODResources
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker )
+        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker)
         {
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);

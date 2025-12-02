@@ -100,6 +100,12 @@ namespace CUE4Parse.FileProvider
                     continue;
                 }
 
+                if (upperExt is "TFC")
+                {
+                    RegisterTextureCache(file);
+                    continue;
+                }
+
                 // Register local file only if it has a known extension, we don't need every file
                 if (!GameFile.UeKnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
                     continue;
