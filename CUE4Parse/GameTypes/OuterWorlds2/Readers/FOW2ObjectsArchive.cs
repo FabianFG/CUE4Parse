@@ -11,7 +11,7 @@ public class FOW2ObjectsArchive : FObjectAndNameAsStringProxyArchive
     public readonly FPropertryDataObjectContainer Objects;
     public readonly IPackage Asset;
     public readonly bool bHasVersion;
-    
+
     public FOW2ObjectsArchive(FAssetArchive Ar, FPropertryDataObjectContainer container) : base(Ar)
     {
         Objects = container;
@@ -29,6 +29,6 @@ public class FOW2ObjectsArchive : FObjectAndNameAsStringProxyArchive
         Asset = owner;
         Objects = container;
         bHasVersion = hasVersion;
-        Ver = hasVersion ? new FPackageFileVersion(Read<int>(), Read<int>()) : new FPackageFileVersion(522, 1010);
+        Ver = hasVersion ? new FPackageFileVersion(0, Read<int>(), Read<int>()) : new FPackageFileVersion(0, 522, 1010);
     }
 }

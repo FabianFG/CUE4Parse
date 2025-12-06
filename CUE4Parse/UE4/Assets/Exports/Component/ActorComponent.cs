@@ -54,11 +54,11 @@ public class UAudioCaptureComponent : USynthComponent;
 public class UAudioComponent : USceneComponent
 {
     public USoundBase? Sound { get; protected set; }
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        
+
         Sound = GetOrDefault<USoundBase?>(nameof(Sound));
     }
 }
@@ -86,10 +86,10 @@ public class UBillboardComponent : UPrimitiveComponent
         {
             var sprite = current.GetOrDefault<UTexture2D?>("Sprite");
             if (sprite != null) return sprite;
-            
+
             current = current.Template?.Load<UBillboardComponent>();
         }
-        
+
         return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
     }
 }
@@ -247,7 +247,7 @@ public class UParticleSystemComponent : UFXSystemComponent
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
     }
 }

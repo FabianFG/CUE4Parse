@@ -155,7 +155,7 @@ public class UObject : AbstractPropertyHolder
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
-        if (!Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
+        if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
         {
             ObjectGuid = Ar.Read<FGuid>();
         }
