@@ -30,7 +30,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FMaterialParameterInfo()
         {
             Name = new FName();
-            Association = EMaterialParameterAssociation.LayerParameter;
+            Association = EMaterialParameterAssociation.GlobalParameter;
             Index = 0;
         }
     }

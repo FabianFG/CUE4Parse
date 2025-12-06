@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material.Parameters
 
         public FStaticParameterBase(FArchive Ar)
         {
-            ParameterInfo = FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MaterialAttributeLayerParameters ? new FMaterialParameterInfo { Name = Ar.ReadFName() } : new FMaterialParameterInfo(Ar);
+            ParameterInfo = FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MaterialAttributeLayerParameters ? new FMaterialParameterInfo { Name = Ar.ReadFName(), Index = -1 } : new FMaterialParameterInfo(Ar);
         }
     }
 }
