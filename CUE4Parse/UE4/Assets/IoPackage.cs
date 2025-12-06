@@ -95,7 +95,7 @@ namespace CUE4Parse.UE4.Assets
                 }
 
                 FZenPackageCellOffsets cellOffsets;
-                if (summary.bHasVersioningInfo == 0 && uassetAr.Ver >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
+                if (summary.bHasVersioningInfo == 0 || uassetAr.Ver >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
                 {
                     cellOffsets = uassetAr.Read<FZenPackageCellOffsets>();
                 }
