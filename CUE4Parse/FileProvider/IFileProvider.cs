@@ -31,6 +31,8 @@ namespace CUE4Parse.FileProvider
 
         public IDictionary<string, string> VirtualPaths { get; }
 
+        public IDictionary<string, string> TextureCachePaths { get; }
+
         /// <summary>
         /// the localized resources (strings) from the game
         /// </summary>

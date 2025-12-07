@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public static FPackedNormal[] SerializeTangents(FArchive Ar, bool useHighPrecisionTangents)
         {
             if (!useHighPrecisionTangents)
-                return new [] { new FPackedNormal(Ar), new FPackedNormal(0), new FPackedNormal(Ar) }; // # TangentX and TangentZ
+                return new [] { new FPackedNormal(Ar), new FPackedNormal(0), new FPackedNormal(Ar) }; // # TangentX, TangentY and TangentZ
 
             return new [] { (FPackedNormal)new FPackedRGBA16N(Ar), new FPackedNormal(0), (FPackedNormal)new FPackedRGBA16N(Ar) };
         }

@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Versions
             get => _ver;
             set
             {
-                bExplicitVer = value.FileVersionUE4 != 0 || value.FileVersionUE5 != 0;
+                bExplicitVer = value.FileVersionUE3 != 0 || value.FileVersionUE4 != 0 || value.FileVersionUE5 != 0;
                 _ver = bExplicitVer ? value : _game.GetVersion();
             }
         }

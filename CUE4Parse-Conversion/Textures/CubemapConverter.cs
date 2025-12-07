@@ -12,12 +12,12 @@ public static class CubemapConverter
         float boundary = 0.005f; //TODO calculate value based on Texture Size?
 
         //preserve pixel density
-        double widthSphereMap = Math.Sqrt(12) * cubeMap.Width;  // 2 * sqrt(3) * W
-        double heightSphereMap = Math.Sqrt(3) * cubeMap.Width;  // sqrt(3) * W
+        double widthSphereMap = Math.Sqrt(12) * cubeMap.Width; // 2 * sqrt(3) * W
+        double heightSphereMap = Math.Sqrt(3) * cubeMap.Width; // sqrt(3) * W
 
         // Round width and height to integers
-        int panoramaWidth = (int)Math.Floor(widthSphereMap);
-        int panoramaHeight = (int)Math.Floor(heightSphereMap);
+        int panoramaWidth = (int) Math.Floor(widthSphereMap);
+        int panoramaHeight = (int) Math.Floor(heightSphereMap);
 
         byte[] panoramaData = new byte[panoramaWidth * panoramaHeight * 16]; // 16 bytes per pixel (4 floats)
 
@@ -32,12 +32,12 @@ public static class CubemapConverter
 
                 for (var j = 0; j < panoramaHeight; j++)
                 {
-                    sphereV = 1 - ((double)j / panoramaHeight);
+                    sphereV = 1 - ((double) j / panoramaHeight);
                     theta = sphereV * Math.PI;
 
                     for (var i = 0; i < panoramaWidth; i++)
                     {
-                        sphereU = ((double)i / panoramaWidth);
+                        sphereU = ((double) i / panoramaWidth);
                         phi = sphereU * 2 * Math.PI;
 
                         x = Math.Sin(phi) * Math.Sin(theta) * -1;
@@ -49,16 +49,16 @@ public static class CubemapConverter
                         // Sample edges directly
                         if (u <= boundary || u >= 1 - boundary || IsCloseToVerticalEdge(v, boundary))
                         {
-                            int xPixel = (int)(u * cubeMap.Width);
-                            int yPixel = (int)(v * cubeMap.Height);
+                            int xPixel = (int) (u * cubeMap.Width);
+                            int yPixel = (int) (v * cubeMap.Height);
                             var color = GetColorFromCubeMap(cubeDataPtr, cubeMap, xPixel, yPixel);
                             SetPixel(sphereDataPtr, i, j, panoramaWidth, color);
                         }
                         else // Bilinear interpolation on non-edges
                         {
-                            int x0 = Math.Max(0, Math.Min(cubeMap.Width - 1, (int)Math.Floor(u * cubeMap.Width)));
+                            int x0 = Math.Max(0, Math.Min(cubeMap.Width - 1, (int) Math.Floor(u * cubeMap.Width)));
                             int x1 = Math.Max(0, Math.Min(cubeMap.Width - 1, x0 + 1));
-                            int y0 = Math.Max(0, Math.Min(cubeMap.Height - 1, (int)Math.Floor(v * cubeMap.Height)));
+                            int y0 = Math.Max(0, Math.Min(cubeMap.Height - 1, (int) Math.Floor(v * cubeMap.Height)));
                             int y1 = Math.Max(0, Math.Min(cubeMap.Height - 1, y0 + 1));
 
                             double weightX = u * cubeMap.Width - x0;
@@ -81,10 +81,132 @@ public static class CubemapConverter
         return new CTexture(panoramaWidth, panoramaHeight, EPixelFormat.PF_A32B32G32R32F, panoramaData);
     }
 
+    public static CTexture ToPanoramaFromFaces(
+        CTexture facePosX,
+        CTexture faceNegX,
+        CTexture facePosY,
+        CTexture faceNegY,
+        CTexture facePosZ,
+        CTexture faceNegZ)
+    {
+        float boundary = 0.005f; //TODO calculate value based on Texture Size?
+
+        int faceWidth = facePosX.Width;
+
+        //preserve pixel density
+        double widthSphereMap = Math.Sqrt(12) * faceWidth; // 2 * sqrt(3) * W
+        double heightSphereMap = Math.Sqrt(3) * faceWidth; // sqrt(3) * W
+
+        // Round width and height to integers
+        int panoramaWidth = (int) Math.Floor(widthSphereMap);
+        int panoramaHeight = (int) Math.Floor(heightSphereMap);
+
+        byte[] panoramaData = new byte[panoramaWidth * panoramaHeight * 16]; // 16 bytes per pixel (4 floats)
+
+        unsafe
+        {
+            fixed (byte* sphereDataPtr = panoramaData)
+            {
+                double sphereU, sphereV;
+                double phi, theta; // polar coordinates
+                double x, y, z; // unit vector
+
+                for (var j = 0; j < panoramaHeight; j++)
+                {
+                    sphereV = 1 - ((double) j / panoramaHeight);
+                    theta = sphereV * Math.PI;
+
+                    for (var i = 0; i < panoramaWidth; i++)
+                    {
+                        sphereU = ((double) i / panoramaWidth);
+                        phi = sphereU * 2 * Math.PI;
+
+                        x = Math.Sin(phi) * Math.Sin(theta) * -1;
+                        y = Math.Cos(theta);
+                        z = Math.Cos(phi) * Math.Sin(theta) * -1;
+
+                        MapCartesianToUvMulti(x, y, z, out var faceIndex, out var u, out var v);
+
+                        CTexture targetFace = faceIndex switch
+                        {
+                            0 => facePosX,
+                            1 => faceNegX,
+                            2 => facePosY,
+                            3 => faceNegY,
+                            4 => facePosZ,
+                            5 => faceNegZ,
+                            _ => facePosX
+                        };
+
+                        fixed (byte* cubeDataPtr = targetFace.Data)
+                        {
+                            // Sample edges directly
+                            if (u <= boundary || u >= 1 - boundary || IsCloseToVerticalEdge(v, boundary))
+                            {
+                                int xPixel = (int) (u * targetFace.Width);
+                                int yPixel = (int) (v * targetFace.Height);
+                                var color = GetColorFromCubeMap(cubeDataPtr, targetFace, xPixel, yPixel);
+                                SetPixel(sphereDataPtr, i, j, panoramaWidth, color);
+                            }
+                            else // Bilinear interpolation on non-edges
+                            {
+                                int x0 = Math.Max(0, Math.Min(targetFace.Width - 1, (int) Math.Floor(u * targetFace.Width)));
+                                int x1 = Math.Max(0, Math.Min(targetFace.Width - 1, x0 + 1));
+                                int y0 = Math.Max(0, Math.Min(targetFace.Height - 1, (int) Math.Floor(v * targetFace.Height)));
+                                int y1 = Math.Max(0, Math.Min(targetFace.Height - 1, y0 + 1));
+
+                                double weightX = u * targetFace.Width - x0;
+                                double weightY = v * targetFace.Height - y0;
+
+                                var color00 = GetColorFromCubeMap(cubeDataPtr, targetFace, x0, y0);
+                                var color01 = GetColorFromCubeMap(cubeDataPtr, targetFace, x0, y1);
+                                var color10 = GetColorFromCubeMap(cubeDataPtr, targetFace, x1, y0);
+                                var color11 = GetColorFromCubeMap(cubeDataPtr, targetFace, x1, y1);
+
+                                // Interpolate colors
+                                var interpolatedColor = InterpolateColor(color00, color01, color10, color11, weightX, weightY);
+                                SetPixel(sphereDataPtr, i, j, panoramaWidth, interpolatedColor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return new CTexture(panoramaWidth, panoramaHeight, EPixelFormat.PF_A32B32G32R32F, panoramaData);
+    }
+
+    private static void MapCartesianToUvMulti(double x, double y, double z, out int faceIndex, out double u, out double v)
+    {
+        double absX = Math.Abs(x);
+        double absY = Math.Abs(y);
+        double absZ = Math.Abs(z);
+
+        if (absX >= absY && absX >= absZ)
+        {
+            faceIndex = x > 0 ? 0 : 1;
+            u = (x > 0 ? -z : z) / absX * 0.5 + 0.5;
+            v = (y / absX) * 0.5 + 0.5;
+        }
+        else if (absY >= absX && absY >= absZ)
+        {
+            faceIndex = y > 0 ? 2 : 3;
+            u = (x / absY) * 0.5 + 0.5;
+            v = (y > 0 ? z : -z) / absY * 0.5 + 0.5;
+        }
+        else
+        {
+            faceIndex = z > 0 ? 4 : 5;
+            u = (z > 0 ? x : -x) / absZ * 0.5 + 0.5;
+            v = (y / absZ) * 0.5 + 0.5;
+        }
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe void SetPixel(byte* dataPtr, int x, int y, int width, FLinearColor color)
     {
-        *(FLinearColor*)(dataPtr + ((y * width + x) * 16)) = color; // 16 bytes per pixel (FLinearColor / 4 floats)
+        *(FLinearColor*) (dataPtr + ((y * width + x) * 16)) = color; // 16 bytes per pixel (FLinearColor / 4 floats)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -97,46 +219,46 @@ public static class CubemapConverter
             case EPixelFormat.PF_A32B32G32R32F:
                 pixelOffset *= 16; // 16 bytes per pixel (4x float32)
                 return new FLinearColor(
-                    *(float*)(cubeDataPtr + pixelOffset + 12), // A
-                    *(float*)(cubeDataPtr + pixelOffset + 8),  // B
-                    *(float*)(cubeDataPtr + pixelOffset + 4),  // G
-                    *(float*)(cubeDataPtr + pixelOffset + 0)   // R
+                    *(float*) (cubeDataPtr + pixelOffset + 12), // A
+                    *(float*) (cubeDataPtr + pixelOffset + 8), // B
+                    *(float*) (cubeDataPtr + pixelOffset + 4), // G
+                    *(float*) (cubeDataPtr + pixelOffset + 0) // R
                 );
 
             case EPixelFormat.PF_R32G32B32F:
                 pixelOffset *= 12; // 12 bytes per pixel (3x float32)
                 return new FLinearColor(
-                    1.0f,                                       // A
-                    *(float*)(cubeDataPtr + pixelOffset + 8),  // B
-                    *(float*)(cubeDataPtr + pixelOffset + 4),  // G
-                    *(float*)(cubeDataPtr + pixelOffset + 0)   // R
+                    1.0f, // A
+                    *(float*) (cubeDataPtr + pixelOffset + 8), // B
+                    *(float*) (cubeDataPtr + pixelOffset + 4), // G
+                    *(float*) (cubeDataPtr + pixelOffset + 0) // R
                 );
 
             case EPixelFormat.PF_FloatRGBA:
                 pixelOffset *= 8; // 8 bytes per pixel (4x half16)
                 return new FLinearColor(
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 6), // A
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 4), // B
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 2), // G
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 0)  // R
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 6), // A
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 4), // B
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 2), // G
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 0) // R
                 );
 
             case EPixelFormat.PF_A16B16G16R16:
                 pixelOffset *= 8; // 8 bytes per pixel (4x half16)
                 return new FLinearColor(
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 0), // A
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 2), // B
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 4), // G
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 6)  // R
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 0), // A
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 2), // B
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 4), // G
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 6) // R
                 );
 
             case EPixelFormat.PF_FloatRGB:
                 pixelOffset *= 6; // 6 bytes per pixel (3x half16)
                 return new FLinearColor(
-                    1.0f,                                           // A
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 4), // B
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 2), // G
-                    (float)*(Half*)(cubeDataPtr + pixelOffset + 0)  // R
+                    1.0f, // A
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 4), // B
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 2), // G
+                    (float) *(Half*) (cubeDataPtr + pixelOffset + 0) // R
                 );
 
             case EPixelFormat.PF_R8G8B8A8:
@@ -145,7 +267,7 @@ public static class CubemapConverter
                     *(cubeDataPtr + pixelOffset + 3) / 255.0f, // A
                     *(cubeDataPtr + pixelOffset + 2) / 255.0f, // B
                     *(cubeDataPtr + pixelOffset + 1) / 255.0f, // G
-                    *(cubeDataPtr + pixelOffset + 0) / 255.0f  // R
+                    *(cubeDataPtr + pixelOffset + 0) / 255.0f // R
                 );
 
             case EPixelFormat.PF_B8G8R8A8:
@@ -154,23 +276,23 @@ public static class CubemapConverter
                     *(cubeDataPtr + pixelOffset + 3) / 255.0f, // A
                     *(cubeDataPtr + pixelOffset + 0) / 255.0f, // B
                     *(cubeDataPtr + pixelOffset + 1) / 255.0f, // G
-                    *(cubeDataPtr + pixelOffset + 2) / 255.0f  // R
+                    *(cubeDataPtr + pixelOffset + 2) / 255.0f // R
                 );
 
             case EPixelFormat.PF_R8:
-                float gray8 = *(ushort*)(cubeDataPtr + pixelOffset) / 255.0f;
+                float gray8 = *(ushort*) (cubeDataPtr + pixelOffset) / 255.0f;
                 return new FLinearColor(1.0f, gray8, gray8, gray8); // A, B, G, R
 
             case EPixelFormat.PF_G16:
-                float gray16 = *(ushort*)(cubeDataPtr + pixelOffset) / 65535.0f;
+                float gray16 = *(ushort*) (cubeDataPtr + pixelOffset) / 65535.0f;
                 return new FLinearColor(1.0f, gray16, gray16, gray16); // A, B, G, R
 
             case EPixelFormat.PF_G16R16:
                 return new FLinearColor(
-                    1.0f,                                           // A
-                    0.0f,                                           // B
-                    *(ushort*)(cubeDataPtr + pixelOffset + 0) / 65535.0f, // G
-                    *(ushort*)(cubeDataPtr + pixelOffset + 2) / 65535.0f  // R
+                    1.0f, // A
+                    0.0f, // B
+                    *(ushort*) (cubeDataPtr + pixelOffset + 0) / 65535.0f, // G
+                    *(ushort*) (cubeDataPtr + pixelOffset + 2) / 65535.0f // R
                 );
 
             default:
@@ -181,17 +303,17 @@ public static class CubemapConverter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static FLinearColor InterpolateColor(FLinearColor color00, FLinearColor color01, FLinearColor color10, FLinearColor color11, double weightX, double weightY)
     {
-        var r = (float)((color00.R * (1 - weightX) * (1 - weightY)) + (color01.R * (1 - weightX) * weightY) +
-                        (color10.R * weightX * (1 - weightY)) + (color11.R * weightX * weightY));
+        var r = (float) ((color00.R * (1 - weightX) * (1 - weightY)) + (color01.R * (1 - weightX) * weightY) +
+                         (color10.R * weightX * (1 - weightY)) + (color11.R * weightX * weightY));
 
-        var g = (float)((color00.G * (1 - weightX) * (1 - weightY)) + (color01.G * (1 - weightX) * weightY) +
-                        (color10.G * weightX * (1 - weightY)) + (color11.G * weightX * weightY));
+        var g = (float) ((color00.G * (1 - weightX) * (1 - weightY)) + (color01.G * (1 - weightX) * weightY) +
+                         (color10.G * weightX * (1 - weightY)) + (color11.G * weightX * weightY));
 
-        var b = (float)((color00.B * (1 - weightX) * (1 - weightY)) + (color01.B * (1 - weightX) * weightY) +
-                        (color10.B * weightX * (1 - weightY)) + (color11.B * weightX * weightY));
+        var b = (float) ((color00.B * (1 - weightX) * (1 - weightY)) + (color01.B * (1 - weightX) * weightY) +
+                         (color10.B * weightX * (1 - weightY)) + (color11.B * weightX * weightY));
 
-        var a = (float)((color00.A * (1 - weightX) * (1 - weightY)) + (color01.A * (1 - weightX) * weightY) +
-                        (color10.A * weightX * (1 - weightY)) + (color11.A * weightX * weightY));
+        var a = (float) ((color00.A * (1 - weightX) * (1 - weightY)) + (color01.A * (1 - weightX) * weightY) +
+                         (color10.A * weightX * (1 - weightY)) + (color11.A * weightX * weightY));
 
         return new FLinearColor(r, g, b, a);
     }
@@ -259,6 +381,7 @@ public static class CubemapConverter
             v = (za + 1) / 2;
             faceIndex = 4;
         }
+
         v = (v + faceIndex) / 6;
     }
 }
