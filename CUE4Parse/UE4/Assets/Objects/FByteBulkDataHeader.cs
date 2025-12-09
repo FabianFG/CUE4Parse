@@ -7,13 +7,16 @@ using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
-    public readonly struct FByteBulkDataHeader
+    public struct FByteBulkDataHeader
     {
         public readonly EBulkDataFlags BulkDataFlags;
         public readonly int ElementCount;
         public readonly uint SizeOnDisk;
         public readonly long OffsetInFile;
         public readonly FBulkDataCookedIndex CookedIndex;
+
+        // TODO: remove this once all AbstractVfsReader.Extract(VfsEntry) methods support extracting from headers or whatever this feature will be called
+        internal bool NeedsSeeking = true;
 
         public FByteBulkDataHeader(FAssetArchive Ar)
         {

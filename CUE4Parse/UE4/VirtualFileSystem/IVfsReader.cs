@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.VirtualFileSystem
@@ -26,6 +27,6 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public void Mount(StringComparer pathComparer);
         public void MountTo(FileProviderDictionary files, StringComparer pathComparer, EventHandler<int>? vfsMounted = null);
 
-        public abstract byte[] Extract(VfsEntry entry);
+        public abstract byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null);
     }
 }

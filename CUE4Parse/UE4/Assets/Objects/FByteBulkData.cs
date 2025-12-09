@@ -96,7 +96,7 @@ public class FByteBulkData
         }
     }
 
-    public bool ReadBulkDataInto(byte[] data, int offset = 0)
+    private bool ReadBulkDataInto(byte[] data, int offset = 0)
     {
         if (data.Length - offset < Header.ElementCount) {
             Log.Error("Data buffer is too small");
@@ -119,7 +119,9 @@ public class FByteBulkData
 #endif
             if (!TryGetBulkPayload(Ar, PayloadType.UPTNL, out var uptnlAr)) return false;
 
-            CheckReadSize(uptnlAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));
+            CheckReadSize(Header.NeedsSeeking
+                ? uptnlAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount)
+                : uptnlAr.Read(data, offset, Header.ElementCount));
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
         {
@@ -130,13 +132,22 @@ public class FByteBulkData
             if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
             {
                 var compressedData = new byte[Header.SizeOnDisk];
-                ubulkAr.ReadAt(Header.OffsetInFile, compressedData, offset, (int)Header.SizeOnDisk);
+                if (Header.NeedsSeeking)
+                {
+                    ubulkAr.ReadAt(Header.OffsetInFile, compressedData, offset, compressedData.Length);
+                }
+                else
+                {
+                    ubulkAr.ReadExactly(compressedData, offset, compressedData.Length);
+                }
                 using var dataAr = new FByteArchive("", compressedData, Ar.Versions);
                 dataAr.SerializeCompressedNew(data, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out var decompressedLength);
             }
             else
             {
-                CheckReadSize(ubulkAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));
+                CheckReadSize(Header.NeedsSeeking
+                    ? ubulkAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount)
+                    : ubulkAr.Read(data, offset, Header.ElementCount));
             }
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
@@ -171,12 +182,12 @@ public class FByteBulkData
         payloadAr = null;
         if (Header.CookedIndex.IsDefault)
         {
-            Ar.TryGetPayload(type, out payloadAr);
+            Ar.TryGetPayload(type, out payloadAr, Header);
         }
         else if (Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
         {
             var path = Path.ChangeExtension(Ar.Name, $"{Header.CookedIndex}.{type.ToString().ToLowerInvariant()}");
-            if (vfsFileProvider.TryGetGameFile(path, out var file) && file.TryCreateReader(out var reader))
+            if (vfsFileProvider.TryGetGameFile(path, out var file) && file.TryCreateReader(out var reader, Header))
             {
                 payloadAr = new FAssetArchive(reader, Ar.Owner);
             }
