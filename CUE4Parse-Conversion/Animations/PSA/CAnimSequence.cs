@@ -23,14 +23,24 @@ namespace CUE4Parse_Conversion.Animations.PSA
         public CAnimSequence(UAnimSequence animSequence, USkeleton skeleton)
         {
             OriginalSequence = animSequence;
-            RetargetBasePose = OriginalSequence.RetargetSource.IsNone switch
+            var retarget = OriginalSequence.RetargetSource;
+            RetargetBasePose = retarget.IsNone switch
             {
                 true when OriginalSequence.RetargetSourceAssetReferencePose is { Length: > 0 }
                     => OriginalSequence.RetargetSourceAssetReferencePose,
-                false when skeleton.AnimRetargetSources.TryGetValue(OriginalSequence.RetargetSource, out var refPose)
+                false when skeleton.AnimRetargetSources.TryGetValue(retarget, out var refPose)
                     => refPose.ReferencePose,
                 _ => null
             };
+
+            // TryGetValue fails half the time :D
+            if (!retarget.IsNone && RetargetBasePose == null) {
+                foreach (var (key, value) in skeleton.AnimRetargetSources) {
+                    if (key.PlainText.Equals(retarget.PlainText)) {
+                        RetargetBasePose = value.ReferencePose;
+                    }
+                }
+            }
 
             Name = OriginalSequence.Name;
             NumFrames = OriginalSequence.NumFrames;
