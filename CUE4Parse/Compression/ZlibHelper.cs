@@ -80,6 +80,7 @@ public static class ZlibHelper
             var dllPath = path ?? DLL_NAME;
             {
                 using var dllResponse = await client.GetAsync(url ?? DOWNLOAD_URL).ConfigureAwait(false);
+                dllResponse.EnsureSuccessStatusCode();
                 await using var dllFs = File.Create(dllPath);
                 await dllResponse.Content.CopyToAsync(dllFs).ConfigureAwait(false);
             }
