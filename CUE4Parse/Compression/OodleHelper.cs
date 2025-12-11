@@ -102,7 +102,7 @@ public static class OodleHelper
             UseCookies = false,
             AutomaticDecompression = DecompressionMethods.All
         });
-        client.Timeout = TimeSpan.FromSeconds(20);
+        client.Timeout = TimeSpan.FromSeconds(180);
 
         return await DownloadOodleDllFromOodleUEAsync(client, path).ConfigureAwait(false);
     }
