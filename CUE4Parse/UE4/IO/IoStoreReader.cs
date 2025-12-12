@@ -126,7 +126,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var size = ioEntry.Size;
         if (header is { } bulk)
         {
-            bulk.NeedsSeeking = false;
             offset += bulk.OffsetInFile;
             size = bulk.ElementCount;
         }

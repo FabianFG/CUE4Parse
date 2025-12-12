@@ -83,7 +83,6 @@ namespace CUE4Parse.UE4.Pak
             var requestedSize = (int) pakEntry.UncompressedSize;
             if (header is { } bulk)
             {
-                bulk.NeedsSeeking = false;
                 offset = (int) bulk.OffsetInFile;
                 requestedSize = bulk.ElementCount;
             }

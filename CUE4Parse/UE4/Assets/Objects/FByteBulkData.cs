@@ -89,65 +89,52 @@ public class FByteBulkData
         }
     }
 
-    private void CheckReadSize(int read)
-    {
-        if (read != Header.ElementCount) {
-            Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
-        }
-    }
-
     private bool ReadBulkDataInto(byte[] data, int offset = 0)
     {
-        if (data.Length - offset < Header.ElementCount) {
+        if (data.Length - offset < Header.ElementCount)
+        {
             Log.Error("Data buffer is too small");
             return false;
         }
 
-        var Ar = (FAssetArchive)_savedAr.Clone(); // TODO: remove and use FArchive.ReadAt
-        Ar.Position = _dataPosition;
+        var archive = _savedAr;
+        var position = _dataPosition;
+
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
         {
 #if DEBUG
             Log.Debug("bulk data in .uexp file (Force Inline Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
-            CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
         {
 #if DEBUG
             Log.Debug("bulk data in {CookedIndex}.uptnl file (Optional Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
-            if (!TryGetBulkPayload(Ar, PayloadType.UPTNL, out var uptnlAr)) return false;
+            if (!TryGetBulkPayload(archive, PayloadType.UPTNL, out var uptnlAr))
+                return false;
 
-            CheckReadSize(Header.NeedsSeeking
-                ? uptnlAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount)
-                : uptnlAr.Read(data, offset, Header.ElementCount));
+            archive = uptnlAr;
+            position = uptnlAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
         {
 #if DEBUG
             Log.Debug("bulk data in {CookedIndex}.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
-            if (!TryGetBulkPayload(Ar, PayloadType.UBULK, out var ubulkAr)) return false;
+            if (!TryGetBulkPayload(archive, PayloadType.UBULK, out var ubulkAr))
+                return false;
+
+            archive = ubulkAr;
+            position = ubulkAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
+
             if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
             {
                 var compressedData = new byte[Header.SizeOnDisk];
-                if (Header.NeedsSeeking)
-                {
-                    ubulkAr.ReadAt(Header.OffsetInFile, compressedData, offset, compressedData.Length);
-                }
-                else
-                {
-                    ubulkAr.ReadExactly(compressedData, offset, compressedData.Length);
-                }
-                using var dataAr = new FByteArchive("", compressedData, Ar.Versions);
-                dataAr.SerializeCompressedNew(data, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out var decompressedLength);
-            }
-            else
-            {
-                CheckReadSize(Header.NeedsSeeking
-                    ? ubulkAr.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount)
-                    : ubulkAr.Read(data, offset, Header.ElementCount));
+                ubulkAr.ReadAt(position, compressedData, offset, compressedData.Length);
+                using var dataAr = new FByteArchive("", compressedData, _savedAr.Versions);
+                dataAr.SerializeCompressedNew(data, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+                return true;
             }
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
@@ -155,24 +142,28 @@ public class FByteBulkData
 #if DEBUG
             Log.Debug("bulk data in .uexp file (Payload At End Of File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
+            if (Header.OffsetInFile + Header.ElementCount > archive.Length)
+                throw new ParserException(archive, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
+
             // stored in same file, but at different position
             // save archive position
-            if (Header.OffsetInFile + Header.ElementCount <= Ar.Length)
-            {
-                CheckReadSize(Ar.ReadAt(Header.OffsetInFile, data, offset, Header.ElementCount));
-            }
-            else throw new ParserException(Ar, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
+            position = Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
         {
-            throw new ParserException(Ar, "TODO: CompressedZlib");
+            throw new ParserException(archive, "TODO: CompressedZlib");
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable) || BulkDataFlags.HasFlag(BULKDATA_None))
         {
-            CheckReadSize(Ar.Read(data, offset, Header.ElementCount));
+            //
         }
 
-        Ar.Dispose();
+        var read = archive.ReadAt(position, data, offset, Header.ElementCount);
+        if (read != Header.ElementCount)
+        {
+            Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
+            // return false; // should we???
+        }
         return true;
     }
 

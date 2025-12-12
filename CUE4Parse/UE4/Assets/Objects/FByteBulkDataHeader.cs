@@ -15,9 +15,6 @@ namespace CUE4Parse.UE4.Assets.Objects
         public readonly long OffsetInFile;
         public readonly FBulkDataCookedIndex CookedIndex;
 
-        // TODO: remove this once all AbstractVfsReader.Extract(VfsEntry) methods support extracting from headers or whatever this feature will be called
-        internal bool NeedsSeeking = true;
-
         public FByteBulkDataHeader(FAssetArchive Ar)
         {
             CookedIndex = FBulkDataCookedIndex.Default;

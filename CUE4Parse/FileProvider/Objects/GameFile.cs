@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -28,7 +29,7 @@ public abstract class GameFile
     public static readonly HashSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     // so we don't end up with a lot of duplicate "uasset"s in memory
-    private static readonly Dictionary<string, string> InternedExtensions = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
 
     private string _path;
     private string? _directory;
@@ -138,16 +139,10 @@ public abstract class GameFile
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string InternExtension(string extension)
     {
-        if (InternedExtensions.TryGetValue(extension, out var interned))
+        if (_internedExtensions.TryGetValue(extension, out var interned))
             return interned;
 
-        lock (InternedExtensions)
-        {
-            if (InternedExtensions.TryGetValue(extension, out interned))
-                return interned;
-
-            InternedExtensions[extension] = extension;
-            return extension;
-        }
+        _internedExtensions[extension] = extension;
+        return extension;
     }
 }
