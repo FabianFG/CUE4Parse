@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
@@ -67,14 +69,22 @@ public static class ZlibHelper
         if (decodedSize < uncompressedSize)
         {
             // Not sure whether this should be an exception or not
-            Log.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
+            Log.Warning("Zlib decompression only decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
     }
 
     public static async Task<bool> DownloadDllAsync(string? path, string? url = null)
     {
-        using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false, UseCookies = false });
-        client.Timeout = TimeSpan.FromSeconds(20);
+        using var client = new HttpClient(new SocketsHttpHandler
+        {
+            UseProxy = false,
+            UseCookies = false,
+            AutomaticDecompression = DecompressionMethods.All
+        });
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(
+            nameof(CUE4Parse),
+            typeof(ZlibHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
+        client.Timeout = TimeSpan.FromSeconds(30);
         try
         {
             var dllPath = path ?? DLL_NAME;
@@ -84,12 +94,12 @@ public static class ZlibHelper
                 await using var dllFs = File.Create(dllPath);
                 await dllResponse.Content.CopyToAsync(dllFs).ConfigureAwait(false);
             }
-            Log.Information($"Successfully downloaded zlib-ng dll at \"{dllPath}\"");
+            Log.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
             return true;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Uncaught exception while downloading zlib-ng dll");
+            Log.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
         }
         return false;
     }

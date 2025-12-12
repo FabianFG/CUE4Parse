@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -102,7 +103,10 @@ public static class OodleHelper
             UseCookies = false,
             AutomaticDecompression = DecompressionMethods.All
         });
-        client.Timeout = TimeSpan.FromSeconds(180);
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(
+            nameof(CUE4Parse),
+            typeof(OodleHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
+        client.Timeout = TimeSpan.FromSeconds(30);
 
         return await DownloadOodleDllFromOodleUEAsync(client, path).ConfigureAwait(false);
     }
