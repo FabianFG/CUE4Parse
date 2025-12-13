@@ -28,7 +28,7 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_DXT3,               "DXT3",                   4,          4,          1,          16,           4,                true),
         new(EPixelFormat.PF_DXT5,               "DXT5",                   4,          4,          1,          16,           4,                true),
         new(EPixelFormat.PF_UYVY,               "UYVY",                   2,          1,          1,          4,            4,                false),
-        new(EPixelFormat.PF_FloatRGB,           "FloatRGB",               1,          1,          1,          4,            3,                true),
+        new(EPixelFormat.PF_FloatRGB,           "FloatRGB",               1,          1,          1,          6,            3,                true),
         new(EPixelFormat.PF_FloatRGBA,          "FloatRGBA",              1,          1,          1,          8,            4,                true),
         new(EPixelFormat.PF_DepthStencil,       "DepthStencil",           1,          1,          1,          4,            1,                false),
         new(EPixelFormat.PF_ShadowDepth,        "ShadowDepth",            1,          1,          1,          4,            1,                false),
