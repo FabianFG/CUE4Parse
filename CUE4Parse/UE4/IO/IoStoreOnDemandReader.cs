@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Readers;
@@ -23,7 +24,7 @@ namespace CUE4Parse.UE4.IO
             _downloader = downloader;
         }
 
-        public override byte[] Extract(VfsEntry entry)
+        public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
         {
             if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
             return Read(Entries[ioEntry.TocEntryIndex]);

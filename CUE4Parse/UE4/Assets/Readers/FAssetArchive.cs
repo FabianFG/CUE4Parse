@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
@@ -16,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        private readonly Dictionary<PayloadType, Lazy<FAssetArchive?>> _payloads;
+        private readonly Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>> _payloads;
         private readonly FArchive _baseArchive;
 
         public readonly IPackage? Owner;
@@ -26,9 +27,9 @@ namespace CUE4Parse.UE4.Assets.Readers
         public bool IsFilterEditorOnly => Owner?.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ?? false;
         public bool IsLoadingFromCookedPackage => Owner?.HasFlags(EPackageFlags.PKG_Cooked) ?? false;
 
-        public FAssetArchive(FArchive baseArchive, IPackage? owner, int absoluteOffset = 0, Dictionary<PayloadType, Lazy<FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
+        public FAssetArchive(FArchive baseArchive, IPackage? owner, int absoluteOffset = 0, Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
         {
-            _payloads = payloads ?? new Dictionary<PayloadType, Lazy<FAssetArchive?>>();
+            _payloads = payloads ?? new Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>>();
             _baseArchive = baseArchive;
             Owner = owner;
             AbsoluteOffset = absoluteOffset;
@@ -102,11 +103,11 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         public override UObject? ReadUObject() => ReadObject<UObject>().Value;
 
-        public bool TryGetPayload(PayloadType type, [MaybeNullWhen(false)] out FAssetArchive ar)
+        public bool TryGetPayload(PayloadType type, [MaybeNullWhen(false)] out FAssetArchive ar, FByteBulkDataHeader? header = null)
         {
             try
             {
-                ar = GetPayload(type);
+                ar = GetPayload(type, header);
             }
             catch
             {
@@ -115,10 +116,10 @@ namespace CUE4Parse.UE4.Assets.Readers
             return ar != null;
         }
 
-        public FAssetArchive GetPayload(PayloadType type)
+        public FAssetArchive GetPayload(PayloadType type, FByteBulkDataHeader? header = null)
         {
             _payloads.TryGetValue(type, out var ret);
-            var reader = ret?.Value;
+            var reader = ret?.Invoke(header);
             return reader ?? throw new ParserException(this, $"Requested payload of type {type} was not found");
         }
 
@@ -129,21 +130,21 @@ namespace CUE4Parse.UE4.Assets.Readers
                 throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
 
-            _payloads[type] = new Lazy<FAssetArchive?>(() => payload);
+            _payloads[type] = _ => payload;
         }
 
-        public void AddPayload(PayloadType type, int absoluteOffset, Lazy<FArchive?> payload)
+        public void AddPayload(PayloadType type, int absoluteOffset, Func<FByteBulkDataHeader?, FArchive?> payload)
         {
             if (_payloads.ContainsKey(type))
             {
                 throw new ParserException(this, $"Can't add a payload that is already attached of type {type}");
             }
 
-            _payloads[type] = new Lazy<FAssetArchive?>(() =>
+            _payloads[type] = header =>
             {
-                var rawAr = payload.Value;
+                var rawAr = payload.Invoke(header);
                 return rawAr == null ? null : new FAssetArchive(rawAr, Owner, absoluteOffset);
-            });
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -10,6 +10,7 @@ using System.Threading;
 using CUE4Parse.Compression;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -199,10 +200,10 @@ public class FAEPakEntry : FPakEntry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override byte[] Read() => Vfs.Extract(this);
+    public override byte[] Read(FByteBulkDataHeader? header = null) => Vfs.Extract(this, header);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override FArchive CreateReader() => new FByteArchive(Path, Read(), Vfs.Versions);
+    public override FArchive CreateReader(FByteBulkDataHeader? header = null) => new FByteArchive(Path, Read(header), Vfs.Versions);
 }
 
 public class AEPakFileReader : AbstractAesVfsReader
@@ -246,7 +247,7 @@ public class AEPakFileReader : AbstractAesVfsReader
             var indexHash = Ar.Read<uint>();
             var indexData = Ar.ReadArray<byte>((int)indexLength);
             using var indexAr = new GenericBufferReader(indexData);
-            
+
             var entries = new List<FAssetEntry>(4);
             while (indexAr.Position < indexLength)
             {
@@ -287,7 +288,7 @@ public class AEPakFileReader : AbstractAesVfsReader
         }
     }
 
-    public override byte[] Extract(VfsEntry entry)
+    public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
     {
         if (entry is not FAEPakEntry pakEntry || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
         // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety

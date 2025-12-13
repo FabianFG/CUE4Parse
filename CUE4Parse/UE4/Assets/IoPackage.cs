@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
@@ -38,16 +39,16 @@ namespace CUE4Parse.UE4.Assets
             : this(
                 uasset,
                 containerHeader,
-                ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
-                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null,
+                ubulk != null ? _ => ubulk : null,
+                uptnl != null ? _ => uptnl : null,
                 provider)
         { }
 
         public IoPackage(
             FArchive uasset,
             FIoContainerHeader? containerHeader = null,
-            Lazy<FArchive?>? ubulk = null,
-            Lazy<FArchive?>? uptnl = null,
+            Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
+            Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
             IVfsFileProvider? provider = null)
             : base(uasset.Name.SubstringBeforeLast('.'), provider)
         {

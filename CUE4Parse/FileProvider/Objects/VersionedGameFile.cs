@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -14,6 +15,6 @@ namespace CUE4Parse.FileProvider.Objects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override FArchive CreateReader() => new FByteArchive(Path, Read(), Versions);
+        public override FArchive CreateReader(FByteBulkDataHeader? header = null) => new FByteArchive(Path, Read(header), Versions);
     }
 }

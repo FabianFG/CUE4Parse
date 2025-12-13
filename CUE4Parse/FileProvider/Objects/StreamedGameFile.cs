@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 using CUE4Parse.Compression;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.FileProvider.Objects
@@ -19,7 +20,7 @@ namespace CUE4Parse.FileProvider.Objects
         public override bool IsEncrypted => false;
         public override CompressionMethod CompressionMethod => CompressionMethod.None;
 
-        public override byte[] Read()
+        public override byte[] Read(FByteBulkDataHeader? header = null)
         {
             var data = new byte[Size];
             var _ = _baseStream.Seek(_position, SeekOrigin.Begin);
