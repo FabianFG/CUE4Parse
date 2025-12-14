@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -48,7 +49,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         }
 
         public abstract void Mount(StringComparer pathComparer);
-        public abstract byte[] Extract(VfsEntry entry);
+        public abstract byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null);
 
         protected void ValidateMountPoint(ref string mountPoint)
         {

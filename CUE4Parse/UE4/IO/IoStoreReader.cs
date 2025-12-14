@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -117,10 +118,19 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
     }
 
-    public override byte[] Extract(VfsEntry entry)
+    public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
     {
         if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-        return Read(ioEntry.Offset, ioEntry.Size);
+
+        var offset = ioEntry.Offset;
+        var size = ioEntry.Size;
+        if (header is { } bulk)
+        {
+            offset += bulk.OffsetInFile;
+            size = bulk.ElementCount;
+        }
+
+        return Read(offset, size);
     }
 
     // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
