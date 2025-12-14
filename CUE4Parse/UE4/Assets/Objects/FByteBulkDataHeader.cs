@@ -7,7 +7,7 @@ using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 namespace CUE4Parse.UE4.Assets.Objects
 {
     [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
-    public struct FByteBulkDataHeader
+    public readonly struct FByteBulkDataHeader
     {
         public readonly EBulkDataFlags BulkDataFlags;
         public readonly int ElementCount;
