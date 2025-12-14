@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Objects.UObject.Editor;
 
+public class UEnumCookedMetaData : Assets.Exports.UObject;
+public class UStructCookedMetaData : Assets.Exports.UObject;
 public class UClassCookedMetaData : Assets.Exports.UObject
 {
     public FStructCookedMetaDataStore ClassMetaData;
