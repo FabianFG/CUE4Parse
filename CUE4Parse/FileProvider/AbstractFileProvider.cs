@@ -367,50 +367,48 @@ namespace CUE4Parse.FileProvider
                 }
             });
 
-            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !matchingPlugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
-
             foreach ((string filePath, GameFile gameFile) in matchingPlugins)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (arregex.IsMatch(filePath))
+                switch (gameFile.Extension)
                 {
-                    var virtPath = gameFile.Directory.SubstringAfterLast('/');
-                    var path = gameFile.Directory;
-
-                    VirtualPaths[virtPath] = path;
-                    continue;
-                }
-
-                if (useIndividualPlugin)
-                {
-                    if (!filePath.EndsWith(".uplugin")) continue;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
-                    using var reader = new StreamReader(stream);
-                    var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
-                    if (!pluginFile!.CanContainContent) continue;
-
-                    var virtPath = gameFile.NameWithoutExtension;
-                    var path = gameFile.Directory;
-                    VirtualPaths[virtPath] = path;
-                }
-                else
-                {
-                    if (!regex.IsMatch(filePath)) continue;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
-                    using var reader = new StreamReader(stream);
-                    var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
-
-                    foreach (var content in manifest!.Contents)
+                    case "upluginmanifest":
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
+                        if (!regex.IsMatch(filePath) || !TryCreateReader(gameFile.Path, out var stream))
+                            continue;
+                        using var reader = new StreamReader(stream);
+                        var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
 
-                        if (!content.Descriptor.CanContainContent) continue;
+                        foreach (var content in manifest!.Contents)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
 
-                        var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
-                        var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
-                        VirtualPaths[virtPath] = path;
+                            if (!content.Descriptor.CanContainContent)
+                                continue;
+
+                            var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
+                            var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
+                            VirtualPaths[virtPath] = path;
+                        }
+                        break;
                     }
+                    case "uplugin":
+                    {
+                        if (VirtualPaths.ContainsKey(gameFile.NameWithoutExtension) || !TryCreateReader(gameFile.Path, out var stream))
+                            continue;
+                        using var reader = new StreamReader(stream);
+                        var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
+                        if (!pluginFile!.CanContainContent)
+                            continue;
+
+                        VirtualPaths[gameFile.NameWithoutExtension] = gameFile.Directory;
+                        break;
+                    }
+                    default:
+                        VirtualPaths[gameFile.Directory.SubstringAfterLast('/')] = gameFile.Directory;
+                        break;
+
                 }
             }
 
