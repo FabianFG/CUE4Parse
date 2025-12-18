@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TestReadFName()
+        public virtual bool TestReadFName()
         {
             if (HasUnversionedProperties) return false;
             var savedPos = Position;

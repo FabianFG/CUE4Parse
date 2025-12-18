@@ -157,7 +157,7 @@ public enum EGame : uint
         GAME_Valorant = GAME_UE5_3 + 3,
         GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
         GAME_Aion2 = GAME_UE5_3 + 5,
-        GAME_AshesOfCreation = GAME_UE5_3 + 6,
+        GAME_Placeholder2 = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
         GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
@@ -193,6 +193,7 @@ public enum EGame : uint
         GAME_Rennsport = GAME_UE5_5 + 11,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
         GAME_Grounded2 = GAME_UE5_6 + 1,
+        GAME_AshesOfCreation = GAME_UE5_6 + 2,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
 

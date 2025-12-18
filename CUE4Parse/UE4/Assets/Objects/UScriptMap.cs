@@ -1,11 +1,12 @@
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Objects.Properties;
-using Newtonsoft.Json;
-using CUE4Parse.UE4.Versions;
+using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.DaysGone.Assets;
 using CUE4Parse.GameTypes.SOD2.Assets;
+using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -53,6 +54,8 @@ public class UScriptMap
                 FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
             }
         }
+
+        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader) Ar.Position += 4;
 
         var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.MAP;
         var numEntries = Ar.Read<int>();
