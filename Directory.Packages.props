@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AssetRipper.TextureDecoder" Version="2.2.1" />
+    <PackageVersion Include="AssetRipper.TextureDecoder" Version="2.5.0" />
     <PackageVersion Include="Blake3" Version="2.0.0" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageVersion Include="FixedMathSharp" Version="1.3.3" />
