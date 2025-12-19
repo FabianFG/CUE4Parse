@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Project Path="CUE4Parse-Conversion/CUE4Parse-Conversion.csproj" />
   <Project Path="CUE4Parse.Example/CUE4Parse.Example.csproj" />
   <Project Path="CUE4Parse.Tests/CUE4Parse.Tests.csproj" />
