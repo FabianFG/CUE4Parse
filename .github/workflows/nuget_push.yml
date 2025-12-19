@@ -20,15 +20,27 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Build & Pack NuGet Package(s)
-        run: dotnet pack -c Release -o "./nuget-packages"
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+#      - name: Run Tests
+#        run: dotnet test -c Release --no-restore --no-build -v normal
+
+      - name: Pack NuGet Package(s)
+        run: dotnet pack -c Release --no-restore --no-build --output ~/nuget-packages
 
       - name: Upload Build Artifact(s)
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages
-          path: ./nuget-packages
+          path: ~/nuget-packages
 
       - name: Push NuGet Package(s)
-        working-directory: ./nuget-packages
-        run: dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        run: |
+          dotnet nuget push ~/nuget-packages/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --skip-duplicate
