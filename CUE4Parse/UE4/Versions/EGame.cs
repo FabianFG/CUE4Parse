@@ -151,6 +151,7 @@ public enum EGame : uint
         GAME_LostRecordsBloomAndRage = GAME_UE5_2 + 5,
         GAME_DuneAwakening = GAME_UE5_2 + 6,
         GAME_TitanQuest2 = GAME_UE5_2 + 7,
+        GAME_PUBGBlackBudget = GAME_UE5_2 + 8,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_BlackStigma = GAME_UE5_3 + 2,

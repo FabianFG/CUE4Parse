@@ -6,6 +6,8 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.PCG;
 
@@ -32,11 +34,12 @@ public class FPCGLandscapeCacheEntry
     public FVector PointHalfSize;
     public int Stride;
     public FName[] LayerDataNames;
-    public FVector[] PositionsAndNormals;
-    public byte[][] LayerData;
+    [JsonIgnore] public FVector[] PositionsAndNormals;
+    [JsonIgnore] public byte[][] LayerData;
 
     public FPCGLandscapeCacheEntry(FAssetArchive Ar)
     {
+        if (Ar.Game < EGame.GAME_UE5_4) _ = new FPackageIndex(Ar); // DummyComponent
         PointHalfSize = new FVector(Ar);
         Stride = Ar.Read<int>();
         LayerDataNames = Ar.ReadArray(Ar.ReadFName);
