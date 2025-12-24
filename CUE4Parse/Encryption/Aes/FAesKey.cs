@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using CUE4Parse.Utils;
 
@@ -10,9 +10,9 @@ public class FAesKey
     public readonly string KeyString;
     public bool IsDefault => Key.All(x => x == 0);
 
-    public FAesKey(byte[] key)
+    public FAesKey(byte[] key, bool ignoreLength = false)
     {
-        if (key.Length != 32)
+        if (!ignoreLength && key.Length != 32)
             throw new ArgumentException("Aes Key must be 32 bytes long");
         Key = key;
         KeyString = "0x" + BitConverter.ToString(key);

@@ -12,8 +12,8 @@ public enum ERawHeaderFlags : uint
     Reverse = 1 << 0, // reverse order after properties filtering
     RawProperties = 1 << 1, // all properties are raw no header/tag
     RawPropertiesExceptStructs = 1 << 2 | RawProperties, // Read StructProperty header
+    SuperStructs = 1 << 3, // include super properties
     // TO-DO
-    // SuperStructs = 1 << 3, // include super properties
     // SuperFirst = 1 << 4 | SuperStructs, // read super properties first
 }
 
@@ -27,7 +27,8 @@ public class FRawHeader
     public readonly IReadOnlyList<(uint, int)> Fragments;
     // TO-DO Add reading by property names
 
-    public static readonly FRawHeader FullRead = new([(0,-1)], ERawHeaderFlags.RawProperties);
+    // TO-DO Maybe should be game specific, but for now can manually override it when needed
+    public static FRawHeader FullRead = new([(0,-1)], ERawHeaderFlags.RawProperties | ERawHeaderFlags.SuperStructs);
 
     public FRawHeader(List<(uint, int)> fragments, ERawHeaderFlags flags = ERawHeaderFlags.None)
     {
@@ -37,9 +38,10 @@ public class FRawHeader
 
     public List<int> BuildIndices(Struct propMappings)
     {
-        var result = new List<int>(propMappings.PropertyCount);
+        bool includeSuper = Flags.HasFlag(ERawHeaderFlags.SuperStructs);
+        int totalCount = propMappings.CountProperties(includeSuper);
+        var result = new List<int>(totalCount);
 
-        int totalCount = propMappings.PropertyCount;
         uint current = 0;
         foreach (var (skip, count) in Fragments)
         {

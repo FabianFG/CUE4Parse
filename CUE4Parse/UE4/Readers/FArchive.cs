@@ -253,7 +253,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ReadBoolean()
+        public virtual bool ReadBoolean()
         {
             var i = Read<int>();
             return i switch
@@ -341,12 +341,13 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            if (Math.Abs(length) > Length - Position)
+            var strlength = length >= 0 ? length : -length * sizeof(ushort);
+            if (strlength > Length - Position)
             {
                 throw new ParserException($"Invalid FString length '{length}'");
             }
 
-            Position += length >= 0 ? length : -length * sizeof(ushort);
+            Position += strlength;
         }
 
         public virtual string ReadFString()

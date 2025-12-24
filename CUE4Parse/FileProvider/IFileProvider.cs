@@ -120,6 +120,9 @@ namespace CUE4Parse.FileProvider
         /// <returns>true if the file could be found; false otherwise</returns>
         public bool TryGetGameFile(string path, [MaybeNullWhen(false)] out GameFile file);
 
+        public int LoadVirtualPaths();
+        public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default);
+
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default);
         public int LoadLocalization(string culture, CancellationToken cancellationToken = default);
 

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -27,6 +28,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     public readonly FIoStoreTocResource TocResource;
     public readonly Dictionary<FIoChunkId, FIoOffsetAndLength>? TocImperfectHashMapFallback;
     public FIoContainerHeader? ContainerHeader { get; private set; }
+    public Dictionary<FPackageId, GameFile> PackageIdIndex { get; } = [];
 
     public override string MountPoint { get; protected set; }
     public sealed override long Length { get; set; }
@@ -116,10 +118,19 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
     }
 
-    public override byte[] Extract(VfsEntry entry)
+    public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
     {
         if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-        return Read(ioEntry.Offset, ioEntry.Size);
+
+        var offset = ioEntry.Offset;
+        var size = ioEntry.Size;
+        if (header is { } bulk)
+        {
+            offset += bulk.OffsetInFile;
+            size = bulk.ElementCount;
+        }
+
+        return Read(offset, size);
     }
 
     // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
@@ -380,10 +391,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         watch.Start();
 
         ProcessIndex(pathComparer);
-        if (Game >= EGame.GAME_UE5_0) // We can safely skip reading container header on UE4
-        {
-            ContainerHeader = ReadContainerHeader();
-        }
+        ContainerHeader = ReadContainerHeader();
 
         if (Globals.LogVfsMounts)
         {
@@ -449,6 +457,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
                     var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
                     if (entry.IsEncrypted) EncryptedFileCount++;
+                    if (entry.IsUePackage) PackageIdIndex[entry.ChunkId.AsPackageId()] = entry;
                     files[path] = entry;
 
                     file = fileEntry.NextFileEntry;
@@ -466,9 +475,19 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
     private FIoContainerHeader ReadContainerHeader()
     {
-        var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
-        using var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
-        return new FIoContainerHeader(Ar);
+        try
+        {
+            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
+            using var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
+            return new FIoContainerHeader(Ar);
+        }
+        catch (Exception)
+        {
+            if (Game >= EGame.GAME_UE5_0)
+                throw;
+            else
+                return null!;
+        }
     }
 
     public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];

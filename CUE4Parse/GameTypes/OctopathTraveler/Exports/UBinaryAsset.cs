@@ -1,7 +1,6 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
@@ -29,6 +28,7 @@ public class UBinaryAsset : UObject
             var data = GetOrDefault<byte[]>("BinaryData", []);
             using var dataAr = new FByteArchive("BinaryData", data, Ar.Versions);
             var name = Name;
+
             if (name.StartsWith("VillageBuildingFillMap"))
             {
                 var str = new FPropertyTag
@@ -43,40 +43,10 @@ public class UBinaryAsset : UObject
                 return;
             }
 
-            if (name.StartsWith("BattlePlaybackData")) name = "BattlePlaybacks";
-            if (name.StartsWith("NpcTalkList")) name = "FieldTalkList";
-            if (name.StartsWith("NpcSetList")) name = "NpcSetList";
-            if (name.StartsWith("_bytesDP")) name = "NpcSetList";
-            if (name.StartsWith("GameText")) name = "GameTextID";
-            if (name.StartsWith("EvTutorial") || name.StartsWith("EvTownArrival") || name.StartsWith("EvSml")
-                || name.StartsWith("EvMap") || name.StartsWith("EvPChatOth") || name.StartsWith("EvQuSQ")
-                || name.StartsWith("EvB") || name.StartsWith("EvJ") || name.StartsWith("EvT"))
-                name = "EventParam";
-            name = Name switch
-            {
-                //"DebugSizzlingGroup" => "DataID",
-                "CharaReplaceList" => "CharacterReplaceList",
-                "CharaTexID" or "EnemyTexID" or "TextureID" => "ResourceListID",
-                "EventFinishProcessList" => "EventFinishProcess",
-                "EventFlagVariableList" => "EventFlagVariable",
-                "GameTextGraphic" or "GameTextPartVoice" or "GameTextEvent" => "GameTextEventID",
-                "GameTextNPC" => "GameTextNPCID",
-                "ItemClassupList" or "ItemTowerRecover" or "MapIconType" => "ItemList",
-                "MapListTable" or "MapPathListTable" => "MapList",
-                "NpcTalkList" => "NpcSetList",
-                "SkillCalcType" => "SpecialSkillID",
-                "SkillAvailMagnificationList" => "SkillAvailMagnificationConditionList",
-                "TextFilter" => "TextFilterList",
-                "VillageBuildingGradeUpRequire" => "VillageBuildingResourceDestruct",
-                _ => name,
-            };
-
             var tag = new FPropertyTag
             {
                 Name = "Data",
-                PropertyType = "StructProperty",
-                Tag = ReadOctopathPropertyTagType(dataAr, Ar.Owner!.Mappings!, "StructProperty", new FPropertyTagData(name)),
-                TagData = new FPropertyTagData(name),
+                Tag = ReadOctopathPropertyTagType(dataAr),
             };
             if (dataAr.Position != dataAr.Length)
                 Log.Warning("Did not read the full UBinaryAsset data for {0}, read {1} of {2} bytes", Name, dataAr.Position, dataAr.Length);
@@ -90,73 +60,114 @@ public class UBinaryAsset : UObject
         }
     }
 
-    public static FPropertyTagType? ReadOctopathPropertyTagType(FArchive Ar, TypeMappings mappings, string? propertyType, FPropertyTagData? tagData)
+    public static FPropertyTagType? ReadOctopathPropertyTagType(FArchive Ar)
     {
-        return propertyType switch
+        var type = Ar.Read<byte>();
+        Ar.Position -= 1;
+        return type switch
         {
-            "IntProperty" => new IntProperty(ReadIntValue(Ar)),
-            "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.StructType)),
-            "ArrayProperty" => new ArrayProperty(ReadArray(Ar, mappings, tagData)),
-            "StrProperty" => new StrProperty(ReadString(Ar)),
-            "NameProperty" => new NameProperty(ReadString(Ar)),
-            "FloatProperty" => new FloatProperty(ReadFloatValue(Ar)),
-            "BoolProperty" => new BoolProperty((Ar.Read<byte>() & 1) == 1), // 0xc2 or 0xc3, but we need only 1 bit
-            _ => null,
+            0xc2 or 0xc3 => new BoolProperty((Ar.Read<byte>() & 1) == 1),
+            >= 0x00 and <= 0x7f or 0xd2 or >= 0xe0 and <= 0xff => new IntProperty(ReadIntValue(Ar)),
+            >= 0xca and <= 0xd3 => ReadNumericProperty(Ar),
+            >= 0xa0 and <= 0xbf or >= 0xd9 and <= 0xdb => new StrProperty(ReadString(Ar)),
+            >= 0x80 and <= 0x8f or 0xde or 0xdf => new StructProperty(ReadStruct(Ar)),
+            >= 0x90 and <= 0x9f or >= 0xc4 and <= 0xc9 or >= 0xd4 and <= 0xd8 or 0xdc or 0xdd => new ArrayProperty(ReadArray(Ar)),
+
+            0xc0 => null,
+            0xc1 => throw new ParserException(Ar, "Unknown property type 0xc1"),
         };
 
-        float ReadFloatValue(FArchive Ar) => BitConverter.ToSingle(Ar.ReadBytes(5).Reverse().ToArray());
-        int ReadIntValue(FArchive Ar) => new FOctoInt(Ar).Value;
-
-        UScriptArray ReadArray(FArchive Ar, TypeMappings mappings, FPropertyTagData? tagData)
+        FPropertyTagType? ReadNumericProperty(FArchive Ar)
         {
-            var pos = Ar.Position;
-            var header = new FOctoStructHeader(Ar);
-            if (!header.Flags.HasFlag(FOctoStructHeader.TypeFlags.IsArray))
-                throw new ParserException(Ar, $"Unknown ArrayProperty flags: {header.Flags}");
-
-            var properties = new List<FPropertyTagType>(header.Length);
-            for (int i = 0; i < header.Length; i++)
+            var numType = Ar.Read<byte>();
+            return numType switch
             {
-                properties.Add(ReadOctopathPropertyTagType(Ar, mappings, tagData?.InnerType, tagData?.InnerTypeData));
-            }
-
-            return new UScriptArray(properties, tagData?.InnerType, tagData?.InnerTypeData);
+                0xca => new FloatProperty(BinaryPrimitives.ReadSingleBigEndian(Ar.ReadBytes(4))),
+                0xcb => new DoubleProperty(BinaryPrimitives.ReadDoubleBigEndian(Ar.ReadBytes(8))),
+                0xcc => new ByteProperty(Ar.Read<byte>()),
+                0xcd => new UInt16Property(BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>())),
+                0xce => new UInt32Property(BinaryPrimitives.ReverseEndianness(Ar.Read<uint>())),
+                0xcf => new UInt64Property(BinaryPrimitives.ReverseEndianness(Ar.Read<ulong>())),
+                0xd0 => new Int8Property(Ar.Read<sbyte>()),
+                0xd1 => new Int16Property(BinaryPrimitives.ReverseEndianness(Ar.Read<short>())),
+                0xd3 => new Int64Property(BinaryPrimitives.ReverseEndianness(Ar.Read<long>())),
+                _ => throw new ParserException(Ar, $"Unknown NumericProperty type: {numType:X2}"),
+            };
         }
 
-        FScriptStruct ReadStruct(FArchive Ar, TypeMappings mappings, string? structName)
+        string ReadString(FArchive Ar)
         {
-            mappings.Types.TryGetValue(structName, out var propMappings);
-            if (propMappings == null)
+            var type = Ar.Read<byte>();
+            int length = type switch
             {
-                throw new ParserException(Ar, $"No property mappings found for struct {structName}");
-            }
-            var properties = new List<FPropertyTag>();
-            var header = new FOctoStructHeader(Ar);
-            var propindex = 0;
+                >= 0xa0 and <= 0xbf => type & 0x1f,
+                0xd9 => Ar.Read<byte>(),
+                0xda => BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>()),
+                0xdb => (int)BinaryPrimitives.ReverseEndianness(Ar.Read<uint>()),
+                _ => throw new ParserException(Ar, $"Unknown string property type: {type:X2}"),
+            };
 
-            for (int i = 0; i < header.Length; i++)
+            return Encoding.UTF8.GetString(Ar.ReadBytes(length));
+        }
+
+        int ReadIntValue(FArchive Ar)
+        {
+            var type = Ar.Read<byte>();
+            return type switch
+            {
+                >= 0x00 and <= 0x7f => type & 0x7f,
+                >= 0xe0 and <= 0xff => (type & 0x1f),
+                0xd2 => BinaryPrimitives.ReverseEndianness(Ar.Read<int>()),
+                _ => throw new ParserException(Ar, $"Unknown int property type: {type:X2}"),
+            };
+        }
+
+        UScriptArray ReadArray(FArchive Ar)
+        {
+            var pos = Ar.Position;
+            var type = Ar.Read<byte>();
+
+            var length = type switch
+            {
+                >= 0xc4 and <= 0xc or >= 0xd4 and <= 0xd8 => throw new NotImplementedException("OctopathTraveler array with type info inside is not implemented"),
+                >= 0x90 and <= 0x9f => type & 0xf,
+                0xdc => BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>()),
+                0xdd => (int) BinaryPrimitives.ReverseEndianness(Ar.Read<uint>()),
+
+                _ => throw new ParserException(Ar, $"Unknown ArrayProperty type: {type:X2}"),
+            };
+
+            var properties = new List<FPropertyTagType>(length);
+            for (int i = 0; i < length; i++)
+            {
+                properties.Add(ReadOctopathPropertyTagType(Ar));
+            }
+
+            return new UScriptArray(properties, "");
+        }
+
+        FScriptStruct ReadStruct(FArchive Ar)
+        {
+            var type = Ar.Read<byte>();
+
+            var length = type switch
+            {
+                >= 0x80 and <= 0x8f => type & 0xf,
+                0xde => BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>()),
+                0xdf => (int) BinaryPrimitives.ReverseEndianness(Ar.Read<uint>()),
+                _ => throw new ParserException(Ar, $"Unknown StructProperty type: {type:X2}"),
+            };
+            var properties = new List<FPropertyTag>();
+            for (int i = 0; i < length; i++)
             {
                 var name = ReadString(Ar);
-                if (!(propMappings.Properties.Values.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) is { } info)
-                    && !AlternateOctopathPropertyLookup.Value.TryGetValue(name, out info))
-                {
-                    throw new ParserException(Ar, $"Unknown property with name {name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
-                }
 
-                var tag = new FPropertyTag
-                {
-                    Name = new FName(info.Name),
-                    PropertyType = new FName(info.MappingType.Type),
-                    ArrayIndex = info.Index,
-                    ArraySize = info.ArraySize,
-                    TagData = new FPropertyTagData(info.MappingType),
-                };
+                var tag = new FPropertyTag { Name = new FName(name) };
 
                 var pos = Ar.Position;
-                propindex++;
                 try
                 {
-                    tag.Tag = ReadOctopathPropertyTagType(Ar, mappings, tag.PropertyType.Text, tag.TagData);
+                    tag.Tag = ReadOctopathPropertyTagType(Ar);
                 }
                 catch (ParserException e)
                 {
@@ -168,103 +179,12 @@ public class UBinaryAsset : UObject
                 if (tag.Tag != null)
                     properties.Add(tag);
                 else
-                    throw new ParserException(Ar, $"Failed to serialize property {info.MappingType.Type} {info.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
+                    throw new ParserException(Ar, $"Failed to serialize property {tag.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
 
             }
             var res = new FStructFallback();
             res.Properties.AddRange(properties);
             return new FScriptStruct(res);
-        }
-    }
-
-    private static readonly Lazy<Dictionary<string, PropertyInfo>> AlternateOctopathPropertyLookup = new(() => new()
-    {
-        { "m_ChainConditionID", new PropertyInfo(-1, "m_ChainConditionID", new PropertyType("ArrayProperty", null, new PropertyType("IntProperty")), 1)},
-        { "m_Inflence", new PropertyInfo(-1, "m_Inflence", new PropertyType("ArrayProperty", null, new PropertyType("IntProperty")), 1)},
-        { "m_ChoiceJump", new PropertyInfo(-1, "m_ChoiceJump", new PropertyType("ArrayProperty", null, new PropertyType("IntProperty")), 1)},
-        { "m_Root", new PropertyInfo(-1, "m_Root", new PropertyType("BoolProperty"), 1)},
-        { "m_ChoiceTalk", new PropertyInfo(-1, "m_ChoiceTalk", new PropertyType("BoolProperty"), 1)},
-        { "m_Affection", new PropertyInfo(-1, "m_Affection", new PropertyType("BoolProperty"), 1)},
-        { "m_HardDungeonPairId", new PropertyInfo(-1, "m_HardDungeonPairId", new PropertyType("IntProperty"), 1) },
-        { "m_HardDungeonPairNum", new PropertyInfo(-1, "m_HardDungeonPairNum", new PropertyType("IntProperty"), 1)},
-        { "m_Hard", new PropertyInfo(-1, "m_Hard", new PropertyType("IntProperty"), 1)},
-        { "m_CorrelationSpawnTrigger", new PropertyInfo(-1, "m_CorrelationSpawnTrigger", new PropertyType("IntProperty"), 1)},
-        { "m_nLine", new PropertyInfo(-1, "m_nLine", new PropertyType("IntProperty"), 1)},
-        { "m_nLineA", new PropertyInfo(-1, "m_nLineA", new PropertyType("IntProperty"), 1)},
-        { "m_nLen", new PropertyInfo(-1, "m_nLen", new PropertyType("IntProperty"), 1)},
-        { "m_nLenA", new PropertyInfo(-1, "m_nLenA", new PropertyType("IntProperty"), 1)},
-        { "m_OwnerChara", new PropertyInfo(-1, "m_OwnerChara", new PropertyType("IntProperty"), 1)},
-        { "m_Priority", new PropertyInfo(-1, "m_Priority", new PropertyType("IntProperty"), 1)},
-        { "m_InputCheck", new PropertyInfo(-1, "m_InputCheck", new PropertyType("IntProperty"), 1)},
-        { "m_Boss", new PropertyInfo(-1, "m_Boss", new PropertyType("IntProperty"), 1)},
-        { "m_Progress", new PropertyInfo(-1, "m_Progress", new PropertyType("IntProperty"), 1)},
-        { "m_TalkDir", new PropertyInfo(-1, "m_TalkDir", new PropertyType("IntProperty"), 1)},
-        { "m_CategoryID", new PropertyInfo(-1, "m_CategoryID", new PropertyType("IntProperty"), 1)},
-        { "m_EventID", new PropertyInfo(-1, "m_EventID", new PropertyType("IntProperty"), 1)},
-        { "m_QuestID", new PropertyInfo(-1, "m_QuestID", new PropertyType("IntProperty"), 1)},
-        { "m_0", new PropertyInfo(-1, "m_0", new PropertyType("IntProperty"), 1)},
-        { "m_ChainTalk", new PropertyInfo(-1, "m_ChainTalk", new PropertyType("IntProperty"), 1)},
-        { "m_TalkText", new PropertyInfo(-1, "m_TalkText", new PropertyType("IntProperty"), 1)},
-        { "m_EmbedWord1", new PropertyInfo(-1, "m_EmbedWord1", new PropertyType("IntProperty"), 1)},
-        { "m_EmbedWord2", new PropertyInfo(-1, "m_EmbedWord2", new PropertyType("IntProperty"), 1)},
-        { "m_EmbedWord3", new PropertyInfo(-1, "m_EmbedWord3", new PropertyType("IntProperty"), 1)},
-        { "m_EmbedWord4", new PropertyInfo(-1, "m_EmbedWord4", new PropertyType("IntProperty"), 1)},
-        { "m_Params", new PropertyInfo(-1, "m_Params", new PropertyType("StrProperty"), 1)},
-        { "m", new PropertyInfo(-1, "m", new PropertyType("StrProperty"), 1)},
-        { "m_EnemySkillID_01", new PropertyInfo(-1, "m_EnemySkillID_01", new PropertyType("StrProperty"), 1)},
-    });
-
-    public static string ReadString(FArchive Ar)
-    {
-        var nameHeader = new FOctoStructHeader(Ar);
-        return Encoding.UTF8.GetString(Ar.ReadBytes(nameHeader.Length));
-    }
-
-    public struct FOctoInt
-    {
-        public int Value;
-        public FOctoInt(FArchive Ar)
-        {
-            var header = Ar.Read<byte>();
-            if (header >> 7 == 0)
-            {
-                Value = header & 0x7f;
-                return;
-            }
-
-            var lower = header & 0xf;
-            Value = (header >> 4) switch
-            {
-                12 => Ar.Read<byte>(),
-                13 when lower == 1 => BinaryPrimitives.ReverseEndianness(Ar.Read<short>()),
-                13 when lower == 2 => BinaryPrimitives.ReverseEndianness(Ar.Read<int>()),
-                14 or 15 => lower,
-                _ => throw new ParserException("Unknow int header type"),
-            };
-        }
-    }
-
-    public struct FOctoStructHeader
-    {
-        public int Length;
-        public TypeFlags Flags;
-        public byte SomeData;
-
-        public FOctoStructHeader(FArchive Ar)
-        {
-            var header = Ar.Read<byte>();
-            Flags = (TypeFlags) (header >> 4);
-            Length = Flags.HasFlag(TypeFlags.ExtendedLength) ?  BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>()) : (header & 0xf);
-        }
-
-        [Flags]
-        public enum TypeFlags : byte
-        {
-            None = 0,
-            IsArray = 1 << 0,
-            IsString = 1 << 1,
-            ExtendedLength = 1 << 2,
-            Unknown = 1 << 3,
         }
     }
 }

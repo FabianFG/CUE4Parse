@@ -39,10 +39,10 @@ public class UMaterialInterface : UUnrealMaterial
         MobileBaseTexture = GetOrDefault<UTexture>(nameof(MobileBaseTexture));
         MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
         MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileMaskTexture));
-
         TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
         var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
+        if (Ar.Game == EGame.GAME_DeadByDaylight) Ar.SkipFString();
         if (bSavedCachedExpressionData)
         {
             CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");

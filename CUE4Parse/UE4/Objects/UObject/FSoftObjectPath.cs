@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
+using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Readers;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
@@ -53,12 +54,21 @@ public readonly struct FSoftObjectPath : IUStruct
             return;
         }
 
+        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader)
+        {
+            var str = Ar.ReadFName().Text;
+            AssetPathName = str.SubstringBeforeLast(':');
+            var index = str.LastIndexOf(':');
+            SubPathString = index <= 0 ? string.Empty : str[(index+1)..];
+            return;
+        }
+
         if (Ar.Game is EGame.GAME_OuterWorlds2 && Ar is FOW2ObjectsArchive OW2Ar)
         {
             while (true)
             {
                 var data = Ar.Read<uint>();
-                var idktype = (data >> 24) & 0xFF; 
+                var idktype = (data >> 24) & 0xFF;
                 if (idktype == 0xa9)
                 {
                     var path = OW2Ar.Objects.SoftObjectPathStore[(int) (data & 0xFFFFFF)];

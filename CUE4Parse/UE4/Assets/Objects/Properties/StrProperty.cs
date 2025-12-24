@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -13,6 +14,7 @@ public class StrProperty : FPropertyTagType<string>
         Value = type switch
         {
             ReadType.ZERO => string.Empty,
+            _ when Ar is FAoCDBCReader => Ar.ReadFName().Text,
             _ => Ar.ReadFString()
         };
     }

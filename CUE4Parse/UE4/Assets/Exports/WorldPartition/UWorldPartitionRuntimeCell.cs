@@ -8,13 +8,15 @@ namespace CUE4Parse.UE4.Assets.Exports.WorldPartition;
 public class UWorldPartitionRuntimeCell : UObject
 {
     public bool bIsSpatiallyLoaded;
+    public FDataLayerInstanceNames? DataLayers;
     public FLinearColor CellDebugColor;
     public FPackageIndex? RuntimeCellData;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         bIsSpatiallyLoaded = GetOrDefault<bool>(nameof(bIsSpatiallyLoaded));
+        DataLayers = GetOrDefault<FDataLayerInstanceNames?>(nameof(DataLayers));
         CellDebugColor = GetOrDefault<FLinearColor>(nameof(CellDebugColor));
         RuntimeCellData = GetOrDefault<FPackageIndex>(nameof(RuntimeCellData));
     }
@@ -23,7 +25,7 @@ public class UWorldPartitionRuntimeCell : UObject
 public class UWorldPartitionRuntimeLevelStreamingCell : UWorldPartitionRuntimeCell
 {
     public FPackageIndex? LevelStreaming;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -56,7 +58,7 @@ public class UWorldPartitionRuntimeCellData : UObject
 public class UWorldPartitionRuntimeCellDataHashSet : UWorldPartitionRuntimeCellData
 {
     public bool bIs2D;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -68,7 +70,7 @@ public class UWorldPartitionRuntimeCellDataSpatialHash : UWorldPartitionRuntimeC
 {
     public FVector Position;
     public float Extent;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

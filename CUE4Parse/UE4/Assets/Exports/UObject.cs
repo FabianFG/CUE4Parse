@@ -358,6 +358,7 @@ public class UObject : AbstractPropertyHolder
         if (propMappings is null)
         {
             if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + type);
+            Log.Warning("Couldn't find {type} struct definition", type);
             return;
         }
 

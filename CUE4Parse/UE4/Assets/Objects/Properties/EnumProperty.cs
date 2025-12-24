@@ -1,6 +1,8 @@
 using System;
+using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
@@ -17,6 +19,11 @@ public class EnumProperty : FPropertyTagType<FName>
         }
         else if ((Ar.HasUnversionedProperties && type == ReadType.NORMAL) || type == ReadType.RAW)
         {
+            if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader)
+            {
+                Value = Ar.ReadFName();
+                return;
+            }
             var index = 0;
             if (tagData?.InnerType != null)
             {

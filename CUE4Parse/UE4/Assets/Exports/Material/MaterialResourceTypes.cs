@@ -139,7 +139,7 @@ public class FShaderMapContent
             var shaderPlatform = Ar.ReadFName();
             Enum.TryParse("SP_" + shaderPlatform.PlainText, out ShaderPlatform);
 
-            if (Ar.Game is EGame.GAME_MarvelRivals or EGame.GAME_Valorant) Ar.Position += 8;
+            if (Ar.Game is EGame.GAME_MarvelRivals or EGame.GAME_Valorant or EGame.GAME_DeadByDaylight) Ar.Position += 8;
         }
         else
         {
