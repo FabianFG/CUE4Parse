@@ -6,9 +6,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
 {
     public class CMeshSection
     {
-        public int MaterialIndex;
-        public string? MaterialName;
-        public ResolvedObject? Material; // UMaterialInterface
+        public readonly int MaterialIndex;
+        public readonly string? MaterialName;
+        public readonly ResolvedObject? Material; // UMaterialInterface
+        public readonly bool CastShadow;
         public int FirstIndex;
         public int NumFaces;
 
@@ -17,6 +18,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public CMeshSection(FStaticMeshSection section)
         {
             MaterialIndex = -1;
+            CastShadow = section.bCastShadow;
             FirstIndex = section.FirstIndex;
             NumFaces = section.NumTriangles;
         }
@@ -24,10 +26,11 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public CMeshSection(FSkelMeshSection section)
         {
             MaterialIndex = -1;
+            CastShadow = section.bCastShadow;
             FirstIndex = section.BaseIndex;
             NumFaces = section.NumTriangles;
         }
-        
+
         public CMeshSection(int index, FStaticMeshSection section, string? materialName, ResolvedObject? material) : this(section)
         {
             MaterialIndex = index;
@@ -41,7 +44,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             MaterialName = materialName;
             Material = material;
         }
-        
+
         public CMeshSection(int index, int firstIndex, int numFaces, string? materialName, ResolvedObject? material)
         {
             MaterialIndex = index;

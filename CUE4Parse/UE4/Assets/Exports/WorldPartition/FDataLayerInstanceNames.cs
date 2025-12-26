@@ -5,7 +5,8 @@ using CUE4Parse.UE4.Objects.UObject;
 namespace CUE4Parse.UE4.Assets.Exports.WorldPartition;
 
 [StructFallback]
-public readonly struct FDataLayerInstanceNames : IUStruct
+// TODO: attribute not working when it's a struct, needs investigation, this is a global problem
+public class FDataLayerInstanceNames : IUStruct
 {
     public readonly bool bIsFirstDataLayerExternal;
     public readonly FName[] DataLayers;
