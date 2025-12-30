@@ -21,7 +21,7 @@ public class UPCGLandscapeCache : UObject
         CachedData = Ar.ReadMap(Ar.Read<CacheMapKey>, () => new FPCGLandscapeCacheEntry(Ar));
     }
 
-    override protected internal void WriteJson(Newtonsoft.Json.JsonWriter writer, Newtonsoft.Json.JsonSerializer serializer)
+    override protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
         writer.WritePropertyName(nameof(CachedData));

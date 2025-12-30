@@ -303,6 +303,7 @@ public class FShaderParameterMapInfo
         {
             UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar));
             TextureSamplers = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
+            if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 16;
             SRVs = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
         }
         else //4.25-5.0
@@ -951,6 +952,8 @@ public class FMaterialPreshaderData
 
     public FMaterialPreshaderData(FMemoryImageArchive Ar)
     {
+        if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 56; // Custom Layers Data
+
         if (Ar.Game >= EGame.GAME_UE5_8)
         {
             bPreshader2 = Ar.ReadBoolean();
