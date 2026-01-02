@@ -7,6 +7,8 @@ using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -54,11 +56,11 @@ public class UAudioCaptureComponent : USynthComponent;
 public class UAudioComponent : USceneComponent
 {
     public USoundBase? Sound { get; protected set; }
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        
+
         Sound = GetOrDefault<USoundBase?>(nameof(Sound));
     }
 }
@@ -86,10 +88,10 @@ public class UBillboardComponent : UPrimitiveComponent
         {
             var sprite = current.GetOrDefault<UTexture2D?>("Sprite");
             if (sprite != null) return sprite;
-            
+
             current = current.Template?.Load<UBillboardComponent>();
         }
-        
+
         return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
     }
 }
@@ -99,7 +101,22 @@ public class UBoxComponent : UShapeComponent;
 public class UBoxFalloff : UFieldNodeFloat;
 public class UBoxReflectionCaptureComponent : UReflectionCaptureComponent;
 public class UBrainComponent : UActorComponent;
-public class UBrushComponent : UPrimitiveComponent;
+public class UBrushComponent : UPrimitiveComponent
+{
+    public FPackageIndex? Brush { get; protected set; }
+    public FPackageIndex? BodySetup { get; protected set; }
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        Brush = GetOrDefault(nameof(Brush), new FPackageIndex());
+        BodySetup = GetOrDefault(nameof(BodySetup), new FPackageIndex());
+    }
+
+    public UModel? GetBrush() => Brush?.Load<UModel>();
+    public UBodySetup? GetBodySetup() => BodySetup?.Load<UBodySetup>();
+}
 public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
