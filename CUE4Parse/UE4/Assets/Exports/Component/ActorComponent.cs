@@ -104,18 +104,18 @@ public class UBrainComponent : UActorComponent;
 public class UBrushComponent : UPrimitiveComponent
 {
     public FPackageIndex? Brush { get; protected set; }
-    public FPackageIndex? BodySetup { get; protected set; }
+    public FPackageIndex? BrushBodySetup { get; protected set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
         Brush = GetOrDefault(nameof(Brush), new FPackageIndex());
-        BodySetup = GetOrDefault(nameof(BodySetup), new FPackageIndex());
+        BrushBodySetup = GetOrDefault(nameof(BrushBodySetup), new FPackageIndex());
     }
 
     public UModel? GetBrush() => Brush?.Load<UModel>();
-    public UBodySetup? GetBodySetup() => BodySetup?.Load<UBodySetup>();
+    public override UBodySetup? GetBodySetup() => BrushBodySetup?.Load<UBodySetup>();
 }
 public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
