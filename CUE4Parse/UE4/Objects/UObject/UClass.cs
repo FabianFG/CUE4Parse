@@ -181,6 +181,20 @@ public class UClass : UStruct
                         if (final.Parameters is [EX_IntConst intConst])
                             offset = intConst.Value;
                         break;
+                    case EX_CallMath final:   // usually a Delay
+                        foreach (var parameter in final.Parameters)
+                        {
+                            if (parameter is EX_StructConst structConst && structConst.Struct.Name.Contains("LatentActionInfo"))
+                            {
+                                if (structConst.Properties.FirstOrDefault() is EX_SkipOffsetConst skipOffsetConst)
+                                {
+                                    var skipOffsetValue = skipOffsetConst.Value;
+                                    offset = (int)skipOffsetValue;
+                                    label = function.Name;
+                                }
+                            }
+                        }
+                        break;
                 }
 
                 if (!string.IsNullOrEmpty(label) && offset.HasValue)
