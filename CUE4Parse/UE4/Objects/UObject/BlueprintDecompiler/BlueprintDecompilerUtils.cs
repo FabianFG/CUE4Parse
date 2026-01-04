@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -1106,7 +1106,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_PopExecutionFlow:
             {
-                return "return";
+                return "return // PopExecution";
             }
             case EX_JumpIfNot jumpIfNot:
             {
@@ -1416,6 +1416,11 @@ public static class BlueprintDecompilerUtils
 #endif
                 return "";
             }
+            case EX_PushExecutionFlow pushExecutionFlow:
+            {
+                var targetIndex = (int)pushExecutionFlow.PushingAddress;
+                return $"goto Label_{targetIndex}; // PushExecution";
+            }
             case EX_Nothing:
             case EX_NothingInt32:
             case EX_EndFunctionParms:
@@ -1427,7 +1432,6 @@ public static class BlueprintDecompilerUtils
             case EX_EndMapConst:
             case EX_EndSetConst:
             case EX_EndOfScript:
-            case EX_PushExecutionFlow:
             case EX_AutoRtfmStopTransact:
             case EX_AutoRtfmTransact:
             case EX_AutoRtfmAbortIfNot:
