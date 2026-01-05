@@ -24,7 +24,7 @@ public class AkMusicMarkerWwise
             var stringSize = Ar.Read<uint>();
             if (stringSize > 0)
             {
-                MarkerName = Ar.ReadString();
+                MarkerName = Ar.ReadFString();
             }
         }
         else

@@ -132,7 +132,7 @@ public class WwiseReader
             {
                 var shouldBe = position + sectionLength;
 #if DEBUG
-                Log.Warning($"Didn't read 0x{sectionIdentifier:X} correctly (at {Ar.Position}, should be {shouldBe})");
+                Log.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                 Ar.Position = shouldBe;
             }
