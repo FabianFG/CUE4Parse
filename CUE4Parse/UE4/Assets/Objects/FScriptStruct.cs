@@ -28,6 +28,7 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.ChaosCaching;
+using CUE4Parse.UE4.Objects.ControlRig;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -193,9 +194,12 @@ public class FScriptStruct
             "StateTreeInstanceData" => type == ReadType.ZERO ? new FStructFallback() : new FStateTreeInstanceData(Ar),
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
             "EdGraphPinType" => new FEdGraphPinType(Ar),
+            "ControlRigOverrideContainer" => type == ReadType.ZERO ? new FControlRigOverrideContainer() : new FControlRigOverrideContainer(Ar),
 
             // Custom struct types for simple structs in tagged TMap
             "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
+            // Custom struct type to skip unknown properties
+            "ZeroSizeProperty" => new FRawUIntStruct(),
 
             // FortniteGame
             "ConnectivityCube" => new FConnectivityCube(Ar),
