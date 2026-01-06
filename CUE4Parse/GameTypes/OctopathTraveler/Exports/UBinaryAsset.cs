@@ -21,7 +21,7 @@ public class UBinaryAsset : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game != EGame.GAME_OctopathTraveler0) return;
+        if (Ar.Game != EGame.GAME_OctopathTraveler0 && Ar.Game != EGame.GAME_OctopathTravelerCoTC) return;
 
         try
         {
