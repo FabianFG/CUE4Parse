@@ -1,20 +1,20 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
-public class FRealTimeMorphStreamable
+public readonly struct FRealTimeMorphStreamable
 {
-    public FName[] NameResolutionMap;
-    public uint Size;
-    public FMutableStreamableBlock Block;
-    public uint SourceId;
-
-    public FRealTimeMorphStreamable(FAssetArchive Ar)
+    public readonly FName[] NameResolutionMap;
+    public readonly FMutableStreamableBlock Block;
+    public readonly uint Size;
+    public readonly uint SourceId;
+    
+    public FRealTimeMorphStreamable(FArchive Ar)
     {
         NameResolutionMap = Ar.ReadArray(Ar.ReadFName);
+        Block = Ar.Read<FMutableStreamableBlock>();
         Size = Ar.Read<uint>();
-        Block = new FMutableStreamableBlock(Ar);
         SourceId = Ar.Read<uint>();
     }
 }
