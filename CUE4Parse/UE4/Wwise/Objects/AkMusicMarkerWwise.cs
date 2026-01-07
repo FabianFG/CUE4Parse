@@ -15,22 +15,12 @@ public class AkMusicMarkerWwise
 
         Position = Ar.Read<double>();
 
-        if (WwiseVersions.Version <= 62)
+        MarkerName = WwiseVersions.Version switch
         {
-            // No additional fields for version <= 62
-        }
-        else if (WwiseVersions.Version <= 136)
-        {
-            var stringSize = Ar.Read<uint>();
-            if (stringSize > 0)
-            {
-                MarkerName = Ar.ReadFString();
-            }
-        }
-        else
-        {
-            MarkerName = WwiseReader.ReadStzString(Ar);
-        }
+            <= 62 => null,
+            <= 136 => Ar.ReadFString(),
+            _ => WwiseReader.ReadStzString(Ar),
+        };
     }
 
     public static List<AkMusicMarkerWwise> ReadMultiple(FArchive Ar)
