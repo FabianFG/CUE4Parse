@@ -1,6 +1,8 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
-using FImageSize = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<ushort>;
+using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using FImageArray = byte[];
+using FImageSize = CUE4Parse.UE4.Objects.Core.Math.TIntVector2<ushort>;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 
@@ -8,7 +10,7 @@ public class FImageDataStorage
 {
     public FImageSize Size;
     public EImageFormat ImageFormat;
-    public byte NumLODs;
+    [JsonIgnore] public byte NumLODs;
     public FImageArray[] Buffers;
     public ushort[] CompactedTailOffsets;
     
@@ -30,6 +32,7 @@ public class FImageDataStorage
     }
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EImageFormat : byte
 {
     None,

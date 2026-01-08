@@ -1,10 +1,10 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class UCustomizableObjectInstance : UObject
 {
-    public FCustomizableObjectInstanceDescriptor Descriptor;
+    public FCustomizableObjectInstanceDescriptor? Descriptor;
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

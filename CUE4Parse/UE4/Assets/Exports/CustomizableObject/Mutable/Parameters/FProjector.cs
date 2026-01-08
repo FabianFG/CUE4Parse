@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Objects.Core.Math;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -14,6 +16,7 @@ public struct FProjector
     public float ProjectionAngle;
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EProjectorType : uint
 {
     /** Standard projector that uses an affine transform. */

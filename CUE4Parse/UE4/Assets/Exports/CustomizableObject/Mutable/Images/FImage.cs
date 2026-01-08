@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 
@@ -15,6 +17,7 @@ public class FImage
     }
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 [Flags]
 public enum EImageFlags
 {

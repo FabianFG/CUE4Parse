@@ -1,18 +1,22 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Objects;
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
 public class FParameterDesc
 {
     public string Name;
+    // Unique id (provided externally, so no actual guarantee that it is unique.)
     public FGuid UID;
     public EParameterType Type;
     public object? DefaultValue;
+    // Ranges, if the parameter is multi-dimensional. The indices refer to the Model's program vector of range descriptors.
     public uint[] Ranges;
+    // For integer parameters, this contains the description of the possible values. If empty, the integer may have any value.
     public FIntValueDesc[] PossibleValues;
    
     public FParameterDesc(FMutableArchive Ar)
@@ -44,6 +48,7 @@ public class FParameterDesc
     }
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EParameterType : uint
 {
     /** Undefined parameter type. */
@@ -69,7 +74,7 @@ public enum EParameterType : uint
 
     /** An externally provided mesh. */
     SkeletalMesh,
-		
+        
     /** An externally provided material*/
     Material,
 

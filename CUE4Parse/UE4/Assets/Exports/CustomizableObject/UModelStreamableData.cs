@@ -1,11 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class UModelStreamableData : UObject
 {
-    public FModelStreamableBulkData StreamingData;
+    public FModelStreamableBulkData? StreamingData;
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

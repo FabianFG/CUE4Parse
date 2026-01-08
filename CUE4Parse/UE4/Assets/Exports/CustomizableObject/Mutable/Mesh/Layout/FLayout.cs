@@ -1,6 +1,8 @@
-﻿using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Layout;
 
@@ -24,6 +26,7 @@ public class FLayout
     }
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EPackStrategy : uint
 {
     Resizeable,
@@ -31,6 +34,7 @@ public enum EPackStrategy : uint
     Overlay
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EReductionMethod : uint
 {
     Halve,	// Divide axis by 2

@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh;
 
@@ -17,6 +19,7 @@ public struct FMeshContentRange
     public uint FirstIndex => FirstIndex_ContentFlags & FirstIndexBitMask;
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 [Flags]
 public enum EMeshContentFlags : byte
 {

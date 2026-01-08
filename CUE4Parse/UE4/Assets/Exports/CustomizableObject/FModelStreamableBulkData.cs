@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
