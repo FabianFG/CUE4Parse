@@ -27,9 +27,7 @@ public struct FZenPackageVersioningInfo
     public FZenPackageVersioningInfo(FArchive Ar)
     {
         ZenVersion = Ar.Read<EZenPackageVersion>();
-        var FileVersionUE4 = Ar.Read<int>();
-        var FileVersionUE5 = Ar.Read<int>();
-        PackageVersion = new FPackageFileVersion(0, FileVersionUE4, FileVersionUE5);
+        PackageVersion = new FPackageFileVersion(Ar.Read<int>(), Ar.Read<int>());
         LicenseeVersion = Ar.Read<int>();
         CustomVersions = new FCustomVersionContainer(Ar);
     }

@@ -219,14 +219,14 @@ public static class GameUtils
         {
             return game switch
             {
-                < EGame.GAME_UE5_1 => new FPackageFileVersion(0, 522, 1004),
-                < EGame.GAME_UE5_2 => new FPackageFileVersion(0, 522, 1008),
-                    EGame.GAME_TheFirstDescendant => new FPackageFileVersion(0, 522, 1002),
-                < EGame.GAME_UE5_4 => new FPackageFileVersion(0, 522, 1009),
-                < EGame.GAME_UE5_5 => new FPackageFileVersion(0, 522, 1012),
-                < EGame.GAME_UE5_6 => new FPackageFileVersion(0, 522, 1013),
-                < EGame.GAME_UE5_8 => new FPackageFileVersion(0, 522, 1017),
-                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
+                < EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1004),
+                < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
+                    EGame.GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
+                < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
+                < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
+                < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
+                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
+                _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }
 

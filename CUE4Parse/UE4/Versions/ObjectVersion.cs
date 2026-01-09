@@ -80,220 +80,220 @@ namespace CUE4Parse.UE4.Versions
 
         // Pre-release UE4 file versions
 
-	    // Added array support to blueprints
-	    ADD_PINTYPE_ARRAY = 108,
-	    // Remove redundant key from raw animation data
-	    REMOVE_REDUNDANT_KEY,
-	    // Changing from WORDs to UINTs in the shader cache serialization, needs a new version
-	    SUPPORT_LARGE_SHADERS,
-	    // Added material functions to FMaterialShaderMapId
-	    FUNCTIONS_IN_SHADERMAPID,
-	    // Added asset registry tags to the package summary so the editor can learn more about the assets in the package without loading it
-	    ASSET_REGISTRY_TAGS,
-	    // Removed DontSortCategories option to classes
-	    DONTSORTCATEGORIES_REMOVED,
-	    // Added Tiled navmesh generation and redone navmesh serialization
-	    TILED_NAVMESH,
-	    // Removed old pylon-based navigation mesh system
-	    REMOVED_OLD_NAVMESH,
-	    // AnimNotify name change
-	    ANIMNOTIFY_NAMECHANGE,
-	    // Removed/consolidated some properties used only in the header parser that should never be serialized
-	    CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES,
-	    // Made ComponentNameToDefaultObjectMap non-serialized
-	    STOPPED_SERIALIZING_COMPONENTNAMETODEFAULTOBJECTMAP,
-	    // Reset ModifyFrequency on static lights
-	    RESET_MODIFYFREQUENCY_STATICLIGHTS,
-	    // Add a GUID to SoundNodeWave
-	    ADD_SOUNDNODEWAVE_GUID,
-	    // Add audio to DDC
-	    ADD_SOUNDNODEWAVE_TO_DDC,
-	    // - Fix for Material Blend Mode override
-	    MATERIAL_BLEND_OVERRIDE,
-	    // Ability to save cooked audio
-	    ADD_COOKED_TO_SOUND_NODE_WAVE,
-	    // Update the derived data key for textures.
-	    TEXTURE_DERIVED_DATA2,
-	    // Textures can now be cooked into packages
-	    ADD_COOKED_TO_TEXTURE2D,
-	    // Ability to save cooked PhysX meshes
-	    ADD_COOKED_TO_BODY_SETUP,
-	    // Blueprint saved before this may need Event Graph change to Local/Server Graph
-	    ADD_KISMETNETWORKGRAPHS,
-	    // - Added material quality level switches
-	    MATERIAL_QUALITY_LEVEL_SWITCH,
-	    // - Debugging material shader uniform expression sets.
-	    DEBUG_MATERIALSHADER_UNIFORM_EXPRESSIONS,
-	    // Removed StripData
-	    REMOVED_STRIP_DATA,
-	    // Setting RF_Transactional object flag on blueprint's SimpleConstructionScript
-	    FLAG_SCS_TRANSACTIONAL,
-	    // - Fixing chunk bounding boxes in imported NxDestructibleAssets.
-	    NX_DESTRUCTIBLE_ASSET_CHUNK_BOUNDS_FIX,
-	    // Add support for StaticMesh sockets
-	    STATIC_MESH_SOCKETS,
-	    // - Removed extra skelmesh vert weights
-	    REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES,
-	    // - Change UCurve objects to use FRichCurve
-	    UCURVE_USING_RICHCURVES,
-	    // Add support for inline shaders
-	    INLINE_SHADERS,
-	    // Change additive types to include mesh rotation only to be baked
-	    ADDITIVE_TYPE_CHANGE,
-	    // Readd cooker versioning to package
-	    READD_COOKER,
-	    // Serialize class properties
-	    ADDED_SCRIPT_SERIALIZATION_FOR_BLUEPRINT_GENERATED_CLASSES,
-	    // Variable UBoolProperty size.
-	    VARIABLE_BITFIELD_SIZE,
-	    // Fix skeletons which only list active bones in their required bones list.
-	    FIX_REQUIRED_BONES,
-	    // Switched 'cooked package' version to simply be the package version itself.
-	    COOKED_PACKAGE_VERSION_IS_PACKAGE_VERSION,
-	    // Refactor how texture source art is stored to better isolate editor-only data.
-	    TEXTURE_SOURCE_ART_REFACTOR,
-	    // Add additional settings to static and skeletal mesh optimization struct (FStaticMeshOptimizationSettings and FSkeletalMeshOptimizationSettings)
-	    ADDED_EXTRA_MESH_OPTIMIZATION_SETTINGS,
-	    // Add BodySetup to DestructibleMesh, use it to store the destructible physical material.
-	    DESTRUCTIBLE_MESH_BODYSETUP_HOLDS_PHYSICAL_MATERIAL,
-	    // Remove USequence class and references
-	    REMOVE_USEQUENCE,
-	    // Added by-ref parameters to blueprints
-	    ADD_PINTYPE_BYREF,
-	    // Change to make public blueprint variables 'read only'
-	    PUBLIC_BLUEPRINT_VARS_READONLY,
-	    // change HiddenGame, DrawInGame, DrawInEditor to bVisible, and bHiddenInGame
-	    VISIBILITY_FLAG_CHANGES,
-	    // change Light/Fog/Blur bEnable to use bVisible
-	    REMOVE_COMPONENT_ENABLED_FLAG,
-	    // change Particle/Audio/Thrust/RadialForce bEnable/bAutoPlay to use bAutoActivate
-	    CONFORM_COMPONENT_ACTIVATE_FLAG,
-	    // make the 'mesh to import vertex map' in skelmesh always loaded so it can be used by vertex anim
-	    ADD_SKELMESH_MESHTOIMPORTVERTEXMAP,
-	    // remove serialization for properties added with UE3 version 864 serialization
-	    REMOVE_UE3_864_SERIALIZATION,
-	    // Spherical harmonic lightmaps
-	    SH_LIGHTMAPS,
-	    // Removed per-shader DDC entries
-	    REMOVED_PERSHADER_DDC,
-	    // Core split into Core and CoreUObject
-	    CORE_SPLIT,
-	    // Removed some compile outputs being stored in FMaterial
-	    REMOVED_FMATERIAL_COMPILE_OUTPUTS,
-	    // New physical material model
-	    PHYSICAL_MATERIAL_MODEL,
-	    // Added a usage to FMaterialShaderMapId
-	    ADDED_MATERIALSHADERMAP_USAGE,
-	    // Covert blueprint PropertyFlags from int32 to uint64
-	    BLUEPRINT_PROPERTYFLAGS_SIZE_CHANGE,
-	    // Consolidate UpdateSkelWhenNotRendered and TickAnimationWhenNotRendered to enum
-	    CONSOLIDATE_SKINNEDMESH_UPDATE_FLAGS,
-	    // Remove Internal Archetype
-	    REMOVE_INTERNAL_ARCHETYPE,
-	    // Remove Internal Archetype
-	    REMOVE_ARCHETYPE_INDEX_FROM_LINKER_TABLES,
-	    // Made change to UK2Node_Variable so that VariableSourceClass is NULL if bSelfContext is TRUE
-	    VARK2NODE_NULL_VARSRCCLASS_ON_SELF,
-	    // Removed SpecularBoost
-	    REMOVED_SPECULAR_BOOST,
-	    // Add CPF_BlueprintVisible flag
-	    ADD_KISMETVISIBLE,
-	    // UDistribution* objects moved to PostInitProperties.
-	    MOVE_DISTRIBUITONS_TO_POSTINITPROPS,
-	    // Add optimized shadow-only index buffers to static meshes.
-	    SHADOW_ONLY_INDEX_BUFFERS,
-	    // Changed indirect lighting volume sample format
-	    CHANGED_VOLUME_SAMPLE_FORMAT,
-	    /** Change bool bEnableCollision in BodyInstance to enum CollisionEnabled */
-	    CHANGE_BENABLECOLLISION_TO_COLLISIONENABLED,
-	    // Changed irrelevant light guids
-	    CHANGED_IRRELEVANT_LIGHT_GUIDS,
-	    /** Rename bDisableAllRigidBody to bCreatePhysicsState */
-	    RENAME_DISABLEALLRIGIDBODIES,
-	    // Unified SoundNodeAttenuation settings with other attenuation settings
-	    SOUND_NODE_ATTENUATION_SETTINGS_CHANGE,
-	    // Add a NodeGuid to EdGraphNode, upping version to generate for existing nodes
-	    ADD_EDGRAPHNODE_GUID,
-	    // Fix the outer of InterpData objects
-	    FIX_INTERPDATA_OUTERS,
-	    // Natively serialize blueprint core classes
-	    BLUEPRINT_NATIVE_SERIALIZATION,
-	    // Inherit SoundNode from EdGraphNOde
-	    SOUND_NODE_INHERIT_FROM_ED_GRAPH_NODE,
-	    // Unify ambient sound actor classes in to single ambient actor class
-	    UNIFY_AMBIENT_SOUND_ACTORS,
-	    // Lightmap compression
-	    LIGHTMAP_COMPRESSION,
-	    // MorphTarget data type integration to curve
-	    MORPHTARGET_CURVE_INTEGRATION,
-	    // Fix LevelScriptBlueprints being standalone
-	    CLEAR_STANDALONE_FROM_LEVEL_SCRIPT_BLUEPRINTS,
-	    // Natively serialize blueprint core classes
-	    NO_INTERFACE_PROPERTY,
-	    // Category field moved to metadata.
-	    CATEGORY_MOVED_TO_METADATA,
-	    // We removed the ctor link flag, this just clears this flag on load for future use
-	    REMOVE_CTOR_LINK,
-	    // Short to long package name associations removal.
-	    REMOVE_SHORT_PACKAGE_NAME_ASSOCIATIONS,
-	    // Add bCreatedByConstructionScript flag to ActorComponent
-	    ADD_CREATEDBYCONSTRUCTIONSCRIPT,
-	    // Fix loading of bogus NxDestructibleAssetAuthoring
-	    NX_DESTRUCTIBLE_ASSET_AUTHORING_LOAD_FIX,
-	    // Added angular constraint options
-	    ANGULAR_CONSTRAINT_OPTIONS,
-	    /** Changed material expression constants 3 and 4 to use a FLinearColor rather than separate floats to make it more artist friendly */
-	    CHANGE_MATERIAL_EXPRESSION_CONSTANTS_TO_LINEARCOLOR,
-	    // Added built lighting flag to primitive component
-	    PRIMITIVE_BUILT_LIGHTING_FLAG,
-	    // Added Counter for atmospheric fog
-	    ATMOSPHERIC_FOG_CACHE_TEXTURE,
-	    // Ressurrected precomputed shadowmaps
-	    PRECOMPUTED_SHADOW_MAPS,
-	    // Eliminated use of distribution for USoundNodeModulatorContinuous
-	    MODULATOR_CONTINUOUS_NO_DISTRIBUTION,
-	    // Added a 4-byte magic number at the end of the package for file corruption validation
-	    PACKAGE_MAGIC_POSTTAG,
-	    // Discard invalid irrelevant lights
-	    TOSS_IRRELEVANT_LIGHTS,
-	    // Removed NetIndex
-	    REMOVE_NET_INDEX,
-	    // Moved blueprint authoritative data from Skeleton CDO to the Generated CDO
-	    BLUEPRINT_CDO_MIGRATION,
-	    // Bulkdata is stored at the end of package files and can be located at offsets > 2GB
-	    BULKDATA_AT_LARGE_OFFSETS,
-	    // Explicitly track whether streaming texture data has been built
-	    EXPLICIT_STREAMING_TEXTURE_BUILT,
-	    // Precomputed shadowmaps on bsp and landscape
-	    PRECOMPUTED_SHADOW_MAPS_BSP,
-	    // Refactor of static mesh build pipeline.
-	    STATIC_MESH_REFACTOR,
-	    // Remove cached static mesh streaming texture factors. They have been moved to derived data.
-	    REMOVE_CACHED_STATIC_MESH_STREAMING_FACTORS,
-	    // Added Atmospheric fog Material support
-	    ATMOSPHERIC_FOG_MATERIAL,
-	    // Fixup BSP brush type
-	    FIX_BSP_BRUSH_TYPE,
-	    // Removed ClientDestroyedActorContent from UWorld
-	    REMOVE_CLIENTDESTROYEDACTORCONTENT,
-	    // Added SoundCueGraph for new SoundCue editor
-	    SOUND_CUE_GRAPH_EDITOR,
-	    // Strip TransLevelMoveBuffers out of Worlds
-	    STRIP_TRANS_LEVEL_MOVE_BUFFER,
-	    // Deprecated PrimitiveComponent.bNoEncroachCheck
-	    DEPRECATED_BNOENCROACHCHECK,
-	    // Light component bUseIESBrightness now defaults to false
-	    LIGHTS_USE_IES_BRIGHTNESS_DEFAULT_CHANGED,
-	    // Material attributes multiplex
-	    MATERIAL_ATTRIBUTES_MULTIPLEX,
-	    // Renamed & moved TSF_RGBA8/E8 to TSF_BGRA8/E8
-	    TEXTURE_FORMAT_RGBA_SWIZZLE,
-	    // Package summary stores the offset to the beginning of the area where the bulkdata gets stored */
-	    SUMMARY_HAS_BULKDATA_OFFSET,
-	    // The SimpleConstructionScript now marks the default root component as transactional, and bCreatedByConstructionScript true
-	    DEFAULT_ROOT_COMP_TRANSACTIONAL,
-	    // Hashed material compile output stored in packages to detect mismatches
-	    HASHED_MATERIAL_OUTPUT,
+        // Added array support to blueprints
+        ADD_PINTYPE_ARRAY = 108,
+        // Remove redundant key from raw animation data
+        REMOVE_REDUNDANT_KEY,
+        // Changing from WORDs to UINTs in the shader cache serialization, needs a new version
+        SUPPORT_LARGE_SHADERS,
+        // Added material functions to FMaterialShaderMapId
+        FUNCTIONS_IN_SHADERMAPID,
+        // Added asset registry tags to the package summary so the editor can learn more about the assets in the package without loading it
+        ASSET_REGISTRY_TAGS,
+        // Removed DontSortCategories option to classes
+        DONTSORTCATEGORIES_REMOVED,
+        // Added Tiled navmesh generation and redone navmesh serialization
+        TILED_NAVMESH,
+        // Removed old pylon-based navigation mesh system
+        REMOVED_OLD_NAVMESH,
+        // AnimNotify name change
+        ANIMNOTIFY_NAMECHANGE,
+        // Removed/consolidated some properties used only in the header parser that should never be serialized
+        CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES,
+        // Made ComponentNameToDefaultObjectMap non-serialized
+        STOPPED_SERIALIZING_COMPONENTNAMETODEFAULTOBJECTMAP,
+        // Reset ModifyFrequency on static lights
+        RESET_MODIFYFREQUENCY_STATICLIGHTS,
+        // Add a GUID to SoundNodeWave
+        ADD_SOUNDNODEWAVE_GUID,
+        // Add audio to DDC
+        ADD_SOUNDNODEWAVE_TO_DDC,
+        // - Fix for Material Blend Mode override
+        MATERIAL_BLEND_OVERRIDE,
+        // Ability to save cooked audio
+        ADD_COOKED_TO_SOUND_NODE_WAVE,
+        // Update the derived data key for textures.
+        TEXTURE_DERIVED_DATA2,
+        // Textures can now be cooked into packages
+        ADD_COOKED_TO_TEXTURE2D,
+        // Ability to save cooked PhysX meshes
+        ADD_COOKED_TO_BODY_SETUP,
+        // Blueprint saved before this may need Event Graph change to Local/Server Graph
+        ADD_KISMETNETWORKGRAPHS,
+        // - Added material quality level switches
+        MATERIAL_QUALITY_LEVEL_SWITCH,
+        // - Debugging material shader uniform expression sets.
+        DEBUG_MATERIALSHADER_UNIFORM_EXPRESSIONS,
+        // Removed StripData
+        REMOVED_STRIP_DATA,
+        // Setting RF_Transactional object flag on blueprint's SimpleConstructionScript
+        FLAG_SCS_TRANSACTIONAL,
+        // - Fixing chunk bounding boxes in imported NxDestructibleAssets.
+        NX_DESTRUCTIBLE_ASSET_CHUNK_BOUNDS_FIX,
+        // Add support for StaticMesh sockets
+        STATIC_MESH_SOCKETS,
+        // - Removed extra skelmesh vert weights
+        REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES,
+        // - Change UCurve objects to use FRichCurve
+        UCURVE_USING_RICHCURVES,
+        // Add support for inline shaders
+        INLINE_SHADERS,
+        // Change additive types to include mesh rotation only to be baked
+        ADDITIVE_TYPE_CHANGE,
+        // Readd cooker versioning to package
+        READD_COOKER,
+        // Serialize class properties
+        ADDED_SCRIPT_SERIALIZATION_FOR_BLUEPRINT_GENERATED_CLASSES,
+        // Variable UBoolProperty size.
+        VARIABLE_BITFIELD_SIZE,
+        // Fix skeletons which only list active bones in their required bones list.
+        FIX_REQUIRED_BONES,
+        // Switched 'cooked package' version to simply be the package version itself.
+        COOKED_PACKAGE_VERSION_IS_PACKAGE_VERSION,
+        // Refactor how texture source art is stored to better isolate editor-only data.
+        TEXTURE_SOURCE_ART_REFACTOR,
+        // Add additional settings to static and skeletal mesh optimization struct (FStaticMeshOptimizationSettings and FSkeletalMeshOptimizationSettings)
+        ADDED_EXTRA_MESH_OPTIMIZATION_SETTINGS,
+        // Add BodySetup to DestructibleMesh, use it to store the destructible physical material.
+        DESTRUCTIBLE_MESH_BODYSETUP_HOLDS_PHYSICAL_MATERIAL,
+        // Remove USequence class and references
+        REMOVE_USEQUENCE,
+        // Added by-ref parameters to blueprints
+        ADD_PINTYPE_BYREF,
+        // Change to make public blueprint variables 'read only'
+        PUBLIC_BLUEPRINT_VARS_READONLY,
+        // change HiddenGame, DrawInGame, DrawInEditor to bVisible, and bHiddenInGame
+        VISIBILITY_FLAG_CHANGES,
+        // change Light/Fog/Blur bEnable to use bVisible
+        REMOVE_COMPONENT_ENABLED_FLAG,
+        // change Particle/Audio/Thrust/RadialForce bEnable/bAutoPlay to use bAutoActivate
+        CONFORM_COMPONENT_ACTIVATE_FLAG,
+        // make the 'mesh to import vertex map' in skelmesh always loaded so it can be used by vertex anim
+        ADD_SKELMESH_MESHTOIMPORTVERTEXMAP,
+        // remove serialization for properties added with UE3 version 864 serialization
+        REMOVE_UE3_864_SERIALIZATION,
+        // Spherical harmonic lightmaps
+        SH_LIGHTMAPS,
+        // Removed per-shader DDC entries
+        REMOVED_PERSHADER_DDC,
+        // Core split into Core and CoreUObject
+        CORE_SPLIT,
+        // Removed some compile outputs being stored in FMaterial
+        REMOVED_FMATERIAL_COMPILE_OUTPUTS,
+        // New physical material model
+        PHYSICAL_MATERIAL_MODEL,
+        // Added a usage to FMaterialShaderMapId
+        ADDED_MATERIALSHADERMAP_USAGE,
+        // Covert blueprint PropertyFlags from int32 to uint64
+        BLUEPRINT_PROPERTYFLAGS_SIZE_CHANGE,
+        // Consolidate UpdateSkelWhenNotRendered and TickAnimationWhenNotRendered to enum
+        CONSOLIDATE_SKINNEDMESH_UPDATE_FLAGS,
+        // Remove Internal Archetype
+        REMOVE_INTERNAL_ARCHETYPE,
+        // Remove Internal Archetype
+        REMOVE_ARCHETYPE_INDEX_FROM_LINKER_TABLES,
+        // Made change to UK2Node_Variable so that VariableSourceClass is NULL if bSelfContext is TRUE
+        VARK2NODE_NULL_VARSRCCLASS_ON_SELF,
+        // Removed SpecularBoost
+        REMOVED_SPECULAR_BOOST,
+        // Add CPF_BlueprintVisible flag
+        ADD_KISMETVISIBLE,
+        // UDistribution* objects moved to PostInitProperties.
+        MOVE_DISTRIBUITONS_TO_POSTINITPROPS,
+        // Add optimized shadow-only index buffers to static meshes.
+        SHADOW_ONLY_INDEX_BUFFERS,
+        // Changed indirect lighting volume sample format
+        CHANGED_VOLUME_SAMPLE_FORMAT,
+        /** Change bool bEnableCollision in BodyInstance to enum CollisionEnabled */
+        CHANGE_BENABLECOLLISION_TO_COLLISIONENABLED,
+        // Changed irrelevant light guids
+        CHANGED_IRRELEVANT_LIGHT_GUIDS,
+        /** Rename bDisableAllRigidBody to bCreatePhysicsState */
+        RENAME_DISABLEALLRIGIDBODIES,
+        // Unified SoundNodeAttenuation settings with other attenuation settings
+        SOUND_NODE_ATTENUATION_SETTINGS_CHANGE,
+        // Add a NodeGuid to EdGraphNode, upping version to generate for existing nodes
+        ADD_EDGRAPHNODE_GUID,
+        // Fix the outer of InterpData objects
+        FIX_INTERPDATA_OUTERS,
+        // Natively serialize blueprint core classes
+        BLUEPRINT_NATIVE_SERIALIZATION,
+        // Inherit SoundNode from EdGraphNOde
+        SOUND_NODE_INHERIT_FROM_ED_GRAPH_NODE,
+        // Unify ambient sound actor classes in to single ambient actor class
+        UNIFY_AMBIENT_SOUND_ACTORS,
+        // Lightmap compression
+        LIGHTMAP_COMPRESSION,
+        // MorphTarget data type integration to curve
+        MORPHTARGET_CURVE_INTEGRATION,
+        // Fix LevelScriptBlueprints being standalone
+        CLEAR_STANDALONE_FROM_LEVEL_SCRIPT_BLUEPRINTS,
+        // Natively serialize blueprint core classes
+        NO_INTERFACE_PROPERTY,
+        // Category field moved to metadata.
+        CATEGORY_MOVED_TO_METADATA,
+        // We removed the ctor link flag, this just clears this flag on load for future use
+        REMOVE_CTOR_LINK,
+        // Short to long package name associations removal.
+        REMOVE_SHORT_PACKAGE_NAME_ASSOCIATIONS,
+        // Add bCreatedByConstructionScript flag to ActorComponent
+        ADD_CREATEDBYCONSTRUCTIONSCRIPT,
+        // Fix loading of bogus NxDestructibleAssetAuthoring
+        NX_DESTRUCTIBLE_ASSET_AUTHORING_LOAD_FIX,
+        // Added angular constraint options
+        ANGULAR_CONSTRAINT_OPTIONS,
+        /** Changed material expression constants 3 and 4 to use a FLinearColor rather than separate floats to make it more artist friendly */
+        CHANGE_MATERIAL_EXPRESSION_CONSTANTS_TO_LINEARCOLOR,
+        // Added built lighting flag to primitive component
+        PRIMITIVE_BUILT_LIGHTING_FLAG,
+        // Added Counter for atmospheric fog
+        ATMOSPHERIC_FOG_CACHE_TEXTURE,
+        // Ressurrected precomputed shadowmaps
+        PRECOMPUTED_SHADOW_MAPS,
+        // Eliminated use of distribution for USoundNodeModulatorContinuous
+        MODULATOR_CONTINUOUS_NO_DISTRIBUTION,
+        // Added a 4-byte magic number at the end of the package for file corruption validation
+        PACKAGE_MAGIC_POSTTAG,
+        // Discard invalid irrelevant lights
+        TOSS_IRRELEVANT_LIGHTS,
+        // Removed NetIndex
+        REMOVE_NET_INDEX,
+        // Moved blueprint authoritative data from Skeleton CDO to the Generated CDO
+        BLUEPRINT_CDO_MIGRATION,
+        // Bulkdata is stored at the end of package files and can be located at offsets > 2GB
+        BULKDATA_AT_LARGE_OFFSETS,
+        // Explicitly track whether streaming texture data has been built
+        EXPLICIT_STREAMING_TEXTURE_BUILT,
+        // Precomputed shadowmaps on bsp and landscape
+        PRECOMPUTED_SHADOW_MAPS_BSP,
+        // Refactor of static mesh build pipeline.
+        STATIC_MESH_REFACTOR,
+        // Remove cached static mesh streaming texture factors. They have been moved to derived data.
+        REMOVE_CACHED_STATIC_MESH_STREAMING_FACTORS,
+        // Added Atmospheric fog Material support
+        ATMOSPHERIC_FOG_MATERIAL,
+        // Fixup BSP brush type
+        FIX_BSP_BRUSH_TYPE,
+        // Removed ClientDestroyedActorContent from UWorld
+        REMOVE_CLIENTDESTROYEDACTORCONTENT,
+        // Added SoundCueGraph for new SoundCue editor
+        SOUND_CUE_GRAPH_EDITOR,
+        // Strip TransLevelMoveBuffers out of Worlds
+        STRIP_TRANS_LEVEL_MOVE_BUFFER,
+        // Deprecated PrimitiveComponent.bNoEncroachCheck
+        DEPRECATED_BNOENCROACHCHECK,
+        // Light component bUseIESBrightness now defaults to false
+        LIGHTS_USE_IES_BRIGHTNESS_DEFAULT_CHANGED,
+        // Material attributes multiplex
+        MATERIAL_ATTRIBUTES_MULTIPLEX,
+        // Renamed & moved TSF_RGBA8/E8 to TSF_BGRA8/E8
+        TEXTURE_FORMAT_RGBA_SWIZZLE,
+        // Package summary stores the offset to the beginning of the area where the bulkdata gets stored */
+        SUMMARY_HAS_BULKDATA_OFFSET,
+        // The SimpleConstructionScript now marks the default root component as transactional, and bCreatedByConstructionScript true
+        DEFAULT_ROOT_COMP_TRANSACTIONAL,
+        // Hashed material compile output stored in packages to detect mismatches
+        HASHED_MATERIAL_OUTPUT,
 
 
         OLDEST_LOADABLE_PACKAGE = 214,
@@ -2155,6 +2155,14 @@ namespace CUE4Parse.UE4.Versions
             FileVersionUE3 = 0;
             FileVersionUE4 = 0;
             FileVersionUE5 = 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public FPackageFileVersion(int ue4Version, int ue5Version)
+        {
+            FileVersionUE3 = 0;
+            FileVersionUE4 = ue4Version;
+            FileVersionUE5 = ue5Version;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

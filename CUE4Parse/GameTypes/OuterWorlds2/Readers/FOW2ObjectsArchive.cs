@@ -29,6 +29,6 @@ public class FOW2ObjectsArchive : FObjectAndNameAsStringProxyArchive
         Asset = owner;
         Objects = container;
         bHasVersion = hasVersion;
-        Ver = hasVersion ? new FPackageFileVersion(0, Read<int>(), Read<int>()) : new FPackageFileVersion(0, 522, 1010);
+        Ver = hasVersion ? new FPackageFileVersion(Read<int>(), Read<int>()) : new FPackageFileVersion(522, 1010);
     }
 }

@@ -56,7 +56,7 @@ public class FStaticMeshLODResources
         }
         if (Ar.Game >= EGame.GAME_UE4_0)
         {
-        MaxDeviation = Ar.Read<float>();
+            MaxDeviation = Ar.Read<float>();
         }
 
         if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
