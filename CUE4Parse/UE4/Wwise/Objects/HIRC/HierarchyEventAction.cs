@@ -46,7 +46,8 @@ public class HierarchyEventAction : AbstractHierarchy
             EEventActionType.Seek => new AkActionSeek(Ar),
             EEventActionType.SetSwitch => new AkActionSetSwitch(Ar),
             EEventActionType.SetState => new AkActionSetState(Ar),
-            EEventActionType.SetEffect => new AkActionSetEffect(Ar),
+            EEventActionType.SetEffect or
+                EEventActionType.ResetEffect => new AkActionSetEffect(Ar),
             EEventActionType.Mute or
                 EEventActionType.UnMute or
                 EEventActionType.ResetPlaylist => new AkActionBase(Ar),

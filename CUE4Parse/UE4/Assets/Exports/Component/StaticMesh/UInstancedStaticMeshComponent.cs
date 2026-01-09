@@ -25,6 +25,23 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             bCooked = Ar.ReadBoolean();
         }
 
+        if (Ar.Game is EGame.GAME_WutheringWaves && Ar.ReadFlag())
+        {
+            Ar.Position += 12;
+            var len = Ar.Read<int>();
+            for (int i = 0; i < len; i++)
+            {
+                Ar.Position += 12;
+                Ar.Position += Ar.ReadFlag() ? 3 : 7;
+            }
+
+            Ar.SkipFixedArray(4);
+            PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+            Ar.Position += Ar.Read<long>()+8;
+            PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+            return;
+        }
+
         var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
         if (bHasSkipSerializationPropertiesData)
         {

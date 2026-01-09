@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.FileProvider.Objects
@@ -19,6 +20,6 @@ namespace CUE4Parse.FileProvider.Objects
         public override CompressionMethod CompressionMethod => CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] Read() => File.ReadAllBytes(ActualFile.FullName);
+        public override byte[] Read(FByteBulkDataHeader? header = null) => File.ReadAllBytes(ActualFile.FullName);
     }
 }

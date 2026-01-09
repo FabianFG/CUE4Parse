@@ -185,7 +185,7 @@ public partial class PakFileReader
                 };
 
                 reader.Seek(0, SeekOrigin.Begin);
-                var package = new Package(reader, null, new Lazy<FArchive?>());
+                var package = new Package(reader, null, _ => null);
 
                 var exports = package.ExportMap.Where(export => export.IsAsset).ToList();
                 FObjectExport? mainExport;

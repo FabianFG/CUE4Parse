@@ -107,7 +107,7 @@ public class FStaticMeshRenderData
                     var bValid = Ar.ReadBoolean();
                     if (bValid)
                     {
-                        if (Ar.Game is >= EGame.GAME_UE5_0 or EGame.GAME_TerminullBrigade)
+                        if (Ar.Game is >= EGame.GAME_UE5_0 or EGame.GAME_TerminullBrigade or EGame.GAME_WutheringWaves)
                         {
                             _ = new FDistanceFieldVolumeData5(Ar);
                         }

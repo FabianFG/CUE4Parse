@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports;
@@ -75,9 +75,11 @@ namespace CUE4Parse_Conversion
 
         protected ExporterBase(UObject export, ExporterOptions options)
         {
-            var p = export.GetPathName();
-            PackagePath = export.Owner?.Name ?? p.SubstringBeforeLast("."); // hm? (export.Owner?.Provider?.FixPath(p) ?? p).SubstringBeforeLast('.');
-            ExportName = p.SubstringAfterLast('.');
+            var p = export.Owner?.Name ?? export.GetPathName();
+
+            // this should use FixPath in order to get correct package path, as in game project
+            PackagePath = (export.Owner?.Provider?.FixPath(p) ?? p).SubstringBeforeLast('.');
+            ExportName = export.Name;
             Options = options;
         }
 

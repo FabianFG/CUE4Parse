@@ -3,6 +3,8 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
+public class UMaterialFunctionEditorOnlyData : UObject;
+
 public class UMaterialFunction : UObject
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)

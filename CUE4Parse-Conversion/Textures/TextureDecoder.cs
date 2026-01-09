@@ -17,9 +17,8 @@ public static class TextureDecoder
 {
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
 
-    public static CTexture? Decode(this UTexture2D texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetMipByMaxSize(maxMipSize), platform);
-    public static CTexture? Decode(this UTexture2D texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
-    public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.Decode(texture.GetFirstMip(), platform);
+    public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);
+    public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetFirstMipIndex(), platform);
     public static CTexture? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
@@ -42,6 +41,29 @@ public static class TextureDecoder
         return new CTexture( sizeX, sizeY, colorType, data);
     }
 
+    public static CTexture? DecodeMip(this UTexture texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
+    {
+        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
+            return DecodeVT(texture, vt, mipIndex);
+
+        var mip = texture.GetMip(mipIndex);
+        if (mip == null)
+            return null;
+
+        var sizeX = mip.SizeX;
+        var sizeY = mip.SizeY;
+        var sizeZ = mip.SizeZ;
+
+        if (texture.Format == EPixelFormat.PF_BC7)
+        {
+            sizeX = sizeX.Align(4);
+            sizeY = sizeY.Align(4);
+        }
+
+        DecodeTexture(mip, sizeX, sizeY, sizeZ, texture.Format, texture.IsNormalMap, platform, out var data, out var colorType);
+        return new CTexture(sizeX, sizeY, colorType, data);
+    }
+
     private static unsafe Span<byte> GetSliceData(byte* data, int sizeX, int sizeY, int bytesPerPixel, int zLayer = 0)
     {
         var offset = sizeX * sizeY * bytesPerPixel;
@@ -61,14 +83,15 @@ public static class TextureDecoder
         return 0;
     }
 
-    private static CTexture DecodeVT(UTexture texture, FVirtualTextureBuiltData vt)
+    private static CTexture DecodeVT(UTexture texture, FVirtualTextureBuiltData vt, int mip = -1)
     {
         unsafe
         {
             var tileSize = (int) vt.TileSize;
             var tileBorderSize = (int) vt.TileBorderSize;
             var tilePixelSize = (int) vt.GetPhysicalTileSize();
-            int level = GetMinLevel(vt);
+            var minLevel = GetMinLevel(vt);
+            int level = mip <= -1 ? minLevel : Math.Max(mip, minLevel);
 
             var tileOffsetData = vt.GetTileOffsetData(level);
 

@@ -9,5 +9,5 @@ public class SoundWaveProcedural : USoundWave
         base.SoundBaseDeserialize(Ar, validPos);
     }
 
-    public override void SerializeCuePoints(FAssetArchive Ar) { }
+    protected override void SerializeCuePoints(FAssetArchive Ar) { }
 }

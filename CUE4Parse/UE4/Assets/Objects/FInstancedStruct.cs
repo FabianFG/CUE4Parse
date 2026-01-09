@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -34,6 +35,12 @@ public class FInstancedStruct : IUStruct
         if (Ar.Game is EGame.GAME_VEIN)
         {
             StringData = Ar.ReadFString();
+            return;
+        }
+
+        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader AoCReader)
+        {
+            NonConstIUSturct = AoCReader.ReadInstancedStruct();
             return;
         }
 

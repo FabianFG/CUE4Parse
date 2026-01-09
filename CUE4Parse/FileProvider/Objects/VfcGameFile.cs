@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileCache;
 
@@ -27,7 +28,7 @@ namespace CUE4Parse.FileProvider.Objects
         public override CompressionMethod CompressionMethod => CompressionMethod.None;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] Read()
+        public override byte[] Read(FByteBulkDataHeader? header = null)
         {
             var offset = 0;
             var data = new byte[Size];

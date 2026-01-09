@@ -177,6 +177,11 @@ public class FRichCurve : FRealCurve
         Keys = [];
     }
 
+    public FRichCurve(FMutableArchive Ar)
+    {
+        Keys = Ar.ReadArray<FRichCurveKey>();
+    }
+
     public FRichCurve(FStructFallback data) : base(data)
     {
         Keys = data.GetOrDefault(nameof(Keys), Array.Empty<FRichCurveKey>());

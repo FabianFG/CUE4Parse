@@ -11,6 +11,7 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
+using CUE4Parse.GameTypes.BB3.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
@@ -95,6 +96,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
                 EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
+                EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
                 _ => null
             };
         }
@@ -429,11 +431,6 @@ namespace CUE4Parse.FileProvider.Vfs
             return false;
         }
 
-        /// <summary>
-        /// load .ini files and verify the validity of the main encryption key against them
-        /// in cases where archives are not encrypted, but their packages are, that is one way to tell if the key is correct
-        /// if the key is not correct, archives will be removed from the pool of mounted archives no matter how many encrypted packages they have
-        /// </summary>
         public void PostMount()
         {
             var workingAes = LoadIniConfigs();
@@ -489,6 +486,29 @@ namespace CUE4Parse.FileProvider.Vfs
 
             UnloadAllVfs();
             Files.AddFiles(onDemandFiles);
+        }
+
+        public List<GameFile> ScanForPackageRefs(GameFile asset)
+        {
+            if (asset is not FIoStoreEntry { IsUePackage: true })
+                return [];
+
+            var package = LoadPackage(asset);
+            var id = FPackageId.FromName(package.Name);
+            var refList = new List<GameFile>();
+            foreach (var reader in MountedVfs)
+            {
+                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                    continue;
+                for (var i = 0; i < header.StoreEntries.Length; i++)
+                {
+                    if (header.StoreEntries[i].ImportedPackages.Contains(id) && ioReader.PackageIdIndex.TryGetValue(header.PackageIds[i], out var file))
+                    {
+                        refList.Add(file);
+                    }
+                }
+            }
+            return refList;
         }
 
         public override void Dispose()
