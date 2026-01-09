@@ -93,6 +93,76 @@ public static class DXTDecoder
         return rawData;
     }
 
+    public static byte[] DXT3(byte[] inp, int sizeX, int sizeY, int sizeZ)
+    {
+        int bitsPerPixel = Constants.DXT_BITS_PER_PIXEL;
+        int bitsPerRow = sizeX * bitsPerPixel;
+        int sizeOfPlane = bitsPerRow * sizeY;
+        byte[] rawData = new byte[sizeZ * sizeOfPlane];
+        Colour8888[] colours = new Colour8888[4];
+
+        unsafe
+        {
+            fixed (byte* bytePtr = inp)
+            {
+                byte* temp = bytePtr;
+
+                for (int z = 0; z < sizeZ; z++)
+                {
+                    for (int y = 0; y < sizeY; y += 4)
+                    {
+                        for (int x = 0; x < sizeX; x += 4)
+                        {
+                            ulong alphaBits = *(ulong*)temp;
+                            temp += 8;
+
+                            ushort color0 = *((ushort*)temp);
+                            ushort color1 = *((ushort*)(temp + 2));
+                            DxtcReadColor(color0, ref colours[0]);
+                            DxtcReadColor(color1, ref colours[1]);
+
+                            uint bitmask = ((uint*)temp)[1];
+                            temp += 8;
+
+                            colours[2].Blue = (byte)((2 * colours[0].Blue + colours[1].Blue + 1) / 3);
+                            colours[2].Green = (byte)((2 * colours[0].Green + colours[1].Green + 1) / 3);
+                            colours[2].Red = (byte)((2 * colours[0].Red + colours[1].Red + 1) / 3);
+                            colours[2].Alpha = 0xFF;
+
+                            colours[3].Blue = (byte)((colours[0].Blue + 2 * colours[1].Blue + 1) / 3);
+                            colours[3].Green = (byte)((colours[0].Green + 2 * colours[1].Green + 1) / 3);
+                            colours[3].Red = (byte)((colours[0].Red + 2 * colours[1].Red + 1) / 3);
+                            colours[3].Alpha = 0xFF;
+
+                            for (int j = 0, k = 0; j < 4; j++)
+                            {
+                                for (int i = 0; i < 4; i++, k++)
+                                {
+                                    int selector = (int)((bitmask >> (k * 2)) & 0x3);
+                                    Colour8888 c = colours[selector];
+
+                                    byte a4 = (byte)((alphaBits >> (k * 4)) & 0xF);
+                                    byte alpha = (byte)(a4 | (a4 << 4));
+
+                                    if ((x + i) < sizeX && (y + j) < sizeY)
+                                    {
+                                        uint ofs = (uint)(z * sizeOfPlane + (y + j) * bitsPerRow + (x + i) * bitsPerPixel);
+                                        rawData[ofs + 0] = c.Red;
+                                        rawData[ofs + 1] = c.Green;
+                                        rawData[ofs + 2] = c.Blue;
+                                        rawData[ofs + 3] = alpha;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return rawData;
+    }
+
     public static byte[] DXT5(byte[] inp, int sizeX, int sizeY, int sizeZ)
     {
         int bitsPerSecond = sizeX * Constants.DXT_BITS_PER_PIXEL;
@@ -196,6 +266,7 @@ public static class DXTDecoder
                                         uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL + 3);
                                         rawData[offset] = (byte)alphas[bits & 0x07];
                                     }
+
                                     bits >>= 3;
                                 }
                             }
@@ -213,6 +284,7 @@ public static class DXTDecoder
                                         uint offset = (uint)(z * sizeOfPlane + (y + j) * bitsPerSecond + (x + i) * Constants.DXT_BITS_PER_PIXEL + 3);
                                         rawData[offset] = (byte)alphas[bits & 0x07];
                                     }
+
                                     bits >>= 3;
                                 }
                             }
@@ -220,6 +292,7 @@ public static class DXTDecoder
                     }
                 }
             }
+
             return rawData;
         }
     }

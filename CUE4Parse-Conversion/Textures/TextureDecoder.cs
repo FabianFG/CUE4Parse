@@ -264,6 +264,20 @@ public static class TextureDecoder
                 }
                 break;
             }
+            case EPixelFormat.PF_DXT3:
+            {
+                if (UseAssetRipperTextureDecoder)
+                {
+                    Bc2.Decompress(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
+                else
+                {
+                    data = DXTDecoder.DXT3(bytes, sizeX, sizeY, sizeZ);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
+                break;
+            }
             case EPixelFormat.PF_DXT5:
                 if (UseAssetRipperTextureDecoder)
                 {
@@ -353,7 +367,9 @@ public static class TextureDecoder
                 break;
 
             //SECTION: raw formats. Do nothing, we return original format and data
+            case EPixelFormat.PF_A8R8G8B8:
             case EPixelFormat.PF_B8G8R8A8:
+            case EPixelFormat.PF_V8U8:
             case EPixelFormat.PF_G8:
             case EPixelFormat.PF_A32B32G32R32F:
             case EPixelFormat.PF_FloatRGB:

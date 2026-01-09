@@ -25,7 +25,7 @@ public class FMaterial
 
     public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)
     {
-        var bCooked = Ar.ReadBoolean();
+        var bCooked = Ar.Ver > EUnrealEngineObjectUE4Version.INLINE_SHADERS && Ar.ReadBoolean();
         if (!bCooked) return;
 
         var bValid = Ar.ReadBoolean();

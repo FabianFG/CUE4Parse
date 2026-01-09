@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -21,6 +21,7 @@ public abstract class GameFile
     [
         ..UePackageExtensions, ..UePackagePayloadExtensions,
         "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
+        // "wem", "bnk" not sure we want to load these
     ];
 
     // hashset for quick lookup

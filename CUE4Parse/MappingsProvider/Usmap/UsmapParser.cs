@@ -40,7 +40,7 @@ public class UsmapParser
         var bHasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
         if (bHasVersioning)
         {
-            PackageVersion = Ar.Read<FPackageFileVersion>();
+            PackageVersion = new FPackageFileVersion(Ar.Read<int>(), Ar.Read<int>());
             CustomVersions = new FCustomVersionContainer(Ar);
             NetCL = Ar.Read<uint>();
         }

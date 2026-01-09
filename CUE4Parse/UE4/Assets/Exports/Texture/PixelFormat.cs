@@ -43,7 +43,7 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_R16F,               "PF_R16F",                1,          1,          1,          2,            1,                true),
         new(EPixelFormat.PF_R16F_FILTER,        "PF_R16F_FILTER",         1,          1,          1,          2,            1,                true),
         new(EPixelFormat.PF_BC5,                "BC5",                    4,          4,          1,          16,           2,                true),
-        new(EPixelFormat.PF_V8U8,               "V8U8",                   1,          1,          1,          2,            2,                false),
+        new(EPixelFormat.PF_V8U8,               "V8U8",                   1,          1,          1,          2,            2,                true),
         new(EPixelFormat.PF_A1,                 "A1",                     1,          1,          1,          1,            1,                false),
         new(EPixelFormat.PF_FloatR11G11B10,     "FloatR11G11B10",         1,          1,          1,          4,            3,                false),
         new(EPixelFormat.PF_A8,                 "A8",                     1,          1,          1,          1,            1,                false),
@@ -58,8 +58,8 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_R16G16B16A16_UINT,  "R16G16B16A16_UINT",      1,          1,          1,          8,            4,                false),
         new(EPixelFormat.PF_R16G16B16A16_SINT,  "R16G16B16A16_SINT",      1,          1,          1,          8,            4,                false),
         new(EPixelFormat.PF_R5G6B5_UNORM,       "PF_R5G6B5_UNORM",        1,          1,          1,          2,            3,                false),
-        new(EPixelFormat.PF_R8G8B8A8,           "R8G8B8A8",               1,          1,          1,          4,            4,                false),
-        new(EPixelFormat.PF_A8R8G8B8,           "A8R8G8B8",               1,          1,          1,          4,            4,                false),
+        new(EPixelFormat.PF_R8G8B8A8,           "R8G8B8A8",               1,          1,          1,          4,            4,                true),
+        new(EPixelFormat.PF_A8R8G8B8,           "A8R8G8B8",               1,          1,          1,          4,            4,                true),
         new(EPixelFormat.PF_BC4,                "BC4",                    4,          4,          1,          8,            1,                true),
         new(EPixelFormat.PF_R8G8,               "R8G8",                   1,          1,          1,          2,            2,                false),
 
@@ -157,7 +157,7 @@ public enum EPixelFormat : byte
 	PF_DXT3                 = 6,
 	PF_DXT5                 = 7,
 	PF_UYVY                 = 8,
-	PF_FloatRGB             = 9, // 16F
+	PF_FloatRGB             = 9,  // 16F
 	PF_FloatRGBA            = 10, // 16F
 	PF_DepthStencil         = 11,
 	PF_ShadowDepth          = 12,
@@ -186,7 +186,7 @@ public enum EPixelFormat : byte
 	PF_R16G16B16A16_SINT    = 35,
 	PF_R5G6B5_UNORM         = 36,
 	PF_R8G8B8A8             = 37,
-	PF_A8R8G8B8				= 38,	// Only used for legacy loading; do NOT use!
+	PF_A8R8G8B8				= 38,
 	PF_BC4					= 39,
 	PF_R8G8                 = 40,
 	PF_ATC_RGB				= 41,	// Unsupported Format
