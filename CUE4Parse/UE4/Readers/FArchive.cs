@@ -207,6 +207,15 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipMultipleBulkArrayData(int count)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                SkipBulkArrayData();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SkipFixedArray(int size = -1)
         {
             var num = Read<int>();

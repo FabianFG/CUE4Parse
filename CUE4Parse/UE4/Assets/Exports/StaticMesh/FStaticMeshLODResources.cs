@@ -131,6 +131,7 @@ public class FStaticMeshLODResources
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
+                    EGame.GAME_TheFinals => 12,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
@@ -143,7 +144,7 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals) Ar.Position += 4;
         }
     }
 
@@ -267,6 +268,11 @@ public class FStaticMeshLODResources
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
+        }
+        if (Ar.Game == EGame.GAME_TheFinals)
+        {
+            _ = new FRawStaticIndexBuffer(Ar);
+            Ar.Position += 4; // Vert count
         }
 
         if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth)

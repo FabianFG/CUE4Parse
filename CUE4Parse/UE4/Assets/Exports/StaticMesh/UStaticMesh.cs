@@ -85,20 +85,14 @@ public class UStaticMesh : UObject
                     case EGame.GAME_CrystalOfAtlan:
                     case EGame.GAME_FragPunk:
                         if (Ar.Game is EGame.GAME_FragPunk && !Ar.ReadBoolean()) break;
-                        Ar.SkipBulkArrayData();
-                        Ar.SkipBulkArrayData();
-                        Ar.SkipBulkArrayData();
+                        Ar.SkipMultipleBulkArrayData(3);
                         break;
                     case EGame.GAME_Farlight84:
                     {
-                        Ar.SkipBulkArrayData();
-                        Ar.SkipBulkArrayData();
+                        Ar.SkipMultipleBulkArrayData(2);
                         var count = Ar.Read<int>();
                         for (var i = 0; i < count; i++)
-                        {
-                            Ar.SkipBulkArrayData();
-                            Ar.SkipBulkArrayData();
-                        }
+                            Ar.SkipMultipleBulkArrayData(2);
                         break;
                     }
                     default:
@@ -110,6 +104,7 @@ public class UStaticMesh : UObject
         }
 
         if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_TheFinals && Ar.ReadBoolean()) Ar.SkipMultipleBulkArrayData(5);
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {
