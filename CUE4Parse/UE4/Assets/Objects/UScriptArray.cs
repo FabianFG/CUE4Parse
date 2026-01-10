@@ -42,7 +42,7 @@ public class UScriptArray
                 $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
         }
 
-        if (Ar.HasUnversionedProperties)
+        if (Ar.HasUnversionedProperties || Ar.Game < EGame.GAME_UE4_0)
         {
             InnerTagData = tagData.InnerTypeData;
         }

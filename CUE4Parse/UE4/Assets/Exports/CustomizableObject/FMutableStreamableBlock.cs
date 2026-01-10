@@ -1,17 +1,11 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+﻿using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
-public class FMutableStreamableBlock
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public readonly struct FMutableStreamableBlock
 {
-    public uint FileId;
-    public uint Flags;
-    public ulong Offset;
-
-    public FMutableStreamableBlock(FAssetArchive Ar)
-    {
-        FileId = Ar.Read<uint>();
-        Flags = Ar.Read<uint>();
-        Offset = Ar.Read<ulong>();
-    }
+    public readonly uint FileId;
+    public readonly ushort Flags;
+    public readonly ulong Offset;
 }

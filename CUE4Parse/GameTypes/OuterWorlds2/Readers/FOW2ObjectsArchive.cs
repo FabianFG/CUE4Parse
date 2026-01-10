@@ -11,7 +11,7 @@ public class FOW2ObjectsArchive : FObjectAndNameAsStringProxyArchive
     public readonly FPropertryDataObjectContainer Objects;
     public readonly IPackage Asset;
     public readonly bool bHasVersion;
-    
+
     public FOW2ObjectsArchive(FAssetArchive Ar, FPropertryDataObjectContainer container) : base(Ar)
     {
         Objects = container;

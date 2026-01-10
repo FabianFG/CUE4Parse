@@ -30,7 +30,7 @@ public class UMaterial : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         TwoSided = GetOrDefault<bool>(nameof(TwoSided));
         bDisableDepthTest = GetOrDefault<bool>(nameof(bDisableDepthTest));
@@ -42,7 +42,7 @@ public class UMaterial : UMaterialInterface
         OpacityMaskClipValue = GetOrDefault(nameof(OpacityMaskClipValue), OpacityMaskClipValue);
 
         // 4.25+
-        if (Ar.Game >= EGame.GAME_UE4_25)
+        if (Ar.Game >= EGame.GAME_UE4_25 || Ar.Game < EGame.GAME_UE4_0)
         {
             CachedExpressionData ??= GetOrDefault<FStructFallback>(nameof(CachedExpressionData));
             if (CachedExpressionData != null && CachedExpressionData.TryGetValue(out UTexture[] referencedTextures, "ReferencedTextures"))

@@ -217,6 +217,11 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
+        public void RegisterTextureCache(FileInfo file)
+        {
+            TextureCachePaths[Path.GetFileNameWithoutExtension(file.Name)] = file.FullName;
+        }
+
         protected void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 
@@ -10,20 +10,12 @@ public class FModelStreamableBulkData
     public Dictionary<uint, FClothingStreamable> ClothingStreamables;
     public Dictionary<uint, FRealTimeMorphStreamable> RealTimeMorphStreamables;
     public FByteBulkData[] StreamableBulkData;
-
-    public FModelStreamableBulkData(FAssetArchive Ar, bool bCooked)
+    
+    public FModelStreamableBulkData(FAssetArchive Ar)
     {
-        ModelStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FMutableStreamableBlock(Ar)));
-        ClothingStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FClothingStreamable(Ar)));
-        RealTimeMorphStreamables = Ar.ReadMap(() => (Ar.Read<uint>(), new FRealTimeMorphStreamable(Ar)));
-
-        if (bCooked)
-        {
-            StreamableBulkData = new FByteBulkData[Ar.Read<int>()];
-            for (int i = 0; i < StreamableBulkData.Length; i++)
-            {
-                StreamableBulkData[i] = new FByteBulkData(Ar);
-            }
-        }
+        ModelStreamables = Ar.ReadMap(Ar.Read<uint>, Ar.Read<FMutableStreamableBlock>);
+        ClothingStreamables = Ar.ReadMap(Ar.Read<uint>, Ar.Read<FClothingStreamable>);
+        RealTimeMorphStreamables = Ar.ReadMap(Ar.Read<uint>, () => new FRealTimeMorphStreamable(Ar));
+        StreamableBulkData = Ar.ReadArray(() => new FByteBulkData(Ar));
     }
 }

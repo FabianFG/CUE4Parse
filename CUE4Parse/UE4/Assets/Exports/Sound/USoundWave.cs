@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -6,14 +7,6 @@ using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound;
-
-public enum ESoundWaveFlag : uint
-{
-    CookedFlag					= 1 << 0,
-    HasOwnerLoadingBehaviorFlag	= 1 << 1,
-    LoadingBehaviorShift		= 2,
-    LoadingBehaviorMask			= 0b00000111,
-}
 
 public class USoundWave : USoundBase
 {
@@ -70,12 +63,12 @@ public class USoundWave : USoundBase
         }
     }
 
-    public virtual void SerializeCuePoints(FAssetArchive Ar)
+    protected virtual void SerializeCuePoints(FAssetArchive Ar)
     {
         PlatformCuePoints = Ar.ReadArray(() => new FStructFallback(Ar, "SoundWaveCuePoint"));
     }
 
-    public virtual void SerializeCookedPlatformData(FAssetArchive Ar)
+    protected virtual void SerializeCookedPlatformData(FAssetArchive Ar)
     {
         RunningPlatformData = new FStreamedAudioPlatformData(Ar);
     }
@@ -107,4 +100,13 @@ public class USoundWave : USoundBase
     {
         base.Deserialize(Ar, validPos);
     }
+}
+
+[Flags]
+public enum ESoundWaveFlag : uint
+{
+    CookedFlag					= 1 << 0,
+    HasOwnerLoadingBehaviorFlag	= 1 << 1,
+    LoadingBehaviorShift		= 2,
+    LoadingBehaviorMask			= 0b00000111,
 }

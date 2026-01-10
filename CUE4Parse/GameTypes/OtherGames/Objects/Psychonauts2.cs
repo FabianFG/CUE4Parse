@@ -74,8 +74,8 @@ public class UStoryData : UObject
     [StructLayout(LayoutKind.Sequential, Pack =1)]
     public struct FP2StoryDataStruct
     {
-        public int LinecodeTableIndex;
         public int TextsIndex;
+        public int DialogueIndex;
         public short CharactersIndex;
         public short CharacterVariantsIndex;
         public short AudioTemplatesIndex;
