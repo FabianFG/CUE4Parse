@@ -3,7 +3,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.StructUtils;
 
@@ -42,11 +41,17 @@ public enum EPropertyBagContainerType : byte
 
 public class FInstancedPropertyBag : IUStruct
 {
-    public FPropertyBagPropertyDesc[] PropertyDescs;
+    public FPropertyBagPropertyDesc[] PropertyDescs = [];
     public int SerialSize;
 
     public FInstancedPropertyBag(FAssetArchive Ar)
     {
+        if (this is FInstancedOverridablePropertyBag
+            && FOverridablePropertyBagCustomVersion.Get(Ar) < FOverridablePropertyBagCustomVersion.Type.FixSerializer)
+        {
+            return;
+        }
+
         var Version = EVersion.LatestVersion;
         if (FPropertyBagCustomVersion.Get(Ar) < FPropertyBagCustomVersion.Type.ContainerTypes)
         {

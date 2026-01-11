@@ -181,6 +181,7 @@ public class FScriptStruct
             "InstancedStruct" => new FInstancedStruct(Ar),
             "InstancedStructContainer" => new FInstancedStructContainer(Ar),
             "InstancedPropertyBag" => new FInstancedPropertyBag(Ar),
+            "InstancedOverridablePropertyBag" => new FInstancedOverridablePropertyBag(Ar),
             "WorldConditionQueryDefinition" => new FWorldConditionQueryDefinition(Ar),
             "UniversalObjectLocatorFragment" => type == ReadType.ZERO ? new FUniversalObjectLocatorFragment() : new FUniversalObjectLocatorFragment(Ar),
             "KeyHandleMap" => new FStructFallback(),
