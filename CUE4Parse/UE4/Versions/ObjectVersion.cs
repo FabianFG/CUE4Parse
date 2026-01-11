@@ -2160,7 +2160,7 @@ namespace CUE4Parse.UE4.Versions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FPackageFileVersion(int ue4Version, int ue5Version)
         {
-            FileVersionUE3 = 0;
+            FileVersionUE3 = (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION;
             FileVersionUE4 = ue4Version;
             FileVersionUE5 = ue5Version;
         }
@@ -2181,10 +2181,10 @@ namespace CUE4Parse.UE4.Versions
         public static FPackageFileVersion CreateUE3Version(EUnrealEngineObjectUE3Version version) => new((int)version, 0, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FPackageFileVersion CreateUE4Version(int version) => new(0, version, 0);
+        public static FPackageFileVersion CreateUE4Version(int version) => new(version, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FPackageFileVersion CreateUE4Version(EUnrealEngineObjectUE4Version version) => new(0, (int)version, 0);
+        public static FPackageFileVersion CreateUE4Version(EUnrealEngineObjectUE4Version version) => new((int)version, 0);
 
         public int Value
         {
