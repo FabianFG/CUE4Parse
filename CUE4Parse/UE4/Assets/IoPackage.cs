@@ -141,7 +141,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr.Position = cellOffsets.CellImportMapOffset;
                 exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
-                (var storeEntry, importedPackageIds) = GetStoreEntryAndImportedPackageIds(containerHeader);
+                (var storeEntry, importedPackageIds) = GetStoreEntryAndImportedPackageIds(containerHeader, provider);
                 if (uassetAr.Game < EGame.GAME_UE5_3)
                 {
                     // Export bundle headers

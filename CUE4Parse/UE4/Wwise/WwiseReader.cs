@@ -49,9 +49,13 @@ public class WwiseReader
                     if (!Ar.ReadBoolean())
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
-                    Ar.Position += 16;
+                    long entriesOffset = Ar.Read<int>();
+                    Ar.Position += 12;
+                    var namesOffset = Ar.Position;
+                    entriesOffset += namesOffset + sizeof(int);
                     Folders = Ar.ReadArray(() => new AkFolder(Ar));
-                    foreach (var folder in Folders) folder.PopulateName(Ar);
+                    foreach (var folder in Folders) folder.PopulateName(Ar, namesOffset);
+                    Ar.Position = entriesOffset;
                     foreach (var folder in Folders)
                     {
                         folder.Entries = new AkEntry[Ar.Read<uint>()];
