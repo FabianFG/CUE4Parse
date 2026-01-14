@@ -7,6 +7,7 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
@@ -28,8 +29,17 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 102
     // Important note: If game splits audio event hierarchies across multiple soundbanks and either of these limits is reached, given game requires custom loading implementation!
     public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
     public int MaxBankFiles { get; } = maxBankFiles;
-    // NOTES:
-    // - REMATCH requires increase MaxBankFiles. Total Wwise size is fine.
+
+    public static WwiseProviderConfiguration GetFinalConfiguration(EGame game, WwiseProviderConfiguration? userConfig)
+    {
+        var baseConfig = userConfig ?? new WwiseProviderConfiguration();
+
+        return game switch
+        {
+            EGame.GAME_AceCombat7 => new WwiseProviderConfiguration(long.MaxValue, baseConfig.MaxBankFiles),
+            _ => baseConfig
+        };
+    }
 }
 
 public class WwiseProvider
@@ -54,7 +64,7 @@ public class WwiseProvider
     public WwiseProvider(AbstractVfsFileProvider provider, WwiseProviderConfiguration? configuration = null)
     {
         _provider = provider;
-        _configuration = configuration ?? new WwiseProviderConfiguration();
+        _configuration = WwiseProviderConfiguration.GetFinalConfiguration(_provider.Versions.Game, configuration);
 
         LoadMultiReferenceLibrary();
 
@@ -70,7 +80,7 @@ public class WwiseProvider
     private readonly HashSet<uint> _visitedWemIds = []; // To prevent duplicates
 
     // Please don't change this, when extracting directly from .bnk we shouldn't loop through wwise hierarchy
-    // because that doesn't guarantee us to extract the audio from this given .bnk
+    // because that doesn't guarantee us to extract the audio from this given soundbank
     public List<WwiseExtractedSound> ExtractBankSounds(WwiseReader wwiseReader)
     {
         CacheSoundBank(wwiseReader);
@@ -89,7 +99,7 @@ public class WwiseProvider
                 Data = media.Value,
             });
         }
-        
+
         return results;
     }
 
@@ -208,7 +218,8 @@ public class WwiseProvider
 
     private void ProcessSoundBankCookedData(FWwiseSoundBankCookedData soundBank, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results)
     {
-        if (!soundBank.bContainsMedia) return;
+        if (!soundBank.bContainsMedia)
+            return;
 
         DetermineBaseWwiseAudioPath();
 
@@ -346,7 +357,6 @@ public class WwiseProvider
                                 continue;
 
                             TraverseAndSave(eventAction.ReferencedId);
-
                         }
                         break;
                     default:
@@ -433,6 +443,8 @@ public class WwiseProvider
 
         var soundBankFiles = _provider.Files.Values
             .Where(file => _validSoundBankExtensions.Contains(file.Extension))
+            // We need to prioritize .pck over .bnk (if there's such pair, .bnk might contain only partial audio buffer, full one is stored in .pck)
+            .OrderByDescending(file => file.Extension.Equals("pck", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         if (soundBankFiles.Count == 0)
@@ -477,6 +489,7 @@ public class WwiseProvider
             totalLoadedBanks += 1;
         }
 
+        Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks");
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
@@ -491,7 +504,9 @@ public class WwiseProvider
         using var archive = new FByteArchive(soundBankName, data);
         var wwiseReader = new WwiseReader(archive);
         CacheSoundBank(wwiseReader);
-        _wwiseLoadedSoundBanks.Add(wwiseReader.Header.SoundBankId);
+
+        if (wwiseReader.Header.SoundBankId is not 0)
+            _wwiseLoadedSoundBanks.Add(wwiseReader.Header.SoundBankId);
 
         fileSize = data.LongLength;
         return true;
