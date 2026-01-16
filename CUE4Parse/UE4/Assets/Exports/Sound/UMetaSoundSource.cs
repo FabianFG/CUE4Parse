@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound;
 
-public class UMetaSoundSource : SoundWaveProcedural
+public class UMetaUSoundSource : USoundWaveProcedural
 {
     public FStructFallback? Settings;
 
