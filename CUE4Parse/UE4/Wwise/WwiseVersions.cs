@@ -65,11 +65,13 @@ public static class WwiseVersions
     ];
 
     // Versions CUE4Parse currently supports
+    // Should be noted that Wwise added support for Unreal Engine around version 100, so we can safely ignore older ones
     // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [
         112,    // Dead by Daylight (old)
         113,    // Dead by Daylight (old)
+        125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect

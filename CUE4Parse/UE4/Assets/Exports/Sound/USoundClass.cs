@@ -18,7 +18,7 @@ public class USoundClass : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SOUND_CLASS_SERIALISATION_UPDATE)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SOUND_CLASS_SERIALISATION_UPDATE && Ar.Ver < EUnrealEngineObjectUE4Version.SOUND_CLASS_GRAPH_EDITOR)
         {
             EditorData = Ar.ReadArray<KeyValuePair<FPackageIndex, FSoundClassEditorData>>(() => new(new FPackageIndex(Ar), Ar.Read<FSoundClassEditorData>()));
         }

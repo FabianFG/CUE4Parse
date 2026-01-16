@@ -181,6 +181,7 @@ public class FScriptStruct
             "InstancedStruct" => new FInstancedStruct(Ar),
             "InstancedStructContainer" => new FInstancedStructContainer(Ar),
             "InstancedPropertyBag" => new FInstancedPropertyBag(Ar),
+            "InstancedOverridablePropertyBag" => new FInstancedOverridablePropertyBag(Ar),
             "WorldConditionQueryDefinition" => new FWorldConditionQueryDefinition(Ar),
             "UniversalObjectLocatorFragment" => type == ReadType.ZERO ? new FUniversalObjectLocatorFragment() : new FUniversalObjectLocatorFragment(Ar),
             "KeyHandleMap" => new FStructFallback(),
@@ -350,6 +351,9 @@ public class FScriptStruct
 
             // Palia
             "VAL_CharacterCustomizationVariantOptionsArray" => new FVAL_CharacterCustomizationVariantOptionsArray(Ar),
+
+            // Steel Hunters
+            "ParamRegistryInfo" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             _ => Ar.Game switch
             {

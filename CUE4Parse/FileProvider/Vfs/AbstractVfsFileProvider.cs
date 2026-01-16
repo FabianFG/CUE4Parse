@@ -29,6 +29,7 @@ using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
+using CUE4Parse.GameTypes.Styx.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
 using CUE4Parse.GameTypes.UWO.Encryption.Aes;
@@ -97,6 +98,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
+                EGame.GAME_StyxBladesofGreed => StyxAes.StyxDecrypt,
                 _ => null
             };
         }
@@ -509,6 +511,25 @@ namespace CUE4Parse.FileProvider.Vfs
                 }
             }
             return refList;
+        }
+
+        public FFilePackageStoreEntry? TryFindStoreEntry(FPackageId packageId)
+        {
+            FFilePackageStoreEntry? storeEntry = null;
+            foreach (var reader in MountedVfs)
+            {
+                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                    continue;
+
+                var idx = Array.IndexOf(header.PackageIds, packageId);
+                if (idx != -1)
+                {
+                    storeEntry = header.StoreEntries[idx];
+                    break;
+                }
+
+            }
+            return storeEntry;
         }
 
         public override void Dispose()

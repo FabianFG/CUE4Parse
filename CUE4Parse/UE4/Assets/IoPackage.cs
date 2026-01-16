@@ -111,32 +111,6 @@ namespace CUE4Parse.UE4.Assets
                 Summary.NameCount = NameMap.Length;
                 Name = CreateFNameFromMappedName(summary.Name).Text;
 
-                // Find store entry by package name
-                FFilePackageStoreEntry? storeEntry = null;
-                if (containerHeader != null)
-                {
-                    var packageId = FPackageId.FromName(Name);
-                    var storeEntryIdx = Array.IndexOf(containerHeader.PackageIds, packageId);
-                    if (storeEntryIdx != -1)
-                    {
-                        storeEntry = containerHeader.StoreEntries[storeEntryIdx];
-                    }
-                    else
-                    {
-                        var optionalSegmentStoreEntryIdx = Array.IndexOf(containerHeader.OptionalSegmentPackageIds, packageId);
-                        if (optionalSegmentStoreEntryIdx != -1)
-                        {
-                            storeEntry = containerHeader.OptionalSegmentStoreEntries[optionalSegmentStoreEntryIdx];
-                        }
-                        else
-                        {
-                            Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
-                        }
-                    }
-
-                    // SoftPackageReferences = containerHeader.SoftPackageReferences.PackageIds;
-                }
-
                 BulkDataMap = [];
                 if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == EGame.GAME_TheFirstDescendant)
                 {
@@ -167,6 +141,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr.Position = cellOffsets.CellImportMapOffset;
                 exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
+                (var storeEntry, importedPackageIds) = GetStoreEntryAndImportedPackageIds(containerHeader, provider);
                 if (uassetAr.Game < EGame.GAME_UE5_3)
                 {
                     // Export bundle headers
@@ -176,8 +151,6 @@ namespace CUE4Parse.UE4.Assets
                     // We don't read the graph data
                 }
                 else exportBundleHeaders = null;
-
-                importedPackageIds = storeEntry?.ImportedPackages ?? [];
 
                 cookedHeaderSize = (int) summary.CookedHeaderSize;
                 allExportDataOffset = (int) summary.HeaderSize;
@@ -311,6 +284,70 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
+        private (FFilePackageStoreEntry? storeEntry, FPackageId[] importedPackageIds) GetStoreEntryAndImportedPackageIds(FIoContainerHeader? containerHeader, IVfsFileProvider? provider = null)
+        {
+            // Find store entry by package name
+            FFilePackageStoreEntry? storeEntry = null;
+            FFilePackageStoreEntry? mainAssetStoreEntry = null;
+            FPackageId[] importedPackageIds = [];
+            if (containerHeader != null)
+            {
+                var packageId = FPackageId.FromName(Name);
+                var storeEntryIdx = Array.IndexOf(containerHeader.PackageIds, packageId);
+                if (storeEntryIdx != -1)
+                {
+                    storeEntry = containerHeader.StoreEntries[storeEntryIdx];
+                }
+                else
+                {
+                    var optionalSegmentStoreEntryIdx = Array.IndexOf(containerHeader.OptionalSegmentPackageIds, packageId);
+                    if (optionalSegmentStoreEntryIdx != -1)
+                    {
+                        storeEntry = containerHeader.OptionalSegmentStoreEntries[optionalSegmentStoreEntryIdx];
+                    }
+                    else
+                    {
+                        // this  should not happen for regular packages, but can be the case for editor only data
+                        mainAssetStoreEntry = (provider as AbstractVfsFileProvider)?.TryFindStoreEntry(packageId);
+                        if (mainAssetStoreEntry == null)
+                            Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                    }
+                }
+            }
+
+            if (storeEntry?.ImportedPackages is null && mainAssetStoreEntry is { ImportedPackages: not null }
+                && Summary.PackageFlags.HasFlag(EPackageFlags.PKG_ContainsNoAsset))
+            {
+                if (!ExportMap[0].OuterIndex.IsPackageImport)
+                    return (storeEntry, importedPackageIds);
+
+                // manually inserting main package as outer
+                int index = (int) ExportMap[0].OuterIndex.AsPackageImportRef.ImportedPackageIndex;
+                var list = mainAssetStoreEntry.ImportedPackages;
+
+                (int min, int max) = index < list.Length ? (index, list.Length) : (list.Length, index);
+                if (max > 1024 * 1024)
+                    return (storeEntry, list);
+
+                var result = new FPackageId[max+1];
+                Array.Copy(list, result, min);
+                result[index] = FPackageId.FromName(Name);
+
+                if (index < list.Length)
+                {
+                    Array.Copy(list, index, result, index + 1, list.Length - index);
+                }
+
+                importedPackageIds = result;
+            }
+            else
+            {
+                importedPackageIds = storeEntry?.ImportedPackages ?? [];
+            }
+
+            return (storeEntry, importedPackageIds);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FName CreateFNameFromMappedName(FMappedName mappedName) =>
             new(mappedName, mappedName.IsGlobal ? _globalData.GlobalNameMap : NameMap);
@@ -435,7 +472,6 @@ namespace CUE4Parse.UE4.Assets
                             }
                             else if (asset is Package package)
                             {
-                                Log.Information("Searching Pak package {0} for PublicExportHash 0x{1:X}", package.Name, ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex]);
                                 for (int exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
                                 {
                                     if (package.ExportMap[exportIndex].GetPublicExportHash() == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
