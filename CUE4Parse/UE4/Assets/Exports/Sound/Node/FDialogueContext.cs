@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+﻿using System;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -18,7 +19,7 @@ public struct FDialogueContext
     
     public static bool operator ==(FDialogueContext left, FDialogueContext right)
     {
-        if (!left.Speaker.ResolvedObject?.GetFullName().Equals(right.Speaker.ResolvedObject?.GetFullName()) ?? true)
+        if (!left.Speaker.ResolvedObject?.GetFullName().Equals(right.Speaker.ResolvedObject?.GetFullName(), StringComparison.OrdinalIgnoreCase) ?? true)
             return false;
 
         if (left.Targets.Length != right.Targets.Length)
@@ -26,7 +27,7 @@ public struct FDialogueContext
 
         for (int i = 0; i < left.Targets.Length; i++)
         {
-            if (left.Targets[i].ResolvedObject?.GetFullName().Equals(right.Targets[i].ResolvedObject?.GetFullName()) ?? true)
+            if (left.Targets[i].ResolvedObject?.GetFullName().Equals(right.Targets[i].ResolvedObject?.GetFullName(), StringComparison.OrdinalIgnoreCase) ?? true)
                 return false;
         }
         
