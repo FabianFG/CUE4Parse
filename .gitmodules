@@ -1,3 +1,7 @@
 [submodule "CUE4Parse-Natives/ACL/external/acl"]
 	path = CUE4Parse-Natives/ACL/external/acl
 	url = https://github.com/nfrechette/acl.git
+[submodule "CUE4Parse/UE4/Fmod/Fmod5Sharp"]
+	path = CUE4Parse/UE4/Fmod/Fmod5Sharp
+	url = https://github.com/Masusder/Fmod5Sharp.git
+	branch = improved

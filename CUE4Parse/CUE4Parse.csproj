@@ -28,7 +28,6 @@
     <PackageReference Include="Blake3" Version="2.0.0" />
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="FixedMathSharp" Version="1.3.3" />
-    <PackageReference Include="Fmod5Sharp" Version="3.0.1" />
     <PackageReference Include="GenericReader" Version="2.3.0" />
     <PackageReference Include="Infrablack.UE4Config" Version="0.7.2.97" />
     <PackageReference Include="LZMA-SDK" Version="22.1.1" />
@@ -38,6 +37,7 @@
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.8" />
+    <PackageReference Include="SubstreamSharp" Version="1.0.3" />
     <PackageReference Include="VGAudio" Version="2.2.1" />
     <PackageReference Include="Zlib-ng.NET" Version="1.2.0" />
     <PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
@@ -48,6 +48,13 @@
     <EmbeddedResource Include="Resources\ACE7Key.bin" />
     <None Remove="Resources\PUBGNameHashMap.json" />
     <EmbeddedResource Include="Resources\PUBGNameHashMap.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="UE4\FMod\Fmod5Sharp\**" />
+    <EmbeddedResource Remove="UE4\FMod\Fmod5Sharp\**" />
+    <None Remove="UE4\FMod\Fmod5Sharp\**" />
+    <ProjectReference Include="UE4\FMod\Fmod5Sharp\Fmod5Sharp\Fmod5Sharp.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
