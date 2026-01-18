@@ -2292,10 +2292,14 @@ namespace CUE4Parse.UE4.Versions
         public override int GetHashCode() => HashCode.Combine(FileVersionUE3, FileVersionUE4, FileVersionUE5);
 
         public override string ToString()
-            => FileVersionUE3 > (int)EUnrealEngineObjectUE3Version.DETERMINE_BY_GAME
-                ? ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString()
-                : FileVersionUE5 >= (int)EUnrealEngineObjectUE5Version.INITIAL_VERSION
-                    ? ((EUnrealEngineObjectUE5Version)FileVersionUE5).ToString()
-                    : ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
+        {
+            if (FileVersionUE5 >= (int)EUnrealEngineObjectUE5Version.INITIAL_VERSION)
+                return ((EUnrealEngineObjectUE5Version)FileVersionUE5).ToString();
+
+            if (FileVersionUE4 >= (int)EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE)
+                return ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
+            
+            return ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString();
+        }
     }
 }

@@ -262,6 +262,40 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue[]> ReadMultiMap<TKey, TValue>(int length, Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
+        {
+            var keyDic = new Dictionary<TKey, List<TValue>>();
+            for (var i = 0; i < length; i++)
+            {
+                var key = keyGetter();
+                var value = valueGetter();
+        
+                if (!keyDic.TryGetValue(key, out var list))
+                {
+                    list = [];
+                    keyDic[key] = list;
+                }
+        
+                list.Add(value);
+            }
+            
+            var result = new Dictionary<TKey, TValue[]>(keyDic.Count);
+            foreach (var kvp in keyDic)
+            {
+                result[kvp.Key] = kvp.Value.ToArray();
+            }
+
+            return result;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<TKey, TValue[]> ReadMultiMap<TKey, TValue>(Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
+        {
+            var length = Read<int>();
+            return ReadMultiMap(length, keyGetter, valueGetter);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool ReadBoolean()
         {
             var i = Read<int>();
