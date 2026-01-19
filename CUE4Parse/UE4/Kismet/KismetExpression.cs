@@ -16,7 +16,7 @@ public class FKismetPropertyPointer
 
     public FKismetPropertyPointer(FKismetArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE4_25)
+        if (Ar.Game >= EGame.GAME_UE4_25 || Ar.Game is EGame.GAME_AssaultFireFuture)
         {
             New = new FFieldPath(Ar);
         }

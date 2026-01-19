@@ -29,6 +29,7 @@ public class FStaticMeshSection
         bEnableCollision = Ar.ReadBoolean();
         bCastShadow = Ar.ReadBoolean();
         if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) Ar.Position += 5; // byte + int
+        if (Ar.Game is EGame.GAME_AssaultFireFuture) return;
         bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_MortalKombat1 or EGame.GAME_TheFinals) Ar.Position += 8;
         if (Ar.Game == EGame.GAME_BlueProtocol) CustomData = Ar.Read<short>(); // Must be read before bVisibleInRayTracing

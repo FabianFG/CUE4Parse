@@ -42,6 +42,9 @@ public class UScriptSet
 
             tagData.InnerTypeData = Ar.Game switch
             {
+                EGame.GAME_AssaultFireFuture when tagData.Name is "Data" => new FPropertyTagData("SoftObjectPath"),
+                EGame.GAME_AssaultFireFuture when tagData.Name is "MGCIdList" => new FPropertyTagData("GPRowName"),
+                EGame.GAME_AssaultFireFuture when tagData.Name is "PrimitiveBindingGuids" or "RefSets" or "OwnerActors" => new FPropertyTagData("Guid"),
                 EGame.GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),

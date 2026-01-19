@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.DaysGone.Assets;
@@ -70,7 +71,7 @@ public class UScriptMap
                 var value = FPropertyTagType.ReadPropertyTagType(Ar, tagData.ValueType, tagData.ValueTypeData, type);
                 Properties[key ?? new StrProperty($"UNK_Entry_{i}")] = value;
             }
-            catch (ParserException e)
+            catch (Exception e)
             {
                  throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
             }

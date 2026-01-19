@@ -124,7 +124,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 {
                     if (Ar.Game < EGame.GAME_UE4_23)
                         SerializeCompressedData(Ar);
-                    else if (Ar.Game < EGame.GAME_UE4_25)
+                    else if (Ar.Game < EGame.GAME_UE4_25 && Ar.Game != EGame.GAME_AssaultFireFuture)
                         SerializeCompressedData2(Ar);
                     else
                         SerializeCompressedData3(Ar);

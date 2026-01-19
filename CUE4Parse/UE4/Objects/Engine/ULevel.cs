@@ -135,6 +135,7 @@ public class ULevel : Assets.Exports.UObject
             return;
         }
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
+        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
     }
 
