@@ -196,6 +196,7 @@ public enum EGame : uint
         GAME_Borderlands4 = GAME_UE5_5 + 10,
         GAME_Rennsport = GAME_UE5_5 + 11,
         GAME_GrayZoneWarfare = GAME_UE5_5 + 12,
+        GAME_IntotheRadius2 = GAME_UE5_5 + 13,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
         GAME_Grounded2 = GAME_UE5_6 + 1,
         GAME_AshesOfCreation = GAME_UE5_6 + 2,
