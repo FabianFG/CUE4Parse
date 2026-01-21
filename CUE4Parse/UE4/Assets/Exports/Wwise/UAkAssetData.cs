@@ -15,10 +15,16 @@ public class UAkAssetData : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
+        var savedPosition = Ar.Position;
         if (bulkData.Data is null) return;
 
         using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
         Data = new WwiseReader(reader);
+
+        if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
+        {
+            Ar.Position = savedPosition + bulkData.Header.ElementCount;
+        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

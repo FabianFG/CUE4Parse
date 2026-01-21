@@ -45,6 +45,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_CrystalOfAtlan = 0x22ce976a;
     public const uint PAK_FILE_MAGIC_PromiseMascotAgency = 0x11adde11;
     public const uint PAK_FILE_MAGIC_ArenaBreakoutInfinite = 0x53647586;
+    public const uint PAK_FILE_MAGIC_AssaultFireFuture = 0x4F6FAE86;
 
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -201,6 +202,7 @@ public partial class FPakInfo
                 Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                 Ar.Game == EGame.GAME_FridayThe13th && Magic == PAK_FILE_MAGIC_FridayThe13th ||
                 Ar.Game == EGame.GAME_DreamStar && Magic == PAK_FILE_MAGIC_DreamStar ||
+                Ar.Game == EGame.GAME_AssaultFireFuture && Magic == PAK_FILE_MAGIC_AssaultFireFuture ||
                 Ar.Game == EGame.GAME_KartRiderDrift && Magic == PAK_FILE_MAGIC_KartRiderDrift)
                 goto afterMagic;
             // Stop immediately when magic is wrong
@@ -246,7 +248,7 @@ public partial class FPakInfo
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
-        if (Ar.Game == EGame.GAME_DreamStar)
+        if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_AssaultFireFuture)
         {
             (IndexOffset, IndexSize) = (IndexSize, IndexOffset);
         }
@@ -464,6 +466,7 @@ public partial class FPakInfo
                     EGame.GAME_PromiseMascotAgency when info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency => true,
                     EGame.GAME_WildAssault when info.Magic == PAK_FILE_MAGIC_WildAssault => true,
                     EGame.GAME_ArenaBreakoutInfinite when info.Magic == PAK_FILE_MAGIC_ArenaBreakoutInfinite => true,
+                    EGame.GAME_AssaultFireFuture when info.Magic == PAK_FILE_MAGIC_AssaultFireFuture => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
                 if (found) return info;
