@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+using CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
@@ -48,6 +49,15 @@ public class FMorphTargetLODModel
             {
                 Ar.Position += 4; // NumVertices
                 Vertices = [];
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
+            if (Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyTheDevilinMe
+                or EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope)
+            {
+                Vertices = FDPAMorphTargetDeltaBatchData.ProcessDPAMorphTargetDeltas(Ar);
                 SectionIndices = Ar.ReadArray<int>();
                 bGeneratedByEngine = Ar.ReadBoolean();
                 return;

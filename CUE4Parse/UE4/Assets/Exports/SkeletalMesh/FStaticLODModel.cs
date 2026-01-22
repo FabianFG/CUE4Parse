@@ -399,8 +399,9 @@ public class FStaticLODModel
             }
         }
 
-        if (Ar.Game is EGame.GAME_ReadyOrNot or EGame.GAME_HellLetLoose)
-            Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_ReadyOrNot or EGame.GAME_HellLetLoose or EGame.GAME_DarkPicturesAnthologyManofMedan or
+            EGame.GAME_DarkPicturesAnthologyTheDevilinMe) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DarkPicturesAnthologyLittleHope && !bIsLODCookedOut) Ar.Position += 4;
     }
 
     public void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
