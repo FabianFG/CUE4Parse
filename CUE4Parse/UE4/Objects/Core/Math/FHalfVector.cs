@@ -18,6 +18,7 @@ public readonly struct FHalfVector
     }
 
     public static implicit operator FVector(FHalfVector h) => new((float)h.X, (float)h.Y, (float)h.Z);
+    public static implicit operator FHalfVectorScaled(FHalfVector v) => new(v.X, v.Y, v.Z, Half.Zero);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 2)]
@@ -37,4 +38,27 @@ public readonly struct FHalfVector4
     }
 
     public static implicit operator FVector(FHalfVector4 h) => new FVector((float)h.X, (float)h.Y, (float)h.Z) * (float)h.W;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
+public readonly struct FHalfVectorScaled
+{
+    public readonly Half X;
+    public readonly Half Y;
+    public readonly Half Z;
+    public readonly Half W;
+
+    public FHalfVectorScaled(Half x, Half y, Half z, Half w)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+        W = w;
+    }
+
+    public static implicit operator FVector(FHalfVectorScaled h)
+    {
+        float wf = h.W == Half.Zero ? 1.0f : (float)h.W;
+        return new FVector((float) h.X, (float) h.Y, (float) h.Z) * wf;
+    }
 }

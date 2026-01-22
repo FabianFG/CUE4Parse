@@ -22,6 +22,7 @@ using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.MJS.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
+using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
@@ -99,6 +100,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
                 EGame.GAME_StyxBladesofGreed => StyxAes.StyxDecrypt,
+                EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 _ => null
             };
         }

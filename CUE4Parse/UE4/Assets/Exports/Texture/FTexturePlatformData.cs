@@ -159,6 +159,8 @@ public class FTexturePlatformData
             }
         }
 
+        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112; 
+
         if (Mips.Length > 0)
         {
             SizeX = Mips[0].SizeX;

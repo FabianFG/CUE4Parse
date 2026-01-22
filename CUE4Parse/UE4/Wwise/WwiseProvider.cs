@@ -37,6 +37,7 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 102
         return game switch
         {
             EGame.GAME_AceCombat7 => new WwiseProviderConfiguration(long.MaxValue, baseConfig.MaxBankFiles),
+            EGame.GAME_DarkPicturesAnthologyHouseOfAshes => new WwiseProviderConfiguration(long.MaxValue, baseConfig.MaxBankFiles),
             _ => baseConfig
         };
     }

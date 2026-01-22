@@ -1102,8 +1102,8 @@ public class FShaderMapResourceCode(FArchive Ar)
 {
     public FSHAHash ResourceHash = new FSHAHash(Ar);
     public FSHAHash[] ShaderHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-    public FShaderEntry[] ShaderEntries = Ar.Game < EGame.GAME_UE5_6 ? Ar.ReadArray(() => new FShaderEntry(Ar)) : [];
-    public FShaderCodeResource[] ShaderCodeResources = Ar.Game >= EGame.GAME_UE5_6 ? Ar.ReadArray(() => new FShaderCodeResource(Ar)) : [];
+    public FShaderEntry[] ShaderEntries = Ar.Game < EGame.GAME_UE5_5 ? Ar.ReadArray(() => new FShaderEntry(Ar)) : [];
+    public FShaderCodeResource[] ShaderCodeResources = Ar.Game >= EGame.GAME_UE5_5 ? Ar.ReadArray(() => new FShaderCodeResource(Ar)) : [];
 }
 
 public class FShaderEntry(FArchive Ar)
@@ -1130,7 +1130,7 @@ public class FShaderCodeResource
 
     FHeader Header;		// The above FHeader struct persisted in a shared buffer
     FSharedBuffer Code;			// The bytecode buffer as constructed by FShaderCode::FinalizeShaderCode
-    FCompressedBuffer Symbols;	// Buffer containing the symbols for this bytecode; will be empty if symbols are disabled
+    FCompressedBuffer? Symbols;	// Buffer containing the symbols for this bytecode; will be empty if symbols are disabled
 
     public FShaderCodeResource(FArchive Ar)
     {
@@ -1138,7 +1138,7 @@ public class FShaderCodeResource
         using var headerAr = new FByteArchive("FShaderCodeResource::Header", headerBuffer.Data, Ar.Versions);
         Header = headerAr.Read<FHeader>();
         Code = new FSharedBuffer(Ar);
-        Symbols = new FCompressedBuffer(Ar);
+        if (Ar.Game >= EGame.GAME_UE5_6) Symbols = new FCompressedBuffer(Ar);
     }
 }
 

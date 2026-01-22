@@ -2,6 +2,7 @@ using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
@@ -9,6 +10,7 @@ using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
+using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
@@ -69,6 +71,7 @@ public class FScriptStruct
             "Box2D" => type == ReadType.ZERO ? new FBox2D() : new FBox2D(Ar),
             "Box2f" => type == ReadType.ZERO ? new TBox2<float>() : new TBox2<float>(Ar),
             "Box3f" => type == ReadType.ZERO ? new TBox3<float>() : new TBox3<float>(Ar),
+            "CapsuleShape" => type == ReadType.ZERO ? new FCapsuleShape() : new FCapsuleShape(Ar),
             "Color" => type == ReadType.ZERO ? new FColor() : Ar.Read<FColor>(),
             "ColorMaterialInput" when FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.MaterialInputUsesLinearColor
                 => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),
@@ -354,6 +357,16 @@ public class FScriptStruct
 
             // Steel Hunters
             "ParamRegistryInfo" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "GPRowName" when Ar.Game is EGame.GAME_AssaultFireFuture => new FGPRowName(Ar),
+            "AnnotationPointData2" when Ar.Game is EGame.GAME_AssaultFireFuture => new FAnnotationPointData2(Ar),
+            "MovieSceneTangentData" when Ar.Game is EGame.GAME_AssaultFireFuture => new FMovieSceneTangentData(Ar),
+            "WeaponPassiveID" when Ar.Game is EGame.GAME_AssaultFireFuture => Ar.Read<FRawUIntStruct>(),
+            "MGEPassiveEquipStruct" when Ar.Game is EGame.GAME_AssaultFireFuture => Ar.Read<FRawStruct<ulong>>(),
+            "AssetDataSerializable" when Ar.Game is EGame.GAME_AssaultFireFuture => new FAssetDataSerializable(Ar),
+
+            "ActorReference" when Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyManofMedan or
+                EGame.GAME_DarkPicturesAnthologyLittleHope or EGame.GAME_DarkPicturesAnthologyTheDevilinMe => new FActorReference(Ar),
 
             _ => Ar.Game switch
             {
