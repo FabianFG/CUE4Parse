@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using CUE4Parse.UE4.Exceptions;
@@ -14,6 +15,7 @@ namespace CUE4Parse.UE4.Readers
         private readonly byte[] _compressedData;
         private int _currentIndex;
         private readonly byte[] _tmpData;
+        private readonly bool _tmpDataPooled;
         private int _tmpDataPos;
         private int _tmpDataSize;
         private bool _shouldSerializeFromArray;
@@ -28,7 +30,8 @@ namespace CUE4Parse.UE4.Readers
             _compressionFormat = compressionFormat;
             _compressionFlags = flags;
 
-            _tmpData = new byte[LOADING_COMPRESSION_CHUNK_SIZE];
+            _tmpData = ArrayPool<byte>.Shared.Rent(LOADING_COMPRESSION_CHUNK_SIZE);
+            _tmpDataPooled = true;
             _tmpDataPos = LOADING_COMPRESSION_CHUNK_SIZE;
             _tmpDataSize = LOADING_COMPRESSION_CHUNK_SIZE;
         }
@@ -119,6 +122,15 @@ namespace CUE4Parse.UE4.Readers
             // Buffer is filled again, reset.
             _tmpDataPos = 0;
             _tmpDataSize = (int) decompressedLength;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _tmpDataPooled)
+            {
+                ArrayPool<byte>.Shared.Return(_tmpData);
+            }
+            base.Dispose(disposing);
         }
     }
 }
