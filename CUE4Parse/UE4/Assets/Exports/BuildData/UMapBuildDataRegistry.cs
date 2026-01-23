@@ -344,7 +344,8 @@ public class FMeshMapBuildData
         };
 
         if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
-        if (Ar.Game is EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope && LightMap is not null) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope or
+            EGame.GAME_TheQuarry && LightMap is not null) Ar.Position += 4;
 
         ShadowMap = Ar.Read<EShadowMapType>() switch
         {
