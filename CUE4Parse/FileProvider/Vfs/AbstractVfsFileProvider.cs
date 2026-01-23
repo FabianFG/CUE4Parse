@@ -108,15 +108,24 @@ namespace CUE4Parse.FileProvider.Vfs
         public abstract void Initialize();
 
         public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName);
-        public void RegisterVfs(string file) => RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+        /// <summary>
+        /// Registers a VFS archive using memory-mapped files by default.
+        /// Memory-mapped files provide better performance for large archives through OS-level paging.
+        /// </summary>
+        public void RegisterVfs(string file) => RegisterRandomAccessVfs(new FMountedArchive(file, Versions), null, openPath => new FMountedArchive(openPath, Versions));
 
         public void RegisterVfs(FileInfo file, bool useMemoryMapping) => RegisterVfs(file.FullName, useMemoryMapping);
+        /// <summary>
+        /// Registers a VFS archive with explicit control over memory mapping.
+        /// </summary>
+        /// <param name="file">Path to the archive file.</param>
+        /// <param name="useMemoryMapping">If true, uses memory-mapped files (default behavior). If false, uses traditional file streams.</param>
         public void RegisterVfs(string file, bool useMemoryMapping)
         {
             if (useMemoryMapping)
                 RegisterRandomAccessVfs(new FMountedArchive(file, Versions), null, openPath => new FMountedArchive(openPath, Versions));
             else
-                RegisterVfs(file);
+                RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
         }
 
         public void RegisterVfs(string[] filePaths, bool useMemoryMapping)
@@ -151,17 +160,23 @@ namespace CUE4Parse.FileProvider.Vfs
         public void RegisterVfs(string file, Stream[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
             => RegisterVfs(new FStreamArchive(file, stream[0], Versions), stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
 
+        /// <summary>
+        /// Registers VFS archives using memory-mapped files by default.
+        /// </summary>
         public void RegisterVfs(string[] filePaths)
             => RegisterRandomAccessVfs(
-                new FRandomAccessFileStreamArchive(filePaths[0], Versions),
-                filePaths.Length > 1 ? new FRandomAccessFileStreamArchive(filePaths[1], Versions) : null,
-                openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+                new FMountedArchive(filePaths[0], Versions),
+                filePaths.Length > 1 ? new FMountedArchive(filePaths[1], Versions) : null,
+                openPath => new FMountedArchive(openPath, Versions));
 
+        /// <summary>
+        /// Registers VFS archives using memory-mapped files by default.
+        /// </summary>
         public void RegisterVfs(FileInfo[] fileInfos)
             => RegisterRandomAccessVfs(
-                new FRandomAccessFileStreamArchive(fileInfos[0], Versions),
-                fileInfos.Length > 1 ? new FRandomAccessFileStreamArchive(fileInfos[1], Versions) : null,
-                openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+                new FMountedArchive(fileInfos[0].FullName, Versions),
+                fileInfos.Length > 1 ? new FMountedArchive(fileInfos[1].FullName, Versions) : null,
+                openPath => new FMountedArchive(openPath, Versions));
 
         public void RegisterVfs(FArchive archive, Stream? stream, Func<string, FArchive>? openContainerStreamFunc = null)
         {

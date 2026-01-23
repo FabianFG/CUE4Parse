@@ -451,7 +451,17 @@ public class FPakEntry : VfsEntry
     public override byte[] Read(FByteBulkDataHeader? header = null)  => Vfs.Extract(this, header);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override FArchive CreateReader(FByteBulkDataHeader? header = null) => new FByteArchive(Path, Read(header), Vfs.Versions);
+    public override FArchive CreateReader(FByteBulkDataHeader? header = null)
+    {
+        // Use streaming for full file reads (no bulk header) when available
+        if (header == null)
+        {
+            var stream = Vfs.ExtractStream(this);
+            if (stream != null)
+                return new FStreamArchive(Path, stream, Vfs.Versions);
+        }
+        return new FByteArchive(Path, Read(header), Vfs.Versions);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FPakEntry(PakFileReader reader, string path, FArchive Ar, EGame game) : base(reader, path)
