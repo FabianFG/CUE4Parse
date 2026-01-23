@@ -527,6 +527,41 @@ public partial class IoStoreReader : AbstractAesVfsReader
     public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
     protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("IoStore can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
 
+    /// <summary>
+    /// Extracts an entry as a streaming reader for on-demand decompression.
+    /// </summary>
+    /// <param name="entry">The entry to extract.</param>
+    /// <returns>A stream for reading the entry data, or null if streaming is not supported.</returns>
+    public Stream? ExtractStream(VfsEntry entry)
+    {
+        if (entry is not FIoStoreEntry ioEntry || entry.Vfs != this)
+            return null;
+
+        // Game-specific extraction methods are not supported for streaming
+        if (Game is EGame.GAME_MindsEye)
+        {
+            return null;
+        }
+
+        // Prepare container streams (clone if concurrent)
+        FArchive[] containerStreams;
+        if (IsConcurrent)
+        {
+            containerStreams = new FArchive[ContainerStreams.Count];
+            for (var i = 0; i < ContainerStreams.Count; i++)
+            {
+                containerStreams[i] = (FArchive)ContainerStreams[i].Clone();
+            }
+        }
+        else
+        {
+            containerStreams = ContainerStreams.ToArray();
+        }
+
+        var blockProvider = new IoStoreBlockProvider(ioEntry, this, containerStreams);
+        return new StreamingAssetReader(blockProvider, AesKey, CustomEncryption, this, blockProvider.OffsetInFirstBlock);
+    }
+
     public override void Dispose()
     {
         foreach (var stream in ContainerStreams)

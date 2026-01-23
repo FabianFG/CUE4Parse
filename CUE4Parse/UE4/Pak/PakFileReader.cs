@@ -446,6 +446,39 @@ namespace CUE4Parse.UE4.Pak
             return reader.ReadBytes(size.Align(Aes.ALIGN));
         }
 
+        /// <summary>
+        /// Extracts an entry as a streaming reader for on-demand decompression.
+        /// </summary>
+        /// <param name="entry">The entry to extract.</param>
+        /// <returns>A stream for reading the entry data, or null if streaming is not supported.</returns>
+        public Stream? ExtractStream(VfsEntry entry)
+        {
+            if (entry is not FPakEntry pakEntry || entry.Vfs != this)
+                return null;
+
+            // Only support streaming for standard compressed entries
+            // Game-specific extraction methods (NetEase, Rennsport, etc.) are not supported
+            if (Game is EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves
+                or EGame.GAME_MindsEye or EGame.GAME_GameForPeace or EGame.GAME_Rennsport
+                or EGame.GAME_DragonQuestXI or EGame.GAME_ArenaBreakoutInfinite)
+            {
+                return null;
+            }
+
+            // Only compressed entries benefit from streaming
+            if (!pakEntry.IsCompressed)
+            {
+                // For uncompressed entries, use regular extraction wrapped in MemoryStream
+                // This maintains the same API but doesn't provide memory benefits
+                return new MemoryStream(Extract(entry));
+            }
+
+            // Create block provider and streaming reader
+            var archive = IsConcurrent ? (FArchive)Ar.Clone() : Ar;
+            var blockProvider = new PakBlockProvider(pakEntry, archive);
+            return new Readers.StreamingAssetReader(blockProvider, AesKey, CustomEncryption, this);
+        }
+
         public override void Dispose()
         {
             Ar.Dispose();
