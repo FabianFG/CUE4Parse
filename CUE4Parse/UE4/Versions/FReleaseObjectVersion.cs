@@ -160,6 +160,8 @@ public static class FReleaseObjectVersion
         return Ar.Game switch
         {
             EGame.GAME_AssaultFireFuture => Type.FFieldPathOwnerSerialization,
+            EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope or
+                EGame.GAME_DarkPicturesAnthologyTheDevilinMe => Type.GeometryCollectionCacheRemovesMassToLocal,
 
             < EGame.GAME_UE4_11 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE4_13 => Type.StaticMeshExtendedBoundsFix,

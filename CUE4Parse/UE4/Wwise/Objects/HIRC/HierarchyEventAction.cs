@@ -53,6 +53,8 @@ public class HierarchyEventAction : AbstractHierarchy
                 EEventActionType.ResetPlaylist => new AkActionBase(Ar),
             EEventActionType.Resume => new AkActionResume(Ar),
             EEventActionType.Pause => new AkActionPause(Ar),
+            EEventActionType.ToggleBypassEffect or
+                EEventActionType.ResetBypassEffect => new AkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };
