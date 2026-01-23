@@ -234,7 +234,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var remainingSize = length;
         var dstOffset = 0;
 
-        byte[]? compressedBuffer = null;
+        byte[]? pooledCompressedBuffer = null;
         byte[]? uncompressedBuffer = null;
         var compressedBufferSize = 0;
         var uncompressedBufferSize = 0;
@@ -250,9 +250,9 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
                 if (compressedBufferSize < rawSize)
                 {
-                    if (compressedBuffer != null)
-                        ArrayPool<byte>.Shared.Return(compressedBuffer);
-                    compressedBuffer = ArrayPool<byte>.Shared.Rent((int) rawSize);
+                    if (pooledCompressedBuffer != null)
+                        ArrayPool<byte>.Shared.Return(pooledCompressedBuffer);
+                    pooledCompressedBuffer = ArrayPool<byte>.Shared.Rent((int) rawSize);
                     compressedBufferSize = (int) rawSize;
                 }
 
@@ -268,14 +268,15 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 }
                 else reader = ContainerStreams[partitionIndex];
 
-                reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
+                reader.ReadAt(partitionOffset, pooledCompressedBuffer, 0, (int) rawSize);
                 // FragPunk decided to encrypt the global utoc too.
-                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+                // Note: DecryptIfEncrypted may return a new array if encrypted, keep pooled buffer reference separate
+                var dataToProcess = DecryptIfEncrypted(pooledCompressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
                 byte[] src;
                 if (compressionBlock.CompressionMethodIndex == 0)
                 {
-                    src = compressedBuffer;
+                    src = dataToProcess;
                 }
                 else
                 {
@@ -289,7 +290,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     }
 
                     var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
-                    Compression.Compression.Decompress(compressedBuffer, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
+                    Compression.Compression.Decompress(dataToProcess, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
                         (int) uncompressedSize, compressionMethod, reader);
                     src = uncompressedBuffer;
                 }
@@ -303,8 +304,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
         finally
         {
-            if (compressedBuffer != null)
-                ArrayPool<byte>.Shared.Return(compressedBuffer);
+            if (pooledCompressedBuffer != null)
+                ArrayPool<byte>.Shared.Return(pooledCompressedBuffer);
             if (uncompressedBuffer != null)
                 ArrayPool<byte>.Shared.Return(uncompressedBuffer);
         }
@@ -328,7 +329,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var remainingSize = length;
         var dstOffset = 0;
 
-        byte[]? compressedBuffer = null;
+        byte[]? pooledCompressedBuffer = null;
         byte[]? uncompressedBuffer = null;
         var compressedBufferSize = 0;
         var uncompressedBufferSize = 0;
@@ -344,9 +345,9 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
                 if (compressedBufferSize < rawSize)
                 {
-                    if (compressedBuffer != null)
-                        ArrayPool<byte>.Shared.Return(compressedBuffer);
-                    compressedBuffer = ArrayPool<byte>.Shared.Rent((int) rawSize);
+                    if (pooledCompressedBuffer != null)
+                        ArrayPool<byte>.Shared.Return(pooledCompressedBuffer);
+                    pooledCompressedBuffer = ArrayPool<byte>.Shared.Rent((int) rawSize);
                     compressedBufferSize = (int) rawSize;
                 }
 
@@ -363,18 +364,21 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 else
                     reader = ContainerStreams[partitionIndex];
 
-                reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
+                reader.ReadAt(partitionOffset, pooledCompressedBuffer, 0, (int) rawSize);
+                // Track data to process separately from pooled buffer
+                byte[] dataToProcess = pooledCompressedBuffer;
                 if (IsEncrypted && limit > 0)
                 {
                     if ((int) rawSize < limit)
                     {
-                        compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted);
+                        // Decrypt returns new array, use it for processing but keep pooled buffer reference
+                        dataToProcess = DecryptIfEncrypted(pooledCompressedBuffer, 0, (int) rawSize, IsEncrypted);
                         limit -= (int) rawSize;
                     }
                     else
                     {
-                        var decrypted = DecryptIfEncrypted(compressedBuffer, 0, limit, IsEncrypted);
-                        Buffer.BlockCopy(decrypted, 0, compressedBuffer, 0, limit);
+                        var decrypted = DecryptIfEncrypted(pooledCompressedBuffer, 0, limit, IsEncrypted);
+                        Buffer.BlockCopy(decrypted, 0, pooledCompressedBuffer, 0, limit);
                         limit = 0;
                     }
                 }
@@ -382,7 +386,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 byte[] src;
                 if (compressionBlock.CompressionMethodIndex == 0)
                 {
-                    src = compressedBuffer;
+                    src = dataToProcess;
                 }
                 else
                 {
@@ -396,7 +400,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     }
 
                     var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
-                    Compression.Compression.Decompress(compressedBuffer, 0, (int) compressionBlock.CompressedSize, uncompressedBuffer, 0,
+                    Compression.Compression.Decompress(dataToProcess, 0, (int) compressionBlock.CompressedSize, uncompressedBuffer, 0,
                         (int) uncompressedSize, compressionMethod, reader);
                     src = uncompressedBuffer;
                 }
@@ -410,8 +414,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
         finally
         {
-            if (compressedBuffer != null)
-                ArrayPool<byte>.Shared.Return(compressedBuffer);
+            if (pooledCompressedBuffer != null)
+                ArrayPool<byte>.Shared.Return(pooledCompressedBuffer);
             if (uncompressedBuffer != null)
                 ArrayPool<byte>.Shared.Return(uncompressedBuffer);
         }
@@ -558,7 +562,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
             containerStreams = ContainerStreams.ToArray();
         }
 
-        var blockProvider = new IoStoreBlockProvider(ioEntry, this, containerStreams);
+        // When concurrent, cloned streams are owned by the block provider
+        var blockProvider = new IoStoreBlockProvider(ioEntry, this, containerStreams, ownsStreams: IsConcurrent);
         return new StreamingAssetReader(blockProvider, AesKey, CustomEncryption, this, blockProvider.OffsetInFirstBlock);
     }
 

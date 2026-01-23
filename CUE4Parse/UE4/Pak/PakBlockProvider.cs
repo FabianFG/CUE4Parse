@@ -19,6 +19,7 @@ internal sealed class PakBlockProvider : IBlockProvider
     private readonly FArchive _archive;
     private readonly CompressionBlock[] _blocks;
     private readonly int _encryptionAlignment;
+    private readonly bool _ownsArchive;
 
     public int BlockCount => _blocks.Length;
     public long UncompressedSize => _entry.UncompressedSize;
@@ -31,11 +32,13 @@ internal sealed class PakBlockProvider : IBlockProvider
     /// </summary>
     /// <param name="entry">The Pak entry to provide block access for.</param>
     /// <param name="archive">The archive to read from. If concurrent access is needed, pass a cloned archive.</param>
-    public PakBlockProvider(FPakEntry entry, FArchive archive)
+    /// <param name="ownsArchive">If true, the provider will dispose the archive when disposed.</param>
+    public PakBlockProvider(FPakEntry entry, FArchive archive, bool ownsArchive = false)
     {
         _entry = entry;
         _archive = archive;
         _encryptionAlignment = entry.IsEncrypted ? Aes.ALIGN : 1;
+        _ownsArchive = ownsArchive;
         _blocks = BuildBlockList(entry);
     }
 
@@ -78,18 +81,16 @@ internal sealed class PakBlockProvider : IBlockProvider
         return _blocks[blockIndex];
     }
 
-    public int ReadBlockRaw(int blockIndex, Span<byte> buffer)
+    public int ReadBlockRaw(int blockIndex, byte[] buffer, int offset = 0)
     {
         var block = GetBlock(blockIndex);
         var readSize = GetBlockReadSize(blockIndex);
 
-        if (buffer.Length < readSize)
-            throw new ArgumentException($"Buffer too small. Need {readSize} bytes, got {buffer.Length}.", nameof(buffer));
+        if (buffer.Length - offset < readSize)
+            throw new ArgumentException($"Buffer too small. Need {readSize} bytes, got {buffer.Length - offset}.", nameof(buffer));
 
-        // Read directly into the provided buffer
-        _archive.Position = block.CompressedOffset;
-        var tempBuffer = _archive.ReadBytes(readSize);
-        tempBuffer.AsSpan(0, readSize).CopyTo(buffer);
+        // Read directly into the provided buffer without intermediate allocation
+        _archive.ReadAt(block.CompressedOffset, buffer, offset, readSize);
 
         return readSize;
     }
@@ -134,7 +135,7 @@ internal sealed class PakBlockProvider : IBlockProvider
 
     public void Dispose()
     {
-        // Don't dispose the archive - it may be shared or owned by the reader
-        // The caller is responsible for archive lifecycle
+        if (_ownsArchive)
+            _archive.Dispose();
     }
 }

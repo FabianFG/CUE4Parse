@@ -26,9 +26,18 @@ public interface IBlockProvider : IDisposable
     int BlockSize { get; }
 
     /// <summary>
-    /// Compression method used for this entry's blocks.
+    /// Default compression method used for this entry's blocks.
+    /// For formats with per-block compression (like IoStore), use GetBlockCompressionMethod.
     /// </summary>
     CompressionMethod CompressionMethod { get; }
+
+    /// <summary>
+    /// Gets the compression method for a specific block.
+    /// Some formats (like IoStore) support different compression per block.
+    /// </summary>
+    /// <param name="blockIndex">Zero-based block index.</param>
+    /// <returns>Compression method for the block.</returns>
+    CompressionMethod GetBlockCompressionMethod(int blockIndex) => CompressionMethod;
 
     /// <summary>
     /// Whether the blocks are encrypted and require decryption.
@@ -46,9 +55,10 @@ public interface IBlockProvider : IDisposable
     /// Reads raw (compressed and possibly encrypted) block data.
     /// </summary>
     /// <param name="blockIndex">Zero-based block index.</param>
-    /// <param name="buffer">Buffer to receive the raw data. Must be at least CompressedSize bytes.</param>
+    /// <param name="buffer">Buffer to receive the raw data. Must be at least GetBlockReadSize bytes.</param>
+    /// <param name="offset">Offset within buffer to start writing.</param>
     /// <returns>Number of bytes read.</returns>
-    int ReadBlockRaw(int blockIndex, Span<byte> buffer);
+    int ReadBlockRaw(int blockIndex, byte[] buffer, int offset = 0);
 
     /// <summary>
     /// Gets the aligned read size for a block (accounts for encryption alignment).

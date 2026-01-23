@@ -115,7 +115,8 @@ public sealed class StreamingAssetReader : Stream
             // Calculate how much we can read from current block
             var blockOffset = (int)(_position - _currentBlockStart);
             var available = (int)(_currentBlockEnd - _position);
-            var toRead = Math.Min(count, available);
+            // Clamp to remaining entry length to prevent reading past entry end
+            var toRead = (int)Math.Min(Math.Min(count, available), Length - _position);
 
             Buffer.BlockCopy(_currentBlockData!, blockOffset, buffer, offset, toRead);
             _position += toRead;
@@ -139,7 +140,7 @@ public sealed class StreamingAssetReader : Stream
         try
         {
             // Read raw block data
-            _blockProvider.ReadBlockRaw(blockIndex, rawBuffer.AsSpan(0, readSize));
+            _blockProvider.ReadBlockRaw(blockIndex, rawBuffer, 0);
 
             // Decrypt if needed
             byte[] decrypted;
@@ -152,8 +153,8 @@ public sealed class StreamingAssetReader : Stream
                 decrypted = rawBuffer;
             }
 
-            // Decompress if needed
-            var compressionMethod = _blockProvider.CompressionMethod;
+            // Decompress if needed - use per-block method for IoStore support
+            var compressionMethod = _blockProvider.GetBlockCompressionMethod(blockIndex);
             if (compressionMethod != CompressionMethod.None)
             {
                 _currentBlockData = ArrayPool<byte>.Shared.Rent(block.UncompressedSize);

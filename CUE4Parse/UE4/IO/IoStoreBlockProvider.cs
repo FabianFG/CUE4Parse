@@ -24,6 +24,7 @@ internal sealed class IoStoreBlockProvider : IBlockProvider
     private readonly int _lastBlockIndex;
     private readonly long _offsetInFirstBlock;
     private readonly CompressionBlock[] _blocks;
+    private readonly bool _ownsStreams;
 
     public int BlockCount => _blocks.Length;
     public long UncompressedSize => _entry.Size;
@@ -37,11 +38,13 @@ internal sealed class IoStoreBlockProvider : IBlockProvider
     /// <param name="entry">The IoStore entry to provide block access for.</param>
     /// <param name="reader">The IoStore reader.</param>
     /// <param name="containerStreams">Container streams to read from. For concurrent access, pass cloned streams.</param>
-    public IoStoreBlockProvider(FIoStoreEntry entry, IoStoreReader reader, FArchive[] containerStreams)
+    /// <param name="ownsStreams">If true, the provider will dispose the container streams when disposed.</param>
+    public IoStoreBlockProvider(FIoStoreEntry entry, IoStoreReader reader, FArchive[] containerStreams, bool ownsStreams = false)
     {
         _entry = entry;
         _reader = reader;
         _containerStreams = containerStreams;
+        _ownsStreams = ownsStreams;
 
         var compressionBlockSize = reader.TocResource.Header.CompressionBlockSize;
         var offset = entry.Offset;
@@ -132,23 +135,21 @@ internal sealed class IoStoreBlockProvider : IBlockProvider
     /// </summary>
     public long OffsetInFirstBlock => _offsetInFirstBlock;
 
-    public int ReadBlockRaw(int blockIndex, Span<byte> buffer)
+    public int ReadBlockRaw(int blockIndex, byte[] buffer, int offset = 0)
     {
         var block = GetBlock(blockIndex);
         var readSize = GetBlockReadSize(blockIndex);
 
-        if (buffer.Length < readSize)
-            throw new ArgumentException($"Buffer too small. Need {readSize} bytes, got {buffer.Length}.", nameof(buffer));
+        if (buffer.Length - offset < readSize)
+            throw new ArgumentException($"Buffer too small. Need {readSize} bytes, got {buffer.Length - offset}.", nameof(buffer));
 
         // Determine which partition contains this block
         var partitionIndex = (int)((ulong)block.CompressedOffset / _reader.TocResource.Header.PartitionSize);
         var partitionOffset = (long)((ulong)block.CompressedOffset % _reader.TocResource.Header.PartitionSize);
 
-        // Read from the appropriate container stream
+        // Read directly into the provided buffer without intermediate allocation
         var reader = _containerStreams[partitionIndex];
-        var tempBuffer = new byte[readSize];
-        reader.ReadAt(partitionOffset, tempBuffer, 0, readSize);
-        tempBuffer.AsSpan(0, readSize).CopyTo(buffer);
+        reader.ReadAt(partitionOffset, buffer, offset, readSize);
 
         return readSize;
     }
@@ -182,6 +183,10 @@ internal sealed class IoStoreBlockProvider : IBlockProvider
 
     public void Dispose()
     {
-        // Don't dispose container streams - they may be shared or owned by the reader
+        if (_ownsStreams)
+        {
+            foreach (var stream in _containerStreams)
+                stream?.Dispose();
+        }
     }
 }

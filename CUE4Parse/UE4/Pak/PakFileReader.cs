@@ -474,8 +474,9 @@ namespace CUE4Parse.UE4.Pak
             }
 
             // Create block provider and streaming reader
+            // When concurrent, clone the archive and transfer ownership to block provider
             var archive = IsConcurrent ? (FArchive)Ar.Clone() : Ar;
-            var blockProvider = new PakBlockProvider(pakEntry, archive);
+            var blockProvider = new PakBlockProvider(pakEntry, archive, ownsArchive: IsConcurrent);
             return new Readers.StreamingAssetReader(blockProvider, AesKey, CustomEncryption, this);
         }
 

@@ -27,7 +27,12 @@ public class FMountedArchive : FArchive
     public override long Position
     {
         get => _position;
-        set => _position = value;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Position cannot be negative.");
+            _position = value;
+        }
     }
 
     /// <summary>
@@ -94,6 +99,9 @@ public class FMountedArchive : FArchive
 
     public override int ReadAt(long position, Span<byte> buffer)
     {
+        if (position < 0)
+            throw new ArgumentOutOfRangeException(nameof(position), "Position cannot be negative.");
+
         var bytesToRead = (int)Math.Min(buffer.Length, Length - position);
         if (bytesToRead <= 0)
             return 0;
@@ -133,13 +141,18 @@ public class FMountedArchive : FArchive
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        _position = origin switch
+        var newPosition = origin switch
         {
             SeekOrigin.Begin => offset,
             SeekOrigin.Current => _position + offset,
             SeekOrigin.End => Length + offset,
             _ => throw new ArgumentOutOfRangeException(nameof(origin))
         };
+
+        if (newPosition < 0)
+            throw new IOException("Seek position cannot be negative.");
+
+        _position = newPosition;
         return _position;
     }
 
