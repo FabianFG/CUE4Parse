@@ -110,6 +110,37 @@ namespace CUE4Parse.FileProvider.Vfs
         public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName);
         public void RegisterVfs(string file) => RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
 
+        public void RegisterVfs(FileInfo file, bool useMemoryMapping) => RegisterVfs(file.FullName, useMemoryMapping);
+        public void RegisterVfs(string file, bool useMemoryMapping)
+        {
+            if (useMemoryMapping)
+                RegisterRandomAccessVfs(new FMountedArchive(file, Versions), null, openPath => new FMountedArchive(openPath, Versions));
+            else
+                RegisterVfs(file);
+        }
+
+        public void RegisterVfs(string[] filePaths, bool useMemoryMapping)
+        {
+            if (useMemoryMapping)
+                RegisterRandomAccessVfs(
+                    new FMountedArchive(filePaths[0], Versions),
+                    filePaths.Length > 1 ? new FMountedArchive(filePaths[1], Versions) : null,
+                    openPath => new FMountedArchive(openPath, Versions));
+            else
+                RegisterVfs(filePaths);
+        }
+
+        public void RegisterVfs(FileInfo[] fileInfos, bool useMemoryMapping)
+        {
+            if (useMemoryMapping)
+                RegisterRandomAccessVfs(
+                    new FMountedArchive(fileInfos[0].FullName, Versions),
+                    fileInfos.Length > 1 ? new FMountedArchive(fileInfos[1].FullName, Versions) : null,
+                    openPath => new FMountedArchive(openPath, Versions));
+            else
+                RegisterVfs(fileInfos);
+        }
+
         public void RegisterVfs(FRandomAccessFileStreamArchive[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
             => RegisterRandomAccessVfs(stream[0], stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);
         public void RegisterVfs(FRandomAccessStreamArchive[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
