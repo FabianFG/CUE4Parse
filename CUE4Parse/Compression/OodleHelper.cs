@@ -34,7 +34,7 @@ public static class OodleHelper
     {
         if (Instance is not null) return;
 
-        if (path is null && CUE4ParseNatives.IsFeatureAvailable("Oodle"))
+        if (path is null && CUE4ParseNatives.IsFeatureAvailable("Oodle\0"u8))
         {
             Instance = new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName));
         }
