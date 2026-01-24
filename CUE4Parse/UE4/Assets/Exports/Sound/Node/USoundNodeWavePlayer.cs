@@ -25,6 +25,7 @@ public class USoundNodeWavePlayer : USoundNodeAssetReferencer
         base.WriteJson(writer, serializer);
 
         if (SoundWave == null) return;
+        
         writer.WritePropertyName("SoundWave");
         serializer.Serialize(writer, SoundWave);
     }

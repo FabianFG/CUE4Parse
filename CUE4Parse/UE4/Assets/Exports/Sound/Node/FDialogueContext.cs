@@ -19,23 +19,26 @@ public struct FDialogueContext
     
     public static bool operator ==(FDialogueContext left, FDialogueContext right)
     {
-        if (!left.Speaker.ResolvedObject?.GetFullName().Equals(right.Speaker.ResolvedObject?.GetFullName(), StringComparison.OrdinalIgnoreCase) ?? true)
+        var leftSpeaker = left.Speaker.ResolvedObject?.GetFullName();
+        var rightSpeaker = right.Speaker.ResolvedObject?.GetFullName();
+        
+        if (!leftSpeaker?.Equals(rightSpeaker, StringComparison.OrdinalIgnoreCase) ?? true)
             return false;
 
         if (left.Targets.Length != right.Targets.Length)
             return false;
 
-        for (int i = 0; i < left.Targets.Length; i++)
+        for (var i = 0; i < left.Targets.Length; i++)
         {
-            if (left.Targets[i].ResolvedObject?.GetFullName().Equals(right.Targets[i].ResolvedObject?.GetFullName(), StringComparison.OrdinalIgnoreCase) ?? true)
+            var leftTarget = left.Targets[i].ResolvedObject?.GetFullName();
+            var rightTarget = right.Targets[i].ResolvedObject?.GetFullName();
+            
+            if (!leftTarget?.Equals(rightTarget, StringComparison.OrdinalIgnoreCase) ?? true)
                 return false;
         }
         
         return true;
     }
 
-    public static bool operator !=(FDialogueContext left, FDialogueContext right)
-    {
-        return !(left == right);
-    }
+    public static bool operator !=(FDialogueContext left, FDialogueContext right) => !(left == right);
 }
