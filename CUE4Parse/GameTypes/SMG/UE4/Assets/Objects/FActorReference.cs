@@ -1,7 +1,7 @@
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Readers;
 
-namespace CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
+namespace CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 
 public class FActorReference : IUStruct
 {
