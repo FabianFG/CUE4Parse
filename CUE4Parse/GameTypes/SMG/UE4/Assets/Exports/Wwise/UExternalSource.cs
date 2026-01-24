@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 
-namespace CUE4Parse.GameTypes.DPA.UE4.Assets.Exports.Wwise;
+namespace CUE4Parse.GameTypes.SMG.UE4.Assets.Exports.Wwise;
 
 public class UExternalSource : UObject
 {

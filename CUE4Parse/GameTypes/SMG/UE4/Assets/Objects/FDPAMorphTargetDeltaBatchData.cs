@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
+namespace CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 
 public class FDPAMorphTargetDeltaBatchData(FArchive Ar)
 {
