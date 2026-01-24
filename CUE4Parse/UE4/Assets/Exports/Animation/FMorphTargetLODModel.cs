@@ -1,4 +1,4 @@
-using CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
+using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;

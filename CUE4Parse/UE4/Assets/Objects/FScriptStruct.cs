@@ -2,7 +2,7 @@ using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
-using CUE4Parse.GameTypes.DPA.UE4.Assets.Objects;
+using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
