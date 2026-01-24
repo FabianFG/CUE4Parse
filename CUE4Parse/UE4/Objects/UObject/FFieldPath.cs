@@ -31,7 +31,7 @@ public class FFieldPath
     public FFieldPath(FKismetArchive Ar) : this()
     {
         var index = Ar.Index;
-        Path = Ar.ReadArray(() => Ar.ReadFName());
+        Path = Ar.ReadArray(Ar.ReadFName);
         // The old serialization format could save 'None' paths, they should be just empty
         if (Path.Length == 1 && Path[0].IsNone) Path = [];
 

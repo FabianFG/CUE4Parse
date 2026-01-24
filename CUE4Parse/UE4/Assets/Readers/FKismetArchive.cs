@@ -32,7 +32,7 @@ public class FKismetArchive : FArchive
     public KismetExpression ReadExpression()
     {
         var index = Index;
-        EExprToken token = (EExprToken)Read<byte>();
+        var token = (EExprToken)Read<byte>();
         KismetExpression expression = token switch
         {
             EExprToken.EX_LocalVariable => new EX_LocalVariable(this),
@@ -177,7 +177,7 @@ public class FKismetArchive : FArchive
     public KismetExpression[] ReadExpressionArray(EExprToken endToken)
     {
         var newData = new List<KismetExpression>();
-        KismetExpression currExpression = null;
+        KismetExpression? currExpression = null;
         while (currExpression == null || currExpression.Token != endToken)
         {
             if (currExpression != null) newData.Add(currExpression);
