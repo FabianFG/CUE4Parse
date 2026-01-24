@@ -1,4 +1,4 @@
-namespace CUE4Parse.UE4.Objects.Engine.Animation
-{
-    public class UBlendSpace : UBlendSpaceBase { }
-}
+namespace CUE4Parse.UE4.Objects.Engine.Animation;
+
+public class UBlendSpace : UBlendSpaceBase;
+public class UAimOffsetBlendSpace : UBlendSpace;

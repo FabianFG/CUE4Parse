@@ -12,9 +12,9 @@ public class FEdGraphPinType : IUStruct
     public FName PinCategory;
     public FName PinSubCategory;
     public FPackageIndex PinSubCategoryObject;
-    public FEdGraphTerminalType PinValueType;
+    public FEdGraphTerminalType? PinValueType;
     public EPinContainerType ContainerType;
-    public FSimpleMemberReference PinSubCategoryMemberReference;
+    public FSimpleMemberReference? PinSubCategoryMemberReference;
 
     public bool bIsReference;
     public bool bIsConst;
@@ -24,6 +24,7 @@ public class FEdGraphPinType : IUStruct
 
     private static readonly string[] WrappedCategories = ["class", "object", "interface", "softclass", "softobject"];
 
+    public FEdGraphPinType() { }
     public FEdGraphPinType(FAssetArchive Ar)
     {
         if (FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName)
@@ -50,9 +51,8 @@ public class FEdGraphPinType : IUStruct
             }
         }
 
+        //if(!Ar.IsObjectReferenceCollector() || Ar.IsModifyingWeakAndStrongReferences() || Ar.IsPersistent())
         PinSubCategoryObject = new FPackageIndex(Ar);
-        // if(Ar.IsPersistent())
-        //    Ar << Object;
 
         if (FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.EdGraphPinContainerType)
         {

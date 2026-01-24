@@ -116,6 +116,8 @@ public class FStaticMeshRenderData
                             _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
+                    if (Ar.Game is EGame.GAME_TheFinals)
+                        _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }
         }

@@ -126,11 +126,13 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                 return;
             }
 
+            if (Ar.Game is EGame.GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
         }
 
-        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_Valorant) Ar.Position += 4;
     }
 
     public FInstancedStaticMeshInstanceData[] GetInstances() // PerInstanceSMData

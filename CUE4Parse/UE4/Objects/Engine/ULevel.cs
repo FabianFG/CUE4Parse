@@ -34,7 +34,8 @@ public readonly struct FCompressedVisibilityChunk : IUStruct
     {
         bCompressed = Ar.ReadBoolean();
         UncompressedSize = Ar.Read<int>();
-        Data = Ar.ReadArray<byte>();
+        Data = [];
+        Ar.SkipFixedArray(1);
     }
 }
 
@@ -70,6 +71,11 @@ public readonly struct FPrecomputedVisibilityHandler : IUStruct
         PrecomputedVisibilityCellBucketSizeXY = Ar.Read<int>();
         PrecomputedVisibilityNumCellBuckets = Ar.Read<int>();
         PrecomputedVisibilityCellBuckets = Ar.ReadArray(() => new FPrecomputedVisibilityBucket(Ar));
+        if (Ar.Game is EGame.GAME_IntotheRadius2)
+        {
+            _ = Ar.ReadArray(() => new FCompressedVisibilityChunk(Ar));
+            Ar.Position += 57;
+        }
     }
 }
 
@@ -135,6 +141,7 @@ public class ULevel : Assets.Exports.UObject
             return;
         }
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
+        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
     }
 

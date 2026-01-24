@@ -89,6 +89,9 @@ public class FPropertyTag
     public FGuid? PropertyGuid;
     public FPropertyTagType? Tag;
     public EPropertyTagFlags PropertyTagFlags;
+#if DEBUG
+    public long Position;
+#endif
 
     public EPropertyTagSerializeType SerializeType => PropertyTagFlags.HasFlag(EPropertyTagFlags.SkippedSerialize)
             ? EPropertyTagSerializeType.Skipped
@@ -115,6 +118,9 @@ public class FPropertyTag
         PropertyTagFlags = ArraySize > 1 ? EPropertyTagFlags.HasArrayIndex : EPropertyTagFlags.None;
 
         var pos = Ar.Position;
+#if DEBUG
+        Position = pos;
+#endif
         try
         {
             Tag = FPropertyTagType.ReadPropertyTagType(Ar, PropertyType.Text, TagData, type);
@@ -196,6 +202,9 @@ public class FPropertyTag
         if (!readData) return;
 
         var pos = Ar.Position;
+#if DEBUG
+        Position = pos;
+#endif
         var finalPos = pos + Size;
         try
         {

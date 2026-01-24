@@ -18,8 +18,9 @@ public class AkFolder
         Id = Ar.Read<uint>();
     }
 
-    public void PopulateName(FArchive Ar)
+    public void PopulateName(FArchive Ar, long namesOffset)
     {
+        Ar.Position = namesOffset + Offset;
         var sb = new StringBuilder();
         while (true)
         {

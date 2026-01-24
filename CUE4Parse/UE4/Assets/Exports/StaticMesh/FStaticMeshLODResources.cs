@@ -54,14 +54,16 @@ public class FStaticMeshLODResources
         {
             SourceMeshBounds = new FBoxSphereBounds(Ar);
         }
-
-        MaxDeviation = Ar.Read<float>();
+        if (Ar.Game >= EGame.GAME_UE4_0)
+        {
+            MaxDeviation = Ar.Read<float>();
+        }
 
         if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
-            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
             {
                 SerializeBuffersLegacy(Ar, stripDataFlags);
             }
@@ -88,6 +90,10 @@ public class FStaticMeshLODResources
                         break;
                     case EGame.GAME_TheDivisionResurgence:
                         Ar.Position += 12;
+                        break;
+                    case EGame.GAME_PUBGBlackBudget:
+                        Ar.Position += 4;
+                        if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData();
                         break;
                     case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData.HasValue && x.CustomData.Value == 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
@@ -125,6 +131,7 @@ public class FStaticMeshLODResources
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
+                    EGame.GAME_TheFinals => 12,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
@@ -137,7 +144,7 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals) Ar.Position += 4;
         }
     }
 
@@ -170,7 +177,7 @@ public class FStaticMeshLODResources
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker )
+        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker)
         {
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -261,6 +268,11 @@ public class FStaticMeshLODResources
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
+        }
+        if (Ar.Game == EGame.GAME_TheFinals)
+        {
+            _ = new FRawStaticIndexBuffer(Ar);
+            Ar.Position += 4; // Vert count
         }
 
         if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth)

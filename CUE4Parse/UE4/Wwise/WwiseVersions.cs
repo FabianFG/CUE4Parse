@@ -65,15 +65,17 @@ public static class WwiseVersions
     ];
 
     // Versions CUE4Parse currently supports
+    // Should be noted that Wwise added support for Unreal Engine around version 100, so we can safely ignore older ones
     // TODO: Test more versions
     public static readonly uint[] SupportedVersions =
     [
         112,    // Dead by Daylight (old)
         113,    // Dead by Daylight (old)
+        125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
-        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis
+        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis, The Outlast Trials, Little Nightmares 3
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight, Splitgate 2, Byte Breakers, Le Dernier Don
         154     // Off The Grid

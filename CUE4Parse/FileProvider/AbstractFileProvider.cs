@@ -50,6 +50,7 @@ namespace CUE4Parse.FileProvider
         public FileProviderDictionary Files { get; }
         public InternationalizationDictionary Internationalization { get; }
         public IDictionary<string, string> VirtualPaths { get; }
+        public IDictionary<string, string> TextureCachePaths { get; }
         public CustomConfigIni DefaultGame { get; }
         public CustomConfigIni DefaultEngine { get; }
 
@@ -72,6 +73,7 @@ namespace CUE4Parse.FileProvider
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
             VirtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
+            TextureCachePaths = new ConcurrentDictionary<string, string>(PathComparer);
             DefaultGame = new CustomConfigIni(nameof(DefaultGame));
             DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }
@@ -350,8 +352,8 @@ namespace CUE4Parse.FileProvider
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
         public virtual int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
-            var regex = new Regex($"^{ProjectName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            var arregex = new Regex($"^{ProjectName}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var regex = new Regex($"^{Regex.Escape(ProjectName)}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var arregex = new Regex($"^{Regex.Escape(ProjectName)}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
             ConcurrentBag<KeyValuePair<string, GameFile>> matchingPlugins = [];
             Parallel.ForEach(Files, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>

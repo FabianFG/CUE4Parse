@@ -51,7 +51,9 @@ public class FTexture2DMipMap
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_DERIVED_DATA2 && !cooked)
         {
-            var derivedDataKey = Ar.ReadFString();
+            var FileRegionType = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<byte>() : 0;
+            var derivedDataKey = Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadFString() : "";
+            var bPagedToDerivedData = Ar.Game >= EGame.GAME_UE5_0 ? Ar.ReadBoolean() : false;
         }
     }
 

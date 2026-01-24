@@ -41,7 +41,8 @@ public static class DAStructs
         {
             "BodyInstance" => new FBodyInstance(Ar),
             "GenericTeamId" => new FGenericTeamId(Ar),
-            "UniqueID" or "Persistence_DEPRECATED_Id" or "PersistenceActorId" => new FUniqueID(Ar),
+            "UniqueID" or "Persistence_DEPRECATED_Id" or "PersistenceActorId"
+                or "PersistenceItemId" or "PersistenceBuildingBlueprintId" => new FUniqueID(Ar),
             "BotAutoBorderCrossingConfig" => new FBotAutoBorderCrossingConfig(Ar),
             "StringEnumValue" => new FStringEnumValue(Ar),
 

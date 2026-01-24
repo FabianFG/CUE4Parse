@@ -281,6 +281,7 @@ public static class TextureEncoder
         {
             case EPixelFormat.PF_R8G8B8A8:
                 break;
+            case EPixelFormat.PF_A8R8G8B8:
             case EPixelFormat.PF_B8G8R8A8:
                 skColorType = SKColorType.Bgra8888;
                 break;
@@ -317,6 +318,9 @@ public static class TextureEncoder
             case EPixelFormat.PF_R16F:
                 convertedData = ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8);
                 break;
+            case EPixelFormat.PF_V8U8:
+                convertedData = ConvertV8U8ToRGBA(texture.Width, texture.Height, dataSpan);
+                break;
             default:
                 throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat);
         }
@@ -341,6 +345,33 @@ public static class TextureEncoder
     private static byte ConvertHalfTo8(Half value)
     {
         return (byte)Math.Clamp((float)value * 255.0f, 0, byte.MaxValue);
+    }
+
+    private static unsafe nint ConvertV8U8ToRGBA(int width, int height, ReadOnlySpan<byte> data)
+    {
+        int pixelCount = width * height;
+        const int bytesPerPixel = 4;
+
+        MemoryUtils.NativeAlloc<byte>(pixelCount * bytesPerPixel, out var retPtr);
+        byte* dst = (byte*)retPtr;
+
+        for (int i = 0; i < pixelCount; i++)
+        {
+            sbyte v = (sbyte)data[i * 2 + 0];
+            sbyte u = (sbyte)data[i * 2 + 1];
+
+            float fx = u / 127f;
+            float fy = v / 127f;
+            float fz = MathF.Sqrt(MathF.Max(0f, 1f - (fx * fx + fy * fy)));
+
+            int offset = i * bytesPerPixel;
+            dst[offset + 0] = (byte)((fx * 0.5f + 0.5f) * 255f);
+            dst[offset + 1] = (byte)((fy * 0.5f + 0.5f) * 255f);
+            dst[offset + 2] = (byte)((fz * 0.5f + 0.5f) * 255f);
+            dst[offset + 3] = 255;
+        }
+
+        return retPtr;
     }
 
     private static unsafe nint ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, bool flipOrder = false)

@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
-using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -49,9 +47,14 @@ public class WwiseReader
                     if (!Ar.ReadBoolean())
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
-                    Ar.Position += 16;
+                    long entriesOffset = Ar.Read<int>();
+                    Ar.Position += 12;
+                    var namesOffset = Ar.Position;
+                    entriesOffset += namesOffset + sizeof(int);
                     Folders = Ar.ReadArray(() => new AkFolder(Ar));
-                    foreach (var folder in Folders) folder.PopulateName(Ar);
+                    foreach (var folder in Folders)
+                        folder.PopulateName(Ar, namesOffset);
+                    Ar.Position = entriesOffset;
                     foreach (var folder in Folders)
                     {
                         folder.Entries = new AkEntry[Ar.Read<uint>()];
@@ -66,10 +69,8 @@ public class WwiseReader
                 case ChunkID.BankHeader:
                     Header = new BankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Version);
-#if DEBUG
                     if (!WwiseVersions.IsSupported())
                         Log.Warning($"Wwise version {Version} is not supported");
-#endif
                     break;
                 case ChunkID.BankInit:
                     AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar));
@@ -99,14 +100,15 @@ public class WwiseReader
                     WemFile = wemData;
                     break;
                 case ChunkID.BankStrMap:
-                    Ar.Position += 4;//var type = Ar.Read<AKBKStringType>;
+                    Ar.Position += 4; //var type = Ar.Read<AKBKStringType>;
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
                 case ChunkID.BankStateMg:
-                    //if (WwiseVersions.IsSupported())
-                    //{
-                    //    GlobalSettings = new GlobalSettings(Ar);
-                    //}
+                    // TODO:
+                    // if (WwiseVersions.IsSupported())
+                    // {
+                    //     GlobalSettings = new GlobalSettings(Ar);
+                    // }
                     break;
                 case ChunkID.BankEnvSetting:
                     if (WwiseVersions.IsSupported()) // Let's guard this just in case
@@ -132,44 +134,23 @@ public class WwiseReader
             {
                 var shouldBe = position + sectionLength;
 #if DEBUG
-                Log.Warning($"Didn't read 0x{sectionIdentifier:X} correctly (at {Ar.Position}, should be {shouldBe})");
+                Log.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                 Ar.Position = shouldBe;
             }
         }
 
-        if (Folders != null)
-        {
-            foreach (var folder in Folders)
-            {
-                foreach (var entry in folder.Entries)
-                {
-                    if (entry.IsSoundBank || entry.Data == null)
-                        continue;
-                    WwiseEncodedMedias[BankIDToFileName.TryGetValue(entry.NameHash, out var k) ? k : $"{entry.Path.ToUpper()}_{entry.NameHash}"] = entry.Data;
-                }
-            }
-        }
-        if (Hierarchies != null)
-        {
-            // the proper way seems to read the header id to get the main hierarchy
-            // that hierarchy will give other hierarchy ids and so on until the end sound data
-            // but not everything is currently getting parsed so that's not possible
+        if (Folders is null) return;
 
-            // foreach (var hierarchy in Hierarchies)
-            // {
-            //     switch (hierarchy.Type)
-            //     {
-            //         case EHierarchyObjectType.SoundSfxVoice when hierarchy.Data is HierarchySoundSfxVoice
-            //         {
-            //             SoundSource: ESoundSource.Embedded
-            //         } sfxVoice:
-            //             WwiseEncodedMedias[IdToString.TryGetValue(sfxVoice.SourceId, out var k) ? k : $"{sfxVoice.SourceId}"] = null;
-            //             break;
-            //         default:
-            //             break;
-            //     }
-            // }
+        foreach (var folder in Folders)
+        {
+            foreach (var entry in folder.Entries)
+            {
+                if (entry.IsSoundBank || entry.Data == null)
+                    continue;
+
+                WwiseEncodedMedias[entry.NameHash.ToString()] = entry.Data;
+            }
         }
     }
 
@@ -183,7 +164,7 @@ public class WwiseReader
             var sectionLength = Ar.Read<int>();
             var sectionStart = Ar.Position;
 
-            if (sectionIdentifier == ChunkID.BankHeader)
+            if (sectionIdentifier is ChunkID.BankHeader)
             {
                 Ar.Read<uint>(); // Version
                 var soundBankId = Ar.Read<uint>();

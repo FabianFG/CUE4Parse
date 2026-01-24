@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -26,6 +24,7 @@ public class URigVM : Assets.Exports.UObject
     public FRigVMMemoryContainer? LiteralMemoryStorageOld;
     public FRigVMMemoryContainer? DefaultWorkMemoryStorageOld;
     public FRigVMMemoryContainer? DefaultDebugMemoryStorageOld;
+    public FRigVMRegistry_NoLock? LocalizedRegistry;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -119,10 +118,9 @@ public class URigVM : Assets.Exports.UObject
         {
             var bStoredLocalizedRegistry = Ar.ReadBoolean();
 
-            if (bStoredLocalizedRegistry)
-            {
-                throw new NotSupportedException("Localized registry is currently not supported");
-            }
+            if (!bStoredLocalizedRegistry) return;
+            var ArchivePosAfterSerializedRegistry = Ar.Read<long>();
+            LocalizedRegistry = new FRigVMRegistry_NoLock(Ar);
         }
     }
 
@@ -221,6 +219,12 @@ public class URigVM : Assets.Exports.UObject
         {
             writer.WritePropertyName(nameof(DefaultDebugMemoryStorageOld));
             serializer.Serialize(writer, DefaultDebugMemoryStorageOld);
+        }
+
+        if (LocalizedRegistry != null)
+        {
+            writer.WritePropertyName(nameof(LocalizedRegistry));
+            serializer.Serialize(writer, LocalizedRegistry);
         }
     }
 }

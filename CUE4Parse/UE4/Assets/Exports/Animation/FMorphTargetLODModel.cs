@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
@@ -44,10 +45,20 @@ public class FMorphTargetLODModel
         }
         else
         {
-            if (Ar.Game == EGame.GAME_TheCastingofFrankStone)
+            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry)
             {
                 Ar.Position += 4; // NumVertices
+                NumBaseMeshVerts = 1;
                 Vertices = [];
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
+            if (Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or
+                EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope)
+            {
+                Vertices = FDPAMorphTargetDeltaBatchData.ProcessDPAMorphTargetDeltas(Ar);
                 SectionIndices = Ar.ReadArray<int>();
                 bGeneratedByEngine = Ar.ReadBoolean();
                 return;
