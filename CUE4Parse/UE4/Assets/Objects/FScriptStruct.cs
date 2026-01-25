@@ -366,7 +366,8 @@ public class FScriptStruct
             "AssetDataSerializable" when Ar.Game is EGame.GAME_AssaultFireFuture => new FAssetDataSerializable(Ar),
 
             "ActorReference" when Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyManofMedan or
-                EGame.GAME_DarkPicturesAnthologyLittleHope or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or EGame.GAME_TheQuarry => new FActorReference(Ar),
+                EGame.GAME_DarkPicturesAnthologyLittleHope or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or
+                EGame.GAME_TheQuarry or EGame.GAME_TheCastingofFrankStone => new FActorReference(Ar),
 
             _ => Ar.Game switch
             {

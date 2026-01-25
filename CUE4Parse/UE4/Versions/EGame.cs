@@ -188,6 +188,7 @@ public enum EGame : uint
         GAME_Placeholder2 = GAME_UE5_4 + 16,
         GAME_OuterWorlds2 = GAME_UE5_4 + 17,
         GAME_OctopathTraveler0 = GAME_UE5_4 + 18,
+        GAME_CodeVein2 = GAME_UE5_4 + 19,
     GAME_UE5_5 = GameUtils.GameUe5Base + (5 << 16),
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
