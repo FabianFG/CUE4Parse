@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.IO
                     uncompressedBuffer = new byte[uncompressedSize];
                 }
 
-                reader.Read(compressedBuffer, 0, (int) rawSize);
+                reader.ReadExactly(compressedBuffer, 0, (int) rawSize);
                 compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
 
                 byte[] src;
