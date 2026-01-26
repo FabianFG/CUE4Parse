@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,7 +23,7 @@ public class ZlibException : ParserException
 
 public static class ZlibHelper
 {
-    public const string DOWNLOAD_URL = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/zlib-ng2.dll";
+    public const string DOWNLOAD_URL = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/zlib-ng2.dll.gz";
     public const string DLL_NAME = "zlib-ng2.dll";
 
     public static Zlibng? Instance { get; private set; }
@@ -85,14 +86,26 @@ public static class ZlibHelper
             nameof(CUE4Parse),
             typeof(ZlibHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
         client.Timeout = TimeSpan.FromSeconds(30);
+
+        url ??= DOWNLOAD_URL;
+        var dllPath = path ?? DLL_NAME;
         try
         {
-            var dllPath = path ?? DLL_NAME;
             {
-                using var dllResponse = await client.GetAsync(url ?? DOWNLOAD_URL).ConfigureAwait(false);
+                using var dllResponse = await client.GetAsync(url).ConfigureAwait(false);
                 dllResponse.EnsureSuccessStatusCode();
+
                 await using var dllFs = File.Create(dllPath);
-                await dllResponse.Content.CopyToAsync(dllFs).ConfigureAwait(false);
+                if (url.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+                {
+                    var contentStream = await dllResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    await using var gzipStream = new GZipStream(contentStream, CompressionMode.Decompress);
+                    await gzipStream.CopyToAsync(dllFs).ConfigureAwait(false);
+                }
+                else
+                {
+                    await dllResponse.Content.CopyToAsync(dllFs).ConfigureAwait(false);
+                }
             }
             Log.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
             return true;

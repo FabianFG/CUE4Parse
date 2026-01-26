@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Exports.Sound.Node;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Sound;
 
@@ -16,5 +17,16 @@ public class UDialogueWave : UObject
         ContextMappings = GetOrDefault<FDialogueContextMapping[]>(nameof(ContextMappings), []);
 
         _ = Ar.ReadBoolean();
+    }
+
+    public FPackageIndex GetWaveFromContext(FDialogueContext context)
+    {
+        foreach (var contextMapping in ContextMappings)
+        {
+            if (contextMapping.Context == context)
+                return contextMapping.SoundWave;
+        }
+
+        return new FPackageIndex();
     }
 }
