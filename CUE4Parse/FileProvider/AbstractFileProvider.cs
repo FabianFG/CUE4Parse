@@ -15,6 +15,7 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -47,6 +48,7 @@ namespace CUE4Parse.FileProvider
         public VersionContainer Versions { get; }
         public StringComparer PathComparer { get; }
 
+        public IoStoreOnDemandOptions? OnDemandOptions { get; set; }
         public FileProviderDictionary Files { get; }
         public InternationalizationDictionary Internationalization { get; }
         public IDictionary<string, string> VirtualPaths { get; }

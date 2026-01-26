@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -39,7 +39,7 @@ public class IoChunkToc
 
 public class IoStoreOnDemandOptions
 {
-    public Uri ChunkBaseUri { get; set; }
+    public Uri ChunkHostUri { get; set; }
     public DirectoryInfo ChunkCacheDirectory { get; set; }
     public AuthenticationHeaderValue? Authorization { get; set; }
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
@@ -74,7 +74,7 @@ public class IoStoreOnDemandDownloader : IDisposable
             return fs;
         }
 
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.ChunkBaseUri, url));
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.ChunkHostUri, url));
         if (_options.UseAuth) requestMessage.Headers.Authorization = _options.Authorization;
         using var response = await _client.SendAsync(requestMessage).ConfigureAwait(false);
         var outData = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);

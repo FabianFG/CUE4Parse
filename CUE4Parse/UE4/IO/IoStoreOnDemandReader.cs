@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.Encryption.Aes;
@@ -13,24 +13,26 @@ namespace CUE4Parse.UE4.IO
 {
     public class IoStoreOnDemandReader : IoStoreReader
     {
-        public readonly FOnDemandTocEntry[] Entries;
+        public IoChunkToc ChunkToc { get; }
+        public FOnDemandTocContainerEntry Container { get; }
 
         private readonly IoStoreOnDemandDownloader _downloader;
 
-        public IoStoreOnDemandReader(FArchive tocStream, FOnDemandTocEntry[] entries, IoStoreOnDemandDownloader downloader)
+        public IoStoreOnDemandReader(FArchive tocStream, IoChunkToc chunkToc, FOnDemandTocContainerEntry container, IoStoreOnDemandDownloader downloader)
             : base(tocStream, it => new FByteArchive(it, Array.Empty<byte>(), tocStream.Versions))
         {
-            Entries = entries;
+            ChunkToc = chunkToc;
+            Container = container;
             _downloader = downloader;
         }
 
         public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
         {
             if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-            return Read(Entries[ioEntry.TocEntryIndex]);
+            return Read(Container.Entries[ioEntry.TocEntryIndex]);
         }
 
-        public override byte[] Read(FIoChunkId chunkId) => Read(Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
+        public override byte[] Read(FIoChunkId chunkId) => Read(Container.Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
 
         private byte[] Read(FOnDemandTocEntry? onDemandEntry)
         {
@@ -44,7 +46,7 @@ namespace CUE4Parse.UE4.IO
 
         private byte[] Read(string hash, long offset, long length)
         {
-            var reader = _downloader.Download($"chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
+            var reader = _downloader.Download($"{ChunkToc.Header.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
 
             var compressionBlockSize = TocResource.Header.CompressionBlockSize;
             var dst = new byte[length];
