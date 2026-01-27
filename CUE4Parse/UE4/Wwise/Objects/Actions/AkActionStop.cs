@@ -12,7 +12,7 @@ public class AkActionStop
     public AkActionStop(FArchive Ar)
     {
         ActionParams = new ActionParams(Ar);
-        if (WwiseVersions.Version > 112)
+        if (WwiseVersions.Version > 122)
         {
             var byBitVector = Ar.Read<byte>();
             ApplyToStateTransitions = (byBitVector & (1 << 1)) != 0; // bit 1
