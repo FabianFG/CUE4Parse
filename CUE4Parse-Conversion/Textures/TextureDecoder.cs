@@ -269,7 +269,7 @@ public static class TextureDecoder
             {
                 if (UseAssetRipperTextureDecoder)
                 {
-                    Bc2.Decompress(bytes, sizeX, sizeY, out data);
+                    Bc2.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
                     colorType = EPixelFormat.PF_B8G8R8A8;
                 }
                 else
