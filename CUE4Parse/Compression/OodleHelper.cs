@@ -113,8 +113,8 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path)
     {
-        const string url = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-21-1216/clang-cl-release.zip"; // 2.9.15
-        const string entryName = "bin/Release/oodle-data-shared.dll";
+        const string url = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223/clang-cl-x64-release.zip"; // 2.9.15
+        const string entryName = "bin/oodle-data-shared.dll";
 
         try
         {

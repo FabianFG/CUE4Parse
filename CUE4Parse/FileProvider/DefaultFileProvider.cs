@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
@@ -93,10 +95,17 @@ namespace CUE4Parse.FileProvider
                 var upperExt = file.Extension.SubstringAfter('.').ToUpper();
 
                 // Only load containers if .uproject file is not found
-                if (uproject == null && upperExt is "PAK" or "UTOC")
+                if (uproject is null && upperExt is "PAK" or "UTOC")
                 {
                     if (file.FullName.Contains(@"ThirdParty\CEF3\Win64\Resources") || file.FullName.Contains(@"Binaries\Win32\host")) continue;
                     RegisterVfs(file);
+                    continue;
+                }
+
+                if (uproject is null && OnDemandOptions is not null && upperExt is "UONDEMANDTOC")
+                {
+                    var ioChunkTok = new IoChunkToc(file.FullName);
+                    RegisterVfs(ioChunkTok, OnDemandOptions);
                     continue;
                 }
 

@@ -43,23 +43,43 @@ public class USoundWave : USoundBase
             SerializeCuePoints(Ar);
         }
 
-        if (!bStreaming)
+        var saved = Ar.Position;
+        try
         {
-            if (flags.HasFlag(ESoundWaveFlag.CookedFlag))
+            SerializePlatformData(Ar, bCooked);
+        }
+        catch (Exception)
+        {
+            bStreaming = !bStreaming;
+            Ar.Position = saved;
+            CompressedFormatData = null;
+            RawData = null;
+            CompressedDataGuid = default;
+            RunningPlatformData = null;
+            SerializePlatformData(Ar, bCooked);
+        }
+
+        void SerializePlatformData(FAssetArchive Ar, bool bCooked)
+        {
+            if (!bStreaming)
             {
-                CompressedFormatData = new FFormatContainer(Ar);
+                if (bCooked)
+                {
+                    CompressedFormatData = new FFormatContainer(Ar);
+                }
+                else
+                {
+                    RawData = new FByteBulkData(Ar);
+                }
+
+                CompressedDataGuid = Ar.Read<FGuid>();
             }
             else
             {
-                RawData = new FByteBulkData(Ar);
+                CompressedDataGuid = Ar.Read<FGuid>();
+                if (bCooked)
+                    SerializeCookedPlatformData(Ar);
             }
-
-            CompressedDataGuid = Ar.Read<FGuid>();
-        }
-        else
-        {
-            CompressedDataGuid = Ar.Read<FGuid>();
-            if (bCooked) SerializeCookedPlatformData(Ar);
         }
     }
 

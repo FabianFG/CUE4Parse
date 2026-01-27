@@ -9,7 +9,7 @@ public class FConfigFile
 {
     public FConfigFileMap ConfigFileMap;
     public bool Dirty;
-    public bool bNoSave;
+    public bool NoSave;
     public bool bHasPlatformName;
     public FName Name;
     public string PlatformName;
@@ -19,7 +19,7 @@ public class FConfigFile
     {
         ConfigFileMap = Ar.ReadMap(Ar.ReadFString, () => new FConfigSection(Ar));
         Dirty = Ar.ReadBoolean();
-        bNoSave = Ar.ReadBoolean();
+        NoSave = Ar.ReadBoolean();
         bHasPlatformName = Ar.ReadBoolean();
         Name = Ar.ReadFName();
         PlatformName = Ar.ReadFString();
