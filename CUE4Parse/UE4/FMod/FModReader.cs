@@ -699,33 +699,26 @@ public class FModReader
         return result;
     }
 
-    public static T[] ReadElemListImp<T>(BinaryReader Ar, Func<BinaryReader, T>? readElem = null, int? expectedSize = null)
+    public static T[] ReadElemListImp<T>(BinaryReader Ar, Func<BinaryReader, T>? readElem = null)
     {
         uint raw = ReadX16(Ar);
-        int count = (int)(raw >> 1);
+        int count = (int) (raw >> 1);
 
-        if (count <= 0) return [];
+        if (count <= 0)
+            return [];
 
         var result = new T[count];
 
-        ushort payloadSize = Ar.ReadUInt16();
+        _ = Ar.ReadUInt16(); // Payload size
         for (int i = 0; i < count; i++)
         {
-            // Pass size for debugging purposes only
-            if (expectedSize != null && payloadSize != expectedSize)
-            {
-                Ar.BaseStream.Position += payloadSize;
-#if DEBUG
-                Log.Debug($"Warning: '{typeof(T).Name}' element size {payloadSize} does not match expected {expectedSize}, skipping");
-#endif
-            }
-            else if (readElem != null)
+            if (readElem != null)
             {
                 result[i] = readElem(Ar);
             }
             else
             {
-                result[i] = (T)Activator.CreateInstance(typeof(T), Ar)!;
+                result[i] = (T) Activator.CreateInstance(typeof(T), Ar)!;
             }
         }
 
