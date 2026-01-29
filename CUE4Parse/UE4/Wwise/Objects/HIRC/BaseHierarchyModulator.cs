@@ -6,15 +6,15 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyModulator : AbstractHierarchy
 {
-    public readonly List<AkProp> Props = [];
-    public readonly List<AkPropRange> PropRanges;
-    public readonly List<AkRtpc> RtpcList;
+    public readonly AkProp[] Props = [];
+    public readonly AkPropRange[] PropRanges;
+    public readonly AkRtpc[] RtpcList;
 
     public BaseHierarchyModulator(FArchive Ar) : base(Ar)
     {
         Props = AkPropBundle.ReadLinearAkProp(Ar);
         PropRanges = AkPropBundle.ReadLinearAkPropRange(Ar);
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadArray(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

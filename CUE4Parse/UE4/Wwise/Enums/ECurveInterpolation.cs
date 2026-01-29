@@ -11,5 +11,8 @@ public enum ECurveInterpolation : byte
     Exp1 = 0x6,
     SineRecip = 0x7,
     Exp3 = 0x8,
+#pragma warning disable CA1069
+    LastFadeCurve = 0x8,
+#pragma warning restore CA1069
     Constant = 0x9
 }

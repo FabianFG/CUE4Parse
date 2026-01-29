@@ -14,8 +14,8 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly EEventActionType EventActionType;
     public readonly byte IsBus;
     public readonly uint ReferencedId;
-    public readonly List<AkProp> Props;
-    public readonly List<AkPropRange> PropRanges;
+    public readonly AkProp[] Props;
+    public readonly AkPropRange[] PropRanges;
     public readonly object? ActionData;
 
     public HierarchyEventAction(FArchive Ar) : base(Ar)
@@ -25,7 +25,7 @@ public class HierarchyEventAction : AbstractHierarchy
         ReferencedId = Ar.Read<uint>();
         IsBus = Ar.Read<byte>();
 
-        AkPropBundle propBundle = new(Ar);
+        var propBundle = new AkPropBundle(Ar);
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
