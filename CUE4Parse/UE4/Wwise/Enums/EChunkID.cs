@@ -1,6 +1,6 @@
 namespace CUE4Parse.UE4.Wwise.Enums;
 
-public enum ChunkID : uint
+public enum EChunkID : uint
 {
     AKPK = 0x4B504B41, // Audiokinetic Bank
     BankHeader = 0x44484B42, // Bank Header

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -9,7 +8,7 @@ public class BaseHierarchyBus : AbstractHierarchy
 {
     public readonly uint OverrideBusId;
     public readonly uint DeviceSharesetId;
-    public readonly List<AkProp> Props = [];
+    public readonly AkProp[] Props = [];
     public readonly AkPositioningParams? PositioningParams;
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings? AdvSettingsParams;
@@ -18,12 +17,12 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly byte? HdrEnvelopeFlags;
     public readonly uint RecoveryTime;
     public readonly float MaxDuckVolume;
-    public readonly List<AkDuckInfo> DuckInfo = [];
+    public readonly AkDuckInfo[] DuckInfo = [];
     public readonly AkFxBus FxBusParams;
     public readonly byte OverrideAttachmentParams;
-    public readonly List<AkFxChunk> FxChunk = [];
-    public readonly List<AkRtpc> RtpcList;
-    public readonly List<AkStateGroup>? StateGroups;
+    public readonly AkFxChunk[] FxChunks = [];
+    public readonly AkRtpc[] RTPCs;
+    public readonly AkStateGroup[] StateGroups;
 
     public BaseHierarchyBus(FArchive Ar) : base(Ar)
     {
@@ -36,23 +35,13 @@ public class BaseHierarchyBus : AbstractHierarchy
         if (WwiseVersions.Version > 56)
         {
             int propCount = Ar.Read<byte>();
-            var propIds = new byte[propCount];
-            var propValues = new float[propCount];
+            var propIds = Ar.ReadArray(propCount, Ar.Read<byte>);
+            var propValues = Ar.ReadArray(propCount, Ar.Read<float>);
 
+            Props = new AkProp[propCount];
             for (int i = 0; i < propCount; i++)
             {
-                propIds[i] = Ar.Read<byte>();
-            }
-
-            for (int i = 0; i < propCount; i++)
-            {
-                propValues[i] = Ar.Read<float>();
-            }
-
-            Props = new List<AkProp>(propCount);
-            for (int i = 0; i < propCount; i++)
-            {
-                Props.Add(new AkProp(propIds[i], propValues[i]));
+                Props[i] = new AkProp(propIds[i], propValues[i]);
             }
         }
 
@@ -99,11 +88,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             var stateSyncType = Ar.Read<uint>();
         }
 
-        var numDucks = Ar.Read<uint>();
-        for (int i = 0; i < numDucks; i++)
-        {
-            DuckInfo.Add(new AkDuckInfo(Ar));
-        }
+        DuckInfo = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkDuckInfo(Ar));
 
         FxBusParams = new AkFxBus(Ar);
 
@@ -114,21 +99,14 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         if (WwiseVersions.Version > 136)
         {
-            var numFx = Ar.Read<byte>();
-            if (numFx > 0)
-            {
-                for (int i = 0; i < numFx; i++)
-                {
-                    FxChunk.Add(new AkFxChunk(Ar));
-                }
-            }
+            FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        RTPCs = AkRtpc.ReadArray(Ar);
 
         if (WwiseVersions.Version <= 52)
         {
-            // TODO: State chunk inlined
+            // State chunk inlined
             StateGroups = new AkStateChunk(Ar).Groups;
         }
         else if (WwiseVersions.Version <= 122)
@@ -219,13 +197,13 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         writer.WritePropertyName("FxChunk");
         writer.WriteStartArray();
-        foreach (var f in FxChunk)
+        foreach (var f in FxChunks)
             serializer.Serialize(writer, f);
         writer.WriteEndArray();
 
         writer.WritePropertyName("RtpcList");
         writer.WriteStartArray();
-        foreach (var r in RtpcList)
+        foreach (var r in RTPCs)
             serializer.Serialize(writer, r);
         writer.WriteEndArray();
 

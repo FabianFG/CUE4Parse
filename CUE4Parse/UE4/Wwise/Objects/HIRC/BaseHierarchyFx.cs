@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -6,11 +5,11 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 public class BaseHierarchyFx : AbstractHierarchy
 {
-    public readonly List<AkMediaMap> MediaList;
-    public readonly List<AkRtpc> RtpcList;
-    public readonly List<AkStateGroup> StateGroups = [];
-    public readonly List<RtpcInit> RtpcInitList = [];
-    public readonly List<PluginPropertyValue> PluginPropertyValues = [];
+    public readonly AkMediaMap[] MediaList;
+    public readonly AkRtpc[] RTPCs;
+    public readonly AkStateGroup[] StateGroups = [];
+    public readonly RtpcInit[] RtpcInitList = [];
+    public readonly PluginPropertyValue[] PluginPropertyValues = [];
 
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
     {
@@ -18,19 +17,8 @@ public class BaseHierarchyFx : AbstractHierarchy
 
         WwisePlugin.ParsePluginParams(Ar, pluginId);
 
-        var numBankData = Ar.Read<byte>();
-        MediaList = new List<AkMediaMap>(numBankData);
-        for (int i = 0; i < numBankData; i++)
-        {
-            var mediaItem = new AkMediaMap
-            {
-                Index = Ar.Read<byte>(),
-                SourceId = Ar.Read<uint>()
-            };
-            MediaList.Add(mediaItem);
-        }
-
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        MediaList = Ar.ReadArray(Ar.Read<byte>(), () => new AkMediaMap(Ar));
+        RTPCs = AkRtpc.ReadArray(Ar);
 
         if (WwiseVersions.Version <= 89)
         {
@@ -45,46 +33,39 @@ public class BaseHierarchyFx : AbstractHierarchy
                 Ar.Read<byte>();
             }
 
-            var numInit = Ar.Read<ushort>();
-            RtpcInitList = new List<RtpcInit>(numInit);
-            for (int i = 0; i < numInit; i++)
-            {
-                RtpcInitList.Add(new RtpcInit
-                {
-                    ParamId = WwiseReader.Read7BitEncodedIntBE(Ar),
-                    InitValue = Ar.Read<float>()
-                });
-            }
+            RtpcInitList = Ar.ReadArray(Ar.Read<ushort>(), () => new RtpcInit(Ar));
         }
         else
         {
             StateGroups = new AkStateAwareChunk(Ar).Groups;
-
-            var numValues = Ar.Read<ushort>();
-            PluginPropertyValues = new List<PluginPropertyValue>(numValues);
-            for (int i = 0; i < numValues; i++)
-            {
-                PluginPropertyValues.Add(new PluginPropertyValue
-                {
-                    PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar),
-                    RtpcAccum = Ar.Read<byte>(),
-                    Value = Ar.Read<float>()
-                });
-            }
+            PluginPropertyValues = Ar.ReadArray(Ar.Read<ushort>(), () => new PluginPropertyValue(Ar));
         }
     }
 
-    public class RtpcInit
+    public readonly struct RtpcInit
     {
-        public int ParamId { get; set; }
-        public float InitValue { get; set; }
+        public readonly int ParamId;
+        public readonly float InitValue;
+
+        public RtpcInit(FArchive Ar)
+        {
+            ParamId = WwiseReader.Read7BitEncodedIntBE(Ar);
+            InitValue = Ar.Read<float>();
+        }
     }
 
-    public class PluginPropertyValue
+    public readonly struct PluginPropertyValue
     {
-        public int PropertyId { get; set; }
-        public byte RtpcAccum { get; set; }
-        public float Value { get; set; }
+        public readonly int PropertyId;
+        public readonly byte RtpcAccum;
+        public readonly float Value;
+
+        public PluginPropertyValue(FArchive Ar)
+        {
+            PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar);
+            RtpcAccum = Ar.Read<byte>();
+            Value = Ar.Read<float>();
+        }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -93,7 +74,7 @@ public class BaseHierarchyFx : AbstractHierarchy
         serializer.Serialize(writer, MediaList);
 
         writer.WritePropertyName("RtpcList");
-        serializer.Serialize(writer, RtpcList);
+        serializer.Serialize(writer, RTPCs);
 
         writer.WritePropertyName("StateGroups");
         serializer.Serialize(writer, StateGroups);

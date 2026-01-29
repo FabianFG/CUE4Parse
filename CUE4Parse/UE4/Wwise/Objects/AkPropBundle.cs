@@ -1,78 +1,51 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class AkPropBundle
 {
-    public readonly List<AkProp> Props;
-    public readonly List<AkPropRange> PropRanges;
+    public readonly AkProp[] Props;
+    public readonly AkPropRange[] PropRanges;
 
     public AkPropBundle(FArchive Ar)
     {
-        int propCount = Ar.Read<byte>();
-        Props = new List<AkProp>(propCount);
-        for (int i = 0; i < propCount; i++)
-        {
-            Props.Add(new AkProp(Ar));
-        }
-
-        int rangeCount = Ar.Read<byte>();
-        PropRanges = new List<AkPropRange>(rangeCount);
-        for (int i = 0; i < rangeCount; i++)
-        {
-            PropRanges.Add(new AkPropRange(Ar));
-        }
+        Props = Ar.ReadArray(Ar.Read<byte>(), () => new AkProp(Ar));
+        PropRanges = Ar.ReadArray(Ar.Read<byte>(), () => new AkPropRange(Ar));
     }
 
-    public static List<AkProp> ReadLinearAkProp(FArchive Ar)
+    public static AkProp[] ReadLinearAkProp(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        var ids = new List<byte>(propCount);
-        var values = new List<float>(propCount);
 
-        for (int i = 0; i < propCount; i++)
-        {
-            ids.Add(Ar.Read<byte>());
-        }
+        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
+        var values = Ar.ReadArray(propCount, Ar.Read<float>);
 
+        var props = new AkProp[propCount];
         for (int i = 0; i < propCount; i++)
-        {
-            values.Add(Ar.Read<float>());
-        }
-
-        List<AkProp> props = new(propCount);
-        for (int i = 0; i < propCount; i++)
-        {
-            props.Add(new AkProp(ids[i], values[i]));
-        }
+            props[i] = new AkProp(ids[i], values[i]);
 
         return props;
     }
 
-    public static List<AkPropRange> ReadLinearAkPropRange(FArchive Ar)
+    public static AkPropRange[] ReadLinearAkPropRange(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        var ids = new List<byte>(propCount);
 
-        for (int i = 0; i < propCount; i++)
-        {
-            ids.Add(Ar.Read<byte>());
-        }
+        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
 
-        var ranges = new List<AkPropRange>(propCount);
+        var ranges = new AkPropRange[propCount];
         for (int i = 0; i < propCount; i++)
         {
             float min = Ar.Read<float>();
             float max = Ar.Read<float>();
-            ranges.Add(new AkPropRange(ids[i], min, max));
+            ranges[i] = new AkPropRange(ids[i], min, max);
         }
 
         return ranges;
     }
 }
 
-public class AkProp
+public readonly struct AkProp
 {
     public readonly byte Id;
     public readonly float Value;
@@ -90,7 +63,7 @@ public class AkProp
     }
 }
 
-public class AkPropRange
+public readonly struct AkPropRange
 {
     public readonly byte Id;
     public readonly float Min;

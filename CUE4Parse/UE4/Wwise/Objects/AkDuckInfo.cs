@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkDuckInfo
+public readonly struct AkDuckInfo
 {
     public readonly uint BusId;
     public readonly float DuckVolume;
@@ -13,7 +13,7 @@ public class AkDuckInfo
     public readonly uint FadeInTime;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly ECurveInterpolation FadeCurve;
-    public readonly byte TargetProp; // Version > 65
+    public readonly EPropID TargetProp;
 
     public AkDuckInfo(FArchive Ar)
     {
@@ -26,7 +26,7 @@ public class AkDuckInfo
         FadeCurve = (ECurveInterpolation) (byBitVector & 0x1F);
         if (WwiseVersions.Version > 65)
         {
-            TargetProp = Ar.Read<byte>();
+            TargetProp = Ar.Read<EPropID>();
         }
     }
 }

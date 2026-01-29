@@ -19,8 +19,8 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly byte PriorityApplyDistFactor;
     public readonly sbyte DistOffset;
     public readonly EMidiBehaviorFlags MidiBehaviorFlags;
-    public readonly List<AkProp> Props;
-    public readonly List<AkPropRange> PropRanges;
+    public readonly AkProp[] Props;
+    public readonly AkPropRange[] PropRanges;
     public readonly AkPositioningParams PositioningParams;
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings AdvSettingsParams;
@@ -28,8 +28,8 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly ushort MaxNumInstance;
     public readonly EBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
-    public readonly List<AkStateGroup> StateGroups;
-    public readonly List<AkRtpc> RtpcList;
+    public readonly AkStateGroup[] StateGroups;
+    public readonly AkRtpc[] RtpcList;
 
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
@@ -70,7 +70,7 @@ public class BaseHierarchy : AbstractHierarchy
             PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0);
         }
 
-        AkPropBundle propBundle = new(Ar);
+        var propBundle = new AkPropBundle(Ar);
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
@@ -101,7 +101,7 @@ public class BaseHierarchy : AbstractHierarchy
             StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadArray(Ar);
     }
 
     // WriteStartEndObjects are handled by derived classes!
