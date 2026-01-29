@@ -2,10 +2,12 @@ namespace CUE4Parse.UE4.Wwise.Enums;
 
 public enum EEventActionScope : byte
 {
-    GameObject = 0x01,
+    None = 0x0,
+    GameObject,
     Global,
     GameObjectId,
-    GameObjectState,
     All,
+    GlobalGameObject,
     AllExceptId = 0x09,
+    Ducking = 0x20
 }

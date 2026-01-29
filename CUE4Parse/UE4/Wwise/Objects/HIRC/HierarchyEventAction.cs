@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkAction::Create
+// CAkAction::SetInitialValues
 public class HierarchyEventAction : AbstractHierarchy
 {
     public readonly EEventActionScope EventActionScope;
@@ -27,14 +29,14 @@ public class HierarchyEventAction : AbstractHierarchy
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
-        ActionData = EventActionType switch
+        ActionData = (EventActionType, WwiseVersions.Version) switch
         {
-            EEventActionType.Play => new AkActionPlay(Ar),
-            EEventActionType.Stop => new AkActionStop(Ar),
-            EEventActionType.SetGameParameter or
-                EEventActionType.ResetGameParameter => new AkActionSetGameParameter(Ar),
-            EEventActionType.SetHighPassFilter or
-                EEventActionType.SetHighPassFilter2 or
+            (EEventActionType.Play, _) => new AkActionPlay(Ar),
+            (EEventActionType.Stop, _) => new AkActionStop(Ar),
+            (EEventActionType.SetGameParameter or
+                EEventActionType.ResetGameParameter, _) => new AkActionSetGameParameter(Ar),
+            (EEventActionType.SetHighPassFilter or
+                EEventActionType.ResetHighPassFilter or
                 EEventActionType.ResetVoiceLowPassFilter or
                 EEventActionType.ResetBusVolume or
                 EEventActionType.SetVoiceVolume or
@@ -42,19 +44,19 @@ public class HierarchyEventAction : AbstractHierarchy
                 EEventActionType.SetBusVolume or
                 EEventActionType.SetVoiceLowPassFilter or
                 EEventActionType.ResetVoiceVolume or
-                EEventActionType.ResetVoicePitch => new AkActionSetAkProps(Ar),
-            EEventActionType.Seek => new AkActionSeek(Ar),
-            EEventActionType.SetSwitch => new AkActionSetSwitch(Ar),
-            EEventActionType.SetState => new AkActionSetState(Ar),
-            EEventActionType.SetEffect or
-                EEventActionType.ResetEffect => new AkActionSetEffect(Ar),
-            EEventActionType.Mute or
+                EEventActionType.ResetVoicePitch, _) => new AkActionSetAkProps(Ar),
+            (EEventActionType.Seek, _) => new AkActionSeek(Ar),
+            (EEventActionType.SetSwitch, _) => new AkActionSetSwitch(Ar),
+            (EEventActionType.SetState, _) => new AkActionSetState(Ar),
+            (EEventActionType.SetEffect or
+                EEventActionType.ResetEffect, _) => new AkActionSetEffect(Ar),
+            (EEventActionType.Mute or
                 EEventActionType.UnMute or
-                EEventActionType.ResetPlaylist => new AkActionBase(Ar),
-            EEventActionType.Resume => new AkActionResume(Ar),
-            EEventActionType.Pause => new AkActionPause(Ar),
-            EEventActionType.ToggleBypassEffect or
-                EEventActionType.ResetBypassEffect => new AkActionBypassFX(Ar),
+                EEventActionType.ResetPlaylist, _) => new AkActionBase(Ar),
+            (EEventActionType.Resume, _) => new AkActionResume(Ar),
+            (EEventActionType.Pause, _) => new AkActionPause(Ar),
+            (EEventActionType.Break or
+                EEventActionType.Trigger, < 150) => new AkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };
