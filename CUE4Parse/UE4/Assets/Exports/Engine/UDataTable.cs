@@ -1,11 +1,10 @@
+using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
@@ -22,9 +21,12 @@ public class UDataTable : UObject
         UStruct? rowStruct = null;
         if (string.IsNullOrEmpty(RowStructName))
         {
-            var ptr = GetOrDefault<FPackageIndex>("RowStruct");
-            if (ptr is not null && !ptr.TryLoad<UStruct>(out rowStruct))
+            var ptr = GetOrDefault<FPackageIndex?>("RowStruct");
+            if (ptr != null)
+            {
                 RowStructName = ptr.Name;
+                ptr.TryLoad<UStruct>(out rowStruct);
+            }
         }
 
         var numRows = Ar.Read<int>();
