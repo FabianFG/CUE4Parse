@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -7,16 +6,16 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 public class HierarchyMusicSegment : BaseHierarchyMusic
 {
     public readonly AkMeterInfo MeterInfo;
-    public readonly List<AkStinger> Stingers;
+    public readonly AkStinger[] Stingers;
     public readonly double Duration;
-    public readonly List<AkMusicMarkerWwise> Markers;
+    public readonly AkMusicMarkerWwise[] Markers;
 
     public HierarchyMusicSegment(FArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
-        Stingers = AkStinger.ReadMultiple(Ar);
+        Stingers = AkStinger.ReadArray(Ar);
         Duration = Ar.Read<double>();
-        Markers = AkMusicMarkerWwise.ReadMultiple(Ar);
+        Markers = AkMusicMarkerWwise.ReadArray(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)

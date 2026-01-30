@@ -12,8 +12,8 @@ public class BaseHierarchyModulator : AbstractHierarchy
 
     public BaseHierarchyModulator(FArchive Ar) : base(Ar)
     {
-        Props = AkPropBundle.ReadLinearAkProp(Ar);
-        PropRanges = AkPropBundle.ReadLinearAkPropRange(Ar);
+        Props = AkPropBundle.ReadSequentialAkProp(Ar);
+        PropRanges = AkPropBundle.ReadSequentialAkPropRange(Ar);
         RtpcList = AkRtpc.ReadArray(Ar);
     }
 

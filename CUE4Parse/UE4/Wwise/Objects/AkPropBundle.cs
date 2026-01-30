@@ -13,7 +13,7 @@ public class AkPropBundle
         PropRanges = Ar.ReadArray(Ar.Read<byte>(), () => new AkPropRange(Ar));
     }
 
-    public static AkProp[] ReadLinearAkProp(FArchive Ar)
+    public static AkProp[] ReadSequentialAkProp(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
 
@@ -27,7 +27,7 @@ public class AkPropBundle
         return props;
     }
 
-    public static AkPropRange[] ReadLinearAkPropRange(FArchive Ar)
+    public static AkPropRange[] ReadSequentialAkPropRange(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
 

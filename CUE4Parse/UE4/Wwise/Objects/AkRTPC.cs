@@ -9,6 +9,7 @@ public readonly struct AkRtpcGraphPoint
 {
     public readonly float From;
     public readonly float To;
+    [JsonConverter(typeof(StringEnumConverter))]
     public readonly ECurveInterpolation Interpolation;
 
     public AkRtpcGraphPoint(FArchive Ar)

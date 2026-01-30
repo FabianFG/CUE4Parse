@@ -7,14 +7,14 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
 {
     public readonly AkMeterInfo MeterInfo;
-    public readonly List<AkStinger> Stingers;
+    public readonly AkStinger[] Stingers;
     public readonly AkMusicTransitionRule MusicTransitionRule;
     public readonly List<AkMusicRanSeqPlaylistItem> Playlist;
 
     public HierarchyMusicRandomSequenceContainer(FArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
-        Stingers = AkStinger.ReadMultiple(Ar);
+        Stingers = AkStinger.ReadArray(Ar);
         MusicTransitionRule = new AkMusicTransitionRule(Ar);
 
         Ar.Read<uint>(); // numPlaylistItems, I assume this is for parent and children together, therefore parent is always 1

@@ -18,7 +18,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
     public readonly uint ERSType;
     public readonly EMusicTrackType MusicTrackType;
     public readonly AkTrackSwitchParams? SwitchParams;
-    public readonly AkTransParams? TransParams;
+    public readonly AkMusicTrackTransRule? TransParams;
     public readonly int LookAheadTime;
 
     public HierarchyMusicTrack(FArchive Ar) : base(Ar)
@@ -97,7 +97,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
             if (MusicTrackType == EMusicTrackType.Switch) // Special case for track type
             {
                 SwitchParams = new AkTrackSwitchParams(Ar);
-                TransParams = new AkTransParams(Ar);
+                TransParams = new AkMusicTrackTransRule(Ar);
             }
         }
 

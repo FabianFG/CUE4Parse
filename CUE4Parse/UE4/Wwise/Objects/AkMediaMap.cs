@@ -2,10 +2,10 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public struct AkMediaMap
+public readonly struct AkMediaMap
 {
-    public byte Index { get; set; }
-    public uint SourceId { get; set; }
+    public readonly byte Index;
+    public readonly uint SourceId;
 
     public AkMediaMap(FArchive Ar)
     {
