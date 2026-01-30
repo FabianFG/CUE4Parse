@@ -57,16 +57,11 @@ namespace CUE4Parse.FileProvider.Vfs
                     }
                 }
             }
-            else if (file is VfsEntry {Vfs: { } vfs})
-            {
-                // file comes from a specific archive
-                // this ensure that its payloads are also from the same archive
-                // this is useful with patched archives
-                vfs.Files.TryGetValue(path + ".uexp", out uexp);
-                if (vfs.Files.TryGetValue(path + ".ubulk", out var ubulkVfs))
-                    ubulkList.Add(ubulkVfs);
-            }
 
+            // Resolve payloads using ReadOrder priority (highest ReadOrder wins)
+            // This ensures payloads come from the highest-priority pak, matching how
+            // the engine resolves patched archives, rather than assuming payloads are
+            // always co-located with the uasset in the same archive.
             if (uexp == null) TryGetValue(path + ".uexp", out uexp);
             if (ubulkList.Count < 1 && TryGetValue(path + ".ubulk", out var ubulk))
                 ubulkList.Add(ubulk);
