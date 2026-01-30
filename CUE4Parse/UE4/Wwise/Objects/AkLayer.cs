@@ -27,6 +27,7 @@ public class AkLayer
             RTPCCrossfadingDefaultValue = Ar.Read<float>();
         }
 
+        // CAkLayer::SetChildAssoc
         Associations = AkAssociatedLayerChild.ReadArray(Ar);
     }
 
@@ -42,6 +43,6 @@ public class AkLayer
         }
 
         public static AkAssociatedLayerChild[] ReadArray(FArchive Ar) =>
-            Ar.ReadArray((int) Ar.Read<uint>(), () => new AkAssociatedLayerChild(Ar));
+            Ar.ReadArray(Ar.Read<int>(), () => new AkAssociatedLayerChild(Ar));
     }
 }

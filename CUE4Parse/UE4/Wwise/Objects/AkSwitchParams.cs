@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkSwitchParams
+public readonly struct AkSwitchParams
 {
     public readonly uint NodeId;
     public readonly bool IsFirstOnly;

@@ -19,7 +19,7 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public readonly ERandomSequenceContainerMode Mode;
     public readonly EPlayListFlags PlaylistFlags;
     public readonly uint[] ChildIds;
-    public readonly List<AkPlayList.AkPlayListItem> Playlist;
+    public readonly AkPlayListItem[] Playlist;
 
     public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
     {

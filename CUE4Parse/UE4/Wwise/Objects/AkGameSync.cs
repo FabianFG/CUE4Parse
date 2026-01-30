@@ -17,7 +17,7 @@ public struct AkGameSync
         GroupType = groupType;
     }
 
-    public static AkGameSync[] ReadLinear(FArchive Ar, uint count)
+    public static AkGameSync[] ReadSequential(FArchive Ar, uint count)
     {
         var groupIds = Ar.ReadArray<uint>((int) count);
         var groupTypes = Ar.ReadArray<EGroupType>((int) count);
