@@ -176,6 +176,10 @@ public class UClass : UStruct
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
                         break;
+                    case EX_PushExecutionFlow pushflow:
+                        label = pushflow.ObjectPath.ToString().Split('.').Last().Split('[')[0];;
+                        offset = (int)pushflow.PushingAddress;
+                        break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
