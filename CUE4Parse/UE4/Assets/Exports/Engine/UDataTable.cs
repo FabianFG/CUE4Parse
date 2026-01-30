@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
@@ -47,6 +48,25 @@ public class UDataTable : UObject
 
         writer.WritePropertyName("Rows");
         serializer.Serialize(writer, RowMap);
+    }
+
+    public bool TryGetRowStructName(out string? rowStructName)
+    {
+        if (!string.IsNullOrEmpty(RowStructName))
+        {
+            rowStructName = RowStructName!;
+            return true;
+        }
+        var ptr = GetOrDefault<FPackageIndex>("RowStruct");
+
+        // Try to load the struct to confirm it exists
+        if (ptr is not null && ptr.TryLoad<UStruct>(out _))
+        {
+            rowStructName = ptr.Name;
+            return true;
+        }
+        rowStructName = null;
+        return false;
     }
 }
 
