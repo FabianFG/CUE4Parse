@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.Actions;
@@ -70,7 +69,7 @@ public class HierarchyEventAction : AbstractHierarchy
         writer.WriteValue(EventActionScope.ToString());
 
         writer.WritePropertyName("EventActionType");
-        writer.WriteValue(EventActionType.ToString());
+        writer.WriteValue(EventActionType.ToString(WwiseVersions.Version));
 
         if (ReferencedId != 0)
         {

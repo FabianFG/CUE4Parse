@@ -128,7 +128,6 @@ public enum EEventActionType : byte
     NoOp = 0x40
 }
 
-// Keep old for reference only
 public enum EEventActionType_v72_to_v150 : byte
 {
     Stop = 0x01, // AkActionStop
@@ -171,4 +170,16 @@ public enum EEventActionType_v72_to_v150 : byte
     BypassEffect2 = 0x35, // AkActionBypassFX
     ResetBypassEffect3 = 0x36, // AkActionBypassFX
     ToggleBypassEffect2 = 0x37, // AkActionBypassFX
+}
+
+public static class EventActionTypeExtensions
+{
+    public static string ToString(this EEventActionType actionType, uint version)
+    {
+        return version switch
+        {
+            < 150 => ((EEventActionType_v72_to_v150) (byte) actionType).ToString(),
+            _ => actionType.ToString()
+        };
+    }
 }
