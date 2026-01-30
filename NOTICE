@@ -21,6 +21,7 @@ This library includes material developed by the following third-party libraries:
 - CriWareLibrary (https://github.com/MarshmallowAndroid/CriWareLibrary/blob/master/LICENSE) - Copyright (c) 2025 Jacob Tarun. Licensed under the MIT License.
 - vgmstream (https://github.com/vgmstream/vgmstream/blob/master/COPYING) - Portions Copyright (c) 2008-2025 Adam Gashlin, Fastelbja, Ronny Elfert, bnnm, Christopher Snowhill, NicknineTheEagle, bxaimc, Thealexbarney, CyberBotX, et al. Licensed under the original ISC-style license. Only portions of the library were used/ported.
 - VGAudio (https://github.com/Thealexbarney/VGAudio/blob/master/LICENSE) - Copyright (c) 2016 Thealexbarney. Licensed under the MIT License.
+- SubstreamSharp (https://github.com/connorhaigh/SubstreamSharp/blob/master/Licence.txt) - Copyright (c) 2021 Connor Haigh. Licensed under the MIT License.
 
 ---------------------------------------------------------------------------
 
