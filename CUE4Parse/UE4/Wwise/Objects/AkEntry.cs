@@ -14,7 +14,7 @@ public class AkEntry
     public readonly uint Offset;
     public readonly uint FolderId;
     public string? Path;
-    public bool IsSoundBank => Data is { Length: >= 4 } && BitConverter.ToUInt32(Data) == (uint)EChunkID.BankHeader;
+    public bool IsSoundBank => Data is { Length: >= 4 } && BitConverter.ToUInt32(Data) is (uint)EChunkID.BankHeader;
     public byte[]? Data;
 
     public AkEntry(FArchive Ar)

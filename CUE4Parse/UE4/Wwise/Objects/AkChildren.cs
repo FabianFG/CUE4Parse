@@ -2,17 +2,12 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkChildren
+public readonly struct AkChildren
 {
     public readonly uint[] ChildIds;
 
     public AkChildren(FArchive Ar)
     {
-        var numChildren = Ar.Read<uint>();
-        ChildIds = new uint[numChildren];
-        for (var i = 0; i < numChildren; i++)
-        {
-            ChildIds[i] = Ar.Read<uint>();
-        }
+        ChildIds = Ar.ReadArray<uint>((int)Ar.Read<uint>());
     }
 }

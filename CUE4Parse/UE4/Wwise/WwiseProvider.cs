@@ -457,7 +457,7 @@ public class WwiseProvider
 
         if (wwiseDir is null)
         {
-            Log.Warning($"Wwise directory not found under {wwiseDir}");
+            Log.Warning($"Wwise directory not found under '{wwiseDir}'");
             return;
         }
 
