@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -278,10 +279,35 @@ public class FStructFallbackConverter : JsonConverter<FStructFallback>
     {
         writer.WriteStartObject();
 
-        foreach (var property in value.Properties)
+        var grouped = value.Properties
+            .GroupBy(p => p.Name.Text)
+            .ToList();
+
+        foreach (var group in grouped)
         {
-            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
-            serializer.Serialize(writer, property.Tag);
+            writer.WritePropertyName(group.Key);
+
+            var properties = group.ToList();
+            if (properties.Any(p => p.IsIndexed) || properties.Count > 1)
+            {
+                var maxIndex = properties.Max(p => p.ArrayIndex);
+                var sparse = new object?[maxIndex + 1];
+                foreach (var property in properties)
+                {
+                    sparse[property.ArrayIndex] = property.Tag;
+                }
+
+                writer.WriteStartArray();
+                foreach (var element in sparse)
+                {
+                    serializer.Serialize(writer, element);
+                }
+                writer.WriteEndArray();
+            }
+            else
+            {
+                serializer.Serialize(writer, properties[0].Tag);
+            }
         }
 
         writer.WriteEndObject();
