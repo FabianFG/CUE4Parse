@@ -176,6 +176,10 @@ public class UClass : UStruct
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
                         break;
+                    case EX_PushExecutionFlow pushflow:
+                        label = pushflow.ObjectPath.ToString().Split('.').Last().Split('[')[0];;
+                        offset = (int)pushflow.PushingAddress;
+                        break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
@@ -254,7 +258,7 @@ public class UClass : UStruct
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
             foreach (var kismetExpression in function.ScriptBytecode)
             {
-                if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_PushExecutionFlow)
+                if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript)
                     continue;
 
                 if (jumpCodeOffsets.Contains(kismetExpression.StatementIndex))

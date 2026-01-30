@@ -1138,6 +1138,10 @@ public static class BlueprintDecompilerUtils
 
                 return $"goto Label_{jump.CodeOffset}";
             }
+            case EX_PushExecutionFlow pushflow:
+            {
+                return $"goto Label_{pushflow.PushingAddress}";
+            }
             case EX_SkipOffsetConst skipOffsetConst:
             {
                 return $"goto Label_{skipOffsetConst.Value}";
@@ -1427,7 +1431,6 @@ public static class BlueprintDecompilerUtils
             case EX_EndMapConst:
             case EX_EndSetConst:
             case EX_EndOfScript:
-            case EX_PushExecutionFlow:
             case EX_AutoRtfmStopTransact:
             case EX_AutoRtfmTransact:
             case EX_AutoRtfmAbortIfNot:
