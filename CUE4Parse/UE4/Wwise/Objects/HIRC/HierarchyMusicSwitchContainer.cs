@@ -10,7 +10,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
     public readonly List<AkStinger> Stingers;
     public readonly AkMusicTransitionRule MusicTransitionRule;
     public readonly byte IsContinuePlayback;
-    public readonly List<AkGameSync> Arguments;
+    public readonly AkGameSync[] Arguments;
     public readonly byte Mode;
     public readonly AkDecisionTree DecisionTree;
 
@@ -32,16 +32,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
             IsContinuePlayback = Ar.Read<byte>();
             var treeDepth = Ar.Read<uint>();
 
-            for (int i = 0; i < treeDepth; i++)
-            {
-                var gameSync = new AkGameSync(Ar);
-                Arguments.Add(gameSync);
-            }
-
-            foreach (var argument in Arguments)
-            {
-                argument.SetGroupType(Ar);
-            }
+            Arguments = AkGameSync.ReadLinear(Ar, treeDepth);
 
             var treeDataSize = Ar.Read<uint>();
             Mode = Ar.Read<byte>();
