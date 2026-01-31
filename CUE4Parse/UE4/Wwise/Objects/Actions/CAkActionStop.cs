@@ -2,16 +2,17 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class AkActionStop
+public class CAkActionStop
 {
-    public readonly ActionParams ActionParams;
+    public readonly CAkActionParams ActionParams;
     public readonly bool ApplyToStateTransitions;
     public readonly bool ApplyToDynamicSequence;
-    public readonly ExceptParams ExceptParams;
+    public readonly CAkActionExcept ExceptParams;
 
-    public AkActionStop(FArchive Ar)
+    // CAkActionStop::SetActionActiveParams
+    public CAkActionStop(FArchive Ar)
     {
-        ActionParams = new ActionParams(Ar);
+        ActionParams = new CAkActionParams(Ar);
         if (WwiseVersions.Version > 122)
         {
             var byBitVector = Ar.Read<byte>();
@@ -19,6 +20,6 @@ public class AkActionStop
             ApplyToDynamicSequence = (byBitVector & (1 << 2)) != 0; // bit 2
         }
 
-        ExceptParams = new ExceptParams(Ar);
+        ExceptParams = new CAkActionExcept(Ar);
     }
 }

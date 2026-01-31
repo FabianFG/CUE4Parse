@@ -3153,7 +3153,7 @@ public class BankHeaderConverter : JsonConverter<AkBankHeader>
         writer.WriteValue(value.ProjectId);
 
         writer.WritePropertyName("SoundBankType");
-        writer.WriteValue(value.SoundBankType);
+        writer.WriteValue(value.SoundBankType.ToString());
 
         writer.WritePropertyName("BankHash");
         writer.WriteValue(value.BankHash);

@@ -5,16 +5,17 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class AkActionResume
+public class CAkActionResume
 {
-    public readonly ActionParams ActionParams;
+    public readonly CAkActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EResumeOptions ResumeOptions;
-    public readonly ExceptParams ExceptParams;
+    public readonly CAkActionExcept ExceptParams;
 
-    public AkActionResume(FArchive Ar)
+    // CAkActionResume::SetActionActiveParams
+    public CAkActionResume(FArchive Ar)
     {
-        ActionParams = new ActionParams(Ar);
+        ActionParams = new CAkActionParams(Ar);
 
         if (WwiseVersions.Version <= 56)
         {
@@ -29,6 +30,6 @@ public class AkActionResume
             ResumeOptions = Ar.Read<EResumeOptions>();
         }
 
-        ExceptParams = new ExceptParams(Ar);
+        ExceptParams = new CAkActionExcept(Ar);
     }
 }

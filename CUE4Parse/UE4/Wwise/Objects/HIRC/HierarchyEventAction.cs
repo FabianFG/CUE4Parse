@@ -30,10 +30,10 @@ public class HierarchyEventAction : AbstractHierarchy
 
         ActionData = (EventActionType, WwiseVersions.Version) switch
         {
-            (EAkActionType.Play, _) => new AkActionPlay(Ar),
-            (EAkActionType.Stop, _) => new AkActionStop(Ar),
+            (EAkActionType.Play, _) => new CAkActionPlay(Ar),
+            (EAkActionType.Stop, _) => new CAkActionStop(Ar),
             (EAkActionType.SetGameParameter or
-                EAkActionType.ResetGameParameter, _) => new AkActionSetGameParameter(Ar),
+                EAkActionType.ResetGameParameter, _) => new CAkActionSetGameParameter(Ar),
             (EAkActionType.SetHighPassFilter or
                 EAkActionType.ResetHighPassFilter or
                 EAkActionType.ResetVoiceLowPassFilter or
@@ -43,19 +43,19 @@ public class HierarchyEventAction : AbstractHierarchy
                 EAkActionType.SetBusVolume or
                 EAkActionType.SetVoiceLowPassFilter or
                 EAkActionType.ResetVoiceVolume or
-                EAkActionType.ResetVoicePitch, _) => new AkActionSetAkProps(Ar),
-            (EAkActionType.Seek, _) => new AkActionSeek(Ar),
-            (EAkActionType.SetSwitch, _) => new AkActionSetSwitch(Ar),
-            (EAkActionType.SetState, _) => new AkActionSetState(Ar),
+                EAkActionType.ResetVoicePitch, _) => new CAkActionSetAkProp(Ar),
+            (EAkActionType.Seek, _) => new CAkActionSeek(Ar),
+            (EAkActionType.SetSwitch, _) => new CAkActionSetSwitch(Ar),
+            (EAkActionType.SetState, _) => new CAkActionSetState(Ar),
             (EAkActionType.SetEffect or
-                EAkActionType.ResetEffect, _) => new AkActionSetEffect(Ar),
+                EAkActionType.ResetEffect, _) => new CAkActionSetFX(Ar),
             (EAkActionType.Mute or
                 EAkActionType.UnMute or
-                EAkActionType.ResetPlaylist, _) => new AkActionBase(Ar),
-            (EAkActionType.Resume, _) => new AkActionResume(Ar),
-            (EAkActionType.Pause, _) => new AkActionPause(Ar),
+                EAkActionType.ResetPlaylist, _) => new CAkActionBase(Ar),
+            (EAkActionType.Resume, _) => new CAkActionResume(Ar),
+            (EAkActionType.Pause, _) => new CAkActionPause(Ar),
             (EAkActionType.Break or
-                EAkActionType.Trigger, < 150) => new AkActionBypassFX(Ar),
+                EAkActionType.Trigger, < 150) => new CAkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };

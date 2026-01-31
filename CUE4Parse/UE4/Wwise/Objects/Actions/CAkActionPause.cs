@@ -5,16 +5,17 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class AkActionPause
+public class CAkActionPause
 {
-    public readonly ActionParams ActionParams;
+    public readonly CAkActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EPauseOptions PauseOptions;
-    public readonly ExceptParams ExceptParams;
+    public readonly CAkActionExcept ExceptParams;
 
-    public AkActionPause(FArchive Ar)
+    // CAkActionPause::SetActionSpecificParams
+    public CAkActionPause(FArchive Ar)
     {
-        ActionParams = new ActionParams(Ar);
+        ActionParams = new CAkActionParams(Ar);
 
         if (WwiseVersions.Version <= 56)
         {
@@ -29,6 +30,6 @@ public class AkActionPause
             PauseOptions = Ar.Read<EPauseOptions>();
         }
 
-        ExceptParams = new ExceptParams(Ar);
+        ExceptParams = new CAkActionExcept(Ar);
     }
 }

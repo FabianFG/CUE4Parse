@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class ActionParams
+public class CAkActionParams
 {
     public readonly int TTime;
     public readonly int TTimeMin;
@@ -13,7 +13,7 @@ public class ActionParams
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly ECurveInterpolation FadeCurve;
 
-    public ActionParams(FArchive Ar)
+    public CAkActionParams(FArchive Ar)
     {
         if (WwiseVersions.Version <= 56)
         {
