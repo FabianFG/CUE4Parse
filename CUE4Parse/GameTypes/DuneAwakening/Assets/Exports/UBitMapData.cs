@@ -33,7 +33,7 @@ public class UBitMapData : UObject
                 var data = 0;
                 for (var k = 0; k < m_BitsPerWord; k++)
                 {
-                    data |= Data[i * m_SizeY + j] ? 1 << k : 0;
+                    data |= Data[(i * m_SizeY + j) * m_BitsPerWord + k] ? 1 << k : 0;
                 }
 
                 if (data != 0)
