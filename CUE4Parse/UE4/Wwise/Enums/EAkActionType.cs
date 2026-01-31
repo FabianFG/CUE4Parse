@@ -1,6 +1,6 @@
 namespace CUE4Parse.UE4.Wwise.Enums;
 
-// Split into two enums EAkActionType - EAkActionScope for convience
+// Originally one enum, split into two enums EAkActionType - EAkActionScope for convience
 // High byte is EAkActionType, low byte is EAkActionScope
 public enum EAkActionType : byte
 {

@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Wwise.Enums;
 public enum EPauseOptions : byte
 {
     None = 0,
-    IncludePendingResume = 1 << 0,
+    PausePendingResume = 1 << 0,
     ApplyToStateTransitions = 1 << 1,
     ApplyToDynamicSequence = 1 << 2
 }

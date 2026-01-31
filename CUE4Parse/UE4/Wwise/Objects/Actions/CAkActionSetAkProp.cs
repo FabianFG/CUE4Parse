@@ -5,17 +5,18 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
-public class AkActionSetAkProps
+public class CAkActionSetAkProp
 {
-    public readonly ActionParams ActionParams;
+    public readonly CAkActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkValueMeaning ValueMeaning;
-    public readonly RandomizerModifier RandomizerModifier;
-    public readonly ExceptParams ExceptParams;
+    public readonly AkRandomizerModifier RandomizerModifier;
+    public readonly CAkActionExcept ExceptParams;
 
-    public AkActionSetAkProps(FArchive Ar)
+    // CAkActionSetAkProp::SetActionSpecificParams
+    public CAkActionSetAkProp(FArchive Ar)
     {
-        ActionParams = new ActionParams(Ar);
+        ActionParams = new CAkActionParams(Ar);
 
         if (WwiseVersions.Version <= 56)
         {
@@ -26,7 +27,7 @@ public class AkActionSetAkProps
             ValueMeaning = (EAkValueMeaning) Ar.Read<byte>();
         }
 
-        RandomizerModifier = new RandomizerModifier(Ar);
-        ExceptParams = new ExceptParams(Ar);
+        RandomizerModifier = new AkRandomizerModifier(Ar);
+        ExceptParams = new CAkActionExcept(Ar);
     }
 }

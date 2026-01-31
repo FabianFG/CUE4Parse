@@ -15,7 +15,7 @@ public readonly struct AkBankHeader
     public readonly bool FeedbackInBank;
     public readonly EAltValues AltValues;
     public readonly uint ProjectId;
-    public readonly uint SoundBankType;
+    public readonly EAkBankTypeEnum SoundBankType;
     public readonly byte[] BankHash;
 
     // CAkBankMgr::ProcessBankHeader
@@ -55,7 +55,7 @@ public readonly struct AkBankHeader
 
         if (Version > 141)
         {
-            SoundBankType = Ar.Read<uint>();
+            SoundBankType = Ar.Read<EAkBankTypeEnum>();
             BankHash = Ar.ReadBytes(0x10);
         }
 
