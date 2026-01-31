@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;

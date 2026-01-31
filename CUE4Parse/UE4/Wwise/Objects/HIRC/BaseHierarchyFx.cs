@@ -1,8 +1,10 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkFxBase
 public class BaseHierarchyFx : AbstractHierarchy
 {
     public readonly AkMediaMap[] MediaList;
@@ -11,6 +13,7 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly RtpcInit[] RtpcInitList = [];
     public readonly PluginPropertyValue[] PluginPropertyValues = [];
 
+    // CAkFxBase::SetInitialValues
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
     {
         var pluginId = WwisePlugin.ParsePlugin(Ar);
@@ -57,32 +60,32 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly struct PluginPropertyValue
     {
         public readonly int PropertyId;
-        public readonly byte RtpcAccum;
+        public readonly EAkRtpcAccum RtpcAccum;
         public readonly float Value;
 
         public PluginPropertyValue(FArchive Ar)
         {
             PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar);
-            RtpcAccum = Ar.Read<byte>();
+            RtpcAccum = Ar.Read<EAkRtpcAccum>();
             Value = Ar.Read<float>();
         }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("MediaList");
+        writer.WritePropertyName(nameof(MediaList));
         serializer.Serialize(writer, MediaList);
 
-        writer.WritePropertyName("RtpcList");
+        writer.WritePropertyName(nameof(RTPCs));
         serializer.Serialize(writer, RTPCs);
 
-        writer.WritePropertyName("StateGroups");
+        writer.WritePropertyName(nameof(StateGroups));
         serializer.Serialize(writer, StateGroups);
 
-        writer.WritePropertyName("RtpcInitList");
+        writer.WritePropertyName(nameof(RtpcInitList));
         serializer.Serialize(writer, RtpcInitList);
 
-        writer.WritePropertyName("PluginPropertyValues");
+        writer.WritePropertyName(nameof(PluginPropertyValues));
         serializer.Serialize(writer, PluginPropertyValues);
     }
 }

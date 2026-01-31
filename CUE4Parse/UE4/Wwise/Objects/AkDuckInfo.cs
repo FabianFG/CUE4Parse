@@ -12,8 +12,9 @@ public readonly struct AkDuckInfo
     public readonly uint FadeOutTime;
     public readonly uint FadeInTime;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveInterpolation FadeCurve;
-    public readonly EPropID TargetProp;
+    public readonly EAkCurveInterpolation FadeCurve;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkPropID TargetProp;
 
     public AkDuckInfo(FArchive Ar)
     {
@@ -23,10 +24,10 @@ public readonly struct AkDuckInfo
         FadeInTime = Ar.Read<uint>();
 
         var byBitVector = Ar.Read<byte>();
-        FadeCurve = (ECurveInterpolation) (byBitVector & 0x1F);
+        FadeCurve = (EAkCurveInterpolation) (byBitVector & 0x1F);
         if (WwiseVersions.Version > 65)
         {
-            TargetProp = Ar.Read<EPropID>();
+            TargetProp = Ar.Read<EAkPropID>();
         }
     }
 }

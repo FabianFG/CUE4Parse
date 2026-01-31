@@ -9,13 +9,13 @@ public readonly struct AkMusicFade
 {
     public readonly int TransitionTime;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveInterpolation FadeCurve;
+    public readonly EAkCurveInterpolation FadeCurve;
     public readonly int FadeOffset;
 
     public AkMusicFade(FArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
-        FadeCurve = (ECurveInterpolation)Ar.Read<uint>();
+        FadeCurve = (EAkCurveInterpolation)Ar.Read<uint>();
         FadeOffset = Ar.Read<int>();
     }
 }

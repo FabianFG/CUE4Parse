@@ -1,9 +1,10 @@
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkBus
 public class BaseHierarchyBus : AbstractHierarchy
 {
     public readonly uint OverrideBusId;
@@ -24,6 +25,7 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly AkRtpc[] RTPCs;
     public readonly AkStateGroup[] StateGroups;
 
+    // CAkBus::SetInitialValues
     public BaseHierarchyBus(FArchive Ar) : base(Ar)
     {
         OverrideBusId = Ar.Read<uint>();
@@ -51,24 +53,20 @@ public class BaseHierarchyBus : AbstractHierarchy
             AuxParams = new AkAuxParams(Ar);
         }
 
-        if (WwiseVersions.Version <= 53)
+        switch (WwiseVersions.Version)
         {
-            // TODO: Handle this case
-        }
-        else if (WwiseVersions.Version <= 122)
-        {
-            Ar.Read<byte>();
-            AdvSettingsParams = Ar.Read<EAdvSettings>();
-            MaxNumInstance = Ar.Read<ushort>();
-            ChannelConfig = Ar.Read<uint>();
-            HdrEnvelopeFlags = Ar.Read<byte>();
-        }
-        else
-        {
-            AdvSettingsParams = Ar.Read<EAdvSettings>();
-            MaxNumInstance = Ar.Read<ushort>();
-            ChannelConfig = Ar.Read<uint>();
-            HdrEnvelopeFlags = Ar.Read<byte>();
+            case <= 53:
+                // TODO: Handle this case
+                break;
+            case <= 122:
+                Ar.Read<byte>();
+                goto default;
+            default:
+                AdvSettingsParams = Ar.Read<EAdvSettings>();
+                MaxNumInstance = Ar.Read<ushort>();
+                ChannelConfig = Ar.Read<uint>();
+                HdrEnvelopeFlags = Ar.Read<byte>();
+                break;
         }
 
         if (WwiseVersions.Version <= 56)
@@ -126,19 +124,19 @@ public class BaseHierarchyBus : AbstractHierarchy
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("OverrideBusId");
+        writer.WritePropertyName(nameof(OverrideBusId));
         writer.WriteValue(OverrideBusId);
-        writer.WritePropertyName("DeviceSharesetId");
+        writer.WritePropertyName(nameof(DeviceSharesetId));
         writer.WriteValue(DeviceSharesetId);
 
-        writer.WritePropertyName("Props");
+        writer.WritePropertyName(nameof(Props));
         writer.WriteStartArray();
         foreach (var p in Props)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("Id");
+            writer.WritePropertyName(nameof(p.Id));
             writer.WriteValue(p.Id);
-            writer.WritePropertyName("Value");
+            writer.WritePropertyName(nameof(p.Value));
             writer.WriteValue(p.Value);
             writer.WriteEndObject();
         }
@@ -146,62 +144,62 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         if (PositioningParams != null)
         {
-            writer.WritePropertyName("PositioningParams");
+            writer.WritePropertyName(nameof(PositioningParams));
             serializer.Serialize(writer, PositioningParams);
         }
 
         if (AuxParams != null)
         {
-            writer.WritePropertyName("AuxParams");
+            writer.WritePropertyName(nameof(AuxParams));
             serializer.Serialize(writer, AuxParams);
         }
 
         if (AdvSettingsParams.HasValue)
         {
-            writer.WritePropertyName("AdvSettingsParams");
+            writer.WritePropertyName(nameof(AdvSettingsParams));
             writer.WriteValue(AdvSettingsParams.Value.ToString());
         }
 
         if (MaxNumInstance.HasValue)
         {
-            writer.WritePropertyName("MaxNumInstance");
+            writer.WritePropertyName(nameof(MaxNumInstance));
             writer.WriteValue(MaxNumInstance.Value);
         }
 
         if (ChannelConfig.HasValue)
         {
-            writer.WritePropertyName("ChannelConfig");
+            writer.WritePropertyName(nameof(ChannelConfig));
             writer.WriteValue(ChannelConfig.Value);
         }
 
         if (HdrEnvelopeFlags.HasValue)
         {
-            writer.WritePropertyName("HdrEnvelopeFlags");
+            writer.WritePropertyName(nameof(HdrEnvelopeFlags));
             writer.WriteValue(HdrEnvelopeFlags.Value);
         }
 
-        writer.WritePropertyName("RecoveryTime");
+        writer.WritePropertyName(nameof(RecoveryTime));
         writer.WriteValue(RecoveryTime);
 
-        writer.WritePropertyName("DuckInfo");
+        writer.WritePropertyName(nameof(DuckInfo));
         writer.WriteStartArray();
         foreach (var d in DuckInfo)
             serializer.Serialize(writer, d);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("FxBusParams");
+        writer.WritePropertyName(nameof(FxBusParams));
         serializer.Serialize(writer, FxBusParams);
 
-        writer.WritePropertyName("OverrideAttachmentParams");
+        writer.WritePropertyName(nameof(OverrideAttachmentParams));
         writer.WriteValue(OverrideAttachmentParams);
 
-        writer.WritePropertyName("FxChunk");
+        writer.WritePropertyName(nameof(FxChunks));
         writer.WriteStartArray();
         foreach (var f in FxChunks)
             serializer.Serialize(writer, f);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("RtpcList");
+        writer.WritePropertyName(nameof(RTPCs));
         writer.WriteStartArray();
         foreach (var r in RTPCs)
             serializer.Serialize(writer, r);
@@ -209,7 +207,7 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         if (StateGroups != null)
         {
-            writer.WritePropertyName("StateGroups");
+            writer.WritePropertyName(nameof(StateGroups));
             serializer.Serialize(writer, StateGroups);
         }
     }

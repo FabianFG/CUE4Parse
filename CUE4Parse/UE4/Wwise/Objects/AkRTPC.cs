@@ -10,13 +10,13 @@ public readonly struct AkRtpcGraphPoint
     public readonly float From;
     public readonly float To;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveInterpolation Interpolation;
+    public readonly EAkCurveInterpolation Interpolation;
 
     public AkRtpcGraphPoint(FArchive Ar)
     {
         From = Ar.Read<float>();
         To = Ar.Read<float>();
-        Interpolation = (ECurveInterpolation) Ar.Read<uint>();
+        Interpolation = (EAkCurveInterpolation) Ar.Read<uint>();
     }
 
     public static AkRtpcGraphPoint[] ReadArray(FArchive Ar) =>
@@ -27,13 +27,13 @@ public readonly struct AkRtpc
 {
     public readonly uint RtpcId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ERTPCType RtpcType;
+    public readonly EAkGameSyncType RtpcType;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ERTPCAccum RtpcAccum;
+    public readonly EAkRtpcAccum RtpcAccum;
     public readonly int ParamId;
     public readonly uint RtpcCurveId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveScaling Scaling;
+    public readonly EAkCurveScaling Scaling;
     public readonly AkRtpcGraphPoint[] GraphPoints;
 
     public AkRtpc(FArchive Ar)
@@ -42,34 +42,19 @@ public readonly struct AkRtpc
 
         if (WwiseVersions.Version > 89)
         {
-            RtpcType = Ar.Read<ERTPCType>();
-            RtpcAccum = Ar.Read<ERTPCAccum>();
+            RtpcType = Ar.Read<EAkGameSyncType>();
+            RtpcAccum = Ar.Read<EAkRtpcAccum>();
         }
 
-        if (WwiseVersions.Version <= 89)
+        ParamId = WwiseVersions.Version switch
         {
-            ParamId = Ar.Read<int>();
-        }
-        else if (WwiseVersions.Version <= 113)
-        {
-            ParamId = Ar.Read<byte>();
-        }
-        else
-        {
-            ParamId = Ar.Read7BitEncodedInt();
-        }
+            <= 89 => Ar.Read<int>(),
+            <= 113 => Ar.Read<byte>(),
+            _ => Ar.Read7BitEncodedInt()
+        };
 
         RtpcCurveId = Ar.Read<uint>();
-
-        if (WwiseVersions.Version <= 36)
-        {
-            Scaling = Ar.Read<ECurveScaling>();
-        }
-        else
-        {
-            Scaling = Ar.Read<ECurveScaling>();
-        }
-
+        Scaling = Ar.Read<EAkCurveScaling>();
         GraphPoints = Ar.ReadArray(Ar.Read<ushort>(), () => new AkRtpcGraphPoint(Ar));
     }
 

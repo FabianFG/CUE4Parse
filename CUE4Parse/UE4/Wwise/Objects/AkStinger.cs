@@ -10,7 +10,7 @@ public readonly struct AkStinger
     public readonly uint TriggerId;
     public readonly uint SegmentId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ESyncType SyncPlayAt;
+    public readonly EAkSyncType SyncPlayAt;
     public readonly uint CueFilterHash;
     public readonly int DontRepeatTime;
     public readonly uint NumSegmentLookAhead;
@@ -19,7 +19,7 @@ public readonly struct AkStinger
     {
         TriggerId = Ar.Read<uint>();
         SegmentId = Ar.Read<uint>();
-        SyncPlayAt = Ar.Read<ESyncType>();
+        SyncPlayAt = Ar.Read<EAkSyncType>();
 
         if (WwiseVersions.Version > 62)
         {

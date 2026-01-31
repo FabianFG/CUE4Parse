@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -10,8 +11,8 @@ public class AkPositioningParams
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EBitsPositioning BitsPositioning;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EPathMode? PathMode;
-    public readonly int? TransitionTime;
+    public readonly EAkPathMode PathMode;
+    public readonly int TransitionTime;
     public readonly AkPathVertex[] Vertices;
     public readonly AkPathListItemOffset[] PlaylistItems;
     public readonly AkPathListItem[] PlaylistRanges;
@@ -68,7 +69,7 @@ public class AkPositioningParams
 
             if (hasAutomation)
             {
-                PathMode = Ar.Read<EPathMode>();
+                PathMode = Ar.Read<EAkPathMode>();
                 TransitionTime = Ar.Read<int>();
 
                 Vertices = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkPathVertex(Ar));

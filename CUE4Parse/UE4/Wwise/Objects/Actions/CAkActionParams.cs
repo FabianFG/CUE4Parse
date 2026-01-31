@@ -11,7 +11,7 @@ public class CAkActionParams
     public readonly int TTimeMin;
     public readonly int TTimeMax;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveInterpolation FadeCurve;
+    public readonly EAkCurveInterpolation FadeCurve;
 
     public CAkActionParams(FArchive Ar)
     {
@@ -23,6 +23,6 @@ public class CAkActionParams
         }
 
         var byBitVector = Ar.Read<byte>();
-        FadeCurve = (ECurveInterpolation) (byBitVector & 0x1F);
+        FadeCurve = (EAkCurveInterpolation) (byBitVector & 0x1F);
     }
 }

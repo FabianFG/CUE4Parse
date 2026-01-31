@@ -49,7 +49,7 @@ public class WwisePlugin
     }
 
     // TODO: add plugins
-    private static readonly Dictionary<uint, Action<FArchive, uint>> PluginDispatch = new Dictionary<uint, Action<FArchive, uint>>
+    private static readonly Dictionary<uint, Action<FArchive, uint>> PluginDispatch = new()
     {
         //{ 0x00640002, CAkFxSrcSine },
         { 0x00650002, CAkFxSrcSilence },

@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public readonly struct AkConversionTable
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveScaling Scaling;
+    public readonly EAkCurveScaling Scaling;
     public readonly dynamic Size; // uint for legacy versions, ushort for modern versions
     public readonly AkRtpcGraphPoint[] GraphPoints;
 
@@ -16,12 +16,12 @@ public readonly struct AkConversionTable
     {
         if (WwiseVersions.Version <= 36)
         {
-            Scaling = (ECurveScaling) Ar.Read<uint>();
+            Scaling = (EAkCurveScaling) Ar.Read<uint>();
             Size = Ar.Read<uint>();
         }
         else
         {
-            Scaling = (ECurveScaling) Ar.Read<byte>();
+            Scaling = (EAkCurveScaling) Ar.Read<byte>();
             Size = Ar.Read<ushort>();
         }
 

@@ -9,13 +9,13 @@ public readonly struct AkStatePropertyInfo
 {
     public readonly int PropertyId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ERTPCAccum AccumType;
+    public readonly EAkRtpcAccum AccumType;
     public readonly byte InDb;
 
     public AkStatePropertyInfo(FArchive Ar)
     {
         PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar);
-        AccumType = Ar.Read<ERTPCAccum>();
+        AccumType = Ar.Read<EAkRtpcAccum>();
         if (WwiseVersions.Version > 126)
         {
             InDb = Ar.Read<byte>();
