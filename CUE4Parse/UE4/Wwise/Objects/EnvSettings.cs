@@ -1,15 +1,14 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class EnvSettings
 {
-    public readonly List<ConversionTableEntry> ConversionTableEntries;
+    public readonly ConversionTableEntry[] ConversionTableEntries = [];
 
+    // CAkBankMgr::ProcessEnvSettingsChunk
     public EnvSettings(FArchive Ar)
     {
-        ConversionTableEntries = [];
         int maxY;
         int maxX;
         if (WwiseVersions.Version <= 89)
@@ -28,10 +27,12 @@ public class EnvSettings
             maxY = 3;
         }
 
+        ConversionTableEntries = new ConversionTableEntry[maxX * maxY];
         for (int i = 0; i < maxX; i++)
         {
             for (int j = 0; j < maxY; j++)
             {
+                // CAkEnvironmentsMgr -> CAkAttenuation -> CAkConversionTable
                 var curveEnabled = Ar.Read<byte>();
                 int curveSize;
                 if (WwiseVersions.Version <= 36)
@@ -45,23 +46,18 @@ public class EnvSettings
                     curveSize = Ar.Read<ushort>();
                 }
 
-                var graphPoints = new List<AkRtpcGraphPoint>(curveSize);
-                for (int t = 0; t < curveSize; t++)
-                {
-                    graphPoints.Add(new AkRtpcGraphPoint(Ar));
-                }
-
-                ConversionTableEntries.Add(new ConversionTableEntry(curveEnabled, graphPoints));
+                var graphPoints = Ar.ReadArray(curveSize, () => new AkRtpcGraphPoint(Ar));
+                ConversionTableEntries[(i * maxY) + j] = new ConversionTableEntry(curveEnabled, graphPoints);
             }
         }
     }
 
-    public class ConversionTableEntry
+    public readonly struct ConversionTableEntry
     {
-        public byte CurveEnabled { get; }
-        public List<AkRtpcGraphPoint> GraphPoints { get; }
+        public readonly byte CurveEnabled;
+        public readonly AkRtpcGraphPoint[] GraphPoints;
 
-        public ConversionTableEntry(byte curveEnabled, List<AkRtpcGraphPoint> graphPoints)
+        public ConversionTableEntry(byte curveEnabled, AkRtpcGraphPoint[] graphPoints)
         {
             CurveEnabled = curveEnabled;
             GraphPoints = graphPoints;

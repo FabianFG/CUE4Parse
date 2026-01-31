@@ -2295,7 +2295,7 @@ public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
     public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        if (value.StringData != null)
+        if (value?.StringData != null)
         {
             writer.WriteStartObject();
 
@@ -3128,9 +3128,9 @@ public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseL
         => throw new NotImplementedException("Deserialization not implemented");
 }
 
-public class BankHeaderConverter : JsonConverter<BankHeader>
+public class BankHeaderConverter : JsonConverter<AkBankHeader>
 {
-    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, AkBankHeader value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
@@ -3161,7 +3161,7 @@ public class BankHeaderConverter : JsonConverter<BankHeader>
         writer.WriteEndObject();
     }
 
-    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override AkBankHeader ReadJson(JsonReader reader, Type objectType, AkBankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException("Deserialization is not implemented.");
     }

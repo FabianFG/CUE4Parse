@@ -9,7 +9,7 @@ public class AkActionSetAkProps
 {
     public readonly ActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EValueMeaning ValueMeaning;
+    public readonly EAkValueMeaning ValueMeaning;
     public readonly RandomizerModifier RandomizerModifier;
     public readonly ExceptParams ExceptParams;
 
@@ -19,11 +19,11 @@ public class AkActionSetAkProps
 
         if (WwiseVersions.Version <= 56)
         {
-            ValueMeaning = (EValueMeaning) Ar.Read<uint>();
+            ValueMeaning = (EAkValueMeaning) Ar.Read<uint>();
         }
         else
         {
-            ValueMeaning = (EValueMeaning) Ar.Read<byte>();
+            ValueMeaning = (EAkValueMeaning) Ar.Read<byte>();
         }
 
         RandomizerModifier = new RandomizerModifier(Ar);

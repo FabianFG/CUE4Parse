@@ -19,7 +19,7 @@ public class WwiseReader
     public readonly string Path;
     private uint Version => Header.Version;
 
-    public BankHeader Header { get; }
+    public AkBankHeader Header { get; }
     public AkFolder[]? Folders { get; }
     public Dictionary<uint, string>? AKPluginList { get; }
     public MediaHeader[]? WemIndexes { get; }
@@ -67,7 +67,7 @@ public class WwiseReader
                     }
                     break;
                 case EChunkID.BankHeader:
-                    Header = new BankHeader(Ar, sectionLength);
+                    Header = new AkBankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Version);
                     if (!WwiseVersions.IsSupported())
                         Log.Warning($"Wwise version {Version} is not supported");

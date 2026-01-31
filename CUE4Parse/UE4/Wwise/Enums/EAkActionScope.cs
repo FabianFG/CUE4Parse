@@ -1,6 +1,6 @@
 namespace CUE4Parse.UE4.Wwise.Enums;
 
-public enum EEventActionScope : byte
+public enum EAkActionScope : byte
 {
     None = 0x0,
     GameObject,

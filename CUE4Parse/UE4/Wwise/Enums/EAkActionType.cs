@@ -1,7 +1,8 @@
 namespace CUE4Parse.UE4.Wwise.Enums;
 
-// AkActionType, only high byte is used for main type, low byte is EEventActionScope
-public enum EEventActionType : byte
+// Split into two enums EAkActionType - EAkActionScope for convience
+// High byte is EAkActionType, low byte is EAkActionScope
+public enum EAkActionType : byte
 {
     None = 0x0,
     Stop = 0x01, // AkActionStop
@@ -174,7 +175,7 @@ public enum EEventActionType_v72_to_v150 : byte
 
 public static class EventActionTypeExtensions
 {
-    public static string ToString(this EEventActionType actionType, uint version)
+    public static string ToString(this EAkActionType actionType, uint version)
     {
         return version switch
         {

@@ -7,7 +7,7 @@ public class AkActionSetGameParameter
 {
     public readonly ActionParams ActionParams;
     public readonly bool? BypassTransition;
-    public readonly EValueMeaning ValueMeaning;
+    public readonly EAkValueMeaning ValueMeaning;
     public readonly RandomizerModifier RandomizerModifier;
     public readonly ExceptParams ExceptParams;
 
@@ -21,11 +21,11 @@ public class AkActionSetGameParameter
 
         if (WwiseVersions.Version <= 56)
         {
-            ValueMeaning = (EValueMeaning) Ar.Read<uint>();
+            ValueMeaning = (EAkValueMeaning) Ar.Read<uint>();
         }
         else
         {
-            ValueMeaning = (EValueMeaning) Ar.Read<byte>();
+            ValueMeaning = (EAkValueMeaning) Ar.Read<byte>();
         }
 
         RandomizerModifier = new RandomizerModifier(Ar);
