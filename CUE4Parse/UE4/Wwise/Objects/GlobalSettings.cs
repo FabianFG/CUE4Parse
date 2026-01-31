@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class GlobalSettings
 {
-    public readonly EFilterBehavior FilterBehavior;
+    public readonly EAkFilterBehavior FilterBehavior;
     public readonly float VolumeThreshold;
     public readonly ushort MaxNumVoicesLimitInternal;
     public readonly ushort MaxNumDangerousVirtVoicesLimitInternal;
@@ -14,7 +14,7 @@ public class GlobalSettings
     {
         if (WwiseVersions.Version > 140)
         {
-            FilterBehavior = Ar.Read<EFilterBehavior>();
+            FilterBehavior = Ar.Read<EAkFilterBehavior>();
         }
 
         VolumeThreshold = Ar.Read<float>();

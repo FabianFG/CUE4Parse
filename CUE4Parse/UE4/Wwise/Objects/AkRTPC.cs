@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -6,44 +5,36 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkRtpcGraphPoint
+public readonly struct AkRtpcGraphPoint
 {
     public readonly float From;
     public readonly float To;
-    public readonly uint Interpolation;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkCurveInterpolation Interpolation;
 
     public AkRtpcGraphPoint(FArchive Ar)
     {
         From = Ar.Read<float>();
         To = Ar.Read<float>();
-        Interpolation = Ar.Read<uint>();
+        Interpolation = (EAkCurveInterpolation) Ar.Read<uint>();
     }
 
-    public static List<AkRtpcGraphPoint> ReadMultiple(FArchive Ar)
-    {
-        uint pointsCount = Ar.Read<uint>();
-        var graphPoints = new List<AkRtpcGraphPoint>((int)pointsCount);
-        for (int j = 0; j < pointsCount; j++)
-        {
-            graphPoints.Add(new AkRtpcGraphPoint(Ar));
-        }
-
-        return graphPoints;
-    }
+    public static AkRtpcGraphPoint[] ReadArray(FArchive Ar) =>
+        Ar.ReadArray((int) Ar.Read<uint>(), () => new AkRtpcGraphPoint(Ar));
 }
 
-public class AkRtpc
+public readonly struct AkRtpc
 {
     public readonly uint RtpcId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ERTPCType RtpcType;
+    public readonly EAkGameSyncType RtpcType;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ERTPCAccum RtpcAccum;
+    public readonly EAkRtpcAccum RtpcAccum;
     public readonly int ParamId;
     public readonly uint RtpcCurveId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ECurveScaling Scaling;
-    public readonly List<AkRtpcGraphPoint> GraphPoints;
+    public readonly EAkCurveScaling Scaling;
+    public readonly AkRtpcGraphPoint[] GraphPoints;
 
     public AkRtpc(FArchive Ar)
     {
@@ -51,51 +42,22 @@ public class AkRtpc
 
         if (WwiseVersions.Version > 89)
         {
-            RtpcType = Ar.Read<ERTPCType>();
-            RtpcAccum = Ar.Read<ERTPCAccum>();
+            RtpcType = Ar.Read<EAkGameSyncType>();
+            RtpcAccum = Ar.Read<EAkRtpcAccum>();
         }
 
-        if (WwiseVersions.Version <= 89)
+        ParamId = WwiseVersions.Version switch
         {
-            ParamId = Ar.Read<int>();
-        }
-        else if (WwiseVersions.Version <= 113)
-        {
-            ParamId = Ar.Read<byte>();
-        }
-        else
-        {
-            ParamId = Ar.Read7BitEncodedInt();
-        }
+            <= 89 => Ar.Read<int>(),
+            <= 113 => Ar.Read<byte>(),
+            _ => Ar.Read7BitEncodedInt()
+        };
 
         RtpcCurveId = Ar.Read<uint>();
-
-        if (WwiseVersions.Version <= 36)
-        {
-            Scaling = Ar.Read<ECurveScaling>();
-        }
-        else
-        {
-            Scaling = Ar.Read<ECurveScaling>();
-        }
-
-        ushort pointsCount = Ar.Read<ushort>();
-        GraphPoints = new List<AkRtpcGraphPoint>(pointsCount);
-        for (int j = 0; j < pointsCount; j++)
-        {
-            GraphPoints.Add(new AkRtpcGraphPoint(Ar));
-        }
+        Scaling = Ar.Read<EAkCurveScaling>();
+        GraphPoints = Ar.ReadArray(Ar.Read<ushort>(), () => new AkRtpcGraphPoint(Ar));
     }
 
-    public static List<AkRtpc> ReadMultiple(FArchive Ar)
-    {
-        ushort numCurves = Ar.Read<ushort>();
-        var rtpcEntries = new List<AkRtpc>(numCurves);
-        for (int j = 0; j < numCurves; j++)
-        {
-            rtpcEntries.Add(new AkRtpc(Ar));
-        }
-
-        return rtpcEntries;
-    }
+    public static AkRtpc[] ReadArray(FArchive Ar) =>
+        Ar.ReadArray(Ar.Read<ushort>(), () => new AkRtpc(Ar));
 }

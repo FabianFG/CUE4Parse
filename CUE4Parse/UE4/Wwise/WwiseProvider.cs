@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
+using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
 using Serilog;
 
@@ -457,7 +458,7 @@ public class WwiseProvider
 
         if (wwiseDir is null)
         {
-            Log.Warning($"Wwise directory not found under {wwiseDir}");
+            Log.Warning($"Wwise directory not found under '{wwiseDir}'");
             return;
         }
 

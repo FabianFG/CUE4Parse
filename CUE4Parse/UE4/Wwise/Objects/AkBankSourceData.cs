@@ -2,6 +2,7 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
+// CAkBankMgr::LoadSource
 public class AkBankSourceData
 {
     public readonly uint PluginId;

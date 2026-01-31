@@ -1,31 +1,30 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkConversionTable
+public readonly struct AkConversionTable
 {
-    public readonly uint Scaling;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkCurveScaling Scaling;
     public readonly dynamic Size; // uint for legacy versions, ushort for modern versions
-    public readonly List<AkRtpcGraphPoint> GraphPoints;
+    public readonly AkRtpcGraphPoint[] GraphPoints;
 
     public AkConversionTable(FArchive Ar)
     {
         if (WwiseVersions.Version <= 36)
         {
-            Scaling = Ar.Read<uint>();
+            Scaling = (EAkCurveScaling) Ar.Read<uint>();
             Size = Ar.Read<uint>();
         }
         else
         {
-            Scaling = Ar.Read<byte>();
+            Scaling = (EAkCurveScaling) Ar.Read<byte>();
             Size = Ar.Read<ushort>();
         }
 
-        GraphPoints = [];
-        for (int i = 0; i < Size; i++)
-        {
-            GraphPoints.Add(new AkRtpcGraphPoint(Ar));
-        }
+        GraphPoints = Ar.ReadArray((int) Size, () => new AkRtpcGraphPoint(Ar));
     }
 }

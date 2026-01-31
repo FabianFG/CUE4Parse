@@ -1,13 +1,16 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkStinger
+public readonly struct AkStinger
 {
     public readonly uint TriggerId;
     public readonly uint SegmentId;
-    public readonly uint SyncPlayAt;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkSyncType SyncPlayAt;
     public readonly uint CueFilterHash;
     public readonly int DontRepeatTime;
     public readonly uint NumSegmentLookAhead;
@@ -16,7 +19,7 @@ public class AkStinger
     {
         TriggerId = Ar.Read<uint>();
         SegmentId = Ar.Read<uint>();
-        SyncPlayAt = Ar.Read<uint>();
+        SyncPlayAt = Ar.Read<EAkSyncType>();
 
         if (WwiseVersions.Version > 62)
         {
@@ -27,15 +30,6 @@ public class AkStinger
         NumSegmentLookAhead = Ar.Read<uint>();
     }
 
-    public static List<AkStinger> ReadMultiple(FArchive Ar)
-    {
-        var numStingers = Ar.Read<uint>();
-        var stingers = new List<AkStinger>((int)numStingers);
-        for (int i = 0; i < numStingers; i++)
-        {
-            stingers.Add(new AkStinger(Ar));
-        }
-
-        return stingers;
-    }
+    public static AkStinger[] ReadArray(FArchive Ar) =>
+        Ar.ReadArray((int) Ar.Read<uint>(), () => new AkStinger(Ar));
 }

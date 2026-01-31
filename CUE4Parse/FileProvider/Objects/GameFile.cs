@@ -21,7 +21,7 @@ public abstract class GameFile
     [
         ..UePackageExtensions, ..UePackagePayloadExtensions,
         "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
-        // "wem", "bnk" not sure we want to load these
+        "wem", "bnk", "pck", "bank", "awb", "acb"
     ];
 
     // hashset for quick lookup

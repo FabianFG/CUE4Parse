@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -10,11 +10,12 @@ public class AkPositioningParams
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EBitsPositioning BitsPositioning;
-    public readonly byte? PathMode;
-    public readonly int? TransitionTime;
-    public readonly List<AkVertex> Vertices;
-    public readonly List<AkPlaylistItem> PlaylistItems;
-    public readonly List<AkPlaylistRange> PlaylistRanges;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkPathMode PathMode;
+    public readonly int TransitionTime;
+    public readonly AkPathVertex[] Vertices;
+    public readonly AkPathListItemOffset[] PlaylistItems;
+    public readonly AkPathListItem[] PlaylistRanges;
 
     public AkPositioningParams(FArchive Ar)
     {
@@ -68,25 +69,14 @@ public class AkPositioningParams
 
             if (hasAutomation)
             {
-                PathMode = Ar.Read<byte>();
+                PathMode = Ar.Read<EAkPathMode>();
                 TransitionTime = Ar.Read<int>();
 
-                uint numVertices = Ar.Read<uint>();
-                for (int i = 0; i < numVertices; i++)
-                {
-                    Vertices.Add(new AkVertex(Ar));
-                }
+                Vertices = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkPathVertex(Ar));
 
                 uint numPlaylistItems = Ar.Read<uint>();
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    PlaylistItems.Add(new AkPlaylistItem(Ar));
-                }
-
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    PlaylistRanges.Add(new AkPlaylistRange(Ar));
-                }
+                PlaylistItems = Ar.ReadArray((int) numPlaylistItems, () => new AkPathListItemOffset(Ar));
+                PlaylistRanges = Ar.ReadArray((int) numPlaylistItems, () => new AkPathListItem(Ar));
             }
         }
     }
@@ -160,14 +150,14 @@ public class AkPositioningParams
         return (hasAutomation, isDynamic);
     }
 
-    public class AkVertex
+    public readonly struct AkPathVertex
     {
         public readonly float X;
         public readonly float Y;
         public readonly float Z;
         public readonly int Duration;
 
-        public AkVertex(FArchive Ar)
+        public AkPathVertex(FArchive Ar)
         {
             X = Ar.Read<float>();
             Y = Ar.Read<float>();
@@ -176,25 +166,25 @@ public class AkPositioningParams
         }
     }
 
-    public class AkPlaylistItem
+    public readonly struct AkPathListItemOffset
     {
         public readonly uint VerticesOffset;
         public readonly uint NumVertices;
 
-        public AkPlaylistItem(FArchive Ar)
+        public AkPathListItemOffset(FArchive Ar)
         {
             VerticesOffset = Ar.Read<uint>();
             NumVertices = Ar.Read<uint>();
         }
     }
 
-    public class AkPlaylistRange
+    public readonly struct AkPathListItem
     {
         public readonly float XRange;
         public readonly float YRange;
         public readonly float ZRange;
 
-        public AkPlaylistRange(FArchive Ar)
+        public AkPathListItem(FArchive Ar)
         {
             XRange = Ar.Read<float>();
             YRange = Ar.Read<float>();

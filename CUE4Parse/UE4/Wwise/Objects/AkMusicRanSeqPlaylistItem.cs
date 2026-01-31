@@ -1,14 +1,13 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkMusicRanSeqPlaylistItem
+public readonly struct AkMusicRanSeqPlaylistItem
 {
     public readonly uint SegmentId;
     public readonly uint PlaylistItemId;
     public readonly uint NumChildren;
-    public readonly List<AkMusicRanSeqPlaylistItem> Children;
+    public readonly AkMusicRanSeqPlaylistItem[] Children = [];
     public readonly LoopInfo LoopInfo;
     public readonly WeightInfo WeightInfo;
 
@@ -17,7 +16,6 @@ public class AkMusicRanSeqPlaylistItem
         SegmentId = Ar.Read<uint>();
         PlaylistItemId = Ar.Read<uint>();
         NumChildren = Ar.Read<uint>();
-        Children = [];
 
         if (WwiseVersions.Version <= 36)
         {
@@ -55,15 +53,11 @@ public class AkMusicRanSeqPlaylistItem
             WeightInfo = new WeightInfo(Ar);
         }
 
-        for (int i = 0; i < NumChildren; i++)
-        {
-            var child = new AkMusicRanSeqPlaylistItem(Ar);
-            Children.Add(child);
-        }
+        Children = Ar.ReadArray((int) NumChildren, () => new AkMusicRanSeqPlaylistItem(Ar));
     }
 }
 
-public class LoopInfo
+public readonly struct LoopInfo
 {
     public readonly short Loop;
     public readonly short? LoopMin;
@@ -81,7 +75,7 @@ public class LoopInfo
     }
 }
 
-public class WeightInfo
+public readonly struct WeightInfo
 {
     public readonly ushort Weight;
     public readonly ushort? AvoidRepeatCount;

@@ -1,24 +1,21 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkClipAutomation
+public readonly struct AkClipAutomation
 {
-    public readonly uint UClipIndex;
-    public readonly uint EAutoType;
-    public readonly List<AkRtpcGraphPoint> GraphPoints;
+    public readonly uint ClipIndex;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkClipAutomationType AutoType;
+    public readonly AkRtpcGraphPoint[] GraphPoints;
 
     public AkClipAutomation(FArchive Ar)
     {
-        UClipIndex = Ar.Read<uint>();
-        EAutoType = Ar.Read<uint>();
-
-        var numPoints = Ar.Read<uint>();
-        GraphPoints = new List<AkRtpcGraphPoint>((int) numPoints);
-        for (int i = 0; i < numPoints; i++)
-        {
-            GraphPoints.Add(new AkRtpcGraphPoint(Ar));
-        }
+        ClipIndex = Ar.Read<uint>();
+        AutoType = Ar.Read<EAkClipAutomationType>();
+        GraphPoints = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkRtpcGraphPoint(Ar));
     }
 }
