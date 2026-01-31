@@ -9,9 +9,9 @@ public struct AkGameSync
 {
     public readonly uint GroupId;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EGroupType GroupType;
+    public readonly EAkGroupType GroupType;
 
-    public AkGameSync(uint groupId, EGroupType groupType)
+    public AkGameSync(uint groupId, EAkGroupType groupType)
     {
         GroupId = groupId;
         GroupType = groupType;
@@ -20,7 +20,7 @@ public struct AkGameSync
     public static AkGameSync[] ReadSequential(FArchive Ar, uint count)
     {
         var groupIds = Ar.ReadArray<uint>((int) count);
-        var groupTypes = Ar.ReadArray<EGroupType>((int) count);
+        var groupTypes = Ar.ReadArray<EAkGroupType>((int) count);
 
         var gameSyncs = new AkGameSync[count];
         for (int i = 0; i < count; i++)

@@ -9,14 +9,14 @@ public readonly struct AkMusicTrackTransRule
 {
     public readonly AkMusicFade SourceFadeParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly ESyncType SyncType;
+    public readonly EAkSyncType SyncType;
     public readonly uint CueFilterHash;
     public readonly AkMusicFade DestinationFadeParams;
 
     public AkMusicTrackTransRule(FArchive Ar)
     {
         SourceFadeParams = new AkMusicFade(Ar);
-        SyncType = Ar.Read<ESyncType>();
+        SyncType = Ar.Read<EAkSyncType>();
         CueFilterHash = Ar.Read<uint>();
         DestinationFadeParams = new AkMusicFade(Ar);
     }

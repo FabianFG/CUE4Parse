@@ -1,5 +1,5 @@
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

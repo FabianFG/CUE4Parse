@@ -29,7 +29,7 @@ public class WwiseReader
     public string? Platform { get; }
     public Dictionary<string, byte[]> WwiseEncodedMedias { get; } = [];
     public GlobalSettings? GlobalSettings { get; }
-    public EnvSettings? EnvSettings { get; }
+    public CAkEnvironmentsMgr? EnvSettings { get; }
     public byte[] WemFile { get; } = [];
 
     public WwiseReader(FArchive Ar)
@@ -113,7 +113,7 @@ public class WwiseReader
                 case EChunkID.BankEnvSetting:
                     if (WwiseVersions.IsSupported()) // Let's guard this just in case
                     {
-                        EnvSettings = new EnvSettings(Ar);
+                        EnvSettings = new CAkEnvironmentsMgr(Ar);
                     }
                     break;
                 case EChunkID.FXPR:

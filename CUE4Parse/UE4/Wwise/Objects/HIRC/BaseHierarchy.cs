@@ -1,10 +1,11 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkParameterNodeBase
 public class BaseHierarchy : AbstractHierarchy
 {
     public readonly bool OverrideFx;
@@ -24,13 +25,14 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly AkPositioningParams PositioningParams;
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings AdvSettingsParams;
-    public readonly EVirtualQueueBehavior VirtualQueueBehavior;
+    public readonly EAkVirtualQueueBehavior VirtualQueueBehavior;
     public readonly ushort MaxNumInstance;
     public readonly EAkBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
     public readonly AkStateGroup[] StateGroups;
     public readonly AkRtpc[] RtpcList;
 
+    // CAkParameterNodeBase::SetNodeBaseParams
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
         OverrideFx = Ar.Read<byte>() != 0;
@@ -82,7 +84,7 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         AdvSettingsParams = Ar.Read<EAdvSettings>();
-        VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
+        VirtualQueueBehavior = Ar.Read<EAkVirtualQueueBehavior>();
         MaxNumInstance = Ar.Read<ushort>();
         BelowThresholdBehavior = Ar.Read<EAkBelowThresholdBehavior>();
         HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
