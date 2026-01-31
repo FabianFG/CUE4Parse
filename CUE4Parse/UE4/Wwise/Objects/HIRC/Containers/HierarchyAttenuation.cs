@@ -44,7 +44,8 @@ public class HierarchyAttenuation : AbstractHierarchy
             <= 72 => 4,
             <= 89 => 5,
             <= 141 => 7,
-            _ => 19
+            <= 154 => 19,
+            _ => 24
         };
 
         for (int i = 0; i < numCurves; i++)

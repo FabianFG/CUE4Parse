@@ -23,7 +23,7 @@ public readonly struct Hierarchy
 
         Type = rawType.MapToCurrent();
 
-        // Try/Catch is done to allow for extracting audio even if it fails
+        // Try/Catch is done to allow for extracting audio even if this fails
         // Due to their complexity it's very likely hierarchies will fail to parse if unsupported
         try
         {
@@ -51,6 +51,7 @@ public readonly struct Hierarchy
                 EAKBKHircType.LFO => new HierarchyLFO(Ar),
                 EAKBKHircType.Envelope => new HierarchyEnvelope(Ar),
                 EAKBKHircType.TimeMod => new HierarchyTimeMod(Ar),
+                EAKBKHircType.SidechainMix => new HierarchySidechainMix(Ar),
                 _ => new HierarchyGeneric(Ar)
             };
         }

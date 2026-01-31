@@ -24,7 +24,8 @@ public enum EAKBKHircType : byte
     LFO,
     Envelope,
     AudioDevice,
-    TimeMod
+    TimeMod,
+    SidechainMix // >= 168
 }
 
 // Versions <= 125
