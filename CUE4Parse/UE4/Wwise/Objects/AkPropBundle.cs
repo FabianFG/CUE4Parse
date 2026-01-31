@@ -2,7 +2,7 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkPropBundle
+public readonly struct AkPropBundle
 {
     public readonly AkProp[] Props;
     public readonly AkPropRange[] PropRanges;

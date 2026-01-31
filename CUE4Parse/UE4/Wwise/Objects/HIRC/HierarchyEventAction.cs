@@ -9,8 +9,8 @@ namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 // CAkAction::SetInitialValues
 public class HierarchyEventAction : AbstractHierarchy
 {
-    public readonly EEventActionScope EventActionScope;
-    public readonly EEventActionType EventActionType;
+    public readonly EAkActionScope EventActionScope;
+    public readonly EAkActionType EventActionType;
     public readonly byte IsBus;
     public readonly uint ReferencedId;
     public readonly AkProp[] Props;
@@ -19,8 +19,8 @@ public class HierarchyEventAction : AbstractHierarchy
 
     public HierarchyEventAction(FArchive Ar) : base(Ar)
     {
-        EventActionScope = Ar.Read<EEventActionScope>();
-        EventActionType = Ar.Read<EEventActionType>();
+        EventActionScope = Ar.Read<EAkActionScope>();
+        EventActionType = Ar.Read<EAkActionType>();
         ReferencedId = Ar.Read<uint>();
         IsBus = Ar.Read<byte>();
 
@@ -30,32 +30,32 @@ public class HierarchyEventAction : AbstractHierarchy
 
         ActionData = (EventActionType, WwiseVersions.Version) switch
         {
-            (EEventActionType.Play, _) => new AkActionPlay(Ar),
-            (EEventActionType.Stop, _) => new AkActionStop(Ar),
-            (EEventActionType.SetGameParameter or
-                EEventActionType.ResetGameParameter, _) => new AkActionSetGameParameter(Ar),
-            (EEventActionType.SetHighPassFilter or
-                EEventActionType.ResetHighPassFilter or
-                EEventActionType.ResetVoiceLowPassFilter or
-                EEventActionType.ResetBusVolume or
-                EEventActionType.SetVoiceVolume or
-                EEventActionType.SetVoicePitch or
-                EEventActionType.SetBusVolume or
-                EEventActionType.SetVoiceLowPassFilter or
-                EEventActionType.ResetVoiceVolume or
-                EEventActionType.ResetVoicePitch, _) => new AkActionSetAkProps(Ar),
-            (EEventActionType.Seek, _) => new AkActionSeek(Ar),
-            (EEventActionType.SetSwitch, _) => new AkActionSetSwitch(Ar),
-            (EEventActionType.SetState, _) => new AkActionSetState(Ar),
-            (EEventActionType.SetEffect or
-                EEventActionType.ResetEffect, _) => new AkActionSetEffect(Ar),
-            (EEventActionType.Mute or
-                EEventActionType.UnMute or
-                EEventActionType.ResetPlaylist, _) => new AkActionBase(Ar),
-            (EEventActionType.Resume, _) => new AkActionResume(Ar),
-            (EEventActionType.Pause, _) => new AkActionPause(Ar),
-            (EEventActionType.Break or
-                EEventActionType.Trigger, < 150) => new AkActionBypassFX(Ar),
+            (EAkActionType.Play, _) => new AkActionPlay(Ar),
+            (EAkActionType.Stop, _) => new AkActionStop(Ar),
+            (EAkActionType.SetGameParameter or
+                EAkActionType.ResetGameParameter, _) => new AkActionSetGameParameter(Ar),
+            (EAkActionType.SetHighPassFilter or
+                EAkActionType.ResetHighPassFilter or
+                EAkActionType.ResetVoiceLowPassFilter or
+                EAkActionType.ResetBusVolume or
+                EAkActionType.SetVoiceVolume or
+                EAkActionType.SetVoicePitch or
+                EAkActionType.SetBusVolume or
+                EAkActionType.SetVoiceLowPassFilter or
+                EAkActionType.ResetVoiceVolume or
+                EAkActionType.ResetVoicePitch, _) => new AkActionSetAkProps(Ar),
+            (EAkActionType.Seek, _) => new AkActionSeek(Ar),
+            (EAkActionType.SetSwitch, _) => new AkActionSetSwitch(Ar),
+            (EAkActionType.SetState, _) => new AkActionSetState(Ar),
+            (EAkActionType.SetEffect or
+                EAkActionType.ResetEffect, _) => new AkActionSetEffect(Ar),
+            (EAkActionType.Mute or
+                EAkActionType.UnMute or
+                EAkActionType.ResetPlaylist, _) => new AkActionBase(Ar),
+            (EAkActionType.Resume, _) => new AkActionResume(Ar),
+            (EAkActionType.Pause, _) => new AkActionPause(Ar),
+            (EAkActionType.Break or
+                EAkActionType.Trigger, < 150) => new AkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };

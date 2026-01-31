@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 [JsonConverter(typeof(BankHeaderConverter))]
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct BankHeader
+public readonly struct AkBankHeader
 {
     public readonly uint Version;
     public readonly uint SoundBankId;
@@ -18,7 +18,8 @@ public readonly struct BankHeader
     public readonly uint SoundBankType;
     public readonly byte[] BankHash;
 
-    public BankHeader(FArchive Ar, int sectionLength)
+    // CAkBankMgr::ProcessBankHeader
+    public AkBankHeader(FArchive Ar, int sectionLength)
     {
         Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, support for versions < 100 isn't needed anyway
         SoundBankId = Ar.Read<uint>();
@@ -68,8 +69,6 @@ public readonly struct BankHeader
         };
 
         if (gapSize > 0)
-        {
             Ar.Position += gapSize;
-        }
     }
 }

@@ -35,7 +35,7 @@ public class HierarchySettings : AbstractHierarchy
         if (WwiseVersions.Version <= 126)
         {
             var bytes = Ar.ReadArray<byte>(count);
-            return bytes.Select(b => (EHierarchyParameterType) (ushort) b).ToArray();
+            return [.. bytes.Select(b => (EHierarchyParameterType) (ushort) b)];
         }
         else
         {
@@ -47,17 +47,11 @@ public class HierarchySettings : AbstractHierarchy
     {
         writer.WriteStartObject();
 
-        // writer.WritePropertyName("SettingsCount");
-        // writer.WriteValue(SettingsCount);
-
-        // if (SettingsCount != 0)
-        {
-            writer.WritePropertyName("Settings");
-            writer.WriteStartObject();
-            foreach (Setting<EHierarchyParameterType> setting in Settings)
-                setting.WriteJson(writer, serializer);
-            writer.WriteEndObject();
-        }
+        writer.WritePropertyName(nameof(Settings));
+        writer.WriteStartObject();
+        foreach (Setting<EHierarchyParameterType> setting in Settings)
+            setting.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WriteEndObject();
     }

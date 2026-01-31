@@ -1,6 +1,6 @@
 namespace CUE4Parse.UE4.Wwise.Enums;
 
-public enum EBelowThresholdBehavior : byte
+public enum EAkBelowThresholdBehavior : byte
 {
     ContinueToPlay = 0x0,
     KillVoice = 0x1,

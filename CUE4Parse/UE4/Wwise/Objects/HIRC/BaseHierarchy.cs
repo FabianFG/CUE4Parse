@@ -26,7 +26,7 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly EAdvSettings AdvSettingsParams;
     public readonly EVirtualQueueBehavior VirtualQueueBehavior;
     public readonly ushort MaxNumInstance;
-    public readonly EBelowThresholdBehavior BelowThresholdBehavior;
+    public readonly EAkBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
     public readonly AkStateGroup[] StateGroups;
     public readonly AkRtpc[] RtpcList;
@@ -84,7 +84,7 @@ public class BaseHierarchy : AbstractHierarchy
         AdvSettingsParams = Ar.Read<EAdvSettings>();
         VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
         MaxNumInstance = Ar.Read<ushort>();
-        BelowThresholdBehavior = Ar.Read<EBelowThresholdBehavior>();
+        BelowThresholdBehavior = Ar.Read<EAkBelowThresholdBehavior>();
         HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
 
         if (WwiseVersions.Version <= 52)
