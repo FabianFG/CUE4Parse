@@ -69,7 +69,9 @@ public class WwisePlugin
 
     private static void SkipPlugin(FArchive Ar, uint size, uint pluginId)
     {
+#if DEBUG
         Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping");
+#endif
         Ar.Position += size; // Skip
     }
 
