@@ -9,6 +9,12 @@ public class CAkEnvironmentsMgr
     // CAkBankMgr::ProcessEnvSettingsChunk
     public CAkEnvironmentsMgr(FArchive Ar)
     {
+        if (WwiseVersions.Version > 154)
+        {
+            var attenuationId = Ar.Read<uint>();
+            return; // Yes, that's it
+        }
+
         int maxY;
         int maxX;
         if (WwiseVersions.Version <= 89)
