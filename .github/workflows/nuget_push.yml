@@ -3,8 +3,15 @@ name: NuGet Push
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  OWNER: "FabianFG"
 
 jobs:
   build:
@@ -20,27 +27,47 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Compute package version from Directory.Build.props
+        id: ver
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content .\Directory.Build.props
+          $baseVersion = $props.Project.PropertyGroup.Version
+          if (-not $baseVersion) { 
+            throw "Could not find <Version> in Directory.Build.props" 
+          }
+          $version = "$baseVersion.${{ github.run_number }}"
+          "packageVersion=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "PackageVersion=$version (base: $baseVersion + run: ${{ github.run_number }})"
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
         run: dotnet build -c Release --no-restore
 
-#      - name: Run Tests
-#        run: dotnet test -c Release --no-restore --no-build -v normal
-
       - name: Pack NuGet Package(s)
-        run: dotnet pack -c Release --no-restore --no-build --output ~/nuget-packages
+        run: >
+          dotnet pack -c Release --no-restore --no-build `
+            -p:Version=${{ steps.ver.outputs.packageVersion }} `
+            -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
+            --output $env:USERPROFILE\nuget-packages
 
-      - name: Upload Build Artifact(s)
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-packages
-          path: ~/nuget-packages
+      - name: List packages
+        run: dir $env:USERPROFILE\nuget-packages\*.nupkg
 
-      - name: Push NuGet Package(s)
+      - name: Add GitHub Packages source
         run: |
-          dotnet nuget push ~/nuget-packages/*.nupkg \
-            --source https://api.nuget.org/v3/index.json \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+          dotnet nuget add source `
+            --username ${{ github.actor }} `
+            --password ${{ secrets.GITHUB_TOKEN }} `
+            --store-password-in-clear-text `
+            --name github `
+            "https://nuget.pkg.github.com/${{ env.OWNER }}/index.json"
+
+      - name: Push NuGet Package(s) to GitHub Packages
+        run: |
+          dotnet nuget push "$env:USERPROFILE\nuget-packages\*.nupkg" `
+            --source github `
+            --api-key ${{ secrets.GITHUB_TOKEN }} `
             --skip-duplicate
