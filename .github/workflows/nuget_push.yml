@@ -2,9 +2,9 @@
 name: NuGet Push
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master, dotnet-10 ]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -56,10 +56,14 @@ jobs:
           dotnet pack -c Release --no-restore --no-build `
             -p:Version=${{ steps.ver.outputs.packageVersion }} `
             -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
-            --output $env:USERPROFILE\nuget-packages
+            --output "${{ github.workspace }}\nuget-packages"
 
-      - name: List packages
-        run: dir $env:USERPROFILE\nuget-packages\*.nupkg
+#      - name: Push NuGet Package(s) to nuget.org
+#        run: |
+#          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+#            --source https://api.nuget.org/v3/index.json `
+#            --api-key ${{ secrets.NUGET_API_KEY }} `
+#            --skip-duplicate
 
       - name: Add GitHub Packages source
         run: |
@@ -70,9 +74,9 @@ jobs:
             --name github `
             "https://nuget.pkg.github.com/${{ env.OWNER }}/index.json"
 
-      - name: Push NuGet Package(s) to GitHub Packages
+      - name: Push NuGet Package(s) to GitHub
         run: |
-          dotnet nuget push "$env:USERPROFILE\nuget-packages\*.nupkg" `
+          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
             --source github `
             --api-key ${{ secrets.GITHUB_TOKEN }} `
             --skip-duplicate

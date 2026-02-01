@@ -9,7 +9,7 @@
     <PackageReference Include="Blake3" />
     <PackageReference Include="BouncyCastle.Cryptography" />
     <PackageReference Include="FixedMathSharp" />
-    <PackageReference Include="Fmod5Sharp" />
+    <PackageReference Include="FModel.Fmod5Sharp" />
     <PackageReference Include="GenericReader" />
     <PackageReference Include="Infrablack.UE4Config" />
     <PackageReference Include="LZMA-SDK" />
