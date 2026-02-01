@@ -31,14 +31,19 @@ jobs:
         id: ver
         shell: pwsh
         run: |
-          [xml]$props = Get-Content .\Directory.Build.props
-          $baseVersion = $props.Project.PropertyGroup.Version
-          if (-not $baseVersion) { 
-            throw "Could not find <Version> in Directory.Build.props" 
+          $content = Get-Content .\Directory.Build.props -Raw -Encoding UTF8
+          if (-not $content) { throw "Could not read Directory.Build.props" }
+          
+          # Parse <Version>1.2.2</Version> with regex (strips whitespace/tabs)
+          if ($content -match '<Version>\s*([0-9]+\.[0-9]+\.[0-9]+)\s*</Version>') {
+            $baseVersion = $matches[1]
+          } else {
+            throw "Could not parse 3-part SemVer <Version> from Directory.Build.props. Found: '$content'"
           }
-          $version = "$baseVersion.${{ github.run_number }}"
+          
+          $version = "$baseVersion.$($env:GITHUB_RUN_NUMBER)"
           "packageVersion=$version" >> $env:GITHUB_OUTPUT
-          Write-Host "PackageVersion=$version (base: $baseVersion + run: ${{ github.run_number }})"
+          Write-Host "PackageVersion=$version (parsed base: '$baseVersion' + run: $($env:GITHUB_RUN_NUMBER))"
 
       - name: Restore dependencies
         run: dotnet restore
