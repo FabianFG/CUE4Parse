@@ -3,7 +3,7 @@ name: NuGet Push
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dotnet-10 ]
   workflow_dispatch:
 
 permissions:
