@@ -119,7 +119,12 @@ public class FSkyAtmosphereMapBuildData
     }
 }
 
-public class FReflectionCaptureMapBuildData(FAssetArchive Ar) : FReflectionCaptureData(Ar) { }
+public class FReflectionCaptureMapBuildData : FReflectionCaptureData {
+
+    public FReflectionCaptureMapBuildData() { }
+
+    public FReflectionCaptureMapBuildData(FAssetArchive Ar) : base(Ar) { }
+}
 
 [JsonConverter(typeof(FReflectionCaptureDataConverter))]
 public class FReflectionCaptureData
@@ -127,8 +132,10 @@ public class FReflectionCaptureData
     public int CubemapSize;
     public float AverageBrightness;
     public float Brightness;
-    public byte[]? FullHDRCapturedData;
+    [JsonIgnore] public byte[]? FullHDRCapturedData;
     public FPackageIndex? EncodedCaptureData;
+
+    public FReflectionCaptureData() { }
 
     public FReflectionCaptureData(FAssetArchive Ar)
     {

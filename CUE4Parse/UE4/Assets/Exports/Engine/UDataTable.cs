@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine;
 public class UDataTable : UObject
 {
     public Dictionary<FName, FStructFallback> RowMap { get; private set; }
-    protected string? RowStructName { get; set; } // Only used if set from inheritor
+    public string? RowStructName { get; protected set; } // Set by inheritor or during deserialization
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -21,9 +21,12 @@ public class UDataTable : UObject
         UStruct? rowStruct = null;
         if (string.IsNullOrEmpty(RowStructName))
         {
-            var ptr = GetOrDefault<FPackageIndex>("RowStruct");
-            if (ptr is not null && !ptr.TryLoad<UStruct>(out rowStruct))
+            var ptr = GetOrDefault<FPackageIndex?>("RowStruct");
+            if (ptr != null)
+            {
                 RowStructName = ptr.Name;
+                ptr.TryLoad<UStruct>(out rowStruct);
+            }
         }
 
         var numRows = Ar.Read<int>();

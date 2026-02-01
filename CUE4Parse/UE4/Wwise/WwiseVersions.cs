@@ -71,6 +71,7 @@ public static class WwiseVersions
     [
         112,    // Dead by Daylight (old)
         113,    // Dead by Daylight (old)
+        120,    // Code Vein
         125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)

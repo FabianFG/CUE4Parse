@@ -1,5 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
+using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 using CUE4Parse.UE4.Readers;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 
@@ -79,15 +80,18 @@ public class FPImplRecastNavMesh
         DetourMeshTiles[index] = new DetourMeshTile(Ar, sizeInfo, navMeshVersion);
     }
 
-    private void SerializeCompressedTileCacheData(FArchive Ar)
+    public static void SerializeCompressedTileCacheData(FArchive Ar)
     {
         var compressedDataSizeNoHeader = Ar.Read<int>();
         var bHasHeader = compressedDataSizeNoHeader >= 0;
 
         if (!bHasHeader) return;
-
+#if DEBUG
+        Log.Warning("CompressedTileCacheData is not null, comressed size: {0}", compressedDataSizeNoHeader);
+#endif
         var header = new DetourTileCacheLayerHeader(Ar);
 
+        // Oodle compressed data
         if (compressedDataSizeNoHeader > 0)
             Ar.Position += compressedDataSizeNoHeader;
     }

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Assets.Exports.Component.Atmosphere;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
@@ -66,7 +65,6 @@ public class UArrowComponent : UPrimitiveComponent
     }
 }
 public class UAsyncPhysicsInputComponent : UActorComponent;
-public class UAtmosphericFogComponent : USkyAtmosphereComponent;
 public class UAudioCaptureComponent : USynthComponent;
 
 public class UAudioComponent : USceneComponent
@@ -328,7 +326,6 @@ public class URadialForceComponent : USceneComponent;
 public class URadialIntMask : UFieldNodeInt;
 public class URadialVector : UFieldNodeVector;
 public class URandomVector : UFieldNodeVector;
-public class UReflectionCaptureComponent : USceneComponent;
 public class UReturnResultsTerminal : UFieldNodeBase;
 public class URotatingMovementComponent : UMovementComponent;
 public class URuntimeVirtualTextureComponent : USceneComponent;

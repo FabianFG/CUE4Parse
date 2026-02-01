@@ -99,7 +99,7 @@ public class CMaterialParams2
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
             "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
-            "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap",
+            "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap", "REM",
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
             "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture"
