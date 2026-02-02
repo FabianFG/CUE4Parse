@@ -21,7 +21,9 @@ public class HierarchySoundSfxVoice : AbstractHierarchy
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(Source));
-        serializer.Serialize(writer, Source);
+        writer.WriteStartObject();
+        Source.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName(nameof(BaseParams));
         writer.WriteStartObject();

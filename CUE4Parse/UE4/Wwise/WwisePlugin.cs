@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using Serilog;
 
@@ -9,65 +10,65 @@ namespace CUE4Parse.UE4.Wwise;
 public class WwisePlugin
 {
     // TODO: add all plugins
-    private static readonly Dictionary<uint, Action<FArchive, uint, uint>> PluginDispatch = new()
+    private static readonly Dictionary<EAkPluginId, Func<FArchive, uint, EAkPluginId, object>> _pluginDispatch = new()
     {
-        //{ 0x00640002, CAkFxSrcSine },
-        { 0x00650002, CAkFxSrcSilence.Read },
-        //{ 0x00660002, CAkToneGen },
-        //{ 0x00690003, CAkParameterEQFX },
-        //{ 0x006A0003, CAkDelayFX },
-        //{ 0x006E0003, CAkPeakLimiterFX },
-        //{ 0x00730003, CAkFDNReverbFX },
-        //{ 0x00760003, CAkRoomVerbFX },
-        //{ 0x007D0003, CAkFlangerFX },
-        //{ 0x007E0003, CAkGuitarDistortionFX },
-        //{ 0x007F0003, CAkConvolutionReverbFX },
-        //{ 0x00810003, CAkMeterFX },
-        //{ 0x00870003, CAkStereoDelayFX },
-        //{ 0x008B0003, CAkGainFX },
-        //{ 0x008A0003, CAkHarmonizerFX },
-        //{ 0x00940002, CAkSynthOne },
-        //{ 0x00C80002, CAkFxSrcAudioInput },
-        //{ 0x00041033, iZTrashDelayFXParams }
+        //{ EAkPluginId.AkFxSrcSine, CAkFxSrcSine.Read },
+        { EAkPluginId.AkFxSrcSilence, CAkFxSrcSilence.Read },
+        //{ EAkPluginId.AkToneGen, CAkToneGen.Read },
+        //{ EAkPluginId.AkParameterEQFX, CAkParameterEQFX.Read },
+        //{ EAkPluginId.AkDelayFX, CAkDelayFX.Read },
+        //{ EAkPluginId.AkCompressor, CAkCompressor.Read },
+        //{ EAkPluginId.AkPeakLimiterFX, CAkPeakLimiterFX.Read },
+        //{ EAkPluginId.AkFDNReverbFX, CAkFDNReverbFX.Read },
+        //{ EAkPluginId.AkRoomVerbFX, CAkRoomVerbFX.Read },
+        //{ EAkPluginId.AkFlangerFX, CAkFlangerFX.Read },
+        //{ EAkPluginId.AkGuitarDistortionFX, CAkGuitarDistortionFX.Read },
+        //{ EAkPluginId.AkConvolutionReverbFX, CAkConvolutionReverbFX.Read },
+        //{ EAkPluginId.AkMeterFX, CAkMeterFX.Read },
+        //{ EAkPluginId.AkTremolo, CAkTremolo.Read },
+        //{ EAkPluginId.AkStereoDelayFX, CAkStereoDelayFX.Read },
+        //{ EAkPluginId.AkPitchShifter, CAkPitchShifter.Read },
+        //{ EAkPluginId.AkGainFX, CAkGainFX.Read },
+        //{ EAkPluginId.AkHarmonizerFX, CAkHarmonizerFX.Read },
+        //{ EAkPluginId.AkSynthOne, CAkSynthOne.Read },
+        //{ EAkPluginId.AkFxSrcAudioInput, CAkFxSrcAudioInput.Read },
+        //{ EAkPluginId.AkMotion, CAkMotion.Read },
+        //{ EAkPluginId.iZTrashDelayFXParams, iZTrashDelayFXParams.Read }
     };
 
-    public static void ParsePluginParams(FArchive Ar, uint pluginId, bool always=false)
+    public static object? TryParsePluginParams(FArchive Ar, EAkPluginId pluginId, bool always = false)
     {
-        if (pluginId == 0)
-            return;
-
+        if (pluginId is EAkPluginId.None)
+            return null;
         if ((int) pluginId < 0 && !always)
-            return;
+            return null;
 
         uint size = Ar.Read<uint>();
         if (size == 0)
-            return;
+            return null;
 
-        if (PluginDispatch.TryGetValue(pluginId, out var dispatch))
-        {
-            dispatch(Ar, size, pluginId);
-        }
-        else
-        {
-            SkipPlugin(Ar, size, pluginId);
-        }
+        if (_pluginDispatch.TryGetValue(pluginId, out var dispatch))
+            return dispatch;
+
+        SkipPlugin(Ar, size, pluginId);
+        return null;
     }
 
-    public static uint ParsePlugin(FArchive Ar)
+    // Actual Plugin ID Format: 0xPPPPCCCT (PPPP = PluginID, CCC=CompanyID, T=Type)
+    public static uint GetPluginId(FArchive Ar)
     {
-        var fxId = Ar.Read<uint>();
-        if (fxId == uint.MaxValue)
-        {
+        var pluginId = Ar.Read<uint>();
+
+        if (pluginId == uint.MaxValue)
             return uint.MaxValue; // Plugin ID == -1 (invalid)
-        }
 
-        //var type = // (fld >> 0) & 0x000F
-        //var company = // (fld >> 4) & 0x03FF
+        // var type = // (pluginId >> 0) & 0x000F
+        // var company = // (pluginId >> 4) & 0x03FF
 
-        return fxId;
+        return pluginId;
     }
 
-    private static void SkipPlugin(FArchive Ar, uint size, uint pluginId)
+    private static void SkipPlugin(FArchive Ar, uint size, EAkPluginId pluginId)
     {
 #if DEBUG
         Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping");
@@ -75,7 +76,7 @@ public class WwisePlugin
         Ar.Position += size; // Skip
     }
 
-    public static void EnsureEndOfBlock(FArchive Ar, long endPosition, uint pluginId)
+    public static void EnsureEndOfBlock(FArchive Ar, long endPosition, EAkPluginId pluginId)
     {
         if (Ar.Position != endPosition)
         {
