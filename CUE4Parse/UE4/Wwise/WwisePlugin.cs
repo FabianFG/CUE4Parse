@@ -48,7 +48,7 @@ public class WwisePlugin
             return null;
 
         if (_pluginDispatch.TryGetValue(pluginId, out var dispatch))
-            return dispatch;
+            return dispatch(Ar, size, pluginId);
 
         SkipPlugin(Ar, size, pluginId);
         return null;
