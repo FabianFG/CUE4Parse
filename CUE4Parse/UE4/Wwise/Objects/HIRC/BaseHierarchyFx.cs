@@ -18,9 +18,8 @@ public class BaseHierarchyFx : AbstractHierarchy
     // CAkFxBase::SetInitialValues
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
     {
-        var rawPluginId = WwisePlugin.GetPluginId(Ar);
-        PluginId = (EAkPluginId) rawPluginId;
-        PluginParams = WwisePlugin.TryParsePluginParams(Ar, (EAkPluginId) rawPluginId);
+        PluginId = (EAkPluginId) WwisePlugin.GetPluginId(Ar);
+        PluginParams = WwisePlugin.TryParsePluginParams(Ar, PluginId);
 
         MediaList = Ar.ReadArray(Ar.Read<byte>(), () => new AkMediaMap(Ar));
         RTPCs = AkRtpc.ReadArray(Ar);
