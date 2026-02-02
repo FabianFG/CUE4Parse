@@ -60,7 +60,7 @@ public class FTexturePlatformData
         PixelFormat = string.Empty;
         OptData = default;
         FirstMipToSerialize = -1;
-        Mips = Array.Empty<FTexture2DMipMap>();
+        Mips = [];
         VTData = null;
     }
 
@@ -69,7 +69,7 @@ public class FTexturePlatformData
         const long PlaceholderDerivedDataSize = 16;
         if (Ar.Game is >= EGame.GAME_UE5_2)
         {
-            if (Ar.ReadFlag()) // bUsingDerivedData
+            if (Ar.ReadFlag() && Ar.Game != EGame.GAME_InfinityNikki) // bUsingDerivedData
                 throw new NotImplementedException("FTexturePlatformData deserialization using derived data is not implemented.");
             else
                 Ar.Position += PlaceholderDerivedDataSize - 1;
