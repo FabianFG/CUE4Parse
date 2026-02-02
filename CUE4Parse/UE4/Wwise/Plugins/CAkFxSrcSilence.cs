@@ -1,16 +1,24 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
 public class CAkFxSrcSilence
 {
-    public static void Read(FArchive Ar, uint size, uint pluginId)
+    public readonly float Duration;
+    public readonly float RandomizedLengthMinus;
+    public readonly float RandomizedLengthPlus;
+
+    public static object Read(FArchive Ar, uint size, EAkPluginId pluginId) =>
+        new CAkFxSrcSilence(Ar, size, pluginId);
+
+    public CAkFxSrcSilence(FArchive Ar, uint size, EAkPluginId pluginId)
     {
         long maxOffset = Ar.Position + size;
 
-        var fDuration = Ar.Read<float>();
-        var fRandomizedLengthMinus = Ar.Read<float>();
-        var fRandomizedLengthPlus = Ar.Read<float>();
+        Duration = Ar.Read<float>();
+        RandomizedLengthMinus = Ar.Read<float>();
+        RandomizedLengthPlus = Ar.Read<float>();
 
         WwisePlugin.EnsureEndOfBlock(Ar, maxOffset, pluginId);
     }
