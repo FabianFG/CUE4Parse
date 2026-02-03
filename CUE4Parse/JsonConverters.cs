@@ -1343,6 +1343,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
             writer.WriteValue(value.Platform);
         }
 
+        if (value.GlobalSettings is not null)
+        {
+            writer.WritePropertyName(nameof(value.GlobalSettings));
+            value.GlobalSettings.WriteJson(writer, serializer);
+        }
+
         if (value.WemFile is { Length: > 0 })
         {
             writer.WritePropertyName("IsWemFile");
