@@ -104,11 +104,7 @@ public class WwiseReader
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
                 case EChunkID.BankStateMg:
-                    // TODO:
-                    // if (WwiseVersions.IsSupported())
-                    // {
-                    //     GlobalSettings = new GlobalSettings(Ar);
-                    // }
+                    GlobalSettings = new GlobalSettings(Ar);
                     break;
                 case EChunkID.BankEnvSetting:
                     if (WwiseVersions.IsSupported()) // Let's guard this just in case
@@ -119,7 +115,7 @@ public class WwiseReader
                 case EChunkID.FXPR:
                     break;
                 case EChunkID.BankCustomPlatformName:
-                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()) : ReadStzString(Ar);
+                    Platform = Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
                     break;
                 case EChunkID.PLUGIN:
                     break;

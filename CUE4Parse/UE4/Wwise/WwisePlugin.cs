@@ -12,6 +12,8 @@ public class WwisePlugin
     // TODO: add all plugins
     private static readonly Dictionary<EAkPluginId, Func<FArchive, uint, EAkPluginId, object>> _pluginDispatch = new()
     {
+        //{ EAkPluginId.iZTrashDelayFXParams, iZTrashDelayFXParams.Read }
+        //{ EAkPluginId.AudioSpectrumFX, AudioSpectrumFX.Read },
         //{ EAkPluginId.AkFxSrcSine, CAkFxSrcSine.Read },
         { EAkPluginId.AkFxSrcSilence, CAkFxSrcSilence.Read },
         //{ EAkPluginId.AkToneGen, CAkToneGen.Read },
@@ -33,7 +35,8 @@ public class WwisePlugin
         //{ EAkPluginId.AkSynthOne, CAkSynthOne.Read },
         //{ EAkPluginId.AkFxSrcAudioInput, CAkFxSrcAudioInput.Read },
         //{ EAkPluginId.AkMotion, CAkMotion.Read },
-        //{ EAkPluginId.iZTrashDelayFXParams, iZTrashDelayFXParams.Read }
+        //{ EAkPluginId.bnsRadio, bnsRadio.Read },
+        //{ EAkPluginId.Auro, Auro.Read },
     };
 
     public static object? TryParsePluginParams(FArchive Ar, EAkPluginId pluginId, bool always = false)

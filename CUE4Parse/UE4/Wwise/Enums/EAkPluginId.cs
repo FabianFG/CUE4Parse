@@ -4,6 +4,8 @@ namespace CUE4Parse.UE4.Wwise.Enums;
 public enum EAkPluginId : uint
 {
     None,
+    iZTrashDelayFXParams = 0x00041033,
+    AudioSpectrumFX = 0x002E2FD3,
     AkFxSrcSine = 0x00640002,
     AkFxSrcSilence = 0x00650002,
     AkToneGen = 0x00660002,
@@ -25,5 +27,6 @@ public enum EAkPluginId : uint
     AkSynthOne = 0x00940002,
     AkFxSrcAudioInput = 0x00C80002,
     AkMotion = 0x01990002,
-    iZTrashDelayFXParams = 0x00041033,
+    bnsRadio = 0x039B2FD3,
+    Auro = 0x044C1073,
 }
