@@ -27,8 +27,15 @@ public static class OodleHelper
 {
     public const string OODLE_DLL_NAME_OLD = "oo2core_9_win64.dll";
     public const string OODLE_DLL_NAME = "oodle-data-shared.dll";
+    public const string OODLE_SO_NAME = "liboodle-data-shared.so";
+
+    private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223";
+    private const string WINDOWS_ZIP = "clang-cl-x64-release.zip";
+    private const string LINUX_ZIP = "gcc-x64-release.zip";
 
     public static Oodle? Instance { get; private set; }
+
+    private static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
     public static void Initialize(string? path = null)
     {
@@ -40,7 +47,7 @@ public static class OodleHelper
         }
         else
         {
-            path ??= OODLE_DLL_NAME_OLD;
+            path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
             if (DownloadOodleDll(path))
             {
                 Instance = new Oodle(path);
@@ -60,7 +67,10 @@ public static class OodleHelper
 
     public static bool DownloadOodleDll(string? path = null)
     {
-        path ??= OODLE_DLL_NAME_OLD;
+        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
+        // Check for old Windows DLL name for backward compatibility
+        if (!IsLinux && File.Exists(OODLE_DLL_NAME_OLD))
+            return true;
         return File.Exists(path) || DownloadOodleDllAsync(path).GetAwaiter().GetResult();
     }
 
@@ -95,7 +105,7 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllAsync(string? path)
     {
-        path ??= OODLE_DLL_NAME_OLD;
+        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
 
         using var client = new HttpClient(new SocketsHttpHandler
         {
@@ -113,8 +123,9 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path)
     {
-        const string url = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223/clang-cl-x64-release.zip"; // 2.9.15
-        const string entryName = "bin/oodle-data-shared.dll";
+        var (url, entryName) = IsLinux
+            ? ($"{RELEASE_URL}/{LINUX_ZIP}", $"lib/{OODLE_SO_NAME}")
+            : ($"{RELEASE_URL}/{WINDOWS_ZIP}", $"bin/{OODLE_DLL_NAME}");
 
         try
         {
@@ -127,6 +138,14 @@ public static class OodleHelper
             await using var entryStream = entry.Open();
             await using var fs = File.Create(path);
             await entryStream.CopyToAsync(fs).ConfigureAwait(false);
+
+            if (IsLinux)
+            {
+                File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                                           UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                                           UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
+
             return true;
         }
         catch (Exception e)
