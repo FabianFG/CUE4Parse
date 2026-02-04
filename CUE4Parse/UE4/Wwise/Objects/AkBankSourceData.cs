@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
+using CUE4Parse.UE4.Wwise.Plugins;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -21,7 +22,7 @@ public class AkBankSourceData
     public readonly uint CacheId;
     public readonly EBankSourceFlags BankSourceFlags;
     public readonly bool HasPluginParams;
-    public readonly object? PluginParams;
+    public readonly IAkPluginParam? PluginParams;
 
     public AkBankSourceData(FArchive Ar)
     {
