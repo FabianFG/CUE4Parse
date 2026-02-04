@@ -31,6 +31,7 @@ public class WwiseReader
     public GlobalSettings? GlobalSettings { get; }
     public CAkEnvironmentsMgr? EnvSettings { get; }
     public byte[] WemFile { get; } = [];
+    public byte[] PluginData { get; } = [];
 
     public WwiseReader(FArchive Ar)
     {
@@ -104,7 +105,10 @@ public class WwiseReader
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
                 case EChunkID.BankStateMg:
-                    GlobalSettings = new GlobalSettings(Ar);
+                    if (WwiseVersions.IsSupported())
+                    {
+                        GlobalSettings = new GlobalSettings(Ar);
+                    }
                     break;
                 case EChunkID.BankEnvSetting:
                     if (WwiseVersions.IsSupported()) // Let's guard this just in case
@@ -118,6 +122,8 @@ public class WwiseReader
                     Platform = Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
                     break;
                 case EChunkID.PLUGIN:
+                    // could be any data for a specific plugin
+                    PluginData = Ar.ReadBytes(sectionLength);
                     break;
                 default:
 #if DEBUG

@@ -119,6 +119,7 @@ public class BaseHierarchyBus : AbstractHierarchy
         if (WwiseVersions.Version <= 126)
         {
             // TODO: FeedbackInfo
+            // FeedbackID = Ar.bFeedbackInBank ? Ar.Read<uint>() : 0;
         }
     }
 

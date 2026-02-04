@@ -112,6 +112,7 @@ public class AkBankSourceData
 
     public void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
+        writer.WriteStartObject();
         writer.WritePropertyName(nameof(PluginId));
         writer.WriteValue(HasPluginParams ? PluginId.ToString() : PluginId); // We won't map to enum if it has no params
 
@@ -179,6 +180,7 @@ public class AkBankSourceData
             writer.WritePropertyName(nameof(HasPluginParams));
             writer.WriteValue(HasPluginParams);
         }
+        writer.WriteEndObject();
     }
 }
 

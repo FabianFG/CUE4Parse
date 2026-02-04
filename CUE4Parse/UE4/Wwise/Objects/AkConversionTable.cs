@@ -5,26 +5,26 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public readonly struct AkConversionTable
+public readonly struct CAkConversionTable
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveScaling Scaling;
-    public readonly dynamic Size; // uint for legacy versions, ushort for modern versions
+    public readonly int Size; // uint for legacy versions, ushort for modern versions
     public readonly AkRtpcGraphPoint[] GraphPoints;
 
-    public AkConversionTable(FArchive Ar)
+    public CAkConversionTable(FArchive Ar, bool readScaling = true)
     {
         if (WwiseVersions.Version <= 36)
         {
-            Scaling = (EAkCurveScaling) Ar.Read<uint>();
-            Size = Ar.Read<uint>();
+            Scaling = readScaling ? (EAkCurveScaling) Ar.Read<uint>() : EAkCurveScaling.None;
+            Size = (int) Ar.Read<uint>();
         }
         else
         {
-            Scaling = (EAkCurveScaling) Ar.Read<byte>();
+            Scaling = readScaling ? (EAkCurveScaling) Ar.Read<byte>() : EAkCurveScaling.None;
             Size = Ar.Read<ushort>();
         }
 
-        GraphPoints = Ar.ReadArray((int) Size, () => new AkRtpcGraphPoint(Ar));
+        GraphPoints = Ar.ReadArray(Size, () => new AkRtpcGraphPoint(Ar));
     }
 }
