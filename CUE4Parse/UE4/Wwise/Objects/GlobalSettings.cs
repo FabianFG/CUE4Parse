@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
@@ -13,9 +14,8 @@ public class GlobalSettings
     public readonly float HSFEmphasis;
     public readonly AkStateGroupInfo[] StateGroups;
     public readonly AkSwitchGroup[] SwitchGroups;
-    public readonly AkRTPCRamping[] RTPCRampingParams;
-    public readonly AkAcousticTexture_v122[] AcousticTextures_v122 = [];
-    public readonly AkAcousticTexture[] AcousticTextures = [];
+    public readonly AkRTPCRamping[] RTPCRampingParams = [];
+    public List<ICAkIndexable> VirtualAcoustics = [];
 
     // CAkBankMgr::ProcessGlobalSettingsChunk
     public GlobalSettings(FArchive Ar)
@@ -40,35 +40,23 @@ public class GlobalSettings
             HSFEmphasis = Ar.Read<float>();
 
         // CAkStateMgr::AddStateGroup
-        StateGroups = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkStateGroupInfo(Ar));
-        SwitchGroups = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchGroup(Ar));
-        RTPCRampingParams = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkRTPCRamping(Ar));
+        StateGroups = Ar.ReadArray(() => new AkStateGroupInfo(Ar));
+        SwitchGroups = Ar.ReadArray(() => new AkSwitchGroup(Ar));
+        if (WwiseVersions.Version <= 38)
+            return;
+        RTPCRampingParams = Ar.ReadArray(() => new AkRTPCRamping(Ar));
 
         // CAkVirtualAcousticsMgr::AddAcousticTexture
-        switch (WwiseVersions.Version)
+        VirtualAcoustics.AddRange(WwiseVersions.Version switch
         {
-            case <= 118:
-                // Nothing
-                break;
-            case <= 122:
-                AcousticTextures_v122 = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkAcousticTexture_v122(Ar));
-                break;
-            default:
-                AcousticTextures = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkAcousticTexture(Ar));
-                break;
-        }
+            <= 118 => [],
+            <= 122 => Ar.ReadArray<ICAkIndexable>(() => new AkAcousticTexture_v122(Ar)),
+            _ => Ar.ReadArray<ICAkIndexable>(() => new AkAcousticTexture(Ar))
+        });
 
-        switch (WwiseVersions.Version)
+        if (WwiseVersions.Version is > 118 and <= 122)
         {
-            case <= 118:
-                // Nothing
-                break;
-            case <= 122:
-                Ar.ReadArray((int) Ar.Read<uint>(), () => new AkDiffuseReverberator(Ar));
-                break;
-            default:
-                // Nothing
-                break;
+            VirtualAcoustics.AddRange(Ar.ReadArray<ICAkIndexable>(() => new AkDiffuseReverberator(Ar)));
         }
     }
 
@@ -100,16 +88,8 @@ public class GlobalSettings
         writer.WritePropertyName(nameof(RTPCRampingParams));
         serializer.Serialize(writer, RTPCRampingParams);
 
-        if (WwiseVersions.Version > 122)
-        {
-            writer.WritePropertyName(nameof(AcousticTextures));
-            serializer.Serialize(writer, AcousticTextures);
-        }
-        else
-        {
-            writer.WritePropertyName(nameof(AcousticTextures_v122));
-            serializer.Serialize(writer, AcousticTextures_v122);
-        }
+        writer.WritePropertyName(nameof(VirtualAcoustics));
+        serializer.Serialize(writer, VirtualAcoustics);
 
         writer.WriteEndObject();
     }

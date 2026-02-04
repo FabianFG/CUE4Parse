@@ -5,6 +5,21 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
+public readonly struct AkSwitchGraphPoint
+{
+    public readonly float From;
+    public readonly uint To;
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkCurveInterpolation Interp;
+
+    public AkSwitchGraphPoint(FArchive Ar)
+    {
+        From = Ar.Read<float>();
+        To = Ar.Read<uint>();
+        Interp = (EAkCurveInterpolation) Ar.Read<uint>();
+    }
+}
+
 public readonly struct AkRtpcGraphPoint
 {
     public readonly float From;
@@ -30,11 +45,10 @@ public readonly struct AkRtpc
     public readonly EAkGameSyncType RtpcType;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkRtpcAccum RtpcAccum;
+    //AkRTPC_ParameterID
     public readonly int ParamId;
     public readonly uint RtpcCurveId;
-    [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EAkCurveScaling Scaling;
-    public readonly AkRtpcGraphPoint[] GraphPoints;
+    public readonly CAkConversionTable ConversionTable;
 
     public AkRtpc(FArchive Ar)
     {
@@ -54,8 +68,7 @@ public readonly struct AkRtpc
         };
 
         RtpcCurveId = Ar.Read<uint>();
-        Scaling = Ar.Read<EAkCurveScaling>();
-        GraphPoints = Ar.ReadArray(Ar.Read<ushort>(), () => new AkRtpcGraphPoint(Ar));
+        ConversionTable = new CAkConversionTable(Ar);
     }
 
     public static AkRtpc[] ReadArray(FArchive Ar) =>

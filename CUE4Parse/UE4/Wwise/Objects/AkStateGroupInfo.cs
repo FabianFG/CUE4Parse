@@ -12,6 +12,10 @@ public readonly struct AkStateGroupInfo
     {
         StateGroupId = Ar.Read<uint>();
         DefaultTransitionTime = Ar.Read<uint>();
+        if (WwiseVersions.Version <= 52)
+        {
+            // To-Do
+        }
         StateTransitions = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkStateTransition(Ar));
     }
 }

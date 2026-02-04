@@ -11,7 +11,7 @@ public readonly struct AkSwitchGroup
     public readonly uint RtpcId;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkGameSyncType RtpcType;
-    public readonly AkRtpcGraphPoint[] GraphPoints;
+    public readonly AkSwitchGraphPoint[] GraphPoints;
 
     public AkSwitchGroup(FArchive Ar)
     {
@@ -19,6 +19,6 @@ public readonly struct AkSwitchGroup
         RtpcId = Ar.Read<uint>();
         if (WwiseVersions.Version > 89)
             RtpcType = Ar.Read<EAkGameSyncType>();
-        GraphPoints = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkRtpcGraphPoint(Ar));
+        GraphPoints = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchGraphPoint(Ar));
     }
 }
