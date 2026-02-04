@@ -33,20 +33,13 @@ public class HierarchyMusicTrack : AbstractHierarchy
             MusicFlags = Ar.Read<EMusicFlags>();
         }
 
-        var numSources = Ar.Read<uint>();
-        Sources = new AkBankSourceData[numSources];
+        var numSources = (int)Ar.Read<uint>();
         if (WwiseVersions.Version <= 26)
         {
-            for (int i = 0; i < numSources; i++)
-            {
-                Sources[i] = new AkBankSourceData(Ar);
-            }
+            var DataIndexes = Ar.ReadArray<uint>(numSources);
         }
-
-        for (int i = 0; i < numSources; i++)
-        {
-            Sources[i] = new AkBankSourceData(Ar);
-        }
+            
+        Sources = Ar.ReadArray(numSources, () => new AkBankSourceData(Ar));
 
         if (WwiseVersions.Version > 152)
         {
@@ -58,24 +51,14 @@ public class HierarchyMusicTrack : AbstractHierarchy
             var numPlaylistItems = Ar.Read<uint>();
             if (numPlaylistItems > 0)
             {
-                Playlist = new AkTrackSrcInfo[numPlaylistItems];
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Playlist[i] = new AkTrackSrcInfo(Ar);
-                }
-
+                Playlist = Ar.ReadArray((int) numPlaylistItems, () => new AkTrackSrcInfo(Ar));
                 Ar.Read<uint>(); // numSubTrack
             }
         }
 
         if (WwiseVersions.Version > 62)
         {
-            var numClipAutomationItems = Ar.Read<uint>();
-            ClipAutomations = new AkClipAutomation[numClipAutomationItems];
-            for (int i = 0; i < numClipAutomationItems; i++)
-            {
-                ClipAutomations[i] = new AkClipAutomation(Ar);
-            }
+            ClipAutomations = Ar.ReadArray(() => new AkClipAutomation(Ar));
         }
 
         Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
@@ -109,11 +92,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
             uint numPlaylistItems = Ar.Read<uint>();
             if (numPlaylistItems > 0)
             {
-                Playlist = new AkTrackSrcInfo[numPlaylistItems];
-                for (int i = 0; i < numPlaylistItems; i++)
-                {
-                    Playlist[i] = new AkTrackSrcInfo(Ar);
-                }
+                Playlist = Ar.ReadArray((int) numPlaylistItems, () => new AkTrackSrcInfo(Ar));
             }
 
             Ar.Read<uint>(); // Unknown flag
@@ -128,10 +107,7 @@ public class HierarchyMusicTrack : AbstractHierarchy
         writer.WriteValue(MusicFlags.ToString());
 
         writer.WritePropertyName(nameof(Sources));
-        writer.WriteStartArray();
-        foreach (var source in Sources)
-            source.WriteJson(writer, serializer);
-        writer.WriteEndArray();
+        serializer.Serialize(writer, Sources);
 
         writer.WritePropertyName(nameof(Playlist));
         serializer.Serialize(writer, Playlist);

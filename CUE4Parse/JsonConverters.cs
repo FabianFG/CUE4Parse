@@ -3140,28 +3140,28 @@ public class BankHeaderConverter : JsonConverter<AkBankHeader>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Version");
+        writer.WritePropertyName(nameof(value.Version));
         writer.WriteValue(value.Version);
 
-        writer.WritePropertyName("SoundBankId");
+        writer.WritePropertyName(nameof(value.SoundBankId));
         writer.WriteValue(value.SoundBankId);
 
-        writer.WritePropertyName("LanguageId");
+        writer.WritePropertyName(nameof(value.LanguageId));
         writer.WriteValue(value.LanguageId);
 
-        writer.WritePropertyName("FeedbackInBank");
+        writer.WritePropertyName(nameof(value.FeedbackInBank));
         writer.WriteValue(value.FeedbackInBank);
 
-        writer.WritePropertyName("AltValues");
+        writer.WritePropertyName(nameof(value.AltValues));
         writer.WriteValue(value.AltValues.ToString());
 
-        writer.WritePropertyName("ProjectId");
+        writer.WritePropertyName(nameof(value.ProjectId));
         writer.WriteValue(value.ProjectId);
 
-        writer.WritePropertyName("SoundBankType");
+        writer.WritePropertyName(nameof(value.SoundBankType));
         writer.WriteValue(value.SoundBankType.ToString());
 
-        writer.WritePropertyName("BankHash");
+        writer.WritePropertyName(nameof(value.BankHash));
         writer.WriteValue(value.BankHash);
 
         writer.WriteEndObject();
