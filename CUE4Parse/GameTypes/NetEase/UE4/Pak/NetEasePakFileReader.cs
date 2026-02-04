@@ -30,7 +30,13 @@ public partial class PakFileReader
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => pakEntry.Path.EndsWith("ini") ? int.MaxValue : 0x800,
+            EGame.GAME_WutheringWaves => pakEntry.WutheringWavesByte switch
+            {
+                0 => int.MaxValue,
+                1 => 0x200000,
+                2 => 0x800,
+                _ => throw new NotImplementedException($"WutheringWavesByte {pakEntry.WutheringWavesByte} not implemented for partial encrypted pak entry extraction")
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
 
@@ -72,7 +78,13 @@ public partial class PakFileReader
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => 0x800,
+            EGame.GAME_WutheringWaves => pakEntry.WutheringWavesByte switch
+            {
+                0 => int.MaxValue,
+                1 => 0x200000,
+                2 => 0x800,
+                _ => throw new NotImplementedException($"WutheringWavesByte {pakEntry.WutheringWavesByte} not implemented for partial encrypted pak entry extraction")
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
         var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);

@@ -29,6 +29,7 @@ public class FPakEntry : VfsEntry
     public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
     public bool IsDeleted => (Flags & Flag_Deleted) == Flag_Deleted;
     public readonly uint CompressionBlockSize;
+    public readonly byte WutheringWavesByte;
 
     public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
     public bool IsCompressed => UncompressedSize != CompressedSize && CompressionBlockSize > 0;
@@ -152,6 +153,7 @@ public class FPakEntry : VfsEntry
         if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
         {
             bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 | (bitfield & 0x0FC00000) << 1 | bitfield & 0xE0000000;
+            WutheringWavesByte = *data;
             data += sizeof(byte);
         }
 
@@ -306,7 +308,7 @@ public class FPakEntry : VfsEntry
         {
             bitfield = (bitfield >> 16) & 0x3F | (bitfield & 0xFFFF) << 6 | (bitfield & (1 << 28)) >> 6 |
                        (bitfield & 0x0FC00000) << 1 | (bitfield & 0xC0000000) >> 1 | (bitfield & 0x20000000) << 2;
-            Ar.Position++;
+            WutheringWavesByte = Ar.Read<byte>();
         }
 
         if (reader.Game is EGame.GAME_InfinityNikki)
