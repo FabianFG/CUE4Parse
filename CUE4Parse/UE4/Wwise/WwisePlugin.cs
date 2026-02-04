@@ -1,45 +1,18 @@
 using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
+using CUE4Parse.UE4.Wwise.Plugins.Auro;
+using CUE4Parse.UE4.Wwise.Plugins.iZotope;
+using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
+using CUE4Parse.UE4.Wwise.Plugins.McDSP;
 using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    // TODO: add all plugins
-    private static readonly Dictionary<EAkPluginId, Func<FArchive, uint, EAkPluginId, object>> _pluginDispatch = new()
-    {
-        //{ EAkPluginId.iZTrashDelayFXParams, iZTrashDelayFXParams.Read }
-        //{ EAkPluginId.AudioSpectrumFX, AudioSpectrumFX.Read },
-        //{ EAkPluginId.AkFxSrcSine, CAkFxSrcSine.Read },
-        { EAkPluginId.AkFxSrcSilence, CAkFxSrcSilence.Read },
-        //{ EAkPluginId.AkToneGen, CAkToneGen.Read },
-        //{ EAkPluginId.AkParameterEQFX, CAkParameterEQFX.Read },
-        //{ EAkPluginId.AkDelayFX, CAkDelayFX.Read },
-        //{ EAkPluginId.AkCompressor, CAkCompressor.Read },
-        //{ EAkPluginId.AkPeakLimiterFX, CAkPeakLimiterFX.Read },
-        //{ EAkPluginId.AkFDNReverbFX, CAkFDNReverbFX.Read },
-        //{ EAkPluginId.AkRoomVerbFX, CAkRoomVerbFX.Read },
-        //{ EAkPluginId.AkFlangerFX, CAkFlangerFX.Read },
-        //{ EAkPluginId.AkGuitarDistortionFX, CAkGuitarDistortionFX.Read },
-        //{ EAkPluginId.AkConvolutionReverbFX, CAkConvolutionReverbFX.Read },
-        //{ EAkPluginId.AkMeterFX, CAkMeterFX.Read },
-        //{ EAkPluginId.AkTremolo, CAkTremolo.Read },
-        //{ EAkPluginId.AkStereoDelayFX, CAkStereoDelayFX.Read },
-        //{ EAkPluginId.AkPitchShifter, CAkPitchShifter.Read },
-        //{ EAkPluginId.AkGainFX, CAkGainFX.Read },
-        //{ EAkPluginId.AkHarmonizerFX, CAkHarmonizerFX.Read },
-        //{ EAkPluginId.AkSynthOne, CAkSynthOne.Read },
-        //{ EAkPluginId.AkFxSrcAudioInput, CAkFxSrcAudioInput.Read },
-        //{ EAkPluginId.AkMotion, CAkMotion.Read },
-        //{ EAkPluginId.bnsRadio, bnsRadio.Read },
-        //{ EAkPluginId.Auro, Auro.Read },
-    };
-
-    public static object? TryParsePluginParams(FArchive Ar, EAkPluginId pluginId, bool always = false)
+    public static IAkPluginParam? TryParsePluginParams(FArchive Ar, EAkPluginId pluginId, bool always = false)
     {
         if (pluginId is EAkPluginId.None)
             return null;
@@ -50,11 +23,120 @@ public class WwisePlugin
         if (size == 0)
             return null;
 
-        if (_pluginDispatch.TryGetValue(pluginId, out var dispatch))
-            return dispatch(Ar, size, pluginId);
+        var saved = Ar.Position;
+        var endPosition = saved + size;
+        IAkPluginParam? Params = null;
+        var temp = Ar.ReadBytes((int) size);
+        
+        Ar.Position = saved;
+        try
+        {
+            Params = pluginId switch
+            {
+                // Built-in Wwise plugins
+                EAkPluginId.AkFxSrcSineSource => new CAkFxSrcSineParams(Ar),
+                EAkPluginId.AkFxSrcSilenceSource => new CAkFxSrcSilenceParams(Ar),
+                EAkPluginId.AkToneSource => new CAkToneGenParams(Ar),
+                EAkPluginId.AkParameterEQFX => new CAkParameterEQFXParams(Ar),
+                EAkPluginId.AkDelayFX => new CAkDelayFXParams(Ar),
+                EAkPluginId.AkCompressorFX => new CAkCompressorFXParams(Ar),
+                EAkPluginId.AkExpanderFX => new CAkExpanderFXParams(Ar),
+                EAkPluginId.AkPeakLimiterFX => new CAkPeakLimiterFXParams(Ar),
 
-        SkipPlugin(Ar, size, pluginId);
-        return null;
+                EAkPluginId.AkMatrixReverbFX => new CAkFDNReverbFXParams(Ar),
+                EAkPluginId.AkSoundSeedImpactFX => new CAkModalSynthParams(Ar),
+                EAkPluginId.AkRoomVerbFX => new CAkRoomVerbFXParams(Ar),
+                EAkPluginId.AkSoundSeedWind => new CAkSoundSeedWindParams(Ar),
+                EAkPluginId.AkSoundSeedWoosh => new CAkSoundSeedWooshParams(Ar),
+                EAkPluginId.AkFlangerFX => new CAkFlangerFXParams(Ar),
+                EAkPluginId.AkGuitarDistortionFX => new CAkGuitarDistortionFXParams(Ar),
+                EAkPluginId.AkConvolutionReverbFX => new CAkConvolutionReverbFXParams(Ar),
+
+                EAkPluginId.AkMeterFX => new CAkMeterFXParams(Ar),
+                EAkPluginId.AkTimeStretchFX => new CAkTimeStretchFXParams(Ar),
+                EAkPluginId.AkTremoloFX => new CAkTremoloFXParams(Ar),
+                EAkPluginId.AkRecorderFX => new CAkRecorderFXParams(Ar, (int) size),
+                EAkPluginId.AkStereoDelayFX => new CAkStereoDelayFXParams(Ar),
+                EAkPluginId.AkPitchShifterFX => new CAkPitchShifterFXParams(Ar),
+                EAkPluginId.AkHarmonizerFX => new CAkHarmonizerFXParams(Ar),
+                EAkPluginId.AkGainFX => new CAkGainFXParams(Ar),
+
+                EAkPluginId.AkSynthOne => new CAkSynthOneParams(Ar),
+
+                EAkPluginId.AkReflectFX => new CAkReflectFXParams(Ar),
+                // EAkPluginId.AkRouterMixer
+                EAkPluginId.SystemSink => new CAkDefaultSinkParams(),
+                // EAkPluginId.DVRByPassSink
+
+                // EAkPluginId.CommunicationSink
+                // EAkPluginId.ControllerHeadphonesSink
+                // EAkPluginId.ControllerSpeakerSink
+                // EAkPluginId.AuxiliarySink
+                EAkPluginId.NoOutputSink => new CAkDefaultSinkParams(),
+                // EAkPluginId.AkSoundSeedGrainSrc
+                // EAkPluginId.AkImpacterSrc
+                EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
+                EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),
+                // EAkPluginId.AkChannelRouterFX
+
+                // EAkPluginId.AkMultibandMeterFX
+                EAkPluginId.AkAudioInputSrc => new CAkFxSrcAudioInputParams(Ar),
+
+                EAkPluginId.AkMotionGeneratorSource => new CAkMotionGeneratorParams(Ar),
+                // EAkPluginId.AkMotionGeneratorMotionSource
+                EAkPluginId.AkMotionSourceSource => new CAkMotionSourceParams(Ar),
+                // EAkPluginId.AkMotionSource
+                EAkPluginId.AkMotionSink => new CAkMotionSinkParams(),
+
+                // EAkPluginId.AkSystemoutputSettings
+
+                EAkPluginId.AuroHeadphoneFX => new CAuroHPFXParams(Ar),
+
+                // EAkPluginId.CrankcaseAudioREVModelPlayer
+                // EAkPluginId.AudioSpectrumFX
+                // EAkPluginId.bnsRadio
+
+                EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
+                EAkPluginId.iZTrashDistortionFX => new CiZTrashDistortionFXParams(Ar),
+                EAkPluginId.iZTrashDelayFX => new CiZTrashDelayFXParams(Ar),
+                EAkPluginId.iZTrashDynamicsFX => new CiZTrashDynamicsFXParams(Ar),
+                EAkPluginId.iZTrashFiltersFX => new CiZTrashFiltersFXParams(Ar),
+                EAkPluginId.iZTrashBoxModelerFX => new CiZTrashBoxModelerFXParams(Ar),
+                EAkPluginId.iZTrashMultibandDistortionFX => new CiZTrashMultibandDistortionFXParams(Ar),
+
+                EAkPluginId.McDSPLimiterFX => new CMcDSPLimiterFXParams(Ar),
+                EAkPluginId.McDSPFutzBoxFX => new CMcDSPFutzBoxFXParams(Ar),
+
+                // EAkPluginId.ResonanceAudioRendererFX
+                // EAkPluginId.ResonanceAudioRoomEffect
+
+                // EAkPluginId.IgniterLive
+                // EAkPluginId.IgniterLiveSynth
+
+                _ => new CAkDefaultParams(Ar, (int)size),
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with WWise version {WwiseVersions.Version}");
+        }
+        finally
+        {
+#if DEBUG
+            if (Params is CAkDefaultParams)
+            {
+                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+            }
+
+            if (Ar.Position != endPosition)
+            {
+                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with WWise version {WwiseVersions.Version} correctly (at {Ar.Position}, should be {endPosition})");
+            }
+#endif
+            Ar.Position = endPosition;
+        }
+
+        return Params;
     }
 
     // Actual Plugin ID Format: 0xPPPPCCCT (PPPP = PluginID, CCC=CompanyID, T=Type)
@@ -69,22 +151,5 @@ public class WwisePlugin
         // var company = // (pluginId >> 4) & 0x03FF
 
         return pluginId;
-    }
-
-    private static void SkipPlugin(FArchive Ar, uint size, EAkPluginId pluginId)
-    {
-#if DEBUG
-        Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping");
-#endif
-        Ar.Position += size; // Skip
-    }
-
-    public static void EnsureEndOfBlock(FArchive Ar, long endPosition, EAkPluginId pluginId)
-    {
-        if (Ar.Position != endPosition)
-        {
-            Log.Warning($"Didn't read Wwise plugin '{pluginId}' correctly (at {Ar.Position}, should be {endPosition})");
-            Ar.Position = endPosition;
-        }
     }
 }

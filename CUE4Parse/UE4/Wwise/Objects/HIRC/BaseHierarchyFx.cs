@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Plugins;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -13,7 +14,7 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly RtpcInit[] RtpcInitList = [];
     public readonly PluginPropertyValue[] PluginPropertyValues = [];
     public readonly EAkPluginId PluginId;
-    public readonly object? PluginParams;
+    public readonly IAkPluginParam? PluginParams;
 
     // CAkFxBase::SetInitialValues
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
