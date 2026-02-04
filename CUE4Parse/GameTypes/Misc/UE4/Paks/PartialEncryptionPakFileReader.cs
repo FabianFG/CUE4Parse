@@ -15,14 +15,14 @@ namespace CUE4Parse.UE4.Pak;
 public partial class PakFileReader
 {
     /// <summary>
-    /// Function for extracting an entry from the pak in NetEase games
-    /// Their games only encrypt the first 4kb of the block, the rest is unencrypted,
+    /// Function for extracting an entry from the pak file that uses partial block encryption
+    /// Some games encrypt only the first part of the block,
     /// thus requiring this custom implementation.
     /// </summary>
     /// <param name="reader">The pak reader</param>
     /// <param name="pakEntry">The entry to be extracted</param>
     /// <returns>The merged and decompressed/decrypted entry data</returns>
-    private byte[] NetEaseCompressedExtract(FArchive reader, FPakEntry pakEntry)
+    private byte[] PartialEncryptCompressedExtract(FArchive reader, FPakEntry pakEntry)
     {
         var uncompressed = new byte[(int) pakEntry.UncompressedSize];
         var uncompressedOff = 0;
@@ -72,7 +72,7 @@ public partial class PakFileReader
         return uncompressed;
     }
 
-    private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
+    private byte[] PartialEncryptExtract(FArchive reader, FPakEntry pakEntry)
     {
         var limit = Game switch
         {
