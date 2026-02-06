@@ -158,7 +158,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
+                new UEModel(originalMesh.Name, convertedMesh, Options.ExportMorphTargets ? originalMesh.MorphTargets : null, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{GetExportSavePath()}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
