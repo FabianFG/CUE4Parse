@@ -30,13 +30,7 @@ public partial class PakFileReader
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => pakEntry.WutheringWavesByte switch
-            {
-                0 => int.MaxValue,
-                1 => 0x200000,
-                2 => 0x800,
-                _ => throw new NotImplementedException($"WutheringWavesByte {pakEntry.WutheringWavesByte} not implemented for partial encrypted pak entry extraction")
-            },
+            EGame.GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
 
@@ -78,13 +72,7 @@ public partial class PakFileReader
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => pakEntry.WutheringWavesByte switch
-            {
-                0 => int.MaxValue,
-                1 => 0x200000,
-                2 => 0x800,
-                _ => throw new NotImplementedException($"WutheringWavesByte {pakEntry.WutheringWavesByte} not implemented for partial encrypted pak entry extraction")
-            },
+            EGame.GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
         var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
@@ -117,5 +105,16 @@ public partial class PakFileReader
         var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
 
         return (int) final;
+    }
+
+    private int CalculateEncryptedBytesCountForWutheringWaves(FPakEntry pakEntry)
+    {
+        return pakEntry.CustomData switch
+        {
+            0 => int.MaxValue,
+            1 => 0x200000,
+            2 => 0x800,
+            _ => throw new NotImplementedException($"Unknown value of WutheringWaves PakEntry byte {pakEntry.CustomData} for partially encrypted file")
+        };
     }
 }
