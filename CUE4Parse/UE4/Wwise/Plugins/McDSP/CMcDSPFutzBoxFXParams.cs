@@ -310,6 +310,6 @@ public struct McDSPFutzLoFiFXParams(FArchive Ar)
 public struct McDSPGlobalFXParams(FArchive Ar)
 {
     public float fInputGain = Ar.Read<float>();
-    public float fOutputGain = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float fBalance = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float fOutputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float fBalance = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 }

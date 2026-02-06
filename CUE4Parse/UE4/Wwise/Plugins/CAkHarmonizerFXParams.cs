@@ -23,8 +23,8 @@ internal struct AkHarmonizerFXParams
         Voice = Ar.ReadArray(2, () => new AkPitchVoiceParams(Ar));
 
         eInputType = Ar.Read<AkInputType>();
-        fDryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fWetLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         uWindowSize = Ar.Read<uint>();
         bProcessLFE = Ar.Read<byte>() != 0;
         bSyncDry = Ar.Read<byte>() != 0;

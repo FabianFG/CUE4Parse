@@ -26,8 +26,8 @@ public struct AkPitchShifterFXParams
     public AkPitchShifterFXParams(FArchive Ar)
     {
         eInputType = Ar.Read<AkInputType>();
-        fDryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fWetLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fDelayTime = Ar.Read<float>();
         bProcessLFE = Ar.Read<byte>() != 0;
         bSyncDry = Ar.Read<byte>() != 0;
@@ -59,7 +59,7 @@ public struct AkPitchVoiceParams
     {
         bEnable = Ar.Read<byte>() != 0;
         fPitchFactor = (float) Math.Pow(2f, Ar.Read<float>() * 0.000833333354f);
-        fGain = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         Filter = Ar.Read<AkVoiceFilterParams>();
     }
 }

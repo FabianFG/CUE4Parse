@@ -58,37 +58,45 @@ public enum EAkPluginId : uint
 
     AkSynthOne                           = 0x00940002,
 
+    ASIOSink                             = 0x00A80007,
     AkReflectFX                          = 0x00AB0003,
     AkRouterMixer                        = 0x00AC0006,
+
+    // Built-in sinks
     SystemSink                           = 0x00AE0007,
     DVRByPassSink                        = 0x00AF0007,
-
     CommunicationSink                    = 0x00B00007,
     ControllerHeadphonesSink             = 0x00B10007,
+    VoiceSink                            = 0x00B20007,
     ControllerSpeakerSink                = 0x00B30007,
     AuxiliarySink                        = 0x00B40007,
     NoOutputSink                         = 0x00B50007,
+    RemoteSystemSink                     = 0x00B60007,
+
     AkSoundSeedGrain                     = 0x00B70002,
-    AkImpacter                           = 0x00B80002,
+    AkImpacterSource                     = 0x00B80002,
     MasteringSuiteFX                     = 0x00BA0003,
     Ak3DAudioBedMixerFX                  = 0x00BE0003,
     AkChannelRouterFX                    = 0x00BF0003,
 
+    AkSidechainSendFX                    = 0x00C10003,
+    AkSidechainRecvFX                    = 0x00C20003,
     AkMultibandMeterFX                   = 0x00C40003,
-    AkAudioInputSrc                      = 0x00C80002,
+    AkRecorder_ADM                       = 0x00C60003,
+    AkAudioInputSource                   = 0x00C80002,
+    ASIOSource                           = 0x00CC0002,
 
     AkMotionGeneratorSource              = 0x01950002,
-    AkMotionGeneratorMotionSource        = 0x01950005, // #AkMotion (used in CAkFeedbackNode, v125<=)
+    AkMotionGeneratorMotionSource        = 0x01950005,
     AkMotionSourceSource                 = 0x01990002,
-    AkMotionSource                       = 0x01990005, // #AkMotion (v132<= ?)
+    AkMotionSource                       = 0x01990005,
     AkMotionSink                         = 0x01FB0007,
 
-    AkSystemOutputSettings               = 0x03840009, // "Wwise System Output Settings", #DefaultSink
+    AkSystemOutputMeta                   = 0x03840009,
 
     // Third-party plugins
-    AuroHeadphoneFX                      = 0x044C1073,
-
     AudioSpectrumFX                      = 0x002E2FD3,
+    AuroHeadphoneFX                      = 0x044C1073,
 
     bnsRadio                             = 0x039B2FD3,
 
@@ -105,11 +113,31 @@ public enum EAkPluginId : uint
     iZTrashBoxModelerFX                  = 0x00071033,
     iZTrashMultibandDistortionFX         = 0x00091033,
 
+    // Mindseye
+    AudioDataPassbackFX                  = 0x234C0403,
+    BarbDelayFX                          = 0x352A0403,
+    BarbRecorderFX                       = 0x7C550403,
+    DrunkPMSource                        = 0x00030A32,
+
     McDSPLimiterFX                       = 0x00671003,
     McDSPFutzBoxFX                       = 0x006E1003,
 
+    MsSpatialSink                        = 0x00aa1137,
+
+    // MetaXRAudio
+    OculusEndpointSink                   = 0x009410a7,
+    OculusEndpointMetadata               = 0x3d6a10a9,
+    OculusEndpointExperimentalMetadata   = 0x3d6b10a9,
+
     ResonanceAudioRendererFX             = 0x00641103,
     ResonanceAudioRoomEffectMixer        = 0x00C81106,
+    ResonanceAudioRoomEffectFX           = 0x00C91103,
 
     SpeechEngine                         = 0x00011382,
+
+    // TencentGME
+    TencentGMESendFX                     = 0x232C1213,
+    TencentGMESource                     = 0x23291212,
+    TencentGMEReceiveSource              = 0x232B1212,
+    TencentGMESessionFX                  = 0x232D1212,
 }

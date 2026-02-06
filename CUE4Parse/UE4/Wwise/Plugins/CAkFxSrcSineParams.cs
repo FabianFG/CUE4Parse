@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 
@@ -12,7 +13,7 @@ public class CAkFxSrcSineParams(FArchive Ar) : IAkPluginParam
 public struct AkFxSrcSineParams(FArchive Ar)
 {
     public float fFrequency = Ar.Read<float>();
-    public float fGain = (float) System.Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     public float fDuration = Ar.Read<float>();
     public uint uChannelMask = Ar.Read<uint>();
 }

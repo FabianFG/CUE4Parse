@@ -32,7 +32,7 @@ public struct AkDelayFXParams
         NonRTPC.fDelayTime = Ar.Read<float>();
         RTPC.fFeedback = Ar.Read<float>() * 0.01f;
         RTPC.fWetDryMix = Ar.Read<float>() * 0.01f;
-        RTPC.fOutputLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        RTPC.fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         RTPC.bFeedbackEnabled = Ar.Read<byte>() != 0;
         NonRTPC.bProcessLFE = Ar.Read<byte>() != 0;
     }

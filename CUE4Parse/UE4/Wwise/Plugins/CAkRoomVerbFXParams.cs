@@ -33,12 +33,12 @@ public struct AkRoomVerbRTPCParams(FArchive Ar)
     public float Filter3Gain = Ar.Read<float>();
     public float Filter3Freq = Ar.Read<float>();
     public float Filter3Q = Ar.Read<float>();
-    public float FrontLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float RearLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float CenterLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float LFELevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float DryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float ERLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float FrontLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float RearLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float CenterLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float LFELevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float DryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float ERLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     public float ReverbLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05 - 0.15);
 }
 
@@ -59,8 +59,8 @@ public struct AkRoomVerbInvariantParams(FArchive Ar)
     public AkFilterCurveType Filter2Curve = Ar.Read<AkFilterCurveType>();
     public AkFilterInsertType Filter3Pos = Ar.Read<AkFilterInsertType>();
     public AkFilterCurveType Filter3Curve = Ar.Read<AkFilterCurveType>();
-    public float InputCenterLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-    public float InputLFELevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float InputCenterLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float InputLFELevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]

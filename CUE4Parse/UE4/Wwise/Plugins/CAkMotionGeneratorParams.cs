@@ -32,7 +32,7 @@ public struct AkMotionGeneratorParams
         m_fDecayTime = Ar.Read<float>();
         m_fSustainTime = Ar.Read<float>();
         m_fReleaseTime = Ar.Read<float>();
-        m_fSustainLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        m_fSustainLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         m_eDurationType = Ar.Read<ushort>();
         m_Curves = Ar.ReadArray(Ar.Read<ushort>(), () => new CAkConversionTable(Ar, false));
     }

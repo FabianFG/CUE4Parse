@@ -29,8 +29,8 @@ public struct AkStereoDelayFXParams
         eInputType[1] = Ar.Read<AkInputChannelType>();
         StereoDelayParams[1] = new AkStereoDelayChannelParams(Ar);
         FilterParams = Ar.Read<AkStereoDelayFilterParams>();
-        fDryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fWetLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fFrontRearBalance = Ar.Read<float>();
         bEnableFeedback = Ar.Read<byte>() != 0;
         bEnableCrossFeed = Ar.Read<byte>() != 0;
@@ -39,8 +39,8 @@ public struct AkStereoDelayFXParams
     public struct AkStereoDelayChannelParams(FArchive Ar)
     {
         public float fDelayTime = Ar.Read<float>();
-        public float fFeedback = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        public float fCrossFeed = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        public float fFeedback = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        public float fCrossFeed = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

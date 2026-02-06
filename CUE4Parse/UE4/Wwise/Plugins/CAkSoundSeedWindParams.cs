@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 
@@ -70,5 +71,5 @@ public struct AkWindDeflectorParams(FArchive Ar)
     public float fAngle = Ar.Read<float>();
     public float fFrequency = Ar.Read<float>();
     public float fQFactor = Ar.Read<float>();
-    public float fGain = (float) System.Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 }

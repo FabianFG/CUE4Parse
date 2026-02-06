@@ -24,7 +24,7 @@ public struct AkTremoloRTPCParams
         ModParams.LfoParams.Smooth = Ar.Read<float>() * 0.01f;
         ModParams.LfoParams.PWM = Ar.Read<float>() * 0.01f;
         ModParams.PhaseParams = Ar.Read<DSPPhaseParams>();
-        OutputGain = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        OutputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     }
 }
 

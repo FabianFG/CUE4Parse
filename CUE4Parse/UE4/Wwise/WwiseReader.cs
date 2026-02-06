@@ -36,24 +36,6 @@ public class WwiseReader
     public WwiseReader(FArchive Ar)
     {
         Path = Ar.Name;
-        var saved = Ar.Position;
-
-        AkBankHeader? header = null!; 
-        while (Ar.Position < Ar.Length)
-        {
-            var sectionIdentifier = Ar.Read<EChunkID>();
-            var sectionLength = Ar.Read<int>();
-            if (sectionIdentifier is EChunkID.BankHeader)
-            {
-                Header = new AkBankHeader(Ar, sectionLength);
-            }
-            else
-            {
-                Ar.Position += sectionLength;
-            }
-        }
-        Ar.Position = saved;
-
         while (Ar.Position < Ar.Length)
         {
             var sectionIdentifier = Ar.Read<EChunkID>();
