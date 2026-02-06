@@ -33,17 +33,17 @@ public struct AkConvolutionReverbParams
         fPreDelay = Ar.Read<float>();
         fFrontRearDelay = Ar.Read<float>();
         fStereoWidth = Ar.Read<float>();
-        fInputCenterLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fInputLFELevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fInputCenterLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fInputLFELevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fInputStereoWidth = WwiseVersions.Version >= 120 ? Ar.Read<float>() : 0;
-        fFrontLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fRearLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fCenterLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fLFELevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fDryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fWetLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fFrontLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fRearLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fCenterLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fLFELevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         eAlgoType = Ar.Read<AkConvolutionAlgoType>();
-        fInputThreshold = WwiseVersions.Version >= 135 ? (float) Math.Pow(10f, Ar.Read<float>() * 0.05) : 0;
+        fInputThreshold = WwiseVersions.Version >= 135 ? MathF.Pow(10f, Ar.Read<float>() * 0.05f) : 0;
         unknown = WwiseVersions.Version >= 145 ? Ar.Read<byte>() : (byte)0;
     }
 }

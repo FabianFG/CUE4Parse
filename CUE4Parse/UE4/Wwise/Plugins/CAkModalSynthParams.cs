@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
@@ -33,8 +34,8 @@ public struct AkModalSynthParams
 
     public AkModalSynthParams(FArchive Ar)
     {
-        fResidualLevel = (float) System.Math.Pow(10f, Ar.Read<float>() * 0.05);
-        fOutputLevel = (float) System.Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fResidualLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fFreqAmt = Ar.Read<float>();
         fFreqVar = Ar.Read<float>();
         fBWAmt = Ar.Read<float>();

@@ -58,7 +58,7 @@ public struct AkFlangerRTPCParams
         ModParams.LfoParams.Smooth = Ar.Read<float>() * 0.01f;
         ModParams.LfoParams.PWM = Ar.Read<float>() * 0.01f;
         ModParams.PhaseParams = Ar.Read<DSPPhaseParams>();
-        OutputLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        OutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         WetDryMix = Ar.Read<float>();
     }
 }

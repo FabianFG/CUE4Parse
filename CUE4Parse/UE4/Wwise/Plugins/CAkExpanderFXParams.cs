@@ -14,7 +14,7 @@ public struct AkExpanderParams(FArchive Ar)
     public float fRatio = Ar.Read<float>();
     public float fAttack = Ar.Read<float>();
     public float fRelease = Ar.Read<float>();
-    public float fOutputLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+    public float fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     public bool bProcessLFE = Ar.Read<byte>() != 0;
     public bool bChannelLink = Ar.Read<byte>() != 0;
 }

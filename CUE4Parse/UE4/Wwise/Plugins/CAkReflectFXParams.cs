@@ -44,7 +44,7 @@ public struct AkReflectFXParams
         delayLineParams.uThresholdMode = Ar.Read<uint>();
         if (WwiseVersions.Version >= 154)
             Ar.Position += 8;
-        outputConfig = new AkChannelConfig(Ar);
+        outputConfig = Ar.Read<AkChannelConfig>();
         if (WwiseVersions.Version >= 154)
             Ar.Position += 34;
         var curvesCount = Ar.Read<ushort>();
@@ -68,25 +68,31 @@ public struct AkFilteredFracDelayLineParams
     public uint uThresholdMode;
 }
 
-public struct AkChannelConfig
-{
-    public byte NumChannels;
-    public AkChannelConfigType ConfigType;
-    public uint ChannelMask;
-
-    public AkChannelConfig(FArchive Ar)
-    {
-        var data = Ar.Read<uint>();
-        NumChannels = (byte) (data & 0xFF);
-        ConfigType = (AkChannelConfigType) ((data >> 8) & 0x0F);
-        ChannelMask = (data >> 12) & 0xFFFFF;
-    }
-}
-
 [JsonConverter(typeof(StringEnumConverter))]
-public enum AkChannelConfigType : byte
+public enum AkChannelConfig : uint
 {
-    Anonymous = 0,
-    Standard = 1,
-    Ambisonic = 2
+    SameasAudioDevice = 0,
+    SameasMainMix = 3584,
+    SameasPassThroughMix = 3840,
+    AudioObjects = 768,
+    Audio_1_0 = 16641,
+    Audio_2_0 = 12546,
+    Audio_2_1 = 45315,
+    Audio_3_0 = 28931,
+    Audio_4_0 = 6304004,
+    Audio_5_1 = 6353158,
+    Audio_7_1 = 6549768,
+    Audio_5_1_2 = 90239240,
+    Audio_5_1_4 = 761327882,
+    Audio_7_1_2 = 90435850,
+    Audio_7_1_4 = 761524492,
+    Ambisonics1storder = 516,
+    Ambisonics2ndorder = 521,
+    Ambisonics3rdorder = 528,
+    Ambisonics4thorder = 537,
+    Ambisonics5thorder = 548,
+    Auro10_1 = 769716491,
+    Auro11_1 = 803270924,
+    Auro13_1 = 803467534,
+    LFE = 33025,
 }

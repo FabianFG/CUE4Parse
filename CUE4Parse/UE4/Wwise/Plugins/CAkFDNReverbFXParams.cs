@@ -20,8 +20,8 @@ public class AkFDNReverbFXParams
         RTPC.fReverbTime = Ar.Read<float>();
         RTPC.fHFRatio = Ar.Read<float>();
         NonRTPC.uNumberOfDelays = Ar.Read<int>();
-        RTPC.fDryLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
-        RTPC.fWetLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        RTPC.fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        RTPC.fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         NonRTPC.fPreDelay = Ar.Read<float>();
         NonRTPC.uProcessLFE = Ar.Read<byte>() != 0;
         NonRTPC.uDelayLengthsMode = Ar.Read<AkDelayLengthsMode>();

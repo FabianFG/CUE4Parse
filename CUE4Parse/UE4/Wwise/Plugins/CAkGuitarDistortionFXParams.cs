@@ -24,7 +24,7 @@ public struct AkGuitarDistortionParams
         PreEQ = Ar.ReadArray<AkFilterBand>(3);
         PostEQ = Ar.ReadArray<AkFilterBand>(3);
         Distortion = Ar.Read<AkDistortionParams>();
-        fOutputLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fWetDryMix = Ar.Read<float>();
     }
 }

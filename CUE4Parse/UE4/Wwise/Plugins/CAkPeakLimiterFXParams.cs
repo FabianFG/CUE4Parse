@@ -19,7 +19,7 @@ public struct AkPeakLimiterFXParams
         RTPC.fRatio = Ar.Read<float>();
         NonRTPC.fLookAhead = Ar.Read<float>();
         RTPC.fRelease = Ar.Read<float>();
-        RTPC.fOutputLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05);
+        RTPC.fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         NonRTPC.bProcessLFE = Ar.Read<byte>() != 0;
         NonRTPC.bChannelLink = Ar.Read<byte>() != 0;
     }

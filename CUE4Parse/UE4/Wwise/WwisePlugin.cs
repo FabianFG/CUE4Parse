@@ -6,6 +6,9 @@ using CUE4Parse.UE4.Wwise.Plugins.Auro;
 using CUE4Parse.UE4.Wwise.Plugins.iZotope;
 using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
 using CUE4Parse.UE4.Wwise.Plugins.McDSP;
+using CUE4Parse.UE4.Wwise.Plugins.MetaXRAudio;
+using CUE4Parse.UE4.Wwise.Plugins.Mindseye;
+using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
 using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
@@ -26,9 +29,6 @@ public class WwisePlugin
         var saved = Ar.Position;
         var endPosition = saved + size;
         IAkPluginParam? Params = null;
-        var temp = Ar.ReadBytes((int) size);
-        
-        Ar.Position = saved;
         try
         {
             Params = pluginId switch
@@ -63,32 +63,34 @@ public class WwisePlugin
 
                 EAkPluginId.AkSynthOne => new CAkSynthOneParams(Ar),
 
+                EAkPluginId.ASIOSink => new CAkAsioSinkParams(Ar),
                 EAkPluginId.AkReflectFX => new CAkReflectFXParams(Ar),
                 // EAkPluginId.AkRouterMixer
-                EAkPluginId.SystemSink => new CAkDefaultSinkParams(),
-                // EAkPluginId.DVRByPassSink
 
-                // EAkPluginId.CommunicationSink
-                // EAkPluginId.ControllerHeadphonesSink
-                // EAkPluginId.ControllerSpeakerSink
-                // EAkPluginId.AuxiliarySink
-                EAkPluginId.NoOutputSink => new CAkDefaultSinkParams(),
+                EAkPluginId.SystemSink => new CAkSystemSinkParams(Ar),
+                EAkPluginId.DVRByPassSink => new CAkDVRSinkParams(Ar),
+                EAkPluginId.CommunicationSink or EAkPluginId.ControllerHeadphonesSink or  EAkPluginId.VoiceSink or
+                    EAkPluginId.ControllerSpeakerSink or EAkPluginId.AuxiliarySink or EAkPluginId.NoOutputSink or
+                    EAkPluginId.RemoteSystemSink => new CAkDefaultSinkParams(),
+
                 // EAkPluginId.AkSoundSeedGrainSrc
-                // EAkPluginId.AkImpacterSrc
+                // EAkPluginId.AkImpacterSource
                 EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
                 EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),
-                // EAkPluginId.AkChannelRouterFX
+                EAkPluginId.AkChannelRouterFX => new CAkChannelRouterFXParams(Ar),
 
-                // EAkPluginId.AkMultibandMeterFX
-                EAkPluginId.AkAudioInputSrc => new CAkFxSrcAudioInputParams(Ar),
+                EAkPluginId.AkSidechainSendFX => new CAkSidechainSendFXParams(Ar),
+                EAkPluginId.AkSidechainRecvFX => new CAkSidechainRecvFXParams(Ar),
+                EAkPluginId.AkMultibandMeterFX => new CAkMultibandMeterFXParams(Ar),
+                EAkPluginId.AkRecorder_ADM => new CAkRecorderADMFXParams(Ar),
+                EAkPluginId.AkAudioInputSource => new CAkFxSrcAudioInputParams(Ar),
+                EAkPluginId.ASIOSource => new CAkAsioSourceParams(Ar),
 
-                EAkPluginId.AkMotionGeneratorSource => new CAkMotionGeneratorParams(Ar),
-                // EAkPluginId.AkMotionGeneratorMotionSource
-                EAkPluginId.AkMotionSourceSource => new CAkMotionSourceParams(Ar),
-                // EAkPluginId.AkMotionSource
-                EAkPluginId.AkMotionSink => new CAkMotionSinkParams(),
+                EAkPluginId.AkMotionGeneratorSource or EAkPluginId.AkMotionGeneratorMotionSource => new CAkMotionGeneratorParams(Ar),
+                EAkPluginId.AkMotionSourceSource or EAkPluginId.AkMotionSource => new CAkMotionSourceParams(Ar),
+                EAkPluginId.AkMotionSink => new CAkDefaultSinkParams(),
 
-                // EAkPluginId.AkSystemoutputSettings
+                EAkPluginId.AkSystemOutputMeta => new CAkSystemOutputParams(Ar),
 
                 EAkPluginId.AuroHeadphoneFX => new CAuroHPFXParams(Ar),
 
@@ -104,14 +106,29 @@ public class WwisePlugin
                 EAkPluginId.iZTrashBoxModelerFX => new CiZTrashBoxModelerFXParams(Ar),
                 EAkPluginId.iZTrashMultibandDistortionFX => new CiZTrashMultibandDistortionFXParams(Ar),
 
+                EAkPluginId.AudioDataPassbackFX => new AudioDataPassbackFXParams(Ar),
+                EAkPluginId.BarbDelayFX => new BarbDelayFXParams(Ar),
+                EAkPluginId.BarbRecorderFX => new BarbRecorderFXParams(Ar),
+                EAkPluginId.DrunkPMSource => new DrunkPMSourceParams(Ar),
+
+                EAkPluginId.MsSpatialSink => new CAkDefaultSinkParams(),
+
                 EAkPluginId.McDSPLimiterFX => new CMcDSPLimiterFXParams(Ar),
                 EAkPluginId.McDSPFutzBoxFX => new CMcDSPFutzBoxFXParams(Ar),
 
-                // EAkPluginId.ResonanceAudioRendererFX
-                // EAkPluginId.ResonanceAudioRoomEffect
+                EAkPluginId.OculusEndpointSink => new OculusEndpointSinkParams(Ar),
+                EAkPluginId.OculusEndpointMetadata => new OculusEndpointMetadataParams(Ar),
+                EAkPluginId.OculusEndpointExperimentalMetadata => new OculusEndpointExperimentalMetadataParams(Ar),
+
+                EAkPluginId.ResonanceAudioRendererFX or EAkPluginId.ResonanceAudioRoomEffectMixer or
+                    EAkPluginId .ResonanceAudioRoomEffectFX => new ResonanceAudioParams(Ar),
 
                 // EAkPluginId.IgniterLive
                 // EAkPluginId.IgniterLiveSynth
+
+                EAkPluginId.TencentGMESendFX or EAkPluginId.TencentGMESource or
+                    EAkPluginId.TencentGMEReceiveSource => new CAkDefaultSinkParams(),
+                // EAkPluginId.TencentGMESessionFX
 
                 _ => new CAkDefaultParams(Ar, (int)size),
             };
