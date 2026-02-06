@@ -42,8 +42,10 @@ public class FTextLocalizationResource
         var localizedStringArray = Array.Empty<FTextLocalizationResourceString>();
         if (versionNumber >= ELocResVersion.Compact)
         {
-            if (Ar.Game == EGame.GAME_NevernessToEverness && Ar.Name.StartsWith("HT/Content/Localization/"))
+            if (Ar.Game == EGame.GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
                 Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_NevernessToEverness && Ar.Name.StartsWith("HT/Content/Localization/"))
+                Ar.Position += 8;
             var localizedStringArrayOffset = Ar.Read<long>();
             if (localizedStringArrayOffset != -1) // INDEX_NONE
             {
