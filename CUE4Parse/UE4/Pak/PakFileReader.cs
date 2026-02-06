@@ -95,7 +95,7 @@ namespace CUE4Parse.UE4.Pak
                 switch (Game)
                 {
                     case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                        return NetEaseCompressedExtract(reader, pakEntry);
+                        return PartialEncryptCompressedExtract(reader, pakEntry);
                     case EGame.GAME_GameForPeace:
                         return GameForPeaceExtract(reader, pakEntry);
                     case EGame.GAME_Rennsport:
@@ -151,7 +151,7 @@ namespace CUE4Parse.UE4.Pak
             switch (Game)
             {
                 case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                    return NetEaseExtract(reader, pakEntry);
+                    return PartialEncryptExtract(reader, pakEntry);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:

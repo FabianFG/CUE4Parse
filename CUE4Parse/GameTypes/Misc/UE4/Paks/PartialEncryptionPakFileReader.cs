@@ -15,14 +15,14 @@ namespace CUE4Parse.UE4.Pak;
 public partial class PakFileReader
 {
     /// <summary>
-    /// Function for extracting an entry from the pak in NetEase games
-    /// Their games only encrypt the first 4kb of the block, the rest is unencrypted,
+    /// Function for extracting an entry from the pak file that uses partial block encryption
+    /// Some games encrypt only the first part of the block,
     /// thus requiring this custom implementation.
     /// </summary>
     /// <param name="reader">The pak reader</param>
     /// <param name="pakEntry">The entry to be extracted</param>
     /// <returns>The merged and decompressed/decrypted entry data</returns>
-    private byte[] NetEaseCompressedExtract(FArchive reader, FPakEntry pakEntry)
+    private byte[] PartialEncryptCompressedExtract(FArchive reader, FPakEntry pakEntry)
     {
         var uncompressed = new byte[(int) pakEntry.UncompressedSize];
         var uncompressedOff = 0;
@@ -30,7 +30,7 @@ public partial class PakFileReader
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => pakEntry.Path.EndsWith("ini") ? int.MaxValue : 0x800,
+            EGame.GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
 
@@ -66,13 +66,13 @@ public partial class PakFileReader
         return uncompressed;
     }
 
-    private byte[] NetEaseExtract(FArchive reader, FPakEntry pakEntry)
+    private byte[] PartialEncryptExtract(FArchive reader, FPakEntry pakEntry)
     {
         var limit = Game switch
         {
             EGame.GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
             EGame.GAME_OperationApocalypse or EGame.GAME_MindsEye => 0x1000,
-            EGame.GAME_WutheringWaves => 0x800,
+            EGame.GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
         };
         var size = (int) pakEntry.UncompressedSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
@@ -105,5 +105,16 @@ public partial class PakFileReader
         var final = (63 * (firstU64 % 0x3D) + 319) & 0xFFFFFFFFFFFFFFC0u;
 
         return (int) final;
+    }
+
+    private int CalculateEncryptedBytesCountForWutheringWaves(FPakEntry pakEntry)
+    {
+        return pakEntry.CustomData switch
+        {
+            0 => int.MaxValue,
+            1 => 0x200000,
+            2 => 0x800,
+            _ => throw new NotImplementedException($"Unknown value of WutheringWaves PakEntry byte {pakEntry.CustomData} for partially encrypted file")
+        };
     }
 }
