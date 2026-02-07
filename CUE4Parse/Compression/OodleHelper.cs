@@ -47,7 +47,7 @@ public static class OodleHelper
         }
         else
         {
-            path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
+            path ??= IsLinux ? $"./{OODLE_SO_NAME}" : OODLE_DLL_NAME;
             if (DownloadOodleDll(path))
             {
                 Instance = new Oodle(path);
