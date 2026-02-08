@@ -14,7 +14,7 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings? AdvSettingsParams;
     public readonly ushort? MaxNumInstance;
-    public readonly uint? ChannelConfig;
+    public readonly AkChannelConfig ChannelConfig;
     public readonly byte? HdrEnvelopeFlags;
     public readonly uint RecoveryTime;
     public readonly float MaxDuckVolume;
@@ -64,7 +64,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             default:
                 AdvSettingsParams = Ar.Read<EAdvSettings>();
                 MaxNumInstance = Ar.Read<ushort>();
-                ChannelConfig = Ar.Read<uint>();
+                ChannelConfig = new AkChannelConfig(Ar);
                 HdrEnvelopeFlags = Ar.Read<byte>();
                 break;
         }
@@ -167,11 +167,8 @@ public class BaseHierarchyBus : AbstractHierarchy
             writer.WriteValue(MaxNumInstance.Value);
         }
 
-        if (ChannelConfig.HasValue)
-        {
-            writer.WritePropertyName(nameof(ChannelConfig));
-            writer.WriteValue(ChannelConfig.Value);
-        }
+        writer.WritePropertyName(nameof(ChannelConfig));
+        serializer.Serialize(writer, ChannelConfig);
 
         if (HdrEnvelopeFlags.HasValue)
         {
