@@ -16,7 +16,7 @@ public struct FStripDataFlags
 
     public FStripDataFlags(FArchive Ar, in FPackageFileVersion minVersion)
     {
-        if (Ar.Ver.IsCompatible(minVersion))
+        if (Ar.Ver.IsCompatible(minVersion) || Ar.Game is EGame.GAME_SeaOfThieves)
         {
             GlobalStripFlags = Ar.Read<byte>();
             ClassStripFlags = Ar.Read<byte>();
