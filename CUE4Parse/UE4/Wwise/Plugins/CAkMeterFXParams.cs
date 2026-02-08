@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -74,7 +75,7 @@ public struct AkMeterParams(FArchive Ar)
 {
     public AkMeterMode eMode = Ar.Read<AkMeterMode>();
     public AkMeterScope eScope = Ar.Read<AkMeterScope>();
-    public AkChannelConfig mixdownCfg = Ar.Read<AkChannelConfig>();
+    public EAkChannelConfig mixdownCfg = Ar.Read<EAkChannelConfig>();
     public bool bApplyDownstreamVolume = Ar.Read<byte>() != 0;
     public bool bInfiniteHold = Ar.Read<byte>() != 0;
 }
