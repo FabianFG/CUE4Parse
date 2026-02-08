@@ -12,7 +12,7 @@ public class UAkAudioEventData : UAkAssetDataSwitchContainer
     {
         base.Deserialize(Ar, validPos);
 
-        MediaList = GetOrDefault<FPackageIndex[]>(nameof(MediaList));
+        MediaList = GetOrDefault<FPackageIndex[]>(nameof(MediaList)) ?? [];
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
