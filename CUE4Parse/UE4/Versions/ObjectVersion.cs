@@ -2160,7 +2160,7 @@ public struct FPackageFileVersion :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FPackageFileVersion(int ue4Version, int ue5Version)
     {
-        FileVersionUE3 = (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION;
+        FileVersionUE3 = 0;
         FileVersionUE4 = ue4Version;
         FileVersionUE5 = ue5Version;
     }
