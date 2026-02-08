@@ -91,7 +91,7 @@ public class FWwisePackagedFile : FStructFallback
                 Log.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
             }
         }
-        else if (PackagingStrategy is EWwisePackagingStrategy.External)
+        else if (PackagingStrategy is EWwisePackagingStrategy.External or EWwisePackagingStrategy.AdditionalFile) // maybe in AssetLibrary or an asset
         {
         }
         else

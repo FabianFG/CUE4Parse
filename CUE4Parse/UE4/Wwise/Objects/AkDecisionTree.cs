@@ -1,11 +1,12 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
+// AkDecisionTree::SetTree
+// Used in AkDecisionTree::ResolvePath, AkDecisionTree::ResolvePathWeighted
 public class AkDecisionTree
 {
-    public readonly List<AkDecisionTreeNode> Nodes;
+    public readonly AkDecisionTreeNode[] Nodes;
 
     public AkDecisionTree()
     {
@@ -17,12 +18,12 @@ public class AkDecisionTree
         Nodes = ParseDecisionTree(Ar, treeDataSize, treeDepth);
     }
 
-    private List<AkDecisionTreeNode> ParseDecisionTree(FArchive Ar, uint size, uint maxDepth)
+    private AkDecisionTreeNode[] ParseDecisionTree(FArchive Ar, uint size, uint maxDepth)
     {
-        var nodes = new List<AkDecisionTreeNode>();
         uint itemSize = DetermineItemSize();
         uint countMax = size / itemSize;
 
+        var nodes = new AkDecisionTreeNode[1];
         ParseTreeNode(Ar, nodes, 1, countMax, 0, (int) maxDepth, (int) itemSize, null);
 
         return nodes;
@@ -30,42 +31,38 @@ public class AkDecisionTree
 
     private static uint DetermineItemSize()
     {
-        if (WwiseVersions.Version <= 29)
-            return 0x08;
-        if (WwiseVersions.Version <= 36)
-            return 0x0C;
-        if (WwiseVersions.Version <= 45)
-            return 0x08;
-        return 0x0C; // Default
+        return WwiseVersions.Version switch
+        {
+            <= 29 => 0x08,
+            <= 36 => 0x0C,
+            <= 45 => 0x08,
+            _ => 0x0C, // Default
+        };
     }
 
-    private static void ParseTreeNode(FArchive Ar, List<AkDecisionTreeNode> nodes, uint count, uint countMax, int curDepth, int maxDepth, int itemSize, AkDecisionTreeNode? parent)
+    private static void ParseTreeNode(FArchive Ar, AkDecisionTreeNode[] nodes, uint count, uint countMax, int curDepth, int maxDepth, int itemSize, AkDecisionTreeNode? parent)
     {
-        var parsedNodes = new List<(AkDecisionTreeNode Node, int ChildrenCount)>();
-
+        var parsedNodes = new AkDecisionTreeNode[count];
         for (int i = 0; i < count; i++)
         {
             var node = new AkDecisionTreeNode(Ar, countMax, curDepth, maxDepth, itemSize);
-
-            //Log.Warning($"Parsing Node - Key: {node.Key}, AudioNodeId: {node.AudioNodeId}, ChildrenIndex: {node.ChildrenIndex}, ChildrenCount: {node.ChildrenCount}");
-
             if (parent == null)
             {
-                nodes.Add(node);
+                nodes[i] = node;
             }
             else
             {
-                parent.Children.Add(node);
+                parent.Children[i] = node;
             }
 
-            parsedNodes.Add((node, node.ChildrenCount));
+            parsedNodes[i] = node;
         }
 
-        foreach (var (node, childrenCount) in parsedNodes)
+        foreach (var node in parsedNodes)
         {
-            if (childrenCount > 0)
+            if (node.ChildrenCount > 0)
             {
-                ParseTreeNode(Ar, nodes, (uint) childrenCount, countMax, curDepth + 1, maxDepth, itemSize, node);
+                ParseTreeNode(Ar, nodes, node.ChildrenCount, countMax, curDepth + 1, maxDepth, itemSize, node);
             }
         }
     }
@@ -79,15 +76,13 @@ public class AkDecisionTreeNode
     public readonly ushort ChildrenCount;
     public readonly ushort Weight;
     public readonly ushort Probability;
-    public readonly List<AkDecisionTreeNode> Children;
+    public readonly AkDecisionTreeNode[] Children;
 
     public AkDecisionTreeNode(FArchive Ar, uint countMax, int currentDepth, int maxDepth, int itemSize)
     {
         Key = Ar.Read<uint>();
-        Children = [];
 
         bool isAudioNode = IsAudioNode(Ar, countMax, itemSize);
-
         if (isAudioNode || currentDepth == maxDepth)
         {
             AudioNodeId = Ar.Read<uint>();
@@ -98,6 +93,8 @@ public class AkDecisionTreeNode
             ChildrenIndex = Ar.Read<ushort>();
             ChildrenCount = Ar.Read<ushort>();
         }
+
+        Children = ChildrenCount > 0 ? new AkDecisionTreeNode[ChildrenCount] : [];
 
         if (WwiseVersions.Version > 29 && WwiseVersions.Version <= 36)
         {

@@ -1,10 +1,11 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkParameterNodeBase
 public class BaseHierarchy : AbstractHierarchy
 {
     public readonly bool OverrideFx;
@@ -19,18 +20,19 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly byte PriorityApplyDistFactor;
     public readonly sbyte DistOffset;
     public readonly EMidiBehaviorFlags MidiBehaviorFlags;
-    public readonly List<AkProp> Props;
-    public readonly List<AkPropRange> PropRanges;
+    public readonly AkProp[] Props;
+    public readonly AkPropRange[] PropRanges;
     public readonly AkPositioningParams PositioningParams;
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings AdvSettingsParams;
-    public readonly EVirtualQueueBehavior VirtualQueueBehavior;
+    public readonly EAkVirtualQueueBehavior VirtualQueueBehavior;
     public readonly ushort MaxNumInstance;
-    public readonly EBelowThresholdBehavior BelowThresholdBehavior;
+    public readonly EAkBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
-    public readonly List<AkStateGroup> StateGroups;
-    public readonly List<AkRtpc> RtpcList;
+    public readonly AkStateGroup[] StateGroups;
+    public readonly AkRtpc[] RtpcList;
 
+    // CAkParameterNodeBase::SetNodeBaseParams
     public BaseHierarchy(FArchive Ar) : base(Ar)
     {
         OverrideFx = Ar.Read<byte>() != 0;
@@ -70,7 +72,7 @@ public class BaseHierarchy : AbstractHierarchy
             PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0);
         }
 
-        AkPropBundle propBundle = new(Ar);
+        var propBundle = new AkPropBundle(Ar);
         Props = propBundle.Props;
         PropRanges = propBundle.PropRanges;
 
@@ -82,9 +84,9 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         AdvSettingsParams = Ar.Read<EAdvSettings>();
-        VirtualQueueBehavior = Ar.Read<EVirtualQueueBehavior>();
+        VirtualQueueBehavior = Ar.Read<EAkVirtualQueueBehavior>();
         MaxNumInstance = Ar.Read<ushort>();
-        BelowThresholdBehavior = Ar.Read<EBelowThresholdBehavior>();
+        BelowThresholdBehavior = Ar.Read<EAkBelowThresholdBehavior>();
         HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
 
         if (WwiseVersions.Version <= 52)
@@ -101,7 +103,7 @@ public class BaseHierarchy : AbstractHierarchy
             StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        RtpcList = AkRtpc.ReadArray(Ar);
     }
 
     // WriteStartEndObjects are handled by derived classes!

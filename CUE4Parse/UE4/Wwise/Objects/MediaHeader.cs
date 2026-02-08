@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
+// AkBank::MediaHeader
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MediaHeader
 {

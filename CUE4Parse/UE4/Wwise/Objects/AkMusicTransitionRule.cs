@@ -1,62 +1,45 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkMusicTransitionRule
+public readonly struct AkMusicTransitionRule
 {
-    public readonly List<TransitionRule> Rules;
+    public readonly TransitionRule[] Rules;
 
     public AkMusicTransitionRule(FArchive Ar)
     {
-        var numRules = Ar.Read<uint>();
-        Rules = [];
-
-        for (int i = 0; i < numRules; i++)
-        {
-            var rule = new TransitionRule(Ar);
-            Rules.Add(rule);
-        }
+        Rules = Ar.ReadArray((int) Ar.Read<uint>(), () => new TransitionRule(Ar));
     }
 }
 
-public class TransitionRule
+public readonly struct TransitionRule
 {
-    public readonly List<int> SrcIds;
-    public readonly List<int> DstIds;
-    public readonly List<SrcRule> SrcRules;
-    public readonly List<DstRule> DstRules;
-    public readonly bool HasTransitionObject;
-    public readonly TransitionObject? TransObject;
+    public readonly int[] SrcIds;
+    public readonly int[] DestIds;
+    public readonly AkMusicTransSrcRule SrcRules;
+    public readonly AkMusicTransDestRule DestRules;
+    public readonly AkMusicTransitionObject? TransObject;
 
     public TransitionRule(FArchive Ar)
     {
         int numSrc = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
-        SrcIds = [];
-        for (int i = 0; i < numSrc; i++)
-        {
-            SrcIds.Add(Ar.Read<int>());
-        }
+        SrcIds = Ar.ReadArray<int>(numSrc);
 
-        int numDst = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
-        DstIds = [];
-        for (int i = 0; i < numDst; i++)
-        {
-            DstIds.Add(Ar.Read<int>());
-        }
+        int numDest = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
+        DestIds = Ar.ReadArray<int>(numDest);
 
-        SrcRules = [new SrcRule(Ar)];
-        DstRules = [new DstRule(Ar)];
+        SrcRules = new AkMusicTransSrcRule(Ar);
+        DestRules = new AkMusicTransDestRule(Ar);
 
-        HasTransitionObject = WwiseVersions.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
-        if (HasTransitionObject)
+        bool hasTransitionObject = WwiseVersions.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
+        if (hasTransitionObject)
         {
-            TransObject = new TransitionObject(Ar);
+            TransObject = new AkMusicTransitionObject(Ar);
         }
     }
 }
 
-public class SrcRule
+public readonly struct AkMusicTransSrcRule
 {
     public readonly int TransitionTime;
     public readonly uint FadeCurve;
@@ -66,7 +49,7 @@ public class SrcRule
     public readonly uint CueFilterHash;
     public readonly byte PlayPostExit;
 
-    public SrcRule(FArchive Ar)
+    public AkMusicTransSrcRule(FArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
         FadeCurve = Ar.Read<uint>();
@@ -82,7 +65,7 @@ public class SrcRule
     }
 }
 
-public class DstRule
+public readonly struct AkMusicTransDestRule
 {
     public readonly int TransitionTime;
     public readonly uint FadeCurve;
@@ -95,7 +78,7 @@ public class DstRule
     public readonly byte PlayPreEntry;
     public readonly byte DestMatchSourceCueName;
 
-    public DstRule(FArchive Ar)
+    public AkMusicTransDestRule(FArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
         FadeCurve = Ar.Read<uint>();
@@ -109,9 +92,7 @@ public class DstRule
         JumpToId = Ar.Read<uint>();
 
         if (WwiseVersions.Version > 132)
-        {
             JumpToType = Ar.Read<ushort>();
-        }
 
         EntryType = Ar.Read<ushort>();
         PlayPreEntry = Ar.Read<byte>();
@@ -121,34 +102,20 @@ public class DstRule
     }
 }
 
-public class TransitionObject
+public readonly struct AkMusicTransitionObject
 {
     public readonly uint SegmentId;
-    public readonly FadeParams FadeInParams;
-    public readonly FadeParams FadeOutParams;
+    public readonly AkMusicFade FadeInParams;
+    public readonly AkMusicFade FadeOutParams;
     public readonly byte PlayPreEntry;
     public readonly byte PlayPostExit;
 
-    public TransitionObject(FArchive Ar)
+    public AkMusicTransitionObject(FArchive Ar)
     {
         SegmentId = Ar.Read<uint>();
-        FadeInParams = new FadeParams(Ar);
-        FadeOutParams = new FadeParams(Ar);
+        FadeInParams = new AkMusicFade(Ar);
+        FadeOutParams = new AkMusicFade(Ar);
         PlayPreEntry = Ar.Read<byte>();
         PlayPostExit = Ar.Read<byte>();
-    }
-}
-
-public class FadeParams
-{
-    public readonly int TransitionTime;
-    public readonly uint FadeCurve;
-    public readonly int FadeOffset;
-
-    public FadeParams(FArchive Ar)
-    {
-        TransitionTime = Ar.Read<int>();
-        FadeCurve = Ar.Read<uint>();
-        FadeOffset = Ar.Read<int>();
     }
 }

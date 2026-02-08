@@ -1343,6 +1343,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
             writer.WriteValue(value.Platform);
         }
 
+        if (value.GlobalSettings is not null)
+        {
+            writer.WritePropertyName(nameof(value.GlobalSettings));
+            value.GlobalSettings.WriteJson(writer, serializer);
+        }
+
         if (value.WemFile is { Length: > 0 })
         {
             writer.WritePropertyName("IsWemFile");
@@ -2295,7 +2301,7 @@ public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
     public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        if (value.StringData != null)
+        if (value?.StringData != null)
         {
             writer.WriteStartObject();
 
@@ -3128,40 +3134,40 @@ public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseL
         => throw new NotImplementedException("Deserialization not implemented");
 }
 
-public class BankHeaderConverter : JsonConverter<BankHeader>
+public class BankHeaderConverter : JsonConverter<AkBankHeader>
 {
-    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, AkBankHeader value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Version");
+        writer.WritePropertyName(nameof(value.Version));
         writer.WriteValue(value.Version);
 
-        writer.WritePropertyName("SoundBankId");
+        writer.WritePropertyName(nameof(value.SoundBankId));
         writer.WriteValue(value.SoundBankId);
 
-        writer.WritePropertyName("LanguageId");
+        writer.WritePropertyName(nameof(value.LanguageId));
         writer.WriteValue(value.LanguageId);
 
-        writer.WritePropertyName("FeedbackInBank");
+        writer.WritePropertyName(nameof(value.FeedbackInBank));
         writer.WriteValue(value.FeedbackInBank);
 
-        writer.WritePropertyName("AltValues");
+        writer.WritePropertyName(nameof(value.AltValues));
         writer.WriteValue(value.AltValues.ToString());
 
-        writer.WritePropertyName("ProjectId");
+        writer.WritePropertyName(nameof(value.ProjectId));
         writer.WriteValue(value.ProjectId);
 
-        writer.WritePropertyName("SoundBankType");
-        writer.WriteValue(value.SoundBankType);
+        writer.WritePropertyName(nameof(value.SoundBankType));
+        writer.WriteValue(value.SoundBankType.ToString());
 
-        writer.WritePropertyName("BankHash");
+        writer.WritePropertyName(nameof(value.BankHash));
         writer.WriteValue(value.BankHash);
 
         writer.WriteEndObject();
     }
 
-    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override AkBankHeader ReadJson(JsonReader reader, Type objectType, AkBankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException("Deserialization is not implemented.");
     }

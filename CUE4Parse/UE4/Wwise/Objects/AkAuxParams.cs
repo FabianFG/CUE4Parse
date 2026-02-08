@@ -1,28 +1,23 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkAuxParams
+public readonly struct AkAuxParams
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAuxParams AuxParams;
-    public readonly List<uint> AuxIds;
+    public readonly uint[] AuxIds = [];
     public readonly uint ReflectionsAuxBus;
 
     public AkAuxParams(FArchive Ar)
     {
-        AuxIds = [];
         AuxParams = Ar.Read<EAuxParams>();
         if (AuxParams.HasFlag(EAuxParams.HasAux))
         {
-            for (int i = 0; i < 4; i++)
-            {
-                AuxIds.Add(Ar.Read<uint>());
-            }
+            AuxIds = Ar.ReadArray(4, Ar.Read<uint>);
         }
 
         if (WwiseVersions.Version > 134)

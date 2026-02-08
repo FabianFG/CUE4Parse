@@ -8,18 +8,16 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkTrackSwitchParams
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EGroupType GroupType;
+    public readonly EAkGroupType GroupType;
     public readonly uint GroupId;
     public readonly uint DefaultSwitch;
     public readonly uint[] SwitchAssociationIds;
 
     public AkTrackSwitchParams(FArchive Ar)
     {
-        GroupType = Ar.Read<EGroupType>();
+        GroupType = Ar.Read<EAkGroupType>();
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
-
-        uint numSwitchAssociations = Ar.Read<uint>();
-        SwitchAssociationIds = Ar.ReadArray<uint>((int)numSwitchAssociations);
+        SwitchAssociationIds = Ar.ReadArray<uint>((int) Ar.Read<uint>());
     }
 }

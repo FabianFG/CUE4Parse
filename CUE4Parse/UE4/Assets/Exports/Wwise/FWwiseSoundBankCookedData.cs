@@ -6,7 +6,7 @@ using CUE4Parse.UE4.Objects.UObject;
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 [StructFallback]
-public readonly struct FWwiseSoundBankCookedData
+public class FWwiseSoundBankCookedData
 {
     public readonly int SoundBankId;
     public readonly FName SoundBankPathName;
@@ -29,7 +29,7 @@ public readonly struct FWwiseSoundBankCookedData
         PackagedFile = FWwisePackagedFile.CreatePackagedFile(fallback, nameof(PackagedFile));
     }
 
-    public void SerializeBulkData(FAssetArchive Ar)
+    public virtual void SerializeBulkData(FAssetArchive Ar)
     {
         PackagedFile?.SerializeBulkData(Ar);
     }
