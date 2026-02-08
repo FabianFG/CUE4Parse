@@ -1,5 +1,6 @@
 using System.Text;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
@@ -11,7 +12,7 @@ public class CAkRecorderADMFXParams(FArchive Ar) : IAkPluginParam
 public struct AkRecorderADMFXParams{
     public short Profile;
     public short ChannelCount;
-    public AkChannelConfig MainMixChannelConfig;
+    public EAkChannelConfig MainMixChannelConfig;
     public bool Passthrough;
     public bool PreserveExtraBeds;
     public bool ApplyDownstreamVolume;
@@ -22,7 +23,7 @@ public struct AkRecorderADMFXParams{
     {
         Profile = Ar.Read<short>();
         ChannelCount = Ar.Read<short>();
-        MainMixChannelConfig = Ar.Read<AkChannelConfig>();
+        MainMixChannelConfig = Ar.Read<EAkChannelConfig>();
         Passthrough = Ar.Read<byte>() != 0;
         PreserveExtraBeds = Ar.Read<byte>() != 0;
         ApplyDownstreamVolume = Ar.Read<byte>() != 0;
