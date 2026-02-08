@@ -25,7 +25,7 @@ public class WwiseExtractedSound
     public override string ToString() => OutputPath + "." + Extension.ToLowerInvariant();
 }
 
-public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
+public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
 {
     // Important note: If game splits audio event hierarchies across multiple soundbanks or audio events don't reference soundbanks to load (that happens in older Wwise versions) and either of these limits is reached, given game requires custom loading implementation!
     public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
