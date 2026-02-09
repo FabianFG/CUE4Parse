@@ -47,7 +47,7 @@ public static class OodleHelper
         }
         else
         {
-            path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
+            path ??= IsLinux ? $"./{OODLE_SO_NAME}" : OODLE_DLL_NAME;
             if (DownloadOodleDll(path))
             {
                 Instance = new Oodle(path);
@@ -67,7 +67,7 @@ public static class OodleHelper
 
     public static bool DownloadOodleDll(string? path = null)
     {
-        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
+        path ??= IsLinux ? $"./{OODLE_SO_NAME}" : OODLE_DLL_NAME;
         // Check for old Windows DLL name for backward compatibility
         if (!IsLinux && File.Exists(OODLE_DLL_NAME_OLD))
             return true;
@@ -105,7 +105,7 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllAsync(string? path)
     {
-        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
+        path ??= IsLinux ? $"./{OODLE_SO_NAME}" : OODLE_DLL_NAME;
 
         using var client = new HttpClient(new SocketsHttpHandler
         {
