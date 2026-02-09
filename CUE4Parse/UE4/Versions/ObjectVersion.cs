@@ -2119,7 +2119,9 @@ public enum EUnrealEngineObjectUE3Version
 
     // this needs to be the last line (see note below)
     AUTOMATIC_VERSION_PLUS_ONE,
-    AUTOMATIC_VERSION = AUTOMATIC_VERSION_PLUS_ONE - 1
+    AUTOMATIC_VERSION = AUTOMATIC_VERSION_PLUS_ONE - 1,
+
+    LegacyUE3Version = ANDROID_ETC_SEPARATED
 }
 
 public enum EUnrealEngineObjectLicenseeUEVersion
@@ -2160,7 +2162,7 @@ public struct FPackageFileVersion :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FPackageFileVersion(int ue4Version, int ue5Version)
     {
-        FileVersionUE3 = (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION;
+        FileVersionUE3 = (int) EUnrealEngineObjectUE3Version.LegacyUE3Version;
         FileVersionUE4 = ue4Version;
         FileVersionUE5 = ue5Version;
     }
