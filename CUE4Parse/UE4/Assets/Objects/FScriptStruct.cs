@@ -369,7 +369,7 @@ public class FScriptStruct
                 EGame.GAME_DarkPicturesAnthologyLittleHope or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or
                 EGame.GAME_TheQuarry or EGame.GAME_TheCastingofFrankStone => new FActorReference(Ar),
 
-            "ParameterWrapperArray" when Ar.Game is EGame.GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.Raw),
+            "ParameterWrapperArray" when Ar.Game is EGame.GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             _ => Ar.Game switch
             {
