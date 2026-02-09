@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.CodeVein2.Encryption;
+using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -42,23 +43,7 @@ public class FTextLocalizationResource
         var localizedStringArray = Array.Empty<FTextLocalizationResourceString>();
         if (versionNumber >= ELocResVersion.Compact)
         {
-            if (Ar.Game == EGame.GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
-                Ar.Position += 4;
-            if (Ar.Game == EGame.GAME_NevernessToEverness && Ar.Name.StartsWith("HT/Content/Localization/"))
-                Ar.Position += 8;
-            var localizedStringArrayOffset = Ar.Read<long>();
-            if (localizedStringArrayOffset != -1) // INDEX_NONE
-            {
-                var currentFileOffset = Ar.Position;
-                Ar.Position = localizedStringArrayOffset;
-                localizedStringArray = Ar.Game switch
-                {
-                    EGame.GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") => 
-                        Ar.ReadArray(() => new FTextLocalizationResourceString(CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.Locres), Ar.Read<int>())),
-                    _ => Ar.ReadArray(() => new FTextLocalizationResourceString(Ar, versionNumber))
-                };
-                Ar.Position = currentFileOffset;
-            }
+            localizedStringArray = ReadLocResStringArray(Ar, versionNumber);
         }
 
         // Read entries count
@@ -104,5 +89,30 @@ public class FTextLocalizationResource
             }
             Entries.Add(namespce, keyValue);
         }
+    }
+
+    private static FTextLocalizationResourceString[] ReadLocResStringArray(FArchive Ar, ELocResVersion versionNumber)
+    {
+        if (Ar.Game is EGame.GAME_NevernessToEverness or EGame.GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
+        {
+            return FNTEFTextLocalizationResource.ReadLocResStringArray(Ar);
+        }
+
+        var localizedStringArrayOffset = Ar.Read<long>();
+        if (localizedStringArrayOffset != -1) // INDEX_NONE
+        {
+            var currentFileOffset = Ar.Position;
+            Ar.Position = localizedStringArrayOffset;
+            var localizedStringArray = Ar.Game switch
+            {
+                EGame.GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") =>
+                    Ar.ReadArray(() => new FTextLocalizationResourceString(CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.Locres), Ar.Read<int>())),
+                _ => Ar.ReadArray(() => new FTextLocalizationResourceString(Ar, versionNumber))
+            };
+            Ar.Position = currentFileOffset;
+            return localizedStringArray;
+        }
+
+        return [];
     }
 }
