@@ -197,7 +197,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 if (legacyFileVersion != -4)
                 {
-                    _ = Ar.Read<int>(); // legacyUE3Version
+                    FileVersionUE.FileVersionUE3 = Ar.Read<int>();
                 }
 
                 FileVersionUE.FileVersionUE4 = Ar.Read<int>();
