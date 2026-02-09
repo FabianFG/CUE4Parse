@@ -55,7 +55,7 @@ public class WwiseProvider
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
     private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
-    private readonly List<uint> _wwiseLoadedSoundBanks = [];
+    private readonly HashSet<uint> _wwiseLoadedSoundBanks = [];
     private readonly Dictionary<uint, WwiseReader> _multiReferenceLibraryCache = [];
     private bool _completedWwiseFullBnkInit = false;
     private bool _loadedMultiRefLibrary = false;
@@ -450,7 +450,10 @@ public class WwiseProvider
     {
         var searchDirectory = _gameDirectory;
         var dir = new DirectoryInfo(searchDirectory);
-        if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(searchDirectory) is { } parentInfo)
+        if (!dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (Directory.GetParent(searchDirectory) is { } parentInfo)
             searchDirectory = parentInfo.FullName;
 
         var wwiseDir = Directory.EnumerateDirectories(searchDirectory, "WwiseAudio", SearchOption.AllDirectories)
