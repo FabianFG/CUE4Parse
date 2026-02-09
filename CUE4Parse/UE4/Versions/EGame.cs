@@ -173,7 +173,7 @@ public enum EGame : uint
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
-        GAME_NevernessToEverness_CBT1 = GAME_UE5_4 + 3, // keep for now, will be removed later
+        GAME_Placeholder3 = GAME_UE5_4 + 3,
         GAME_Gothic1Remake = GAME_UE5_4 + 4,
         GAME_SplitFiction = GAME_UE5_4 + 5,
         GAME_WildAssault = GAME_UE5_4 + 6,
@@ -197,7 +197,7 @@ public enum EGame : uint
         GAME_MotoGP25 = GAME_UE5_5 + 4,
         GAME_Wildgate = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
-        GAME_NevernessToEverness = GAME_UE5_5 + 7,
+        GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
         GAME_Squad = GAME_UE5_5 + 9,
         GAME_Borderlands4 = GAME_UE5_5 + 10,
@@ -208,6 +208,7 @@ public enum EGame : uint
         GAME_Grounded2 = GAME_UE5_6 + 1,
         GAME_AshesOfCreation = GAME_UE5_6 + 2,
         GAME_StyxBladesofGreed = GAME_UE5_6 + 3,
+        GAME_NevernessToEverness = GAME_UE5_6 + 4,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
 
