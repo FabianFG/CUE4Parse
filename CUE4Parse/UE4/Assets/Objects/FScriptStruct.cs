@@ -371,6 +371,9 @@ public class FScriptStruct
 
             "ParameterWrapperArray" when Ar.Game is EGame.GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
+            "MercunaPawnUsageFlags" when Ar.Game is EGame.GAME_HighOnLife2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "MercunaNavUsageTypes" when Ar.Game is EGame.GAME_HighOnLife2 => Ar.Read<FRawUIntStruct>(),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
