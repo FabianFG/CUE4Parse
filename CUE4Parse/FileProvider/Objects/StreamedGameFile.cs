@@ -1,33 +1,40 @@
-﻿using System.IO;
+using System.IO;
 
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.FileProvider.Objects
+namespace CUE4Parse.FileProvider.Objects;
+
+public class StreamedGameFile : VersionedGameFile
 {
-    public class StreamedGameFile : VersionedGameFile
+    private readonly Stream _baseStream;
+    private readonly long _position;
+
+    public StreamedGameFile(string path, Stream stream, VersionContainer versions) : base(path, stream.Length, versions)
     {
-        private readonly Stream _baseStream;
-        private readonly long _position;
+        _baseStream = stream;
+        _position = _baseStream.Position;
+    }
 
-        public StreamedGameFile(string path, Stream stream, VersionContainer versions) : base(path, stream.Length, versions)
+    public override bool IsEncrypted => false;
+    public override CompressionMethod CompressionMethod => CompressionMethod.None;
+
+    public override byte[] Read(FByteBulkDataHeader? header = null)
+    {
+        if (header != null)
         {
-            _baseStream = stream;
-            _position = _baseStream.Position;
+            _baseStream.Seek(_position + header.Value.OffsetInFile, SeekOrigin.Begin);
+            var buffer = new byte[header.Value.SizeOnDisk];
+            _baseStream.ReadExactly(buffer, 0, buffer.Length);
+            return buffer;
         }
 
-        public override bool IsEncrypted => false;
-        public override CompressionMethod CompressionMethod => CompressionMethod.None;
-
-        public override byte[] Read(FByteBulkDataHeader? header = null)
-        {
-            var data = new byte[Size];
-            var _ = _baseStream.Seek(_position, SeekOrigin.Begin);
-            var bytesRead = _baseStream.Read(data, 0, data.Length);
-            if (bytesRead != Size)
-                throw new FileLoadException("Read operation mismatch: bytesRead ≠ Size");
-            return data;
-        }
+        var data = new byte[Size];
+        var _ = _baseStream.Seek(_position, SeekOrigin.Begin);
+        var bytesRead = _baseStream.Read(data, 0, data.Length);
+        if (bytesRead != Size)
+            throw new FileLoadException("Read operation mismatch: bytesRead ≠ Size");
+        return data;
     }
 }
