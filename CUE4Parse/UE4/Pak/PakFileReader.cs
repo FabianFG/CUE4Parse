@@ -79,12 +79,12 @@ namespace CUE4Parse.UE4.Pak
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
-            var offset = 0;
+            long offset = 0;
             var requestedSize = (int) pakEntry.UncompressedSize;
             if (header is { } bulk)
             {
-                offset = (int) bulk.OffsetInFile;
-                requestedSize = bulk.ElementCount;
+                offset = bulk.OffsetInFile;
+                requestedSize = (int) bulk.SizeOnDisk;
             }
 
             if (pakEntry.IsCompressed)
@@ -164,10 +164,10 @@ namespace CUE4Parse.UE4.Pak
             // but it's the same as the one from the index, just without a name
             // We don't need to serialize that again so + file.StructSize
 
-            var readOffset = offset.Align(alignment);
+            var readOffset = offset & ~((long) alignment - 1);
             var dataOffset = offset - readOffset;
             var readSize = (dataOffset + requestedSize).Align(alignment);
-            var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, readSize, reader, pakEntry.IsEncrypted);
+            var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
 
             if (dataOffset == 0 && requestedSize == data.Length)
                 return data;

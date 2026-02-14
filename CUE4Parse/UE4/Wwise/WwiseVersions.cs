@@ -72,7 +72,7 @@ public static class WwiseVersions
     public static readonly uint[] SupportedVersions =
     [
         112,    // Dead by Daylight (old)
-        113,    // Dead by Daylight (old)
+        113,    // Dead by Daylight (old), Styx: Shards of Drakness
         120,    // Code Vein
         125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn

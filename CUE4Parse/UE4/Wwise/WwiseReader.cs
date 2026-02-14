@@ -119,7 +119,7 @@ public class WwiseReader
                 case EChunkID.FXPR:
                     break;
                 case EChunkID.BankCustomPlatformName:
-                    Platform = Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar);
+                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : ReadStzString(Ar);
                     break;
                 case EChunkID.PLUGIN:
                     // could be any data for a specific plugin

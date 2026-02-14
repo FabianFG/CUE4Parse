@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -134,7 +135,10 @@ public class ULevel : Assets.Exports.UObject
         NavListStart = new FPackageIndex(Ar);
         NavListEnd = new FPackageIndex(Ar);
         if (Ar.Game == EGame.GAME_MetroAwakening && GetOrDefault<bool>("bIsLightingScenario")) return;
-        if (Ar.Game is EGame.GAME_StateOfDecay2 or EGame.GAME_WeHappyFew && Ar.ReadBoolean()) return;
+        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
+        {
+            _ = new FPrecomputedLightVolumeData(Ar);
+        }
         if (Ar.Game == EGame.GAME_OutlastTrials)
         {
             PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);

@@ -1,3 +1,4 @@
+using System.Text;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -15,7 +16,7 @@ public readonly struct AkMusicMarkerWwise
         MarkerName = WwiseVersions.Version switch
         {
             <= 62 => null,
-            <= 136 => Ar.ReadFString(),
+            <= 136 => Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0'),
             _ => WwiseReader.ReadStzString(Ar),
         };
     }

@@ -28,6 +28,7 @@ public enum EGame : uint
     GAME_UE4_13 = GameUtils.GameUe4Base + (13 << 16),
         GAME_StateOfDecay2 = GAME_UE4_13 + 1,
         GAME_WeHappyFew = GAME_UE4_13 + 2,
+        Game_StyxShardsofDarkness = GAME_UE4_13 + 3,
     GAME_UE4_14 = GameUtils.GameUe4Base + (14 << 16),
         GAME_TEKKEN7 = GAME_UE4_14 + 1,
         GAME_TransformersOnline = GAME_UE4_14 + 2,
