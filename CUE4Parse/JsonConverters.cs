@@ -3065,7 +3065,7 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("EventLanguageMap");
+        writer.WritePropertyName(nameof(value.EventLanguageMap));
         writer.WriteStartArray();
         foreach (var (language, data) in value.EventLanguageMap)
         {
@@ -3080,16 +3080,90 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
         }
         writer.WriteEndArray();
 
-        writer.WritePropertyName("DebugName");
+        writer.WritePropertyName(nameof(value.DebugName));
         serializer.Serialize(writer, value.DebugName);
 
-        writer.WritePropertyName("EventId");
+        writer.WritePropertyName(nameof(value.EventId));
         writer.WriteValue(value.EventId);
 
         writer.WriteEndObject();
     }
 
     public override FWwiseLocalizedEventCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedEventCookedData existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedAuxBusCookedDataConverter : JsonConverter<FWwiseLocalizedAuxBusCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedAuxBusCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.AuxBusLanguageMap));
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.AuxBusLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.DebugName));
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName(nameof(value.AuxBusId));
+        writer.WriteValue(value.AuxBusId);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedAuxBusCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedAuxBusCookedData existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedShareSetCookedDataConverter : JsonConverter<FWwiseLocalizedShareSetCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedShareSetCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.ShareSetLanguageMap));
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.ShareSetLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.DebugName));
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName(nameof(value.ShareSetId));
+        writer.WriteValue(value.ShareSetId);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedShareSetCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedShareSetCookedData existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();

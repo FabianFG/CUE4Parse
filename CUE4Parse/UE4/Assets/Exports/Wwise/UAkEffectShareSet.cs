@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 public class UAkEffectShareSet : UAkAudioType
 {
-    public FStructFallback? ShareSetCookedData { get; private set; }
+    public FWwiseLocalizedShareSetCookedData? ShareSetCookedData { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -14,7 +14,8 @@ public class UAkEffectShareSet : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        ShareSetCookedData = new FStructFallback(Ar, "WwiseLocalizedShareSetCookedData");
+        ShareSetCookedData = new FWwiseLocalizedShareSetCookedData(new FStructFallback(Ar, "WwiseLocalizedShareSetCookedData"));
+        ShareSetCookedData?.SerializeBulkData(Ar);
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -23,7 +24,7 @@ public class UAkEffectShareSet : UAkAudioType
 
         if (ShareSetCookedData is null) return;
 
-        writer.WritePropertyName("ShareSetCookedData");
+        writer.WritePropertyName(nameof(ShareSetCookedData));
         serializer.Serialize(writer, ShareSetCookedData);
     }
 }
