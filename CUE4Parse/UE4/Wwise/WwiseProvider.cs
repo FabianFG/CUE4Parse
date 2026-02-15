@@ -446,12 +446,12 @@ public partial class WwiseProvider
         }
     }
 
-    private void LoadExternalWwiseFiles()
+    private int LoadExternalWwiseFiles()
     {
         var searchDirectory = _gameDirectory;
         var dir = new DirectoryInfo(searchDirectory);
         if (!dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase))
-            return;
+            return 0;
 
         if (Directory.GetParent(searchDirectory) is { } parentInfo)
             searchDirectory = parentInfo.FullName;
@@ -462,7 +462,7 @@ public partial class WwiseProvider
         if (wwiseDir is null)
         {
             Log.Warning($"Wwise directory not found under '{wwiseDir}'");
-            return;
+            return 0;
         }
 
         var wemFiles = Directory.GetFiles(wwiseDir, "*.wem", SearchOption.AllDirectories);
@@ -476,11 +476,14 @@ public partial class WwiseProvider
                 _looseWemFilesLookup[wemId] = new WwiseLocation(wem, InProvider: false);
         }
 
+        var loadedBanks = 0;
         foreach (var bnk in wwiseBankFiles)
         {
             var name = Path.GetFileNameWithoutExtension(bnk);
-            TryLoadAndCacheWwiseFile(bnk, name, 0, out var size, loadFromFileSystem: true, isWemFile: false);
+            if (TryLoadAndCacheWwiseFile(bnk, name, 0, out var size, loadFromFileSystem: true, isWemFile: false))
+                loadedBanks++;
         }
+        return loadedBanks;
     }
 
     private void BulkInitializeWwise()
@@ -488,10 +491,8 @@ public partial class WwiseProvider
         if (_completedWwiseFullBnkInit)
             return;
 
-        LoadExternalWwiseFiles();
-
         long totalLoadedSize = 0;
-        int totalLoadedBanks = 0;
+        int totalLoadedBanks = LoadExternalWwiseFiles();
 
         var wwiseFiles = _provider.Files.Values
             .Where(file => _validWwiseExtensions.Contains(file.Extension))
@@ -636,14 +637,19 @@ public partial class WwiseProvider
 
         _loadedMultiRefLibrary = true;
 
-        var assetFile = _provider.Files.Values.FirstOrDefault(f =>
-            f.Path.EndsWith("WwiseMultiReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase));
+        var assetFiles = _provider.Files.Values.Where(f =>
+            f.Path.EndsWith("ReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase));
 
-        if (assetFile == null)
+        foreach (var assetFile in assetFiles)
         {
-            Log.Warning("WwiseMultiReferenceAssetLibrary.uasset not found in provider");
-            return;
+            TryLoadMultiReferenceAsset(assetFile);
         }
+    }
+
+    private void TryLoadMultiReferenceAsset(FileProvider.Objects.GameFile? assetFile)
+    {
+        if (assetFile == null)
+            return;
 
         try
         {
@@ -655,7 +661,7 @@ public partial class WwiseProvider
 
             if (wwiseAssetLib == null)
             {
-                Log.Warning("No UWwiseAssetLibrary found in the package");
+                Log.Warning("No UWwiseAssetLibrary found in the package {0}", assetFile.Path);
                 return;
             }
 
@@ -671,12 +677,12 @@ public partial class WwiseProvider
                 }
             }
 
-            Log.Information("Loaded WwiseMultiReferenceAssetLibrary and cached {Count} packaged files",
+            Log.Information("Loaded {Name} and cached {Count} packaged files", assetFile.Name,
                 _multiReferenceLibraryCache.Count);
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to load WwiseMultiReferenceAssetLibrary.uasset");
+            Log.Error(e, "Failed to load {Nmae}", assetFile.Name);
         }
     }
 
