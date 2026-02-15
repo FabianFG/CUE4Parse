@@ -44,7 +44,7 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 102
     }
 }
 
-public class WwiseProvider
+public partial class WwiseProvider
 {
     private readonly AbstractVfsFileProvider _provider;
     private readonly WwiseProviderConfiguration _configuration;
@@ -421,12 +421,12 @@ public class WwiseProvider
             .FirstOrDefault(v => v.HasValue);
 
         var files = _provider.Files.Values.ToList();
-        var soundBankName = eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString() ?? string.Empty;
+        var soundBankName = eventData?.SoundBanks.FirstOrDefault()?.SoundBankPathName.ToString() ?? string.Empty;
         var mediaPathName = eventData?.Media.FirstOrDefault().MediaPathName.Text ?? string.Empty;
 
         var targets = new[]
         {
-            eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString(),
+            eventData?.SoundBanks.FirstOrDefault()?.SoundBankPathName.ToString(),
             eventData?.Media.FirstOrDefault().MediaPathName.Text
         };
 
