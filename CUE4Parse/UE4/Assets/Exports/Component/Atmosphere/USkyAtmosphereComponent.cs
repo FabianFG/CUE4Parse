@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Atmosphere;
@@ -11,8 +12,9 @@ public class USkyAtmosphereComponent : USceneComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-
-        bStaticLightingBuiltGUID = Ar.Read<FGuid>();
+        var bIsAtmosphericFog = this is UAtmosphericFogComponent;
+        if ((FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.RemovedAtmosphericFog && bIsAtmosphericFog) || !bIsAtmosphericFog)
+            bStaticLightingBuiltGUID = Ar.Read<FGuid>();
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

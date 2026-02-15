@@ -67,7 +67,7 @@ public class USceneComponent : UActorComponent
             current = current.Template?.Load<USceneComponent>();
         }
 
-        return new FTransform(FRotator.ZeroRotator, FVector.ZeroVector, FVector.OneVector);
+        return new FTransform(FRotator.ZeroRotator, FVector.ZeroVector, topMostScale ?? FVector.OneVector);
     }
 
     public FTransform GetAbsoluteTransform()

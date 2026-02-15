@@ -1,33 +1,31 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkGameSync
+public struct AkGameSync
 {
     public readonly uint GroupId;
-    public byte GroupType { get; private set; }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public readonly EAkGroupType GroupType;
 
-    public AkGameSync(FArchive Ar)
+    public AkGameSync(uint groupId, EAkGroupType groupType)
     {
-        GroupId = Ar.Read<uint>();
+        GroupId = groupId;
+        GroupType = groupType;
     }
 
-    public void SetGroupType(FArchive Ar)
+    public static AkGameSync[] ReadSequential(FArchive Ar, uint count)
     {
-        GroupType = Ar.Read<byte>();
-    }
+        var groupIds = Ar.ReadArray<uint>((int) count);
+        var groupTypes = Ar.ReadArray<EAkGroupType>((int) count);
 
-    public void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        writer.WriteStartObject();
+        var gameSyncs = new AkGameSync[count];
+        for (int i = 0; i < count; i++)
+            gameSyncs[i] = new AkGameSync(groupIds[i], groupTypes[i]);
 
-        writer.WritePropertyName("GroupId");
-        writer.WriteValue(GroupId);
-
-        writer.WritePropertyName("GroupType");
-        writer.WriteValue(GroupType);
-
-        writer.WriteEndObject();
+        return gameSyncs;
     }
 }

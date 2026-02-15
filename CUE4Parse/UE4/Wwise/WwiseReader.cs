@@ -19,7 +19,7 @@ public class WwiseReader
     public readonly string Path;
     private uint Version => Header.Version;
 
-    public BankHeader Header { get; }
+    public AkBankHeader Header { get; }
     public AkFolder[]? Folders { get; }
     public Dictionary<uint, string>? AKPluginList { get; }
     public MediaHeader[]? WemIndexes { get; }
@@ -29,21 +29,22 @@ public class WwiseReader
     public string? Platform { get; }
     public Dictionary<string, byte[]> WwiseEncodedMedias { get; } = [];
     public GlobalSettings? GlobalSettings { get; }
-    public EnvSettings? EnvSettings { get; }
+    public CAkEnvironmentsMgr? EnvSettings { get; }
     public byte[] WemFile { get; } = [];
+    public byte[] PluginData { get; } = [];
 
     public WwiseReader(FArchive Ar)
     {
         Path = Ar.Name;
         while (Ar.Position < Ar.Length)
         {
-            var sectionIdentifier = Ar.Read<ChunkID>();
+            var sectionIdentifier = Ar.Read<EChunkID>();
             var sectionLength = Ar.Read<int>();
             var position = Ar.Position;
 
             switch (sectionIdentifier)
             {
-                case ChunkID.AKPK:
+                case EChunkID.AKPK:
                     if (!Ar.ReadBoolean())
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
@@ -66,19 +67,19 @@ public class WwiseReader
                         }
                     }
                     break;
-                case ChunkID.BankHeader:
-                    Header = new BankHeader(Ar, sectionLength);
+                case EChunkID.BankHeader:
+                    Header = new AkBankHeader(Ar, sectionLength);
                     WwiseVersions.SetVersion(Version);
                     if (!WwiseVersions.IsSupported())
                         Log.Warning($"Wwise version {Version} is not supported");
                     break;
-                case ChunkID.BankInit:
+                case EChunkID.BankInit:
                     AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar));
                     break;
-                case ChunkID.BankDataIndex:
+                case EChunkID.BankDataIndex:
                     WemIndexes = Ar.ReadArray(sectionLength / 12, Ar.Read<MediaHeader>);
                     break;
-                case ChunkID.BankData:
+                case EChunkID.BankData:
                     if (WemIndexes == null)
                         break;
                     WemSounds = new byte[WemIndexes.Length][];
@@ -89,39 +90,40 @@ public class WwiseReader
                         WwiseEncodedMedias[WemIndexes[i].Id.ToString()] = WemSounds[i];
                     }
                     break;
-                case ChunkID.BankHierarchy:
+                case EChunkID.BankHierarchy:
                     Hierarchies = Ar.ReadArray(() => new Hierarchy(Ar));
                     break;
-                case ChunkID.RIFF:
+                case EChunkID.RIFF:
                     if (Ar.Position + sectionLength > Ar.Length)
                         throw new RIFFSectionSizeException();
                     Ar.Position -= 8;
                     var wemData = Ar.ReadBytes(8 + sectionLength);
                     WemFile = wemData;
                     break;
-                case ChunkID.BankStrMap:
+                case EChunkID.BankStrMap:
                     Ar.Position += 4; //var type = Ar.Read<AKBKStringType>;
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
-                case ChunkID.BankStateMg:
-                    // TODO:
-                    // if (WwiseVersions.IsSupported())
-                    // {
-                    //     GlobalSettings = new GlobalSettings(Ar);
-                    // }
-                    break;
-                case ChunkID.BankEnvSetting:
-                    if (WwiseVersions.IsSupported()) // Let's guard this just in case
+                case EChunkID.BankStateMg:
+                    if (WwiseVersions.IsSupported())
                     {
-                        EnvSettings = new EnvSettings(Ar);
+                        GlobalSettings = new GlobalSettings(Ar);
                     }
                     break;
-                case ChunkID.FXPR:
+                case EChunkID.BankEnvSetting:
+                    if (WwiseVersions.IsSupported()) // Let's guard this just in case
+                    {
+                        EnvSettings = new CAkEnvironmentsMgr(Ar);
+                    }
                     break;
-                case ChunkID.BankCustomPlatformName:
-                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()) : ReadStzString(Ar);
+                case EChunkID.FXPR:
                     break;
-                case ChunkID.PLUGIN:
+                case EChunkID.BankCustomPlatformName:
+                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : ReadStzString(Ar);
+                    break;
+                case EChunkID.PLUGIN:
+                    // could be any data for a specific plugin
+                    PluginData = Ar.ReadBytes(sectionLength);
                     break;
                 default:
 #if DEBUG
@@ -160,11 +162,11 @@ public class WwiseReader
     {
         while (Ar.Position < Ar.Length)
         {
-            var sectionIdentifier = Ar.Read<ChunkID>();
+            var sectionIdentifier = Ar.Read<EChunkID>();
             var sectionLength = Ar.Read<int>();
             var sectionStart = Ar.Position;
 
-            if (sectionIdentifier is ChunkID.BankHeader)
+            if (sectionIdentifier is EChunkID.BankHeader)
             {
                 Ar.Read<uint>(); // Version
                 var soundBankId = Ar.Read<uint>();

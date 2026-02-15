@@ -2,7 +2,7 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkTrackSrcInfo
+public readonly struct AkTrackSrcInfo
 {
     public readonly uint TrackId;
     public readonly uint SourceId;
@@ -17,6 +17,7 @@ public class AkTrackSrcInfo
     {
         TrackId = Ar.Read<uint>();
         SourceId = Ar.Read<uint>();
+
         if (WwiseVersions.Version > 150)
         {
             CacheId = Ar.Read<uint>();

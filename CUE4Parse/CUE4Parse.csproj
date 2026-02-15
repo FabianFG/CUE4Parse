@@ -28,6 +28,7 @@
     <PackageReference Include="Blake3" Version="2.0.0" />
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="FixedMathSharp" Version="1.3.3" />
+    <PackageReference Include="Fmod5Sharp" Version="3.1.0" />
     <PackageReference Include="GenericReader" Version="2.3.0" />
     <PackageReference Include="Infrablack.UE4Config" Version="0.7.2.97" />
     <PackageReference Include="LZMA-SDK" Version="22.1.1" />

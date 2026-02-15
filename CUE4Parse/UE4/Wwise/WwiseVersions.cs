@@ -15,10 +15,7 @@ public static class WwiseVersions
         private set => Interlocked.Exchange(ref _wwiseVersion, value);
     }
 
-    public static void SetVersion(uint version)
-    {
-        Version = version;
-    }
+    public static void SetVersion(uint version) => Version = version;
 
     // Credits to https://github.com/bnnm/wwiser/blob/ead1751c0320e5e9b532f80bf738cba5f5d2664e/wwiser/parser/wdefs.py#L22
     public static readonly uint[] BankVersions =
@@ -61,7 +58,12 @@ public static class WwiseVersions
         145, // 0x91 Wwise 2022.1
         150, // 0x96 Wwise 2023.1
         152, // 0x98 Wwise 2024.1-B
-        154  // 0x9A Wwise 2024.1
+        154, // 0x9A Wwise 2024.1
+        160, // 0xA8 Wwise 2025.1.0-B
+        168, // 0xA8 Wwise 2025.1.0-B
+        169, // 0xA9 Wwise 2025.1.1-B 
+        171, // 0xAB Wwise 2025.1.2-B
+        172, // 0xAC Wwise 2025.1.3
     ];
 
     // Versions CUE4Parse currently supports
@@ -70,15 +72,17 @@ public static class WwiseVersions
     public static readonly uint[] SupportedVersions =
     [
         112,    // Dead by Daylight (old)
-        113,    // Dead by Daylight (old)
+        113,    // Dead by Daylight (old), Styx: Shards of Drakness
+        120,    // Code Vein
         125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
         140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis, The Outlast Trials, Little Nightmares 3
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
-        150,    // Dead by Daylight, Splitgate 2, Byte Breakers, Le Dernier Don
-        154     // Off The Grid
+        150,    // Dead by Daylight (old), Splitgate 2, Byte Breakers, Le Dernier Don
+        154,    // Off The Grid, Dead by Daylight
+        172     // Soglia (Unity)
     ];
 
     public static bool IsSupported() => SupportedVersions.Contains(Version);

@@ -9,13 +9,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 public readonly struct FWwiseEventCookedData
 {
     public readonly int EventId;
-	public readonly FWwiseSoundBankCookedData[] SoundBanks;
-	public readonly FWwiseMediaCookedData[] Media;
-	public readonly FWwiseExternalSourceCookedData[] ExternalSources;
-	public readonly FWwiseSwitchContainerLeafCookedData[] SwitchContainerLeaves;
-	public readonly UScriptSet RequiredGroupValueSet; // FWwiseGroupValueCookedData[]
-	public readonly EWwiseEventDestroyOptions DestroyOptions;
-	public readonly FName DebugName;
+    public readonly FWwiseSoundBankCookedData[] SoundBanks;
+    public readonly FWwiseMediaCookedData[] Media;
+    public readonly FWwiseExternalSourceCookedData[] ExternalSources;
+    public readonly FWwiseSwitchContainerLeafCookedData[] SwitchContainerLeaves;
+    public readonly UScriptSet RequiredGroupValueSet; // FWwiseGroupValueCookedData[]
+    public readonly EWwiseEventDestroyOptions DestroyOptions;
+    public readonly FName DebugName;
 
     public FWwiseEventCookedData(FStructFallback fallback)
     {

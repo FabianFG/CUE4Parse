@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
@@ -119,7 +120,12 @@ public class FSkyAtmosphereMapBuildData
     }
 }
 
-public class FReflectionCaptureMapBuildData(FAssetArchive Ar) : FReflectionCaptureData(Ar) { }
+public class FReflectionCaptureMapBuildData : FReflectionCaptureData {
+
+    public FReflectionCaptureMapBuildData() { }
+
+    public FReflectionCaptureMapBuildData(FAssetArchive Ar) : base(Ar) { }
+}
 
 [JsonConverter(typeof(FReflectionCaptureDataConverter))]
 public class FReflectionCaptureData
@@ -127,8 +133,10 @@ public class FReflectionCaptureData
     public int CubemapSize;
     public float AverageBrightness;
     public float Brightness;
-    public byte[]? FullHDRCapturedData;
+    [JsonIgnore] public byte[]? FullHDRCapturedData;
     public FPackageIndex? EncodedCaptureData;
+
+    public FReflectionCaptureData() { }
 
     public FReflectionCaptureData(FAssetArchive Ar)
     {
@@ -194,11 +202,11 @@ public class FStaticShadowDepthMapData(FArchive Ar)
     public FFloat16[] DepthSamples = Ar.ReadArray(() => new FFloat16(Ar));
 }
 
-public class FVolumeLightingSample(FAssetArchive Ar)
+public class FVolumeLightingSample(FAssetArchive Ar, int order)
 {
     public FVector Position = Ar.Read<FVector>();
     public float Radius = Ar.Read<float>();
-    public float[][] Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(9));
+    public float[][] Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
     public FColor PackedSkyBentNormal = Ar.Read<FColor>();
     public float DirectionalLightShadowing = Ar.Read<float>();
 }
@@ -208,31 +216,28 @@ public class FPrecomputedLightVolumeData
     public FBox Bounds;
     public float SampleSpacing;
     public int NumSHSamples;
-    public FVolumeLightingSample[] HighQualitySamples;
-    public FVolumeLightingSample[]? LowQualitySamples;
+    public FVolumeLightingSample[] HighQualitySamples = [];
+    public FVolumeLightingSample[] LowQualitySamples = [];
 
-    public FPrecomputedLightVolumeData(FAssetArchive Ar)
+    public FPrecomputedLightVolumeData(FAssetArchive Ar, bool readbValid = true)
     {
-        var bValid = Ar.ReadBoolean();
+        if (readbValid && !Ar.ReadBoolean()) return;
 
-        if (bValid)
+        var bVolumeInitialized = Ar.ReadBoolean();
+        if (bVolumeInitialized)
         {
-            var bVolumeInitialized = Ar.ReadBoolean();
-            if (bVolumeInitialized)
+            Bounds = new FBox(Ar);
+            SampleSpacing = Ar.Read<float>();
+            NumSHSamples = 4;
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.IndirectLightingCache3BandSupport)
             {
-                Bounds = new FBox(Ar);
-                SampleSpacing = Ar.Read<float>();
-                NumSHSamples = 4;
-                if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.IndirectLightingCache3BandSupport)
-                {
-                    NumSHSamples = Ar.Read<int>();
-                }
+                NumSHSamples = Ar.Read<int>();
+            }
 
-                HighQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar));
-                if (Ar.Ver >= EUnrealEngineObjectUE4Version.VOLUME_SAMPLE_LOW_QUALITY_SUPPORT)
-                {
-                    LowQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar));
-                }
+            HighQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar, NumSHSamples is 9 ? 3 : 2));
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.VOLUME_SAMPLE_LOW_QUALITY_SUPPORT)
+            {
+                LowQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar, NumSHSamples is 9 ? 3 : 2));
             }
         }
     }

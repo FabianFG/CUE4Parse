@@ -223,6 +223,24 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipMultipleFixedArrays(int [] sizes)
+        {
+            foreach (var size in sizes)
+            {
+                SkipFixedArray(size);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipMultipleFixedArrays(int count, int size)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                SkipFixedArray(size);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<TKey, TValue> ReadMap<TKey, TValue>(int length, Func<(TKey, TValue)> getter) where TKey : notnull
         {
             var res = new Dictionary<TKey, TValue>(length);

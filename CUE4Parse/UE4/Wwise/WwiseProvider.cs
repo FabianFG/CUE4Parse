@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
+using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
 using Serilog;
 
@@ -24,7 +25,7 @@ public class WwiseExtractedSound
     public override string ToString() => OutputPath + "." + Extension.ToLowerInvariant();
 }
 
-public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
+public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
 {
     // Important note: If game splits audio event hierarchies across multiple soundbanks or audio events don't reference soundbanks to load (that happens in older Wwise versions) and either of these limits is reached, given game requires custom loading implementation!
     public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
@@ -54,7 +55,7 @@ public class WwiseProvider
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
     private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
-    private readonly List<uint> _wwiseLoadedSoundBanks = [];
+    private readonly HashSet<uint> _wwiseLoadedSoundBanks = [];
     private readonly Dictionary<uint, WwiseReader> _multiReferenceLibraryCache = [];
     private bool _completedWwiseFullBnkInit = false;
     private bool _loadedMultiRefLibrary = false;
@@ -449,7 +450,10 @@ public class WwiseProvider
     {
         var searchDirectory = _gameDirectory;
         var dir = new DirectoryInfo(searchDirectory);
-        if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(searchDirectory) is { } parentInfo)
+        if (!dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (Directory.GetParent(searchDirectory) is { } parentInfo)
             searchDirectory = parentInfo.FullName;
 
         var wwiseDir = Directory.EnumerateDirectories(searchDirectory, "WwiseAudio", SearchOption.AllDirectories)
@@ -457,7 +461,7 @@ public class WwiseProvider
 
         if (wwiseDir is null)
         {
-            Log.Warning($"Wwise directory not found under {wwiseDir}");
+            Log.Warning($"Wwise directory not found under '{wwiseDir}'");
             return;
         }
 
