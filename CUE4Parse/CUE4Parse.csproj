@@ -51,13 +51,6 @@
     <EmbeddedResource Include="Resources\PUBGNameHashMap.json" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="UE4\FMod\Fmod5Sharp\**" />
-    <EmbeddedResource Remove="UE4\FMod\Fmod5Sharp\**" />
-    <None Remove="UE4\FMod\Fmod5Sharp\**" />
-    <ProjectReference Include="UE4\FMod\Fmod5Sharp\Fmod5Sharp\Fmod5Sharp.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <BuildInParallel>false</BuildInParallel> <!-- we can't run 2 cmake build at same time -->
     <CMakeProject>../CUE4Parse-Natives/</CMakeProject>
