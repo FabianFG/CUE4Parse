@@ -3316,21 +3316,20 @@ public class FModConverter : JsonConverter<FModReader>
         if (value.StringTable?.RadixTree is { Guids: var guids } tree)
         {
             writer.WritePropertyName(nameof(value.StringTable));
-
-            var readableStrings = new string[guids.Length];
+            var guidMap = new Dictionary<string, string>(guids.Length);
             for (int i = 0; i < guids.Length; i++)
             {
+                var guid = guids[i];
                 if (tree.TryGetStringByIndex(i, out var path))
                 {
-                    readableStrings[i] = path;
+                    guidMap[guid.ToString()] = path;
                 }
                 else
                 {
-                    readableStrings[i] = string.Empty;
+                    guidMap[guid.ToString()] = string.Empty;
                 }
             }
-
-            serializer.Serialize(writer, readableStrings);
+            serializer.Serialize(writer, guidMap);
         }
 
         if (value.SoundTable is not null)
