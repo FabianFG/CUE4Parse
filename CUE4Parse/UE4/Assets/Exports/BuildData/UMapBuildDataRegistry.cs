@@ -219,8 +219,10 @@ public class FPrecomputedLightVolumeData
     public FVolumeLightingSample[] HighQualitySamples = [];
     public FVolumeLightingSample[] LowQualitySamples = [];
 
-    public FPrecomputedLightVolumeData(FAssetArchive Ar)
+    public FPrecomputedLightVolumeData(FAssetArchive Ar, bool readbValid = true)
     {
+        if (readbValid && !Ar.ReadBoolean()) return;
+
         var bVolumeInitialized = Ar.ReadBoolean();
         if (bVolumeInitialized)
         {
