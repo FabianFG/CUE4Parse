@@ -59,6 +59,7 @@ public enum EAkPluginId : uint
     AkSynthOne                           = 0x00940002,
 
     ASIOSink                             = 0x00A80007,
+    MicrosoftHRTFSink                    = 0x00AA0007,
     AkReflectFX                          = 0x00AB0003,
     AkRouterMixer                        = 0x00AC0006,
 
@@ -95,8 +96,12 @@ public enum EAkPluginId : uint
     AkSystemOutputMeta                   = 0x03840009,
 
     // Third-party plugins
+    atmokyEars                           = 0x000112c3,
+
     AudioSpectrumFX                      = 0x002E2FD3,
     AuroHeadphoneFX                      = 0x044C1073,
+    AuroPannerMixer                      = 0x044d1076,
+    AuroPannerFX                         = 0x044e1073,
 
     bnsRadio                             = 0x039B2FD3,
 
@@ -125,9 +130,13 @@ public enum EAkPluginId : uint
     MsSpatialSink                        = 0x00aa1137,
 
     // MetaXRAudio
+    OculusAttachableMixerInputFX         = 0x01f510a3,
     OculusEndpointSink                   = 0x009410a7,
     OculusEndpointMetadata               = 0x3d6a10a9,
     OculusEndpointExperimentalMetadata   = 0x3d6b10a9,
+    OculusSpatializerMixer               = 0x009210a6,
+
+    PolyspectralMBC                      = 0x04BC1173,
 
     ResonanceAudioRendererFX             = 0x00641103,
     ResonanceAudioRoomEffectMixer        = 0x00C81106,

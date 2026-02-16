@@ -2,12 +2,16 @@ using System;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
+using CUE4Parse.UE4.Wwise.Plugins.atmoky;
 using CUE4Parse.UE4.Wwise.Plugins.Auro;
+using CUE4Parse.UE4.Wwise.Plugins.CrankcaseAudioREVModelPlayer;
 using CUE4Parse.UE4.Wwise.Plugins.iZotope;
 using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
 using CUE4Parse.UE4.Wwise.Plugins.McDSP;
 using CUE4Parse.UE4.Wwise.Plugins.MetaXRAudio;
 using CUE4Parse.UE4.Wwise.Plugins.Mindseye;
+using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
+using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
 using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
 using Serilog;
 
@@ -64,6 +68,7 @@ public class WwisePlugin
                 EAkPluginId.AkSynthOne => new CAkSynthOneParams(Ar),
 
                 EAkPluginId.ASIOSink => new CAkAsioSinkParams(Ar),
+                EAkPluginId.MicrosoftHRTFSink => new CMicrosoftHRTFSinkParams(Ar),
                 EAkPluginId.AkReflectFX => new CAkReflectFXParams(Ar),
                 // EAkPluginId.AkRouterMixer
 
@@ -92,11 +97,16 @@ public class WwisePlugin
 
                 EAkPluginId.AkSystemOutputMeta => new CAkSystemOutputParams(Ar),
 
-                EAkPluginId.AuroHeadphoneFX => new CAuroHPFXParams(Ar),
+                EAkPluginId.atmokyEars => new CAtmokyEarsFXParams(Ar),
 
-                // EAkPluginId.CrankcaseAudioREVModelPlayer
                 // EAkPluginId.AudioSpectrumFX
+                EAkPluginId.AuroHeadphoneFX => new CAuroHPFXParams(Ar),
+                EAkPluginId.AuroPannerFX => new CAuroPannerFXParams(Ar),
+                EAkPluginId.AuroPannerMixer => new CAuroPannerMixerParams(Ar),
+
                 // EAkPluginId.bnsRadio
+
+                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),                
 
                 EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
                 EAkPluginId.iZTrashDistortionFX => new CiZTrashDistortionFXParams(Ar),
@@ -116,12 +126,16 @@ public class WwisePlugin
                 EAkPluginId.McDSPLimiterFX => new CMcDSPLimiterFXParams(Ar),
                 EAkPluginId.McDSPFutzBoxFX => new CMcDSPFutzBoxFXParams(Ar),
 
+                EAkPluginId.OculusAttachableMixerInputFX => new COculusSpatializerFXAttachmentParams(Ar),
                 EAkPluginId.OculusEndpointSink => new OculusEndpointSinkParams(Ar),
                 EAkPluginId.OculusEndpointMetadata => new OculusEndpointMetadataParams(Ar),
                 EAkPluginId.OculusEndpointExperimentalMetadata => new OculusEndpointExperimentalMetadataParams(Ar),
+                EAkPluginId.OculusSpatializerMixer => new COculusSpatializerFXParams(Ar),
+
+                EAkPluginId.PolyspectralMBC => new CMBCRuntimeParams(Ar, (int)size),
 
                 EAkPluginId.ResonanceAudioRendererFX or EAkPluginId.ResonanceAudioRoomEffectMixer or
-                    EAkPluginId .ResonanceAudioRoomEffectFX => new ResonanceAudioParams(Ar),
+                    EAkPluginId.ResonanceAudioRoomEffectFX => new ResonanceAudioParams(Ar),
 
                 // EAkPluginId.IgniterLive
                 // EAkPluginId.IgniterLiveSynth
