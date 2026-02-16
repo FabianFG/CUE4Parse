@@ -7,7 +7,7 @@
     <PackageVersion Include="Blake3" Version="2.2.0" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageVersion Include="FixedMathSharp" Version="1.3.3" />
-    <PackageVersion Include="FModel.Fmod5Sharp" Version="3.2.0" />
+    <PackageVersion Include="Fmod5Sharp" Version="3.1.0" />
     <PackageVersion Include="GenericReader" Version="2.3.0" />
     <PackageVersion Include="Infrablack.UE4Config" Version="0.7.2.97" />
     <PackageVersion Include="K4os.Compression.LZ4.Streams" Version="1.3.8" />
