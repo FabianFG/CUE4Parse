@@ -149,12 +149,9 @@ public static class OodleHelper
 
     private static string ResolvePath(string? path)
     {
-        if (!OperatingSystem.IsLinux() && File.Exists(OODLE_NAME_OLD))
-        {
-            return OODLE_NAME_OLD;
-        }
-
-        return string.IsNullOrWhiteSpace(path) ? OodleFileName : path;
+        return !string.IsNullOrWhiteSpace(path)
+            ? path
+            : !OperatingSystem.IsLinux() && File.Exists(OODLE_NAME_OLD) ? OODLE_NAME_OLD : OodleFileName;
     }
 
     [DoesNotReturn]
