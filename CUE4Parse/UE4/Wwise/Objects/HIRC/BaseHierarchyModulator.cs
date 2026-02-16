@@ -1,31 +1,32 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkModulator
 public class BaseHierarchyModulator : AbstractHierarchy
 {
-    public readonly List<AkProp> Props = [];
-    public readonly List<AkPropRange> PropRanges;
-    public readonly List<AkRtpc> RtpcList;
+    public readonly AkProp[] Props = [];
+    public readonly AkPropRange[] PropRanges;
+    public readonly AkRtpc[] RtpcCurves;
 
+    // CAkModulator::SetInitialValues
     public BaseHierarchyModulator(FArchive Ar) : base(Ar)
     {
-        Props = AkPropBundle.ReadLinearAkProp(Ar);
-        PropRanges = AkPropBundle.ReadLinearAkPropRange(Ar);
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        Props = AkPropBundle.ReadSequentialAkProp(Ar);
+        PropRanges = AkPropBundle.ReadSequentialAkPropRange(Ar);
+        RtpcCurves = AkRtpc.ReadArray(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("Props");
+        writer.WritePropertyName(nameof(Props));
         serializer.Serialize(writer, Props);
 
-        writer.WritePropertyName("PropRanges");
+        writer.WritePropertyName(nameof(PropRanges));
         serializer.Serialize(writer, PropRanges);
 
-        writer.WritePropertyName("RtpcList");
-        serializer.Serialize(writer, RtpcList);
+        writer.WritePropertyName(nameof(RtpcCurves));
+        serializer.Serialize(writer, RtpcCurves);
     }
 }

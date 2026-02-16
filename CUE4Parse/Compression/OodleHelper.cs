@@ -25,10 +25,18 @@ public class OodleException : ParserException
 
 public static class OodleHelper
 {
-    public const string OODLE_DLL_NAME_OLD = "oo2core_9_win64.dll";
-    public const string OODLE_DLL_NAME = "oodle-data-shared.dll";
+    public const string OODLE_NAME_OLD = "oo2core_9_win64.dll";
+    public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
+    public const string OODLE_NAME_LINUX = "liboodle-data-shared.so";
 
+    private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223";
+    private const string WINDOWS_ZIP = "clang-cl-x64-release.zip";
+    private const string LINUX_ZIP = "gcc-x64-release.zip";
+
+    public static string OodleFileName => IsLinux ? OODLE_NAME_LINUX : OODLE_NAME_CURRENT;
     public static Oodle? Instance { get; private set; }
+
+    private static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
     public static void Initialize(string? path = null)
     {
@@ -38,17 +46,13 @@ public static class OodleHelper
         {
             Instance = new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName));
         }
+        else if (DownloadOodleDll(ref path) && !string.IsNullOrEmpty(path))
+        {
+            Instance = new Oodle(path);
+        }
         else
         {
-            path ??= OODLE_DLL_NAME_OLD;
-            if (DownloadOodleDll(path))
-            {
-                Instance = new Oodle(path);
-            }
-            else
-            {
-                Log.Warning("Oodle decompression failed: unable to download oodle dll");
-            }
+            Log.Warning("Oodle decompression failed: unable to download oodle dll");
         }
     }
 
@@ -58,10 +62,17 @@ public static class OodleHelper
         Instance = instance;
     }
 
-    public static bool DownloadOodleDll(string? path = null)
+    public static bool DownloadOodleDll(ref string? path)
     {
-        path ??= OODLE_DLL_NAME_OLD;
-        return File.Exists(path) || DownloadOodleDllAsync(path).GetAwaiter().GetResult();
+        // Check for old Windows DLL name for backward compatibility
+        if (!IsLinux && File.Exists(OODLE_NAME_OLD))
+        {
+            path = OODLE_NAME_OLD;
+            return true;
+        }
+
+        path ??= OodleFileName;
+        return File.Exists(path) || DownloadOodleDllAsync(ref path).GetAwaiter().GetResult();
     }
 
     public static void Decompress(
@@ -93,9 +104,9 @@ public static class OodleHelper
         }
     }
 
-    public static async Task<bool> DownloadOodleDllAsync(string? path)
+    public static Task<bool> DownloadOodleDllAsync(ref string? path)
     {
-        path ??= OODLE_DLL_NAME_OLD;
+        path ??= OodleFileName;
 
         using var client = new HttpClient(new SocketsHttpHandler
         {
@@ -108,13 +119,14 @@ public static class OodleHelper
             typeof(OodleHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
         client.Timeout = TimeSpan.FromSeconds(30);
 
-        return await DownloadOodleDllFromOodleUEAsync(client, path).ConfigureAwait(false);
+        return DownloadOodleDllFromOodleUEAsync(client, path);
     }
 
     public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path)
     {
-        const string url = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223/clang-cl-x64-release.zip"; // 2.9.15
-        const string entryName = "bin/oodle-data-shared.dll";
+        var (url, entryName) = IsLinux
+            ? ($"{RELEASE_URL}/{LINUX_ZIP}", $"lib/{OODLE_NAME_LINUX}")
+            : ($"{RELEASE_URL}/{WINDOWS_ZIP}", $"bin/{OODLE_NAME_CURRENT}");
 
         try
         {
@@ -127,6 +139,14 @@ public static class OodleHelper
             await using var entryStream = entry.Open();
             await using var fs = File.Create(path);
             await entryStream.CopyToAsync(fs).ConfigureAwait(false);
+
+            if (IsLinux)
+            {
+                File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                                           UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                                           UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
+
             return true;
         }
         catch (Exception e)

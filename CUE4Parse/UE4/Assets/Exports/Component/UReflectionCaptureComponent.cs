@@ -65,7 +65,8 @@ public class UReflectionCaptureComponent : USceneComponent
                 {
                     if (bLegacy)
                     {
-                        AverageBrightness = Ar.Read<float>();
+                        if (Ar.Game >= EGame.GAME_UE4_14)
+                            AverageBrightness = Ar.Read<float>();
                         var formatsCount = Ar.Read<int>();
                         for (var i = 0; i < formatsCount; i++)
                         {

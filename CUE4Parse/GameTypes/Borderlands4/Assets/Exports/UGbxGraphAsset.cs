@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
+using CUE4Parse.GameTypes.Borderlands4.Wwise;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -23,6 +24,7 @@ public struct FSomeStruct(FAssetArchive Ar)
     public FName Name2 = Ar.ReadFName();
 }
 
+public class UOakInteractiveObjectBodyData : UGbxGraphAsset;
 public class UGbxGraphAsset : UObject
 {
     public FPackageIndex[] NodeSettingsTypes = [];
@@ -47,6 +49,7 @@ public class UGbxGraphAsset : UObject
                         or "GbxBrainTaskSettings_Sequence" or "GbxBrainTaskSettings_StateMachine" => new FGbxBrainTaskSettings(Ar, struc.Name),
                     _ => new FStructFallback(Ar, struc),
                 };
+                GbxAudioUtil.TryRegisterEvent(struc.Name, fallbackStruct);
                 Nodes[i] = new(key, fallbackStruct);
             }
             else if (NodeSettingsTypes[i].ResolvedObject is { } obj)
