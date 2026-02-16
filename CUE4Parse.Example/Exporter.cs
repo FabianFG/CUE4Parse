@@ -54,9 +54,8 @@ public static class Exporter
     {
         Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
 
-        // same with ZlibHelper
-        OodleHelper.DownloadOodleDll();
-        OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
+        ZlibHelper.Initialize();
+        OodleHelper.Initialize();
 
         var version = new VersionContainer(EGame.GAME_UE5_6, ETexturePlatform.DesktopMobile);
         var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, version)

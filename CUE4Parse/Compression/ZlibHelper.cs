@@ -1,13 +1,14 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 using Serilog;
 
@@ -24,15 +25,28 @@ public class ZlibException : ParserException
 public static class ZlibHelper
 {
     public const string DOWNLOAD_URL = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/zlib-ng2.dll.gz";
+    public const string DOWNLOAD_URL_LINUX = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/libz-ng.so.gz";
     public const string DLL_NAME = "zlib-ng2.dll";
+    public const string DLL_NAME_LINUX = "libz-ng.so";
 
     public static Zlibng? Instance { get; private set; }
+    public static string DllName => OperatingSystem.IsLinux() ? DLL_NAME_LINUX : DLL_NAME;
 
-    public static void Initialize(string path)
+    public static void Initialize(string? path = null)
+        => InitializeAsync(path).GetAwaiter().GetResult();
+
+    public static async Task InitializeAsync(string? path = null, CancellationToken cancellationToken = default)
     {
-        Instance?.Dispose();
-        if (File.Exists(path))
-            Instance = new Zlibng(path);
+        if (Instance is not null) return;
+
+        var dllPath = string.IsNullOrWhiteSpace(path) ? DllName : path;
+        if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
+        {
+            Log.Warning("Zlib decompression failed: unable to download zlib-ng dll");
+            return;
+        }
+
+        Initialize(new Zlibng(dllPath));
     }
 
     public static void Initialize(Zlibng instance)
@@ -42,29 +56,23 @@ public static class ZlibHelper
     }
 
     public static bool DownloadDll(string? path = null, string? url = null)
-    {
-        if (File.Exists(path ?? DLL_NAME)) return true;
-        return DownloadDllAsync(path, url).GetAwaiter().GetResult();
-    }
+        => DownloadDllAsync(path, url).GetAwaiter().GetResult();
 
     public static void Decompress(byte[] compressed, int compressedOffset, int compressedSize,
         byte[] uncompressed, int uncompressedOffset, int uncompressedSize, FArchive? reader = null)
     {
-        if (Instance is null)
+        var instance = Instance;
+        if (instance is null)
         {
-            const string message = "Zlib decompression failed: not initialized";
-            if (reader is not null) throw new ZlibException(reader, message);
-            throw new ZlibException(message);
+            ThrowDecompressionException(reader, "Zlib decompression failed: not initialized");
         }
 
-        var result = Instance.Uncompress(uncompressed.AsSpan(uncompressedOffset, uncompressedSize),
+        var result = instance.Uncompress(uncompressed.AsSpan(uncompressedOffset, uncompressedSize),
             compressed.AsSpan(compressedOffset, compressedSize), out int decodedSize);
 
         if (result != ZlibngCompressionResult.Ok)
         {
-            var message = $"Zlib decompression failed with result {result}";
-            if (reader is not null) throw new ZlibException(reader, message);
-            throw new ZlibException(message);
+            ThrowDecompressionException(reader, $"Zlib decompression failed with result {result}");
         }
 
         if (decodedSize < uncompressedSize)
@@ -74,39 +82,42 @@ public static class ZlibHelper
         }
     }
 
-    public static async Task<bool> DownloadDllAsync(string? path, string? url = null)
-    {
-        using var client = new HttpClient(new SocketsHttpHandler
-        {
-            UseProxy = false,
-            UseCookies = false,
-            AutomaticDecompression = DecompressionMethods.All
-        });
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(
-            nameof(CUE4Parse),
-            typeof(ZlibHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
-        client.Timeout = TimeSpan.FromSeconds(30);
+    public static Task<bool> DownloadDllAsync(string? path, string? url = null)
+        => DownloadDllAsync(path, url, CancellationToken.None);
 
-        url ??= DOWNLOAD_URL;
-        var dllPath = path ?? DLL_NAME;
+    public static async Task<bool> DownloadDllAsync(string? path, string? url, CancellationToken cancellationToken)
+    {
+        var dllPath = string.IsNullOrWhiteSpace(path) ? DllName : path;
+        if (File.Exists(dllPath)) return true;
+
+        var resolvedUrl = ResolveDownloadUrl(url);
         try
         {
-            {
-                using var dllResponse = await client.GetAsync(url).ConfigureAwait(false);
-                dllResponse.EnsureSuccessStatusCode();
+            using var dllResponse = await HttpUtils.DownloadClient
+                .GetAsync(resolvedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+            dllResponse.EnsureSuccessStatusCode();
 
-                await using var dllFs = File.Create(dllPath);
-                if (url.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-                {
-                    var contentStream = await dllResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    await using var gzipStream = new GZipStream(contentStream, CompressionMode.Decompress);
-                    await gzipStream.CopyToAsync(dllFs).ConfigureAwait(false);
-                }
-                else
-                {
-                    await dllResponse.Content.CopyToAsync(dllFs).ConfigureAwait(false);
-                }
+            await using var dllFs = File.Create(dllPath);
+            if (resolvedUrl.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+            {
+                await using var contentStream = await dllResponse.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                await using var gzipStream = new GZipStream(contentStream, CompressionMode.Decompress, leaveOpen: false);
+                await gzipStream.CopyToAsync(dllFs, cancellationToken).ConfigureAwait(false);
             }
+            else
+            {
+                await using var contentStream = await dllResponse.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                await contentStream.CopyToAsync(dllFs, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (OperatingSystem.IsLinux())
+            {
+                File.SetUnixFileMode(dllPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                                              UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                                              UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
+
             Log.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
             return true;
         }
@@ -115,5 +126,18 @@ public static class ZlibHelper
             Log.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
         }
         return false;
+    }
+
+    private static string ResolveDownloadUrl(string? url)
+    {
+        if (!string.IsNullOrWhiteSpace(url)) return url;
+        return OperatingSystem.IsLinux() ? DOWNLOAD_URL_LINUX : DOWNLOAD_URL;
+    }
+
+    [DoesNotReturn]
+    private static void ThrowDecompressionException(FArchive? reader, string message)
+    {
+        if (reader is not null) throw new ZlibException(reader, message);
+        throw new ZlibException(message);
     }
 }

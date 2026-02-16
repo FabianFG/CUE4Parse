@@ -26,7 +26,7 @@ public struct AkTimeStretchFXParams
         uWindowSize = Ar.Read<uint>();
         fTimeStretch = Ar.Read<float>();
         fTimeStretchRandom = Ar.Read<float>();
-        if (WwiseVersions.Version < 150)
+        if (WwiseVersions.Version < 145)
         {
             fOutputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         }
