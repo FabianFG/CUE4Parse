@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using Serilog;
 
@@ -65,7 +66,8 @@ namespace CUE4Parse.UE4.FMod;
 /// </summary>
 public class Fsb5Decryption
 {
-    private static readonly byte[] _reverseBitsTable =
+    private static readonly string FSB5Header = "FSB5";
+    private static readonly byte[] ReverseBitsTable =
     [
         0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
         0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8,
@@ -85,22 +87,68 @@ public class Fsb5Decryption
         0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF
     ];
 
-    public static bool IsFSB5Header(byte[] bytes) { return bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "FSB5"; }
-
-    public static void Decrypt(byte[] fsbBytes, byte[] key)
+    public static bool IsFSB5Header(Stream stream)
     {
-        if (fsbBytes == null || key == null || key.Length == 0)
-            throw new ArgumentException("Invalid data or decryption key");
+        long savedPos = stream.Position;
+        Span<byte> header = stackalloc byte[4];
+        stream.ReadExactly(header);
+        stream.Position = savedPos;
+        return Encoding.ASCII.GetString(header) == FSB5Header;
+    }
 
-        for (int i = 0; i < fsbBytes.Length; i++)
+    public static Stream Decrypt(Stream fsbStream, byte[]? key)
+    {
+        if (key == null || key.Length == 0)
+            throw new ArgumentException("FSB5 is encrypted, but encryption key wasn't provided, cannot decrypt.", nameof(key));
+
+        var decryptedStream = new Fsb5DecryptingStream(fsbStream, key, ReverseBitsTable);
+
+        if (!IsFSB5Header(decryptedStream))
         {
-            fsbBytes[i] = (byte)(_reverseBitsTable[fsbBytes[i]] ^ key[i % key.Length]);
+            decryptedStream.Dispose();
+            throw new Exception("Failed to decrypt FSB5, make sure encryption key is correct.");
         }
-
-        if (!IsFSB5Header(fsbBytes)) throw new Exception("Failed to decrypt FSB5");
 
 #if DEBUG
         Log.Debug("Decrypted FSB5 successfully");
 #endif
+
+        decryptedStream.Position = 0;
+        return decryptedStream;
     }
+}
+
+public class Fsb5DecryptingStream : Stream
+{
+    private readonly Stream BaseStream;
+    private readonly byte[] Key;
+    private readonly byte[] ReverseBitsTable;
+
+    public Fsb5DecryptingStream(Stream baseStream, byte[] key, byte[] reverseTable)
+    {
+        BaseStream = baseStream;
+        Key = key;
+        ReverseBitsTable = reverseTable;
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        long startPosition = BaseStream.Position;
+        int bytesRead = BaseStream.Read(buffer, offset, count);
+
+        for (int i = 0; i < bytesRead; i++)
+            buffer[offset + i] = (byte) (ReverseBitsTable[buffer[offset + i]] ^ Key[(startPosition + i) % Key.Length]);
+
+        return bytesRead;
+    }
+
+    public override bool CanRead => BaseStream.CanRead;
+    public override bool CanSeek => BaseStream.CanSeek;
+    public override bool CanWrite => false;
+    public override long Length => BaseStream.Length;
+    public override long Position { get => BaseStream.Position; set => BaseStream.Position = value; }
+    public override void Flush() => BaseStream.Flush();
+    public override long Seek(long offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
+    public override void SetLength(long value) => throw new NotSupportedException();
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }

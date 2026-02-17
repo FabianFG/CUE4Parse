@@ -189,7 +189,7 @@ public class FModProvider
         }
     }
 
-    public static bool TryLoadBank(Stream stream, string bankName, [NotNullWhen(true)]out FModReader? fmodReader)
+    public bool TryLoadBank(Stream stream, string bankName, [NotNullWhen(true)]out FModReader? fmodReader)
     {
         fmodReader = null;
         try
