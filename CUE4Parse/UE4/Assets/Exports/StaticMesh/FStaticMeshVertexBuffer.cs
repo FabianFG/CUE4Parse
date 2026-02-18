@@ -106,12 +106,9 @@ public class FStaticMeshVertexBuffer
     // From https://github.com/EpicGames/UnrealEngine/blob/1e1efba9e6050954594c0815d682b8b874a2e721/Engine/Source/Runtime/Engine/Private/Rendering/StaticMeshVertexBuffer.cpp#L21
     private int GetTexCoordNumVerts(int itemCount)
     {
+        if (itemCount == NumVertices * NumTexCoords) return NumVertices;
+        
         var padding = NumVertices > 0 ? NumTexCoords % 2 : 0;
-        
-        var texCoordNumVerts = NumVertices;
-        if (itemCount != NumVertices * NumTexCoords)
-            texCoordNumVerts += padding;
-        
-        return texCoordNumVerts;
+        return NumVertices + padding;
     }
 }
