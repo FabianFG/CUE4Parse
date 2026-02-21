@@ -85,8 +85,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
                 EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
                 EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
-                EGame.GAME_MonsterJamShowdown => MonsterJamShowdownAes.MonsterJamShowdownDecrypt,
-                EGame.GAME_MotoGP25 => MotoGP25Aes.MotoGP25Decrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
                 EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
@@ -99,7 +97,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
-                EGame.GAME_StyxBladesofGreed => StyxAes.StyxDecrypt,
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 _ => null
             };
