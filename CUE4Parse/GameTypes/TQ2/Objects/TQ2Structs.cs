@@ -15,7 +15,8 @@ public static class TQ2Structs
         if (structName is null) return type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName);
         return structName switch
         {
-            "GrimItemDescriptionPtr" or "GrimAbilityProjectileParametersPtr" or "JsonDataAssetPath"=> new FSoftObjectPath(Ar),
+            "GrimItemDescriptionPtr" or "GrimAbilityProjectileParametersPtr" or "SoftJsonDataAssetPtr" or
+                "JsonDataAssetPath" or "JsonDataAssetPtr" => new FSoftObjectPath(Ar),
             "GrimDialogueVariableValue" => new FGrimDialogueVariableValue(Ar),
             _ when structName.StartsWith("GrimDialogue") && structName.EndsWith("Ref") => new FArticyId(Ar),
             _ when structName.StartsWith("TQ2") && structName.EndsWith("Ptr") => new FSoftObjectPath(Ar),
@@ -66,9 +67,9 @@ public class FGrimInstancedObjectPtr : IUStruct
 
     public FGrimInstancedObjectPtr(FAssetArchive Ar)
     {
-        var bValid = Ar.Read<int>();
+        var bValid = Ar.ReadBoolean();
         StructType = new FPackageIndex(Ar);
-        if (StructType.IsNull) return;
+        if (StructType.IsNull || !bValid) return;
 
         Type = Ar.Read<int>();
         Index = Ar.Read<int>();
