@@ -79,7 +79,7 @@ public class WwisePlugin
                     EAkPluginId.RemoteSystemSink => new CAkDefaultSinkParams(),
 
                 // EAkPluginId.AkSoundSeedGrainSrc
-                // EAkPluginId.AkImpacterSource
+                EAkPluginId.AkImpacterSource => new CAkImpacterParams(Ar),
                 EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
                 EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),
                 EAkPluginId.AkChannelRouterFX => new CAkChannelRouterFXParams(Ar),
