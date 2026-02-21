@@ -160,7 +160,7 @@ public enum EGame : uint
         GAME_MetroAwakening = GAME_UE5_2 + 4,
         GAME_LostRecordsBloomAndRage = GAME_UE5_2 + 5,
         GAME_DuneAwakening = GAME_UE5_2 + 6,
-        GAME_TitanQuest2 = GAME_UE5_2 + 7,
+        GAME_Placeholder4 = GAME_UE5_2 + 7,
         GAME_PUBGBlackBudget = GAME_UE5_2 + 8,
     GAME_UE5_3 = GameUtils.GameUe5Base + (3 << 16),
         GAME_MarvelRivals = GAME_UE5_3 + 1,
@@ -212,6 +212,7 @@ public enum EGame : uint
         GAME_StyxBladesofGreed = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
+        GAME_TitanQuest2 = GAME_UE5_7 + 1,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_8
