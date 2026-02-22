@@ -400,10 +400,10 @@ public class UObject : AbstractPropertyHolder
         writer.WriteValue(Flags.ToStringBitfield());
 
         // class
-        if (Class != null)
+        if (Class is { Object.Value: { } clas })
         {
             writer.WritePropertyName("Class");
-            writer.WriteValue(Class.GetFullName());
+            writer.WriteValue(clas.GetFullName());
         }
 
         // outer
