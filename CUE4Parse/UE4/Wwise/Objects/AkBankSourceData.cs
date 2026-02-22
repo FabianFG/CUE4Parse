@@ -9,8 +9,7 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 // CAkBankMgr::LoadSource
 public class AkBankSourceData
 {
-    public readonly EAkPluginId PluginId;
-    public readonly EAkPluginType PluginType;
+    public readonly AkPlugin Plugin;
     public readonly EAKBKSourceType SourceType;
     public readonly uint DataIndex;
     public readonly uint SampleRate;
@@ -26,9 +25,7 @@ public class AkBankSourceData
 
     public AkBankSourceData(FArchive Ar)
     {
-        var rawPluginId = Ar.Read<uint>();
-        PluginId = (EAkPluginId) rawPluginId;
-        PluginType = (EAkPluginType) (rawPluginId & 0x0F);
+        Plugin = WwisePlugin.GetPluginId(Ar);
         SourceType = Ar.Read<EAKBKSourceType>();
 
         if (WwiseVersions.Version <= 46)
@@ -98,27 +95,24 @@ public class AkBankSourceData
                 alwaysParam = true;
                 break;
             case <= 126:
-                HasPluginParams = PluginType is EAkPluginType.Source or EAkPluginType.MotionSource;
+                HasPluginParams = Plugin.Type is EAkPluginType.Source or EAkPluginType.MotionSource;
                 alwaysParam = false;
                 break;
             default:
-                HasPluginParams = PluginType is EAkPluginType.Source;
+                HasPluginParams = Plugin.Type is EAkPluginType.Source;
                 alwaysParam = false;
                 break;
         }
 
         if (HasPluginParams)
-            PluginParams = WwisePlugin.TryParsePluginParams(Ar, PluginId, alwaysParam);
+            PluginParams = WwisePlugin.TryParsePluginParams(Ar, Plugin, alwaysParam);
     }
 
     public void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         writer.WriteStartObject();
-        writer.WritePropertyName(nameof(PluginId));
-        writer.WriteValue(HasPluginParams ? PluginId.ToString() : PluginId); // We won't map to enum if it has no params
-
-        writer.WritePropertyName(nameof(PluginType));
-        writer.WriteValue(PluginType.ToString());
+        writer.WritePropertyName(nameof(Plugin));
+        serializer.Serialize(writer, Plugin);
 
         writer.WritePropertyName(nameof(SourceType));
         writer.WriteValue(SourceType.ToString());
