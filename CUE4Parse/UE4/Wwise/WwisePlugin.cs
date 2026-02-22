@@ -20,11 +20,9 @@ namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    public static IAkPluginParam? TryParsePluginParams(FArchive Ar, AkPlugin? plugin, bool always = false)
+    public static IAkPluginParam? TryParsePluginParams(FArchive Ar, AkPlugin plugin, bool always = false)
     {
-        if (plugin is null)
-            return null;
-        var pluginId = plugin.Value.PluginId;
+        var pluginId = plugin.PluginId;
         if (pluginId is EAkPluginId.None)
             return null;
         if ((int) pluginId < 0 && !always)
