@@ -18,12 +18,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             var handle = new StringBuilder(128);
             handle.Append(Name);
 
-            var obj = Outer;
-            while (obj != null && obj is not UAnimBoneCompressionSettings)
+            var outer = Outer;
+            while (outer?.TryLoad<UAnimBoneCompressionSettings>(out var obj) == true)
             {
                 handle.Append('.');
                 handle.Append(obj.Name);
-                obj = obj.Outer;
+                outer = outer.Outer;
             }
 
             return handle.ToString();
