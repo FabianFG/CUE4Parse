@@ -410,8 +410,11 @@ public class UObject : AbstractPropertyHolder
         if (Outer != null && Outer != package)
         {
             writer.WritePropertyName("Outer");
-            writer.WriteValue(Outer.Name); // TODO serialize the path too
+            writer.WriteValue(Outer.Name);
         }
+
+        writer.WritePropertyName("Path");
+        writer.WriteValue(GetPathName());
 
         // class
         if (Class != null)
