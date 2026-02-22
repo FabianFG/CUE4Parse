@@ -98,7 +98,7 @@ namespace CUE4Parse.FileProvider
                             {
                                 var stringTablePath = g.Value.SubstringAfter("LOCTABLE(\"").SubstringBeforeLast("\",");
 
-                                if (TryLoadPackageObject<UStringTable>(stringTablePath, out var stringTable))
+                                if (UStringTable.TryGet(this, stringTablePath, out var stringTable))
                                 {
                                     var keyName = g.Value.SubstringAfterLast(", \"").SubstringBeforeLast("\")"); // LOCTABLE("/Game/Narrative/LocalisedStrings/UI_Strings.UI_Strings", "23138_ui_pc_game_name_titlebar")
                                     var stringTableEntry = stringTable.StringTable.KeysToEntries;
