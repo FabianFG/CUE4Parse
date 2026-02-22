@@ -107,7 +107,12 @@ public class HierarchyMusicTrack : AbstractHierarchy
         writer.WriteValue(MusicFlags.ToString());
 
         writer.WritePropertyName(nameof(Sources));
-        serializer.Serialize(writer, Sources);
+        writer.WriteStartArray();
+        foreach (var source in Sources)
+        {
+            source.WriteJson(writer, serializer);
+        }
+        writer.WriteEndArray();
 
         writer.WritePropertyName(nameof(Playlist));
         serializer.Serialize(writer, Playlist);

@@ -14,6 +14,7 @@ using System;
 using System.Linq;
 using Serilog;
 using Newtonsoft.Json;
+using CUE4Parse.UE4.FMod.Utils;
 
 namespace CUE4Parse.UE4.FMod;
 
@@ -101,7 +102,7 @@ public class FModReader
                 rawNodeValue = Ar.ReadInt32();
             }
 
-            var nodeId = (ENodeId)rawNodeValue;
+            var nodeId = (ERIFFID)rawNodeValue;
             uint nodeSize = Ar.ReadUInt32();
             long nextNode = nodeStart + 8 + nodeSize;
 
@@ -113,174 +114,174 @@ public class FModReader
 
             switch (nodeId)
             {
-                case ENodeId.CHUNKID_FORMATINFO:
+                case ERIFFID.CHUNKID_FORMATINFO:
                     FormatInfo = new FFormatInfo(Ar);
                     break;
 
-                case ENodeId.CHUNKID_BANKINFO:
+                case ERIFFID.CHUNKID_BANKINFO:
                     BankInfo = new FBankInfo(Ar);
                     break;
 
-                case ENodeId.CHUNKID_STRINGDATA:
+                case ERIFFID.CHUNKID_STRINGDATA:
                     StringTable = new StringTable(Ar);
                     break;
 
-                case ENodeId.CHUNKID_SOUNDTABLE:
+                case ERIFFID.CHUNKID_SOUNDTABLE:
                     SoundTable = new SoundTable(Ar);
                     break;
 
-                case ENodeId.CHUNKID_HASHDATA:
+                case ERIFFID.CHUNKID_HASHDATA:
                     HashData = new HashData(Ar);
                     break;
 
-                case ENodeId.CHUNKID_PLATFORM_INFO:
+                case ERIFFID.CHUNKID_PLATFORM_INFO:
                     PlatformInfo = new FModGuid(Ar);
                     break;
 
-                case ENodeId.CHUNKID_LIST: // List of sub-chunks
-                    var listNodeId = (ENodeId)Ar.ReadInt32(); // Not needed; Im using custom structure
+                case ERIFFID.CHUNKID_LIST: // List of sub-chunks
+                    var listNodeId = (ERIFFID)Ar.ReadInt32(); // Not needed; Im using custom structure
                     ParseNodes(Ar, Ar.BaseStream.Position, nextNode);
                     break;
 
-                case ENodeId.CHUNKID_LISTCOUNT:
+                case ERIFFID.CHUNKID_LISTCOUNT:
                     var listCount = Ar.ReadUInt32(); // Not needed; Im using custom structure
                     break;
 
-                case ENodeId.CHUNKID_OUTPUTPORTBODY:
-                case ENodeId.CHUNKID_RETURNBUSBODY:
-                case ENodeId.CHUNKID_INPUTBUSBODY:
-                case ENodeId.CHUNKID_GROUPBUSBODY:
-                case ENodeId.CHUNKID_MASTERBUSBODY:
-                case ENodeId.CHUNKID_BUS:
+                case ERIFFID.CHUNKID_OUTPUTPORTBODY:
+                case ERIFFID.CHUNKID_RETURNBUSBODY:
+                case ERIFFID.CHUNKID_INPUTBUSBODY:
+                case ERIFFID.CHUNKID_GROUPBUSBODY:
+                case ERIFFID.CHUNKID_MASTERBUSBODY:
+                case ERIFFID.CHUNKID_BUS:
                     ParseBusNodes(Ar, nodeId, parentStack);
                     break;
 
-                case ENodeId.CHUNKID_SPECTRALSIDECHAINEFFECT:
-                case ENodeId.CHUNKID_BUILTINEFFECTBODY:
-                case ENodeId.CHUNKID_SENDEFFECTBODY:
-                case ENodeId.CHUNKID_SIDECHAINEFFECT:
-                case ENodeId.CHUNKID_PARAMETERIZEDEFFECT:
-                case ENodeId.CHUNKID_EFFECTBODY:
-                case ENodeId.CHUNKID_PLUGINEFFECTBODY:
+                case ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT:
+                case ERIFFID.CHUNKID_BUILTINEFFECTBODY:
+                case ERIFFID.CHUNKID_SENDEFFECTBODY:
+                case ERIFFID.CHUNKID_SIDECHAINEFFECT:
+                case ERIFFID.CHUNKID_PARAMETERIZEDEFFECT:
+                case ERIFFID.CHUNKID_EFFECTBODY:
+                case ERIFFID.CHUNKID_PLUGINEFFECTBODY:
                     ParseEffectNodes(Ar, nodeId, parentStack);
                     break;
 
-                case ENodeId.CHUNKID_SCATTERERINSTRUMENTBODY:
-                case ENodeId.CHUNKID_MULTIINSTRUMENTBODY:
-                case ENodeId.CHUNKID_PLAYLIST:
-                case ENodeId.CHUNKID_PROGRAMMERINSTRUMENTBODY:
-                case ENodeId.CHUNKID_COMMANDINSTRUMENTBODY:
-                case ENodeId.CHUNKID_WAVEFORMINSTRUMENTBODY:
-                case ENodeId.CHUNKID_EVENTINSTRUMENTBODY:
-                case ENodeId.CHUNKID_SILENCEINSTRUMENTBODY:
-                case ENodeId.CHUNKID_INSTRUMENT:
-                case ENodeId.CHUNKID_EFFECTINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_SCATTERERINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_MULTIINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_PLAYLIST:
+                case ERIFFID.CHUNKID_PROGRAMMERINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_COMMANDINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_WAVEFORMINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_EVENTINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_SILENCEINSTRUMENTBODY:
+                case ERIFFID.CHUNKID_INSTRUMENT:
+                case ERIFFID.CHUNKID_EFFECTINSTRUMENTBODY:
                     ParseInstrumentNodes(Ar, nodeId, parentStack);
                     break;
 
-                case ENodeId.CHUNKID_TRANSITIONREGIONBODY:
-                case ENodeId.CHUNKID_TRANSITIONTIMELINE:
+                case ERIFFID.CHUNKID_TRANSITIONREGIONBODY:
+                case ERIFFID.CHUNKID_TRANSITIONTIMELINE:
                     ParseTransitionNodes(Ar, nodeId, parentStack);
                     break;
 
-                case ENodeId.CHUNKID_PROPERTY: // Property Node
+                case ERIFFID.CHUNKID_PROPERTY: // Property Node
                     {
                         var node = new PropertyNode(Ar);
                         PropertyNodes[node.MappingGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_EVENTBODY: // Audio Event Node
+                case ERIFFID.CHUNKID_EVENTBODY: // Audio Event Node
                     {
                         var node = new EventNode(Ar);
                         EventNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_MODULATOR:
-                case ENodeId.CHUNKID_MODULATORBODY: // Modulator Node
+                case ERIFFID.CHUNKID_MODULATOR:
+                case ERIFFID.CHUNKID_MODULATORBODY: // Modulator Node
                     {
                         var node = new ModulatorNode(Ar);
                         ModulatorNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_PARAMETERBODY: // Parameter Node
+                case ERIFFID.CHUNKID_PARAMETERBODY: // Parameter Node
                     {
                         var node = new ParameterNode(Ar);
                         ParameterNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_PARAMETERLAYOUTBODY: // Parameter Layout Node
+                case ERIFFID.CHUNKID_PARAMETERLAYOUTBODY: // Parameter Layout Node
                     {
                         var node = new ParameterLayoutNode(Ar);
                         ParameterLayoutNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_WAVEFORMRESOURCE: // Single WAV Node
+                case ERIFFID.CHUNKID_WAVEFORMRESOURCE: // Single WAV Node
                     {
                         var node = new WaveformResourceNode(Ar);
                         WavEntries[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_TIMELINEBODY: // Timeline Node
+                case ERIFFID.CHUNKID_TIMELINEBODY: // Timeline Node
                     {
                         var node = new TimelineNode(Ar);
                         TimelineNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_SNAPSHOTBODY: // Snapshot Node
+                case ERIFFID.CHUNKID_SNAPSHOTBODY: // Snapshot Node
                     {
                         var node = new SnapshotNode(Ar);
                         SnapshotNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_VCA:
-                case ENodeId.CHUNKID_VCABODY: // VCA Node
+                case ERIFFID.CHUNKID_VCA:
+                case ERIFFID.CHUNKID_VCABODY: // VCA Node
                     {
                         var node = new VCANode(Ar);
                         VCANodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_CURVE: // Curve Node
+                case ERIFFID.CHUNKID_CURVE: // Curve Node
                     {
                         var node = new CurveNode(Ar);
                         CurveNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_CONTROLLEROWNER: // Controller Owner Node
+                case ERIFFID.CHUNKID_CONTROLLEROWNER: // Controller Owner Node
                     {
                         var node = new ControllerOwnerNode(Ar);
                         ControllerOwnerNodes.AddRange(node.Controllers);
                     }
                     break;
 
-                case ENodeId.CHUNKID_CONTROLLER: // Controller Node
+                case ERIFFID.CHUNKID_CONTROLLER: // Controller Node
                     {
                         var node = new ControllerNode(Ar);
                         ControllerNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_MAPPING: // Mapping Node
+                case ERIFFID.CHUNKID_MAPPING: // Mapping Node
                     {
                         var node = new MappingNode(Ar);
                         MappingNodes[node.BaseGuid] = node;
                     }
                     break;
 
-                case ENodeId.CHUNKID_SOUNDDATAHEADER: // Sound Data Header
+                case ERIFFID.CHUNKID_SOUNDDATAHEADER: // Sound Data Header
                     SoundDataInfo = new SoundDataInfo(Ar);
                     break;
 
-                case ENodeId.CHUNKID_SOUNDDATA: // Sound Data Node
+                case ERIFFID.CHUNKID_SOUNDDATA: // Sound Data Node
                     {
                         var node = new SoundDataNode(Ar, nodeStart, nodeSize, soundDataIndex);
                         visitedSoundNode = true;
@@ -300,12 +301,12 @@ public class FModReader
             // Stop if we already visited a sound node and current node is NOT sound node
             // Not sure why I need to do that but I've seen soundbanks that write duplicated FSB data outside of SND chunk
             // It's important to note there might be multiple SND chunks so we can't just stop after first SND
-            if (visitedSoundNode && nodeId != ENodeId.CHUNKID_SOUNDDATA)
+            if (visitedSoundNode && nodeId != ERIFFID.CHUNKID_SOUNDDATA)
                 break;
 
             if (Ar.BaseStream.Position != nextNode)
             {
-                if (nodeId is not ENodeId.CHUNKID_LIST)
+                if (nodeId is not ERIFFID.CHUNKID_LIST)
                     Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
 
                 Ar.BaseStream.Position = nextNode;
@@ -313,11 +314,11 @@ public class FModReader
         }
     }
 
-    private void ParseBusNodes(BinaryReader Ar, ENodeId nodeId, Stack<FParentContext> parentStack)
+    private void ParseBusNodes(BinaryReader Ar, ERIFFID nodeId, Stack<FParentContext> parentStack)
     {
         switch (nodeId)
         {
-            case ENodeId.CHUNKID_OUTPUTPORTBODY: // Output Port Node
+            case ERIFFID.CHUNKID_OUTPUTPORTBODY: // Output Port Node
                 {
                     var node = new OutputPortNode(Ar);
                     BusNodes[node.BaseGuid] = node;
@@ -325,7 +326,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_RETURNBUSBODY: // Return Bus Node
+            case ERIFFID.CHUNKID_RETURNBUSBODY: // Return Bus Node
                 {
                     var node = new ReturnBusNode(Ar);
                     BusNodes[node.BaseGuid] = node;
@@ -333,7 +334,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_INPUTBUSBODY: // Input Bus Node
+            case ERIFFID.CHUNKID_INPUTBUSBODY: // Input Bus Node
                 {
                     var node = new InputBusNode(Ar);
                     BusNodes[node.BaseGuid] = node;
@@ -341,7 +342,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_GROUPBUSBODY: // Group Bus Node
+            case ERIFFID.CHUNKID_GROUPBUSBODY: // Group Bus Node
                 {
                     var node = new GroupBusNode(Ar);
                     BusNodes[node.BaseGuid] = node;
@@ -349,7 +350,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_MASTERBUSBODY: // Master Bus Node
+            case ERIFFID.CHUNKID_MASTERBUSBODY: // Master Bus Node
                 {
                     var node = new MasterBusNode(Ar);
                     BusNodes[node.BaseGuid] = node;
@@ -357,13 +358,13 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_BUS: // Bus Node
+            case ERIFFID.CHUNKID_BUS: // Bus Node
                 if (parentStack.TryPeek(out var busParent) &&
-                    busParent.NodeId is ENodeId.CHUNKID_INPUTBUSBODY or
-                        ENodeId.CHUNKID_GROUPBUSBODY or
-                        ENodeId.CHUNKID_MASTERBUSBODY or
-                        ENodeId.CHUNKID_RETURNBUSBODY or
-                        ENodeId.CHUNKID_OUTPUTPORTBODY)
+                    busParent.NodeId is ERIFFID.CHUNKID_INPUTBUSBODY or
+                        ERIFFID.CHUNKID_GROUPBUSBODY or
+                        ERIFFID.CHUNKID_MASTERBUSBODY or
+                        ERIFFID.CHUNKID_RETURNBUSBODY or
+                        ERIFFID.CHUNKID_OUTPUTPORTBODY)
                 {
                     var node = new BusNode(Ar);
                     if (BusNodes.TryGetValue(busParent.Guid, out var baseBus))
@@ -375,11 +376,11 @@ public class FModReader
         }
     }
 
-    private void ParseEffectNodes(BinaryReader Ar, ENodeId nodeId, Stack<FParentContext> parentStack)
+    private void ParseEffectNodes(BinaryReader Ar, ERIFFID nodeId, Stack<FParentContext> parentStack)
     {
         switch (nodeId)
         {
-            case ENodeId.CHUNKID_BUILTINEFFECTBODY:
+            case ERIFFID.CHUNKID_BUILTINEFFECTBODY:
                 {
                     var node = new BuiltInEffectNode(Ar);
                     EffectNodes[node.BaseGuid] = node;
@@ -387,7 +388,7 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_PLUGINEFFECTBODY:
+            case ERIFFID.CHUNKID_PLUGINEFFECTBODY:
                 {
                     var node = new PluginEffectNode(Ar);
                     EffectNodes[node.BaseGuid] = node;
@@ -395,11 +396,11 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_PARAMETERIZEDEFFECT:
+            case ERIFFID.CHUNKID_PARAMETERIZEDEFFECT:
                 {
                     if (parentStack.TryPeek(out var paramEffectParent) &&
-                        paramEffectParent.NodeId is ENodeId.CHUNKID_BUILTINEFFECTBODY or
-                            ENodeId.CHUNKID_PLUGINEFFECTBODY)
+                        paramEffectParent.NodeId is ERIFFID.CHUNKID_BUILTINEFFECTBODY or
+                            ERIFFID.CHUNKID_PLUGINEFFECTBODY)
                     {
                         var node = new ParameterizedEffectNode(Ar);
                         if (EffectNodes.TryGetValue(paramEffectParent.Guid, out var builtInEffectNodeObj))
@@ -420,7 +421,7 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_SPECTRALSIDECHAINEFFECT:
+            case ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT:
                 {
                     var node = new SpectralSideChainEffectNode(Ar);
                     EffectNodes[node.BaseGuid] = node;
@@ -428,7 +429,7 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_SENDEFFECTBODY:
+            case ERIFFID.CHUNKID_SENDEFFECTBODY:
                 {
                     var node = new SendEffectNode(Ar);
                     EffectNodes[node.BaseGuid] = node;
@@ -436,7 +437,7 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_SIDECHAINEFFECT:
+            case ERIFFID.CHUNKID_SIDECHAINEFFECT:
                 {
                     var node = new SideChainEffectNode(Ar);
                     EffectNodes[node.BaseGuid] = node;
@@ -444,13 +445,13 @@ public class FModReader
                     break;
                 }
 
-            case ENodeId.CHUNKID_EFFECTBODY:
+            case ERIFFID.CHUNKID_EFFECTBODY:
                 {
                     if (parentStack.TryPeek(out var effectParent) &&
-                        effectParent.NodeId is ENodeId.CHUNKID_SENDEFFECTBODY or
-                            ENodeId.CHUNKID_SIDECHAINEFFECT or
-                            ENodeId.CHUNKID_SPECTRALSIDECHAINEFFECT or
-                            ENodeId.CHUNKID_PARAMETERIZEDEFFECT)
+                        effectParent.NodeId is ERIFFID.CHUNKID_SENDEFFECTBODY or
+                            ERIFFID.CHUNKID_SIDECHAINEFFECT or
+                            ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT or
+                            ERIFFID.CHUNKID_PARAMETERIZEDEFFECT)
                     {
                         var node = new EffectNode(Ar);
                         if (EffectNodes.TryGetValue(effectParent.Guid, out var effectNode))
@@ -463,11 +464,11 @@ public class FModReader
         }
     }
 
-    private void ParseInstrumentNodes(BinaryReader Ar, ENodeId nodeId, Stack<FParentContext> parentStack)
+    private void ParseInstrumentNodes(BinaryReader Ar, ERIFFID nodeId, Stack<FParentContext> parentStack)
     {
         switch (nodeId)
         {
-            case ENodeId.CHUNKID_SCATTERERINSTRUMENTBODY: // Scatterer Instrument Node
+            case ERIFFID.CHUNKID_SCATTERERINSTRUMENTBODY: // Scatterer Instrument Node
                 {
                     var node = new ScattererInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -475,7 +476,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_MULTIINSTRUMENTBODY: // Multi Instrument Node
+            case ERIFFID.CHUNKID_MULTIINSTRUMENTBODY: // Multi Instrument Node
                 {
                     var node = new MultiInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -483,9 +484,9 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_PLAYLIST: // Playlist Node
+            case ERIFFID.CHUNKID_PLAYLIST: // Playlist Node
                 if (parentStack.TryPeek(out var parentPlst) &&
-                    (parentPlst.NodeId is ENodeId.CHUNKID_SCATTERERINSTRUMENTBODY or ENodeId.CHUNKID_MULTIINSTRUMENTBODY))
+                    (parentPlst.NodeId is ERIFFID.CHUNKID_SCATTERERINSTRUMENTBODY or ERIFFID.CHUNKID_MULTIINSTRUMENTBODY))
                 {
                     var node = new PlaylistNode(Ar);
                     if (InstrumentNodes.TryGetValue(parentPlst.Guid, out var parentNodeObj))
@@ -504,7 +505,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_PROGRAMMERINSTRUMENTBODY: // Programmer Instrument Node
+            case ERIFFID.CHUNKID_PROGRAMMERINSTRUMENTBODY: // Programmer Instrument Node
                 {
                     var node = new ProgrammerInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -512,7 +513,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_COMMANDINSTRUMENTBODY: // Command Instrument Node
+            case ERIFFID.CHUNKID_COMMANDINSTRUMENTBODY: // Command Instrument Node
                 {
                     var node = new CommandInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -520,7 +521,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_WAVEFORMINSTRUMENTBODY: // Waveform Instrument Node
+            case ERIFFID.CHUNKID_WAVEFORMINSTRUMENTBODY: // Waveform Instrument Node
                 {
                     var node = new WaveformInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -528,7 +529,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_EVENTINSTRUMENTBODY: // Event Instrument Node
+            case ERIFFID.CHUNKID_EVENTINSTRUMENTBODY: // Event Instrument Node
                 {
                     var node = new EventInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -536,7 +537,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_SILENCEINSTRUMENTBODY: // Silence Instrument Node
+            case ERIFFID.CHUNKID_SILENCEINSTRUMENTBODY: // Silence Instrument Node
                 {
                     var node = new SilenceInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -544,7 +545,7 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_EFFECTINSTRUMENTBODY: // Effect Instrument Node
+            case ERIFFID.CHUNKID_EFFECTINSTRUMENTBODY: // Effect Instrument Node
                 {
                     var node = new EffectInstrumentNode(Ar);
                     InstrumentNodes[node.BaseGuid] = node;
@@ -552,15 +553,15 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_INSTRUMENT: // Instrument Node
+            case ERIFFID.CHUNKID_INSTRUMENT: // Instrument Node
                 if (parentStack.TryPeek(out var parentInst) &&
-                    (parentInst.NodeId is ENodeId.CHUNKID_PROGRAMMERINSTRUMENTBODY or
-                        ENodeId.CHUNKID_COMMANDINSTRUMENTBODY or
-                        ENodeId.CHUNKID_WAVEFORMINSTRUMENTBODY or
-                        ENodeId.CHUNKID_EVENTINSTRUMENTBODY or
-                        ENodeId.CHUNKID_SILENCEINSTRUMENTBODY or
-                        ENodeId.CHUNKID_PLAYLIST or
-                        ENodeId.CHUNKID_EFFECTINSTRUMENTBODY))
+                    (parentInst.NodeId is ERIFFID.CHUNKID_PROGRAMMERINSTRUMENTBODY or
+                        ERIFFID.CHUNKID_COMMANDINSTRUMENTBODY or
+                        ERIFFID.CHUNKID_WAVEFORMINSTRUMENTBODY or
+                        ERIFFID.CHUNKID_EVENTINSTRUMENTBODY or
+                        ERIFFID.CHUNKID_SILENCEINSTRUMENTBODY or
+                        ERIFFID.CHUNKID_PLAYLIST or
+                        ERIFFID.CHUNKID_EFFECTINSTRUMENTBODY))
                 {
                     var node = new InstrumentNode(Ar);
                     if (InstrumentNodes.TryGetValue(parentInst.Guid, out var instNode))
@@ -572,11 +573,11 @@ public class FModReader
         }
     }
 
-    private void ParseTransitionNodes(BinaryReader Ar, ENodeId nodeId, Stack<FParentContext> parentStack)
+    private void ParseTransitionNodes(BinaryReader Ar, ERIFFID nodeId, Stack<FParentContext> parentStack)
     {
         switch (nodeId)
         {
-            case ENodeId.CHUNKID_TRANSITIONREGIONBODY: // Transition Region Node
+            case ERIFFID.CHUNKID_TRANSITIONREGIONBODY: // Transition Region Node
                 {
                     var node = new TransitionRegionNode(Ar);
                     TransitionNodes[node.BaseGuid] = node;
@@ -584,9 +585,9 @@ public class FModReader
                 }
                 break;
 
-            case ENodeId.CHUNKID_TRANSITIONTIMELINE: // Transition Timeline Node
+            case ERIFFID.CHUNKID_TRANSITIONTIMELINE: // Transition Timeline Node
                 if (parentStack.TryPeek(out var transParent) &&
-                    transParent.NodeId is ENodeId.CHUNKID_TRANSITIONREGIONBODY)
+                    transParent.NodeId is ERIFFID.CHUNKID_TRANSITIONREGIONBODY)
                 {
                     var node = new TransitionTimelineNode(Ar);
                     if (TransitionNodes.TryGetValue(transParent.Guid, out var transNode))
@@ -598,8 +599,47 @@ public class FModReader
         }
     }
 
+    // FMOD::RuntimeAPI::Manager::getSoundInfo
+    // Key parameter is an internal string identifier for the sound, not the actual sound name
+    // Therefore this has no real use for us since we have no way of obtaining these keys
+    public bool TryGetSoundSampleFromSoundTable(string key, out FmodSample? sample)
+    {
+        sample = null;
+        if (SoundTable is null || SoundBankData is null)
+        {
+            Log.Warning("Sound table or sound bank data is missing, cannot retrieve sound info");
+            return false;
+        }
+
+        var hash = JenkinsHash.Hash64(key);
+        int subsoundIndex = SoundTable.Find(hash);
+
+        if (subsoundIndex is -1)
+        {
+            Log.Warning($"Sound with key '{key}' (hash {hash:X}) not found in sound table");
+            return false;
+        }
+
+        if (SoundTable.SoundbankIndex < SoundBankData.Count)
+        {
+            var soundBank = SoundBankData[SoundTable.SoundbankIndex];
+            if (subsoundIndex >= 0 && subsoundIndex < soundBank.Samples.Count)
+            {
+                sample = soundBank.Samples[subsoundIndex];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public List<FmodSample> ExtractTracks()
         => [.. SoundBankData.SelectMany(bank => bank.Samples)];
+
+    public List<FmodSample> ExtractSoundTableTracks()
+        => SoundTable is not null && SoundBankData is not null
+            ? [.. SoundBankData[SoundTable.SoundbankIndex].Samples]
+            : [];
 
     public FModGuid GetBankGuid()
         => BankInfo?.BaseGuid ?? new FModGuid();

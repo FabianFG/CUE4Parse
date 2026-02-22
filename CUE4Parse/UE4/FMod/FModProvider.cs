@@ -8,8 +8,8 @@ using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Fmod;
-using CUE4Parse.UE4.FMod.Extensions;
 using CUE4Parse.UE4.FMod.Objects;
+using CUE4Parse.UE4.FMod.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
@@ -30,13 +30,15 @@ public class FModExtractedSound
 public class FModProvider
 {
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
+    private Dictionary<FModGuid, bool> _eventResolutionStatus = [];
+    private Dictionary<FModGuid, FModGuid> _eventToReaderMap = [];
     private Dictionary<FModGuid, FModReader> _mergedReaders = [];
     private static byte[]? _encryptionKey;
     private string? _BankOutputDirectory;
 
     public FModProvider(IFileProvider provider, string gameDirectory)
     {
-        LoadEncryptionKey(provider);
+        LoadFModSettings(provider);
         LoadPakBanks(provider);
         LoadFileBanks(gameDirectory);
         UpdateEventCache();
@@ -149,17 +151,11 @@ public class FModProvider
         }
     }
 
-    private void LoadEncryptionKey(IFileProvider provider)
+    private void LoadFModSettings(IFileProvider provider)
     {
-        if (!provider.TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
+        var engineConfig = provider.DefaultEngine;
+        if (engineConfig is null)
             return;
-
-        var engineConfig = new ConfigIni(nameof(defaultEngine));
-
-        if (defaultEngine.TryCreateReader(out var engineAr))
-        {
-            using (engineAr) engineConfig.Read(new StreamReader(engineAr));
-        }
 
         var values = new List<string>();
         engineConfig.EvaluatePropertyValues("/Script/FMODStudio.FMODSettings", "BankOutputDirectory", values);
@@ -211,12 +207,20 @@ public class FModProvider
 
         foreach (var fmodReader in _mergedReaders.Values)
         {
-            var resolvedEvents = EventNodesResolver.ResolveAudioEvents(fmodReader);
+            var resolvedEvents = EventNodesResolver.TryResolveAudioEvents(fmodReader, out bool isFullyResolved);
+
 #if DEBUG
             EventNodesResolver.LogMissingSamples(fmodReader, resolvedEvents);
 #endif
+
             foreach (var kvp in resolvedEvents)
             {
+                _eventResolutionStatus.TryAdd(kvp.Key, isFullyResolved);
+                _eventToReaderMap[kvp.Key] = fmodReader.GetBankGuid();
+
+                if (kvp.Value.Count is 0)
+                    continue;
+
                 if (!eventSamples.TryGetValue(kvp.Key, out var sampleList))
                 {
                     eventSamples[kvp.Key] = sampleList = [];
@@ -236,6 +240,14 @@ public class FModProvider
 
         if (!_resolvedEventsCache.TryGetValue(eventGuid, out var samples))
         {
+            // There's no way of associating events with samples from sound table, so we just provide all sounds from sound table
+            // only if all samples were resolved because if they weren't it might be an issue on our side
+            if (_eventResolutionStatus.TryGetValue(eventGuid, out var isResolved) && isResolved)
+            {
+                Log.Debug("FMODEvent with guid {0} wasn't found in events cache, but all waveforms were resolved, using Sound Table instead", eventGuid);
+                return ExtractBankSoundTable(_mergedReaders[_eventToReaderMap[eventGuid]]);
+            }
+
             Log.Warning("Can't find FMODEvent with the guid {0}", eventGuid);
             return [];
         }
@@ -259,6 +271,8 @@ public class FModProvider
         return ExtractAudioSamples(samples, audioBank.Name);
     }
 
+    public List<FModExtractedSound> ExtractBankSoundTable(FModReader fmodReader)
+        => ExtractAudioSamples(fmodReader.ExtractSoundTableTracks(), fmodReader.BankName);
     public List<FModExtractedSound> ExtractBankSounds(FModReader fmodReader)
        => ExtractAudioSamples(fmodReader.ExtractTracks(), fmodReader.BankName);
     
