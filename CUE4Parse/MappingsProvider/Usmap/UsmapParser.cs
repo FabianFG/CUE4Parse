@@ -21,11 +21,11 @@ public class UsmapParser
     public readonly FCustomVersionContainer CustomVersions;
     public readonly uint NetCL;
 
-    public UsmapParser(string path, string name = "An unnamed usmap") : this(File.OpenRead(path), name) { }
-    public UsmapParser(Stream data, string name = "An unnamed usmap") : this(new FStreamArchive(name, data)) { }
-    public UsmapParser(byte[] data, string name = "An unnamed usmap") : this(new FByteArchive(name, data)) { }
+    public UsmapParser(string path, string name = "An unnamed usmap", StringComparer? comparer = null) : this(File.OpenRead(path), name, comparer) { }
+    public UsmapParser(Stream data, string name = "An unnamed usmap", StringComparer? comparer = null) : this(new FStreamArchive(name, data), comparer) { }
+    public UsmapParser(byte[] data, string name = "An unnamed usmap", StringComparer? comparer = null) : this(new FByteArchive(name, data), comparer) { }
 
-    public UsmapParser(FArchive archive)
+    public UsmapParser(FArchive archive, StringComparer? comparer = null)
     {
         var magic = archive.Read<ushort>();
         if (magic != FileMagic)
@@ -128,7 +128,7 @@ public class UsmapParser
         }
 
         var structCount = Ar.Read<uint>();
-        var structs = new Dictionary<string, Struct>(StringComparer.OrdinalIgnoreCase);
+        var structs = new Dictionary<string, Struct>(comparer ?? StringComparer.OrdinalIgnoreCase);
 
         var mappings = new TypeMappings(structs, enums);
 
