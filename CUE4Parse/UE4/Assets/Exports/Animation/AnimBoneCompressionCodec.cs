@@ -19,10 +19,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             handle.Append(Name);
 
             var outer = Outer;
-            while (outer?.TryLoad<UAnimBoneCompressionSettings>(out var obj) == true)
+            while (outer?.TryLoad<UAnimBoneCompressionSettings>(out _) == false)
             {
                 handle.Append('.');
-                handle.Append(obj.Name);
+                handle.Append(outer.Name);
                 outer = outer.Outer;
             }
 
