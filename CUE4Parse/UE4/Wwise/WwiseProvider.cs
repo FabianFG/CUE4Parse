@@ -682,7 +682,7 @@ public partial class WwiseProvider
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to load {Nmae}", assetFile.Name);
+            Log.Error(e, "Failed to load {Name}", assetFile.Name);
         }
     }
 

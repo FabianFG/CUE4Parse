@@ -13,14 +13,14 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly AkStateGroup[] StateGroups = [];
     public readonly RtpcInit[] RtpcInitList = [];
     public readonly PluginPropertyValue[] PluginPropertyValues = [];
-    public readonly EAkPluginId PluginId;
+    public readonly AkPlugin Plugin;
     public readonly IAkPluginParam? PluginParams;
 
     // CAkFxBase::SetInitialValues
     public BaseHierarchyFx(FArchive Ar) : base(Ar)
     {
-        PluginId = (EAkPluginId) WwisePlugin.GetPluginId(Ar);
-        PluginParams = WwisePlugin.TryParsePluginParams(Ar, PluginId);
+        Plugin = WwisePlugin.GetPluginId(Ar);
+        PluginParams = WwisePlugin.TryParsePluginParams(Ar, Plugin);
 
         MediaList = Ar.ReadArray(Ar.Read<byte>(), () => new AkMediaMap(Ar));
         RTPCs = AkRtpc.ReadArray(Ar);
@@ -92,8 +92,8 @@ public class BaseHierarchyFx : AbstractHierarchy
 
         if (PluginParams is not null)
         {
-            writer.WritePropertyName(nameof(PluginId));
-            writer.WriteValue(PluginId.ToString());
+            writer.WritePropertyName(nameof(Plugin));
+            serializer.Serialize(writer, Plugin);
 
             writer.WritePropertyName(nameof(PluginParams));
             serializer.Serialize(writer, PluginParams);
