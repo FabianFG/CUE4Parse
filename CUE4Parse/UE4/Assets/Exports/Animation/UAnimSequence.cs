@@ -26,13 +26,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         #region FCompressedAnimSequence CompressedData
         public FTrackToSkeletonMap[] CompressedTrackToSkeletonMapTable = []; // used for compressed data, missing before 4.12
-        public FSmartName[] CompressedCurveNames;
+        public FSmartName[]? CompressedCurveNames;
         //public byte[] CompressedByteStream; The actual data will be in CompressedDataStructure, no need to store as field
+        public string? BoneCodecDDCHandle;
+        public string? CurveCodecPath;
         public byte[]? CompressedCurveByteStream;
-        public FRawCurveTracks CompressedCurveData; // disappeared in 4.23
+        public FRawCurveTracks? CompressedCurveData; // disappeared in 4.23
         public ICompressedAnimData? CompressedDataStructure;
-        public UAnimBoneCompressionCodec? BoneCompressionCodec;
-        public UAnimCurveCompressionCodec? CurveCompressionCodec;
         public int CompressedRawDataSize;
         #endregion
 
@@ -43,9 +43,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FName RetargetSource;
         public FTransform[]? RetargetSourceAssetReferencePose;
         public EAnimInterpolationType Interpolation;
-
-        public bool bUseRawDataOnly;
-        public bool EnsuredCurveData;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -129,11 +126,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                     else
                         SerializeCompressedData3(Ar);
 
-                    if (Ar.Position + 4 <= validPos) bUseRawDataOnly = Ar.ReadBoolean();
+                    if (FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.AnimSequenceRawDataOnlyFlagRemoval)
+                        Ar.Position += 4;
                 }
             }
 
-            EnsuredCurveData = EnsureCurveData();
+            if (CompressedCurveData == null && CompressedCurveByteStream is { Length: > 0 } && CompressedCurveNames is { Length: > 0 })
+            {
+                if (!string.IsNullOrEmpty(CurveCodecPath) && CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(CurveCodecPath) is { } codec)
+                {
+                    CompressedCurveData = new FRawCurveTracks(codec.ConvertCurves(CompressedCurveNames, CompressedCurveByteStream));
+                }
+                else
+                {
+                    Log.Warning("Unknown curve compression codec {0}", CurveCodecPath);
+                }
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -171,7 +179,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 writer.WriteValue(CompressedCurveByteStream);
             }*/
 
-            if (EnsuredCurveData)
+            if (CompressedCurveData != null)
             {
                 writer.WritePropertyName("CompressedCurveData");
                 serializer.Serialize(writer, CompressedCurveData);
@@ -181,20 +189,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 writer.WritePropertyName("CompressedDataStructure");
                 serializer.Serialize(writer, CompressedDataStructure);
-            }
-
-            if (BoneCompressionCodec != null)
-            {
-                var asReference = new ResolvedLoadedObject(BoneCompressionCodec);
-                writer.WritePropertyName("BoneCompressionCodec");
-                serializer.Serialize(writer, asReference);
-            }
-
-            if (CurveCompressionCodec != null)
-            {
-                var asReference = new ResolvedLoadedObject(CurveCompressionCodec);
-                writer.WritePropertyName("CurveCompressionCodec");
-                serializer.Serialize(writer, asReference);
             }
 
             if (CompressedRawDataSize > 0)
@@ -271,8 +265,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Game >= EGame.GAME_UE4_22)
             {
-                var curveCodecPath = Ar.ReadFString();
-                CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
+                CurveCodecPath = Ar.ReadFString();
                 CompressedCurveByteStream = Ar.ReadBytes(Ar.Read<int>());
             }
 
@@ -299,8 +292,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             compressedData.Bind(serializedByteStream);
             NumFrames = CompressedDataStructure.CompressedNumberOfFrames;
 
-            var curveCodecPath = Ar.ReadFString();
-            CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
+            CurveCodecPath = Ar.ReadFString();
             CompressedCurveByteStream = Ar.ReadBytes(Ar.Read<int>());
         }
 
@@ -314,26 +306,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var serializedByteStream = ReadSerializedByteStream(Ar);
 
-            var boneCodecDDCHandle = Ar.ReadFString();
-            var curveCodecPath = Ar.ReadFString();
+            BoneCodecDDCHandle = Ar.ReadFString();
+            CurveCodecPath = Ar.ReadFString();
 
             var numCurveBytes = Ar.Read<int>();
             CompressedCurveByteStream = Ar.ReadBytes(numCurveBytes);
 
-            // Lookup our codecs in our settings assets
-            BoneCompressionCodec = BoneCompressionSettings?.Load<UAnimBoneCompressionSettings>()?.GetCodec(boneCodecDDCHandle);
-            CurveCompressionCodec = CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(curveCodecPath);
-
-            if (BoneCompressionCodec != null)
+            var boneCompressionCodec = BoneCompressionSettings?.Load<UAnimBoneCompressionSettings>()?.GetCodec(BoneCodecDDCHandle);
+            if (boneCompressionCodec != null)
             {
-                CompressedDataStructure = BoneCompressionCodec.AllocateAnimData();
+                CompressedDataStructure = boneCompressionCodec.AllocateAnimData();
                 CompressedDataStructure.SerializeCompressedData(Ar);
                 CompressedDataStructure.Bind(serializedByteStream);
                 NumFrames = CompressedDataStructure.CompressedNumberOfFrames;
             }
             else
             {
-                Log.Warning("Unknown bone compression codec {0}", boneCodecDDCHandle);
+                Log.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
             }
         }
 
@@ -513,16 +502,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
 
             return dst;
-        }
-
-        private bool EnsureCurveData()
-        {
-            if (CompressedCurveData.FloatCurves == null && CurveCompressionCodec != null)
-            {
-                CompressedCurveData.FloatCurves = CurveCompressionCodec.ConvertCurves(this);
-                return true;
-            }
-            return false;
         }
     }
 }

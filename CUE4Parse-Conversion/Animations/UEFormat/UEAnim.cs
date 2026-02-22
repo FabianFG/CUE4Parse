@@ -123,7 +123,7 @@ public class UEAnim : UEFormatExport
             trackChunk.Serialize(Ar);
         }
 
-        var floatCurves = originalSequence.CompressedCurveData.FloatCurves;
+        var floatCurves = originalSequence.CompressedCurveData?.FloatCurves;
         if (floatCurves is not null && floatCurves.Length > 0)
         {
             using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);

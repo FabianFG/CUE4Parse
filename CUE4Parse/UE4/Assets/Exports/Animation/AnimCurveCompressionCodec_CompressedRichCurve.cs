@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -183,23 +184,16 @@ public class UAnimCurveCompressionCodec_CompressedRichCurve : UAnimCurveCompress
         return curve;
     }
 
-    public override unsafe FFloatCurve[] ConvertCurves(UAnimSequence animSeq)
+    public override unsafe FFloatCurve[] ConvertCurves(FSmartName[] names, byte[] data)
     {
-        if (animSeq.CompressedCurveByteStream == null || animSeq.CompressedCurveByteStream.Length == 0)
-        {
-            return [];
-        }
-
-        fixed (byte* buffer = &animSeq.CompressedCurveByteStream[0])
+        fixed (byte* buffer = &data[0])
         {
             var curveDescriptions = (FCurveDesc*) buffer;
 
-            var compressedCurveNames = animSeq.CompressedCurveNames;
-            var numCurves = compressedCurveNames.Length;
-            var floatCurves = new FFloatCurve[numCurves];
-            for (var curveIndex = 0; curveIndex < numCurves; ++curveIndex)
+            var floatCurves = new FFloatCurve[names.Length];
+            for (var curveIndex = 0; curveIndex < floatCurves.Length; ++curveIndex)
             {
-                var curveName = compressedCurveNames[curveIndex];
+                var curveName = names[curveIndex];
                 var curve = curveDescriptions[curveIndex];
                 var compressedKeys = buffer + curve.KeyDataOffset;
                 var rawCurve = ConverterMap[(int) curve.CompressionFormat][(int) curve.KeyTimeCompressionFormat](curve.PreInfinityExtrap, curve.PostInfinityExtrap, curve.NumKeys, compressedKeys);
