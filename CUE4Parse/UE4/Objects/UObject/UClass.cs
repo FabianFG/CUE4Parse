@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -104,8 +105,9 @@ public class UClass : UStruct
         return null;
     }
 
-    public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
+    public string DecompileBlueprintToPseudo(TypeMappings mappings, UClassCookedMetaData? cookedMetaData = null)
     {
+        BlueprintDecompilerUtils.mappings = mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -114,7 +116,7 @@ public class UClass : UStruct
         bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
 
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
-        if (emptyClass) return $"{c} {{ }};";
+        if (emptyClass) return $"{c};";
 
         var stringBuilder = new CustomStringBuilder();
         stringBuilder.AppendLine(c);
