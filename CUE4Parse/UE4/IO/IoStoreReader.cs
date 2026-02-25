@@ -124,13 +124,14 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
         var offset = ioEntry.Offset;
         var size = ioEntry.Size;
+        long offsetInFile = 0;
         if (header is { } bulk)
         {
-            offset += bulk.OffsetInFile;
-            size = bulk.ElementCount;
+            size = bulk.SizeOnDisk;
+            offsetInFile = bulk.OffsetInFile;
         }
 
-        return Read(offset, size);
+        return Read(offset, size, offsetInFile);
     }
 
     // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
@@ -218,14 +219,15 @@ public partial class IoStoreReader : AbstractAesVfsReader
         throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
     }
 
-    private byte[] Read(long offset, long length)
+    private byte[] Read(long offset, long length, long offsetInFile = 0L)
     {
         switch (Game)
         {
             case EGame.GAME_MindsEye:
-                return ReadPartiallyEncrypted(offset, length);
+                return ReadPartiallyEncrypted(offset, length, offsetInFile);
         }
 
+        offset += offsetInFile;
         var compressionBlockSize = TocResource.Header.CompressionBlockSize;
         var dst = new byte[length];
         var firstBlockIndex = (int) (offset / compressionBlockSize);
@@ -238,12 +240,13 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var uncompressedBuffer = Array.Empty<byte>();
 
         FArchive?[]? clonedReaders = null;
-
+        long size = 0;
         for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
         {
             ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
 
             var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
+            size += rawSize;
             if (compressedBuffer.Length < rawSize)
             {
                 //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");
@@ -296,7 +299,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         return dst;
     }
 
-    private byte[] ReadPartiallyEncrypted(long offset, long length)
+    private byte[] ReadPartiallyEncrypted(long offset, long length, long offsetInFile)
     {
         var limit = Game switch
         {
@@ -305,8 +308,21 @@ public partial class IoStoreReader : AbstractAesVfsReader
         };
 
         var compressionBlockSize = TocResource.Header.CompressionBlockSize;
-        var dst = new byte[length];
         var firstBlockIndex = (int) (offset / compressionBlockSize);
+        var newFirstBlockIndex = (int) ((offset + offsetInFile) / compressionBlockSize);
+        if (newFirstBlockIndex != firstBlockIndex)
+        {
+            limit = 0;
+            offset += offsetInFile;
+            offsetInFile = 0;
+            firstBlockIndex = (int) (offset / compressionBlockSize);
+        }
+        else
+        {
+            length += offsetInFile;
+        }
+
+        var dst = new byte[length];
         var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
         var offsetInBlock = offset % compressionBlockSize;
         var remainingSize = length;
@@ -382,7 +398,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             dstOffset += sizeInBlock;
         }
 
-        return dst;
+        return offsetInFile == 0 ? dst : dst[(int)offsetInFile..];
     }
 
     public override void Mount(StringComparer pathComparer)
