@@ -169,8 +169,7 @@ public class WwiseReader
             if (sectionIdentifier is EChunkID.BankHeader)
             {
                 Ar.Read<uint>(); // Version
-                var soundBankId = Ar.Read<uint>();
-                return soundBankId;
+                return Ar.Read<uint>(); // SoundBankId
             }
 
             Ar.Position = sectionStart + sectionLength;

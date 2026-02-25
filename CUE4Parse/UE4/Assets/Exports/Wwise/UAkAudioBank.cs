@@ -38,7 +38,10 @@ public class UAkAudioBank : UAkAudioType
         if (SoundBankCookedData is null)
             return;
 
-        writer.WritePropertyName("SoundBankCookedData");
+        writer.WritePropertyName(nameof(SoundBankCookedData));
         serializer.Serialize(writer, SoundBankCookedData);
     }
 }
+
+public class UWuiBank : UAkAudioBank; // The Awesome Adventures of Captain Spirit
+public class UWwiseBank : UAkAudioBank; // Borderlands 3

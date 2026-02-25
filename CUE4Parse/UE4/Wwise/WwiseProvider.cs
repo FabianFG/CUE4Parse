@@ -39,6 +39,7 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 102
         {
             EGame.GAME_AceCombat7 or EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyLittleHope
                 or EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or EGame.GAME_TheQuarry => new WwiseProviderConfiguration(long.MaxValue, baseConfig.MaxBankFiles),
+            EGame.GAME_Borderlands3 => new WwiseProviderConfiguration(long.MaxValue, int.MaxValue), // We need everything
             _ => baseConfig
         };
     }
@@ -108,6 +109,49 @@ public partial class WwiseProvider
         }
 
         return results;
+    }
+
+    public List<WwiseExtractedSound> ExtractBankSounds(UAkAudioBank audioBank)
+    {
+        DetermineBaseWwiseAudioPath();
+
+        var soundBankCookedData = audioBank.SoundBankCookedData;
+
+        if (soundBankCookedData is null)
+        {
+            var soundBankId = audioBank.GetOrDefault<uint>("ShortID");
+
+            if (soundBankId is 0)
+                return [];
+
+            var soundBank = LoadSoundBankById(soundBankId, returnBank: true);
+
+            if (soundBank is null)
+                return [];
+
+            return ExtractBankSounds(soundBank);
+        }
+        else
+        {
+            var results = new List<WwiseExtractedSound>();
+            foreach (var eventName in soundBankCookedData.IncludedEventNames)
+            {
+                if (eventName.IsNone)
+                    continue;
+
+                var audioEventId = WwiseFnv.GetHash(eventName.Text);
+
+                foreach (var hierarchy in GetHierarchiesById(audioEventId))
+                {
+                    if (hierarchy.Data is HierarchyEvent hierarchyEvent)
+                    {
+                        LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, eventName.Text);
+                    }
+                }
+            }
+
+            return results;
+        }
     }
 
     public List<WwiseExtractedSound> ExtractAudioEventSounds(UAkAudioEvent audioEvent)
@@ -241,10 +285,10 @@ public partial class WwiseProvider
         }
     }
 
-    private void LoadSoundBankById(uint soundBankId)
+    private WwiseReader? LoadSoundBankById(uint soundBankId, bool returnBank = false)
     {
-        if (_wwiseLoadedSoundBanks.Contains(soundBankId))
-            return;
+        if (!returnBank && _wwiseLoadedSoundBanks.Contains(soundBankId))
+            return null;
 
         DetermineBaseWwiseAudioPath();
 
@@ -264,15 +308,20 @@ public partial class WwiseProvider
                     continue;
 
                 using var fullReader = file.Value.CreateReader();
-                var reader = new WwiseReader(fullReader);
-                CacheWwiseFile(reader);
+                var soundBank = new WwiseReader(fullReader);
+                CacheWwiseFile(soundBank);
                 _wwiseLoadedSoundBanks.Add(soundBankId);
+                return soundBank;
             }
             catch (Exception e)
             {
                 Log.Warning(e, $"Failed to read soundbank file '{file.Key}'");
             }
         }
+
+        Log.Warning("Soundbank with ID {ID} wasn't found", soundBankId);
+
+        return null;
     }
 
     private void LoopThroughEventActions(HierarchyEvent hierarchyEvent, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)

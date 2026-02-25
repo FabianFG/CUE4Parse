@@ -49,3 +49,6 @@ public class UAkAudioEvent : UAkAudioType
         writer.WriteValue(MaxAttenuationRadius);
     }
 }
+
+public class UWuiEvent : UAkAudioEvent; // The Awesome Adventures of Captain Spirit
+public class UWwiseEvent : UAkAudioEvent; // Borderlands 3
