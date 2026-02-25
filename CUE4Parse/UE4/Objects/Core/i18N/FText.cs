@@ -366,7 +366,7 @@ public abstract class FTextHistory : IUStruct
             Key = Ar.ReadFString();
 
             if (Ar.Owner?.Provider is not null &&
-                Ar.Owner.Provider.TryLoadPackageObject<UStringTable>(TableId.Text, out var table) &&
+                UStringTable.TryGet(Ar.Owner.Provider, TableId.Text, out var table) &&
                 table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
             {
                 SourceString = t;
