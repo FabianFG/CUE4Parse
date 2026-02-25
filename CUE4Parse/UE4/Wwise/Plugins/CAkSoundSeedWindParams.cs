@@ -14,22 +14,22 @@ public class CAkSoundSeedWindParams : IAkPluginParam
     {
         WindParams = new AkWindParams(Ar);
         var deflectorCount = Ar.Read<ushort>();
-        WindParams.fMaxDistance = Ar.Read<float>();
-        m_pDeflectors = Ar.ReadArray(() => new AkWindDeflectorParams(Ar));
-        m_Curves = Ar.ReadArray(() => new CAkConversionTable(Ar, false));
+        WindParams.MaxDistance = Ar.Read<float>();
+        m_pDeflectors = Ar.ReadArray(deflectorCount, () => new AkWindDeflectorParams(Ar));
+        m_Curves = Ar.ReadArray(Ar.Read<ushort>(), () => new CAkConversionTable(Ar, false));
     }
 }
 
 public struct AkWindParams
 {
-    public float fDuration;
-    public float fDurationRdm;
-    public uint uChannelMask;
-    public float fMinDistance;
-    public float fAttenuationRolloff;
-    public float fMaxDistance;
-    public float fDynamicRange;
-    public float fPlaybackRate;
+    public float Duration;
+    public float DurationRandom;
+    public uint ChannelMask;
+    public float MinDistance;
+    public float AttenuationRolloff;
+    public float MaxDistance;
+    public float DynamicRange;
+    public float PlaybackRate;
     public float[] fBaseValue;
     public float[] fRandomValue;
     public bool[] bAutomation;
@@ -38,20 +38,20 @@ public struct AkWindParams
 
     public AkWindParams(FArchive Ar)
     {
-        fDuration = Ar.Read<float>();
-        fDurationRdm = Ar.Read<float>();
+        Duration = Ar.Read<float>();
+        DurationRandom = Ar.Read<float>();
         var value = Ar.Read<ushort>();
-        uChannelMask = value switch
+        ChannelMask = value switch
         {
              0 => 4,
              2 => 0x603,
              _ => value,
         };
 
-        fMinDistance = Ar.Read<float>();
-        fAttenuationRolloff = Ar.Read<float>();
-        fDynamicRange = Ar.Read<float>();
-        fPlaybackRate = Ar.Read<float>();
+        MinDistance = Ar.Read<float>();
+        AttenuationRolloff = Ar.Read<float>();
+        DynamicRange = Ar.Read<float>();
+        PlaybackRate = Ar.Read<float>();
         int channelCount = 7;
         fBaseValue = new float[channelCount];
         fRandomValue = new float[channelCount];
@@ -67,9 +67,9 @@ public struct AkWindParams
 
 public struct AkWindDeflectorParams(FArchive Ar)
 {
-    public float fDistance = Ar.Read<float>();
-    public float fAngle = Ar.Read<float>();
-    public float fFrequency = Ar.Read<float>();
-    public float fQFactor = Ar.Read<float>();
-    public float fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float Distance = Ar.Read<float>();
+    public float Angle = Ar.Read<float>();
+    public float Frequency = Ar.Read<float>();
+    public float QFactor = Ar.Read<float>();
+    public float Gain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 }

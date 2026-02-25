@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
@@ -14,38 +13,48 @@ public class CAkReflectFXParams(FArchive Ar) : IAkPluginParam
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct AkReflectFXParams
 {
-    public float fCenterPerc;
-    public float fMaxReflections;
-    public float fDryGain;
-    public float fWetGainDB;
+    public float CenterPerc;
+    public float MaxReflections;
+    public float DryGain;
+    public float WetGainDB;
     public CAkConversionTable[] m_Curves;
-    public float fMaxDistance;
-    public float fBaseTextureFreq;
+    public float MaxDistance;
+    public float BaseTextureFrequency;
     public uint uFadeOutNbFrames;
     public AkFilteredFracDelayLineParams delayLineParams;
     public float fPrevDryGain;
-    public AkChannelConfig outputConfig;
+    public AkChannelConfig OutputChannelConfig;
+    public float DistanceWarping;
+    public float DiffractionWarping;
+    public AkDecorrParams DecorrParams;
+    public float FadeTime;
 
     public AkReflectFXParams(FArchive Ar)
     {
-        delayLineParams.fSpeedOfSound = Math.Max(Ar.Read<float>(), 0.001f);
-        fCenterPerc = Ar.Read<float>();
-        fMaxReflections = Ar.Read<float>();
-        fDryGain = Ar.Read<float>();
-        fWetGainDB = Ar.Read<float>();
-        fMaxDistance = Ar.Read<float>();
-        fBaseTextureFreq = Ar.Read<float>();
+        delayLineParams.SpeedOfSound = Math.Max(Ar.Read<float>(), 0.001f);
+        CenterPerc = Ar.Read<float>();
+        MaxReflections = Ar.Read<float>();
+        DryGain = Ar.Read<float>();
+        WetGainDB = Ar.Read<float>();
+        MaxDistance = Ar.Read<float>();
+        BaseTextureFrequency = Ar.Read<float>();
         uFadeOutNbFrames = Ar.Read<uint>();
-        delayLineParams.fParamFilterCutoff = Ar.Read<float>();
-        delayLineParams.uParamFilterIsFIR = Ar.Read<uint>();
-        delayLineParams.fPitchThreshold = Ar.Read<float>();
-        delayLineParams.fDistanceThreshold = Ar.Read<float>();
-        delayLineParams.uThresholdMode = Ar.Read<uint>();
-        if (WwiseVersions.Version >= 154)
-            Ar.Position += 8;
-        outputConfig = Ar.Read<AkChannelConfig>();
-        if (WwiseVersions.Version >= 154)
-            Ar.Position += 34;
+        delayLineParams.ParamFilterCutoff = Ar.Read<float>();
+        delayLineParams.ParamFilterType = Ar.Read<uint>();
+        delayLineParams.PitchThreshold = Ar.Read<float>();
+        delayLineParams.DistanceThreshold = Ar.Read<float>();
+        delayLineParams.ThresholdMode = Ar.Read<uint>();
+        if (WwiseVersions.Version >= 145)
+        {
+            DistanceWarping = Ar.Read<float>();
+            DiffractionWarping = Ar.Read<float>();
+        }
+        OutputChannelConfig = Ar.Read<AkChannelConfig>();
+        if (WwiseVersions.Version >= 145)
+        {
+            DecorrParams = new AkDecorrParams(Ar);
+            FadeTime = Ar.Read<float>();
+        }
         var curvesCount = Ar.Read<ushort>();
         m_Curves = new CAkConversionTable[curvesCount];
         // scaling depends on index and wwise version
@@ -59,10 +68,24 @@ public struct AkReflectFXParams
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct AkFilteredFracDelayLineParams
 {
-    public float fSpeedOfSound;
-    public float fParamFilterCutoff;
-    public uint uParamFilterIsFIR;
-    public float fPitchThreshold;
-    public float fDistanceThreshold;
-    public uint uThresholdMode;
+    public float SpeedOfSound;
+    public float ParamFilterCutoff;
+    public uint ParamFilterType;
+    public float PitchThreshold;
+    public float DistanceThreshold;
+    public uint ThresholdMode;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct AkDecorrParams(FArchive Ar)
+{
+    public float FusingTime = Ar.Read<float>();
+    public float DecorrStrength = Ar.Read<float>();
+    public int DecorrAlgorithmSelect = Ar.Read<int>();
+    public int DecorrStrengthSource = Ar.Read<int>();
+    public uint DecorrFilterMaxReflectionOrder = Ar.Read<uint>();
+    public bool StereoDecorrelation = Ar.Read<byte>() != 0;
+    public float DecorrWindowWidth = Ar.Read<float>();
+    public bool DecorrHardwareAcceleration = Ar.Read<byte>() != 0;
+    public uint MaterialFilteringSelect = Ar.Read<uint>();
 }
