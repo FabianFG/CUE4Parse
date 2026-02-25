@@ -20,7 +20,7 @@ public class FStringTable
         {
             if (Ar.Game is EGame.GAME_CodeVein2) return CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.StringTable);
             var value = Ar.ReadFString();
-            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.SkipFString();
             if (Ar.Game == EGame.GAME_LostRecordsBloomAndRage)
             {
                 Ar.SkipFString();

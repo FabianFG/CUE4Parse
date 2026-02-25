@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -91,7 +91,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
 
 [StructFallback]
 [JsonConverter(typeof(FGameplayTagConverter))]
-public struct FGameplayTag
+public struct FGameplayTag : IUStruct
 {
     public FName TagName;
 

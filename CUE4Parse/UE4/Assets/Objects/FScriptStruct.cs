@@ -252,8 +252,8 @@ public class FScriptStruct
             // Metro:Awakening
             "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
 
-            // Marvel Rivals
-            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
+            "MarvelSoftObjectPath" when Ar.Game == EGame.GAME_MarvelRivals => new FMarvelSoftObjectPath(Ar),
+            "SerializablePropertySoftPath" when Ar.Game == EGame.GAME_MarvelRivals => new FSerializablePropertySoftPath(Ar),
 
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
