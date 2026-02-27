@@ -111,7 +111,7 @@ public class UObject : AbstractPropertyHolder
     public FStructFallback? SerializedSparseClassData;
 
     // public FObjectExport Export;
-    public IPackage? Owner => Class?.Package;
+    public IPackage? Owner => Outer?.Package ?? Class?.Package;
     public string ExportType => Class?.Name.Text ?? GetType().Name;
 
     public UObject()
