@@ -109,6 +109,8 @@ public class UObject : AbstractPropertyHolder
     public EObjectFlags Flags;
     public UStruct? SerializedSparseClassDataStruct;
     public FStructFallback? SerializedSparseClassData;
+    // field for any custom data
+    public object? CustomGameData;
 
     // public FObjectExport Export;
     public IPackage? Owner => Outer?.Package;
@@ -382,49 +384,42 @@ public class UObject : AbstractPropertyHolder
 
     protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        // export type
         writer.WritePropertyName("Type");
         writer.WriteValue(ExportType);
 
-        // object name
-        writer.WritePropertyName("Name"); // ctrl click depends on the name, we always need it
+        writer.WritePropertyName(nameof(Name)); // ctrl click depends on the name, we always need it
         writer.WriteValue(Name);
 
-        writer.WritePropertyName("Flags");
+        writer.WritePropertyName(nameof(Flags));
         writer.WriteValue(Flags.ToStringBitfield());
 
-        // class
         if (Class is { Object.Value: { } clas })
         {
-            writer.WritePropertyName("Class");
+            writer.WritePropertyName(nameof(Class));
             writer.WriteValue(clas.GetFullName());
         }
 
-        // outer
         if (Outer != null && Outer is not ResolvedPackageObject)
         {
-            writer.WritePropertyName("Outer");
+            writer.WritePropertyName(nameof(Outer));
             serializer.Serialize(writer, Outer);
         }
 
-        // super
         if (Super != null)
         {
-            writer.WritePropertyName("Super");
+            writer.WritePropertyName(nameof(Super));
             serializer.Serialize(writer, Super);
         }
 
-        // template
         if (Template != null)
         {
-            writer.WritePropertyName("Template");
+            writer.WritePropertyName(nameof(Template));
             serializer.Serialize(writer, Template);
         }
 
-        // export properties
         if (Properties.Count > 0)
         {
-            writer.WritePropertyName("Properties");
+            writer.WritePropertyName(nameof(Properties));
             writer.WriteStartObject();
             foreach (var property in Properties)
             {
@@ -436,10 +431,10 @@ public class UObject : AbstractPropertyHolder
 
         if (SerializedSparseClassDataStruct != null)
         {
-            writer.WritePropertyName("SerializedSparseClassDataStruct");
+            writer.WritePropertyName(nameof(SerializedSparseClassDataStruct));
             writer.WriteValue(SerializedSparseClassDataStruct.GetFullName());
 
-            writer.WritePropertyName("SerializedSparseClassData");
+            writer.WritePropertyName(nameof(SerializedSparseClassData));
             serializer.Serialize(writer, SerializedSparseClassData);
         }
     }

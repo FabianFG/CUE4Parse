@@ -825,6 +825,11 @@ public class UObjectConverter : JsonConverter<UObject>
     {
         writer.WriteStartObject();
         value.WriteJson(writer, serializer);
+        if (value.CustomGameData is not null)
+        {
+            writer.WritePropertyName(nameof(value.CustomGameData));
+            serializer.Serialize(writer, value.CustomGameData);
+        }
         writer.WriteEndObject();
     }
 
