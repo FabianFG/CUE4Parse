@@ -38,10 +38,10 @@ public class FByteBulkData
         _data = data;
     }
 
-    public FByteBulkData(FAssetArchive Ar)
+    public FByteBulkData(FAssetArchive Ar, FByteBulkDataHeader? header)
     {
-        Header = new FByteBulkDataHeader(Ar);
-        if (Header.ElementCount == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        Header = header ?? new FByteBulkDataHeader(Ar);
+        if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
         {
             // Log.Warning("Bulk with no data");
             return;
@@ -52,25 +52,54 @@ public class FByteBulkData
 
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
         {
-            Ar.Position += Header.ElementCount;
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB) && !BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile)) // but where is data? inlined or in separate file?
-        {
-            throw new ParserException(Ar, "TODO: CompressedZlib");
+            Ar.Position += Header.SizeOnDisk;
         }
 
         if (LazyLoad)
         {
             _data = new Lazy<byte[]?>(() =>
             {
-                var data = new byte[Header.ElementCount];
+                var data = new byte[Header.SizeOnDisk];
                 return ReadBulkDataInto(data) ? data : null;
             });
         }
         else
         {
-            var data = new byte[Header.ElementCount];
+            var data = new byte[Header.SizeOnDisk];
             if (ReadBulkDataInto(data)) _data = new Lazy<byte[]?>(() => data);
+        }
+    }
+
+    public FByteBulkData(FAssetArchive Ar)
+    {
+        Header = new FByteBulkDataHeader(Ar);
+        if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        {
+            // Log.Warning("Bulk with no data");
+            return;
+        }
+
+        _dataPosition = Ar.Position;
+        _savedAr = Ar;
+
+        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
+        {
+            Ar.Position += Header.SizeOnDisk;
+        }
+
+        if (LazyLoad)
+        {
+            _data = new Lazy<byte[]?>(() =>
+            {
+                var data = new byte[Header.SizeOnDisk];
+                return ReadBulkDataInto(data) ? data : null;
+            });
+        }
+        else
+        {
+            var data = new byte[Header.SizeOnDisk];
+            if (ReadBulkDataInto(data))
+                _data = new Lazy<byte[]?>(() => data);
         }
     }
 
@@ -91,7 +120,7 @@ public class FByteBulkData
 
     private bool ReadBulkDataInto(byte[] data, int offset = 0)
     {
-        if (data.Length - offset < Header.ElementCount)
+        if (data.Length - offset < Header.SizeOnDisk)
         {
             Log.Error("Data buffer is too small");
             return false;
@@ -127,42 +156,37 @@ public class FByteBulkData
 
             archive = ubulkAr;
             position = ubulkAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
-
-            if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
-            {
-                var compressedData = new byte[Header.SizeOnDisk];
-                ubulkAr.ReadAt(position, compressedData, offset, compressedData.Length);
-                using var dataAr = new FByteArchive("", compressedData, _savedAr.Versions);
-                dataAr.SerializeCompressedNew(data, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-                return true;
-            }
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {
 #if DEBUG
             Log.Debug("bulk data in .uexp file (Payload At End Of File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
-            if (Header.OffsetInFile + Header.ElementCount > archive.Length)
+            if (Header.OffsetInFile + Header.SizeOnDisk > archive.Length)
                 throw new ParserException(archive, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
 
             // stored in same file, but at different position
             // save archive position
             position = Header.OffsetInFile;
         }
-        else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
-        {
-            throw new ParserException(archive, "TODO: CompressedZlib");
-        }
         else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable) || BulkDataFlags.HasFlag(BULKDATA_None))
         {
             //
         }
 
-        var read = archive.ReadAt(position, data, offset, Header.ElementCount);
-        if (read != Header.ElementCount)
+        var read = archive.ReadAt(position, data, offset, (int)Header.SizeOnDisk);
+        if (read != Header.SizeOnDisk)
         {
-            Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
+            Log.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
             // return false; // should we???
+        }
+        if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
+        {
+            var uncompressedData = new byte[Header.ElementCount];
+            using var dataAr = new FByteArchive("", data, _savedAr.Versions);
+            dataAr.SerializeCompressedNew(uncompressedData, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            data = uncompressedData;
+            return true;
         }
         return true;
     }
@@ -189,17 +213,20 @@ public class FByteBulkData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetDataSize() => Header.ElementCount;
 
-    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData)
+    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkDataHeader? fullBulkData)
     {
+        fullBulkData = null;
         combinedData = [];
         try
         {
+            var saved = Ar.Position;
             var secondChunk = new FByteBulkData(Ar);
             if (Data is null || secondChunk.Data is null) return false;
 
             if (Data.Length < secondChunk.Data.Length && secondChunk.Data.AsSpan()[..Data.Length].SequenceEqual(Data))
             {
                 combinedData = secondChunk.Data;
+                fullBulkData = new (secondChunk.Header);
                 return true;
             }
 

@@ -1354,7 +1354,7 @@ public class WwiseConverter : JsonConverter<WwiseReader>
             value.GlobalSettings.WriteJson(writer, serializer);
         }
 
-        if (value.WemFile is { Length: > 0 })
+        if (value.WemFile?.IsValid is true)
         {
             writer.WritePropertyName("IsWemFile");
             writer.WriteValue(true);

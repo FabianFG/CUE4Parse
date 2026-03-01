@@ -60,5 +60,5 @@ public sealed class FDeferredByteData
         return data ?? [];
     }
 
-    public long LoadedSize() => _data is null ? 0 : _data.Length;
+    public long LoadedSize => _data is null ? 0 : _data.Length;
 }

@@ -44,6 +44,12 @@ namespace CUE4Parse.UE4.Readers
         }
         public abstract string Name { get; }
 
+        public bool SupportPartialReads => Game switch
+        {
+            EGame.GAME_GameForPeace or EGame.GAME_Rennsport or EGame.GAME_DragonQuestXI or EGame.GAME_ArenaBreakoutInfinite => false,
+            _ => true,
+        };
+
         public override int ReadAt(long position, byte[] buffer, int offset, int count)
         {
             Position = position;
