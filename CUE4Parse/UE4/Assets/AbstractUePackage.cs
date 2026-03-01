@@ -252,3 +252,9 @@ public class ResolvedLoadedObject(UObject uobject) : ResolvedObject(uobject.Owne
     public override ResolvedObject? Super => uobject.Super;
     public override Lazy<UObject> Object => new(() => uobject);
 }
+
+public class ResolvedPackageObject(IPackage package) : ResolvedObject(package)
+{
+    public override FName Name => new(Package.Name);
+    public override Lazy<UObject> Object => new(() => (AbstractUePackage) Package);
+}

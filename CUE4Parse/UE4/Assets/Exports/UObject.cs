@@ -111,7 +111,7 @@ public class UObject : AbstractPropertyHolder
     public FStructFallback? SerializedSparseClassData;
 
     // public FObjectExport Export;
-    public IPackage? Owner => Outer?.Package ?? Class?.Package;
+    public IPackage? Owner => Outer?.Package;
     public string ExportType => Class?.Name.Text ?? GetType().Name;
 
     public UObject()
@@ -190,12 +190,6 @@ public class UObject : AbstractPropertyHolder
     public string GetPathName(UObject? stopOuter = null)
     {
         var result = new StringBuilder();
-        if (Owner is UObject uobject)
-        {
-            uobject.GetPathName(stopOuter, result);
-            result.Append('.');
-        }
-
         GetPathName(stopOuter, result);
         return result.ToString();
     }
@@ -211,7 +205,7 @@ public class UObject : AbstractPropertyHolder
             {
                 objOuter.GetPathName(stopOuter, resultString);
                 // SUBOBJECT_DELIMITER_CHAR is used to indicate that this object's outer is not a UPackage
-                resultString.Append(objOuter.Outer is null ? ':' : '.');
+                resultString.Append(objOuter.Outer is ResolvedPackageObject ? ':' : '.');
             }
 
             resultString.Append(Name);
@@ -407,7 +401,7 @@ public class UObject : AbstractPropertyHolder
         }
 
         // outer
-        if (Outer != null)
+        if (Outer != null && Outer is not ResolvedPackageObject)
         {
             writer.WritePropertyName("Outer");
             serializer.Serialize(writer, Outer);
