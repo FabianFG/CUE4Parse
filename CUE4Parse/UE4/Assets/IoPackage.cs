@@ -543,7 +543,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => _export?.ObjectName ?? "None";
-        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
         public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
     }
@@ -559,7 +559,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
-        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
         public override ResolvedObject? Super => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.SuperIndex);
     }
