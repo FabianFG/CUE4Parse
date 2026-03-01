@@ -2,27 +2,16 @@
 
   <PropertyGroup>
     <RootNamespace>CUE4Parse_Conversion</RootNamespace>
-    <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFramework>net8.0</TargetFramework>
-    <IsPublishable>false</IsPublishable>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/FabianFG/CUE4Parse</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/FabianFG/CUE4Parse.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <Version>1.2.1</Version>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<Description>CUE4Parse Conversion</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AssetRipper.TextureDecoder" Version="2.2.1" />
-    <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0023" />
-    <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0023" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="AssetRipper.TextureDecoder" />
+    <PackageReference Include="SharpGLTF.Core" />
+    <PackageReference Include="SharpGLTF.Toolkit" />
+    <PackageReference Include="SixLabors.ImageSharp" />
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 
   <ItemGroup>

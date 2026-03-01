@@ -2,33 +2,81 @@
 name: NuGet Push
 
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - 'v*'
+    branches: [ master, dotnet-10 ]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  OWNER: "FabianFG"
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - name: GIT Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Build & Pack NuGet Package(s)
-        run: dotnet pack -c Release -o "./nuget-packages"
+      - name: Compute package version from Directory.Build.props
+        id: ver
+        shell: pwsh
+        run: |
+          $content = Get-Content .\Directory.Build.props -Raw -Encoding UTF8
+          if (-not $content) { throw "Could not read Directory.Build.props" }
+          
+          # Parse <Version>1.2.2</Version> with regex (strips whitespace/tabs)
+          if ($content -match '<Version>\s*([0-9]+\.[0-9]+\.[0-9]+)\s*</Version>') {
+            $baseVersion = $matches[1]
+          } else {
+            throw "Could not parse 3-part SemVer <Version> from Directory.Build.props. Found: '$content'"
+          }
+          
+          $version = "$baseVersion.$($env:GITHUB_RUN_NUMBER)"
+          "packageVersion=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "PackageVersion=$version (parsed base: '$baseVersion' + run: $($env:GITHUB_RUN_NUMBER))"
 
-      - name: Upload Build Artifact(s)
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-packages
-          path: ./nuget-packages
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Push NuGet Package(s)
-        working-directory: ./nuget-packages
-        run: dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Pack NuGet Package(s)
+        run: >
+          dotnet pack -c Release --no-restore --no-build `
+            -p:Version=${{ steps.ver.outputs.packageVersion }} `
+            -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
+            --output "${{ github.workspace }}\nuget-packages"
+
+#      - name: Push NuGet Package(s) to nuget.org
+#        run: |
+#          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+#            --source https://api.nuget.org/v3/index.json `
+#            --api-key ${{ secrets.NUGET_API_KEY }} `
+#            --skip-duplicate
+
+      - name: Add GitHub Packages source
+        run: |
+          dotnet nuget add source `
+            --username ${{ github.actor }} `
+            --password ${{ secrets.GITHUB_TOKEN }} `
+            --store-password-in-clear-text `
+            --name github `
+            "https://nuget.pkg.github.com/${{ env.OWNER }}/index.json"
+
+      - name: Push NuGet Package(s) to GitHub
+        run: |
+          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+            --source github `
+            --api-key ${{ secrets.GITHUB_TOKEN }} `
+            --skip-duplicate
