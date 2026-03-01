@@ -200,6 +200,8 @@ public partial class PakFileReader
 
     private int CalculateEncryptedBytesCountForWutheringWaves(FPakEntry pakEntry)
     {
+        if (!pakEntry.IsEncrypted)
+            return 0;
         return pakEntry.CustomData switch
         {
             0 => int.MaxValue,
