@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,11 +45,12 @@ public abstract class AbstractUePackage : UObject, IPackage
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
-    public UObject ConstructObject(UStruct? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
+    public UObject ConstructObject(ResolvedObject? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
     {
         UObject? obj = null;
         var mappings = owner?.Mappings;
-        var current = struc;
+        var current = struc?.Object?.Value as UStruct;
+
         while (current != null) // Traverse up until a known one is found
         {
             if (current is UClass scriptClass)
@@ -66,7 +68,7 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 // added guard for infinite loop
                 if (string.IsNullOrEmpty(structMappings.SuperType) || previous.Name == structMappings.SuperType) break;
-                current = new UScriptClass(structMappings.SuperType) ;
+                current = new UScriptClass(structMappings.SuperType);
             }
         }
 
@@ -125,17 +127,11 @@ public abstract class AbstractUePackage : UObject, IPackage
 }
 
 [JsonConverter(typeof(ResolvedObjectConverter))]
-public abstract class ResolvedObject : IObject
+public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : IObject
 {
-    public readonly IPackage Package;
+    public readonly IPackage Package = package;
 
-    public ResolvedObject(IPackage package, int exportIndex = -1)
-    {
-        Package = package;
-        ExportIndex = exportIndex;
-    }
-
-    public int ExportIndex { get; }
+    public int ExportIndex { get; } = exportIndex;
     public abstract FName Name { get; }
     public virtual ResolvedObject? Outer => null;
     public virtual ResolvedObject? Class => null;
@@ -189,18 +185,31 @@ public abstract class ResolvedObject : IObject
     public UObject? Load() => Object?.Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryLoad(out UObject export)
+    public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UObject
     {
         try
         {
-            export = Object?.Value;
-            return export != null;
+            export = Load<T>();
         }
         catch
         {
-            export = default;
-            return false;
+            export = null;
         }
+        return export != null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryLoad([MaybeNullWhen(false)] out UObject export)
+    {
+        try
+        {
+            export = Load();
+        }
+        catch
+        {
+            export = null;
+        }
+        return export != null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -235,32 +244,17 @@ public abstract class ResolvedObject : IObject
     public override string ToString() => GetFullName();
 }
 
-public class ResolvedLoadedObject : ResolvedObject
+public class ResolvedLoadedObject(UObject uobject) : ResolvedObject(uobject.Owner)
 {
-    private readonly UObject _object;
+    public override FName Name => new(uobject.Name);
+    public override ResolvedObject? Outer => uobject.Outer;
+    public override ResolvedObject? Class => uobject.Class;
+    public override ResolvedObject? Super => uobject.Super;
+    public override Lazy<UObject> Object => new(() => uobject);
+}
 
-    public ResolvedLoadedObject(UObject obj) : base(obj.Owner)
-    {
-        _object = obj;
-    }
-
-    public override FName Name => new(_object.Name);
-    public override ResolvedObject? Outer
-    {
-        get
-        {
-            var obj = _object.Outer;
-            return obj != null ? new ResolvedLoadedObject(obj) : null;
-        }
-    }
-    public override ResolvedObject? Class
-    {
-        get
-        {
-            var obj = _object.Class;
-            return obj != null ? new ResolvedLoadedObject(obj) : null;
-        }
-    }
-    public override ResolvedObject? Super => null; //new ResolvedLoadedObject(_object.Super);
-    public override Lazy<UObject> Object => new(() => _object);
+public class ResolvedPackageObject(IPackage package) : ResolvedObject(package)
+{
+    public override FName Name => new(Package.Name);
+    public override Lazy<UObject> Object => new(() => (AbstractUePackage) Package);
 }

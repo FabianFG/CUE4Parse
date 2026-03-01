@@ -52,7 +52,7 @@ public class UStruct : UField
                 }
             }
             catch (Exception e)
-            { 
+            {
                 Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
             }
             finally
