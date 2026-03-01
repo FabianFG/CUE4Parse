@@ -18,33 +18,36 @@ public struct AkRecorderFXParams(FArchive Ar, int size)
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct AkRecorderRTPCParams
     {
-        public float fCenter;
-        public float fFront;
-        public float fSurround;
-        public float fRear;
-        public float fLFE;
+        public float Center;
+        public float Front;
+        public float Surround;
+        public float Rear;
+        public float LFE;
     }
 
     public struct AkRecorderNonRTPCParams
     {
-        public short iFormat;
-        public string szFilename;
-        public bool bDownmixToStereo;
-        public bool bApplyDownstreamVolume;
+        public short Format;
+        public string Filename;
+        public bool DownmixToStereo;
+        public bool ApplyDownstreamVolume;
+        public short AmbisonicsChannelOrdering;
 
         const int _MaxCount = 0x103;
 
         public AkRecorderNonRTPCParams(FArchive Ar, int size)
         {
-            iFormat = Ar.Read<short>();
-            var len = Math.Min((size - 2) >> 1, _MaxCount + 1);
+            Format = Ar.Read<short>();
+            var len = Math.Min((size - 2), _MaxCount);
             var saved = Ar.Position;
-            var data = Ar.ReadArray<char>(len);
-            len = Array.IndexOf(data, 0) + 1;
+            var data = Ar.ReadArray<byte>(len);
+            len = Array.IndexOf(data, (byte)0) + 1;
             Ar.Position = saved;
-            szFilename = Encoding.Unicode.GetString(Ar.ReadBytes(len * 2), 0, (len - 1) * 2);
-            bDownmixToStereo = Ar.Read<byte>() != 0;
-            bApplyDownstreamVolume = Ar.Read<byte>() != 0;
+            Filename = len > 0 ? Encoding.UTF8.GetString(Ar.ReadBytes(len), 0, len - 1) : "";
+            DownmixToStereo = Ar.Read<byte>() != 0;
+            ApplyDownstreamVolume = Ar.Read<byte>() != 0;
+            if (WwiseVersions.Version >= 134)
+                AmbisonicsChannelOrdering = Ar.Read<short>();
         }
     }
 }

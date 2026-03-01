@@ -28,6 +28,6 @@ public struct AkRecorderADMFXParams{
         PreserveExtraBeds = Ar.Read<byte>() != 0;
         ApplyDownstreamVolume = Ar.Read<byte>() != 0;
         Hold = Ar.Read<byte>() != 0;
-        GameFilename = Encoding.Unicode.GetString(Ar.ReadBytes(0x104*2));
+        GameFilename = WwiseReader.ReadStzString(Ar);
     }
 }
