@@ -42,7 +42,6 @@ public class UMaterialInterface : UUnrealMaterial
         TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
         var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_DeadByDaylight) Ar.SkipFString();
         if (bSavedCachedExpressionData)
         {
             CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
