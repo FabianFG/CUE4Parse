@@ -9,72 +9,62 @@ namespace CUE4Parse.UE4.Wwise.Plugins;
 public class CAkSoundSeedWooshParams : IAkPluginParam
 {
     public AkWooshParams WooshParams;
-    public AkWooshDeflectorParams[] m_pDeflectors;
-    public CAkConversionTable[] m_Curves;
-    public AkWooshPathPoint[] m_pPath;
+    public AkWooshDeflectorParams[] Deflectors;
+    public CAkConversionTable[] Curves;
+    public float TotalPathDistance;
+    public AkWooshPathPoint[] Path;
 
     public CAkSoundSeedWooshParams(FArchive Ar)
     {
         WooshParams = new AkWooshParams(Ar);
-        m_pDeflectors = Ar.ReadArray(Ar.Read<ushort>(), () => new AkWooshDeflectorParams(Ar));
-        m_Curves = Ar.ReadArray(Ar.Read<ushort>(), () => new CAkConversionTable(Ar, false));
-        m_pPath = Ar.ReadArray<AkWooshPathPoint>(Ar.Read<ushort>());
+        Deflectors = Ar.ReadArray(Ar.Read<ushort>(), () => new AkWooshDeflectorParams(Ar));
+        Curves = Ar.ReadArray(Ar.Read<ushort>(), () => { Ar.Read<int>(); return new CAkConversionTable(Ar, false); });
+        var pointsNum = Ar.Read<ushort>();
+        TotalPathDistance = Ar.Read<float>();
+        Path = Ar.ReadArray<AkWooshPathPoint>(pointsNum);
     }
 }
 
 public struct AkWooshParams
 {
-    public float fDuration;
-    public float fDurationRdm;
-    public uint uChannelMask;
-    public float fMinDistance;
-    public float fAttenuationRolloff;
-    public float fDynamicRange;
-    public float fPlaybackRate;
-    public int iAnchorIndex;
-    public EAkNoiseColor eNoiseColor;
-    public float fRandomSpeedX;
-    public float fRandomSpeedY;
-    public uint uOversamplingFactor;
+    public float Duration;
+    public float DurationRdm;
+    public uint ChannelMask;
+    public float MinDistance;
+    public float AttenuationRolloff;
+    public float DynamicRange;
+    public float PlaybackRate;
+    public int AnchorIndex;
+    public EAkNoiseColor NoiseColor;
+    public float RandomSpeedX;
+    public float RandomSpeedY;
+    public uint OversamplingFactor;
 
-    public float[] fBaseValue;
-    public float[] fRandomValue;
-    public bool[] bAutomation;
+    public FSoundSeedParamvalue[] Values;
     public byte bEnableDistanceBasedAttenuation;
 
     public AkWooshParams(FArchive Ar)
     {
-        fDuration = Ar.Read<float>();
-        fDurationRdm = Ar.Read<float>();
+        Duration = Ar.Read<float>();
+        DurationRdm = Ar.Read<float>();
         var value = Ar.Read<ushort>();
-        uChannelMask = value switch
+        ChannelMask = value switch
         {
             0 => 4,
             2 => 0x603,
             _ => value,
         };
-        fMinDistance = Ar.Read<float>();
-        fAttenuationRolloff = Ar.Read<float>();
-        fDynamicRange = Ar.Read<float>();
-        fPlaybackRate = Ar.Read<float>();
-        iAnchorIndex = Ar.Read<int>();
-        eNoiseColor = Ar.Read<EAkNoiseColor>();
-        fRandomSpeedX = Ar.Read<float>();
-        fRandomSpeedY = Ar.Read<float>();
+        MinDistance = Ar.Read<float>();
+        AttenuationRolloff = Ar.Read<float>();
+        DynamicRange = Ar.Read<float>();
+        PlaybackRate = Ar.Read<float>();
+        NoiseColor = Ar.Read<EAkNoiseColor>();
+        RandomSpeedX = Ar.Read<float>();
+        RandomSpeedY = Ar.Read<float>();
         bEnableDistanceBasedAttenuation = Ar.Read<byte>();
-        uOversamplingFactor = Ar.Read<ushort>();
-        int channelCount = 7;
-        fBaseValue = new float[channelCount];
-        fRandomValue = new float[channelCount];
-        bAutomation = new bool[channelCount];
-        for (int i = 0; i < channelCount; i++)
-        {
-            fBaseValue[i] = Ar.Read<float>();
-            fRandomValue[i] = Ar.Read<float>();
-            bAutomation[i] = Ar.Read<bool>();
-        }
-
-        iAnchorIndex = Ar.Read<int>();
+        OversamplingFactor = Ar.Read<ushort>();
+        Values = Ar.ReadArray(4, () => new FSoundSeedParamvalue(Ar));
+        AnchorIndex = Ar.Read<short>();
     }
 }
 
@@ -89,14 +79,14 @@ public enum EAkNoiseColor : ushort
 
 public struct AkWooshDeflectorParams(FArchive Ar)
 {
-    public float fFrequency = Ar.Read<float>();
-    public float fQFactor = Ar.Read<float>();
-    public float fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float Frequency = Ar.Read<float>();
+    public float QFactor = Ar.Read<float>();
+    public float Gain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 };
 
 public struct AkWooshPathPoint(FArchive Ar)
 {
-    public float fDistanceTravelled;
-    public float fX;
-    public float fY;
+    public float DistanceTravelled;
+    public float X;
+    public float Y;
 }
