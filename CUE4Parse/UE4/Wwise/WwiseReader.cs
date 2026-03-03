@@ -24,15 +24,16 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkDataHea
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
-    public readonly string Path;
+    public string Path;
     private uint Version => Header.Version;
     private readonly WwiseDataSource? _source;
 
     public AkBankHeader Header { get; }
-    public AkFolder[]? Folders { get; }
+    public List<WwiseReader>? AKPKBankEntries { get; }
+    public List<AkEntry>? AKPKWemEntries { get; }
     public Dictionary<uint, string>? AKPluginList { get; }
     public MediaHeader[]? WemIndexes { get; }
-    public FDeferredByteData?[]? WemSounds { get; }
+    public FDeferredByteData[]? WemSounds { get; }
     public Hierarchy[]? Hierarchies { get; }
     public Dictionary<uint, string> BankIDToFileName { get; } = [];
     public string? Platform { get; }
@@ -45,13 +46,14 @@ public class WwiseReader
     public long LoadedSize { get; }
     public long TotalSize { get; }
 
-    public WwiseReader(FArchive Ar, WwiseDataSource source)
+    public WwiseReader(FArchive Ar, WwiseDataSource source, long size = -1)
     {
         Path = Ar.Name;
         _source = source;
-        TotalSize = Ar.Length;
+        TotalSize = size == -1 ? size : Ar.Length;
+        var end = size == -1 ? Ar.Length : Ar.Position + size;
 
-        while (Ar.Position < Ar.Length)
+        while (Ar.Position < end)
         {
             var sectionIdentifier = Ar.Read<EChunkID>();
             var sectionLength = Ar.Read<int>();
@@ -60,30 +62,44 @@ public class WwiseReader
             switch (sectionIdentifier)
             {
                 case EChunkID.AKPK:
-                    LoadedSize += sectionLength;
-                    if (!Ar.ReadBoolean())
+                    var akpkHeader = new FAKPKHeader(Ar);
+                    if (!akpkHeader.Endianness)
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
-                    long entriesOffset = Ar.Read<int>();
-                    Ar.Position += 12;
-                    var namesOffset = Ar.Position;
-                    entriesOffset += namesOffset + sizeof(int);
-                    Folders = Ar.ReadArray(() => new AkFolder(Ar));
-                    foreach (var folder in Folders)
-                        folder.PopulateName(Ar, namesOffset);
-                    Ar.Position = entriesOffset;
-                    // To-Do : rewrite with FDefferedByteData and correct offset multiplier
-                    foreach (var folder in Folders)
+                    Ar.Position = akpkHeader.NamesOffset;
+                    var folders = Ar.ReadArray(() => new AkFolder(Ar));
+                    foreach (var folder in folders)
+                        folder.PopulateName(Ar, akpkHeader.NamesOffset);
+
+                    Ar.Position = akpkHeader.BanksOffset;
+                    var bankEntries = Ar.ReadArray(() => new AkEntry(Ar, true, false));
+
+                    AKPKWemEntries = [];
+                    Ar.Position = akpkHeader.WemsOffset;
+                    AKPKWemEntries.AddRange(Ar.ReadArray(() => new AkEntry(Ar, false, false)));
+                    Ar.Position = akpkHeader.ExternalWemsOffset;
+                    AKPKWemEntries.AddRange(Ar.ReadArray(() => new AkEntry(Ar, false, true)));
+
+                    var saved = Ar.Position;
+                    AKPKBankEntries = [];
+                    foreach (var entry in bankEntries)
                     {
-                        folder.Entries = new AkEntry[Ar.Read<uint>()];
-                        for (var i = 0; i < folder.Entries.Length; i++)
-                        {
-                            var entry = new AkEntry(Ar);
-                            entry.Path = Folders[entry.FolderId].Name;
-                            folder.Entries[i] = entry;
-                        }
+                        entry.ReadAudioPath(folders);
+                        Ar.Position = entry.Offset * entry.OffsetMultiplier;
+                        var bank = new WwiseReader(Ar, _source, entry.Size) { Path = entry.AudioPath };
+                        LoadedSize += bank.LoadedSize;
+                        AKPKBankEntries.Add(bank);
                     }
-                    break;
+
+                    foreach (var entry in AKPKWemEntries)
+                    {
+                        entry.ReadAudioPath(folders);
+                        LoadedSize += entry.ReadData(Ar, _source);
+                        WwiseEncodedMedias[entry.Name] = entry.Data;
+                    }
+
+                    // return cause we got everything else from entries
+                    return;
                 case EChunkID.BankHeader:
                     LoadedSize += sectionLength;
                     Header = new AkBankHeader(Ar, sectionLength);
@@ -173,28 +189,14 @@ public class WwiseReader
                 Ar.Position = shouldBe;
             }
         }
-
-        if (Folders is null) return;
-
-        foreach (var folder in Folders)
-        {
-            foreach (var entry in folder.Entries)
-            {
-                if (entry.IsSoundBank || entry.Data == null)
-                    continue;
-
-                WwiseEncodedMedias[entry.NameHash.ToString()] = new FDeferredByteData(entry.Data);
-            }
-        }
     }
 
-    public FDeferredByteData ReadDeferredByteData(FArchive Ar, WwiseDataSource source, long offset, int size)
+    public static FDeferredByteData ReadDeferredByteData(FArchive Ar, WwiseDataSource source, long offset, int size)
     {
         switch (source)
         {
             case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.Header is { } head:
                 var bulk = new FDeferredByteData(assetAr, head, offset, size);
-                //if (head.BulkDataFlags is EBulkDataFlags.BULKDATA_None or EBulkDataFlags.BULKDATA_LazyLoadable)
                 Ar.Position = offset + size;
                 return bulk;
             case WwiseGameFileSource gameFileSource when Ar.SupportPartialReads && gameFileSource.File is { } file:

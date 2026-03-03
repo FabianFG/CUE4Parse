@@ -73,3 +73,17 @@ public readonly struct AkBankHeader
             Ar.Position += gapSize;
     }
 }
+
+public readonly struct FAKPKHeader(FArchive Ar)
+{
+    public readonly bool Endianness = Ar.ReadBoolean();
+    public readonly uint NamesSectionLength = Ar.Read<uint>();
+    public readonly uint BanksSectionLength = Ar.Read<uint>();
+    public readonly uint SoundsSectionLength = Ar.Read<uint>();
+    public readonly uint ExternalSoundsSectionLength = Ar.Read<uint>();
+
+    public readonly long NamesOffset => 28; // sectionHeader + sizeof(FAKPKHeader)
+    public readonly long BanksOffset => NamesOffset + NamesSectionLength;
+    public readonly long WemsOffset => BanksOffset + BanksSectionLength;
+    public readonly long ExternalWemsOffset => WemsOffset + SoundsSectionLength;
+}
