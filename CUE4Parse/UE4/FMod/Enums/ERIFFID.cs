@@ -1,6 +1,6 @@
 namespace CUE4Parse.UE4.FMod.Enums;
 
-public enum ENodeId : int // RIFFID
+public enum ERIFFID : int
 {
     CHUNKID_RIFF = 0x46464952,                      // RIFF
     FORMID_FEV = 0x20564546,                        // FEV 

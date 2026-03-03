@@ -95,6 +95,12 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     protected byte[] ReadAndDecryptAt(long position, int length, FArchive reader, bool isEncrypted) =>
         DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted);
 
+    protected byte[] ReadAndDecryptAt(byte[] buffer, long position, int length, FArchive reader, bool isEncrypted)
+    {
+        reader.ReadAt(position, buffer, 0, length);
+        return DecryptIfEncrypted(buffer, isEncrypted);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte[] ReadAndDecryptIndex(int length, FArchive reader, bool isEncrypted) =>
         DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted, true);

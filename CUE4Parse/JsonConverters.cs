@@ -825,6 +825,11 @@ public class UObjectConverter : JsonConverter<UObject>
     {
         writer.WriteStartObject();
         value.WriteJson(writer, serializer);
+        if (value.CustomGameData is not null)
+        {
+            writer.WritePropertyName(nameof(value.CustomGameData));
+            serializer.Serialize(writer, value.CustomGameData);
+        }
         writer.WriteEndObject();
     }
 
@@ -3313,10 +3318,23 @@ public class FModConverter : JsonConverter<FModReader>
             serializer.Serialize(writer, FModReader.EncryptionKey);
         }
 
-        if (value.StringTable is not null)
+        if (value.StringTable?.RadixTree is { Guids: var guids } tree)
         {
             writer.WritePropertyName(nameof(value.StringTable));
-            serializer.Serialize(writer, value.StringTable);
+            var guidMap = new Dictionary<string, string>(guids.Length);
+            for (int i = 0; i < guids.Length; i++)
+            {
+                var guid = guids[i];
+                if (tree.TryGetStringByIndex(i, out var path))
+                {
+                    guidMap[guid.ToString()] = path;
+                }
+                else
+                {
+                    guidMap[guid.ToString()] = string.Empty;
+                }
+            }
+            serializer.Serialize(writer, guidMap);
         }
 
         if (value.SoundTable is not null)

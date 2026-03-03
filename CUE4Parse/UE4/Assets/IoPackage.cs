@@ -241,11 +241,10 @@ public sealed class IoPackage : AbstractUePackage
             ExportsLazy[entry.LocalExportIndex] = new Lazy<UObject>(() =>
             {
                 // Create
-                var clas = ResolveObjectIndex(export.ClassIndex);
-                var struc = clas?.Object?.Value as UStruct;
-                var obj = ConstructObject(struc, this, export.ObjectFlags);
+                var obj = ConstructObject(ResolveObjectIndex(export.ClassIndex), this, export.ObjectFlags);
                 obj.Name = CreateFNameFromMappedName(export.ObjectName).Text;
-                obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
+                obj.Outer = ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject;
+                obj.Outer ??= new ResolvedPackageObject(this);
                 obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                 obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
                 obj.Flags |= export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
@@ -544,7 +543,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => _export?.ObjectName ?? "None";
-        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
         public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
     }
@@ -560,7 +559,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
-        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
         public override ResolvedObject? Super => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.SuperIndex);
     }

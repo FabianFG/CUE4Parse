@@ -103,6 +103,7 @@ public class FScriptStruct
             "PannerDetails" => new FPannerDetails(Ar),
             "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
             "IntPoint" or "Int32Point" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
+            "Int64Point" or "UInt64Point" => type == ReadType.ZERO ? new TIntVector2<long>() : Ar.Read<TIntVector2<long>>(),
             "IntVector2" or "Int32Vector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
             "UintVector2" or "Uint32Point" => type == ReadType.ZERO ? new TIntVector2<uint>() : Ar.Read<TIntVector2<uint>>(),
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
@@ -251,8 +252,8 @@ public class FScriptStruct
             // Metro:Awakening
             "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
 
-            // Marvel Rivals
-            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
+            "MarvelSoftObjectPath" when Ar.Game == EGame.GAME_MarvelRivals => new FMarvelSoftObjectPath(Ar),
+            "SerializablePropertySoftPath" when Ar.Game == EGame.GAME_MarvelRivals => new FSerializablePropertySoftPath(Ar),
 
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
@@ -373,6 +374,9 @@ public class FScriptStruct
 
             "MercunaPawnUsageFlags" when Ar.Game is EGame.GAME_HighOnLife2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaNavUsageTypes" when Ar.Game is EGame.GAME_HighOnLife2 => Ar.Read<FRawUIntStruct>(),
+
+            // Windrose
+            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             _ => Ar.Game switch
             {

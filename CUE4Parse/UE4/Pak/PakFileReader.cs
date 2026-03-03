@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -10,6 +11,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -95,7 +97,7 @@ namespace CUE4Parse.UE4.Pak
                 switch (Game)
                 {
                     case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                        return PartialEncryptCompressedExtract(reader, pakEntry);
+                        return PartialEncryptCompressedExtract(reader, pakEntry, header);
                     case EGame.GAME_GameForPeace:
                         return GameForPeaceExtract(reader, pakEntry);
                     case EGame.GAME_Rennsport:
@@ -123,14 +125,19 @@ namespace CUE4Parse.UE4.Pak
                 var uncompressed = new byte[bufferSize];
                 var uncompressedOff = 0;
 
+                var compressedBuffer = Array.Empty<byte>();
                 // decompress the required blocks
                 for (var blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
                 {
                     var block = pakEntry.CompressionBlocks[blockIndex];
                     var blockSize = (int) block.Size;
                     var srcSize = blockSize.Align(alignment);
+                    if (srcSize > compressedBuffer.Length)
+                    {
+                        compressedBuffer = new byte[srcSize];
+                    }
                     // Read the compressed block
-                    var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
+                    var compressed = ReadAndDecryptAt(compressedBuffer, block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,
                     // its either just the compression block size,
                     // or if it's the last block, it's the remaining data size
@@ -151,7 +158,7 @@ namespace CUE4Parse.UE4.Pak
             switch (Game)
             {
                 case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                    return PartialEncryptExtract(reader, pakEntry);
+                    return PartialEncryptExtract(reader, pakEntry, header);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:

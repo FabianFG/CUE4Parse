@@ -137,7 +137,7 @@ public class ULevel : Assets.Exports.UObject
         if (Ar.Game == EGame.GAME_MetroAwakening && GetOrDefault<bool>("bIsLightingScenario")) return;
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
-            _ = new FPrecomputedLightVolumeData(Ar);
+            _ = new FPrecomputedLightVolumeData(Ar, false);
         }
         if (Ar.Game == EGame.GAME_OutlastTrials)
         {

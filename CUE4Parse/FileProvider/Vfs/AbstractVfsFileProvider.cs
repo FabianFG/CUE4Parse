@@ -19,7 +19,6 @@ using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
 using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
-using CUE4Parse.GameTypes.MJS.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
 using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
@@ -30,7 +29,6 @@ using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
-using CUE4Parse.GameTypes.Styx.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
 using CUE4Parse.GameTypes.UWO.Encryption.Aes;
@@ -85,8 +83,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
                 EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
                 EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
-                EGame.GAME_MonsterJamShowdown => MonsterJamShowdownAes.MonsterJamShowdownDecrypt,
-                EGame.GAME_MotoGP25 => MotoGP25Aes.MotoGP25Decrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
                 EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
@@ -99,7 +95,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
-                EGame.GAME_StyxBladesofGreed => StyxAes.StyxDecrypt,
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 _ => null
             };

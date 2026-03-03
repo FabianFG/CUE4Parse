@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization;
 
 public class UStringTable : UObject
 {
-        public FStringTable StringTable { get; private set; }
+    public FStringTable StringTable { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

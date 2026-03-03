@@ -72,7 +72,7 @@ namespace CUE4Parse.Compression
                 case CompressionMethod.Zstd:
                 {
                     var compressionStream = new DecompressionStream(srcStream);
-                    compressionStream.Read(uncompressed, uncompressedOffset, uncompressedSize);
+                    compressionStream.ReadExactly(uncompressed, uncompressedOffset, uncompressedSize);
                     compressionStream.Dispose();
                     return;
                 }

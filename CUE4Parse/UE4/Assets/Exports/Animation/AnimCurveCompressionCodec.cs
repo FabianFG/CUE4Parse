@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -33,5 +34,5 @@ public abstract class UAnimCurveCompressionCodec : UObject
 
     public virtual UAnimCurveCompressionCodec? GetCodec(string path) => this;
 
-    public abstract FFloatCurve[] ConvertCurves(UAnimSequence animSeq);
+    public abstract FFloatCurve[] ConvertCurves(FSmartName[] names, byte[] data);
 }

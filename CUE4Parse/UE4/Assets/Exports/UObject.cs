@@ -101,36 +101,20 @@ public abstract class AbstractPropertyHolder : IPropertyHolder
 public class UObject : AbstractPropertyHolder
 {
     public string Name { get; set; } = null!;
-    public UObject? Outer;
-    public UStruct? Class;
+    public ResolvedObject? Class;
+    public ResolvedObject? Outer;
     public ResolvedObject? Super;
     public ResolvedObject? Template;
     public FGuid? ObjectGuid { get; private set; }
     public EObjectFlags Flags;
     public UStruct? SerializedSparseClassDataStruct;
     public FStructFallback? SerializedSparseClassData;
+    // field for any custom data
+    public object? CustomGameData;
 
     // public FObjectExport Export;
-    public IPackage? Owner
-    {
-        get
-        {
-            var top = this;
-            while (true)
-            {
-                var outer = top.Outer;
-                if (outer == null)
-                {
-                    break;
-                }
-
-                top = outer;
-            }
-
-            return top as IPackage;
-        }
-    }
-    public virtual string ExportType => Class?.Name ?? GetType().Name;
+    public IPackage? Owner => Outer?.Package;
+    public string ExportType => Class?.Name.Text ?? GetType().Name;
 
     public UObject()
     {
@@ -148,7 +132,10 @@ public class UObject : AbstractPropertyHolder
         {
             if (Class == null)
                 throw new ParserException(Ar, "Found unversioned properties but object does not have a class");
-            DeserializePropertiesUnversioned(Properties = [], Ar, Class);
+            if (Class.Object?.Value is not UStruct struc)
+                throw new ParserException(Ar, "Found unversioned properties but object's class is not a struct");
+
+            DeserializePropertiesUnversioned(Properties = [], Ar, struc);
         }
         else
         {
@@ -163,7 +150,7 @@ public class UObject : AbstractPropertyHolder
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
             return;
 
-        if (Class?.ExportType is { } type && type.EndsWith("BlueprintGeneratedClass"))
+        if (Class?.Object?.Value.ExportType is { } type && type.EndsWith("BlueprintGeneratedClass"))
         {
             SerializedSparseClassDataStruct = new FPackageIndex(Ar).Load<UStruct>();
             if (SerializedSparseClassDataStruct is null) return;
@@ -193,13 +180,15 @@ public class UObject : AbstractPropertyHolder
         resultString.Append('\'');
     }
 
-    /**
-     * Returns the fully qualified pathname for this object, in the format:
-     * 'Outermost[.Outer].Name'
-     *
-     * @param   stopOuter   if specified, indicates that the output string should be relative to this object.  if stopOuter
-     *                      does not exist in this object's outer chain, the result would be the same as passing null.
-     */
+    /// <summary>
+    /// Returns the fully qualified pathname for this object, in the format:
+    /// 'Outermost.[Outer:]Name'
+    /// </summary>
+    /// <param name="stopOuter">
+    /// if specified, indicates that the output string should be relative to this object.
+    /// if stopOuter does not exist in this object's outer chain, the result would be the same as passing null.
+    /// </param>
+    /// <returns></returns>
     public string GetPathName(UObject? stopOuter = null)
     {
         var result = new StringBuilder();
@@ -214,12 +203,11 @@ public class UObject : AbstractPropertyHolder
     {
         if (this != stopOuter)
         {
-            var objOuter = Outer;
-            if (objOuter != null && objOuter != stopOuter)
+            if (Outer?.TryLoad(out var objOuter) == true && objOuter != stopOuter)
             {
                 objOuter.GetPathName(stopOuter, resultString);
                 // SUBOBJECT_DELIMITER_CHAR is used to indicate that this object's outer is not a UPackage
-                resultString.Append(objOuter.Outer is IPackage ? ':' : '.');
+                resultString.Append(objOuter.Outer is ResolvedPackageObject ? ':' : '.');
             }
 
             resultString.Append(Name);
@@ -243,7 +231,7 @@ public class UObject : AbstractPropertyHolder
         {
             if (target.IsInstanceOfType(nextOuter))
             {
-                result = nextOuter;
+                nextOuter.TryLoad(out result);
             }
         }
         return result;
@@ -396,51 +384,42 @@ public class UObject : AbstractPropertyHolder
 
     protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        var package = Owner;
-
-        // export type
         writer.WritePropertyName("Type");
         writer.WriteValue(ExportType);
 
-        // object name
-        writer.WritePropertyName("Name"); // ctrl click depends on the name, we always need it
+        writer.WritePropertyName(nameof(Name)); // ctrl click depends on the name, we always need it
         writer.WriteValue(Name);
 
-        // outer
-        if (Outer != null && Outer != package)
+        writer.WritePropertyName(nameof(Flags));
+        writer.WriteValue(Flags.ToStringBitfield());
+
+        if (Class is { Object.Value: { } clas })
         {
-            writer.WritePropertyName("Outer");
-            writer.WriteValue(Outer.Name); // TODO serialize the path too
+            writer.WritePropertyName(nameof(Class));
+            writer.WriteValue(clas.GetFullName());
         }
 
-        // class
-        if (Class != null)
+        if (Outer != null && Outer is not ResolvedPackageObject)
         {
-            writer.WritePropertyName("Class");
-            writer.WriteValue(Class.GetFullName());
+            writer.WritePropertyName(nameof(Outer));
+            serializer.Serialize(writer, Outer);
         }
 
-        // super
         if (Super != null)
         {
-            writer.WritePropertyName("Super");
+            writer.WritePropertyName(nameof(Super));
             serializer.Serialize(writer, Super);
         }
 
-        // template
         if (Template != null)
         {
-            writer.WritePropertyName("Template");
+            writer.WritePropertyName(nameof(Template));
             serializer.Serialize(writer, Template);
         }
 
-        writer.WritePropertyName("Flags");
-        writer.WriteValue(Flags.ToStringBitfield());
-
-        // export properties
         if (Properties.Count > 0)
         {
-            writer.WritePropertyName("Properties");
+            writer.WritePropertyName(nameof(Properties));
             writer.WriteStartObject();
             foreach (var property in Properties)
             {
@@ -452,10 +431,10 @@ public class UObject : AbstractPropertyHolder
 
         if (SerializedSparseClassDataStruct != null)
         {
-            writer.WritePropertyName("SerializedSparseClassDataStruct");
+            writer.WritePropertyName(nameof(SerializedSparseClassDataStruct));
             writer.WriteValue(SerializedSparseClassDataStruct.GetFullName());
 
-            writer.WritePropertyName("SerializedSparseClassData");
+            writer.WritePropertyName(nameof(SerializedSparseClassData));
             serializer.Serialize(writer, SerializedSparseClassData);
         }
     }
@@ -501,7 +480,7 @@ public class UObject : AbstractPropertyHolder
     /** IsFullNameStableForNetworking means an object can be referred to its full path name over the network */
     public virtual bool IsFullNameStableForNetworking()
     {
-        if (Outer != null && !Outer.IsNameStableForNetworking())
+        if (Outer?.TryLoad(out var outer) == true && !outer.IsNameStableForNetworking())
         {
             return false;	// If any outer isn't stable, we can't consider the full name stable
         }
@@ -533,14 +512,14 @@ public static class PropertyUtil
         if (SearchPropertyInTemplate && holder is UObject obj)
         {
             // if not here then in look in template
-            var temp = obj?.Template?.Object?.Value;
+            var temp = obj.Template?.Object?.Value;
             if (temp != null && temp.TryGet(name, out tag, comparisonType))
             {
                 return true;
             }
 
             // if not here then in look in class ..? // not sure about this one
-            temp = obj?.Class;
+            temp = obj.Class?.Object?.Value;
             if (temp != null && temp.TryGet(name, out tag, comparisonType))
             {
                 return true;

@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
@@ -25,38 +25,39 @@ public class OodleException : ParserException
 
 public static class OodleHelper
 {
-    public const string OODLE_DLL_NAME_OLD = "oo2core_9_win64.dll";
-    public const string OODLE_DLL_NAME = "oodle-data-shared.dll";
-    public const string OODLE_SO_NAME = "liboodle-data-shared.so";
+    public const string OODLE_NAME_OLD = "oo2core_9_win64.dll";
+    public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
+    public const string OODLE_NAME_LINUX = "liboodle-data-shared.so";
 
     private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223";
     private const string WINDOWS_ZIP = "clang-cl-x64-release.zip";
     private const string LINUX_ZIP = "gcc-x64-release.zip";
 
+    public static string OodleFileName => OperatingSystem.IsLinux() ? OODLE_NAME_LINUX : OODLE_NAME_CURRENT;
     public static Oodle? Instance { get; private set; }
 
-    private static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    public static void Initialize(string? path = null) =>
+        InitializeAsync(path).GetAwaiter().GetResult();
 
-    public static void Initialize(string? path = null)
+    public static async Task InitializeAsync(string? path = null, CancellationToken cancellationToken = default)
     {
         if (Instance is not null) return;
 
         if (path is null && CUE4ParseNatives.IsFeatureAvailable("Oodle\0"u8))
         {
-            Instance = new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName));
+            Initialize(new Oodle(NativeLibrary.Load(CUE4ParseNatives.LibraryName)));
+            return;
         }
-        else
+
+        var oodlePath = path;
+        if (await DownloadOodleDllAsync(ref oodlePath, cancellationToken).ConfigureAwait(false) &&
+            !string.IsNullOrWhiteSpace(oodlePath))
         {
-            path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
-            if (DownloadOodleDll(path))
-            {
-                Instance = new Oodle(path);
-            }
-            else
-            {
-                Log.Warning("Oodle decompression failed: unable to download oodle dll");
-            }
+            Initialize(new Oodle(oodlePath));
+            return;
         }
+
+        Log.Warning("Oodle decompression failed: unable to download oodle dll");
     }
 
     public static void Initialize(Oodle instance)
@@ -65,35 +66,29 @@ public static class OodleHelper
         Instance = instance;
     }
 
-    public static bool DownloadOodleDll(string? path = null)
-    {
-        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
-        // Check for old Windows DLL name for backward compatibility
-        if (!IsLinux && File.Exists(OODLE_DLL_NAME_OLD))
-            return true;
-        return File.Exists(path) || DownloadOodleDllAsync(path).GetAwaiter().GetResult();
-    }
+    public static bool DownloadOodleDll() =>
+        DownloadOodleDllAsync().GetAwaiter().GetResult();
+
+    public static bool DownloadOodleDll(ref string? path) =>
+        DownloadOodleDllAsync(ref path).GetAwaiter().GetResult();
 
     public static void Decompress(
         byte[] compressed,   int compressedOffset,   int compressedSize,
         byte[] uncompressed, int uncompressedOffset, int uncompressedSize,
         FArchive? reader = null)
     {
-        if (Instance is null)
+        var instance = Instance;
+        if (instance is null)
         {
-            const string message = "Oodle decompression failed: not initialized";
-            if (reader is not null) throw new OodleException(reader, message);
-            throw new OodleException(message);
+            ThrowDecompressionException(reader, "Oodle decompression failed: not initialized");
         }
 
-        var decodedSize = Instance.Decompress(compressed.AsSpan(compressedOffset, compressedSize),
+        var decodedSize = instance.Decompress(compressed.AsSpan(compressedOffset, compressedSize),
             uncompressed.AsSpan(uncompressedOffset, uncompressedSize));
 
         if (decodedSize <= 0)
         {
-            var message = $"Oodle decompression failed with result {decodedSize}";
-            if (reader is not null) throw new OodleException(reader, message);
-            throw new OodleException(message);
+            ThrowDecompressionException(reader, $"Oodle decompression failed with result {decodedSize}");
         }
 
         if (decodedSize < uncompressedSize)
@@ -103,43 +98,39 @@ public static class OodleHelper
         }
     }
 
-    public static async Task<bool> DownloadOodleDllAsync(string? path)
+    public static Task<bool> DownloadOodleDllAsync(CancellationToken cancellationToken = default)
     {
-        path ??= IsLinux ? OODLE_SO_NAME : OODLE_DLL_NAME;
-
-        using var client = new HttpClient(new SocketsHttpHandler
-        {
-            UseProxy = false,
-            UseCookies = false,
-            AutomaticDecompression = DecompressionMethods.All
-        });
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(
-            nameof(CUE4Parse),
-            typeof(OodleHelper).Assembly.GetName().Version?.ToString() ?? "1.0.0"));
-        client.Timeout = TimeSpan.FromSeconds(30);
-
-        return await DownloadOodleDllFromOodleUEAsync(client, path).ConfigureAwait(false);
+        string? path = null;
+        return DownloadOodleDllAsync(ref path, cancellationToken);
     }
 
-    public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path)
+    public static Task<bool> DownloadOodleDllAsync(ref string? path, CancellationToken cancellationToken = default)
     {
-        var (url, entryName) = IsLinux
-            ? ($"{RELEASE_URL}/{LINUX_ZIP}", $"lib/{OODLE_SO_NAME}")
-            : ($"{RELEASE_URL}/{WINDOWS_ZIP}", $"bin/{OODLE_DLL_NAME}");
+        path = ResolvePath(path);
+        return File.Exists(path)
+            ? Task.FromResult(true)
+            : DownloadOodleDllFromOodleUEAsync(HttpUtils.DownloadClient, path, cancellationToken);
+    }
+
+    public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path, CancellationToken cancellationToken = default)
+    {
+        var (url, entryName) = OperatingSystem.IsLinux()
+            ? ($"{RELEASE_URL}/{LINUX_ZIP}", $"lib/{OODLE_NAME_LINUX}")
+            : ($"{RELEASE_URL}/{WINDOWS_ZIP}", $"bin/{OODLE_NAME_CURRENT}");
 
         try
         {
-            using var response = await client.GetAsync(url).ConfigureAwait(false);
+            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var zip = new ZipArchive(responseStream, ZipArchiveMode.Read);
             var entry = zip.GetEntry(entryName);
             ArgumentNullException.ThrowIfNull(entry, "oodle entry in zip not found");
             await using var entryStream = entry.Open();
             await using var fs = File.Create(path);
-            await entryStream.CopyToAsync(fs).ConfigureAwait(false);
+            await entryStream.CopyToAsync(fs, cancellationToken).ConfigureAwait(false);
 
-            if (IsLinux)
+            if (OperatingSystem.IsLinux())
             {
                 File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
                                            UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
@@ -154,5 +145,19 @@ public static class OodleHelper
         }
 
         return false;
+    }
+
+    private static string ResolvePath(string? path)
+    {
+        return !string.IsNullOrWhiteSpace(path)
+            ? path
+            : !OperatingSystem.IsLinux() && File.Exists(OODLE_NAME_OLD) ? OODLE_NAME_OLD : OodleFileName;
+    }
+
+    [DoesNotReturn]
+    private static void ThrowDecompressionException(FArchive? reader, string message)
+    {
+        if (reader is not null) throw new OodleException(reader, message);
+        throw new OodleException(message);
     }
 }

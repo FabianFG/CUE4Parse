@@ -1,22 +1,25 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace CUE4Parse.MappingsProvider
 {
     public sealed class FileUsmapTypeMappingsProvider : UsmapTypeMappingsProvider
     {
+        private readonly StringComparer? _stringComparer;
         private readonly string _path;
         public readonly string FileName;
 
-        public FileUsmapTypeMappingsProvider(string path)
+        public FileUsmapTypeMappingsProvider(string path, StringComparer? comparer = null)
         {
+            _stringComparer = comparer;
             _path = path;
             FileName = Path.GetFileName(_path);
-            Load(path);
+            Load(path, _stringComparer);
         }
 
         public override void Reload()
         {
-            Load(_path);
+            Load(_path, _stringComparer);
         }
     }
 }
