@@ -107,7 +107,7 @@ public class UClass : UStruct
 
     public string DecompileBlueprintToPseudo(TypeMappings mappings, UClassCookedMetaData? cookedMetaData = null)
     {
-        BlueprintDecompilerUtils.mappings = mappings;
+        BlueprintDecompilerUtils.Mappings = mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -175,6 +175,12 @@ public class UClass : UStruct
                 switch (expression)
                 {
                     case EX_Jump jump:
+                        var targetIndex = (int)jump.CodeOffset;
+                        targetIndex = Array.FindIndex(function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                        if (targetIndex >= 0 && targetIndex < function.ScriptBytecode.Length && (function.ScriptBytecode[targetIndex] is EX_Return || function.ScriptBytecode[targetIndex++] is EX_Return))
+                        {
+                            break; // prevents Labels that aren't used
+                        }
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
                         break;
@@ -182,6 +188,24 @@ public class UClass : UStruct
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
                             offset = intConst.Value;
+                        break;
+                    case EX_CallMath math:
+                        // creates Labels for Delayed jumps
+                        if (math.StackNode.ToString().Contains("KismetSystemLibrary") && math.StackNode.ToString().Contains("Delay"))
+                        {
+                            foreach (var parameter in math.Parameters)
+                            {
+                                if (parameter is EX_StructConst structConst && structConst.Struct.Name.Contains("LatentActionInfo"))
+                                {
+                                    if (structConst.Properties.FirstOrDefault() is EX_SkipOffsetConst skipOffsetConst)
+                                    {
+                                        var skipOffsetValue = skipOffsetConst.Value;
+                                        offset = (int) skipOffsetValue;
+                                        label = function.Name;
+                                    }
+                                }
+                            }
+                        }
                         break;
                     case EX_PushExecutionFlow flow:
                         label = flow.ObjectPath.ToString().Split('.').Last().Split('[')[0];
@@ -224,8 +248,25 @@ public class UClass : UStruct
                     continue;
                 }
 
-                var parameterExpression = $"{variableType} {property.Name.Text}";
-                parametersList.Add(parameterExpression);
+                parametersList.Add($"{variableType} {property.Name}");
+            }
+
+            foreach (var child in function.Children ?? [])
+            {
+                if (child?.Load() is not UProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                    continue;
+
+                var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableType is null)
+                    continue;
+
+                if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                {
+                    returnType = variableType;
+                    continue;
+                }
+
+                parametersList.Add($"{variableType} {property.Name}");
             }
 
             var functionStringBuilder = new CustomStringBuilder();
@@ -258,8 +299,9 @@ public class UClass : UStruct
                 return stringBuilder.ToString();
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
-            foreach (var kismetExpression in function.ScriptBytecode)
+            for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
+                var kismetExpression = function.ScriptBytecode[i];
                 if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript)
                     continue;
 
@@ -277,13 +319,13 @@ public class UClass : UStruct
 #endif
 
                     functionStringBuilder.AppendLine(lineExpression);
-                    if (!lineExpression.StartsWith("return"))
+
+                    if (i + 1 < function.ScriptBytecode.Length && function.ScriptBytecode[i + 1] is not EX_EndOfScript)
                     {
                         functionStringBuilder.AppendLine();
                     }
                 }
             }
-
             functionStringBuilder.CloseBlock();
 
             stringBuilder.AppendLine(functionStringBuilder.ToString());

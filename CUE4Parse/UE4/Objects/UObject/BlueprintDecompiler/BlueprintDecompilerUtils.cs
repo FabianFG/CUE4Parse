@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Remoting;
 using CUE4Parse.GameTypes._2XKO.Kismet;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.MappingsProvider.Usmap;
@@ -22,8 +21,9 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
-    public static TypeMappings mappings { get; set; }
+    public static TypeMappings? Mappings { get; set; }
     public static UFunction Function { get; set; }
+    private static readonly Stack<int> _executionFlowStack = new();
 
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
@@ -46,8 +46,8 @@ public static class BlueprintDecompilerUtils
 
             var next = current.SuperStruct?.Load<UStruct>();
 
-            if (next is null && mappings is not null &&
-                mappings.Types.TryGetValue(current.Name, out var structMappings))
+            if (next is null && Mappings is not null &&
+                Mappings.Types.TryGetValue(current.Name, out var structMappings))
             {
                 if (string.IsNullOrEmpty(structMappings.SuperType) ||
                     current.Name == structMappings.SuperType)
@@ -65,23 +65,32 @@ public static class BlueprintDecompilerUtils
 
             current = next;
         }
+        return "U";
+    }
 
-        // fallback should be impossible to get executed
-        while (true)
+    private static string GetPrefix(string? strucName)
+    {
+        if (string.IsNullOrEmpty(strucName) || Mappings is null)
+            return "U";
+
+        var current = strucName;
+
+        if (current == "Actor") return "A";
+        if (current == "Interface") return "I";
+        if (current == "Object") return "U";
+
+        while (Mappings.Types.TryGetValue(current, out var structMappings))
         {
-            var structName = struc?.Name;
-            if (!string.IsNullOrEmpty(structName))
-            {
-                if (structName.Contains("Actor"))
-                    return "A";
-                if (structName.Contains("Interface"))
-                    return "I";
-                if (structName.Contains("Object"))
-                    return "U";
-            }
+            var superType = structMappings.SuperType;
 
-            if (struc?.SuperStruct is null || !struc.SuperStruct.TryLoad(out struc))
+            if (string.IsNullOrEmpty(superType) || superType == current)
                 break;
+
+            if (superType == "Actor") return "A";
+            if (superType == "Interface") return "I";
+            if (superType == "Object") return "U";
+
+            current = superType;
         }
 
         return "U";
@@ -90,258 +99,72 @@ public static class BlueprintDecompilerUtils
     // Add_IntInt = UKismetMathLibrary::Add_IntInt(Temp_int_Loop_Counter_Variable, 1);
     // to
     // Add_IntInt = Temp_int_Loop_Counter_Variable + 1;
-    private static string FunctionCleaner(
-        string stackNode,
+    private static string MathFunctionCleaner(
+        string className,
         string functionName,
         List<string> parametersList,
         string parameters)
     {
-        if (stackNode.Contains("SolarisMathLibrary_Int") || stackNode.Contains("KismetMathLibrary") || stackNode.Contains("SolarisMathLibrary_Float") || stackNode.Contains("SolarisMathLibrary_Rational"))
+        if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
         {
-            if (stackNode.Contains("EqualEqual_ByteByte"))
-            {
-                return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
-            }
+            if (functionName.StartsWith("EqualEqual_ByteByte")) return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
+            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) !== (!{parametersList[1]}))";
+            if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqualExactly_")) return $"({parametersList[0]} != {parametersList[1]})";
+            if (functionName.StartsWith("LessEqual_")) return $"({parametersList[0]} <= {parametersList[1]})";
+            if (functionName.StartsWith("Less_")) return $"({parametersList[0]} < {parametersList[1]})";
+            if (functionName.StartsWith("GreaterEqual_")) return $"({parametersList[0]} >= {parametersList[1]})";
+            if (functionName.StartsWith("Greater_")) return $"({parametersList[0]} > {parametersList[1]})";
 
-            if (stackNode.Contains("EqualEqual_"))
-            {
-                return $"{parametersList[0]} == {parametersList[1]}";
-            }
+            if (functionName.StartsWith("Add_")) return $"{parametersList[0]} + {parametersList[1]}";
+            if (functionName.StartsWith("Xor_"))  return $"({parametersList[0]} ^ {parametersList[1]})";
+            if (functionName.StartsWith("Multiply_")) return $"({parametersList[0]} * {parametersList[1]})";
+            if (functionName.StartsWith("Percent_")) return $"({parametersList[0]} % {parametersList[1]})";
+            if (functionName.StartsWith("Or_")) return $"({parametersList[0]} | {parametersList[1]})";
+            if (functionName.StartsWith("Subtract_")) return $"{parametersList[0]} - {parametersList[1]}";
+            if (functionName.StartsWith("Not_PreBool")) return $"!{parametersList[0]}";
+            if (functionName.StartsWith("Not_")) return $"(~{parametersList[0]})";
+            if (functionName.StartsWith("Select")) return $"({parametersList[2]} ? {parametersList[0]} : {parametersList[1]})";
+            if (functionName.StartsWith("AddEquals")) return $"({parametersList[0]} += {parametersList[1]})";
+            if (functionName.StartsWith("Subtract")) return $"({parametersList[0]} - {parametersList[1]})";
+            if (functionName.StartsWith("Divide")) return $"({parametersList[0]} / {parametersList[1]})";
+            if (functionName.StartsWith("Multiply")) return $"({parametersList[0]} * {parametersList[1]})";
+            if (functionName.StartsWith("BooleanAND")) return $"{parametersList[0]} && {parametersList[1]}";
+            if (functionName.StartsWith("BooleanNAND")) return $"!({parametersList[0]} && {parametersList[1]})";
+            if (functionName.StartsWith("BooleanOR")) return $"({parametersList[0]} || {parametersList[1]})";
+            if (functionName.StartsWith("BooleanXOR")) return $"{parametersList[0]} ^ {parametersList[1]}";
+            if (functionName.StartsWith("BooleanNOR")) return $"!({parametersList[0]} || {parametersList[1]})";
+            if (functionName.StartsWith("Floor")) return $"Floor({parametersList[0]})";
+            if (functionName.StartsWith("Abs")) return $"{parametersList[0]} < 0.0 ? -{parametersList[0]} : {parametersList[0]}";
+            if (functionName.StartsWith("CheckConstrainedFloat")) return $"{parametersList[2]} < {parametersList[0]} or {parametersList[2]} > {parametersList[1]}";
+            if (functionName == "Max") return $"(({parametersList[0]} > {parametersList[1]}) ? {parametersList[0]} : {parametersList[1]})";
+            if (functionName.StartsWith("Negate")) return $"-{parametersList[0]}";
+            if (functionName.StartsWith("Ceil")) return $"Ceil({parametersList[0]})";
 
-            if (stackNode.Contains("NotEqual_ByteByte"))
-            {
-                return $"((!{parametersList[0]}) !== (!{parametersList[1]}))";
-            }
+            if (functionName.StartsWith("UncheckedConvertI32I64")) return $"{parametersList[0]}";
+            if (functionName.StartsWith("MakeTransform")) return $"FTransform({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
+            if (functionName.StartsWith("Conv_VectorToTransform")) return $"FTransform({parametersList[0]})";
+            if (functionName.StartsWith("MakeVector2D")) return $"FVector({parametersList[0]}, {parametersList[1]})";
+            if (functionName.StartsWith("MakeVector")) return $"FVector({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
+            if (functionName.EndsWith("ToVector")) return $"FVector((float){parametersList[0]})";
+            if (functionName.StartsWith("MakeRotator")) return $"FRotator({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
+            if (functionName.StartsWith("MakeTimespan")) return $"FTimespan({parametersList[0]}, {parametersList[1]}, {parametersList[2]}, {parametersList[4]} * 1000 * 1000)";
+            if (functionName.StartsWith("MakeColor")) return $"FLinearColor({parametersList[0]}, {parametersList[1]}, {parametersList[2]}, {parametersList[3]})";
+            if (functionName.StartsWith("ComposeRotators")) return $"FRotator(FQuat({parametersList[0]}) * FQuat({parametersList[1]}))";
+            if (functionName.EndsWith("ToLinearColor")) return $"FLinearColor({parametersList[0]})";
 
-            if (stackNode.Contains("NotEqual_"))
-            {
-                return $"({parametersList[0]} !== {parametersList[1]})";
-            }
+            if (functionName.StartsWith("Conv_IntToBool")) return $"({parametersList[0]} != 0)";
+            if (functionName.StartsWith("Conv_BoolToInt")) return $"({parametersList[0]} ? 1 : 0)";
+            if (functionName.StartsWith("Conv_BoolToByte")) return $"({parametersList[0]} ? 1 : 0)";
+            if (functionName.StartsWith("Conv_BoolToFloat")) return $"({parametersList[0]} ? 1.0f : 0.0f)";
+            if (functionName.StartsWith("Conv_BoolToDouble")) return $"({parametersList[0]} ? 1.0 : 0.0)";
 
-            if (stackNode.Contains("NotEqualExactly_"))
-            {
-                return $"({parametersList[0]} != {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Add_"))
-            {
-                return $"{parametersList[0]} + {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("Xor_"))
-            {
-                return $"({parametersList[0]} ^ {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Multiply_"))
-            {
-                return $"({parametersList[0]} * {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Percent_"))
-            {
-                return $"({parametersList[0]} % {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Or_"))
-            {
-                return $"({parametersList[0]} | {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Subtract_"))
-            {
-                return $"{parametersList[0]} - {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("Not_PreBool"))
-            {
-                return $"!{parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Not_"))
-            {
-                return $"(~{parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Select"))
-            {
-                return $"({parametersList[2]} ? {parametersList[0]} : {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Less_"))
-            {
-                return $"({parametersList[0]} < {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("LessEqual_"))
-            {
-                return $"({parametersList[0]} <= {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("AddEquals"))
-            {
-                return $"({parametersList[0]} += {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("GreaterEqual_"))
-            {
-                return $"({parametersList[0]} >= {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Greater_"))
-            {
-                return $"({parametersList[0]} > {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Subtract"))
-            {
-                return $"({parametersList[0]} - {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Divide"))
-            {
-                return $"({parametersList[0]} / {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Multiply"))
-            {
-                return $"({parametersList[0]} * {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("BooleanAND"))
-            {
-                return $"{parametersList[0]} && {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("BooleanNAND"))
-            {
-                return $"!({parametersList[0]} && {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("BooleanOR"))
-            {
-                return $"({parametersList[0]} || {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("BooleanXOR"))
-            {
-                return $"{parametersList[0]} ^ {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("BooleanNOR"))
-            {
-                return $"!({parametersList[0]} || {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Floor"))
-            {
-                return $"Floor({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Abs"))
-            {
-                return $"if {parametersList[0]} < 0.0 then -{parametersList[0]} else {parametersList[0]}";
-            }
-
-            if (stackNode.Contains("CheckConstrainedFloat"))
-            {
-                return $"{parametersList[2]} < {parametersList[0]} or {parametersList[2]} > {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("Negate"))
-            {
-                return $"-{parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Ceil"))
-            {
-                return $"ceil({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("PredicateLessEqual"))
-            {
-                return $"({parametersList[0]} <= {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("PredicateLess"))
-            {
-                return $"({parametersList[0]} < {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("PredicateNotEqual"))
-            {
-                return $"({parametersList[0]} !== {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("LessEqual"))
-            {
-                return $"({parametersList[0]} <= {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("PredicateEqual"))
-            {
-                return $"({parametersList[0]} == {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("UncheckedConvertI32I64"))
-            {
-                return $"{parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Conv_SoftObjectReferenceToObject") || stackNode.Contains("Conv_SoftClassReferenceToClass"))
-            {
-                return $"{parametersList[0]}";
-            }
-
-            if (stackNode.Contains("MakeTransform"))
-            {
-                return $"FTransform({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("Conv_VectorToTransform"))
-            {
-                return $"FTransform({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("MakeVector2D"))
-            {
-                return $"FVector({parametersList[0]}, {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("MakeVector"))
-            {
-                return $"FVector({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToVector"))
-            {
-                return $"FVector((float){parametersList[0]})";
-            }
-
-            if (functionName == "Max")
-            {
-                return $"(({parametersList[0]} > {parametersList[1]}) ? {parametersList[0]} : {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Conv_FloatToVector") || stackNode.Contains("Conv_DoubleToVector") || stackNode.Contains("Conv_DoubleToVector2D"))
-            {
-                return $"FVector((float){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("MakeRotator"))
-            {
-                return $"FRotator({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("Conv_VectorToLinearColor"))
-            {
-                return $"FLinearColor({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("MakeColor"))
-            {
-                return $"FLinearColor({parametersList[0]}, {parametersList[1]}, {parametersList[2]}, {parametersList[3]})";
-            }
+            if (functionName.EndsWith("ToDouble")) return $"((double){parametersList[0]})";
+            if (functionName.EndsWith("ToFloat")) return $"((float){parametersList[0]})";
+            if (functionName.EndsWith("ToInt64")) return $"((int64){parametersList[0]})";
+            if (functionName.EndsWith("ToInt")) return $"((int32){parametersList[0]})";
+            if (functionName.EndsWith("ToByte")) return $"((uint8){parametersList[0]})";
 
             if (functionName == "BreakRotator")
             {
@@ -349,27 +172,23 @@ public static class BlueprintDecompilerUtils
 {parametersList[2]} = {parametersList[0]}.Pitch;
 {parametersList[3]} = {parametersList[0]}.Yaw";
             }
-
             if (functionName == "BreakVector")
             {
                 return $@"{parametersList[1]} = {parametersList[0]}.X;
 {parametersList[2]} = {parametersList[0]}.Y;
 {parametersList[3]} = {parametersList[0]}.Z";
             }
-
             if (functionName == "BreakVector2D")
             {
                 return $@"{parametersList[1]} = {parametersList[0]}.X;
 {parametersList[2]} = {parametersList[0]}.Y";
             }
-
             if (functionName == "BreakTransform")
             {
                 return $@"{parametersList[1]} = {parametersList[0]}.Location;
 {parametersList[2]} = {parametersList[0]}.Rotation;
 {parametersList[3]} = {parametersList[0]}.Scale";
             }
-
             if (functionName == "BreakColor")
             {
                 return $@"{parametersList[1]} = {parametersList[0]}.R;
@@ -377,256 +196,138 @@ public static class BlueprintDecompilerUtils
 {parametersList[3]} = {parametersList[0]}.B;
 {parametersList[4]} = {parametersList[0]}.A";
             }
-
-            if (stackNode.Contains("Clamp"))
+            if (functionName.StartsWith("Clamp"))
             {
                 return $"(({parametersList[0]} < {parametersList[1]}) ? {parametersList[1]} : (({parametersList[0]} > {parametersList[2]}) ? {parametersList[2]} : {parametersList[0]}))";
             }
-
-            if (stackNode.Contains("Lerp"))
+            if (functionName.StartsWith("Lerp"))
             {
                 return $"{parametersList[0]} + {parametersList[2]} * ({parametersList[1]} - {parametersList[0]})";
             }
-
-            if (stackNode.Contains("Conv_ColorToLinearColor"))
-            {
-                return $"FLinearColor({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToBool"))
-            {
-                return $"({parametersList[0]} != 0)";
-            }
-
-            if (stackNode.Contains("Conv_BoolToInt"))
-            {
-                return $"({parametersList[0]} ? 1 : 0)";
-            }
-
-            if (stackNode.Contains("Conv_BoolToByte"))
-            {
-                return $"({parametersList[0]} ? 1 : 0)";
-            }
-
-            if (stackNode.Contains("Conv_BoolToFloat"))
-            {
-                return $"({parametersList[0]} ? 1.0f : 0.0f)";
-            }
-
-            if (stackNode.Contains("Conv_BoolToDouble"))
-            {
-                return $"({parametersList[0]} ? 1.0 : 0.0)";
-            }
-
-            if (stackNode.Contains("Conv_ByteToInt"))
-            {
-                return $"((int32){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_ByteToInt64"))
-            {
-                return $"((int64){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_ByteToFloat"))
-            {
-                return $"((float){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_ByteToDouble"))
-            {
-                return $"((double){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_StringToDouble_ByteToDouble"))
-            {
-                return $"((double){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToFloat"))
-            {
-                return $"((float){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToDouble"))
-            {
-                return $"((double){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToInt64"))
-            {
-                return $"((int64){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToByte"))
-            {
-                return $"((uint8){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_Int64ToInt"))
-            {
-                return $"((int32){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_DoubleToFloat"))
-            {
-                return $"((float){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_FloatToDouble"))
-            {
-                return $"((double){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_Int64ToByte"))
-            {
-                return $"((uint8){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_DoubleToInt64"))
-            {
-                return $"((int64){parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_Int64ToDouble"))
-            {
-                return $"((double){parametersList[0]})";
-            }
         }
-        else if (stackNode.Contains("KismetStringLibrary"))
+        if (className == "KismetStringLibrary")
         {
-            if (stackNode.Contains("EqualEqual_"))
-            {
-                return $"({parametersList[0]} == {parametersList[1]})";
-            }
+            if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
 
-            if (stackNode.Contains("NotEqual_"))
-            {
-                return $"({parametersList[0]} != {parametersList[1]})";
-            }
+            if (functionName.EndsWith("ToDouble")) return $"(double){parametersList[0]}";
+            if (functionName.EndsWith("ToFloat")) return $"(float){parametersList[0]}";
+            if (functionName.EndsWith("ToInt64")) return $"(int64){parametersList[0]}";
+            if (functionName.EndsWith("ToInt")) return $"(int32){parametersList[0]}";
+            if (functionName.EndsWith("ToByte")) return $"(uint8){parametersList[0]}";
 
-            if (stackNode.Contains("Conv_StringToVector"))
-            {
-                return $"FVector({parametersList[0]}, {parametersList[1]}, {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("Conv_StringToInt"))
-            {
-                return $"(int){parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Conv_StringToInt64"))
-            {
-                return $"(int64){parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Conv_StringToDouble"))
-            {
-                return $"(double){parametersList[0]}";
-            }
-
-            if (stackNode.Contains("Conv_VectorToString") || stackNode.Contains("Conv_DoubleToString") || stackNode.Contains("Conv_NameToString") || stackNode.Contains("Conv_RotatorToString") || stackNode.Contains("Conv_NameToString"))
-            {
-                return $"FString({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Concat_StrStr"))
-            {
-                return string.Join(" += ", parametersList);
-            }
-
-            if (stackNode.Contains("Conv_StringToName"))
-            {
-                return $"FName({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_IntToString"))
-            {
-                return $"FString({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("ParseIntoArray"))
-            {
-                return $"{parametersList[0]}.split({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("JoinStringArray"))
-            {
-                return $"{parametersList[0]}.join({parametersList[1]})";
-            }
-
-            if (stackNode.Contains("Replace"))
-            {
-                return $"{parametersList[0]}.replace({parametersList[1]}, {parametersList[2]}, /* SearchCase = */ {parametersList[3]})";
-            }
-
-            if (stackNode.Contains("StartsWith"))
-            {
-                return $"{parametersList[0]}.startswith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
-            }
-
-            if (stackNode.Contains("IsNumeric"))
-            {
-                return $"{parametersList[0]}.IsNumeric()";
-            }
-
-            if (stackNode.Contains("Len"))
-            {
-                return $"{parametersList[0]}.Length";
-            }
+            if (functionName.StartsWith("Conv_BoolToString")) return $"{parametersList[0]} ? \"true\" : \"false\"";
+            if (functionName.EndsWith("ToString")) return $"FString({parametersList[0]})";
+            if (functionName.EndsWith("ToName")) return $"FName({parametersList[0]})";
+            if (functionName.StartsWith("Concat_StrStr")) return string.Join(" += ", parametersList);
+            if (functionName.StartsWith("ParseIntoArray")) return $"{parametersList[0]}.Split({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
+            if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
+            if (functionName.StartsWith("JoinStringArray")) return $"{parametersList[0]}.Join({parametersList[1]})";
+            if (functionName.StartsWith("Replace")) return $"{parametersList[0]}.Replace({parametersList[1]}, {parametersList[2]}, /* SearchCase = */ {parametersList[3]})";
+            if (functionName.StartsWith("StartsWith")) return $"{parametersList[0]}.startswith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
+            if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* bUseCase = */ {parametersList[2]}, /* bSearchFromEnd = */ {parametersList[3]})";
+            if (functionName.StartsWith("IsNumeric")) return $"{parametersList[0]}.IsNumeric()";
+            if (functionName.StartsWith("Len")) return $"{parametersList[0]}.Length";
         }
-        else if (stackNode.Contains("KismetSystemLibrary"))
+        if (className == "KismetSystemLibrary")
         {
-            if (stackNode.Contains("BooleanOR"))
-            {
-                return $"{parametersList[0]} || {parametersList[1]}";
-            }
-
-            if (stackNode.Contains("IsValid"))
+            if (functionName.StartsWith("IsValid") || functionName.StartsWith("Conv_SoftClassReferenceToClass") || functionName.StartsWith("Conv_SoftObjectReferenceToObject") || (functionName.StartsWith("Make") && parametersList.Count == 1))
             {
                 return $"{parametersList[0]}";
             }
-
-            if (stackNode.Contains("Make") && parametersList.Count == 1)
-            {
-                return $"{parametersList[0]}";
-            }
+            if (functionName.StartsWith("Conv_ObjectToSoftObjectReference") || functionName.StartsWith("Conv_SoftObjPathToSoftObjRef")) return $"TSoftObjectPtr<UObject>({parametersList[0]})";
+            if (functionName.StartsWith("Delay") && parametersList.Count == 3) return $"Delay({parametersList[1]}f);\n{parametersList[2]}";
+            if (functionName.StartsWith("Conv_SoftClassPathToSoftClassRef")) return $"TSoftClassPtr<UObject>({parametersList[0]})";
+            if (functionName.StartsWith("Conv_ClassToSoftClassReference")) return $"TSoftClassPtr<UObject>(*{parametersList[0]})";
         }
-        else if (stackNode.Contains("KismetTextLibrary"))
+        if (className == "KismetInputLibrary" || className == "BlueprintGameplayTagLibrary" || className == "FortKismetLibrary" || className == "KismetTextLibrary")
         {
-            if (stackNode.Contains("Conv_StringToText") || stackNode.Contains("Conv_DoubleToText") || stackNode.Contains("Conv_IntToText"))
-            {
-                return $"FText({parametersList[0]})";
-            }
-
-            if (stackNode.Contains("Conv_TextToString"))
-            {
-                return $"FString({parametersList[0]})";
-            }
-        }
-        else if (stackNode.Contains("KismetInputLibrary") || stackNode.Contains("BlueprintGameplayTagLibrary"))
-        {
-            if (stackNode.Contains("EqualEqual_"))
-            {
-                return $"({parametersList[0]} == {parametersList[1]})";
-            }
-
-            if (stackNode.Contains("NotEqual_"))
-            {
-                return $"({parametersList[0]} != {parametersList[1]})";
-            }
+            if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.EndsWith("ToText")) return $"FText({parametersList[0]})";
+            if (functionName.EndsWith("ToString"))  return $"FString({parametersList[0]})";
         }
 
-        var classType = stackNode.SubstringBefore(':').Trim();
-        var className = classType.Split('.').LastOrDefault();
-
-        return $"U{className}::{functionName}({parameters})";
+        // Doesn't work on UE4 as GetPrefix requires mappings
+        return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
     }
+
+    private static string FinalFunctionCleaner(
+        string className,
+        string functionName,
+        List<string> parametersList,
+        string parameters)
+    {
+        if (className == "KismetArrayLibrary")
+        {
+            if (functionName.StartsWith("Array_Length")) return $"{parametersList[0]}.Length";
+            if (functionName.StartsWith("Array_IsNotEmpty")) return $"{parametersList[0]}.Length > 0";
+            if (functionName.StartsWith("Array_LastIndex")) return $"{parametersList[0]}.Length - 1";
+            if (functionName.StartsWith("Array_Clear")) return $"{parametersList[0]}.Clear()";
+            if (functionName.StartsWith("Array_Identical")) return $"{parametersList[0]} == {parametersList[1]}";
+            if (functionName.StartsWith("Array_Remove")) return $"{parametersList[0]}.Remove({parametersList[1]})";
+            if (functionName.StartsWith("Array_Add")) return $"{parametersList[0]}.Add({parametersList[1]})";
+            if (functionName.StartsWith("Array_Get")) return $"{parametersList[2]} = {parametersList[0]}[{parametersList[1]}]";
+            if (functionName.StartsWith("Array_Contains")) return $"{parametersList[0]}[{parametersList[1]}]";
+            if (functionName.StartsWith("Array_IsValidIndex")) return $"{parametersList[0]}[{parametersList[1]}]";
+            if (functionName.StartsWith("Array_Insert")) return $"{parametersList[0]}[{parametersList[2]}] = {parametersList[1]}";
+        }
+
+        if (className == "BlueprintMapLibrary")
+        {
+            if (functionName.StartsWith("Map_Length")) return $"{parametersList[0]}.Length";
+            if (functionName.StartsWith("Map_Remove")) return $"{parametersList[0]}.Remove({parametersList[1]})";
+            if (functionName.StartsWith("Map_Contains")) return $"{parametersList[0]}[{parametersList[1]}]";
+            if (functionName.StartsWith("Map_Get")) return $"{parametersList[2]} = {parametersList[0]}[{parametersList[1]}]";
+        }
+
+        if (className == "BlueprintSetLibrary")
+        {
+            if (functionName.StartsWith("Set_AddItems")) return $"{parametersList[0]}.Add({parametersList[1]})";
+            if (functionName.StartsWith("Set_Clear")) return $"{parametersList[0]}.Clear()";
+            if (functionName.StartsWith("Set_Difference")) return $"{parametersList[2]} = {parametersList[0]} == {parametersList[1]}";
+            if (functionName.StartsWith("Set_IsEmpty")) return $"{parametersList[0]}.Length == 0";
+        }
+
+        // Doesn't work on UE4 as GetPrefix requires mappings
+        return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
+    }
+
+
+    private static string GetTagTypes(FPropertyTagData? tagType) => tagType?.Type switch
+        {
+            "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
+            "IntProperty" => "int",
+            "Int8Property" => "int8",
+            "Int16Property" => "int16",
+            "Int64Property" => "int64",
+            "UInt16Property" => "uint16",
+            "UInt32Property" => "uint32",
+            "UInt64Property" => "uint64",
+            "ByteProperty" => "byte",
+            "BoolProperty" => "bool",
+            "StrProperty" => "string",
+            "VerseStringProperty" => "string",
+            "DoubleProperty" => "double",
+            "NameProperty" => "FName",
+            "TextProperty" => "FText",
+            "FloatProperty" => "float",
+            "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
+            "ObjectProperty" or "ClassProperty" => "UObject*",
+            "StructProperty" => $"F{tagType.StructType}",
+            "InterfaceProperty" => $"I{tagType.StructType}",
+            _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
+        };
 
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
+
+    private static bool IsPointer(UProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+                                                         property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
+                                                         property.GetType() == typeof(UObjectProperty);
 
     public static (string?, string?) GetPropertyType(FProperty property)
     {
@@ -643,7 +344,7 @@ public static class BlueprintDecompilerUtils
         {
             case FObjectProperty objectProperty:
             {
-                // annoying, value is type but full path
+                // Looks bad and provides useless information.
                 // value = objectProperty.PropertyClass.ToString();
                 type += $"class {GetClassWithPrefix(objectProperty.PropertyClass.Load<UStruct>())}";
                 break;
@@ -652,6 +353,7 @@ public static class BlueprintDecompilerUtils
             {
                 var (_, innerType) = GetPropertyType(arrayProperty.Inner!);
 
+                // Looks bad and provides useless information.
                 //var customStringBuilder = new CustomStringBuilder();
                 //customStringBuilder.OpenBlock("[");
                 //customStringBuilder.AppendLine(innerValue!);
@@ -679,7 +381,6 @@ public static class BlueprintDecompilerUtils
                 {
                     type = property.GetType().Name.SubstringAfter("F").SubstringBefore("Property").ToLowerInvariant();
                 }
-
                 break;
             }
             case FInterfaceProperty interfaceProperty:
@@ -717,7 +418,7 @@ public static class BlueprintDecompilerUtils
             }
             case FEnumProperty enumProperty:
             {
-                type = $"\"{enumProperty.Enum.Name}\"";
+                type = $"{enumProperty.Enum.Name}";
                 break;
             }
             case FVerseDynamicProperty:
@@ -752,7 +453,122 @@ public static class BlueprintDecompilerUtils
         return (value, type);
     }
 
+    // Legacy UProperty Support
+     public static (string?, string?) GetPropertyType(UProperty property)
+    {
+        string? value = null;
+        string? type = null;
+
+        var propertyFlags = property.PropertyFlags;
+        if (propertyFlags.HasFlag(EPropertyFlags.ConstParm))
+        {
+            type += "const ";
+        }
+
+        switch (property)
+        {
+            case UObjectProperty objectProperty:
+            {
+                // Looks bad and provides useless information.
+                // value = objectProperty.PropertyClass.ToString();
+                type += $"class {GetClassWithPrefix(objectProperty.PropertyClass.Load<UStruct>())}";
+                break;
+            }
+            case UArrayProperty arrayProperty:
+            {
+                if (arrayProperty.Inner.Load() is UProperty innerProp)
+                {
+                    var (_, innerType) = GetPropertyType(innerProp);
+
+                    // Looks bad and provides useless information.
+                    //var customStringBuilder = new CustomStringBuilder();
+                    //customStringBuilder.OpenBlock("[");
+                    //customStringBuilder.AppendLine(innerValue!);
+                    //customStringBuilder.CloseBlock("]");
+
+                    //value = customStringBuilder.ToString();
+                    type += $"TArray<{innerType}>";
+                }
+                break;
+            }
+            case UStructProperty structProperty:
+            {
+                var structType = structProperty.Struct.Name;
+
+                type += $"struct F{structType}";
+                value = structProperty.Struct.ToString();
+                break;
+            }
+            case UNumericProperty:
+            {
+                if (property is UByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
+                {
+                    type = enumObj.Name;
+                }
+                else
+                {
+                    type = property.GetType().Name.SubstringAfter("U").SubstringBefore("Property").ToLowerInvariant();
+                }
+                break;
+            }
+            case UInterfaceProperty interfaceProperty:
+            {
+                type = $"F{interfaceProperty.InterfaceClass.Name}";
+                break;
+            }
+            case UBoolProperty boolProperty:
+            {
+                type = boolProperty.bIsNativeBool ? "bool" : "uint8";
+                break;
+            }
+            case UStrProperty:
+            {
+                type = "FString";
+                break;
+            }
+            case UTextProperty:
+            {
+                type = "FText";
+                break;
+            }
+            case UNameProperty:
+            {
+                type = "FName";
+                break;
+            }
+            case UMapProperty mapProperty:
+            {
+                if (mapProperty.KeyProp.Load() is UProperty innerProp && mapProperty.KeyProp.Load() is UProperty valueProp)
+                {
+                    var (_, keyinnerType) = GetPropertyType(innerProp);
+                    var (_, valueinnerType) = GetPropertyType(valueProp);
+                    type = $"TMap<{keyinnerType}, {valueinnerType}>";
+                }
+                break;
+            }
+            case UEnumProperty enumProperty:
+            {
+                type = $"{enumProperty.Enum.Name}";
+                break;
+            }
+            default:
+            {
+                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
+                break;
+            }
+        }
+
+        if (IsPointer(property))
+            type += "*";
+
+        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+            type += "&";
+
+        return (value, type);
+    }
+
     private static T GetGenericValue<T>(this FPropertyTag propertyTag) => (T) propertyTag.Tag?.GenericValue!;
+    private static string GetGenericValueStr<T>(this FPropertyTag propertyTag) => propertyTag.Tag?.GenericValue?.ToString()!;
 
     public static bool GetPropertyTagVariable(FPropertyTag propertyTag, out string type, out string value)
     {
@@ -779,7 +595,7 @@ public static class BlueprintDecompilerUtils
                 }
                 else
                 {
-                    value = propertyTag.GetGenericValue<byte>().ToString();
+                    value = propertyTag.GetGenericValueStr<byte>();
                     type = "byte";
                 }
 
@@ -788,13 +604,13 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.BoolProperty:
             {
                 type = "bool";
-                value = propertyTag.GetGenericValue<bool>().ToString().ToLowerInvariant();
+                value = propertyTag.GetGenericValueStr<bool>().ToLowerInvariant();
                 break;
             }
             case EPropertyType.IntProperty:
             {
                 type = "int32";
-                value = propertyTag.GetGenericValue<int>().ToString();
+                value = propertyTag.GetGenericValueStr<int>();
                 break;
             }
             case EPropertyType.FloatProperty:
@@ -805,7 +621,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.ObjectProperty or EPropertyType.ClassProperty:
             {
-                var pkgIndex = propertyTag.GetGenericValue<FPackageIndex>().ToString();
+                var pkgIndex = propertyTag.GetGenericValueStr<FPackageIndex>();
                 if (pkgIndex is null or "0")
                 {
                     type = "class UObject*";
@@ -822,7 +638,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.NameProperty:
             {
                 type = "FName";
-                value = $"FName(\"{propertyTag.GetGenericValue<FName>().ToString()}\")";
+                value = $"FName(\"{propertyTag.GetGenericValueStr<FName>()}\")";
                 break;
             }
             case EPropertyType.DoubleProperty:
@@ -834,7 +650,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.ArrayProperty:
             {
                 var scriptArray = propertyTag.GetGenericValue<UScriptArray>();
-                if (scriptArray == null || scriptArray.Properties == null || scriptArray.InnerType == null)
+                if (scriptArray == null || scriptArray.Properties == null || scriptArray.InnerType == null || scriptArray.InnerTagData == null)
                 {
                     value = "{}";
                     type = "TArray<unknown>";
@@ -844,30 +660,7 @@ public static class BlueprintDecompilerUtils
                 if (scriptArray.Properties.Count == 0)
                 {
                     value = "{}";
-                    var innerType = scriptArray.InnerType switch
-                    {
-                        "IntProperty" => "int",
-                        "Int8Property" => "int8",
-                        "Int16Property" => "int16",
-                        "Int64Property" => "int64",
-                        "UInt16Property" => "uint16",
-                        "UInt32Property" => "uint32",
-                        "UInt64Property" => "uint64",
-                        "ByteProperty" => "byte",
-                        "BoolProperty" => "bool",
-                        "StrProperty" => "string",
-                        "VerseStringProperty" => "string",
-                        "DoubleProperty" => "double",
-                        "NameProperty" => "FName",
-                        "TextProperty" => "FText",
-                        "FloatProperty" => "float",
-                        "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
-                        "ObjectProperty" or "ClassProperty" => "UObject*",
-                        "EnumProperty" => scriptArray.InnerTagData?.EnumName,
-                        "StructProperty" => $"F{scriptArray.InnerTagData?.StructType}",
-                        "InterfaceProperty" => $"F{scriptArray.InnerTagData?.InnerType}", // check
-                        _ => $"Variable type of InnerType '{scriptArray.InnerType}' is currently not supported for UScriptArray"
-                    };
+                    var innerType = GetTagTypes(scriptArray.InnerTagData);
 
                     type = $"TArray<{innerType}>";
                 }
@@ -920,13 +713,13 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.StrProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValue<string>()}\"";
+                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
                 break;
             }
             case EPropertyType.VerseStringProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValue<string>()}\"";
+                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
                 break;
             }
             case EPropertyType.MulticastDelegateProperty:
@@ -943,7 +736,6 @@ public static class BlueprintDecompilerUtils
                     var functions = string.Join(", ", list.Select(x => $"\"{x.FunctionName}\""));
                     value = $"[{functions}]";
                 }
-
                 break;
             }
             case EPropertyType.TextProperty:
@@ -970,52 +762,50 @@ public static class BlueprintDecompilerUtils
 
                 type = "FSoftObjectPath";
                 value = $"FSoftObjectPath(\"{softObjectPath}\")";
-
                 break;
             }
             case EPropertyType.SoftObjectProperty or EPropertyType.SoftClassProperty:
             {
-                var softObjectPath = propertyTag.GetGenericValue<FSoftObjectPath>();
+                var softObjectPath = propertyTag.GetGenericValueStr<FSoftObjectPath>();
 
                 type = "FSoftObjectPath";
-                value = $"FSoftObjectPath(\"{softObjectPath.ToString()}\")";
-
+                value = $"FSoftObjectPath(\"{softObjectPath}\")";
                 break;
             }
             case EPropertyType.UInt64Property:
             {
                 type = "uint64";
-                value = propertyTag.GetGenericValue<ulong>().ToString();
+                value = propertyTag.GetGenericValueStr<ulong>();
                 break;
             }
             case EPropertyType.UInt32Property:
             {
                 type = "uint32";
-                value = propertyTag.GetGenericValue<uint>().ToString();
+                value = propertyTag.GetGenericValueStr<uint>();
                 break;
             }
             case EPropertyType.UInt16Property:
             {
                 type = "uint16";
-                value = propertyTag.GetGenericValue<ushort>().ToString();
+                value = propertyTag.GetGenericValueStr<ushort>();
                 break;
             }
             case EPropertyType.Int64Property:
             {
                 type = "int64";
-                value = propertyTag.GetGenericValue<long>().ToString();
+                value = propertyTag.GetGenericValueStr<long>();
                 break;
             }
             case EPropertyType.Int16Property:
             {
                 type = "int16";
-                value = propertyTag.GetGenericValue<short>().ToString();
+                value = propertyTag.GetGenericValueStr<short>();
                 break;
             }
             case EPropertyType.Int8Property:
             {
                 type = "int8";
-                value = propertyTag.GetGenericValue<sbyte>().ToString();
+                value = propertyTag.GetGenericValueStr<sbyte>();
                 break;
             }
             case EPropertyType.MapProperty:
@@ -1071,36 +861,8 @@ public static class BlueprintDecompilerUtils
                 }
                 else
                 {
-                    string GetScriptArrayTypes(FPropertyTagData? tagType)
-                    {
-                        return tagType?.Type switch
-                        {
-                            "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
-                            "IntProperty" => "int",
-                            "Int8Property" => "int8",
-                            "Int16Property" => "int16",
-                            "Int64Property" => "int64",
-                            "UInt16Property" => "uint16",
-                            "UInt32Property" => "uint32",
-                            "UInt64Property" => "uint64",
-                            "ByteProperty" => "byte",
-                            "BoolProperty" => "bool",
-                            "StrProperty" => "string",
-                            "DoubleProperty" => "double",
-                            "NameProperty" => "FName",
-                            "TextProperty" => "FText",
-                            "FloatProperty" => "float",
-                            "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
-                            "ObjectProperty" or "ClassProperty" => "UObject*",
-                            "StructProperty" => $"F{tagType.StructType}",
-                            "InterfaceProperty" => $"F{tagType.StructType}", // check
-                            _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
-                        };
-                    }
-
-                    var keyType = GetScriptArrayTypes(propertyTag.TagData?.InnerTypeData);
-                    var valueType = GetScriptArrayTypes(propertyTag.TagData?.ValueTypeData);
-
+                    var keyType = GetTagTypes(propertyTag.TagData?.InnerTypeData);
+                    var valueType = GetTagTypes(propertyTag.TagData?.ValueTypeData);
 
                     type = $"TMap<{keyType}, {valueType}>";
                     value = "{}";
@@ -1110,13 +872,13 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.EnumProperty:
             {
-                value = propertyTag.GetGenericValue<FName>().ToString().SubstringAfter("::");
-                type = $"enum {propertyTag.TagData?.EnumName}";
+                value = propertyTag.GetGenericValueStr<FName>(); // .SubstringAfter("::")
+                type = $"enum";//{propertyTag.TagData?.EnumName}
                 break;
             }
             case EPropertyType.FieldPathProperty:
             {
-                value = $"\"{propertyTag.GetGenericValue<FFieldPath>().ToString() ?? string.Empty}\"";
+                value = propertyTag.GetGenericValueStr<FFieldPath>();
                 type = "FieldPath";
                 break;
             }
@@ -1197,7 +959,6 @@ public static class BlueprintDecompilerUtils
 
                     value = stringBuilder.ToString();
                 }
-
                 break;
             }
             case FVector vector:
@@ -1293,7 +1054,6 @@ public static class BlueprintDecompilerUtils
                 var isValid = box2D.bIsValid;
 
                 value = $"FBox2D({min}, {max}, {isValid})";
-
                 break;
             }
             case FRotator rotator:
@@ -1371,7 +1131,6 @@ public static class BlueprintDecompilerUtils
                 var a = color.A;
 
                 value = $"FColor({r}, {g}, {b}, {a})";
-
                 break;
             }
             case FRichCurveKey richCurve:
@@ -1387,7 +1146,6 @@ public static class BlueprintDecompilerUtils
                 var LeaveTangentWeight = richCurve.LeaveTangentWeight;
 
                 value = $"FRichCurveKey({InterpMode}, {TangentMode}, {TangentWeightMode}, {Time}, {Value}, {ArriveTangent}, {ArriveTangentWeight}, {LeaveTangent}, {LeaveTangentWeight})";
-
                 break;
             }
             default:
@@ -1420,7 +1178,7 @@ public static class BlueprintDecompilerUtils
                 var assignment = GetLineExpression(letBool.Assignment);
                 var variable = GetLineExpression(letBool.Variable);
 
-                return $"bool {variable} = {assignment}";
+                return $"{variable} = {assignment}";
             }
             case EX_Let let:
             {
@@ -1448,7 +1206,7 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.IncreaseIndentation();
                 }
 
-                if (obj == "FindObject<UObject>(nullptr, this)" || obj.Contains("KismetArrayLibrary") || obj.Contains("BlueprintMapLibrary") || obj.Contains("BlueprintSetLibrary"))
+                if (obj == "FindObject<UObject>(nullptr, this)" || obj.Contains("KismetArrayLibrary") || (!function.EndsWith("Map_Find") && obj.Contains("BlueprintMapLibrary")) || obj.Contains("BlueprintSetLibrary"))
                 {
                     customStringBuilder.Append(function);
                 }
@@ -1473,97 +1231,13 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var stackNode = final.StackNode.ToString();
-
-                if (stackNode.Contains("KismetArrayLibrary"))
-                {
-                    if (stackNode.Contains("Array_Length"))
-                    {
-                        return $"{parametersList[0]}.Length";
-                    }
-                    if (stackNode.Contains("Array_IsNotEmpty"))
-                    {
-                        return $"{parametersList[0]}.Length > 0";
-                    }
-                    if (stackNode.Contains("Array_LastIndex"))
-                    {
-                        return $"{parametersList[0]}.Length - 1";
-                    }
-                    if (stackNode.Contains("Array_Clear"))
-                    {
-                        return $"{parametersList[0]}.clear()";
-                    }
-                    if (stackNode.Contains("Array_Identical"))
-                    {
-                        return $"{parametersList[0]} == {parametersList[1]}";
-                    }
-                    if (stackNode.Contains("Array_Remove"))
-                    {
-                        return $"{parametersList[0]}.remove({parametersList[1]})";
-                    }
-                    if (stackNode.Contains("Array_Add"))
-                    {
-                        return $"{parametersList[0]}.add({parametersList[1]})";
-                    }
-                    if (stackNode.Contains("Array_Get"))
-                    {
-                        return $"{parametersList[2]} = {parametersList[0]}[{parametersList[1]}]";
-                    }
-                    if (stackNode.Contains("Array_Insert"))
-                    {
-                        return $"{parametersList[0]}[{parametersList[2]}] = {parametersList[2]}";
-                    }
-                }
-
-                if (stackNode.Contains("BlueprintMapLibrary"))
-                {
-                    if (stackNode.Contains("Map_Length"))
-                    {
-                        return $"{parametersList[0]}.Length";
-                    }
-                    if (stackNode.Contains("Map_Remove"))
-                    {
-                        return $"{parametersList[0]}.remove({parametersList[1]})";
-                    }
-                    if (stackNode.Contains("Map_Get"))
-                    {
-                        return $"{parametersList[2]} = {parametersList[0]}[{parametersList[1]}]";
-                    }
-                }
-
-                if (stackNode.Contains("BlueprintSetLibrary"))
-                {
-                    if (stackNode.Contains("Set_AddItems"))
-                    {
-                        return $"{parametersList[0]}.add({parametersList[1]})";
-                    }
-                    if (stackNode.Contains("Set_Clear"))
-                    {
-                        return $"{parametersList[0]}.clear()";
-                    }
-                    if (stackNode.Contains("Set_Difference"))
-                    {
-                        return $"{parametersList[2]} = {parametersList[0]} == {parametersList[1]}";
-                    }
-                    if (stackNode.Contains("Set_IsEmpty"))
-                    {
-                        return $"{parametersList[0]}.Length == 0";
-                    }
-                }
-
                 var functionName = stackNode.SubstringAfter(':').Trim('\'');
-                if (expression is EX_CallMath)
-                {
-                    // Removed useless UE calls, Makes it way cleaner
-                    return FunctionCleaner(stackNode, functionName, parametersList, parameters);
-                }
+                var className = stackNode.SubstringAfter('.').SubstringBefore(':');
 
-                if (expression is EX_LocalFinalFunction)
-                {
-                    return $"{functionName}({parameters})";
-                }
+                if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
+                if (expression is EX_LocalFinalFunction) return $"{functionName}({parameters})";
 
-                var classTypetwo = stackNode.SubstringAfter('.').SubstringBefore(':');
-                return $"U{classTypetwo}::{functionName}({parameters})";
+                return FinalFunctionCleaner(className, functionName, parametersList, parameters);
             }
             case EX_VirtualFunction virtualFunc:
             {
@@ -1575,11 +1249,11 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var functionName = virtualFunc.VirtualFunctionName.Text;
-/*
-  expression is EX_LocalVirtualFunction
-                    ? $"this->{functionName}({parameters})"
-                    : // sometimes "this->" is wrong
- */
+                /*
+                    expression is EX_LocalVirtualFunction
+                        ? $"this->{functionName}({parameters})"
+                        : // sometimes "this->" is wrong
+                */
                 return $"{functionName}({parameters})";
             }
             case EX_TextConst textConst:
@@ -1626,6 +1300,11 @@ public static class BlueprintDecompilerUtils
                 {
                     values.Add(GetLineExpression(element));
                 }
+
+               // var arrayProp = constArray.InnerProperty.New.ResolvedOwner.Load<UArrayProperty>();
+               // var objProp = arrayProp.Inner.Load<UObjectProperty>();
+              //  return objProp.PropertyClass?.Name ?? "Unknown";
+
                 return $"TArray<{constArray.InnerProperty}>({string.Join(", ", values)})";
             }
             case EX_SetArray setArray:
@@ -1732,7 +1411,7 @@ public static class BlueprintDecompilerUtils
                     ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => "bool",
                     ECastToken.CST_DoubleToFloat => "float",
                     ECastToken.CST_FloatToDouble => "double",
-                    ECastToken.CST_ObjectToInterface => "Interface", // make sure this makes sense
+                    ECastToken.CST_ObjectToInterface => "Interface",
                     _ => throw new NotImplementedException($"ConversionType {cast.ConversionType} is currently not implemented")
                 };
 
@@ -1745,13 +1424,33 @@ public static class BlueprintDecompilerUtils
                 var customStringBuilder = new CustomStringBuilder();
                 customStringBuilder.AppendLine($"if (!{booleanExpression})");
                 customStringBuilder.IncreaseIndentation();
-                customStringBuilder.Append("return");
+
+                if (_executionFlowStack.Count == 0)
+                {
+                    customStringBuilder.Append("return");
+                }
+                else
+                {
+                    var target = _executionFlowStack.Pop();
+                    customStringBuilder.Append($"goto Label_{target}");
+                }
 
                 return customStringBuilder.ToString();
             }
+            case EX_PushExecutionFlow pushExecutionFlow:
+            {
+                var targetIndex = (int)pushExecutionFlow.PushingAddress;
+
+                _executionFlowStack.Push(targetIndex);
+                return "";
+            }
             case EX_PopExecutionFlow:
             {
-                return "return // PopExecution";
+                if (_executionFlowStack.Count == 0)
+                    return "return";
+
+                var target = _executionFlowStack.Pop();
+                return $"goto Label_{target}";
             }
             case EX_JumpIfNot jumpIfNot:
             {
@@ -1874,6 +1573,8 @@ public static class BlueprintDecompilerUtils
                     properties.Add(GetLineExpression(property));
                 }
 
+                if (structConst.Struct.Name == "LatentActionInfo") return properties[0]; // used for cleaning code output.
+
                 return $"F{structConst.Struct.Name}({string.Join(", ", properties)})";
             }
             case EX_FloatConst floatConst:
@@ -1901,29 +1602,17 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SetMap setMap:
             {
-                /*
-                var variable = (EX_LocalVariable) setMap.MapProperty;
-                variable.Variable.New.ResolvedOwner.TryLoad(out Assets.Exports.UObject b);
-                b.TryGetValue(out FMapProperty ere2twgt, "Property");
-
-                var (_, keyinnerType) = GetPropertyType(ere2twgt.KeyProp!);
-                var (_, valueinnerType) = GetPropertyType(ere2twgt.ValueProp!);
-                */
-
-
                 var target = GetLineExpression(setMap.MapProperty);
                 if (setMap.Elements.Length == 0)
                 {
                     return $"{target} = TMap {{ }}";
                 }
 
-                //FortniteGame/Content/UI/InGame/HUD/WBP_QuickEditGrid.uasset
-                //"ValueProp": {
-                //    "Type": "ObjectProperty", add type <>
                 var stringBuilder = new CustomStringBuilder();
 
-
-               //<{keyinnerType}, {valueinnerType}>
+                // todo: add inner type for TMap Set/Const
+                //FortniteGame/Content/UI/InGame/HUD/WBP_QuickEditGrid.uasset
+                //<{keyinnerType}, {valueinnerType}>
                 stringBuilder.Append($"{target} = TMap {{ ");
 
                 var elements = setMap.Elements;
@@ -2008,9 +1697,6 @@ public static class BlueprintDecompilerUtils
             }
             case EX_StructMemberContext structMemberContext:
             {
-                if (structMemberContext.Property.New?.Path.Length > 1)
-                    throw new NotImplementedException();
-
                 var property = structMemberContext.Property.ToString();
                 var structExpression = GetLineExpression(structMemberContext.StructExpression);
 
@@ -2037,12 +1723,12 @@ public static class BlueprintDecompilerUtils
 
                 var separator = delegateExpr.Token == EExprToken.EX_Context ? "->" : ".";
 
-                return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove});";
+                return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
             }
             case EX_ClearMulticastDelegate clearMulticastDelegate:
             {
                 var delegateTarget = GetLineExpression(clearMulticastDelegate.DelegateToClear);
-                return $"{delegateTarget}.Clear();";
+                return $"{delegateTarget}.Clear()";
             }
             case EX_PropertyConst propertyConst:
             {
@@ -2066,11 +1752,6 @@ public static class BlueprintDecompilerUtils
                 return "breakpoint;";
 #endif
                 return "";
-            }
-            case EX_PushExecutionFlow pushExecutionFlow:
-            {
-                var targetIndex = (int)pushExecutionFlow.PushingAddress;
-                return $"goto Label_{targetIndex}; // PushExecution";
             }
             case EX_Nothing:
             case EX_NothingInt32:
