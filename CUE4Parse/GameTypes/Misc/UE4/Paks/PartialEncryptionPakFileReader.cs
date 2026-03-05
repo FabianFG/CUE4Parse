@@ -205,6 +205,7 @@ public partial class PakFileReader
             0 => int.MaxValue,
             1 => 0x200000,
             2 => 0x800,
+            4 => 0,
             _ => throw new NotImplementedException($"Unknown value of WutheringWaves PakEntry byte {pakEntry.CustomData} for partially encrypted file")
         };
     }
