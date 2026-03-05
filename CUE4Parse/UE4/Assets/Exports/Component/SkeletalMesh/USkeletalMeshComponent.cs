@@ -11,6 +11,16 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        var bEnablePerPolyCollision = GetOrDefault<bool>("bEnablePerPolyCollision");
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_SKELETALMESH_COMPONENT_BODYSETUP_SERIALIZATION)
+        {
+            if (bEnablePerPolyCollision)
+            {
+                new FPackageIndex(Ar); // BodySetup
+            }
+        }
+
         if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 20;
     }
 

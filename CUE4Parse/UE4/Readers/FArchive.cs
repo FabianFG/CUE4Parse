@@ -178,6 +178,11 @@ namespace CUE4Parse.UE4.Readers
 
         public T[] ReadBulkArray<T>() where T : struct
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                var elementCountLegacy = Read<int>();
+                return ReadArray<T>(elementCountLegacy);
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
@@ -193,6 +198,11 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(Func<T> getter)
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                var elementCountLegacy = Read<int>();
+                return ReadArray(elementCountLegacy, getter);
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             return ReadBulkArray(elementSize, elementCount, getter);
@@ -301,7 +311,7 @@ namespace CUE4Parse.UE4.Readers
 
             return result;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<TKey, List<TValue>> ReadMultiMap<TKey, TValue>(Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
         {
@@ -470,15 +480,15 @@ namespace CUE4Parse.UE4.Readers
         public string ReadFUtf8String()
         {
             var length = Read<int>();
-            
+
             if (length < 0) throw new ParserException($"Negative Utf8String length '{length}'");
             if (length > Length - Position) throw new ParserException($"Invalid Utf8String length '{length}'");
 
             return Encoding.UTF8.GetString(ReadBytes(length));
         }
-        
+
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
-        
+
         public virtual FName ReadFName() => new(ReadFString());
 
         public virtual UObject? ReadUObject()

@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
@@ -26,9 +27,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
         public static FPackedNormal[] SerializeTangents(FArchive Ar, bool useHighPrecisionTangents)
         {
             if (!useHighPrecisionTangents)
-                return new [] { new FPackedNormal(Ar), new FPackedNormal(0), new FPackedNormal(Ar) }; // # TangentX, TangentY and TangentZ
+                return new [] { new FPackedNormal(Ar), Ar.Ver < EUnrealEngineObjectUE3Version.AddedRemovedNormal ? new FPackedNormal(Ar) : new FPackedNormal(0), new FPackedNormal(Ar) }; // # TangentX, TangentY and TangentZ
 
-            return new [] { (FPackedNormal)new FPackedRGBA16N(Ar), new FPackedNormal(0), (FPackedNormal)new FPackedRGBA16N(Ar) };
+            return new [] { (FPackedNormal)new FPackedRGBA16N(Ar), Ar.Ver < EUnrealEngineObjectUE3Version.AddedRemovedNormal ? new FPackedNormal(Ar) : new FPackedNormal(0), (FPackedNormal)new FPackedRGBA16N(Ar) };
         }
 
         public static FMeshUVFloat[] SerializeTexcoords(FArchive Ar, int numStaticUVSets, bool useStaticFloatUVs)
