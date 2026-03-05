@@ -27,7 +27,7 @@ public class UMapBuildDataRegistry : UObject
         base.Deserialize(Ar, validPos);
 
         var stripFlags = new FStripDataFlags(Ar);
-        if (Ar.Game is EGame.GAME_Farlight84 or EGame.GAME_OutlastTrials or EGame.GAME_DuetNightAbyss) return;
+        if (Ar.Game is EGame.GAME_Farlight84 or EGame.GAME_OutlastTrials or EGame.GAME_DuetNightAbyss or EGame.GAME_CrystalOfAtlan) return;
 
         if (!stripFlags.IsAudioVisualDataStripped())
         {
