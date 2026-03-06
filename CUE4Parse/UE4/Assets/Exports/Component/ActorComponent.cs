@@ -336,7 +336,6 @@ public class USensingComponent : UPawnSensingComponent;
 public class UShapeComponent : UPrimitiveComponent;
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
-public class USkinnedMeshComponent : UMeshComponent;
 public class USmartNavLinkComponent : UNavLinkCustomComponent;
 public class USparseVolumeTextureViewerComponent : UPrimitiveComponent;
 public class USpectatorPawnMovement : UFloatingPawnMovement;
