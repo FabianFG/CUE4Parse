@@ -15,6 +15,7 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
     public static void DecryptData(byte[] data) => DecryptData(data.AsSpan(), _xorKeyShort);
     public static void DecryptData(Span<byte> data, byte[] key)
     {
+        if (data.Length <= 4 && key.Length == 4) return;
         for (int i = 0; i < data.Length; i++)
         {
             data[i] ^= key[i & key.Length - 1];

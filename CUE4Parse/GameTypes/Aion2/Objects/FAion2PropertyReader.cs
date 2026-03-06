@@ -120,6 +120,7 @@ public static class FAion2PropertyReader
                 var pos = Ar.Position;
                 try
                 {
+                    tag.Position = pos;
                     tag.Tag = ReadPropertyTagType(Ar, mappings, tag.PropertyType.Text, tag.TagData, true);
                 }
                 catch (ParserException e)
