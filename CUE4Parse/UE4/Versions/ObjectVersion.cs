@@ -953,9 +953,7 @@ public enum EUnrealEngineObjectUE3Version
     Release119 = 119,
     AddedCppTextToUStruct = 120,
     Release122 = 122,
-
     // only comments exist for these three
-
     // Merge in skeletal collision stuff for SVehicle support.
     temp1 = 122,
     // removed InclusiveSphereBound from FBSPNode
@@ -974,12 +972,25 @@ public enum EUnrealEngineObjectUE3Version
     temp8 = 128,
     // StaticMeshActor Socket Type Added
     temp9 = 128,
-
     MovedFriendlyNameToUFunction = 160,
     TextureDeprecatedFromPoly = 170,
+    // Deprecated FCompactIndex
     DeprecatedCompactIndex = 178,
+    // Change InterpData to being a subclass of SequenceVariable attached to SeqAct_Interps
+    temp10 = 179,
+    // Removed UPrimitive
     DeprecatedPointer = 180,
+    // Store precomputed streaming data in ULevel
+    temp11 = 181,
+    // Removed UStatickMesh::StreamingTextureFactor
+    temp12 = 182,
+    // Changed static mesh lightmaps to be a UTexture2D and create mipmaps based on coverage
+    temp13 = 183,
+    // Cleaned up the mess I created when I clobbered Scott's change in the first "183"
+    temp14 = 184,
+    // Added "AutoExpandCategories" array to UClass
     AddedDelegateSourceToUDelegateProperty = 185,
+    // Removed FDependency
     DeprecatedClassDependencies = 186,
     DisplacedHideCategories = 187, // todo
     AddedStateStackToUStateFrame = 189,
@@ -997,9 +1008,7 @@ public enum EUnrealEngineObjectUE3Version
     AddedBulkLod = 221,
     AddedComponentMapToExports,
     AddedInterfacesFeature = 222,
-
     // lowest found version for UE3 packages
-
     // Removing Length, XSize, YSize and ZSize from VJointPos
     REMOVE_SIZE_VJOINTPOS = 224,
     // Added BackfaceShadowTexCoord to FVert.
@@ -1266,7 +1275,6 @@ public enum EUnrealEngineObjectUE3Version
     EMISSIVE_OPTIMIZATIONS_SHADER_RECOMPILE = 352,
     // Only bloom positive scene color values on PC to mimic XBOX
     DOFBLOOMGATHER_SHADER_RECOMPILE = 353,
-
     //	354,355
     // Recompile fog shader
     HEIGHTFOG_SHADER_RECOMPILE = 355,
@@ -1504,16 +1512,13 @@ public enum EUnrealEngineObjectUE3Version
     // Terrain patch bounds get generated 'on-demand'
     TERRAIN_PATCHBOUNDS_ONDEMAND = 471,
     // ===
-
     MovedColorFromUVItem = 472,
     AddedCastShadow = 473,
     AddedFullPrecisionUV = 474,
     AddedPackageFlags = 475,
     AddedRemovedNormal = 477,
     AddedPackageSource = 482,
-
     // === versions missing (LMK if you find it)
-
     // Min version for content resave
     CONTENT_RESAVE_AUGUST_2007_QA_BUILD = 491,
     // Static mesh version bump, package version bumped to ease resaving
@@ -1681,6 +1686,8 @@ public enum EUnrealEngineObjectUE3Version
     PYLONLIST_IN_ULEVEL = 585,
     // Added local object version number to ULevel and NavMesh
     NAVMESH_COVERREF = 586,
+    // Updates and replaces several kismet objects
+    CONVERT_KISMET_OBJECTS = 587,
     // poly height var added to polygons in navmesh
     NAVMESH_POLYHEIGHT = 588,
     // simple element shader recompile
@@ -1846,6 +1853,10 @@ public enum EUnrealEngineObjectUE3Version
     APEX_DESTRUCTION = 681,
     // Added spotlight dominant shadow transition handling
     SPOTLIGHT_DOMINANTSHADOW_TRANSITION = 682,
+    // Added common game type package object lists to GPCD
+    PREFIX_GAMETYPE_OBJECTS_IN_GPCD = 683,
+    // Added PMap forced object lists to GPCD
+    PMAP_FORCED_OBJECTS_IN_GPCD = 684,
     // Added support for preshadows on translucency
     TRANSLUCENT_PRESHADOWS = 685,
     // Removed shadow volume support
@@ -2112,7 +2123,6 @@ public enum EUnrealEngineObjectUE3Version
     IPHONE_STEREO_ADPCM_COMPRRESION_BUG_FIX = 865,
     // Added undo support to Substance
     ALG_SBS_INPUT_INDEX = 866,
-
     //-IPhone adpcm compression now has a variable block size based on the quality setting in SoundNodeWave
     IPHONE_AUDIO_VARIABLE_BLOCK_SIZE_COMPRESSION = 867,
     // -----<new versions can be added before this line>-------------------------------------------------
@@ -2126,10 +2136,10 @@ public enum EUnrealEngineObjectUE3Version
 
 public enum EUnrealEngineObjectLicenseeUEVersion
 {
-    VER_LIC_NONE = 0,
+    LIC_NONE = 0,
     // this needs to be the last line (see note below)
-    VER_LIC_AUTOMATIC_VERSION_PLUS_ONE,
-    VER_LIC_AUTOMATIC_VERSION = VER_LIC_AUTOMATIC_VERSION_PLUS_ONE - 1
+    LIC_AUTOMATIC_VERSION_PLUS_ONE,
+    LIC_AUTOMATIC_VERSION = LIC_AUTOMATIC_VERSION_PLUS_ONE - 1
 }
 
 /// <summary>
@@ -2300,7 +2310,7 @@ public struct FPackageFileVersion :
 
         if (FileVersionUE4 >= (int)EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE)
             return ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
-            
+
         return ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString();
     }
 }

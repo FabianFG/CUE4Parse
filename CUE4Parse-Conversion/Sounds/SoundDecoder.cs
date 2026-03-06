@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse_Conversion.Sounds.ADPCM;
+using CUE4Parse.UE4.Assets.Exports.Sound.Node;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.Sounds;
@@ -16,9 +17,47 @@ public static class SoundDecoder
         switch (export)
         {
             case UAkMediaAssetData mediaAsset: mediaAsset.Decode(shouldDecompress, out audioFormat, out data); break;
+            case USoundNodeWave nodeWave: nodeWave.Decode(shouldDecompress, out audioFormat, out data); break;
             case USoundWave soundWave: soundWave.Decode(shouldDecompress, out audioFormat, out data); break;
-            default: audioFormat = string.Empty; data = null; break;
+            default:
+                audioFormat = string.Empty;
+                data = null;
+                break;
         }
+    }
+
+    public static void Decode(this USoundNodeWave nodeWave, bool shouldDecompress, out string audioFormat, out byte[]? data)
+    {
+        // sometimes some platforms can be null so search for non-null
+        byte[]? input = new[]
+            {
+                nodeWave.RawSound,
+                nodeWave.PCSound,
+                nodeWave.XboxSound,
+                nodeWave.WIIUSound,
+                nodeWave.PS3Sound,
+                nodeWave.IPhoneSound,
+                nodeWave.FlashSound
+            }
+            .Where(s => s?.Data != null)
+            .Select(s => s.Data)
+            .FirstOrDefault();
+
+        if (input == null)
+        {
+            audioFormat = string.Empty;
+            data = null;
+            return;
+        }
+
+        using var archive = new FByteArchive("WhoDoesntLoveCats", input);
+        var Magic = archive.Read<EChunkIdentifier>();
+        audioFormat = "OGG";
+        if (Magic == EChunkIdentifier.RIFF)
+        {
+            audioFormat = "WEM";
+        }
+        data = Decompress(shouldDecompress, ref audioFormat, input);
     }
 
     public static void Decode(this USoundWave soundWave, bool shouldDecompress, out string audioFormat, out byte[]? data)

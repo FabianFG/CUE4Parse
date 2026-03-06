@@ -18,7 +18,7 @@ public class FLandscapeComponentGrassData
 
     public FLandscapeComponentGrassData(FAssetArchive Ar)
     {
-        if (Ar.Game >= Versions.EGame.GAME_UE5_0)
+        if (Ar.Game >= EGame.GAME_UE5_0)
         {
             NumElements = Ar.Read<int>();
             WeightOffsets = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>);
@@ -40,7 +40,7 @@ public class FLandscapeComponentGrassData
                 WeightData = Ar.ReadMap(() => new FPackageIndex(Ar), Array.Empty<byte>);
                 return;
             }
-            
+
             HeightData = Ar.ReadBulkArray<ushort>();
             WeightData = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.ReadArray<byte>);
         }
