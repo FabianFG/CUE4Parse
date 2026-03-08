@@ -54,7 +54,8 @@ public class FModReader
     public FModReader(BinaryReader Ar, string bankName, byte[]? encryptionKey = null)
     {
         BankName = bankName;
-        if (encryptionKey != null) EncryptionKey = encryptionKey;
+        if (encryptionKey != null)
+            EncryptionKey = encryptionKey;
         ParseHeader(Ar);
         ParseNodes(Ar, Ar.BaseStream.Position, Ar.BaseStream.Length);
     }
@@ -65,11 +66,13 @@ public class FModReader
             throw new Exception("File too small to be a valid RIFF header");
 
         string riff = Encoding.ASCII.GetString(Ar.ReadBytes(4));
-        if (riff != "RIFF") throw new Exception("Not a valid RIFF file");
+        if (riff != "RIFF")
+            throw new Exception("Not a valid RIFF file");
 
         uint riffSize = Ar.ReadUInt32();
         string fileType = Encoding.ASCII.GetString(Ar.ReadBytes(4));
-        if (fileType != "FEV ") throw new Exception("Not a valid FMOD bank");
+        if (fileType != "FEV ")
+            throw new Exception("Not a valid FMOD bank");
 
         long expectedSize = riffSize + 8;
         long actualSize = Ar.BaseStream.Length;
@@ -102,7 +105,7 @@ public class FModReader
                 rawNodeValue = Ar.ReadInt32();
             }
 
-            var nodeId = (ERIFFID)rawNodeValue;
+            var nodeId = (ERIFFID) rawNodeValue;
             uint nodeSize = Ar.ReadUInt32();
             long nextNode = nodeStart + 8 + nodeSize;
 
@@ -139,7 +142,7 @@ public class FModReader
                     break;
 
                 case ERIFFID.CHUNKID_LIST: // List of sub-chunks
-                    var listNodeId = (ERIFFID)Ar.ReadInt32(); // Not needed; Im using custom structure
+                    var listNodeId = (ERIFFID) Ar.ReadInt32(); // Not needed; Im using custom structure
                     ParseNodes(Ar, Ar.BaseStream.Position, nextNode);
                     break;
 
@@ -185,113 +188,113 @@ public class FModReader
                     break;
 
                 case ERIFFID.CHUNKID_PROPERTY: // Property Node
-                    {
-                        var node = new PropertyNode(Ar);
-                        PropertyNodes[node.MappingGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new PropertyNode(Ar);
+                    PropertyNodes[node.MappingGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_EVENTBODY: // Audio Event Node
-                    {
-                        var node = new EventNode(Ar);
-                        EventNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new EventNode(Ar);
+                    EventNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_MODULATOR:
                 case ERIFFID.CHUNKID_MODULATORBODY: // Modulator Node
-                    {
-                        var node = new ModulatorNode(Ar);
-                        ModulatorNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new ModulatorNode(Ar);
+                    ModulatorNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_PARAMETERBODY: // Parameter Node
-                    {
-                        var node = new ParameterNode(Ar);
-                        ParameterNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new ParameterNode(Ar);
+                    ParameterNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_PARAMETERLAYOUTBODY: // Parameter Layout Node
-                    {
-                        var node = new ParameterLayoutNode(Ar);
-                        ParameterLayoutNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new ParameterLayoutNode(Ar);
+                    ParameterLayoutNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_WAVEFORMRESOURCE: // Single WAV Node
-                    {
-                        var node = new WaveformResourceNode(Ar);
-                        WavEntries[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new WaveformResourceNode(Ar);
+                    WavEntries[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_TIMELINEBODY: // Timeline Node
-                    {
-                        var node = new TimelineNode(Ar);
-                        TimelineNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new TimelineNode(Ar);
+                    TimelineNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_SNAPSHOTBODY: // Snapshot Node
-                    {
-                        var node = new SnapshotNode(Ar);
-                        SnapshotNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new SnapshotNode(Ar);
+                    SnapshotNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_VCA:
                 case ERIFFID.CHUNKID_VCABODY: // VCA Node
-                    {
-                        var node = new VCANode(Ar);
-                        VCANodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new VCANode(Ar);
+                    VCANodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_CURVE: // Curve Node
-                    {
-                        var node = new CurveNode(Ar);
-                        CurveNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new CurveNode(Ar);
+                    CurveNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_CONTROLLEROWNER: // Controller Owner Node
-                    {
-                        var node = new ControllerOwnerNode(Ar);
-                        ControllerOwnerNodes.AddRange(node.Controllers);
-                    }
-                    break;
+                {
+                    var node = new ControllerOwnerNode(Ar);
+                    ControllerOwnerNodes.AddRange(node.Controllers);
+                }
+                break;
 
                 case ERIFFID.CHUNKID_CONTROLLER: // Controller Node
-                    {
-                        var node = new ControllerNode(Ar);
-                        ControllerNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new ControllerNode(Ar);
+                    ControllerNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_MAPPING: // Mapping Node
-                    {
-                        var node = new MappingNode(Ar);
-                        MappingNodes[node.BaseGuid] = node;
-                    }
-                    break;
+                {
+                    var node = new MappingNode(Ar);
+                    MappingNodes[node.BaseGuid] = node;
+                }
+                break;
 
                 case ERIFFID.CHUNKID_SOUNDDATAHEADER: // Sound Data Header
                     SoundDataInfo = new SoundDataInfo(Ar);
                     break;
 
                 case ERIFFID.CHUNKID_SOUNDDATA: // Sound Data Node
+                {
+                    var node = new SoundDataNode(Ar, nodeStart, nodeSize, soundDataIndex);
+                    visitedSoundNode = true;
+                    soundDataIndex++;
+                    if (node.SoundBank != null)
                     {
-                        var node = new SoundDataNode(Ar, nodeStart, nodeSize, soundDataIndex);
-                        visitedSoundNode = true;
-                        soundDataIndex++;
-                        if (node.SoundBank != null)
-                        {
-                            SoundBankData.Add(node.SoundBank);
-                        }
+                        SoundBankData.Add(node.SoundBank);
                     }
-                    break;
+                }
+                break;
 
                 default:
                     Log.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
@@ -319,44 +322,44 @@ public class FModReader
         switch (nodeId)
         {
             case ERIFFID.CHUNKID_OUTPUTPORTBODY: // Output Port Node
-                {
-                    var node = new OutputPortNode(Ar);
-                    BusNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
-                }
-                break;
+            {
+                var node = new OutputPortNode(Ar);
+                BusNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+            }
+            break;
 
             case ERIFFID.CHUNKID_RETURNBUSBODY: // Return Bus Node
-                {
-                    var node = new ReturnBusNode(Ar);
-                    BusNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
-                }
-                break;
+            {
+                var node = new ReturnBusNode(Ar);
+                BusNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+            }
+            break;
 
             case ERIFFID.CHUNKID_INPUTBUSBODY: // Input Bus Node
-                {
-                    var node = new InputBusNode(Ar);
-                    BusNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
-                }
-                break;
+            {
+                var node = new InputBusNode(Ar);
+                BusNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+            }
+            break;
 
             case ERIFFID.CHUNKID_GROUPBUSBODY: // Group Bus Node
-                {
-                    var node = new GroupBusNode(Ar);
-                    BusNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
-                }
-                break;
+            {
+                var node = new GroupBusNode(Ar);
+                BusNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+            }
+            break;
 
             case ERIFFID.CHUNKID_MASTERBUSBODY: // Master Bus Node
-                {
-                    var node = new MasterBusNode(Ar);
-                    BusNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
-                }
-                break;
+            {
+                var node = new MasterBusNode(Ar);
+                BusNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to bus node
+            }
+            break;
 
             case ERIFFID.CHUNKID_BUS: // Bus Node
                 if (parentStack.TryPeek(out var busParent) &&
@@ -381,86 +384,86 @@ public class FModReader
         switch (nodeId)
         {
             case ERIFFID.CHUNKID_BUILTINEFFECTBODY:
-                {
-                    var node = new BuiltInEffectNode(Ar);
-                    EffectNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to parameterized effect node
-                    break;
-                }
+            {
+                var node = new BuiltInEffectNode(Ar);
+                EffectNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to parameterized effect node
+                break;
+            }
 
             case ERIFFID.CHUNKID_PLUGINEFFECTBODY:
-                {
-                    var node = new PluginEffectNode(Ar);
-                    EffectNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to parameterized effect node
-                    break;
-                }
+            {
+                var node = new PluginEffectNode(Ar);
+                EffectNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to parameterized effect node
+                break;
+            }
 
             case ERIFFID.CHUNKID_PARAMETERIZEDEFFECT:
+            {
+                if (parentStack.TryPeek(out var paramEffectParent) &&
+                    paramEffectParent.NodeId is ERIFFID.CHUNKID_BUILTINEFFECTBODY or
+                        ERIFFID.CHUNKID_PLUGINEFFECTBODY)
                 {
-                    if (parentStack.TryPeek(out var paramEffectParent) &&
-                        paramEffectParent.NodeId is ERIFFID.CHUNKID_BUILTINEFFECTBODY or
-                            ERIFFID.CHUNKID_PLUGINEFFECTBODY)
+                    var node = new ParameterizedEffectNode(Ar);
+                    if (EffectNodes.TryGetValue(paramEffectParent.Guid, out var builtInEffectNodeObj))
                     {
-                        var node = new ParameterizedEffectNode(Ar);
-                        if (EffectNodes.TryGetValue(paramEffectParent.Guid, out var builtInEffectNodeObj))
+                        if (builtInEffectNodeObj is BuiltInEffectNode builtInEffectNode)
                         {
-                            if (builtInEffectNodeObj is BuiltInEffectNode builtInEffectNode)
-                            {
-                                builtInEffectNode.ParamEffectBody = node;
-                            }
-                            else if (builtInEffectNodeObj is PluginEffectNode pluginEffectNode)
-                            {
-                                pluginEffectNode.ParamEffectBody = node;
-                            }
+                            builtInEffectNode.ParamEffectBody = node;
                         }
-
-                        parentStack.Pop();
-                        parentStack.Push(new FParentContext(nodeId, paramEffectParent.Guid)); // Points to effect node
+                        else if (builtInEffectNodeObj is PluginEffectNode pluginEffectNode)
+                        {
+                            pluginEffectNode.ParamEffectBody = node;
+                        }
                     }
-                    break;
+
+                    parentStack.Pop();
+                    parentStack.Push(new FParentContext(nodeId, paramEffectParent.Guid)); // Points to effect node
                 }
+                break;
+            }
 
             case ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT:
-                {
-                    var node = new SpectralSideChainEffectNode(Ar);
-                    EffectNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
-                    break;
-                }
+            {
+                var node = new SpectralSideChainEffectNode(Ar);
+                EffectNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
+                break;
+            }
 
             case ERIFFID.CHUNKID_SENDEFFECTBODY:
-                {
-                    var node = new SendEffectNode(Ar);
-                    EffectNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
-                    break;
-                }
+            {
+                var node = new SendEffectNode(Ar);
+                EffectNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
+                break;
+            }
 
             case ERIFFID.CHUNKID_SIDECHAINEFFECT:
-                {
-                    var node = new SideChainEffectNode(Ar);
-                    EffectNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
-                    break;
-                }
+            {
+                var node = new SideChainEffectNode(Ar);
+                EffectNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to effect node
+                break;
+            }
 
             case ERIFFID.CHUNKID_EFFECTBODY:
+            {
+                if (parentStack.TryPeek(out var effectParent) &&
+                    effectParent.NodeId is ERIFFID.CHUNKID_SENDEFFECTBODY or
+                        ERIFFID.CHUNKID_SIDECHAINEFFECT or
+                        ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT or
+                        ERIFFID.CHUNKID_PARAMETERIZEDEFFECT)
                 {
-                    if (parentStack.TryPeek(out var effectParent) &&
-                        effectParent.NodeId is ERIFFID.CHUNKID_SENDEFFECTBODY or
-                            ERIFFID.CHUNKID_SIDECHAINEFFECT or
-                            ERIFFID.CHUNKID_SPECTRALSIDECHAINEFFECT or
-                            ERIFFID.CHUNKID_PARAMETERIZEDEFFECT)
-                    {
-                        var node = new EffectNode(Ar);
-                        if (EffectNodes.TryGetValue(effectParent.Guid, out var effectNode))
-                            effectNode.EffectBody = node;
+                    var node = new EffectNode(Ar);
+                    if (EffectNodes.TryGetValue(effectParent.Guid, out var effectNode))
+                        effectNode.EffectBody = node;
 
-                        parentStack.Pop();
-                    }
-                    break;
+                    parentStack.Pop();
                 }
+                break;
+            }
         }
     }
 
@@ -469,20 +472,20 @@ public class FModReader
         switch (nodeId)
         {
             case ERIFFID.CHUNKID_SCATTERERINSTRUMENTBODY: // Scatterer Instrument Node
-                {
-                    var node = new ScattererInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to playlist node
-                }
-                break;
+            {
+                var node = new ScattererInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to playlist node
+            }
+            break;
 
             case ERIFFID.CHUNKID_MULTIINSTRUMENTBODY: // Multi Instrument Node
-                {
-                    var node = new MultiInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to playlist node
-                }
-                break;
+            {
+                var node = new MultiInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to playlist node
+            }
+            break;
 
             case ERIFFID.CHUNKID_PLAYLIST: // Playlist Node
                 if (parentStack.TryPeek(out var parentPlst) &&
@@ -506,52 +509,52 @@ public class FModReader
                 break;
 
             case ERIFFID.CHUNKID_PROGRAMMERINSTRUMENTBODY: // Programmer Instrument Node
-                {
-                    var node = new ProgrammerInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new ProgrammerInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_COMMANDINSTRUMENTBODY: // Command Instrument Node
-                {
-                    var node = new CommandInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new CommandInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_WAVEFORMINSTRUMENTBODY: // Waveform Instrument Node
-                {
-                    var node = new WaveformInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new WaveformInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_EVENTINSTRUMENTBODY: // Event Instrument Node
-                {
-                    var node = new EventInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new EventInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_SILENCEINSTRUMENTBODY: // Silence Instrument Node
-                {
-                    var node = new SilenceInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new SilenceInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_EFFECTINSTRUMENTBODY: // Effect Instrument Node
-                {
-                    var node = new EffectInstrumentNode(Ar);
-                    InstrumentNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
-                }
-                break;
+            {
+                var node = new EffectInstrumentNode(Ar);
+                InstrumentNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to instrument node
+            }
+            break;
 
             case ERIFFID.CHUNKID_INSTRUMENT: // Instrument Node
                 if (parentStack.TryPeek(out var parentInst) &&
@@ -578,12 +581,12 @@ public class FModReader
         switch (nodeId)
         {
             case ERIFFID.CHUNKID_TRANSITIONREGIONBODY: // Transition Region Node
-                {
-                    var node = new TransitionRegionNode(Ar);
-                    TransitionNodes[node.BaseGuid] = node;
-                    parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to transition timeline node
-                }
-                break;
+            {
+                var node = new TransitionRegionNode(Ar);
+                TransitionNodes[node.BaseGuid] = node;
+                parentStack.Push(new FParentContext(nodeId, node.BaseGuid)); // Points to transition timeline node
+            }
+            break;
 
             case ERIFFID.CHUNKID_TRANSITIONTIMELINE: // Transition Timeline Node
                 if (parentStack.TryPeek(out var transParent) &&
@@ -690,14 +693,14 @@ public class FModReader
     public static uint ReadX16(BinaryReader Ar)
     {
         short signedLow = Ar.ReadInt16();
-        ushort low = (ushort)signedLow;
+        ushort low = (ushort) signedLow;
         uint value = low;
 
         if ((low & 0x8000) != 0)
         {
             ushort high = Ar.ReadUInt16();
             value &= 0x7FFFu;
-            value |= ((uint)high << 15);
+            value |= ((uint) high << 15);
         }
 
         return value;
@@ -707,9 +710,10 @@ public class FModReader
     {
         uint length = ReadX16(Ar);
 
-        if (length <= 0) return string.Empty;
+        if (length <= 0)
+            return string.Empty;
 
-        var bytes = Ar.ReadBytes((int)length);
+        var bytes = Ar.ReadBytes((int) length);
 
         return Encoding.UTF8.GetString(bytes);
     }
@@ -717,9 +721,10 @@ public class FModReader
     public static T[] ReadVersionedElemListImp<T>(BinaryReader Ar, Func<BinaryReader, T>? readElem = null)
     {
         uint raw = ReadX16(Ar);
-        int count = (int)(raw >> 1);
+        int count = (int) (raw >> 1);
 
-        if (count <= 0) return [];
+        if (count <= 0)
+            return [];
 
         var result = new T[count];
 
@@ -732,7 +737,7 @@ public class FModReader
             }
             else
             {
-                result[i] = (T)Activator.CreateInstance(typeof(T), Ar)!;
+                result[i] = (T) Activator.CreateInstance(typeof(T), Ar)!;
             }
         }
 
@@ -769,18 +774,20 @@ public class FModReader
     {
         uint count = ReadX16(Ar);
 
-        if (count == 0) return [];
+        if (count == 0)
+            return [];
 
-        int totalBytes = checked((int)count * 3); // 3 bytes per entry
+        int totalBytes = checked((int) count * 3); // 3 bytes per entry
         byte[] raw = Ar.ReadBytes(totalBytes);
 
-        if (raw.Length != totalBytes) throw new EndOfStreamException($"Expected {totalBytes} bytes, got {raw.Length}");
+        if (raw.Length != totalBytes)
+            throw new EndOfStreamException($"Expected {totalBytes} bytes, got {raw.Length}");
 
         var arr = new FUInt24[count];
         int o = 0;
         for (int i = 0; i < count; i++)
         {
-            uint v = (uint)(raw[o] | (raw[o + 1] << 8) | (raw[o + 2] << 16));
+            uint v = (uint) (raw[o] | (raw[o + 1] << 8) | (raw[o + 2] << 16));
             o += 3;
             arr[i] = new FUInt24(v);
         }

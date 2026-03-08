@@ -1,11 +1,12 @@
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 using System.IO;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class MappingNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FMappingPoint[] MappingPoints;
 
     public MappingNode(BinaryReader Ar)
