@@ -10,6 +10,11 @@ public class OsGameFile : VersionedGameFile
 {
     public readonly FileInfo ActualFile;
 
+    public OsGameFile(FileInfo info, VersionContainer versions) : base(info.FullName, info.Length, versions)
+    {
+        ActualFile = info;
+    }
+
     public OsGameFile(DirectoryInfo baseDir, FileInfo info, string mountPoint, VersionContainer versions)
         : base(System.IO.Path.GetRelativePath(baseDir.FullName, info.FullName).Replace('\\', '/'), info.Length, versions)
     {

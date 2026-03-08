@@ -50,7 +50,7 @@ public class WwiseReader
     {
         Path = Ar.Name;
         _source = source;
-        TotalSize = size == -1 ? size : Ar.Length;
+        TotalSize = size == -1 ? Ar.Length : size;
         var end = size == -1 ? Ar.Length : Ar.Position + size;
 
         while (Ar.Position < end)
@@ -123,6 +123,7 @@ public class WwiseReader
                     for (var i = 0; i < WemSounds.Length; i++)
                     {
                         var temp = ReadDeferredByteData(Ar, _source, position + WemIndexes[i].Offset, WemIndexes[i].Size);
+                        WemSounds[i] = temp;
                         LoadedSize += temp.LoadedSize;
                         WwiseEncodedMedias[WemIndexes[i].Id.ToString()] = temp;
                     }
@@ -195,17 +196,17 @@ public class WwiseReader
     {
         switch (source)
         {
-            case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.Header is { } head:
-                var bulk = new FDeferredByteData(assetAr, head, offset, size);
+            case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.Header is { } header:
+                var bulkData = new FBulkDataDeferredByteData(assetAr, header, offset, size);
                 Ar.Position = offset + size;
-                return bulk;
+                return bulkData;
             case WwiseGameFileSource gameFileSource when Ar.SupportPartialReads && gameFileSource.File is { } file:
-                var temp = new FDeferredByteData(file, offset, size);
+                var gameFileData = new FGameFileDeferredByteData(file, offset, size);
                 Ar.Position = offset + size;
-                return temp;
+                return gameFileData;
             default:
                 Ar.Position = offset;
-                return new FDeferredByteData(Ar.ReadBytes(size));
+                return new FArrayDeferredByteData(Ar.ReadBytes(size));
         }
     }
 

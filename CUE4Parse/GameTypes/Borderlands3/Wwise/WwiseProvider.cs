@@ -13,7 +13,7 @@ public partial class WwiseProvider
         DetermineBaseWwiseAudioPath();
 
         if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var location))
-            TryLoadAndCacheWwiseFile(null ,location.Path, Path.GetFileNameWithoutExtension(location.Path), 0, isWemFile: true);
+            TryLoadAndCacheWwiseFile(location?.File, 0, isWemFile: true);
 
         var wemId = dialogPerfData.WwiseEventShortID.ToString();
         var fileName = dialogPerfData.WwiseExternalMediaTemplate is null ? wemId : $"{dialogPerfData.WwiseExternalMediaTemplate.Name} ({wemId})";
