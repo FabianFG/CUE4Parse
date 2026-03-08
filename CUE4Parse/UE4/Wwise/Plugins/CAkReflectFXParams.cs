@@ -49,7 +49,7 @@ public struct AkReflectFXParams
             DistanceWarping = Ar.Read<float>();
             DiffractionWarping = Ar.Read<float>();
         }
-        OutputChannelConfig = Ar.Read<AkChannelConfig>();
+        OutputChannelConfig = new AkChannelConfig(Ar);
         if (WwiseVersions.Version >= 145)
         {
             DecorrParams = new AkDecorrParams(Ar);
