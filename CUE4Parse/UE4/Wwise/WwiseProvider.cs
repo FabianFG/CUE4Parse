@@ -8,7 +8,6 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -26,29 +25,9 @@ public class WwiseExtractedSound
     public override string ToString() => OutputPath + "." + Extension.ToLowerInvariant();
 }
 
-public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 1024 * 1024)
-{
-    // Important note: If game splits audio event hierarchies across multiple soundbanks or audio events don't reference soundbanks to load (that happens in older Wwise versions) and either of these limits is reached, given game requires custom loading implementation!
-    public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
-
-    public static WwiseProviderConfiguration GetFinalConfiguration(EGame game, WwiseProviderConfiguration? userConfig)
-    {
-        var baseConfig = userConfig ?? new WwiseProviderConfiguration();
-
-        return game switch
-        {
-            EGame.GAME_AceCombat7 or EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyLittleHope
-                or EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or EGame.GAME_TheQuarry => new WwiseProviderConfiguration(long.MaxValue),
-            EGame.GAME_Borderlands3 => new WwiseProviderConfiguration(long.MaxValue), // We need everything
-            _ => baseConfig
-        };
-    }
-}
-
 public partial class WwiseProvider
 {
     private readonly AbstractVfsFileProvider _provider;
-    private readonly WwiseProviderConfiguration _configuration;
     private readonly string _gameDirectory;
     private string? _baseWwiseAudioPath;
 
@@ -65,24 +44,16 @@ public partial class WwiseProvider
 
     private readonly Dictionary<uint, FGameFileDeferredByteData> _looseWemFilesLookup = [];
 
-    public WwiseProvider(AbstractVfsFileProvider provider, string gameDirectory, int maxBankFiles)
-        : this(provider, gameDirectory, new WwiseProviderConfiguration())
-    {
-    }
-    public WwiseProvider(AbstractVfsFileProvider provider, string gameDirectory, WwiseProviderConfiguration? configuration = null)
+    public WwiseProvider(AbstractVfsFileProvider provider, string gameDirectory)
     {
         _provider = provider;
-        _configuration = WwiseProviderConfiguration.GetFinalConfiguration(_provider.Versions.Game, configuration);
         _gameDirectory = gameDirectory;
 
         LoadMultiReferenceLibrary();
 
-        if (_totalLoadedWwiseSize < _configuration.MaxTotalWwiseSize)
-        {
-            BulkInitializeWwise();
-            if (!_completedWwiseFullBnkInit)
-                throw new InvalidOperationException("Failed to initialize Wwise soundbanks. Ensure that the provider has files to work with.");
-        }
+        BulkInitializeWwise();
+        if (!_completedWwiseFullBnkInit)
+            throw new InvalidOperationException("Failed to initialize Wwise soundbanks. Ensure that the provider has files to work with.");
     }
 
     private readonly HashSet<(uint Id, Hierarchy Hierarchy)> _visitedHierarchies = []; // To speed things up
@@ -610,14 +581,6 @@ public partial class WwiseProvider
             string soundBankName = Path.GetFileNameWithoutExtension(fullPath);
             string extension = Path.GetExtension(fullPath).ToLowerInvariant();
             bool isWemFile = extension == ".wem";
-
-            if (_totalLoadedWwiseSize > _configuration.MaxTotalWwiseSize)
-            {
-#if DEBUG
-                Log.Debug("Reached maximum total size of Wwise files to load. This game might require custom loading implementation (only necessary under some special cases).");
-#endif
-                break;
-            }
 
             if (isWemFile)
             {
