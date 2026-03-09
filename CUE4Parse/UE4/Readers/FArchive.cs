@@ -180,8 +180,7 @@ namespace CUE4Parse.UE4.Readers
         {
             if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
             {
-                var elementCountLegacy = Read<int>();
-                return ReadArray<T>(elementCountLegacy);
+                return ReadArray<T>();
             }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
@@ -200,8 +199,7 @@ namespace CUE4Parse.UE4.Readers
         {
             if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
             {
-                var elementCountLegacy = Read<int>();
-                return ReadArray(elementCountLegacy, getter);
+                return ReadArray(getter);
             }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
@@ -211,6 +209,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SkipBulkArrayData()
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                throw new ParserException("Cannot skip bulk array data for UE3 versions before ADDED_BULKSERIALIZE_SANITY_CHECKING");
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             Position += elementSize * elementCount;

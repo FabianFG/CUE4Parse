@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Versions;
 
@@ -13,7 +12,7 @@ public class UPrimitiveComponent : USceneComponent
         if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentGuid && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_GUID)
         {
-            Ar.Read<FGuid>();
+            Ar.Position += 16; // Guid
         }
     }
 

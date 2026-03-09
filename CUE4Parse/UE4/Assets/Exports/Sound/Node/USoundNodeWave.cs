@@ -4,92 +4,91 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.Assets.Exports.Sound.Node
+namespace CUE4Parse.UE4.Assets.Exports.Sound.Node;
+
+public class USoundNodeWave : UObject
 {
-    public class USoundNodeWave : UObject
+    public FFormatContainer? CompressedFormatData;
+    public FByteBulkData? RawSound;
+    public FByteBulkData? PCSound;
+    public FByteBulkData? XboxSound;
+    public FByteBulkData? PS3Sound;
+    public FByteBulkData? WIIUSound;
+    public FByteBulkData? IPhoneSound;
+    public FByteBulkData? FlashSound;
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        public FFormatContainer? CompressedFormatData;
-        public FByteBulkData? RawSound;
-        public FByteBulkData? PCSound;
-        public FByteBulkData? XboxSound;
-        public FByteBulkData? PS3Sound;
-        public FByteBulkData? WIIUSound;
-        public FByteBulkData? IPhoneSound;
-        public FByteBulkData? FlashSound;
+        base.Deserialize(Ar, validPos);
 
-        public override void Deserialize(FAssetArchive Ar, long validPos)
+        var bCooked = Ar.Ver > EUnrealEngineObjectUE4Version.ADD_COOKED_TO_SOUND_NODE_WAVE && Ar.ReadBoolean();
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PC_DATA)
         {
-            base.Deserialize(Ar, validPos);
+            Ar.ReadFName(); // FileType
+        }
 
-            var bCooked = Ar.Ver > EUnrealEngineObjectUE4Version.ADD_COOKED_TO_SOUND_NODE_WAVE && Ar.ReadBoolean();
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.UPDATED_SOUND_NODE_WAVE && Ar.Ver < EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+        {
+            Ar.SkipFixedArray(sizeof(int)); // ChannelOffsets
+            Ar.SkipFixedArray(sizeof(int)); // ChannelSizes
+        }
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PC_DATA)
+        if (bCooked)
+        {
+            CompressedFormatData = new FFormatContainer(Ar);
+        }
+        else
+        {
+            RawSound = new FByteBulkData(Ar);
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_RAW_SURROUND_DATA && Ar.Ver < EUnrealEngineObjectUE3Version.UPDATED_SOUND_NODE_WAVE)
+        {
+            Ar.ReadArray(() => new FByteBulkData(Ar));
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_NUM_CHANNELS && Ar.Ver < EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+        {
+            Ar.Read<int>(); // ChannelCount
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_TO_DDC)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PC_DATA)
             {
-                Ar.ReadFName(); // FileType
+                PCSound = new FByteBulkData(Ar);
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.UPDATED_SOUND_NODE_WAVE && Ar.Ver < EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_XBOX360_DATA)
             {
-                Ar.ReadArray<int>(); // ChannelOffsets
-                Ar.ReadArray<int>(); // ChannelSizes
+                XboxSound = new FByteBulkData(Ar);
             }
 
-            if (bCooked)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PS3_DATA)
             {
-                CompressedFormatData = new FFormatContainer(Ar);
-            }
-            else
-            {
-                RawSound = new FByteBulkData(Ar);
+                PS3Sound = new FByteBulkData(Ar);
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_RAW_SURROUND_DATA && Ar.Ver < EUnrealEngineObjectUE3Version.UPDATED_SOUND_NODE_WAVE)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.WIIU_COMPRESSED_SOUNDS)
             {
-                Ar.ReadArray(() => new FByteBulkData(Ar));
+                WIIUSound = new FByteBulkData(Ar);
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_NUM_CHANNELS && Ar.Ver < EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.IPHONE_COMPRESSED_SOUNDS)
             {
-                Ar.Read<int>(); // ChannelCount
+                IPhoneSound = new FByteBulkData(Ar);
             }
 
-            if (Ar.Ver < EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_TO_DDC)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN)
             {
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PC_DATA)
-                {
-                    PCSound = new FByteBulkData(Ar);
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_XBOX360_DATA)
-                {
-                    XboxSound = new FByteBulkData(Ar);
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_COOKED_PS3_DATA)
-                {
-                    PS3Sound = new FByteBulkData(Ar);
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.WIIU_COMPRESSED_SOUNDS)
-                {
-                    WIIUSound = new FByteBulkData(Ar);
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.IPHONE_COMPRESSED_SOUNDS)
-                {
-                    IPhoneSound = new FByteBulkData(Ar);
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN)
-                {
-                    FlashSound = new FByteBulkData(Ar);
-                }
+                FlashSound = new FByteBulkData(Ar);
             }
+        }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_GUID)
-            {
-                Ar.Read<FGuid>(); // CompressedDataGuid
-            }
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_GUID)
+        {
+            Ar.Read<FGuid>(); // CompressedDataGuid
         }
     }
 }

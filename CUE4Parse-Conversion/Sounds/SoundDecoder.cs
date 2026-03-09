@@ -39,9 +39,7 @@ public static class SoundDecoder
                 nodeWave.IPhoneSound,
                 nodeWave.FlashSound
             }
-            .Where(s => s?.Data != null)
-            .Select(s => s.Data)
-            .FirstOrDefault();
+            .FirstOrDefault(s => s?.Data != null && s.Data.Length > 4)?.Data;
 
         if (input == null)
         {
@@ -50,10 +48,9 @@ public static class SoundDecoder
             return;
         }
 
-        using var archive = new FByteArchive("WhoDoesntLoveCats", input);
-        var Magic = archive.Read<EChunkIdentifier>();
+        var magic = (EChunkIdentifier) BitConverter.ToUInt32(input);
         audioFormat = "OGG";
-        if (Magic == EChunkIdentifier.RIFF)
+        if (magic == EChunkIdentifier.RIFF)
         {
             audioFormat = "WEM";
         }

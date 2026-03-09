@@ -28,8 +28,7 @@ public class UTextureCube : UTexture
         {
             var SizeX = Ar.Read<int>();
             var SizeY = Ar.Read<int>();
-            var format = Ar.Read<int>();
-            Format = (EPixelFormat) format;
+            Format = (EPixelFormat) Ar.Read<int>();
             var numMips = Ar.Read<int>();
         }
 

@@ -1,5 +1,5 @@
-using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Component;
 
 namespace CUE4Parse.GameTypes.ScourgeOutbreak.Assets.Exports;
 

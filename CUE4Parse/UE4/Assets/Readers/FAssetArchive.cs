@@ -45,7 +45,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         public override FName ReadFName()
         {
             var nameIndex = Read<int>();
-            var extraIndex = -1;
+            var extraIndex = 0;
             if (Ver >= EUnrealEngineObjectUE3Version.FNAME_CHANGE_NAME_SPLIT)
             {
                 extraIndex = Read<int>();

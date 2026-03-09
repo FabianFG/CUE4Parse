@@ -8,8 +8,8 @@ public class UTextureProFXParent : UTexture
 {
     public int SizeX;
     public int SizeY;
-    public EPixelFormat Format;
     public FByteBulkData RawData;
+    
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -24,7 +24,7 @@ public class UTextureProFXChild : UTexture
 {
     public int SizeX;
     public int SizeY;
-    public EPixelFormat Format;
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

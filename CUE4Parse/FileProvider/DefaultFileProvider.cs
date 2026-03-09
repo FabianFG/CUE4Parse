@@ -97,7 +97,7 @@ namespace CUE4Parse.FileProvider
                 // Only load containers if .uproject file is not found
                 if (uproject is null && upperExt is "PAK" or "UTOC")
                 {
-                    if (file.FullName.Contains(@"ThirdParty\CEF3\Win64") || file.FullName.Contains(@"ThirdParty\CEF\Win64") || file.FullName.Contains(@"Binaries\Win32\host")) continue;
+                    if (file.FullName.Contains(@"Binaries\ThirdParty\CEF", StringComparison.OrdinalIgnoreCase) || file.FullName.Contains(@"Binaries\Win32\host")) continue;
                     RegisterVfs(file);
                     continue;
                 }
