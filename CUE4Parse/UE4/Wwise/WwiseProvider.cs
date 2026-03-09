@@ -182,25 +182,6 @@ public partial class WwiseProvider
 
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
-                CacheSoundBankCookedData(soundBank);
-            }
-
-            foreach (var leaf in eventData.Value.SwitchContainerLeaves)
-            {
-                foreach (var soundBank in leaf.SoundBanks)
-                {
-                    CacheSoundBankCookedData(soundBank);
-                }
-            }
-        }
-
-        foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
-        {
-            if (!eventData.HasValue)
-                continue;
-
-            foreach (var soundBank in eventData.Value.SoundBanks)
-            {
                 ProcessSoundBankCookedData(soundBank, eventData, results);
             }
 
@@ -264,23 +245,19 @@ public partial class WwiseProvider
         });
     }
 
-    private void CacheSoundBankCookedData(FWwiseSoundBankCookedData soundBank)
-    {
-        DetermineBaseWwiseAudioPath();
-
-        var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
-        var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
-
-        if (!string.IsNullOrEmpty(soundBankPath) && _provider.TryGetGameFile(soundBankPath, out var gameFile))
-            TryLoadAndCacheWwiseFile(null, (uint) soundBank.SoundBankId);
-    }
-
     private void ProcessSoundBankCookedData(FWwiseSoundBankCookedData soundBank, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results)
     {
         DetermineBaseWwiseAudioPath();
 
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
+
+        var bulkPackagedSoundBank = soundBank.PackagedFile?.BulkData;
+        if (bulkPackagedSoundBank is not null)
+        {
+            CacheWwiseFile(bulkPackagedSoundBank);
+            _wwiseLoadedSoundBanks.Add(bulkPackagedSoundBank.Header.SoundBankId);
+        }
 
         if (_wwiseHierarchyTables.TryGetValue((uint) eventData!.Value.EventId, out var eventHierarchy) &&
             eventHierarchy.Data is HierarchyEvent hierarchyEvent)
@@ -674,16 +651,16 @@ public partial class WwiseProvider
             return [];
 
         var values = new List<string>();
-        //engineConfig.EvaluatePropertyValues("/Script/AkAudio.AkSettings", "WwiseStagingDirectory", values);
-        //var path = values.FirstOrDefault()?.SubstringAfter("Path=\"").SubstringBefore("\")");
-        //if (!string.IsNullOrEmpty(path))
-        //{
-        //    _baseWwiseAudioPath = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-        //}
-        //values.Clear();
+        engineConfig.EvaluatePropertyValues("/Script/AkAudio.AkSettings", "WwiseStagingDirectory", values);
+        var path = values.FirstOrDefault()?.SubstringAfter("Path=\"").SubstringBefore("\")");
+        if (!string.IsNullOrEmpty(path))
+        {
+            _baseWwiseAudioPath = Path.Combine(_provider.ProjectName, "Content", path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar));
+        }
+        values.Clear();
         engineConfig.EvaluatePropertyValues("/Script/WwisePackaging.WwisePackagingSettings", "AssetLibraries", values);
 
-        return values.Select(x => _provider.FixPath(x.TrimStart('/').SubstringBeforeLast('.') + ".uasset")).ToList();
+        return [.. values.Select(x => _provider.FixPath(x.TrimStart('/').SubstringBeforeLast('.') + ".uasset"))];
     }
 
     private void LoadMultiReferenceLibrary()
