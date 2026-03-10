@@ -30,7 +30,7 @@ public class FByteBulkData
 
     public FByteBulkData(byte[] data)
     {
-        _data = new Lazy<byte[]>(data);
+        _data = new Lazy<byte[]?>(data);
     }
 
     public FByteBulkData(Lazy<byte[]?> data)
@@ -38,22 +38,25 @@ public class FByteBulkData
         _data = data;
     }
 
-    public FByteBulkData(FAssetArchive Ar, FByteBulkDataHeader? header)
+    /// <summary>
+    /// Creates a new FByteBulkData instance for a portion of the original bulk data.
+    /// </summary>
+    public FByteBulkData(FAssetArchive Ar, FByteBulkData bulkData, long offset, int size)
     {
-        Header = header ?? new FByteBulkDataHeader(Ar);
+        var header = bulkData.Header;
+        Header = new FByteBulkDataHeader(header.BulkDataFlags, size, (uint) size, header.OffsetInFile + offset, header.CookedIndex);
+        _dataPosition = bulkData._dataPosition;
+        if (!header.BulkDataFlags.HasFlag(BULKDATA_OptionalPayload | BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
+        {
+            _dataPosition += offset;
+        }
+
         if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
         {
-            // Log.Warning("Bulk with no data");
             return;
         }
 
-        _dataPosition = Ar.Position;
         _savedAr = Ar;
-
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
-        {
-            Ar.Position += Header.SizeOnDisk;
-        }
 
         if (LazyLoad)
         {
@@ -82,7 +85,7 @@ public class FByteBulkData
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
+        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None)
         {
             Ar.Position += Header.SizeOnDisk;
         }
@@ -107,7 +110,7 @@ public class FByteBulkData
     {
         Header = new FByteBulkDataHeader(Ar);
 
-        if (BulkDataFlags.HasFlag(BULKDATA_Unused | BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
+        if (BulkDataFlags.HasFlag(BULKDATA_Unused | BULKDATA_OptionalPayload |  BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
         {
             return;
         }
@@ -144,7 +147,7 @@ public class FByteBulkData
                 return false;
 
             archive = uptnlAr;
-            position = uptnlAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
+            position = uptnlAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
         {
@@ -155,7 +158,7 @@ public class FByteBulkData
                 return false;
 
             archive = ubulkAr;
-            position = ubulkAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
+            position = ubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {
@@ -213,7 +216,7 @@ public class FByteBulkData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetDataSize() => Header.ElementCount;
 
-    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkDataHeader? fullBulkData)
+    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkData? fullBulkData)
     {
         fullBulkData = null;
         combinedData = [];
@@ -221,18 +224,19 @@ public class FByteBulkData
         {
             var saved = Ar.Position;
             var secondChunk = new FByteBulkData(Ar);
-            if (Data is null || secondChunk.Data is null) return false;
+            var secondChunkData = secondChunk.Data;
+            if (Data is null || secondChunkData is null) return false;
 
-            if (Data.Length < secondChunk.Data.Length && secondChunk.Data.AsSpan()[..Data.Length].SequenceEqual(Data))
+            if (Data.Length < secondChunkData.Length && secondChunkData.AsSpan()[..Data.Length].SequenceEqual(Data))
             {
-                combinedData = secondChunk.Data;
-                fullBulkData = new (secondChunk.Header);
+                combinedData = secondChunkData;
+                fullBulkData = secondChunk;
                 return true;
             }
 
             combinedData = new byte[GetDataSize() + secondChunk.GetDataSize()];
             Buffer.BlockCopy(Data, 0, combinedData, 0, GetDataSize());
-            Buffer.BlockCopy(secondChunk.Data, 0, combinedData, GetDataSize(), secondChunk.GetDataSize());
+            Buffer.BlockCopy(secondChunkData, 0, combinedData, GetDataSize(), secondChunk.GetDataSize());
             return true;
         }
         catch

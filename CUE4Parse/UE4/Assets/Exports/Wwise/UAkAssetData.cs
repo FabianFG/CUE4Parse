@@ -19,12 +19,7 @@ public class UAkAssetData : UObject
         if (bulkData.Data is null) return;
 
         using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
-        Data = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData.Header));
-
-        if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-        {
-            Ar.Position = savedPosition + bulkData.Header.ElementCount;
-        }
+        Data = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

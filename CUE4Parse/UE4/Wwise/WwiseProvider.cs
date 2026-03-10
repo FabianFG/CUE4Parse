@@ -175,6 +175,26 @@ public partial class WwiseProvider
             return results;
         }
 
+        // cache all banks first
+        foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
+        {
+            if (!eventData.HasValue)
+                continue;
+
+            foreach (var soundBank in eventData.Value.SoundBanks)
+            {
+                CacheSoundBankCookedData(soundBank);
+            }
+
+            foreach (var leaf in eventData.Value.SwitchContainerLeaves)
+            {
+                foreach (var soundBank in leaf.SoundBanks)
+                {
+                    CacheSoundBankCookedData(soundBank);
+                }
+            }
+        }
+
         foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
         {
             if (!eventData.HasValue)
@@ -245,19 +265,22 @@ public partial class WwiseProvider
         });
     }
 
+    private void CacheSoundBankCookedData(FWwiseSoundBankCookedData soundBank)
+    {
+        var bulkPackagedSoundBank = soundBank.PackagedFile?.BulkData;
+        if (bulkPackagedSoundBank is not null && !_wwiseLoadedSoundBanks.Contains(bulkPackagedSoundBank.Header.SoundBankId))
+        {
+            CacheWwiseFile(bulkPackagedSoundBank);
+            _wwiseLoadedSoundBanks.Add(bulkPackagedSoundBank.Header.SoundBankId);
+        }
+    }
+
     private void ProcessSoundBankCookedData(FWwiseSoundBankCookedData soundBank, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results)
     {
         DetermineBaseWwiseAudioPath();
 
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
-
-        var bulkPackagedSoundBank = soundBank.PackagedFile?.BulkData;
-        if (bulkPackagedSoundBank is not null)
-        {
-            CacheWwiseFile(bulkPackagedSoundBank);
-            _wwiseLoadedSoundBanks.Add(bulkPackagedSoundBank.Header.SoundBankId);
-        }
 
         if (_wwiseHierarchyTables.TryGetValue((uint) eventData!.Value.EventId, out var eventHierarchy) &&
             eventHierarchy.Data is HierarchyEvent hierarchyEvent)

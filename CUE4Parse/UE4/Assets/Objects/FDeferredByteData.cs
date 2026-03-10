@@ -45,10 +45,9 @@ public sealed class FBulkDataDeferredByteData : FDeferredByteData
 {
     public readonly FByteBulkData BulkData;
 
-    public FBulkDataDeferredByteData(FAssetArchive Ar, FByteBulkDataHeader header, long offset, int size)
+    public FBulkDataDeferredByteData(FAssetArchive Ar, FByteBulkData bulkData, long offset, int size)
     {
-        var bulkDataHeader = new FByteBulkDataHeader(header.BulkDataFlags, size, (uint) size, header.OffsetInFile + offset, header.CookedIndex);
-        BulkData = new FByteBulkData(Ar, bulkDataHeader);
+        BulkData = new FByteBulkData(Ar, bulkData, offset, size);
     }
 
     public override bool IsValid => BulkData is not null;

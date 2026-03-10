@@ -19,7 +19,7 @@ public class RIFFSectionSizeException : Exception;
 public abstract record WwiseDataSource;
 public sealed record WwiseArchiveSource : WwiseDataSource;
 public sealed record WwiseGameFileSource(GameFile File) : WwiseDataSource;
-public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkDataHeader Header) : WwiseDataSource;
+public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bulkData) : WwiseDataSource;
 
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
@@ -196,10 +196,10 @@ public class WwiseReader
     {
         switch (source)
         {
-            case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.Header is { } header:
-                var bulkData = new FBulkDataDeferredByteData(assetAr, header, offset, size);
+            case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.bulkData is { } bulkData:
+                var newBulkData = new FBulkDataDeferredByteData(assetAr, bulkData, offset, size);
                 Ar.Position = offset + size;
-                return bulkData;
+                return newBulkData;
             case WwiseGameFileSource gameFileSource when Ar.SupportPartialReads && gameFileSource.File is { } file:
                 var gameFileData = new FGameFileDeferredByteData(file, offset, size);
                 Ar.Position = offset + size;
