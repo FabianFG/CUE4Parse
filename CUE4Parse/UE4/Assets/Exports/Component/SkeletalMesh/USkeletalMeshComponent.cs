@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
@@ -13,6 +14,16 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
     {
         base.Deserialize(Ar, validPos);
         AnimationData = GetOrDefault<FSingleAnimationPlayData>(nameof(AnimationData));
+
+        var bEnablePerPolyCollision = GetOrDefault<bool>("bEnablePerPolyCollision");
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_SKELETALMESH_COMPONENT_BODYSETUP_SERIALIZATION)
+        {
+            if (bEnablePerPolyCollision)
+            {
+                new FPackageIndex(Ar); // BodySetup
+            }
+        }
 
         if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 20;
     }
