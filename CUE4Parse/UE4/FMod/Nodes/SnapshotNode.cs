@@ -1,12 +1,13 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class SnapshotNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly int Priority;
     public readonly FSnapshot[] Snapshots;
     public readonly bool BlendingSnapshot;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using Newtonsoft.Json;
 
@@ -11,13 +12,15 @@ public class FAion2L10NFile
     public string Namespace = string.Empty;
     public Dictionary<string, string> Entries = [];
 
-    public FAion2L10NFile(GameFile file)
+    public FAion2L10NFile(GameFile file, IFileProvider provider)
     {
-        using var Ar = file.SafeCreateReader();
-        if (Ar is null) return;
+        var data = file.SafeRead();
+        ArgumentNullException.ThrowIfNull(data);
 
-        Namespace = Ar.ReadFString();
-        Entries = Ar.ReadMap(Ar.ReadFString, Ar.ReadFString);
+        using var Ar = new FAion2DatFileArchive(data, provider.Versions);
+
+        Namespace = Ar.ReadL10NString();
+        Entries = Ar.ReadMap(Ar.ReadL10NString, Ar.ReadL10NString);
     }
 }
 

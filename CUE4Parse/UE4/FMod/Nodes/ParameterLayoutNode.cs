@@ -1,11 +1,12 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class ParameterLayoutNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FModGuid ParameterGuid;
     public readonly FModGuid LegacyGuid;
     public readonly FModGuid[] Instruments = [];

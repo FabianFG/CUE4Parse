@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Exceptions
@@ -13,4 +13,6 @@ namespace CUE4Parse.UE4.Exceptions
             : base($"{message}\n{reader.GetType().Name} Info: {reader.Name} | Pos:{reader.Position} Length:{reader.Length} ({Math.Round((decimal)reader.Position / reader.Length * 100, 1)}% done)", innerException)
         { }
     }
+
+    public class MappingException(string message) : ParserException(message);
 }

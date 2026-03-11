@@ -8,9 +8,13 @@ public class USkeletalMeshComponentBudgeted : USkeletalMeshComponent;
 
 public class USkeletalMeshComponent : USkinnedMeshComponent
 {
+    public FSingleAnimationPlayData? AnimationData { get; private set; }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        AnimationData = GetOrDefault<FSingleAnimationPlayData>(nameof(AnimationData));
+
         var bEnablePerPolyCollision = GetOrDefault<bool>("bEnablePerPolyCollision");
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_SKELETALMESH_COMPONENT_BODYSETUP_SERIALIZATION)
@@ -22,44 +26,5 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
         }
 
         if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 20;
-    }
-
-    public FPackageIndex GetSkeletalMesh()
-    {
-        var skeletalMesh = GetSkeletalMesh("SkeletalMesh"); // deprecated in 5.1 so fallback below
-        if (skeletalMesh.IsNull) skeletalMesh = GetSkeletalMesh("SkinnedAsset");
-
-        return skeletalMesh;
-    }
-
-    public FPackageIndex GetSkeletalMesh(string parameterName)
-    {
-        var mesh = new FPackageIndex();
-        var current = this;
-        while (true)
-        {
-            if (current is null) break;
-            mesh = current.GetOrDefault(parameterName, new FPackageIndex());
-            if (!mesh.IsNull || current.Template == null)
-                break;
-            current = current.Template.Load<USkeletalMeshComponent>();
-        }
-
-        return mesh;
-    }
-
-    public bool SetSkeletalMeshIfNull(FPackageIndex mesh)
-    {
-        if (GetSkeletalMesh().IsNull)
-        {
-            SetSkeletalMesh(mesh);
-            return true;
-        }
-        return false;
-    }
-
-    public void SetSkeletalMesh(FPackageIndex mesh)
-    {
-        PropertyUtil.Set(this, "SkeletalMesh", mesh);
     }
 }
