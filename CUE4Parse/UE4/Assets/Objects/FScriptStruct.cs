@@ -378,6 +378,9 @@ public class FScriptStruct
             // Windrose
             "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            // Armatus 
+            "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
