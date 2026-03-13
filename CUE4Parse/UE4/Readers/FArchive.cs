@@ -664,11 +664,11 @@ namespace CUE4Parse.UE4.Readers
         {
             if (length < 0)
             {
-                throw new ParserException(this, "Read size is smaller than zero.");
+                throw new VersionException(this, "Read size is smaller than zero.");
             }
             if (Position + length > Length)
             {
-                throw new ParserException(this, "Read size is bigger than remaining archive length.");
+                throw new VersionException(this, "Read size is bigger than remaining archive length.");
             }
         }
 
