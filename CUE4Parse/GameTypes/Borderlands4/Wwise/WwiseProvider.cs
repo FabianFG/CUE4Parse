@@ -39,13 +39,7 @@ public partial class WwiseProvider
         uint audioEventId = WwiseFnv.GetHash(audioEventName.Text.SubstringAfterLast('.'));
 
         var results = new List<WwiseExtractedSound>();
-        foreach (var hierarchy in GetHierarchiesById(audioEventId))
-        {
-            if (hierarchy.Data is HierarchyEvent hierarchyEvent)
-            {
-                LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEventName.Text.SubstringAfterLast('.'));
-            }
-        }
+        LoopThroughEvent(audioEventId, results, _baseWwiseAudioPath, audioEventName.Text.SubstringAfterLast('.'));
 
         return results;
     }

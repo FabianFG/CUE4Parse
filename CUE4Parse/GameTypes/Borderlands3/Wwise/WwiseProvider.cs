@@ -12,23 +12,22 @@ public partial class WwiseProvider
     {
         DetermineBaseWwiseAudioPath();
 
-        if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var location))
-            TryLoadAndCacheWwiseFile(location?.File, 0, isWemFile: true);
-
         var wemId = dialogPerfData.WwiseEventShortID.ToString();
         var fileName = dialogPerfData.WwiseExternalMediaTemplate is null ? wemId : $"{dialogPerfData.WwiseExternalMediaTemplate.Name} ({wemId})";
         var results = new List<WwiseExtractedSound>();
-        if (_wwiseEncodedMedia.TryGetValue(wemId, out var wemData))
+        if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var wemGameFile) | _wwiseEncodedMedia.TryGetValue(wemId, out var wemData))
         {
             var outputPath = Path.Combine(_baseWwiseAudioPath, fileName);
             if (outputPath.StartsWith('/'))
                 outputPath = outputPath[1..];
 
+            var data = wemGameFile is { IsValid: true } ? wemGameFile : wemData;
+
             results.Add(new WwiseExtractedSound
             {
                 OutputPath = outputPath.Replace('\\', '/'),
                 Extension = "wem",
-                Data = wemData.GetData(),
+                Data = data,
             });
         }
 

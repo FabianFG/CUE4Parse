@@ -8,7 +8,9 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
+using CUE4Parse.UE4.Wwise.Objects.Actions;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
@@ -20,8 +22,9 @@ public class WwiseExtractedSound
 {
     public required string OutputPath { get; init; }
     public required string Extension { get; init; }
-    public required byte[] Data { get; init; }
+    public required FDeferredByteData? Data { get; init; }
 
+    public byte[] GetData() => Data?.GetData() ?? [];
     public override string ToString() => OutputPath + "." + Extension.ToLowerInvariant();
 }
 
@@ -82,7 +85,7 @@ public partial class WwiseProvider
             {
                 OutputPath = Path.Combine(ownerDirectory, media.Key),
                 Extension = "wem",
-                Data = data?.GetData() ?? [],
+                Data = data,
             });
         }
 
@@ -118,14 +121,7 @@ public partial class WwiseProvider
                     continue;
 
                 var audioEventId = WwiseFnv.GetHash(eventName.Text);
-
-                foreach (var hierarchy in GetHierarchiesById(audioEventId))
-                {
-                    if (hierarchy.Data is HierarchyEvent hierarchyEvent)
-                    {
-                        LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, eventName.Text);
-                    }
-                }
+                LoopThroughEvent(audioEventId, results, _baseWwiseAudioPath, eventName.Text);
             }
 
             return results;
@@ -164,13 +160,7 @@ public partial class WwiseProvider
             if (!string.IsNullOrEmpty(soundBankId))
                 LoadSoundBankById(uint.Parse(soundBankId));
 
-            foreach (var hierarchy in GetHierarchiesById(audioEventId))
-            {
-                if (hierarchy.Data is HierarchyEvent hierarchyEvent)
-                {
-                    LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, audioEvent.Name);
-                }
-            }
+            LoopThroughEvent(audioEventId, results, _baseWwiseAudioPath, audioEvent.Name);
 
             return results;
         }
@@ -234,18 +224,18 @@ public partial class WwiseProvider
         var mediaPathName = ResolveWwisePath(media.MediaPathName.Text, media.PackagedFile, media.MediaPathName.IsNone);
         var mediaRelativePath = Path.Combine(_baseWwiseAudioPath, mediaPathName);
 
-        byte[] data = [];
-        if (media.PackagedFile?.BulkData?.WemFile?.GetData() is { Length:  > 0 } mediaData)
+        FDeferredByteData? data = null;
+        if (media.PackagedFile?.BulkData?.WemFile is { IsValid: true }  mediaData)
         {
             data = mediaData;
         }
-        else if (_provider.TrySaveAsset(mediaRelativePath, out var providerData))
+        else if (_provider.TryGetGameFile(mediaRelativePath, out var providerData))
         {
-            data = providerData;
+            data = new FGameFileDeferredByteData(providerData);
         }
         else if (_multiReferenceLibraryCache.TryGetValue(media.PackagedFile?.Hash ?? 0, out var multiRefReader))
         {
-            data = multiRefReader?.WemFile?.GetData() ?? [];
+            data = multiRefReader?.WemFile;
         }
 
         var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text)
@@ -282,11 +272,7 @@ public partial class WwiseProvider
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
 
-        if (_wwiseHierarchyTables.TryGetValue((uint) eventData!.Value.EventId, out var eventHierarchy) &&
-            eventHierarchy.Data is HierarchyEvent hierarchyEvent)
-        {
-            LoopThroughEventActions(hierarchyEvent, results, soundBankPath.SubstringBeforeLast('.'), eventData.Value.DebugName.Text);
-        }
+        LoopThroughEvent((uint) eventData!.Value.EventId, results, soundBankPath.SubstringBeforeLast('.'), eventData.Value.DebugName.Text);
     }
 
     private WwiseReader? LoadSoundBankById(uint soundBankId, bool returnBank = false)
@@ -328,30 +314,10 @@ public partial class WwiseProvider
         return null;
     }
 
-    private void LoopThroughEventActions(HierarchyEvent hierarchyEvent, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
+    private void LoopThroughEvent(uint eventId, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
     {
-        foreach (var actionId in hierarchyEvent.EventActionIds)
-        {
-            if (!_wwiseHierarchyTables.TryGetValue(actionId, out var actionHierarchy) ||
-                actionHierarchy.Data is not HierarchyEventAction eventAction)
-                continue;
-
-            // TODO: If EventActionPlay points to different soundbank ID than we're currently in, use `wwiseReader.IdToString` to convert to bank name, serialize it, and continue traversing from there
-            // This isn't needed if all soundbanks are loaded anyway
-
-            //if (eventAction.EventActionType == EEventActionType.Play)
-            //{
-            //    var playActionData = (AkActionPlay) eventAction.ActionData;
-            //    var bankId = playActionData.BankId;
-            //    if (bankId != referencedSoundBankId) // I need to know what soundbank I'm currently in
-            //    {
-            //        var soundbankConvertedName = IdToString[referencedSoundBankId]; // I need IdToString from given soundbank
-            //        TryLoadAndCacheSoundBank(Path.Combine(baseWwiseAudioPath, soundbankConvertedName + ".bnk"), soundbankConvertedName, out _);
-            //    }
-            //}
-
-            TraverseAndSave(eventAction.ReferencedId);
-        }
+        List<CAkActionSetSwitch> _switchStates = [];
+        TraverseAndSave(eventId);
 
         void TraverseAndSave(uint id)
         {
@@ -363,7 +329,10 @@ public partial class WwiseProvider
                 switch (hierarchy.Data)
                 {
                     case HierarchySoundSfxVoice soundSfx:
-                        SaveWemSound(soundSfx.Source.SourceId);
+                        if (soundSfx.Source is { Plugin.Type: EAkPluginType.Codec })
+                            SaveWemSound(soundSfx.Source.SourceId);
+                        else
+                            TraverseAndSave(soundSfx.Source.SourceId);
                         break;
                     case HierarchyMusicRandomSequenceContainer musicRandomSequenceContainer:
                         foreach (var childId in musicRandomSequenceContainer.ChildIds)
@@ -398,29 +367,66 @@ public partial class WwiseProvider
                             TraverseAndSave(childId);
                         break;
                     case HierarchySwitchContainer switchContainer:
-                        foreach (var childId in switchContainer.ChildIds)
-                            TraverseAndSave(childId);
+                        var index = _switchStates.FindIndex(x => x.SwitchGroupId == switchContainer.GroupId);
+                        if (index != -1)
+                        {
+                            TraverseSwitchContainer(switchContainer, _switchStates[index].SwitchStateId);
+                        }
+                        else if (switchContainer.DefaultSwitch == 0)
+                        {
+                            foreach (var childId in switchContainer.ChildIds)
+                                TraverseAndSave(childId);
+                        }
+                        else
+                        {
+                            TraverseSwitchContainer(switchContainer, switchContainer.DefaultSwitch);
+                        }
+
+                        void TraverseSwitchContainer(HierarchySwitchContainer switchContainer, uint stateId)
+                        {
+                            foreach (var state in switchContainer.SwitchPackages.Where(x => x.SwitchId == stateId && x.NodeIds is not null))
+                            {
+                                foreach (var node in state.NodeIds)
+                                    TraverseAndSave(node);
+                            }
+                        }
+
                         break;
                     case HierarchyLayerContainer layerContainer:
                         foreach (var childId in layerContainer.ChildIds)
                             TraverseAndSave(childId);
                         break;
+                    // skip mixers cause it resolves too many sounds from other events
                     case HierarchyActorMixer mixerContainer:
-                        foreach (var childId in mixerContainer.ChildIds)
-                            TraverseAndSave(childId);
+                        //foreach (var childId in mixerContainer.ChildIds)
+                        //    TraverseAndSave(childId);
+                        break;
+                    case HierarchyFxCustom fxCustom:
+                        foreach (var childId in fxCustom.MediaList)
+                            SaveWemSound(childId.SourceId);
                         break;
                     case HierarchyEvent eventContainer:
+                        var saved = _switchStates.Count;
                         foreach (var actionId in eventContainer.EventActionIds)
                         {
-                            if (!_wwiseHierarchyTables.TryGetValue(actionId, out var actionHierarchy) ||
-                                actionHierarchy.Data is not HierarchyEventAction eventAction)
+                            if (!_wwiseHierarchyTables.TryGetValue(actionId, out var actionHierarchy) || actionHierarchy.Data is not HierarchyEventAction eventAction)
                                 continue;
 
-                            TraverseAndSave(eventAction.ReferencedId);
+                            if (eventAction.EventActionType is EAkActionType.SetSwitch && eventAction.ActionData is CAkActionSetSwitch setSwitch)
+                            {
+                                _switchStates.Add(setSwitch);
+                            }
+                            else
+                            {
+                                TraverseAndSave(eventAction.ReferencedId);
+                            }
                         }
+
+                        _switchStates.RemoveRange(saved, _switchStates.Count - saved);
                         break;
+
                     default:
-                        Log.Warning("Unhandled hierarchy type {0}, while traversing through EventActions", hierarchy.Type);
+                        Log.Warning("Unhandled hierarchy type {0}, while traversing through Event {1}", hierarchy.Type, eventId);
                         break;
                 }
             }
@@ -431,13 +437,8 @@ public partial class WwiseProvider
             if (!_visitedWemIds.Add(wemId))
                 return;
 
-            if (_looseWemFilesLookup.TryGetValue(wemId, out var wemGameFile))
-            {
-                TryLoadAndCacheWwiseFile(wemGameFile?.File, 0, isWemFile: true);
-            }
-
             var fileName = wemId.ToString();
-            if (_wwiseEncodedMedia.TryGetValue(fileName, out var wemData))
+            if (_looseWemFilesLookup.TryGetValue(wemId, out var wemGameFile) | _wwiseEncodedMedia.TryGetValue(fileName, out var wemData))
             {
                 if (!string.IsNullOrEmpty(debugName))
                     fileName = $"{debugName} ({fileName})";
@@ -446,16 +447,13 @@ public partial class WwiseProvider
                 if (outputPath.StartsWith('/'))
                     outputPath = outputPath[1..];
 
-                var data = wemData;
-
-                if (wemGameFile is {IsValid: true })
-                    data = wemGameFile;
+                var data = wemGameFile is { IsValid: true } ? wemGameFile : wemData;
 
                 results.Add(new WwiseExtractedSound
                 {
                     OutputPath = outputPath.Replace('\\', '/'),
                     Extension = "wem",
-                    Data = data?.GetData() ?? [],
+                    Data = data,
                 });
             }
         }
@@ -540,7 +538,7 @@ public partial class WwiseProvider
         foreach (var bnk in wwiseBankFiles)
         {
             var gameFile = new OsGameFile(new FileInfo(bnk), _provider.Versions);
-            if (TryLoadAndCacheWwiseFile(gameFile, 0, isWemFile: false))
+            if (TryLoadAndCacheWwiseFile(gameFile))
                 loadedBanks++;
         }
         return loadedBanks;
@@ -592,7 +590,7 @@ public partial class WwiseProvider
                 continue;
             }
 
-            if (!TryLoadAndCacheWwiseFile(wwiseFile, 0))
+            if (!TryLoadAndCacheWwiseFile(wwiseFile))
                 continue;
 
             totalLoadedBanks += 1;
@@ -602,27 +600,26 @@ public partial class WwiseProvider
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
-    private bool TryLoadAndCacheWwiseFile(GameFile? gameFile, uint soundBankId, bool isWemFile = false)
+    private bool TryLoadAndCacheWwiseFile(GameFile? gameFile)
     {
-        if (gameFile is null)
-            return false;
-        var soundBankName = gameFile.NameWithoutExtension;
-        if (isWemFile && uint.TryParse(soundBankName, out uint parsedId))
-            soundBankId = parsedId;
-        if (_wwiseLoadedSoundBanks.Contains(soundBankId))
+        if (gameFile is null || !gameFile.TryRead(out var data) || data is not { Length: > 0 } bankData)
             return false;
 
-        if (!gameFile.TryRead(out var data) || data is not {Length: > 0 } bankData)
+        using var reader = new FByteArchive(gameFile.NameWithoutExtension, bankData);
+        try
+        {
+            var wwiseReader = new WwiseReader(reader, new WwiseGameFileSource(gameFile));
+            _totalLoadedWwiseSize += wwiseReader.LoadedSize;
+            _totalWwiseBanksSize += wwiseReader.TotalSize;
+            CacheWwiseFile(wwiseReader);
+            if (wwiseReader.Header.SoundBankId is not 0) // .pck files don't contain SoundBankId so it's always 0
+                _wwiseLoadedSoundBanks.Add(wwiseReader.Header.SoundBankId);
+        }
+        catch (Exception e)
+        {
+            Log.Warning(e, "Failed to cache Wwise sound bank file {0}", gameFile.Name);
             return false;
-        using var reader = new FByteArchive(soundBankName, bankData);
-        var wwiseReader = new WwiseReader(reader, new WwiseGameFileSource(gameFile));
-
-        CacheWwiseFile(wwiseReader);
-        _totalLoadedWwiseSize += wwiseReader.LoadedSize;
-        _totalWwiseBanksSize += wwiseReader.TotalSize;
-
-        if (wwiseReader.Header.SoundBankId is not 0) // .pck files don't contain SoundBankId so it's always 0
-            _wwiseLoadedSoundBanks.Add(isWemFile ? soundBankId : wwiseReader.Header.SoundBankId);
+        }
 
         return true;
     }
