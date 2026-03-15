@@ -272,7 +272,7 @@ public partial class WwiseProvider
         var soundBankName = ResolveWwisePath(soundBank.SoundBankPathName.Text, soundBank.PackagedFile, soundBank.SoundBankPathName.IsNone);
         var soundBankPath = Path.Combine(_baseWwiseAudioPath, soundBankName);
 
-        LoopThroughEvent((uint) eventData!.Value.EventId, results, soundBankPath.SubstringBeforeLast('.'), eventData.Value.DebugName.Text);
+        LoopThroughEvent(eventData!.Value.EventId, results, soundBankPath.SubstringBeforeLast('.'), eventData.Value.DebugName.Text);
     }
 
     private WwiseReader? LoadSoundBankById(uint soundBankId, bool returnBank = false)
@@ -372,7 +372,7 @@ public partial class WwiseProvider
                         {
                             TraverseSwitchContainer(switchContainer, _switchStates[index].SwitchStateId);
                         }
-                        else if (switchContainer.DefaultSwitch == 0)
+                        else if (switchContainer.DefaultSwitch == 0 || _switchStates.Count == 0)
                         {
                             foreach (var childId in switchContainer.ChildIds)
                                 TraverseAndSave(childId);
@@ -396,11 +396,11 @@ public partial class WwiseProvider
                         foreach (var childId in layerContainer.ChildIds)
                             TraverseAndSave(childId);
                         break;
-                    // skip mixers cause it resolves too many sounds from other events
-                    case HierarchyActorMixer mixerContainer:
-                        //foreach (var childId in mixerContainer.ChildIds)
-                        //    TraverseAndSave(childId);
-                        break;
+                    // Skip mixers cause it resolves too many sounds from other events
+                    //case HierarchyActorMixer mixerContainer:
+                    //    foreach (var childId in mixerContainer.ChildIds)
+                    //        TraverseAndSave(childId);
+                    //    break;
                     case HierarchyFxCustom fxCustom:
                         foreach (var childId in fxCustom.MediaList)
                             SaveWemSound(childId.SourceId);
@@ -426,6 +426,9 @@ public partial class WwiseProvider
                         break;
 
                     default:
+                        if (hierarchy.Type is EAKBKHircType.AudioBus or EAKBKHircType.ActorMixer) // Not needed for resolving audio
+                            break;
+
                         Log.Warning("Unhandled hierarchy type {0}, while traversing through Event {1}", hierarchy.Type, eventId);
                         break;
                 }
