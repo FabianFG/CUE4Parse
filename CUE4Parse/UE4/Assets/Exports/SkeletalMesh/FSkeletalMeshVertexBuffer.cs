@@ -13,7 +13,7 @@ public class FSkeletalMeshVertexBuffer
     public int NumTexCoords;
     public FVector MeshExtension;
     public FVector MeshOrigin;
-    public bool bUseFullPrecisionUVs;
+    public bool bUseFullPrecisionUVs = true;
     public bool bExtraBoneInfluences;
     public FGPUVertHalf[] VertsHalf;
     public FGPUVertFloat[] VertsFloat;
@@ -29,7 +29,7 @@ public class FSkeletalMeshVertexBuffer
         var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
 
         NumTexCoords = Ar.Read<int>();
-        bUseFullPrecisionUVs = Ar.ReadBoolean();
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedFullPrecisionUV) bUseFullPrecisionUVs = Ar.ReadBoolean();
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_GPUSKINNING_8_BONE_INFLUENCES &&
             FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)

@@ -1,12 +1,13 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
 public class WaveformInstrumentNode : BaseInstrumentNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly EWaveformLoadingMode LegacyLoadingMode;
     public readonly FModGuid WaveformResourceGuid;
 

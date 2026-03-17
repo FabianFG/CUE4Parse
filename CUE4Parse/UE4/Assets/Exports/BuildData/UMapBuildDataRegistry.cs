@@ -27,7 +27,7 @@ public class UMapBuildDataRegistry : UObject
         base.Deserialize(Ar, validPos);
 
         var stripFlags = new FStripDataFlags(Ar);
-        if (Ar.Game is EGame.GAME_Farlight84 or EGame.GAME_OutlastTrials or EGame.GAME_DuetNightAbyss) return;
+        if (Ar.Game is EGame.GAME_Farlight84 or EGame.GAME_OutlastTrials or EGame.GAME_DuetNightAbyss or EGame.GAME_CrystalOfAtlan) return;
 
         if (!stripFlags.IsAudioVisualDataStripped())
         {
@@ -42,6 +42,8 @@ public class UMapBuildDataRegistry : UObject
             LightBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FLightComponentMapBuildData(Ar));
             if (FReflectionCaptureObjectVersion.Get(Ar) >= FReflectionCaptureObjectVersion.Type.MoveReflectionCaptureDataToMapBuildData)
             {
+                if (Ar.Game is EGame.GAME_TheFirstDescendant) return;
+
                 ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
@@ -154,11 +156,8 @@ public class FReflectionCaptureData
         if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_HogwartsLegacy)
         {
-            var count = Ar.Read<int>();
-            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
-            count = Ar.Read<int>();
-            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
-
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1);
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1);
         }
 
         if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile &&
@@ -171,7 +170,6 @@ public class FReflectionCaptureData
             Ar.SkipFixedArray(1);
         }
 
-        if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 16;
         if (Ar.Game == EGame.GAME_Valorant) Ar.SkipFixedArray(1);
         if (Ar.Game == EGame.GAME_BlackMythWukong)
         {

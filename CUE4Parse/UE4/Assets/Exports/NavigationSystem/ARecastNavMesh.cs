@@ -18,6 +18,8 @@ public class ARecastNavMesh : ANavigationData
     {
         base.Deserialize(Ar, validPos);
 
+        if (Ar.Game is Versions.EGame.GAME_TheFirstDescendant && Class?.Name.Text.Contains("M1RecastNavMesh") is true) return;
+
         AgentHeight = GetOrDefault<float>(nameof(AgentHeight));
         AgentRadius = GetOrDefault<float>(nameof(AgentRadius));
 

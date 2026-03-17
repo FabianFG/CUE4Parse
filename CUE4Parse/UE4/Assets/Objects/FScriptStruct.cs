@@ -378,6 +378,9 @@ public class FScriptStruct
             // Windrose
             "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            // Armatus 
+            "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             "BHVRVariantConfigurator" when Ar.Game is EGame.GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             _ => Ar.Game switch

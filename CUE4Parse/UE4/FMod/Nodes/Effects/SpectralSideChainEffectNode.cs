@@ -1,11 +1,12 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes.Effects;
 
 public class SpectralSideChainEffectNode : BaseEffectNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly float Level;
     public readonly float MinimumFrequency;
     public readonly float MaximumFrequency;

@@ -100,9 +100,9 @@ public enum EGame : uint
         GAME_OctopathTravelerCoTC = GAME_UE4_26 + 21,
         GAME_DarkPicturesAnthologyHouseOfAshes = GAME_UE4_26 + 22,
         GAME_DarkPicturesAnthologyManofMedan = GAME_UE4_26 + 23,
-        GAME_DarkPicturesAnthologyTheDevilinMe = GAME_UE4_26 + 24,        
-        GAME_DarkPicturesAnthologyLittleHope = GAME_UE4_26 + 25,        
-        GAME_TheQuarry = GAME_UE4_26 + 26,    
+        GAME_DarkPicturesAnthologyTheDevilinMe = GAME_UE4_26 + 24,
+        GAME_DarkPicturesAnthologyLittleHope = GAME_UE4_26 + 25,
+        GAME_TheQuarry = GAME_UE4_26 + 26,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
@@ -220,6 +220,7 @@ public enum EGame : uint
 
 public static class GameUtils
 {
+    public const int GameUe3Base = 0x3000000;
     public const int GameUe4Base = 0x4000000;
     public const int GameUe5Base = 0x5000000;
 
@@ -245,7 +246,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
-                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
+                < EGame.GAME_UE5_7 => new FPackageFileVersion(522, 1017),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }

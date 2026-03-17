@@ -272,7 +272,7 @@ public class FSkelMeshSection
             EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters => 4,
             EGame.GAME_FragPunk or EGame.GAME_InfinityNikki => 8,
             EGame.GAME_MortalKombat1 => 12,
-            EGame.GAME_FateTrigger => 15,
+            EGame.GAME_FateTrigger => 19,
             EGame.GAME_Strinova => 18,
             EGame.GAME_SuicideSquad => 11,
             _ => 0,

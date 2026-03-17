@@ -1,11 +1,12 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class EventNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FModGuid SnapshotGuid;
     public readonly FModGuid TimelineGuid;
     public readonly FModGuid InputBusGuid;

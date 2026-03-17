@@ -34,7 +34,7 @@ public class FModProvider
     private Dictionary<FModGuid, FModGuid> _eventToReaderMap = [];
     private Dictionary<FModGuid, FModReader> _mergedReaders = [];
     private static byte[]? _encryptionKey;
-    private string? _BankOutputDirectory;
+    private string? _bankOutputDirectory;
 
     public FModProvider(IFileProvider provider, string gameDirectory)
     {
@@ -96,9 +96,9 @@ public class FModProvider
             gameDirectory = parentInfo.FullName;
 
         string? fmodDir = null!;
-        if (!string.IsNullOrEmpty(_BankOutputDirectory))
+        if (!string.IsNullOrEmpty(_bankOutputDirectory))
         {
-            var potentialPath = Path.Combine(gameDirectory, _BankOutputDirectory);
+            var potentialPath = Path.Combine(gameDirectory, _bankOutputDirectory);
             if (Directory.Exists(potentialPath))
                 fmodDir = potentialPath;
         }
@@ -162,7 +162,7 @@ public class FModProvider
         var path = values.FirstOrDefault()?.SubstringAfter("Path=\"").SubstringBefore("\")");
         if (!string.IsNullOrEmpty(path))
         {
-            _BankOutputDirectory = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+            _bankOutputDirectory = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
         }
 
         var fmodSection = engineConfig.Sections
