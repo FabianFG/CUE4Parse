@@ -56,8 +56,6 @@ public class UMaterialInstance : UMaterialInterface
 
                     if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource)
                         Ar.Position += 8; // 0.0f and 1.0f, for all
-                    if (Ar.Game is EGame.GAME_DeadByDaylight)
-                        CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
                 }
                 catch (Exception e)
                 {
@@ -70,6 +68,9 @@ public class UMaterialInstance : UMaterialInterface
                 Ar.Position = validPos;
             }
         }
+
+        if (Ar.Game is EGame.GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
+            CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
