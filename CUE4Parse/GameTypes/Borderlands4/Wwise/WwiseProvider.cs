@@ -21,9 +21,6 @@ public partial class WwiseProvider
         DetermineBaseWwiseAudioPath();
         PopulateSoundTagsMapBorderlands4();
 
-        _visitedHierarchies.Clear();
-        _visitedWemIds.Clear();
-
         if (useSoundTag)
         {
             if (!_bl4SoundTagsMap.TryGetValue(audioEventName.Text, out var soundTagData))

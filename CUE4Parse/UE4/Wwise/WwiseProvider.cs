@@ -97,7 +97,6 @@ public partial class WwiseProvider
         DetermineBaseWwiseAudioPath();
 
         var soundBankCookedData = audioBank.SoundBankCookedData;
-
         if (soundBankCookedData is null)
         {
             var soundBankId = audioBank.GetOrDefault<uint>("ShortID");
@@ -131,9 +130,6 @@ public partial class WwiseProvider
     public List<WwiseExtractedSound> ExtractAudioEventSounds(UAkAudioEvent audioEvent)
     {
         DetermineBaseWwiseAudioPath(audioEvent);
-
-        _visitedHierarchies.Clear();
-        _visitedWemIds.Clear();
 
         var results = new List<WwiseExtractedSound>();
 
@@ -316,6 +312,8 @@ public partial class WwiseProvider
 
     private void LoopThroughEvent(uint eventId, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
     {
+        _visitedHierarchies.Clear();
+        _visitedWemIds.Clear();
         List<CAkActionSetSwitch> _switchStates = [];
         TraverseAndSave(eventId);
 
