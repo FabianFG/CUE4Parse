@@ -75,7 +75,7 @@ public class FProgram
         Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
         Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
         ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);
-        //if (Ar.Game >= EGame.GAME_UE5_8) RelevantParameterList = Ar.ReadMap(Ar.Read<uint>, Ar.Read<int>);
+        if (Ar.Game >= EGame.GAME_UE5_8) RelevantParameterList = Ar.ReadMap(Ar.Read<uint>, Ar.Read<int>);
         if (Ar.Game >= EGame.GAME_UE5_7) ConstantMaterials = Ar.ReadPtrArray(() => new FMaterial(Ar));
     }
 }

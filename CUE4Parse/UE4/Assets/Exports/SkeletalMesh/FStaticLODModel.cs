@@ -336,7 +336,29 @@ public class FStaticLODModel
 
             Ar.Position += 4; //var buffersSize = Ar.Read<uint>();
 
-            if (bInlined)
+            if (Ar is { Game: >= EGame.GAME_UE5_8, IsFilterEditorOnly: true })
+            {
+                var bDiscardBulkData = false;
+                
+                var bulkData = new FByteBulkData(Ar);
+                if (bulkData.Header.ElementCount == 0)
+                {
+                    bDiscardBulkData = true;
+                }
+                
+                if (!bDiscardBulkData)
+                    SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
+
+                // We should be checking if bInlined is true too but if we do we loose high-res LODs on majority of SKs
+                // Removing the check would have been probabilistic if we had serialization issue but since we don't it's fine
+                
+                if (bulkData is { Data: not null, Header.ElementCount: > 0 })
+                {
+                    using var tempAr = new FByteArchive("LodReader", bulkData.Data, Ar.Versions);
+                    SerializeStreamedData(tempAr, bHasVertexColors);
+                }
+            }
+            else if (bInlined)
             {
                 SerializeStreamedData(Ar, bHasVertexColors);
 
@@ -370,31 +392,7 @@ public class FStaticLODModel
                         SerializeStreamedData(tempAr, bHasVertexColors);
                     }
 
-                    var skipBytes = 5;
-                    if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
-                        skipBytes += 5;
-                    skipBytes += 4 * 4 + 2 * 4 + 2 * 4;
-                    skipBytes += FSkinWeightVertexBuffer.MetadataSize(Ar);
-                    Ar.Position += skipBytes;
-
-                    if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
-
-                    if (HasClothData())
-                    {
-                        var clothIndexMapping = Ar.ReadArray<long>();
-                        Ar.Position += 2 * 4;
-                        if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
-                        {
-                            Ar.Position += 4 * clothIndexMapping.Length;
-                        }
-                    }
-
-                    var profileNames = Ar.ReadArray(Ar.ReadFName);
-
-                    if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
-                    {
-                        Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
-                    }
+                    SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
                 }
             }
         }
@@ -564,6 +562,40 @@ public class FStaticLODModel
                 Normal = staticMeshVertexBuffer.UV[i].Normal,
                 UV = staticMeshVertexBuffer.UV[i].UV
             };
+        }
+    }
+
+    private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyDataStripped)
+    {
+        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32 
+        if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !bAdjacencyDataStripped)
+            bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
+
+        bytesToSkip += 4 * 4; // FStaticMeshVertexBuffer::SerializeMetaData 2x uint32 + 2x bool
+        bytesToSkip += 4 * 2; // FPositionVertexBuffer::SerializeMetaData 2x uint32
+        bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
+        bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
+        
+        Ar.Position += bytesToSkip;
+        
+        if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+        if (HasClothData())
+        {
+            // FSkeletalMeshVertexClothBuffer::SerializeMetaData
+            
+            var clothIndexMapping = Ar.ReadArray<long>(); // TArray<FClothBufferIndexMapping>
+            Ar.Position += 2 * 4; // 2x uint32
+            if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
+            {
+                Ar.Position += 4 * clothIndexMapping.Length;
+            }
+        }
+
+        _ = Ar.ReadArray(Ar.ReadFName); // FSkinWeightProfilesData::SerializeMetaData
+        
+        if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
+        {
+            Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
         }
     }
 

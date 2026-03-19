@@ -101,7 +101,7 @@ public static class Exporter
                     var pointer = new FPackageIndex(pkg, i + 1).ResolvedObject;
                     if (pointer?.Object is null) continue;
 
-                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class?.Object?.Value as UStruct, pkg);
+                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class, pkg);
                     switch (dummy)
                     {
                         case UTexture when type.HasFlag(ExportType.Texture) && pointer.Object.Value is UTexture texture:

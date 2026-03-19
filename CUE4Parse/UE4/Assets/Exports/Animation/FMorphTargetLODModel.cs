@@ -1,3 +1,4 @@
+using System.Linq;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -127,5 +128,47 @@ public class FMorphTargetLODModel
                 Vertices[k++] = new FMorphTargetDelta(pos, tan, delta.Index);
             }
         }
+    }
+
+    public FMorphTargetLODModel(int[] sectionIndices, FDeltaBatchHeader[] batchHeaders, uint[] compressedVertices, float positionPrecision, float tangentZPrecision)
+    {
+        SectionIndices = sectionIndices;
+        bGeneratedByEngine = false;
+        
+        var numDeltas = batchHeaders.Sum(header => (int)header.NumElements);
+        
+        Vertices = new FMorphTargetDelta[numDeltas];
+        NumBaseMeshVerts = numDeltas;
+
+        var index = 0;
+        using var reader = new FDwordBitReader(compressedVertices);
+
+        foreach (var header in batchHeaders)
+        {
+            for (var elementIndex = 0; elementIndex < header.NumElements; elementIndex++)
+            {
+                Vertices[index++] = DecodeMorphTargetDelta(header, reader, (uint)elementIndex, positionPrecision, tangentZPrecision);
+            }
+        }
+    }
+
+    private FMorphTargetDelta DecodeMorphTargetDelta(FDeltaBatchHeader header, FDwordBitReader reader, uint localIndex, float positionPrecision, float tangentZPrecision)
+    {
+        var sourceIdx = reader.GetBits((uint)header.IndexBits) + header.IndexMin + localIndex;
+        var positionDelta = new FVector(
+            ((int)reader.GetBits((uint)header.PositionBits.X) + header.PositionMin.X) * positionPrecision,
+            ((int)reader.GetBits((uint)header.PositionBits.Y) + header.PositionMin.Y) * positionPrecision,
+            ((int)reader.GetBits((uint)header.PositionBits.Z) + header.PositionMin.Z) * positionPrecision);
+
+        var tangentZDelta = new FVector();
+        if (header.bTangents)
+        {
+            tangentZDelta = new FVector(
+                ((int)reader.GetBits((uint)header.TangentZBits.X) + header.TangentZMin.X) * tangentZPrecision,
+                ((int)reader.GetBits((uint)header.TangentZBits.Y) + header.TangentZMin.Y) * tangentZPrecision,
+                ((int)reader.GetBits((uint)header.TangentZBits.Z) + header.TangentZMin.Z) * tangentZPrecision);
+        }
+        
+        return new FMorphTargetDelta(positionDelta, tangentZDelta, sourceIdx);
     }
 }
