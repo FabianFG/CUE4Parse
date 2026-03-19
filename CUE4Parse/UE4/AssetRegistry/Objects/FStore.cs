@@ -38,8 +38,8 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
 
             if (order == ELoadOrder.TextFirst)
             {
-                Ar.AlignPosInArchive();
                 Ar.Position += 4;
+                Ar.AlignPosInArchive();
                 Texts = Ar.ReadArray(nums[4], Ar.ReadFString);
             }
 
