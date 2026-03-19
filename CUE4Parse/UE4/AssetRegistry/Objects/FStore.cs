@@ -79,7 +79,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             Pairs = Ar.ReadArray(nums[10], () => new FNumberedPair(Ar));
 
             if (Ar.Read<uint>() != _END_MAGIC)
-                throw new ParserException(Ar, "Invalid FStore Magic");
+                throw new ParserException(Ar, "Invalid FStore EndMagic");
         }
 
         public string GetAnsiString(int index)

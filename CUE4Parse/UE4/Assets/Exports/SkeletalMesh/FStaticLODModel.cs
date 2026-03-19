@@ -349,7 +349,10 @@ public class FStaticLODModel
                 if (!bDiscardBulkData)
                     SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
 
-                if (bInlined && bulkData is { Data: not null, Header.ElementCount: > 0 })
+                // We should be checking if bInlined is true too but if we do we loose high-res LODs on majority of SKs
+                // Removing the check would have been probabilistic if we had serialization issue but since we don't it's fine
+                
+                if (bulkData is { Data: not null, Header.ElementCount: > 0 })
                 {
                     using var tempAr = new FByteArchive("LodReader", bulkData.Data, Ar.Versions);
                     SerializeStreamedData(tempAr, bHasVertexColors);

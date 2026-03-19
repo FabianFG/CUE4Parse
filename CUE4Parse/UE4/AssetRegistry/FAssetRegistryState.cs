@@ -41,7 +41,7 @@ public class FAssetRegistryState
             {
                 var reader = new FAssetRegistryReader(Ar, header);
                 reader.IsFilterEditorOnly = header.bFilterEditorOnlyData;
-                 Load(reader);
+                Load(reader);
                 break;
             }
         }
