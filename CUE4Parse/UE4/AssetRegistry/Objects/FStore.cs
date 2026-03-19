@@ -43,40 +43,39 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
                 Texts = Ar.ReadArray(nums[4], Ar.ReadFString);
             }
 
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             NumberlessNames = Ar.ReadArray(nums[0], Ar.Read<uint>);
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             Names = Ar.ReadArray(nums[1], Ar.ReadFName);
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             NumberlessExportPaths = Ar.ReadArray(nums[2], () => new FNumberlessExportPath(Ar));
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             ExportPaths = Ar.ReadArray(nums[3], () => new FAssetRegistryExportPath(Ar));
 
             if (order == ELoadOrder.Member)
             {
-                Ar.AlignPosInArchive();
                 Texts = Ar.ReadArray(nums[4], Ar.ReadFString);
             }
 
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             AnsiStringOffsets = Ar.ReadArray(nums[5], Ar.Read<uint>);
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             WideStringOffsets = Ar.ReadArray(nums[6], Ar.Read<uint>);
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             AnsiStrings = Ar.ReadBytes(nums[7]);
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             WideStrings = Ar.ReadBytes(nums[8] * 2);
 
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             NumberlessPairs = Ar.ReadArray(nums[9], () => new FNumberlessPair(Ar));
             
-            Ar.AlignPosInArchive();
+            if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             Pairs = Ar.ReadArray(nums[10], () => new FNumberedPair(Ar));
 
             if (Ar.Read<uint>() != _END_MAGIC)
