@@ -18,7 +18,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         BLEND_AlphaComposite,
         [Description("AlphaHoldout")]
         BLEND_AlphaHoldout,
+        BLEND_TranslucentColoredTransmittance,
         [Description("MAX")]
         BLEND_MAX,
+
+        BLEND_TranslucentGreyTransmittance = BLEND_Translucent,
+        BLEND_ColoredTransmittanceOnly = BLEND_Modulate,
     }
 }
