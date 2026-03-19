@@ -358,7 +358,7 @@ public class FStaticLODModel
                     SerializeStreamedData(tempAr, bHasVertexColors);
                 }
             }
-            else if (bInlined && Ar.Game < EGame.GAME_UE5_8)
+            else if (bInlined)
             {
                 SerializeStreamedData(Ar, bHasVertexColors);
 
@@ -572,8 +572,8 @@ public class FStaticLODModel
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
         bytesToSkip += 4 * 4; // FStaticMeshVertexBuffer::SerializeMetaData 2x uint32 + 2x bool
-        bytesToSkip += 4 * 2; // FPositionVertexBuffer ::SerializeMetaData 2x uint32
-        bytesToSkip += 4 * 2; // FColorVertexBuffer ::SerializeMetaData 2x uint32
+        bytesToSkip += 4 * 2; // FPositionVertexBuffer::SerializeMetaData 2x uint32
+        bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
         
         Ar.Position += bytesToSkip;
@@ -581,7 +581,7 @@ public class FStaticLODModel
         if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
         if (HasClothData())
         {
-            //FSkeletalMeshVertexClothBuffer::SerializeMetaData
+            // FSkeletalMeshVertexClothBuffer::SerializeMetaData
             
             var clothIndexMapping = Ar.ReadArray<long>(); // TArray<FClothBufferIndexMapping>
             Ar.Position += 2 * 4; // 2x uint32
