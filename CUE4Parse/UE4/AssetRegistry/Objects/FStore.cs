@@ -30,35 +30,57 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         public FStore(FAssetRegistryReader Ar)
         {
             NameMap = Ar.NameMap;
+            Ar.AlignPosInArchive();
+            
             var magic = Ar.Read<uint>();
             var order = GetLoadOrder(magic);
             var nums = Ar.ReadArray<int>(11);
 
             if (order == ELoadOrder.TextFirst)
             {
+                Ar.AlignPosInArchive();
                 Ar.Position += 4;
                 Texts = Ar.ReadArray(nums[4], Ar.ReadFString);
             }
 
+            Ar.AlignPosInArchive();
             NumberlessNames = Ar.ReadArray(nums[0], Ar.Read<uint>);
+            
+            Ar.AlignPosInArchive();
             Names = Ar.ReadArray(nums[1], Ar.ReadFName);
+            
+            Ar.AlignPosInArchive();
             NumberlessExportPaths = Ar.ReadArray(nums[2], () => new FNumberlessExportPath(Ar));
+            
+            Ar.AlignPosInArchive();
             ExportPaths = Ar.ReadArray(nums[3], () => new FAssetRegistryExportPath(Ar));
 
             if (order == ELoadOrder.Member)
             {
+                Ar.AlignPosInArchive();
                 Texts = Ar.ReadArray(nums[4], Ar.ReadFString);
             }
 
+            Ar.AlignPosInArchive();
             AnsiStringOffsets = Ar.ReadArray(nums[5], Ar.Read<uint>);
+            
+            Ar.AlignPosInArchive();
             WideStringOffsets = Ar.ReadArray(nums[6], Ar.Read<uint>);
+            
+            Ar.AlignPosInArchive();
             AnsiStrings = Ar.ReadBytes(nums[7]);
+            
+            Ar.AlignPosInArchive();
             WideStrings = Ar.ReadBytes(nums[8] * 2);
 
+            Ar.AlignPosInArchive();
             NumberlessPairs = Ar.ReadArray(nums[9], () => new FNumberlessPair(Ar));
+            
+            Ar.AlignPosInArchive();
             Pairs = Ar.ReadArray(nums[10], () => new FNumberedPair(Ar));
 
-            Ar.Position += 4; // _END_MAGIC
+            if (Ar.Read<uint>() != _END_MAGIC)
+                throw new ParserException(Ar, "Invalid FStore Magic");
         }
 
         public string GetAnsiString(int index)
