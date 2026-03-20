@@ -29,11 +29,34 @@ namespace CUE4Parse.UE4.IO
         public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
         {
             if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-            return Read(Container.Entries[ioEntry.TocEntryIndex]);
+
+            if (ChunkToc.Header.IsLegacy)
+            {
+                return Read(Container.Entries[ioEntry.TocEntryIndex]);
+            }
+            else
+            {
+                return Read(Container.ContainerData.ChunkIds[ioEntry.TocEntryIndex], Container.ContainerData.ChunkEntries[ioEntry.TocEntryIndex]);
+            }
         }
 
-        public override byte[] Read(FIoChunkId chunkId) => Read(Container.Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
+        public override byte[] Read(FIoChunkId chunkId)
+        {
+            if (ChunkToc.Header.IsLegacy)
+            {
+                return Read(Container.Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
+            }
+            else
+            {
+                var index = Array.IndexOf(Container.ContainerData.ChunkIds, chunkId);
+                if (index >= 0)
+                {
+                    return Read(chunkId, Container.ContainerData.ChunkEntries[index]);
+                }
+            }
 
+            throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
+        }
         private byte[] Read(FOnDemandTocEntry? onDemandEntry)
         {
             if (onDemandEntry == null) throw new ParserException("Can't read unknown on-demand entry");
@@ -44,6 +67,16 @@ namespace CUE4Parse.UE4.IO
             throw new KeyNotFoundException($"Couldn't find chunk {onDemandEntry.ChunkId} in IoStoreOnDemand {Name}");
         }
 
+        private byte[] Read(FIoChunkId chunkId, FOnDemandChunkEntry? onDemandEntry)
+        {
+            if (onDemandEntry == null) throw new ParserException("Can't read unknown on-demand entry");
+            if (TryResolve(chunkId, out var offsetLength))
+            {
+                return Read(onDemandEntry.Hash.ToString().ToLower(), (long)offsetLength.Offset, (long)offsetLength.Length);
+            }
+            throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
+        }
+        
         private byte[] Read(string hash, long offset, long length)
         {
             var reader = _downloader.Download($"{ChunkToc.Header.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();

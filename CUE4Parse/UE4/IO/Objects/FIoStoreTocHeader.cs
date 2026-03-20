@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.IO.Objects
     }
 
     [Flags]
-    public enum EIoContainerFlags : byte
+    public enum EIoContainerFlags : uint
     {
         None,
         Compressed	= (1 << 0),
@@ -54,8 +54,6 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly FIoContainerId ContainerId;
         public readonly FGuid EncryptionKeyGuid;
         public readonly EIoContainerFlags ContainerFlags;
-        private readonly byte _reserved3;
-        private readonly ushort _reserved4;
         public readonly uint TocChunkPerfectHashSeedsCount;
         public ulong PartitionSize;
         public readonly uint TocChunksWithoutPerfectHashCount;
@@ -82,8 +80,6 @@ namespace CUE4Parse.UE4.IO.Objects
             ContainerId = Ar.Read<FIoContainerId>();
             EncryptionKeyGuid = Ar.Read<FGuid>();
             ContainerFlags = Ar.Read<EIoContainerFlags>();
-            _reserved3 = Ar.Read<byte>();
-            _reserved4 = Ar.Read<ushort>();
             TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
             PartitionSize = Ar.Read<ulong>();
             TocChunksWithoutPerfectHashCount = Ar.Read<uint>();
