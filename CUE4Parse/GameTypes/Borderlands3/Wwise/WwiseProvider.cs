@@ -10,14 +10,12 @@ public partial class WwiseProvider
     // but we would need to add unnecessary handler for that, just extract from this data instead
     public List<WwiseExtractedSound> ExtractDialogBorderlands3(UDialogPerformanceData dialogPerfData)
     {
-        DetermineBaseWwiseAudioPath();
-
         var wemId = dialogPerfData.WwiseEventShortID.ToString();
         var fileName = dialogPerfData.WwiseExternalMediaTemplate is null ? wemId : $"{dialogPerfData.WwiseExternalMediaTemplate.Name} ({wemId})";
         var results = new List<WwiseExtractedSound>();
         if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var wemGameFile) | _wwiseEncodedMedia.TryGetValue(wemId, out var wemData))
         {
-            var outputPath = Path.Combine(_baseWwiseAudioPath, fileName);
+            var outputPath = Path.Combine(GetOwnerDirectory(dialogPerfData), fileName);
             if (outputPath.StartsWith('/'))
                 outputPath = outputPath[1..];
 

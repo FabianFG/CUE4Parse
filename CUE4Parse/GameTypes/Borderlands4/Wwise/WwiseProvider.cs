@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Resources;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Serilog;
@@ -16,9 +15,8 @@ public partial class WwiseProvider
     private readonly record struct SoundTagData(uint Id, string Event);
     private Dictionary<string, SoundTagData> _bl4SoundTagsMap = [];
 
-    public List<WwiseExtractedSound> ExtractAudioEventBorderlands4(FName audioEventName, bool useSoundTag)
+    public List<WwiseExtractedSound> ExtractAudioEventBorderlands4(string ownerDirectory, FName audioEventName, bool useSoundTag)
     {
-        DetermineBaseWwiseAudioPath();
         PopulateSoundTagsMapBorderlands4();
 
         if (useSoundTag)
@@ -36,7 +34,7 @@ public partial class WwiseProvider
         uint audioEventId = WwiseFnv.GetHash(audioEventName.Text.SubstringAfterLast('.'));
 
         var results = new List<WwiseExtractedSound>();
-        LoopThroughEvent(audioEventId, results, _baseWwiseAudioPath, audioEventName.Text.SubstringAfterLast('.'));
+        LoopThroughEvent(audioEventId, results, ownerDirectory, audioEventName.Text.SubstringAfterLast('.'));
 
         return results;
     }
