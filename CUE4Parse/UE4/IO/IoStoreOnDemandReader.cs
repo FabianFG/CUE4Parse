@@ -28,16 +28,10 @@ namespace CUE4Parse.UE4.IO
 
         public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
         {
-            if (!(entry is FIoStoreEntry ioEntry) || entry.Vfs != this) throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
+            if (entry is not FIoStoreEntry ioEntry || entry.Vfs != this)
+                throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
 
-            if (ChunkToc.Header.IsLegacy)
-            {
-                return Read(Container.Entries[ioEntry.TocEntryIndex]);
-            }
-            else
-            {
-                return Read(Container.ContainerData.ChunkIds[ioEntry.TocEntryIndex], Container.ContainerData.ChunkEntries[ioEntry.TocEntryIndex]);
-            }
+            return Read(ioEntry.ChunkId);
         }
 
         public override byte[] Read(FIoChunkId chunkId)
@@ -46,13 +40,11 @@ namespace CUE4Parse.UE4.IO
             {
                 return Read(Container.Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
             }
-            else
+
+            var index = Array.IndexOf(Container.ContainerData.ChunkIds, chunkId);
+            if (index >= 0)
             {
-                var index = Array.IndexOf(Container.ContainerData.ChunkIds, chunkId);
-                if (index >= 0)
-                {
-                    return Read(chunkId, Container.ContainerData.ChunkEntries[index]);
-                }
+                return Read(chunkId, Container.ContainerData.ChunkEntries[index]);
             }
 
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
@@ -76,7 +68,7 @@ namespace CUE4Parse.UE4.IO
             }
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
         }
-        
+
         private byte[] Read(string hash, long offset, long length)
         {
             var reader = _downloader.Download($"{ChunkToc.Header.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
