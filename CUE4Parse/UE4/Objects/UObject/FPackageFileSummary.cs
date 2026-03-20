@@ -197,7 +197,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     // this file is unversioned, remember that, then use current versions
                     bUnversioned = true;
                     FileVersionUE = Ar.Ver;
-                    FileVersionLicenseeUE = EUnrealEngineObjectLicenseeUEVersion.VER_LIC_AUTOMATIC_VERSION;
+                    FileVersionLicenseeUE = EUnrealEngineObjectLicenseeUEVersion.LIC_AUTOMATIC_VERSION;
                 }
                 else
                 {
@@ -315,7 +315,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ImportTypeHierarchiesCount = 0;
                 ImportTypeHierarchiesOffset = 0;
             }
-            
+
             if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
             {
                 Guid = Ar.Read<FGuid>();

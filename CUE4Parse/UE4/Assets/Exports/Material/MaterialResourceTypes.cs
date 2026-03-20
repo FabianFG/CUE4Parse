@@ -598,9 +598,10 @@ public class FUniformExpressionSet
             UniformPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
             UniformPreshaderFields = Ar.Game is >= EGame.GAME_UE5_1 and < EGame.GAME_UE5_8 ? Ar.ReadArray<FMaterialUniformPreshaderField>() : [];
             UniformNumericParameters = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar));
+            if (Ar.Game is EGame.GAME_FateTrigger) Ar.Position += 16;
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
-            if (Ar.Game >= EGame.GAME_UE5_5) UniformTextureCollectionParameters = Ar.ReadArray(() => new FMaterialTextureCollectionParameterInfo(Ar));
+            if (Ar.Game >= EGame.GAME_UE5_5 && Ar.Game is not EGame.GAME_FateTrigger) UniformTextureCollectionParameters = Ar.ReadArray(() => new FMaterialTextureCollectionParameterInfo(Ar));
 
             UniformPreshaderBufferSize = Ar.Read<uint>();
             Ar.Position = Ar.Position.Align(8);
@@ -633,7 +634,7 @@ public class FUniformExpressionSet
         }
 
         VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
-        if (Ar.Game >= EGame.GAME_UE5_7) MaterialCacheTagStacks = Ar.ReadArray<FMaterialCacheTagStack>();
+        if (Ar.Game >= EGame.GAME_UE5_7 || Ar.Game is EGame.GAME_FateTrigger) MaterialCacheTagStacks = Ar.ReadArray<FMaterialCacheTagStack>();
         ParameterCollections = Ar.ReadArray<FGuid>();
         UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
         //if (Ar.Game >= EGame.GAME_UE5_8) CompactUniformsVSOptional = Ar.ReadArray(() => new FCompactUniformExpressionSet(Ar));
@@ -1050,6 +1051,7 @@ public class FRHIUniformBufferLayoutInitializer
             UniformBuffers = Ar.ReadArray<FRHIUniformBufferResource>();
             Hash = Ar.Read<uint>();
             ConstantBufferSize = Ar.Read<uint>();
+            if (Ar.Game is EGame.GAME_FateTrigger) Ar.Position += 4;
             RenderTargetsOffset = Ar.Read<ushort>();
             StaticSlot = Ar.Read<byte>();
             BindingFlags = Ar.Read<EUniformBufferBindingFlags>();

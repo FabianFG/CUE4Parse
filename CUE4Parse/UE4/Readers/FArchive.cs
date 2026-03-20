@@ -184,6 +184,10 @@ namespace CUE4Parse.UE4.Readers
 
         public T[] ReadBulkArray<T>() where T : struct
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                return ReadArray<T>();
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
@@ -199,6 +203,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(Func<T> getter)
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                return ReadArray(getter);
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             return ReadBulkArray(elementSize, elementCount, getter);
@@ -207,6 +215,10 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SkipBulkArrayData()
         {
+            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            {
+                throw new ParserException("Cannot skip bulk array data for UE3 versions before ADDED_BULKSERIALIZE_SANITY_CHECKING");
+            }
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             Position += elementSize * elementCount;
@@ -307,7 +319,7 @@ namespace CUE4Parse.UE4.Readers
 
             return result;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<TKey, List<TValue>> ReadMultiMap<TKey, TValue>(Func<TKey> keyGetter, Func<TValue> valueGetter) where TKey : notnull
         {
@@ -476,15 +488,15 @@ namespace CUE4Parse.UE4.Readers
         public string ReadFUtf8String()
         {
             var length = Read<int>();
-            
+
             if (length < 0) throw new ParserException($"Negative Utf8String length '{length}'");
             if (length > Length - Position) throw new ParserException($"Invalid Utf8String length '{length}'");
 
             return Encoding.UTF8.GetString(ReadBytes(length));
         }
-        
+
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
-        
+
         public virtual FName ReadFName() => new(ReadFString());
 
         public virtual UObject? ReadUObject()
@@ -658,11 +670,11 @@ namespace CUE4Parse.UE4.Readers
         {
             if (length < 0)
             {
-                throw new ParserException(this, "Read size is smaller than zero.");
+                throw new VersionException(this, "Read size is smaller than zero.");
             }
             if (Position + length > Length)
             {
-                throw new ParserException(this, "Read size is bigger than remaining archive length.");
+                throw new VersionException(this, "Read size is bigger than remaining archive length.");
             }
         }
 

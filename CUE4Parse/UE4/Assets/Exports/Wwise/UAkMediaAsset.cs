@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
@@ -14,7 +15,7 @@ public class UAkMediaAsset : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        ID = GetOrDefault<uint>(nameof(ID));
+        ID = GetOrDefault<uint>(nameof(ID), comparisonType: StringComparison.OrdinalIgnoreCase);
         MediaName = GetOrDefault<string>(nameof(MediaName));
         CurrentMediaAssetData = new FPackageIndex(Ar);
     }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -33,7 +32,7 @@ public abstract class AbstractUePackage : UObject, IPackage
         get
         {
             if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && Mappings is null)
-                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
+                throw new MappingException("Package has unversioned properties but mapping file is missing, can't serialize");
             return true;
         }
     }

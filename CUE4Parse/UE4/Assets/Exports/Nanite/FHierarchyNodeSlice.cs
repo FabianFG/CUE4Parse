@@ -1,6 +1,7 @@
 using System;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteUtils;
 
@@ -32,7 +33,7 @@ public class FHierarchyNodeSlice
         BoxBoundsExtent = Ar.Read<FVector>();
         ChildStartReference = Ar.Read<uint>();
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
-        if (Ar.Game >= Versions.EGame.GAME_UE5_7)
+        if (Ar.Game >= EGame.GAME_UE5_7)
         {
             var misc2 = Ar.Read<TIntVector2<uint>>();
             AssemblyTransformIndex = GetBits(misc2.Y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);

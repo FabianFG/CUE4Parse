@@ -9,11 +9,11 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FByteBulkDataHeaderConverter))]
 public readonly struct FByteBulkDataHeader
 {
-    public readonly FBulkDataCookedIndex CookedIndex;
     public readonly EBulkDataFlags BulkDataFlags;
     public readonly int ElementCount;
     public readonly uint SizeOnDisk;
     public readonly long OffsetInFile;
+    public readonly FBulkDataCookedIndex CookedIndex;
 
     public FByteBulkDataHeader(EBulkDataFlags bulkDataFlags, int elementCount, uint sizeOnDisk, long offsetInFile, FBulkDataCookedIndex cookedIndex)
     {
@@ -45,7 +45,7 @@ public readonly struct FByteBulkDataHeader
                 var metaData = iopkg.BulkDataMap[dataIndex];
                 BulkDataFlags = (EBulkDataFlags) metaData.Flags;
                 ElementCount = (int) metaData.SerialSize;
-                SizeOnDisk = (uint) metaData.SerialSize;
+                SizeOnDisk = (uint) metaData.SerialSize; // ??
                 OffsetInFile = (long) metaData.SerialOffset;
                 CookedIndex = metaData.CookedIndex;
                 return;
