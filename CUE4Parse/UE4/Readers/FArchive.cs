@@ -153,6 +153,27 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] ReadArray<T, TContext>(int length, TContext[] context, Func<TContext, T> getter)
+        {
+            if (length == 0) return [];
+            var result = new T[length];
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = getter(context[i]);
+            }
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ForEach<T>(T[] array, Action<T> action)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                action(array[i]);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual T[] ReadArray<T>(Func<T> getter)
         {
             var length = Read<int>();

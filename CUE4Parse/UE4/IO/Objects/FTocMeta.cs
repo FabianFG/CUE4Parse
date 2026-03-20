@@ -14,4 +14,11 @@ public class FTocMeta
         BuildVersion = Ar.ReadFString();
         TargetPlatform = Ar.ReadFString();
     }
+
+    public FTocMeta(long epochTimestamp, string buildVersion, string targetPlatform)
+    {
+        EpochTimestamp = epochTimestamp;
+        BuildVersion = buildVersion;
+        TargetPlatform = targetPlatform;
+    }
 }
