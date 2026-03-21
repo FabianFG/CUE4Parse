@@ -92,9 +92,6 @@ namespace CUE4Parse.UE4.Pak
 
             if (pakEntry.IsCompressed)
             {
-#if DEBUG
-                Log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
-#endif
                 switch (Game)
                 {
                     case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
