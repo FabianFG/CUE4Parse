@@ -13,7 +13,7 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        AnimationData = GetOrDefault<FSingleAnimationPlayData>(nameof(AnimationData));
+        AnimationData = GetOrDefault<FSingleAnimationPlayData?>(nameof(AnimationData));
 
         var bEnablePerPolyCollision = GetOrDefault<bool>("bEnablePerPolyCollision");
 
