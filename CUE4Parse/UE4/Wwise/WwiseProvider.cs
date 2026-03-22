@@ -523,7 +523,7 @@ public partial class WwiseProvider
             {
                 // TEMP: Init bnk was found, but caching isn't supported yet, prevent exception from throwing
                 _completedWwiseFullBnkInit = true;
-                Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+                Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
                 return;
             }
         }
@@ -551,7 +551,7 @@ public partial class WwiseProvider
             totalLoadedBanks += 1;
         }
 
-        Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+        Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
@@ -669,6 +669,7 @@ public partial class WwiseProvider
                 .OfType<UWwiseAssetLibrary>()
                 .FirstOrDefault();
 
+            var filesCount = 0;
             var loadedSize = 0L;
             var totalSize = 0L;
             if (wwiseAssetLib == null)
@@ -685,6 +686,7 @@ public partial class WwiseProvider
                     {
                         CacheWwiseFile(pf.BulkData);
                         _multiReferenceLibraryCache[pf.Hash] = pf.BulkData;
+                        filesCount++;
                         loadedSize += pf.BulkData.LoadedSize;
                         totalSize += pf.BulkData.TotalSize;
                     }
@@ -692,8 +694,8 @@ public partial class WwiseProvider
             }
             _totalLoadedWwiseSize += loadedSize;
             _totalWwiseBanksSize += totalSize;
-            Log.Information("Loaded {Name} and cached {Count} packaged files, loaded size {size}/{total}", assetFile.Name,
-                _multiReferenceLibraryCache.Count, _totalLoadedWwiseSize, _totalWwiseBanksSize);
+            Log.Information("Loaded {Name} and cached {Count} packaged files, loaded size in bytes {size}/{total}", assetFile.Name,
+                filesCount, loadedSize, totalSize);
         }
         catch (Exception e)
         {
