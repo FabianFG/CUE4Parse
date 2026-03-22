@@ -15,6 +15,24 @@ public readonly struct FByteBulkDataHeader
     public readonly long OffsetInFile;
     public readonly FBulkDataCookedIndex CookedIndex;
 
+    public FByteBulkDataHeader(EBulkDataFlags bulkDataFlags, int elementCount, uint sizeOnDisk, long offsetInFile, FBulkDataCookedIndex cookedIndex)
+    {
+        BulkDataFlags = bulkDataFlags;
+        ElementCount = elementCount;
+        SizeOnDisk = sizeOnDisk;
+        OffsetInFile = offsetInFile;
+        CookedIndex = cookedIndex;
+    }
+
+    public FByteBulkDataHeader(FByteBulkDataHeader header)
+    {
+        BulkDataFlags = header.BulkDataFlags;
+        ElementCount = header.ElementCount;
+        SizeOnDisk = header.SizeOnDisk;
+        OffsetInFile = header.OffsetInFile;
+        CookedIndex = header.CookedIndex;
+    }
+
     public FByteBulkDataHeader(FAssetArchive Ar)
     {
         CookedIndex = FBulkDataCookedIndex.Default;

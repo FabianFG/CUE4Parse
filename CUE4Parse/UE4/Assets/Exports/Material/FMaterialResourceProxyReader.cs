@@ -31,7 +31,9 @@ public class FMaterialResourceProxyReader : FArchive
         if (_readNameMap)
         {
             _nameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
-            Ar.SkipFixedArray(Unsafe.SizeOf<FMaterialResourceLocOnDisk>()); // Locs
+            var num = Ar.Read<int>();
+            Ar.Position += num * Unsafe.SizeOf<FMaterialResourceLocOnDisk>(); // Locs
+            if (Ar.Game is UE4.Versions.EGame.GAME_ArenaBreakoutInfinite) Ar.Position += num;
             Ar.Position += 4; // NumBytes
         }
     }

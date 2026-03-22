@@ -24,11 +24,6 @@ public class UAtomWaveBank : UObject
 
         using var bulkAr = new FByteArchive("bulk", bulkData.Data);
         AtomWaveBankData = new AwbReader(bulkAr);
-
-        if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-        {
-            Ar.Position = savedPosition + bulkData.Header.ElementCount;
-        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
