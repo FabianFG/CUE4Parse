@@ -43,10 +43,13 @@ public abstract class FPropertyTagType
     public object? GetValue(Type type)
     {
         var generic = GenericValue;
+
+        type = Nullable.GetUnderlyingType(type) ?? type;
         if (type.IsInstanceOfType(generic))
         {
             return generic;
         }
+
         switch (this)
         {
             case FPropertyTagType<FScriptStruct> structProp when type.IsInstanceOfType(structProp.Value!.StructType):
