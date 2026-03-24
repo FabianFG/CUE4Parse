@@ -26,6 +26,7 @@ using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
@@ -98,6 +99,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 EGame.GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
+                EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
                 _ => null
             };
         }
