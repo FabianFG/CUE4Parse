@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -50,18 +51,26 @@ public class FStaticMeshComponentLODInfo
         {
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
             {
+                if (Ar.Game < EGame.GAME_UE4_0)
+                {
+                    Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
+                    Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowVertexBuffers
+                }
+
                 FLightMap? lightMap = Ar.Read<ELightMapType>() switch
                 {
                     ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
                     ELightMapType.LMT_2D => new FLightMap2D(Ar),
                     _ => null
                 };
-
-                var shadowMap = Ar.Read<EShadowMapType>() switch
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRECOMPUTED_SHADOW_MAPS)
                 {
-                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
-                    _ => null
-                };
+                    var shadowMap = Ar.Read<EShadowMapType>() switch
+                    {
+                        EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                        _ => null
+                    };
+                }
             }
             else
             {
