@@ -13,6 +13,7 @@ using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
