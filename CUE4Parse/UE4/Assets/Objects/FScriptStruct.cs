@@ -374,6 +374,7 @@ public class FScriptStruct
 
             "MercunaPawnUsageFlags" when Ar.Game is EGame.GAME_HighOnLife2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaNavUsageTypes" when Ar.Game is EGame.GAME_HighOnLife2 => Ar.Read<FRawUIntStruct>(),
+            "MercunaUsageTypes" => Ar.Read<FRawUIntStruct>(),
 
             // Windrose
             "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
@@ -384,6 +385,11 @@ public class FScriptStruct
             "BHVRVariantConfigurator" when Ar.Game is EGame.GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             "NiagaraEventGeneratorProperties" when Ar.Game is EGame.GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
+
+            "RulesetActorCreationParams" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 6), (1, -1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "HexOffsetCoord" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "RulesetId" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "HexCell" when Ar.Game is EGame.GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
 
             _ => Ar.Game switch
             {
