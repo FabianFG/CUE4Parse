@@ -383,6 +383,8 @@ public class FScriptStruct
 
             "BHVRVariantConfigurator" when Ar.Game is EGame.GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            "NiagaraEventGeneratorProperties" when Ar.Game is EGame.GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

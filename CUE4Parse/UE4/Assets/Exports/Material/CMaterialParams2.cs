@@ -46,7 +46,7 @@ public class CMaterialParams2
     public static readonly string[][] Diffuse =
     [
         [
-            "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex",
+            "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex", 
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",

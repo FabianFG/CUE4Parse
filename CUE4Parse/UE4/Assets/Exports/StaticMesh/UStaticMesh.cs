@@ -75,6 +75,8 @@ public class UStaticMesh : UObject
             Ar.Position += 64; // 8 per-platform floats
         }
 
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 4;
+
         if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
@@ -84,6 +86,7 @@ public class UStaticMesh : UObject
                 {
                     case EGame.GAME_CrystalOfAtlan:
                     case EGame.GAME_FragPunk:
+                    case EGame.GAME_RocoKingdomWorld:
                         if (Ar.Game is EGame.GAME_FragPunk && !Ar.ReadBoolean()) break;
                         Ar.SkipMultipleBulkArrayData(3);
                         break;

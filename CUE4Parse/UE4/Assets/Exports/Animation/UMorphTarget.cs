@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
@@ -37,6 +39,27 @@ public class UMorphTarget : UObject
         if (Ar.Game is EGame.GAME_NevernessToEverness) bCooked = Ar.ReadBoolean();
 
         MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
+
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+        {
+            var posscales = GetOrDefault<float[]>("MorphPosDeltaCompressExtent", []);
+            var tanscales = GetOrDefault<float[]>("MorphTanDeltaCompressExtent", []);
+            var scales = posscales.Zip(tanscales).ToArray();
+
+            if (scales.Length > 0)
+            {
+                for (int i = 0; i < scales.Length; i++)
+                {
+                    var (posscale, tanscale) = scales[i];
+                    for (int j = 0; j < MorphLODModels[i].Vertices.Length; j++)
+                    {
+                        var delta = MorphLODModels[i].Vertices[j];
+                        delta.PositionDelta *= posscale;
+                        delta.TangentZDelta *= tanscale;
+                    }
+                }
+            }
+        }
 
         if (bCooked)
         {
