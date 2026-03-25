@@ -120,27 +120,40 @@ public class FText : IUStruct
 
     public FText(FAssetArchive Ar)
     {
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.FTEXT_HISTORY)
+        {
+            Ar.ReadFString(); // SourceStringToImplantIntoHistory
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT)
+            {
+                Ar.ReadFString(); // Namespace
+                Ar.ReadFString(); // Key
+            }
+        }
+
         Flags = Ar.Read<ETextFlag>();
 
-        HistoryType = Ar.Read<ETextHistoryType>();
-        TextHistory = HistoryType switch
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.FTEXT_HISTORY)
         {
-            ETextHistoryType.Base => new FTextHistory.Base(Ar),
-            ETextHistoryType.NamedFormat => new FTextHistory.NamedFormat(Ar),
-            ETextHistoryType.OrderedFormat => new FTextHistory.OrderedFormat(Ar),
-            ETextHistoryType.ArgumentFormat => new FTextHistory.ArgumentFormat(Ar),
-            ETextHistoryType.AsNumber => new FTextHistory.FormatNumber(Ar, HistoryType),
-            ETextHistoryType.AsPercent => new FTextHistory.FormatNumber(Ar, HistoryType),
-            ETextHistoryType.AsCurrency => new FTextHistory.FormatNumber(Ar, HistoryType),
-            ETextHistoryType.AsDate => new FTextHistory.AsDate(Ar),
-            ETextHistoryType.AsTime => new FTextHistory.AsTime(Ar),
-            ETextHistoryType.AsDateTime => new FTextHistory.AsDateTime(Ar),
-            ETextHistoryType.Transform => new FTextHistory.Transform(Ar),
-            ETextHistoryType.StringTableEntry => new FTextHistory.StringTableEntry(Ar),
-            ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
-            _ => new FTextHistory.None(Ar)
-        };
-        if (Ar.Game == EGame.GAME_Splitgate2) Ar.Position += 4;
+            HistoryType = Ar.Read<ETextHistoryType>();
+            TextHistory = HistoryType switch
+            {
+                ETextHistoryType.Base => new FTextHistory.Base(Ar),
+                ETextHistoryType.NamedFormat => new FTextHistory.NamedFormat(Ar),
+                ETextHistoryType.OrderedFormat => new FTextHistory.OrderedFormat(Ar),
+                ETextHistoryType.ArgumentFormat => new FTextHistory.ArgumentFormat(Ar),
+                ETextHistoryType.AsNumber => new FTextHistory.FormatNumber(Ar, HistoryType),
+                ETextHistoryType.AsPercent => new FTextHistory.FormatNumber(Ar, HistoryType),
+                ETextHistoryType.AsCurrency => new FTextHistory.FormatNumber(Ar, HistoryType),
+                ETextHistoryType.AsDate => new FTextHistory.AsDate(Ar),
+                ETextHistoryType.AsTime => new FTextHistory.AsTime(Ar),
+                ETextHistoryType.AsDateTime => new FTextHistory.AsDateTime(Ar),
+                ETextHistoryType.Transform => new FTextHistory.Transform(Ar),
+                ETextHistoryType.StringTableEntry => new FTextHistory.StringTableEntry(Ar),
+                ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
+                _ => new FTextHistory.None(Ar)
+            };
+            if (Ar.Game == EGame.GAME_Splitgate2) Ar.Position += 4;
+        }
     }
 
     public FText(string sourceString, string localizedString = "") : this("", "", sourceString, localizedString) { }
@@ -424,7 +437,7 @@ public class FFormatArgumentData : IUStruct
 
     public FFormatArgumentData(FAssetArchive Ar)
     {
-        ArgumentName = Ar.ReadFString();
+        ArgumentName = Ar.Ver >= EUnrealEngineObjectUE4Version.K2NODE_VAR_REFERENCEGUIDS ? Ar.ReadFString() : new FText(Ar).Text;
         ArgumentValue = new FFormatArgumentValue(Ar, true);
     }
 }

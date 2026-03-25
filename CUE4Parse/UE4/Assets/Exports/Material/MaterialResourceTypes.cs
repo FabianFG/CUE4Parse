@@ -1340,7 +1340,7 @@ public class FMaterialShaderMapId
             FeatureLevel = (ERHIFeatureLevel) Ar.Read<int>();
             if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;
         }
-        else
+        else if (Ar.Ver > EUnrealEngineObjectUE4Version.MATERIAL_QUALITY_LEVEL_SWITCH)
         {
             var legacyQualityLevel = (EMaterialQualityLevel) Ar.Read<byte>(); // Is it enum?
         }

@@ -12,7 +12,8 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
-public class UMaterialInstanceDynamic: UMaterialInstance;
+public class UMaterialInstanceDynamic : UMaterialInstance;
+public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
