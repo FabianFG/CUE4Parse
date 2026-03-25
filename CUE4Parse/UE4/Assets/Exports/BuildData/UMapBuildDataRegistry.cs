@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -375,9 +376,42 @@ public class FLightMap(FAssetArchive Ar)
 
 public class FLegacyLightMap1D : FLightMap
 {
+    private int NUM_DIRECTIONAL_LIGHTMAP_COEF = 2;
+    private int NUM_GATHERED_LIGHTMAP_COEF_LEGACY = 3;
+
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
     {
-        throw new ParserException("Unsupported: FLegacyLightMap1D");
+        new FPackageIndex(Ar); // Owner
+        new FIntBulkData(Ar); // DirectionalSamples
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
+        {
+            for (int elementIndex = 0; elementIndex < 3; elementIndex++)
+            {
+                Ar.Read<FVector>();
+            }
+        }
+        else if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
+        {
+            for (int elementIndex = 0; elementIndex < 4; elementIndex++)
+            {
+                Ar.Read<FVector>();
+            }
+        }
+        else
+        {
+            for (int elementIndex = 0; elementIndex < NUM_GATHERED_LIGHTMAP_COEF_LEGACY; elementIndex++)
+            {
+                if (elementIndex < NUM_DIRECTIONAL_LIGHTMAP_COEF || Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING)
+                {
+                    Ar.Read<FVector>();
+                }
+            }
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING)
+        {
+            new FIntBulkData(Ar); // SimpleSamples
+        }
     }
 }
 
