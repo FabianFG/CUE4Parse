@@ -167,7 +167,7 @@ public class FStaticMeshRenderData
 
         var screenSizeLength = Ar.Game switch
         {
-            EGame.GAME_FragPunk => 16,
+            EGame.GAME_FragPunk or EGame.GAME_RocoKingdomWorld => 16,
             EGame.GAME_Stalker2 => 14,
             >= EGame.GAME_UE4_9 => MAX_STATIC_LODS_UE4,
             _ => 4

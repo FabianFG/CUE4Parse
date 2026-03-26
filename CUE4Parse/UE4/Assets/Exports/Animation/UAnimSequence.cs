@@ -344,6 +344,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // avoid confuse.
             byte[] serializedByteStream;
 
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            {
+                Ar.Position += 16;
+                numBytes -= 16;
+            }
+
             if (bUseBulkDataForLoad)
             {
                 throw new NotImplementedException("Anim: bUseBulkDataForLoad not implemented");

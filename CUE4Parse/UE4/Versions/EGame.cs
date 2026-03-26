@@ -211,7 +211,7 @@ public enum EGame : uint
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
         GAME_Grounded2 = GAME_UE5_6 + 1,
         GAME_AshesOfCreation = GAME_UE5_6 + 2,
-        GAME_Placeholder7 = GAME_UE5_6 + 3,
+        GAME_Solasta2 = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,

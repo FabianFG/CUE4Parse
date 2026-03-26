@@ -24,12 +24,12 @@ public class EnumProperty : FPropertyTagType<FName>
                 Value = Ar.ReadFName();
                 return;
             }
-            var index = 0;
+            long index = 0;
             if (tagData?.InnerType != null)
             {
                 var underlyingProp = ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.NORMAL)?.GenericValue;
                 if (underlyingProp != null && underlyingProp.IsNumericType())
-                    index = Convert.ToInt32(underlyingProp);
+                    index = Convert.ToInt64(underlyingProp);
             }
             else
             {
@@ -45,7 +45,7 @@ public class EnumProperty : FPropertyTagType<FName>
 
     public EnumProperty(FName value) => Value = value;
 
-    private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, int index)
+    private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, long index)
     {
         var enumName = tagData?.EnumName;
         if (enumName == null)

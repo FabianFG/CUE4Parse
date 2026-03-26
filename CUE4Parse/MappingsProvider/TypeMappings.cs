@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace CUE4Parse.MappingsProvider
 {
     public class TypeMappings
     {
         public readonly Dictionary<string, Struct> Types;
-        public readonly Dictionary<string, Dictionary<int, string>> Enums;
+        public readonly Dictionary<string, Dictionary<long, string>> Enums;
 
-        public TypeMappings(Dictionary<string, Struct> types, Dictionary<string, Dictionary<int, string>> enums)
+        public TypeMappings(Dictionary<string, Struct> types, Dictionary<string, Dictionary<long, string>> enums)
         {
             Types = types;
             Enums = enums;
@@ -16,7 +16,7 @@ namespace CUE4Parse.MappingsProvider
         public TypeMappings()
         {
             Types = new Dictionary<string, Struct>();
-            Enums = new Dictionary<string, Dictionary<int, string>>();
+            Enums = new Dictionary<string, Dictionary<long, string>>();
         }
     }
 }

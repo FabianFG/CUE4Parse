@@ -108,6 +108,16 @@ public class FPositionVertexBuffer
             };
             return;
         }
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+        {
+            Verts = Stride switch
+            {
+                8 => Ar.ReadBulkArray(() => (FVector) Ar.Read<FVector3SignedShortScale>()),
+                12 => Ar.ReadBulkArray<FVector>(),
+                _ => throw new ArgumentOutOfRangeException($"Unknown stride {Stride} for FPositionVertexBuffer")
+            };
+            return;
+        }
         if (Ar.Game == EGame.GAME_FateTrigger)
         {
             var box = Ar.Read<byte>();

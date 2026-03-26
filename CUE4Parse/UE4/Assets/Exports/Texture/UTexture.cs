@@ -66,7 +66,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        if (Ar.Game is EGame.GAME_WorldofJadeDynasty or EGame.GAME_RocoKingdomWorld) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
@@ -123,7 +123,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             {
                 //?? check whether we can support this pixel format
 #if DEBUG
-                Log.Debug("Loading data for format {Format}", pixelFormatName);
+                //Log.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 

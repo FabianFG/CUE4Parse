@@ -65,6 +65,26 @@ public class FMorphTargetLODModel
                 return;
             }
 
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            {
+                var buffer = Ar.ReadArray<ulong>();
+                Vertices = new FMorphTargetDelta[buffer.Length];
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    ulong v = buffer[i];
+                    var pos = (uint) (v & 0xFFFFFF);
+                    var tan = (uint) ((v >> 24) & 0x1FFFF);
+                    var vert = (uint) (v >> 45);
+                    var posvec = new FVector((sbyte) (pos & 0xff), (sbyte) ((pos >> 8) & 0xff), (sbyte) ((pos >> 16) & 0xff)) / 127.5f;
+                    var tanvec = new FVector((sbyte) (tan & 0x7f), (sbyte) ((tan >> 7) & 0x7f), (sbyte) ((tan >> 14) & 0x7f)) / 63.5f;
+                    Vertices[i] = new FMorphTargetDelta(posvec, tanvec, vert);
+                }
+                NumBaseMeshVerts = Ar.Read<int>();
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
             var bVerticesAreStrippedForCookedBuilds = false;
             if (FUE5SpecialProjectStreamObjectVersion.Get(Ar) >= FUE5SpecialProjectStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
             {
