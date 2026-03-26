@@ -25,7 +25,9 @@ public class FReferenceSkeleton
         }
         else
         {
+            FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
             FinalRefBonePose = Ar.ReadArray(() => new FTransform(Ar));
+            FinalNameToIndexMap = Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR ? Ar.ReadMap(() => Ar.ReadFName().Text, Ar.Read<int>) : [];
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
