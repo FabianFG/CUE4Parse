@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
@@ -135,6 +136,7 @@ public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
 public class UCapsuleComponent : UShapeComponent;
+public class UCylinderComponent : UPrimitiveComponent;
 public class UChaosDebugDrawComponent : UActorComponent;
 public class UChaosDestructionListener : USceneComponent;
 public class UChaosEventListenerComponent : UActorComponent;
@@ -163,6 +165,7 @@ public class UDebugSkelMeshComponent : USkeletalMeshComponent;
 public class UDefaultPawnMovement : UFloatingPawnMovement;
 public class UDrawFrustumComponent : UPrimitiveComponent;
 public class UDrawSphereComponent : USphereComponent;
+public class UDrawSoundRadiusComponent : UDrawSphereComponent;
 public class UDynamicMeshComponent : UBaseDynamicMeshComponent;
 public class UEQSRenderingComponent : UDebugDrawComponent;
 public class UEditorAutomationActorComponent : UEditorUtilityActorComponent;
@@ -181,6 +184,25 @@ public class UFieldSystemMetaDataFilter : UFieldSystemMetaData;
 public class UFieldSystemMetaDataIteration : UFieldSystemMetaData;
 public class UFieldSystemMetaDataProcessingResolution : UFieldSystemMetaData;
 public class UFloatingPawnMovement : UPawnMovementComponent;
+
+public class UFluidSurfaceComponent : UPrimitiveComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_FLUID_LIGHTMAPS)
+        {
+            FLightMap? lightMap = Ar.Read<ELightMapType>() switch
+            {
+                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                _ => null
+            };
+        }
+    }
+}
+
 public class UForceFeedbackComponent : USceneComponent;
 public class UFuncTestRenderingComponent : UPrimitiveComponent;
 public class UGameplayCameraComponent : USceneComponent;
@@ -293,6 +315,7 @@ public class UParticleSystem : UObject
 }
 
 public class UPathFollowingComponent : UActorComponent;
+public class UPathRenderingComponent : UPrimitiveComponent;
 public class UPawnActionsComponent : UActorComponent;
 public class UPawnMovementComponent : UNavMovementComponent;
 public class UPawnNoiseEmitterComponent : UActorComponent;
@@ -336,6 +359,7 @@ public class USensingComponent : UPawnSensingComponent;
 public class UShapeComponent : UPrimitiveComponent;
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
+public class USkinnedMeshComponent : UMeshComponent;
 public class USmartNavLinkComponent : UNavLinkCustomComponent;
 public class USparseVolumeTextureViewerComponent : UPrimitiveComponent;
 public class USpectatorPawnMovement : UFloatingPawnMovement;
