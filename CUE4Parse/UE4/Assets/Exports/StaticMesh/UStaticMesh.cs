@@ -6,13 +6,13 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 public class UStaticMesh : UObject
 {
     public bool bCooked { get; private set; }
+    public bool HasTangents { get; private set; }
     public FPackageIndex BodySetup { get; private set; }
     public FPackageIndex NavCollision { get; private set; }
     public FGuid LightingGuid { get; private set; }
@@ -30,7 +30,8 @@ public class UStaticMesh : UObject
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
         var stripDataFlags = new FStripDataFlags(Ar);
-        bCooked = Ar.ReadBoolean();
+        bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
+        HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
         BodySetup = new FPackageIndex(Ar);
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])

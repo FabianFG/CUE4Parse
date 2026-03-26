@@ -191,10 +191,18 @@ public class FStaticLODModel
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
-            NumTexCoords = Ar.Read<int>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH)
+            {
+                NumTexCoords = Ar.Read<int>();
+            }
+
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {
-                VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer(Ar);
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
+                {
+                    VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer(Ar);
+                }
+
                 if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
                 {
                     var skinWeights = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
@@ -222,7 +230,10 @@ public class FStaticLODModel
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.UseSharedColorBufferFormat)
                     {
-                        ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SKELETAL_MESH_VERTEX_COLORS)
+                        {
+                            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                        }
                     }
                     else
                     {
@@ -339,19 +350,19 @@ public class FStaticLODModel
             if (Ar is { Game: >= EGame.GAME_UE5_8, IsFilterEditorOnly: true })
             {
                 var bDiscardBulkData = false;
-                
+
                 var bulkData = new FByteBulkData(Ar);
                 if (bulkData.Header.ElementCount == 0)
                 {
                     bDiscardBulkData = true;
                 }
-                
+
                 if (!bDiscardBulkData)
                     SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
 
                 // We should be checking if bInlined is true too but if we do we loose high-res LODs on majority of SKs
                 // Removing the check would have been probabilistic if we had serialization issue but since we don't it's fine
-                
+
                 if (bulkData is { Data: not null, Header.ElementCount: > 0 })
                 {
                     using var tempAr = new FByteArchive("LodReader", bulkData.Data, Ar.Versions);
@@ -567,7 +578,7 @@ public class FStaticLODModel
 
     private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyDataStripped)
     {
-        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32 
+        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !bAdjacencyDataStripped)
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
@@ -575,14 +586,14 @@ public class FStaticLODModel
         bytesToSkip += 4 * 2; // FPositionVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
-        
+
         Ar.Position += bytesToSkip;
-        
+
         if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData
-            
+
             var clothIndexMapping = Ar.ReadArray<long>(); // TArray<FClothBufferIndexMapping>
             Ar.Position += 2 * 4; // 2x uint32
             if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
@@ -592,7 +603,7 @@ public class FStaticLODModel
         }
 
         _ = Ar.ReadArray(Ar.ReadFName); // FSkinWeightProfilesData::SerializeMetaData
-        
+
         if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
         {
             Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
