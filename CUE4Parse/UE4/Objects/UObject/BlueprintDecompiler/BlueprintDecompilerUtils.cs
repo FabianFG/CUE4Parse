@@ -1235,7 +1235,7 @@ public static class BlueprintDecompilerUtils
                 var className = stackNode.SubstringAfter('.').SubstringBefore(':');
 
                 if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
-                if (expression is EX_LocalFinalFunction) return $"{functionName}({parameters})";
+                if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
 
                 return FinalFunctionCleaner(className, functionName, parametersList, parameters);
             }
@@ -1249,11 +1249,7 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var functionName = virtualFunc.VirtualFunctionName.Text;
-                /*
-                    expression is EX_LocalVirtualFunction
-                        ? $"this->{functionName}({parameters})"
-                        : // sometimes "this->" is wrong
-                */
+
                 return $"{functionName}({parameters})";
             }
             case EX_TextConst textConst:
