@@ -1147,26 +1147,17 @@ public class AkEntryConverter : JsonConverter<AkEntry>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("NameHash");
-        writer.WriteValue(value.NameHash);
+        writer.WritePropertyName(nameof(value.AudioPath));
+        writer.WriteValue(value.AudioPath);
 
-        writer.WritePropertyName("OffsetMultiplier");
+        writer.WritePropertyName(nameof(value.OffsetMultiplier));
         writer.WriteValue(value.OffsetMultiplier);
 
-        writer.WritePropertyName("Size");
+        writer.WritePropertyName(nameof(value.Size));
         writer.WriteValue(value.Size);
 
-        writer.WritePropertyName("Offset");
+        writer.WritePropertyName(nameof(value.Offset));
         writer.WriteValue(value.Offset);
-
-        writer.WritePropertyName("FolderId");
-        writer.WriteValue(value.FolderId);
-
-        writer.WritePropertyName("Path");
-        writer.WriteValue(value.Path);
-
-        writer.WritePropertyName("IsSoundBank");
-        writer.WriteValue(value.IsSoundBank);
 
         writer.WriteEndObject();
     }
@@ -1192,9 +1183,6 @@ public class AkFolderConverter : JsonConverter<AkFolder>
 
         writer.WritePropertyName(nameof(value.Name));
         writer.WriteValue(value.Name);
-
-        writer.WritePropertyName(nameof(value.Entries));
-        serializer.Serialize(writer, value.Entries);
 
         writer.WriteEndObject();
     }
@@ -1306,10 +1294,16 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         writer.WritePropertyName(nameof(value.Header));
         serializer.Serialize(writer, value.Header);
 
-        if (value.Folders is { Length: > 0 })
+        if (value.AKPKBankEntries is { Count: > 0 })
         {
-            writer.WritePropertyName(nameof(value.Folders));
-            serializer.Serialize(writer, value.Folders);
+            writer.WritePropertyName(nameof(value.AKPKBankEntries));
+            serializer.Serialize(writer, value.AKPKBankEntries);
+        }
+
+        if (value.AKPKWemEntries is { Count: > 0 })
+        {
+            writer.WritePropertyName(nameof(value.AKPKWemEntries));
+            serializer.Serialize(writer, value.AKPKWemEntries);
         }
 
         if (value.AKPluginList is { Count: > 0 })
@@ -1354,7 +1348,7 @@ public class WwiseConverter : JsonConverter<WwiseReader>
             value.GlobalSettings.WriteJson(writer, serializer);
         }
 
-        if (value.WemFile is { Length: > 0 })
+        if (value.WemFile?.IsValid is true)
         {
             writer.WritePropertyName("IsWemFile");
             writer.WriteValue(true);

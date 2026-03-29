@@ -41,7 +41,7 @@ public class CMBCRuntimeParams : IAkPluginParam
         NumBands = Ar.Read<int>();
 
         Crossover = Ar.ReadArray<float>(3);
-        Bands = Ar.ReadArray<MBCBandParams>(4);
+        Bands = Ar.ReadArray(NumBands, () => new MBCBandParams(Ar));
 
         if (mode >= 1)
         {

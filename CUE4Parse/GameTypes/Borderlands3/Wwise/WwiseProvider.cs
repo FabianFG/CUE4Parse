@@ -10,25 +10,22 @@ public partial class WwiseProvider
     // but we would need to add unnecessary handler for that, just extract from this data instead
     public List<WwiseExtractedSound> ExtractDialogBorderlands3(UDialogPerformanceData dialogPerfData)
     {
-        DetermineBaseWwiseAudioPath();
-
-        if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var location))
-            TryLoadAndCacheWwiseFile(location.Path, Path.GetFileNameWithoutExtension(location.Path), 0, out var _, loadFromFileSystem: !location.InProvider, isWemFile: true);
-
         var wemId = dialogPerfData.WwiseEventShortID.ToString();
         var fileName = dialogPerfData.WwiseExternalMediaTemplate is null ? wemId : $"{dialogPerfData.WwiseExternalMediaTemplate.Name} ({wemId})";
         var results = new List<WwiseExtractedSound>();
-        if (_wwiseEncodedMedia.TryGetValue(wemId, out var wemData))
+        if (_looseWemFilesLookup.TryGetValue(dialogPerfData.WwiseEventShortID, out var wemGameFile) | _wwiseEncodedMedia.TryGetValue(wemId, out var wemData))
         {
-            var outputPath = Path.Combine(_baseWwiseAudioPath, fileName);
+            var outputPath = Path.Combine(GetOwnerDirectory(dialogPerfData), fileName);
             if (outputPath.StartsWith('/'))
                 outputPath = outputPath[1..];
+
+            var data = wemGameFile is { IsValid: true } ? wemGameFile : wemData;
 
             results.Add(new WwiseExtractedSound
             {
                 OutputPath = outputPath.Replace('\\', '/'),
                 Extension = "wem",
-                Data = wemData,
+                Data = data,
             });
         }
 

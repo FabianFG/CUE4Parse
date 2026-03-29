@@ -26,7 +26,7 @@ public class AkBankSourceData
     public AkBankSourceData(FArchive Ar)
     {
         Plugin = WwisePlugin.GetPluginId(Ar);
-        SourceType = Ar.Read<EAKBKSourceType>();
+        SourceType = WwiseVersions.Version <= 89 ? (EAKBKSourceType)Ar.Read<uint>() : Ar.Read<EAKBKSourceType>();
 
         if (WwiseVersions.Version <= 46)
         {

@@ -12,24 +12,31 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
     private static readonly byte[] _xorKeyLong = [0x25, 0x00, 0xa8, 0x00, 0x7e, 0x00, 0x91, 0x00];
     private static readonly byte[] _xorKeyShort = [0x25, 0xa8, 0x7e, 0x91];
 
-    public static void DecryptData(byte[] data)
+    public static void DecryptData(byte[] data) => DecryptData(data.AsSpan(), _xorKeyShort);
+    public static void DecryptData(Span<byte> data, byte[] key)
     {
+        if (data.Length <= 4 && key.Length == 4) return;
         for (int i = 0; i < data.Length; i++)
         {
-            data[i] ^= _xorKeyShort[i & 0x3];
+            data[i] ^= key[i & key.Length - 1];
         }
     }
 
-    public override string ReadFString()
+    private string ReadAion2String(byte[]? xorKey = null)
     {
         var length = Read<int>();
-        if (length == 0) return string.Empty;
+        if (length == 0)
+            return string.Empty;
 
         var strLength = length > 0 ? length : -length * sizeof(ushort);
-        if (strLength > Length - Position) throw new ParserException($"Invalid FString length '{strLength}'");
+        if (strLength > Length - Position)
+            throw new ParserException($"Invalid string length '{strLength}'");
 
         Span<byte> strBuffer = strLength <= 1024 ? stackalloc byte[strLength] : new byte[strLength];
         ReadExactly(strBuffer);
+
+        if (xorKey is not null)
+            DecryptData(strBuffer, xorKey);
 
         if (length > 0)
         {
@@ -37,13 +44,12 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
         }
         else
         {
-            for (int i = 0; i < strBuffer.Length; i++)
-            {
-                strBuffer[i] ^= _xorKeyLong[i & 0x7];
-            }
+            if (xorKey is null) DecryptData(strBuffer, _xorKeyLong);
             return Encoding.Unicode.GetString(strBuffer[..^2]);
         }
     }
 
+    public string ReadL10NString() => ReadAion2String(_xorKeyShort);
+    public override string ReadFString() => ReadAion2String();
     public override FName ReadFName() => ReadFString();
 }

@@ -97,13 +97,13 @@ public class UsmapParser
         }
 
         var enumCount = Ar.Read<uint>();
-        var enums = new Dictionary<string, Dictionary<int, string>>((int) enumCount);
+        var enums = new Dictionary<string, Dictionary<long, string>>((int) enumCount);
         for (var i = 0; i < enumCount; i++)
         {
             var enumName = Ar.ReadName(nameLut)!;
 
             var enumNamesSize = Ar.Version >= EUsmapVersion.LargeEnums ? Ar.Read<ushort>() : Ar.Read<byte>();
-            var enumNames = new Dictionary<int, string>(enumNamesSize);
+            var enumNames = new Dictionary<long, string>(enumNamesSize);
 
             if (Ar.Version >= EUsmapVersion.ExplicitEnumValues)
             {

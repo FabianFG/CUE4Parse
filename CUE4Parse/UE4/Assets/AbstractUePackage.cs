@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -33,7 +32,7 @@ public abstract class AbstractUePackage : UObject, IPackage
         get
         {
             if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && Mappings is null)
-                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
+                throw new MappingException("Package has unversioned properties but mapping file is missing, can't serialize");
             return true;
         }
     }
@@ -98,7 +97,6 @@ public abstract class AbstractUePackage : UObject, IPackage
                     Log.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
                     break;
                 default:
-                    Log.Debug("Successfully read {0} at {1} with size {2}", obj.ExportType, serialOffset, serialSize);
                     break;
             }
 #endif

@@ -49,34 +49,44 @@ public class UDNAAsset : UObject
             if (!signature.SequenceEqual(_signature))
                 throw new InvalidDataException("Invalid file start signature");
 
-            Version = new DNAVersion(endianAr);
-            Sections = new SectionLookupTable(endianAr);
+            var version = new DNAVersion(endianAr);
+            // UE 5.5
+            if (Version.FileVersion < FileVersion.v24)
+            {
+                Version = version;
+                Sections = new SectionLookupTable(endianAr);
 
-            endianAr.Position = startPos + Sections.Descriptor;
-            Descriptor = new RawDescriptor(endianAr);
+                endianAr.Position = startPos + Sections.Descriptor;
+                Descriptor = new RawDescriptor(endianAr);
 
-            endianAr.Position = startPos + Sections.Definition;
-            Definition = new RawDefinition(endianAr);
+                endianAr.Position = startPos + Sections.Definition;
+                Definition = new RawDefinition(endianAr);
 
-            endianAr.Position = startPos + Sections.Behaviour;
-            Behavior = new RawBehavior(endianAr, Sections, startPos);
+                endianAr.Position = startPos + Sections.Behaviour;
+                Behavior = new RawBehavior(endianAr, Sections, startPos);
 
-            endianAr.Position = startPos + Sections.Geometry;
-            Geometry = new RawGeometry(endianAr);
+                endianAr.Position = startPos + Sections.Geometry;
+                Geometry = new RawGeometry(endianAr);
 
-            var eof = endianAr.ReadBytes(3);
-            if (!eof.SequenceEqual(_eof))
-                throw new InvalidDataException("Invalid end of file signature");
+                var eof = endianAr.ReadBytes(3);
+                if (!eof.SequenceEqual(_eof))
+                    throw new InvalidDataException("Invalid end of file signature");
 
-            startPos = endianAr.Position;
+                startPos = endianAr.Position;
 
-            signature = endianAr.ReadBytes(3);
-            if (!signature.SequenceEqual(_signature))
-                throw new InvalidDataException("Invalid layer start signature");
+                signature = endianAr.ReadBytes(3);
+                if (!signature.SequenceEqual(_signature))
+                    throw new InvalidDataException("Invalid layer start signature");
 
-            if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) return;
+                if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
+                    return;
 
-            LayerVersion = new DNAVersion(endianAr);
+                LayerVersion = new DNAVersion(endianAr);
+            }
+            else
+            {
+                LayerVersion = version;
+            }
             IndexTable = new IndexTable(endianAr);
 
             Layers = [];
@@ -84,32 +94,41 @@ public class UDNAAsset : UObject
             {
                 endianAr.Position = startPos + entry.Offset;
                 var layerStartPos = endianAr.Position;
-
-                Layers[entry.Id] = entry.Id switch
+                try
                 {
-                    "desc" => new RawDescriptor(endianAr),
-                    "defn" => new RawDefinition(endianAr),
-                    "bhvr" => new RawBehavior(endianAr),
-                    "geom" => new RawGeometry(endianAr),
-                    "mlbh" => new RawMachineLearnedBehavior(endianAr),
-                    "rbfb" => new RawRBFBehavior(endianAr),
-                    "rbfe" => new RawRBFBehaviorExt(endianAr),
-                    "jbmd" => new RawJointBehaviorMetadata(endianAr),
-                    "twsw" => new RawTwistSwingBehavior(endianAr),
-                    _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
-                };
-
-                var readSize = endianAr.Position - layerStartPos;
-                var remaining = entry.Size - readSize;
-
-                switch (remaining)
+                    Layers[entry.Id] = entry.Id switch
+                    {
+                        "desc" => new RawDescriptor(endianAr),
+                        "defn" => new RawDefinition(endianAr),
+                        "bhvr" => new RawBehavior(endianAr),
+                        "geom" => new RawGeometry(endianAr),
+                        "mlbh" => new RawMachineLearnedBehavior(endianAr),
+                        "rbfb" => new RawRBFBehavior(endianAr),
+                        "rbfe" => new RawRBFBehaviorExt(endianAr),
+                        "jbmd" => new RawJointBehaviorMetadata(endianAr),
+                        "twsw" => new RawTwistSwingBehavior(endianAr),
+                        _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
+                    };
+                }
+                catch (Exception e)
                 {
-                    case > 0:
-                        Log.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
-                        break;
-                    case < 0:
-                        Log.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
-                        break;
+                    Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
+                }
+                finally
+                {
+                    var readSize = endianAr.Position - layerStartPos;
+                    var remaining = entry.Size - readSize;
+                    endianAr.Position = layerStartPos + entry.Size;
+
+                    switch (remaining)
+                    {
+                        case > 0:
+                            Log.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
+                            break;
+                        case < 0:
+                            Log.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
+                            break;
+                    }
                 }
             }
         }

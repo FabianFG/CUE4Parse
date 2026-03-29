@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
@@ -27,6 +28,11 @@ public class UDataTable : UObject
                 RowStructName = ptr.Name;
                 ptr.TryLoad<UStruct>(out rowStruct);
             }
+            else
+            {
+                Log.Warning("Can't find or load RowStruct type to serialize DataTable");
+                return;
+            }
         }
 
         var numRows = Ar.Read<int>();
@@ -41,6 +47,7 @@ public class UDataTable : UObject
         {
             var DataTableName = Ar.ReadFString();
             var MetaData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadMap(Ar.ReadFName, Ar.ReadFString));
+            CustomGameData = (Name: DataTableName, Metadata: MetaData);
         }
     }
 

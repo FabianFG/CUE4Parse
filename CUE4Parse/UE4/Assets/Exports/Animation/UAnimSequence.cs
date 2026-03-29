@@ -77,7 +77,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsEditorDataStripped())
             {
-                RawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
+                if (Ar.Ver > EUnrealEngineObjectUE3Version.NATIVE_RAWANIMDATA_SERIALIZATION)
+                {
+                    RawAnimationData = Ar.ReadArray(() => new FRawAnimSequenceTrack(Ar));
+                }
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.ANIMATION_ADD_TRACKCURVES)
                 {
                     if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovingSourceAnimationData)
@@ -340,6 +343,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // FUECompressedAnimData. We'll use a different name for "joined" serialized array here to
             // avoid confuse.
             byte[] serializedByteStream;
+
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            {
+                Ar.Position += 16;
+                numBytes -= 16;
+            }
 
             if (bUseBulkDataForLoad)
             {

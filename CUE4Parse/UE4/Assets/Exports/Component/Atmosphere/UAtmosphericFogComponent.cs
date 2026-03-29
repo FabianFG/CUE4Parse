@@ -19,16 +19,10 @@ public class UAtmosphericFogComponent : USkyAtmosphereComponent
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.ATMOSPHERIC_FOG_CACHE_DATA)
             {
                 TempTransmittanceData = new FByteBulkData(Ar);
-                if (TempTransmittanceData.Header.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-                    Ar.Position += TempTransmittanceData.Header.SizeOnDisk;
                 TempIrradianceData = new FByteBulkData(Ar);
-                if (TempIrradianceData.Header.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-                    Ar.Position += TempIrradianceData.Header.SizeOnDisk;
             }
 
             TempInscatterData = new FByteBulkData(Ar);
-            if (TempInscatterData.Header.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-                Ar.Position += TempInscatterData.Header.SizeOnDisk;
             CounterVal = Ar.Read<int>();
 
             //	TransformMode = ESkyAtmosphereTransformMode::PlanetTopAtComponentTransform;
