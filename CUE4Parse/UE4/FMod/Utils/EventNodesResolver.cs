@@ -15,18 +15,22 @@ public static class EventNodesResolver
     {
         var result = new Dictionary<FModGuid, List<FmodSample>>();
         int totalExpected = reader.WavEntries.Count;
-        int totalResolved = 0;
-        foreach (var (eventGuid, evNode) in reader.EventNodes)
-        {
-            var samples = ResolveEventNodesWithAudio(reader, evNode, ref totalResolved);
-            result[eventGuid] = samples ?? []; // If empty we will handle it in the provider
-        }
 
-        allWaveformsResolved = totalExpected == totalResolved;
+        result = reader.EventNodes.ToDictionary(
+            kvp => kvp.Key,
+            kvp => ResolveEventNodesWithAudio(reader, kvp.Value) // If empty we will handle it in the provider
+        );
+
+        int totalUniqueResolved = result.Values
+            .SelectMany(samples => samples)
+            .Distinct()
+            .Count();
+
+        allWaveformsResolved = totalExpected == totalUniqueResolved;
         return result;
     }
 
-    private static List<FmodSample> ResolveEventNodesWithAudio(FModReader reader, EventNode evNode, ref int resolvedCount)
+    private static List<FmodSample> ResolveEventNodesWithAudio(FModReader reader, EventNode evNode)
     {
         var result = new HashSet<FmodSample>();
         var visited = new HashSet<FModGuid>();
@@ -129,7 +133,6 @@ public static class EventNodesResolver
                         entry.SubsoundIndex < reader.SoundBankData[entry.SoundBankIndex].Samples.Count)
                     {
                         result.Add(reader.SoundBankData[entry.SoundBankIndex].Samples[entry.SubsoundIndex]);
-                        resolvedCount++;
                     }
                 }
             }

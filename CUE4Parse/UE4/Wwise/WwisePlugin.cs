@@ -80,7 +80,7 @@ public class WwisePlugin
                     EAkPluginId.ControllerSpeakerSink or EAkPluginId.AuxiliarySink or EAkPluginId.NoOutputSink or
                     EAkPluginId.RemoteSystemSink => new CAkDefaultSinkParams(),
 
-                // EAkPluginId.AkSoundSeedGrainSrc
+                EAkPluginId.AkSoundSeedGrain => new CAkGranularSynthParams(Ar),
                 EAkPluginId.AkImpacterSource => new CAkImpacterParams(Ar),
                 EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
                 EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),

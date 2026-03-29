@@ -2,12 +2,7 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
-public class FModel
+public class FModel(FMutableArchive Ar)
 {
-    public FProgram Program;
-    
-    public FModel(FMutableArchive Ar)
-    {
-        Program = new FProgram(Ar);
-    }
+    public FProgram Program = new(Ar);
 }

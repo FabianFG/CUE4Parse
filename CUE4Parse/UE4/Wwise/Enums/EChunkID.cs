@@ -15,4 +15,5 @@ public enum EChunkID : uint
     FXPR = 0x52505846, // FX Parameters
     BankCustomPlatformName = 0x54414C50, // Custom Platform
     PLUGIN = 0x47554C50,
+    MIDI = 0x4944494d,
 }

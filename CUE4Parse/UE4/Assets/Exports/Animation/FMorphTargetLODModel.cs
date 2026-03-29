@@ -1,3 +1,4 @@
+using System.Linq;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -59,6 +60,26 @@ public class FMorphTargetLODModel
                 EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope)
             {
                 Vertices = FDPAMorphTargetDeltaBatchData.ProcessDPAMorphTargetDeltas(Ar);
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            {
+                var buffer = Ar.ReadArray<ulong>();
+                Vertices = new FMorphTargetDelta[buffer.Length];
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    ulong v = buffer[i];
+                    var pos = (uint) (v & 0xFFFFFF);
+                    var tan = (uint) ((v >> 24) & 0x1FFFF);
+                    var vert = (uint) (v >> 45);
+                    var posvec = new FVector((sbyte) (pos & 0xff), (sbyte) ((pos >> 8) & 0xff), (sbyte) ((pos >> 16) & 0xff)) / 127.5f;
+                    var tanvec = new FVector((sbyte) (tan & 0x7f), (sbyte) ((tan >> 7) & 0x7f), (sbyte) ((tan >> 14) & 0x7f)) / 63.5f;
+                    Vertices[i] = new FMorphTargetDelta(posvec, tanvec, vert);
+                }
+                NumBaseMeshVerts = Ar.Read<int>();
                 SectionIndices = Ar.ReadArray<int>();
                 bGeneratedByEngine = Ar.ReadBoolean();
                 return;
@@ -127,5 +148,47 @@ public class FMorphTargetLODModel
                 Vertices[k++] = new FMorphTargetDelta(pos, tan, delta.Index);
             }
         }
+    }
+
+    public FMorphTargetLODModel(int[] sectionIndices, FDeltaBatchHeader[] batchHeaders, uint[] compressedVertices, float positionPrecision, float tangentZPrecision)
+    {
+        SectionIndices = sectionIndices;
+        bGeneratedByEngine = false;
+        
+        var numDeltas = batchHeaders.Sum(header => (int)header.NumElements);
+        
+        Vertices = new FMorphTargetDelta[numDeltas];
+        NumBaseMeshVerts = numDeltas;
+
+        var index = 0;
+        using var reader = new FDwordBitReader(compressedVertices);
+
+        foreach (var header in batchHeaders)
+        {
+            for (var elementIndex = 0; elementIndex < header.NumElements; elementIndex++)
+            {
+                Vertices[index++] = DecodeMorphTargetDelta(header, reader, (uint)elementIndex, positionPrecision, tangentZPrecision);
+            }
+        }
+    }
+
+    private FMorphTargetDelta DecodeMorphTargetDelta(FDeltaBatchHeader header, FDwordBitReader reader, uint localIndex, float positionPrecision, float tangentZPrecision)
+    {
+        var sourceIdx = reader.GetBits((uint)header.IndexBits) + header.IndexMin + localIndex;
+        var positionDelta = new FVector(
+            ((int)reader.GetBits((uint)header.PositionBits.X) + header.PositionMin.X) * positionPrecision,
+            ((int)reader.GetBits((uint)header.PositionBits.Y) + header.PositionMin.Y) * positionPrecision,
+            ((int)reader.GetBits((uint)header.PositionBits.Z) + header.PositionMin.Z) * positionPrecision);
+
+        var tangentZDelta = new FVector();
+        if (header.bTangents)
+        {
+            tangentZDelta = new FVector(
+                ((int)reader.GetBits((uint)header.TangentZBits.X) + header.TangentZMin.X) * tangentZPrecision,
+                ((int)reader.GetBits((uint)header.TangentZBits.Y) + header.TangentZMin.Y) * tangentZPrecision,
+                ((int)reader.GetBits((uint)header.TangentZBits.Z) + header.TangentZMin.Z) * tangentZPrecision);
+        }
+        
+        return new FMorphTargetDelta(positionDelta, tangentZDelta, sourceIdx);
     }
 }

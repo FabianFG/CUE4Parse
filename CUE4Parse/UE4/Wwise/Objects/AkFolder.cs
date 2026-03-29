@@ -10,7 +10,6 @@ public class AkFolder
     public readonly uint Offset;
     public readonly uint Id;
     public string? Name;
-    public AkEntry[] Entries = [];
 
     public AkFolder(FArchive Ar)
     {

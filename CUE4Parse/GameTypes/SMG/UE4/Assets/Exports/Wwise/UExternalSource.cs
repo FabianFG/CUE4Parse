@@ -20,7 +20,7 @@ public class UExternalSource : UObject
         if (GetOrDefault<byte[]>(nameof(Data)) is { } data)
         {
             using var byteAr = new FByteArchive(ExternalSourcePath, data, Ar.Versions);
-            Data = new WwiseReader(byteAr);
+            Data = new WwiseReader(byteAr, new WwiseArchiveSource());
         }
         FileHashString = GetOrDefault<string>(nameof(FileHashString));
     }
