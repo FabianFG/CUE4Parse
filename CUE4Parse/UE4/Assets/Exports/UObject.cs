@@ -407,7 +407,7 @@ public class UObject : AbstractPropertyHolder
         else if (Owner is not null)
         {
             writer.WritePropertyName("Package");
-            serializer.Serialize(writer, Owner.Name);
+            writer.WriteValue(Owner.Name);
         }
 
         if (Super != null)
