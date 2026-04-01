@@ -1,5 +1,6 @@
 using System;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -7,13 +8,16 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 
 public class FImage
 {
+    [JsonIgnore] public int Version = 4;
     public FImageDataStorage DataStorage;
     public EImageFlags Flags;
     
     public FImage(FMutableArchive Ar)
     {
-        DataStorage = new FImageDataStorage(Ar);
-        Flags = (EImageFlags)Ar.Read<byte>();
+        if (Ar.Game >= EGame.GAME_UE5_6) Version = Ar.Read<int>();
+
+        DataStorage = new FImageDataStorage(Ar, Version);
+        Flags = (EImageFlags) Ar.Read<byte>();
     }
 }
 

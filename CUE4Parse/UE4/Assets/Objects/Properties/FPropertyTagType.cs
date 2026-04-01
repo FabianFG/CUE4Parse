@@ -74,6 +74,10 @@ public abstract class FPropertyTagType
                 if (softObjProp.Value.TryLoad(out var softExport) && type.IsInstanceOfType(softExport))
                     return softExport;
                 return null;
+            case FPropertyTagType<FSoftObjectPath> softObjProp when typeof(ResolvedObject).IsAssignableFrom(type):
+                if (softObjProp.Value!.TryLoad(out var loadedObject))
+                    return new ResolvedLoadedObject(loadedObject);
+                return null;
             case EnumProperty enumProp when type.IsEnum:
                 var storedEnum = enumProp.Value.Text;
                 var search = storedEnum.SubstringAfter("::"); // Strip enum name on namespaced and enum class enums

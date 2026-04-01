@@ -56,7 +56,7 @@ public class HierarchyEventAction : AbstractHierarchy
             (EAkActionType.Pause, _) => new CAkActionPause(Ar),
             (EAkActionType.Break or
                 EAkActionType.Trigger, < 150) => new CAkActionBypassFX(Ar),
-            (EAkActionType.SetBypassEffectSlot, _) => new CAkActionBypassFX(Ar),
+            (EAkActionType.SetBypassEffectSlot or EAkActionType.SetBypassAllEffects, _) => new CAkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };

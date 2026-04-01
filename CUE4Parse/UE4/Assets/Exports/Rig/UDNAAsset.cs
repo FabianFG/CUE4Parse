@@ -13,13 +13,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Rig;
 public class UDNAAsset : UObject
 {
     public DNAVersion Version;
-    public SectionLookupTable Sections;
-    public RawDescriptor Descriptor;
-    public RawDefinition Definition;
-    public RawBehavior Behavior;
-    public RawGeometry Geometry;
     public DNAVersion LayerVersion;
-    public IndexTable IndexTable;
+    public Dictionary<string, IRawBase> Sections;
     public Dictionary<string, IRawBase> Layers;
     public Lazy<byte[]>? DNAData;
     public string DnaFileName;
@@ -36,9 +31,10 @@ public class UDNAAsset : UObject
         if (FDNAAssetCustomVersion.Get(Ar) >= FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {
             dnaStartPos = Ar.Position;
-            DNAData = new Lazy<byte[]>(() => {
+            DNAData = new Lazy<byte[]>(() =>
+            {
                 Ar.Position = dnaStartPos;
-                return Ar.ReadBytes((int)(validPos - dnaStartPos));
+                return Ar.ReadBytes((int) (validPos - dnaStartPos));
             });
 
             Ar.Position = dnaStartPos;
@@ -49,72 +45,75 @@ public class UDNAAsset : UObject
             if (!signature.SequenceEqual(_signature))
                 throw new InvalidDataException("Invalid file start signature");
 
-            var version = new DNAVersion(endianAr);
-            // UE 5.5
+            Version = new DNAVersion(endianAr);
+#if DEBUG
+            Log.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
+#endif
             if (Version.FileVersion < FileVersion.v24)
             {
-                Version = version;
-                Sections = new SectionLookupTable(endianAr);
-
-                endianAr.Position = startPos + Sections.Descriptor;
-                Descriptor = new RawDescriptor(endianAr);
-
-                endianAr.Position = startPos + Sections.Definition;
-                Definition = new RawDefinition(endianAr);
-
-                endianAr.Position = startPos + Sections.Behaviour;
-                Behavior = new RawBehavior(endianAr, Sections, startPos);
-
-                endianAr.Position = startPos + Sections.Geometry;
-                Geometry = new RawGeometry(endianAr);
+                var sectionLookupTable = new SectionLookupTable(endianAr);
+                var indexTable = new IndexTable(sectionLookupTable, Version);
+                if (!ReadLayers(endianAr, indexTable, startPos, out Sections, false))
+                    return;
 
                 var eof = endianAr.ReadBytes(3);
                 if (!eof.SequenceEqual(_eof))
                     throw new InvalidDataException("Invalid end of file signature");
 
-                startPos = endianAr.Position;
-
-                signature = endianAr.ReadBytes(3);
-                if (!signature.SequenceEqual(_signature))
-                    throw new InvalidDataException("Invalid layer start signature");
-
                 if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
                     return;
-
-                LayerVersion = new DNAVersion(endianAr);
             }
             else
             {
-                LayerVersion = version;
+                var indexTable = new IndexTable(endianAr);
+                if (!ReadLayers(endianAr, indexTable, startPos, out Sections))
+                    return;
             }
-            IndexTable = new IndexTable(endianAr);
 
-            Layers = [];
-            foreach (var entry in IndexTable.Entries)
+            startPos = endianAr.Position;
+
+            signature = endianAr.ReadBytes(3);
+            if (!signature.SequenceEqual(_signature))
+                throw new InvalidDataException("Invalid layer start signature");
+
+            LayerVersion = new DNAVersion(endianAr);
+            var layersIndexTable = new IndexTable(endianAr);
+            ReadLayers(endianAr, layersIndexTable, startPos, out Layers);
+        }
+    }
+
+    private bool ReadLayers(FArchiveBigEndian endianAr, IndexTable indexTable, long startPos, out Dictionary<string, IRawBase> layers, bool validateSizes = true)
+    {
+        bool result = true;
+        layers = new Dictionary<string, IRawBase>(indexTable.Entries.Length);
+        foreach (var entry in indexTable.Entries)
+        {
+            endianAr.Position = startPos + entry.Offset;
+            var layerStartPos = endianAr.Position;
+            try
             {
-                endianAr.Position = startPos + entry.Offset;
-                var layerStartPos = endianAr.Position;
-                try
+                layers[entry.Id] = entry.Id switch
                 {
-                    Layers[entry.Id] = entry.Id switch
-                    {
-                        "desc" => new RawDescriptor(endianAr),
-                        "defn" => new RawDefinition(endianAr),
-                        "bhvr" => new RawBehavior(endianAr),
-                        "geom" => new RawGeometry(endianAr),
-                        "mlbh" => new RawMachineLearnedBehavior(endianAr),
-                        "rbfb" => new RawRBFBehavior(endianAr),
-                        "rbfe" => new RawRBFBehaviorExt(endianAr),
-                        "jbmd" => new RawJointBehaviorMetadata(endianAr),
-                        "twsw" => new RawTwistSwingBehavior(endianAr),
-                        _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
-                    };
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
-                }
-                finally
+                    "desc" => new RawDescriptor(endianAr),
+                    "defn" => new RawDefinition(endianAr),
+                    "bhvr" => new RawBehavior(endianAr),
+                    "geom" => new RawGeometry(endianAr),
+                    "mlbh" => new RawMachineLearnedBehavior(endianAr),
+                    "rbfb" => new RawRBFBehavior(endianAr),
+                    "rbfe" => new RawRBFBehaviorExt(endianAr),
+                    "jbmd" => new RawJointBehaviorMetadata(endianAr),
+                    "twsw" => new RawTwistSwingBehavior(endianAr),
+                    _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
+                };
+            }
+            catch (Exception e)
+            {
+                result = false;
+                Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
+            }
+            finally
+            {
+                if (validateSizes)
                 {
                     var readSize = endianAr.Position - layerStartPos;
                     var remaining = entry.Size - readSize;
@@ -132,6 +131,8 @@ public class UDNAAsset : UObject
                 }
             }
         }
+
+        return result;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -141,8 +142,11 @@ public class UDNAAsset : UObject
         writer.WritePropertyName(nameof(Version));
         serializer.Serialize(writer, Version);
 
-        writer.WritePropertyName(nameof(Descriptor));
-        serializer.Serialize(writer, Descriptor);
+        if (Sections.TryGetValue("desc", out var descriptor))
+        {
+            writer.WritePropertyName("Descriptor");
+            serializer.Serialize(writer, descriptor);
+        }
 
         //writer.WritePropertyName("Definition");
         //serializer.Serialize(writer, Definition);
