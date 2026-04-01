@@ -15,6 +15,7 @@ public class FReferenceSkeleton
 
     public FReferenceSkeleton(FAssetArchive Ar)
     {
+        FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
         if (Ar.Game < EGame.GAME_UE4_0)
         {
             FinalRefBonePose = new FTransform[FinalRefBoneInfo.Length];
@@ -25,7 +26,6 @@ public class FReferenceSkeleton
         }
         else
         {
-            FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
             FinalRefBonePose = Ar.ReadArray(() => new FTransform(Ar));
         }
 
