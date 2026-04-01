@@ -8,9 +8,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 public readonly struct FSingleAnimationPlayData : IUStruct
 {
     public readonly FPackageIndex AnimToPlay;
+    public readonly float SavedPosition;
+    public readonly float SavedPlayRate;
 
     public FSingleAnimationPlayData(FStructFallback fallback)
     {
         AnimToPlay = fallback.GetOrDefault(nameof(AnimToPlay), new FPackageIndex());
+        SavedPosition = fallback.GetOrDefault(nameof(SavedPosition), 0f);
+        SavedPlayRate = fallback.GetOrDefault(nameof(SavedPlayRate), 1f);
     }
 }
