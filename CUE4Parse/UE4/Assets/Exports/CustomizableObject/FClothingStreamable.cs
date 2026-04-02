@@ -1,14 +1,13 @@
-﻿using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
-public readonly struct FClothingStreamable
+public readonly struct FClothingStreamable(FArchive Ar)
 {
-    public readonly int ClothingAssetIndex;
-    public readonly int ClothingAssetLod;
-    public readonly int PhysicsAssetIndex;
-    public readonly uint Size;
-    public readonly FMutableStreamableBlock Block;
-    public readonly uint SourceId;
+    public readonly int ClothingAssetIndex = Ar.Read<int>();
+    public readonly int ClothingAssetLod = Ar.Read<int>();
+    public readonly int PhysicsAssetIndex = Ar.Read<int>();
+    public readonly uint Size = Ar.Read<uint>();
+    public readonly FMutableStreamableBlock Block = new FMutableStreamableBlock(Ar);
+    public readonly uint SourceId = Ar.Read<uint>();
 }

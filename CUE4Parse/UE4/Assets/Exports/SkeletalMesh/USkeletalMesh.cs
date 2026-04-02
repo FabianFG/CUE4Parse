@@ -109,6 +109,18 @@ public partial class USkeletalMesh : UObject
                     LODModels = LODModels.Concat(fallbackLODModels).ToArray();
                 }
 
+                if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+                {
+                    foreach (var lod in LODModels)
+                    {
+                        for (int i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
+                        {
+                            var vert = lod.VertexBufferGPUSkin.VertsFloat[i];
+                            vert.Pos = ImportedBounds.BoxExtent * vert.Pos + ImportedBounds.Origin;
+                        }
+                    }
+                }
+
                 if (Ar.Game >= EGame.GAME_UE5_5)
                 {
                     NaniteResources = new FNaniteResources(Ar);

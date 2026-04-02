@@ -565,10 +565,10 @@ public class FStaticLODModel
         }
     }
 
-    private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyDataStripped)
+    private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyData)
     {
         var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32 
-        if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && !bAdjacencyDataStripped)
+        if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && bAdjacencyData)
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
         bytesToSkip += 4 * 4; // FStaticMeshVertexBuffer::SerializeMetaData 2x uint32 + 2x bool
@@ -582,12 +582,12 @@ public class FStaticLODModel
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData
-            
-            var clothIndexMapping = Ar.ReadArray<long>(); // TArray<FClothBufferIndexMapping>
+            var num = Ar.Read<int>();
+            Ar.Position += num * sizeof(ulong); // TArray<FClothBufferIndexMapping>
             Ar.Position += 2 * 4; // 2x uint32
             if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias)
             {
-                Ar.Position += 4 * clothIndexMapping.Length;
+                Ar.Position += 4 * num;
             }
         }
 
@@ -597,7 +597,7 @@ public class FStaticLODModel
         {
             Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
         }
-        if (Ar.Game is EGame.GAME_MyHeroUltraRumble) Ar.Position += 5;
+        if (Ar.Game is EGame.GAME_MyHeroUltraRumble or EGame.GAME_RocoKingdomWorld) Ar.Position += 5;
     }
 
     public bool HasClothData()

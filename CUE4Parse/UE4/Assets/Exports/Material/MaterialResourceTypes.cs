@@ -627,7 +627,6 @@ public class FUniformExpressionSet
             UniformScalarPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
             UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
             UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
-            UniformTextureParameters = new FMaterialTextureParameterInfo[5][];
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
@@ -636,6 +635,7 @@ public class FUniformExpressionSet
         VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
         if (Ar.Game >= EGame.GAME_UE5_7 || Ar.Game is EGame.GAME_FateTrigger) MaterialCacheTagStacks = Ar.ReadArray<FMaterialCacheTagStack>();
         ParameterCollections = Ar.ReadArray<FGuid>();
+        if (Ar.Game is EGame.GAME_HogwartsLegacy) Ar.Position += 168;
         UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
         //if (Ar.Game >= EGame.GAME_UE5_8) CompactUniformsVSOptional = Ar.ReadArray(() => new FCompactUniformExpressionSet(Ar));
     }
@@ -980,6 +980,8 @@ public class FMaterialPreshaderData
         {
             NamesOffset = Ar.ReadArray<uint>();
         }
+
+        if (Ar.Game is EGame.GAME_HogwartsLegacy) Ar.Position += 96;
 
         Data = Ar.ReadArray<byte>();
     }
@@ -1339,6 +1341,11 @@ public class FMaterialShaderMapId
             QualityLevel = Ar.Game >= EGame.GAME_UE5_2 ? (EMaterialQualityLevel) Ar.Read<byte>() : (EMaterialQualityLevel) Ar.Read<int>();//changed to byte in FN 23.20
             FeatureLevel = (ERHIFeatureLevel) Ar.Read<int>();
             if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            {
+                (QualityLevel, FeatureLevel) = ((EMaterialQualityLevel) FeatureLevel, (ERHIFeatureLevel) QualityLevel);
+                Ar.Position += 16;
+            }
         }
         else
         {

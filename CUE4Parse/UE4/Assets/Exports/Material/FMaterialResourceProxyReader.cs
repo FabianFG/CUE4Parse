@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -33,7 +34,8 @@ public class FMaterialResourceProxyReader : FArchive
             _nameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
             var num = Ar.Read<int>();
             Ar.Position += num * Unsafe.SizeOf<FMaterialResourceLocOnDisk>(); // Locs
-            if (Ar.Game is UE4.Versions.EGame.GAME_ArenaBreakoutInfinite) Ar.Position += num;
+            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += num;
+            if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += num * 5;
             Ar.Position += 4; // NumBytes
         }
     }

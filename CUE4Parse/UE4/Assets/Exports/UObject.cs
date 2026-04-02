@@ -399,10 +399,15 @@ public class UObject : AbstractPropertyHolder
             writer.WriteValue(clas.GetFullName());
         }
 
-        if (Outer != null && Outer is not ResolvedPackageObject)
+        if (Outer is not null && Outer is not ResolvedPackageObject)
         {
             writer.WritePropertyName(nameof(Outer));
             serializer.Serialize(writer, Outer);
+        }
+        else if (Owner is not null)
+        {
+            writer.WritePropertyName("Package");
+            writer.WriteValue(Owner.Name);
         }
 
         if (Super != null)
