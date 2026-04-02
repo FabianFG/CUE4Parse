@@ -55,7 +55,7 @@ public class IoStoreOnDemandOptions
     public Uri ChunkHostUri { get; set; }
     public DirectoryInfo ChunkCacheDirectory { get; set; }
     public AuthenticationHeaderValue? Authorization { get; set; }
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(120);
 
     public bool UseAuth => Authorization != null;
 }
