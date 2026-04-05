@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -32,9 +33,22 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     public abstract byte[] MountPointCheckBytes();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TestAesKey(byte[] bytes, FAesKey key)
+    protected bool TestAesKey(byte[] bytes, FAesKey key)
     {
-        return IsValidIndex(bytes.Decrypt(key));
+        byte[] result;
+        if (CustomEncryption != null)
+        {
+            var backupKey = AesKey;
+            AesKey = key;
+            try { result = CustomEncryption(bytes, 0, bytes.Length, true, this); }
+            finally { AesKey = backupKey; } 
+        }
+        else
+        {
+            result = bytes.Decrypt(key);
+        }
+
+        return IsValidIndex(result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
