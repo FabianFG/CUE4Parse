@@ -57,7 +57,7 @@ public class CMaterialParams2
             "Primary Base Color", "BaseColor_NonVT", "L0_B/BM", "B/BM", "NRO_Base_Color","BaeColor_Tex", "Layer00_BaseColor_Tex","01. Diffuse Texture",
             "BaseMap", "Tex_SkinBase_BC", "Tex_Core_Layer_Albedo", "BC_Texture", "RGBMap", "RGB_Map", "MW_TextureBaseColor", "Texture", "ColorOpacity",
             "Simple_BaseColor_Texture", "AlbedoTexture", "Albedo Texture", "BC_LUT", "BCO", "CR", "C/R" /*Finals*/, "BaseColor_Tex(a:mask)", "Base Color Map VT",
-            "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
+            "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "Opaque Texture", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
             "Base Color [Standard]", "Base Color VT",
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
