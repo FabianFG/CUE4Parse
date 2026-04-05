@@ -608,7 +608,6 @@ public class FStaticLODModel
         {
             Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader
         }
-        if (Ar.Game is EGame.GAME_MyHeroUltraRumble or EGame.GAME_RocoKingdomWorld) Ar.Position += 5;
     }
 
     public bool HasClothData()
