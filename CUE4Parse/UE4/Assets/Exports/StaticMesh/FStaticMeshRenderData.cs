@@ -140,6 +140,21 @@ public class FStaticMeshRenderData
 
         Bounds = new FBoxSphereBounds(Ar);
 
+        if (Ar.Game == EGame.GAME_RocoKingdomWorld)
+        {
+            foreach (var lod in LODs)
+            {
+                if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8) continue;
+                if (lod.PositionVertexBuffer?.Verts == null) continue;
+
+                var verts = lod.PositionVertexBuffer.Verts;
+                for (var i = 0; i < verts.Length; i++)
+                {
+                    verts[i] =  verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                }
+            }
+        }
+
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
             if (Ar.Game is >= EGame.GAME_UE5_6 or EGame.GAME_GrayZoneWarfare or EGame.GAME_HighOnLife2)
