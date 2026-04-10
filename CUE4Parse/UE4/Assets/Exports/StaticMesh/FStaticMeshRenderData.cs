@@ -190,8 +190,14 @@ public class FStaticMeshRenderData
         ScreenSize = new float[screenSizeLength];
         for (var i = 0; i < ScreenSize.Length; ++i)
         {
-            var screenSize = new FPerPlatformFloat(Ar);
-            ScreenSize[i] = screenSize.Value;
+            if (Ar.Game >= EGame.GAME_UE4_20)
+            {
+                ScreenSize[i] = new FPerPlatformFloat(Ar).Value;
+            }
+            else
+            {
+                ScreenSize[i] = Ar.Read<float>();
+            }
 
             if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position += 8;
             if (Ar.Game == EGame.GAME_VisionsofMana) Ar.Position += 4;
