@@ -72,6 +72,21 @@ public static class FRigVMObjectVersion
         // The VM stores a relative seek offset to be able to skip the registry during load
         LocalizedRegistryWithRelativeSeekOffset,
 
+        // Function arguments can now represent an input variable (an external variable passed into a function)
+        FunctionArgumentCanRepresentInputVariable,
+
+        // Object archive is now storing the version container
+        ObjectArchiveVersionContainerSerialization,
+
+        // Debug operand mapping simplified and moved to context only
+        DebugOperandMappingSimplified,
+
+        // Introduction of callables to the rigvm bytecode
+        RigVMCallables,
+
+        // Referencing variables through Guids
+        GuidForVariables,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
