@@ -1,0 +1,79 @@
+﻿using System.Collections.Generic;
+using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Writers;
+
+namespace CUE4Parse_Conversion.V2.Formats.Meshes;
+
+public sealed class ActorXMeshFormat : IMeshExportFormat
+{
+    public string DisplayName => "ActorX (psk / pskx)";
+
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh, FPackageIndex[] sockets)
+    {
+        var results = new List<ExportFile>();
+        var lodIdx = 0;
+
+        for (var i = 0; i < convertedMesh.LODs.Count; i++)
+        {
+            var lod = convertedMesh.LODs[i];
+            if (lod.SkipLod) continue;
+
+            using var ar = new FArchiveWriter();
+            new ActorXMesh(
+                lod,
+                convertedMesh.RefSkeleton,
+                materialExports: null,   // materials are queued via ExportSession, not collected here
+                options.ExportMorphTargets ? originalMesh.MorphTargets : null,
+                sockets,
+                lodIndex: i,
+                options
+            ).Save(ar);
+
+            var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
+            results.Add(new ExportFile(lod.NumVerts > 65536 ? "pskx" : "psk", ar.GetBuffer(), suffix));
+            lodIdx++;
+
+            if (options.LodFormat == ELodFormat.FirstLod) break;
+        }
+
+        return results;
+    }
+
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, UStaticMesh originalMesh, CStaticMesh convertedMesh)
+    {
+        var results = new List<ExportFile>();
+        var lodIdx = 0;
+
+        foreach (var lod in convertedMesh.LODs)
+        {
+            if (lod.SkipLod) continue;
+
+            using var ar = new FArchiveWriter();
+            new ActorXMesh(lod, materialExports: null, originalMesh.Sockets, options).Save(ar);
+
+            var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
+            results.Add(new ExportFile("pskx", ar.GetBuffer(), suffix));
+            lodIdx++;
+
+            if (options.LodFormat == ELodFormat.FirstLod) break;
+        }
+
+        return results;
+    }
+
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, USkeleton skeleton)
+    {
+        if (!skeleton.TryConvert(out var bones, out _) || bones.Count == 0)
+            return [];
+
+        using var ar = new FArchiveWriter();
+        new ActorXMesh(bones, skeleton.Sockets, options).Save(ar);
+        return [new ExportFile("pskx", ar.GetBuffer())];
+    }
+}
+

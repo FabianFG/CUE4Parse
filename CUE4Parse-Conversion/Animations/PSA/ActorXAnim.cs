@@ -4,35 +4,28 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Animations.PSA;
 
-public class ActorXAnim
+public sealed class ActorXAnim()
 {
-    private FArchiveWriter Ar;
-    private readonly ExporterOptions Options;
-    
-    public ActorXAnim(ExporterOptions options)
-    {
-        Options = options;
-        Ar = new FArchiveWriter();
-    }
+    private readonly FArchiveWriter _archive = new();
 
-    public ActorXAnim(CAnimSet anim, int seqIdx, ExporterOptions options) : this(options)
+    public ActorXAnim(CAnimSet anim, int seqIdx) : this()
     {
         DoExportPsa(anim, seqIdx);
     }
-    
+
     public void Save(FArchiveWriter archive)
     {
-        archive.Write(Ar.GetBuffer());
+        archive.Write(_archive.GetBuffer());
     }
-    
+
     private void DoExportPsa(CAnimSet anim, int seqIdx)
     {
         var mainHdr = new VChunkHeader { TypeFlag = Constants.PSA_VERSION };
-        Ar.SerializeChunkHeader(mainHdr, "ANIMHEAD");
+        _archive.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
         var numBones = anim.Skeleton.BoneCount;
         var boneHdr = new VChunkHeader { DataCount = numBones, DataSize = Constants.FNamedBoneBinary_SIZE };
-        Ar.SerializeChunkHeader(boneHdr, "BONENAMES");
+        _archive.SerializeChunkHeader(boneHdr, "BONENAMES");
         for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
         {
             var boneInfo = anim.Skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex];
@@ -51,12 +44,12 @@ public class ActorXAnim
                     Length = 1.0f
                 }
             };
-            bone.Serialize(Ar);
+            bone.Serialize(_archive);
         }
 
         var sequence = anim.Sequences[seqIdx];
         var animHdr = new VChunkHeader { DataCount = 1, DataSize = Constants.ANIM_INFO_SIZE };
-        Ar.SerializeChunkHeader(animHdr, "ANIMINFO");
+        _archive.SerializeChunkHeader(animHdr, "ANIMINFO");
         var animInfo = new AnimInfoBinary
         {
             Name = sequence.Name,
@@ -72,10 +65,10 @@ public class ActorXAnim
             FirstRawFrame = 0, // useless, but used in UnrealEd when importing
             NumRawFrames = sequence.NumFrames
         };
-        animInfo.Serialize(Ar);
+        animInfo.Serialize(_archive);
 
         var keyHdr = new VChunkHeader { DataCount = sequence.NumFrames * numBones, DataSize = Constants.VQuatAnimKey_SIZE };
-        Ar.SerializeChunkHeader(keyHdr, "ANIMKEYS");
+        _archive.SerializeChunkHeader(keyHdr, "ANIMKEYS");
         for (int frame = 0; frame < sequence.NumFrames; frame++)
         {
             for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
@@ -97,7 +90,7 @@ public class ActorXAnim
                 key.Orientation.Y *= -1;
                 if (boneIndex == 0) key.Orientation.W *= -1; // because the importer has invert enabled by default...
                 key.Position.Y *= -1;
-                key.Serialize(Ar);
+                key.Serialize(_archive);
             }
         }
 
@@ -109,7 +102,7 @@ public class ActorXAnim
         if (mainHdr.TypeFlag >= 20090127)
         {
             var scaleKeysHdr = new VChunkHeader { DataCount = keyHdr.DataCount, DataSize = Constants.VScaleAnimKey_SIZE };
-            Ar.SerializeChunkHeader(scaleKeysHdr, "SCALEKEYS");
+            _archive.SerializeChunkHeader(scaleKeysHdr, "SCALEKEYS");
             for (int frame = 0; frame < sequence.NumFrames; frame++)
             {
                 for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
@@ -127,7 +120,7 @@ public class ActorXAnim
                         ScaleVector = boneScale,
                         Time = 1
                     };
-                    key.Serialize(Ar);
+                    key.Serialize(_archive);
                 }
             }
         }

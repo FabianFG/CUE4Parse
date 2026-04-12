@@ -5,9 +5,7 @@ using CUE4Parse_Conversion.Meshes.UEFormat.Collision;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
@@ -16,9 +14,9 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
-public class UEModel : UEFormatExport
+public sealed class UEModel : UEFormatExport
 {
-    protected override string Identifier { get; set; } = "UEMODEL";
+    protected override string Identifier => "UEMODEL";
 
     public UEModel(string name, CStaticMesh mesh, FPackageIndex bodySetupLazy, ExporterOptions options) : base(name, options)
     {
@@ -197,7 +195,7 @@ public class UEModel : UEFormatExport
 
                 var materialPath = section.Material?.GetPathName() ?? string.Empty;
                 materialChunk.WriteFString(materialPath);
-                
+
                 materialChunk.Write(section.FirstIndex);
                 materialChunk.Write(section.NumFaces);
             }
@@ -251,7 +249,7 @@ public class UEModel : UEFormatExport
             metaDataChunk.WriteFString(skeleton?.GetPathName() ?? string.Empty);
             metaDataChunk.Serialize(archive);
         }
-        
+
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
             foreach (var bone in bones)
@@ -308,18 +306,17 @@ public class UEModel : UEFormatExport
 
     private void SerializePhysicsData(FArchiveWriter archive, UPhysicsAsset physicsAsset)
     {
-        using (var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length))
+        using var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length);
+
+        foreach (var bodySetupLazy in physicsAsset.SkeletalBodySetups)
         {
-            foreach (var bodySetupLazy in physicsAsset.SkeletalBodySetups)
-            {
-                if (!bodySetupLazy.TryLoad<USkeletalBodySetup>(out var bodySetup)) continue;
+            if (!bodySetupLazy.TryLoad<USkeletalBodySetup>(out var bodySetup)) continue;
 
-                var exportBodySetup = new FBodySetup(bodySetup);
-                exportBodySetup.Serialize(bodyChunk);
-            }
-
-            bodyChunk.Serialize(archive);
+            var exportBodySetup = new FBodySetup(bodySetup);
+            exportBodySetup.Serialize(bodyChunk);
         }
+
+        bodyChunk.Serialize(archive);
     }
 
 }

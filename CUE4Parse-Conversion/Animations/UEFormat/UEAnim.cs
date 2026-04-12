@@ -8,140 +8,150 @@ using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.UEFormat;
 
-public class UEAnim : UEFormatExport
+public sealed class UEAnim : UEFormatExport
 {
-    protected override string Identifier { get; set; } = "UEANIM";
+    protected override string Identifier => "UEANIM";
 
     public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
         var originalSequence = sequence.OriginalSequence;
 
-        using (var metaDataChunk = new FDataChunk("METADATA", 1))
+        SerializeMetadata(sequence, originalSequence);
+        SerializeSkeleton(sequence, originalSequence, animSet.Skeleton.ReferenceSkeleton);
+
+        if (originalSequence.CompressedCurveData?.FloatCurves is { Length: > 0 } floatCurves)
         {
-            metaDataChunk.Write(sequence.NumFrames);
-            metaDataChunk.Write(sequence.FramesPerSecond);
-
-            var referencePath = originalSequence.RefPoseSeq?.GetPathName() ?? string.Empty;
-            metaDataChunk.WriteFString(referencePath);
-
-            metaDataChunk.Write((byte) originalSequence.AdditiveAnimType); // EAdditiveAnimationType
-            metaDataChunk.Write((byte) originalSequence.RefPoseType); // EAdditiveBasePoseType
-            metaDataChunk.Write(originalSequence.RefFrameIndex);
-
-            metaDataChunk.Serialize(Ar);
+            SerializeCurves(sequence, floatCurves);
         }
+    }
 
-        var refSkeleton = animSet.Skeleton.ReferenceSkeleton;
-        using (var trackChunk = new FDataChunk("TRACKS", sequence.Tracks.Count))
+    private void SerializeMetadata(CAnimSequence sequence, UAnimSequence originalSequence)
+    {
+        using var metaDataChunk = new FDataChunk("METADATA", 1);
+        metaDataChunk.Write(sequence.NumFrames);
+        metaDataChunk.Write(sequence.FramesPerSecond);
+
+        var referencePath = originalSequence.RefPoseSeq?.GetPathName() ?? string.Empty;
+        metaDataChunk.WriteFString(referencePath);
+
+        metaDataChunk.Write((byte) originalSequence.AdditiveAnimType); // EAdditiveAnimationType
+        metaDataChunk.Write((byte) originalSequence.RefPoseType); // EAdditiveBasePoseType
+        metaDataChunk.Write(originalSequence.RefFrameIndex);
+
+        metaDataChunk.Serialize(Ar);
+    }
+
+    private void SerializeSkeleton(CAnimSequence sequence, UAnimSequence originalSequence, FReferenceSkeleton refSkeleton)
+    {
+        using var trackChunk = new FDataChunk("TRACKS", sequence.Tracks.Count);
+
+        for (var i = 0; i < sequence.Tracks.Count; i++)
         {
-            for (var i = 0; i < sequence.Tracks.Count; i++)
+            var boneName = refSkeleton.FinalRefBoneInfo[i].Name.Text;
+            trackChunk.WriteFString(boneName);
+
+            var track = sequence.Tracks[i];
+            var boneTransform = refSkeleton.FinalRefBonePose[i];
+
+            var positionKeys = new List<FVectorKey>();
+            var rotationKeys = new List<FQuatKey>();
+            var scaleKeys = new List<FVectorKey>();
+
+            FVector? prevPos = null;
+            FQuat? prevRot = null;
+            FVector? prevScale = null;
+
+            for (var frame = 0; frame < sequence.NumFrames; frame++)
             {
-                var boneName = refSkeleton.FinalRefBoneInfo[i].Name.Text;
-                trackChunk.WriteFString(boneName);
-
-                var track = sequence.Tracks[i];
-                var boneTransform = refSkeleton.FinalRefBonePose[i];
-
-                var positionKeys = new List<FVectorKey>();
-                var rotationKeys = new List<FQuatKey>();
-                var scaleKeys = new List<FVectorKey>();
-                FVector? prevPos = null;
-                FQuat? prevRot = null;
-                FVector? prevScale = null;
-                for (var frame = 0; frame < sequence.NumFrames; frame++)
+                var translation = boneTransform.Translation;
+                var rotation = boneTransform.Rotation;
+                var scale = boneTransform.Scale3D;
+                if (originalSequence.FindTrackForBoneIndex(i) >= 0)
                 {
-                    var translation = boneTransform.Translation;
-                    var rotation = boneTransform.Rotation;
-                    var scale = boneTransform.Scale3D;
-                    if (originalSequence.FindTrackForBoneIndex(i) >= 0)
-                    {
-                        track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
-                    }
-
-                    // for Arc System Works custom compression format AnimCompress_Constant
-                    if (originalSequence.GetOrDefault<bool>("bConstantAnimation"))
-                    {
-                        if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))
-                        {
-                            if (prevPos != null)
-                            {
-                                positionKeys.Add(new FVectorKey(frame - 1, (FVector)prevPos));
-                            }
-                            positionKeys.Add(new FVectorKey(frame, translation));
-                            prevPos = translation;
-                        }
-
-                        if (prevRot is null || (prevRot != rotation && track.KeyQuatTime.Contains(frame)))
-                        {
-                            if (prevRot != null)
-                            {
-                                rotationKeys.Add(new FQuatKey(frame - 1, (FQuat)prevRot));
-                            }
-                            rotationKeys.Add(new FQuatKey(frame, rotation));
-                            prevRot = rotation;
-                        }
-
-                        if (prevScale is null || (prevScale != scale && track.KeyScaleTime.Contains(frame)))
-                        {
-                            if (prevScale != null)
-                            {
-                                scaleKeys.Add(new FVectorKey(frame - 1, (FVector)prevScale));
-                            }
-                            scaleKeys.Add(new FVectorKey(frame, scale));
-                            prevScale = scale;
-                        }
-                    }
-                    else
-                    {
-                        // dupe key reduction, could be better but it works for now
-                        if (prevPos is null || prevPos != translation)
-                        {
-                            positionKeys.Add(new FVectorKey(frame, translation));
-                            prevPos = translation;
-                        }
-
-                        if (prevRot is null || prevRot != rotation)
-                        {
-                            rotationKeys.Add(new FQuatKey(frame, rotation));
-                            prevRot = rotation;
-                        }
-
-                        if (prevScale is null || prevScale != scale)
-                        {
-                            scaleKeys.Add(new FVectorKey(frame, scale));
-                            prevScale = scale;
-                        }
-                    }
+                    track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                 }
 
-                trackChunk.WriteArray(positionKeys);
-                trackChunk.WriteArray(rotationKeys);
-                trackChunk.WriteArray(scaleKeys);
-            }
-
-            trackChunk.Serialize(Ar);
-        }
-
-        var floatCurves = originalSequence.CompressedCurveData?.FloatCurves;
-        if (floatCurves is not null && floatCurves.Length > 0)
-        {
-            using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
-
-            foreach (var floatCurve in floatCurves)
-            {
-                // TODO serialize more data for better accuracy
-                curveChunk.WriteFString(floatCurve.CurveName.Text);
-                curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
-                foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
+                // for Arc System Works custom compression format AnimCompress_Constant
+                if (originalSequence.GetOrDefault<bool>("bConstantAnimation"))
                 {
-                    var key = new FFloatKey((int) (floatCurveKey.Time * sequence.FramesPerSecond), floatCurveKey.Value);
-                    key.Serialize(curveChunk);
+                    if (prevPos is null || (prevPos != translation && track.KeyPosTime.Contains(frame)))
+                    {
+                        if (prevPos != null)
+                        {
+                            positionKeys.Add(new FVectorKey(frame - 1, (FVector)prevPos));
+                        }
+                        positionKeys.Add(new FVectorKey(frame, translation));
+                        prevPos = translation;
+                    }
+
+                    if (prevRot is null || (prevRot != rotation && track.KeyQuatTime.Contains(frame)))
+                    {
+                        if (prevRot != null)
+                        {
+                            rotationKeys.Add(new FQuatKey(frame - 1, (FQuat)prevRot));
+                        }
+                        rotationKeys.Add(new FQuatKey(frame, rotation));
+                        prevRot = rotation;
+                    }
+
+                    if (prevScale is null || (prevScale != scale && track.KeyScaleTime.Contains(frame)))
+                    {
+                        if (prevScale != null)
+                        {
+                            scaleKeys.Add(new FVectorKey(frame - 1, (FVector)prevScale));
+                        }
+                        scaleKeys.Add(new FVectorKey(frame, scale));
+                        prevScale = scale;
+                    }
+                }
+                else
+                {
+                    // dupe key reduction, could be better but it works for now
+                    if (prevPos is null || prevPos != translation)
+                    {
+                        positionKeys.Add(new FVectorKey(frame, translation));
+                        prevPos = translation;
+                    }
+
+                    if (prevRot is null || prevRot != rotation)
+                    {
+                        rotationKeys.Add(new FQuatKey(frame, rotation));
+                        prevRot = rotation;
+                    }
+
+                    if (prevScale is null || prevScale != scale)
+                    {
+                        scaleKeys.Add(new FVectorKey(frame, scale));
+                        prevScale = scale;
+                    }
                 }
             }
 
-            curveChunk.Serialize(Ar);
+            trackChunk.WriteArray(positionKeys);
+            trackChunk.WriteArray(rotationKeys);
+            trackChunk.WriteArray(scaleKeys);
         }
 
+        trackChunk.Serialize(Ar);
+    }
+
+    private void SerializeCurves(CAnimSequence sequence, FFloatCurve[] floatCurves)
+    {
+        using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
+
+        foreach (var floatCurve in floatCurves)
+        {
+            // TODO serialize more data for better accuracy
+            curveChunk.WriteFString(floatCurve.CurveName.Text);
+            curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
+            foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
+            {
+                var key = new FFloatKey((int) (floatCurveKey.Time * sequence.FramesPerSecond), floatCurveKey.Value);
+                key.Serialize(curveChunk);
+            }
+        }
+
+        curveChunk.Serialize(Ar);
     }
 }

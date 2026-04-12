@@ -39,9 +39,9 @@ namespace CUE4Parse_Conversion
         public ExporterOptions()
         {
             LodFormat = ELodFormat.FirstLod;
-            MeshFormat = EMeshFormat.ActorX;
+            MeshFormat = EMeshFormat.UEFormat;
             NaniteMeshFormat = ENaniteMeshFormat.OnlyNaniteLOD;
-            AnimFormat = EAnimFormat.ActorX;
+            AnimFormat = EAnimFormat.UEFormat;
             MaterialFormat = EMaterialFormat.AllLayersNoRef;
             TextureFormat = ETextureFormat.Png;
             CompressionFormat = EFileCompressionFormat.None;

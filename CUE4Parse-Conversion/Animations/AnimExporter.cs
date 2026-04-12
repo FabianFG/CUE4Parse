@@ -32,7 +32,7 @@ namespace CUE4Parse_Conversion.Animations
                 {
                     case EAnimFormat.ActorX:
                         ext = "psa";
-                        new ActorXAnim(animSet, sequenceIndex, Options).Save(Ar);
+                        new ActorXAnim(animSet, sequenceIndex).Save(Ar);
                         break;
                     case EAnimFormat.UEFormat:
                         ext = "ueanim";
@@ -70,7 +70,7 @@ namespace CUE4Parse_Conversion.Animations
         public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options, animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
         public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options, animMontage.Skeleton.Load<USkeleton>()!, animMontage) { }
         public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options, animComposite.Skeleton.Load<USkeleton>()!, animComposite) { }
-        
+
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {
