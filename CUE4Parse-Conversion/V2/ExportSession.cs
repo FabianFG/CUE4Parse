@@ -13,7 +13,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     public ExporterOptions Options { get; } = options;
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
 
-    private readonly List<IExporter2> _roots = [];
+    private readonly HashSet<IExporter2> _roots = [];
     private readonly ConcurrentQueue<IExporter2> _childQueue = new();
     private readonly ConcurrentDictionary<string, byte> _seenPaths = new(StringComparer.OrdinalIgnoreCase);
     private int _totalQueued;
@@ -42,7 +42,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
     public bool TryEnqueue(ExporterBase2 child)
     {
-        if (!_seenPaths.TryAdd(child.PackagePath, 0))
+        if (!_seenPaths.TryAdd(child.ObjectPath, 0))
             return false;
 
         child._session = this;
@@ -55,7 +55,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         // Pre-register all roots so they can't be re-queued by children.
         foreach (var r in _roots)
-            _seenPaths.TryAdd(r.PackagePath, 0);
+            _seenPaths.TryAdd(r.ObjectPath, 0);
 
         Interlocked.Add(ref _totalQueued, _roots.Count);
 

@@ -13,9 +13,10 @@ namespace CUE4Parse_Conversion.V2;
 public interface IExporter2
 {
     public string PackagePath { get; }
-    public string ObjectName { get; }
-    public string ClassName { get; }
     public string PackageDirectory { get; }
+    public string ObjectName { get; }
+    public string ObjectPath { get; }
+    public string ClassName { get; }
 
     public Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default);
 }
@@ -23,9 +24,10 @@ public interface IExporter2
 public abstract class ExporterBase2 : IExporter2
 {
     public string PackagePath { get; }
-    public string ObjectName { get; }
-    public string ClassName { get; }
     public string PackageDirectory { get; }
+    public string ObjectName { get; }
+    public string ObjectPath { get; }
+    public string ClassName { get; }
 
     internal ExportSession? _session = null;
     protected ExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
@@ -38,9 +40,10 @@ public abstract class ExporterBase2 : IExporter2
         var rawPath = owner?.Name ?? export.GetPathName();
 
         PackagePath = (owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.');
-        ObjectName = export.Name;
-        ClassName = export.ExportType;
         PackageDirectory = PackagePath.Contains('/') ? PackagePath.SubstringBeforeLast('/') : string.Empty;
+        ObjectName = export.Name;
+        ObjectPath = PackagePath + '.' + ObjectName;
+        ClassName = export.ExportType;
 
         Log = Serilog.Log
             .ForContext(nameof(ObjectName), ObjectName)
@@ -77,5 +80,11 @@ public abstract class ExporterBase2 : IExporter2
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         Directory.CreateDirectory(dir);
         return fullPath;
+    }
+
+    public override bool Equals(object? obj) => obj is ExporterBase2 other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);
+    public override int GetHashCode()
+    {
+        return ObjectPath.GetHashCode();
     }
 }

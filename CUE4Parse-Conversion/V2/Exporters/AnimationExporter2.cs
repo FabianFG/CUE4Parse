@@ -9,7 +9,7 @@ using CUE4Parse_Conversion.V2.Formats.Animations;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class AnimationExporter2(UAnimSequenceBase animation) : ExporterBase2(animation)
+public sealed class AnimationExporter2(UAnimationAsset animation) : ExporterBase2(animation)
 {
     public override async Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {

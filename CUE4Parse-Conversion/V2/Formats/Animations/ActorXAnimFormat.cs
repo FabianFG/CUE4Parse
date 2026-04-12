@@ -11,7 +11,7 @@ public sealed class ActorXAnimFormat : IAnimExportFormat
     public IReadOnlyList<ExportFile> Build(string objectName, ExporterOptions options, CAnimSet animSet)
     {
         var results = new List<ExportFile>(animSet.Sequences.Count);
-        for (var i = 0; i < results.Count; i++)
+        for (var i = 0; i < results.Capacity; i++)
         {
             using var ar = new FArchiveWriter();
             new ActorXAnim(animSet, i).Save(ar);
