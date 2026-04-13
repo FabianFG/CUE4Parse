@@ -1,11 +1,12 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using CommunityToolkit.HighPerformance;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -99,6 +100,23 @@ namespace CUE4Parse.UE4.Readers
 
         public virtual T Read<T>()
         {
+            if (ReverseBytes)
+            {
+                if (_read.TryGetValue(typeof(T), out var func))
+                    return (T) func(this);
+
+                if (typeof(T).IsEnum)
+                {
+                    var underlying = Enum.GetUnderlyingType(typeof(T));
+
+                    if (_read.TryGetValue(underlying, out var enumReader))
+                    {
+                        var value = enumReader(this);
+                        return (T) Enum.ToObject(typeof(T), value);
+                    }
+                }
+            }
+
             var size = Unsafe.SizeOf<T>();
             var buffer = ReadBytes(size);
             return Unsafe.ReadUnaligned<T>(ref buffer[0]);
@@ -111,6 +129,30 @@ namespace CUE4Parse.UE4.Readers
             CheckReadSize(readLength);
 
             var buffer = ReadBytes(readLength);
+
+            if (ReverseBytes)
+            {
+                if (size == 1)
+                {
+                }
+                else if (size == 2)
+                {
+                    ReverseEndian(buffer.AsSpan().Cast<byte, ushort>());
+                }
+                else if (typeof(T) == typeof(uint) || typeof(T) == typeof(int) || typeof(T) == typeof(float))
+                {
+                    ReverseEndian(buffer.AsSpan().Cast<byte, uint>());
+                }
+                else if (typeof(T) == typeof(ulong) || typeof(T) == typeof(long) || typeof(T) == typeof(double))
+                {
+                    ReverseEndian(buffer.AsSpan().Cast<byte, ulong>());
+                }
+                else
+                {
+                    throw new ParserException("Unsupported type for ReadArray: " + typeof(T).Name);
+                }
+            }
+
             var result = new T[length];
             if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
             return result;
@@ -132,9 +174,22 @@ namespace CUE4Parse.UE4.Readers
             Versions = versions ?? new VersionContainer();
         }
 
+        public static readonly Dictionary<Type, Func<FArchive, object>> _read = new()
+        {
+            { typeof(short),  ar => BinaryPrimitives.ReadInt16BigEndian(ar.ReadBytes(sizeof(short))) },
+            { typeof(int),    ar => BinaryPrimitives.ReadInt32BigEndian(ar.ReadBytes(sizeof(int))) },
+            { typeof(long),   ar => BinaryPrimitives.ReadInt64BigEndian(ar.ReadBytes(sizeof(long))) },
+            { typeof(ushort), ar => BinaryPrimitives.ReadUInt16BigEndian(ar.ReadBytes(sizeof(ushort))) },
+            { typeof(uint),   ar => BinaryPrimitives.ReadUInt32BigEndian(ar.ReadBytes(sizeof(uint))) },
+            { typeof(ulong),  ar => BinaryPrimitives.ReadUInt64BigEndian(ar.ReadBytes(sizeof(ulong))) },
+            { typeof(float),  ar => BinaryPrimitives.ReadSingleBigEndian(ar.ReadBytes(sizeof(float))) },
+            { typeof(double), ar => BinaryPrimitives.ReadDoubleBigEndian(ar.ReadBytes(sizeof(double))) },
+        };
+
         public override void Flush() { }
         public override bool CanRead { get; } = true;
         public override bool CanWrite { get; } = false;
+        public bool ReverseBytes { get; set; } = false;
         public override void SetLength(long value) { throw new InvalidOperationException(); }
         public override void Write(byte[] buffer, int offset, int count) { throw new InvalidOperationException(); }
 
@@ -685,6 +740,35 @@ namespace CUE4Parse.UE4.Readers
             value = ((value << 8) & 0xFF00FF00FF00FF00UL) | ((value >> 8) & 0x00FF00FF00FF00FFUL);
             value = ((value << 16) & 0xFFFF0000FFFF0000UL) | ((value >> 16) & 0x0000FFFF0000FFFFUL);
             return (value << 32) | (value >> 32);
+        }
+
+        static void ReverseEndian<TSwap>(Span<TSwap> span) where TSwap : unmanaged
+        {
+            if (typeof(TSwap) == typeof(ushort))
+            {
+                var span2 = span.Cast<TSwap, ushort>();
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span2[i] = BinaryPrimitives.ReverseEndianness(span2[i]);
+                }
+            }
+
+            else if (typeof(TSwap) == typeof(uint))
+            {
+                var span4 = span.Cast<TSwap, uint>();
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span4[i] = BinaryPrimitives.ReverseEndianness(span4[i]);
+                }
+            }
+            else if (typeof(TSwap) == typeof(ulong))
+            {
+                var span8 = span.Cast<TSwap, ulong>();
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span8[i] = BinaryPrimitives.ReverseEndianness(span8[i]);
+                }
+            }
         }
 
         public void CheckReadSize(int length)
