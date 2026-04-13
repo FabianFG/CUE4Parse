@@ -637,7 +637,7 @@ public class FUniformExpressionSet
         ParameterCollections = Ar.ReadArray<FGuid>();
         if (Ar.Game is EGame.GAME_HogwartsLegacy) Ar.Position += 168;
         UniformBufferLayoutInitializer = new FRHIUniformBufferLayoutInitializer(Ar);
-        //if (Ar.Game >= EGame.GAME_UE5_8) CompactUniformsVSOptional = Ar.ReadArray(() => new FCompactUniformExpressionSet(Ar));
+        if (Ar.Game >= EGame.GAME_UE5_8) CompactUniformsVSOptional = Ar.ReadArray(() => new FCompactUniformExpressionSet(Ar));
     }
 }
 
@@ -953,6 +953,8 @@ public class FMaterialPreshaderData
     public EValueComponentType[]? StructComponentTypes;
     public byte[] Data;
     public bool bPreshader2;
+    public bool bPreFixup;
+    public ushort Preshader2TemporarySize;
 
     public FMaterialPreshaderData(FMemoryImageArchive Ar)
     {
@@ -960,7 +962,9 @@ public class FMaterialPreshaderData
 
         if (Ar.Game >= EGame.GAME_UE5_8)
         {
-            bPreshader2 = Ar.ReadBoolean();
+            bPreshader2 = Ar.ReadFlag();
+            bPreFixup = Ar.ReadFlag();
+            Preshader2TemporarySize = Ar.Read<ushort>();
             Ar.Position = Ar.Position.Align(8);
         }
 
@@ -1035,10 +1039,8 @@ public class FRHIUniformBufferLayoutInitializer
     public uint ConstantBufferSize = 0;
     public ushort RenderTargetsOffset = ushort.MaxValue;
     public byte /*FUniformBufferStaticSlot*/ StaticSlot = 255;
-    [JsonConverter(typeof(StringEnumConverter))] public EUniformBufferBindingFlags BindingFlags = EUniformBufferBindingFlags.Shader;
-    public bool bHasNonGraphOutputs = false;
-    public bool bNoEmulatedUniformBuffer = false;
-    public bool bUniformView = false;
+    public EUniformBufferBindingFlags BindingFlags = EUniformBufferBindingFlags.Shader;
+    public ERHIUniformBufferFlags Flags = ERHIUniformBufferFlags.None;
 
     public FRHIUniformBufferLayoutInitializer(FMemoryImageArchive Ar)
     {
@@ -1057,9 +1059,17 @@ public class FRHIUniformBufferLayoutInitializer
             RenderTargetsOffset = Ar.Read<ushort>();
             StaticSlot = Ar.Read<byte>();
             BindingFlags = Ar.Read<EUniformBufferBindingFlags>();
-            bHasNonGraphOutputs = Ar.ReadFlag();
-            bNoEmulatedUniformBuffer = Ar.ReadFlag();
-            bUniformView = Ar.Game >= EGame.GAME_UE5_4 && Ar.ReadFlag();
+            if (Ar.Game >= EGame.GAME_UE5_5)
+            {
+                Flags = Ar.Read<ERHIUniformBufferFlags>();
+            }
+            else
+            {
+                if (Ar.ReadFlag()) Flags |= ERHIUniformBufferFlags.HasNonGraphOutputs;
+                if (Ar.ReadFlag()) Flags |= ERHIUniformBufferFlags.NoEmulatedUniformBuffer;
+                if (Ar.Game >= EGame.GAME_UE5_4 && Ar.ReadFlag()) Flags |= ERHIUniformBufferFlags.UniformView;
+            }
+
             Ar.Position = Ar.Position.Align(4);
         }
         else if (Ar.Game >= EGame.GAME_UE4_26)
@@ -1068,7 +1078,7 @@ public class FRHIUniformBufferLayoutInitializer
             StaticSlot = Ar.Read<byte>();
             Ar.Position += 1;
             RenderTargetsOffset = Ar.Read<ushort>();
-            bHasNonGraphOutputs = Ar.ReadFlag();
+            if (Ar.ReadFlag()) Flags |= ERHIUniformBufferFlags.HasNonGraphOutputs;
             Ar.Position = Ar.Position.Align(8);
             Resources = Ar.ReadArray<FRHIUniformBufferResource>();
             GraphResources = Ar.ReadArray<FRHIUniformBufferResource>();
@@ -1094,8 +1104,28 @@ public class FRHIUniformBufferLayoutInitializer
             Hash = Ar.Read<uint>();
             Ar.Position = Ar.Position.Align(8);
         }
+        if (Flags is not ERHIUniformBufferFlags.None) Flags &= ~ERHIUniformBufferFlags.None;
     }
 }
+
+[Flags]
+[JsonConverter(typeof(StringEnumConverter))]
+public enum ERHIUniformBufferFlags : byte
+{
+    None                    = 0,
+
+    /** Whether to force a real uniform buffer when using emulated uniform buffers */
+    NoEmulatedUniformBuffer = 1 << 0,
+
+    /** Signals if the uniform buffer members need to be included in shader reflection */
+    NeedsReflectedMembers   = 1 << 1,
+
+    /** Whether this layout may contain non-render-graph outputs (e.g. RHI UAVs). */
+    HasNonGraphOutputs      = 1 << 2,
+
+    /** This struct is a view into uniform buffer object, on platforms that support UBO */
+    UniformView             = 1 << 3,
+};
 
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 public struct FRHIUniformBufferResource
@@ -1391,6 +1421,7 @@ public class FPlatformTypeLayoutParameters
 }
 
 [Flags]
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EUniformBufferBindingFlags : byte
 {
     Shader = 1 << 0,
