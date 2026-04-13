@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using CUE4Parse_Conversion.V2.Exporters;
+using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 
 namespace CUE4Parse_Conversion.V2;
 
@@ -13,9 +20,8 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     public ExporterOptions Options { get; } = options;
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
 
-    private readonly HashSet<IExporter2> _roots = [];
-    private readonly ConcurrentQueue<IExporter2> _childQueue = new();
-    private readonly ConcurrentDictionary<string, byte> _seenPaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentQueue<IExporter2> _roots = new();
+    private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
     private int _totalQueued;
 
     public ExportSession(string baseDirectory, ExporterOptions options) : this(new DirectoryInfo(baseDirectory), options)
@@ -23,10 +29,29 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
     }
 
+    public ExportSession Add(UObject export)
+    {
+        return export switch
+        {
+            UTexture texture => Add(new TextureExporter2(texture)),
+            UMaterialInterface material => Add(new MaterialExporter3(material)),
+            USkeletalMesh skeletalMesh => Add(new MeshExporter2(skeletalMesh)),
+            UStaticMesh staticMesh => Add(new MeshExporter2(staticMesh)),
+            USkeleton skeleton => Add(new MeshExporter2(skeleton)),
+            UAnimationAsset animation => Add(new AnimationExporter2(animation)),
+            // TODO: landscape
+            // TODO: world
+            // TODO: components?
+            _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
+        };
+    }
+
     public ExportSession Add(ExporterBase2 exporter)
     {
+        if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
+
         exporter._session = this;
-        _roots.Add(exporter);
+        _roots.Enqueue(exporter);
         return this;
     }
 
@@ -34,47 +59,33 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         foreach (var exporter in exporters)
         {
-            exporter._session = this;
-            _roots.Add(exporter);
+            Add(exporter);
         }
         return this;
     }
 
-    public bool TryEnqueue(ExporterBase2 child)
-    {
-        if (!_seenPaths.TryAdd(child.ObjectPath, 0))
-            return false;
-
-        child._session = this;
-        _childQueue.Enqueue(child);
-        Interlocked.Increment(ref _totalQueued);
-        return true;
-    }
-
     public async Task<IReadOnlyList<ExportResult>> RunAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
-        // Pre-register all roots so they can't be re-queued by children.
-        foreach (var r in _roots)
-            _seenPaths.TryAdd(r.ObjectPath, 0);
-
-        Interlocked.Add(ref _totalQueued, _roots.Count);
-
         var completed = 0;
         var allResults = new ConcurrentBag<ExportResult>();
         var options = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
 
-        var current = new List<IExporter2>(_roots);
-        while (current.Count > 0)
+        var current = new List<IExporter2>();
+        while (true)
         {
-            await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
-
             current.Clear();
-            while (_childQueue.TryDequeue(out var child))
+            while (_roots.TryDequeue(out var exporter))
             {
-                current.Add(child);
+                ct.ThrowIfCancellationRequested();
+                current.Add(exporter);
             }
+            if (current.Count == 0) break;
+
+            Interlocked.Add(ref _totalQueued, current.Count);
+            await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
         }
 
+        Interlocked.Exchange(ref _totalQueued, 0);
         return [.. allResults];
 
         async ValueTask Process(IExporter2 exporter, CancellationToken token)
@@ -86,7 +97,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                results = [ExportResult.Failure(exporter.ObjectName, exporter.PackagePath, exporter.PackageDirectory, ex)];
+                results = [ExportResult.Failure(exporter.ObjectPath, ex)];
             }
 
             foreach (var result in results)

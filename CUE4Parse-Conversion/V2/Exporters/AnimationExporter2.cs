@@ -20,10 +20,10 @@ public sealed class AnimationExporter2(UAnimationAsset animation) : ExporterBase
 
         if (files.Count == 0)
         {
-            return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Format produced no files"))];
+            return [ExportResult.Failure(ObjectPath, new Exception("Format produced no files"))];
         }
 
-        var tasks = files.Select(file => WriteExportFileAsync(file, progress, ct)).ToArray();
+        var tasks = files.Select(file => WriteExportFileAsync(file, progress, ct));
         var results = await Task.WhenAll(tasks).ConfigureAwait(false);
         return results;
     }

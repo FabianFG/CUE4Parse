@@ -45,7 +45,7 @@ public sealed class MeshExporter2 : ExporterBase2
             {
                 if (!skeletalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
                 {
-                    return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Failed to convert skeletal mesh or no LODs"))];
+                    return [ExportResult.Failure(ObjectPath, new Exception("Failed to convert skeletal mesh or no LODs"))];
                 }
 
                 var sockets = skeletalMesh.Skeleton.TryLoad<USkeleton>(out var skeleton) ? skeleton.Sockets : [];
@@ -57,7 +57,7 @@ public sealed class MeshExporter2 : ExporterBase2
                     {
                         if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
                         {
-                            Session.TryEnqueue(new MaterialExporter3(material));
+                            Session.Add(new MaterialExporter3(material));
                         }
                     }
                 }
@@ -67,7 +67,7 @@ public sealed class MeshExporter2 : ExporterBase2
             {
                 if (!staticMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
                 {
-                    return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Failed to convert static mesh or no LODs"))];
+                    return [ExportResult.Failure(ObjectPath, new Exception("Failed to convert static mesh or no LODs"))];
                 }
 
                 files = format.BuildStaticMesh(ObjectName, Session.Options, staticMesh, convertedMesh);
@@ -78,7 +78,7 @@ public sealed class MeshExporter2 : ExporterBase2
                     {
                         if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
                         {
-                            Session.TryEnqueue(new MaterialExporter3(material));
+                            Session.Add(new MaterialExporter3(material));
                         }
                     }
                 }
@@ -91,12 +91,12 @@ public sealed class MeshExporter2 : ExporterBase2
                 break;
             }
             default:
-                return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Unsupported mesh type"))];
+                return [ExportResult.Failure(ObjectPath, new Exception("Unsupported mesh type"))];
         }
 
         if (files.Count == 0)
         {
-            return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Format produced no files"))];
+            return [ExportResult.Failure(ObjectPath, new Exception("Format produced no files"))];
         }
 
         var tasks = files.Select(file => WriteExportFileAsync(file, progress, ct));

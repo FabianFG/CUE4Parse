@@ -17,7 +17,7 @@ public sealed class TextureExporter2(UTexture texture) : ExporterBase2(texture)
         var decoded = texture.Decode(Session.Options.Platform);
         if (decoded == null)
         {
-            return [ExportResult.Failure(ObjectName, PackagePath, PackageDirectory, new Exception("Failed to decode texture"))];
+            return [ExportResult.Failure(ObjectPath, new Exception("Failed to decode texture"))];
         }
 
         var format = GetTextureFormat(Session.Options.TextureFormat);

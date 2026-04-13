@@ -56,12 +56,12 @@ public abstract class ExporterBase2 : IExporter2
     protected async Task<ExportResult> WriteExportFileAsync(ExportFile file, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
         var fileName = $"{ObjectName}{file.NameSuffix}.{file.Extension}";
-        Log.Verbose("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
-
         var path = ResolveOutputPath(file.Extension, file.NameSuffix);
+        Log.ForContext("FilePath", path).Verbose("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
+
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
 
-        return new ExportResult(true, ObjectName, PackagePath, PackageDirectory, file);
+        return new ExportResult(true, ObjectPath, path);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,7 +79,7 @@ public abstract class ExporterBase2 : IExporter2
 
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         Directory.CreateDirectory(dir);
-        return fullPath;
+        return fullPath.Replace('/', '\\');
     }
 
     public override bool Equals(object? obj) => obj is ExporterBase2 other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);

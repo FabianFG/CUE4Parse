@@ -23,7 +23,7 @@ public class MaterialExporter3(UMaterialInterface material) : ExporterBase2(mate
         {
             if (ptr is UTexture texture)
             {
-                Session.TryEnqueue(new TextureExporter2(texture));
+                Session.Add(new TextureExporter2(texture));
             }
         }
 
