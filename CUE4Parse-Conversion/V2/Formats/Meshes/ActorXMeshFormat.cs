@@ -13,10 +13,22 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "ActorX (psk / pskx)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh, FPackageIndex[] sockets)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
+
+        var morphTargets = options.ExportMorphTargets ? originalMesh.MorphTargets : null;
+
+        var sockets = new List<FPackageIndex>();
+        if (options.SocketFormat != ESocketFormat.None)
+        {
+            sockets.AddRange(originalMesh.Sockets);
+            if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
+            {
+                sockets.AddRange(originalSkeleton.Sockets);
+            }
+        }
 
         for (var i = 0; i < convertedMesh.LODs.Count; i++)
         {
@@ -28,9 +40,9 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
                 lod,
                 convertedMesh.RefSkeleton,
                 materialExports: null,   // materials are queued via ExportSession, not collected here
-                options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-                sockets,
-                lodIndex: i,
+                morphTargets,
+                sockets.ToArray(),
+                i,
                 options
             ).Save(ar);
 

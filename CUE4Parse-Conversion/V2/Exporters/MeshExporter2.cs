@@ -3,103 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
 using CUE4Parse.UE4.Assets.Exports;
-using CUE4Parse.UE4.Assets.Exports.Material;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class MeshExporter2 : ExporterBase2
+public abstract class MeshExporter2<T>(T mesh) : ExporterBase2(mesh) where T : UObject
 {
-    private readonly UObject? _mesh;
+    protected abstract IReadOnlyList<ExportFile> BuildFiles(T original, IMeshExportFormat format);
 
-    public MeshExporter2(USkeletalMesh skeletalMesh) : base(skeletalMesh)
-    {
-        _mesh = skeletalMesh;
-    }
-
-    public MeshExporter2(UStaticMesh staticMesh) : base(staticMesh)
-    {
-        _mesh = staticMesh;
-    }
-
-    public MeshExporter2(USkeleton skeleton) : base(skeleton)
-    {
-        _mesh = skeleton;
-    }
-
-    public override async Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
+    protected sealed override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
     {
         Log.Debug("Converting mesh to {Format}", Session.Options.MeshFormat);
 
-        IReadOnlyList<ExportFile> files;
-        var format = GetMeshFormat(Session.Options.MeshFormat);
-
-        switch (_mesh)
-        {
-            case USkeletalMesh skeletalMesh:
-            {
-                if (!skeletalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
-                {
-                    return [ExportResult.Failure(ObjectPath, new Exception("Failed to convert skeletal mesh or no LODs"))];
-                }
-
-                var sockets = skeletalMesh.Skeleton.TryLoad<USkeleton>(out var skeleton) ? skeleton.Sockets : [];
-                files = format.BuildSkeletalMesh(ObjectName, Session.Options, skeletalMesh, convertedMesh, sockets);
-
-                if (Session.Options.ExportMaterials)
-                {
-                    foreach (var ptr in skeletalMesh.Materials)
-                    {
-                        if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
-                        {
-                            Session.Add(new MaterialExporter3(material));
-                        }
-                    }
-                }
-                break;
-            }
-            case UStaticMesh staticMesh:
-            {
-                if (!staticMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
-                {
-                    return [ExportResult.Failure(ObjectPath, new Exception("Failed to convert static mesh or no LODs"))];
-                }
-
-                files = format.BuildStaticMesh(ObjectName, Session.Options, staticMesh, convertedMesh);
-
-                if (Session.Options.ExportMaterials)
-                {
-                    foreach (var ptr in staticMesh.Materials)
-                    {
-                        if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
-                        {
-                            Session.Add(new MaterialExporter3(material));
-                        }
-                    }
-                }
-
-                break;
-            }
-            case USkeleton skeleton:
-            {
-                files = format.BuildSkeleton(ObjectName, Session.Options, skeleton);
-                break;
-            }
-            default:
-                return [ExportResult.Failure(ObjectPath, new Exception("Unsupported mesh type"))];
-        }
-
+        var files = BuildFiles(mesh, GetMeshFormat(Session.Options.MeshFormat));
         if (files.Count == 0)
         {
-            return [ExportResult.Failure(ObjectPath, new Exception("Format produced no files"))];
+            throw new Exception("Format produced no files");
         }
 
-        var tasks = files.Select(file => WriteExportFileAsync(file, progress, ct));
+        var tasks = files.Select(file => WriteExportFileAsync(file, ct));
         var results = await Task.WhenAll(tasks).ConfigureAwait(false);
         return results;
     }

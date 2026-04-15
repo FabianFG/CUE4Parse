@@ -14,14 +14,25 @@ public sealed class UEModelMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh, FPackageIndex[] sockets)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh)
     {
         using var ar = new FArchiveWriter();
+
+        var sockets = new List<FPackageIndex>();
+        if (options.SocketFormat != ESocketFormat.None)
+        {
+            sockets.AddRange(originalMesh.Sockets);
+            if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
+            {
+                sockets.AddRange(originalSkeleton.Sockets);
+            }
+        }
+
         new UEModel(
             objectName,
             convertedMesh,
             options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-            sockets,
+            sockets.ToArray(),
             originalMesh.Skeleton,
             originalMesh.PhysicsAsset,
             options

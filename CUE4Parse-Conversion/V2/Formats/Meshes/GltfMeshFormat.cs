@@ -17,7 +17,7 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
     private readonly EMeshFormat _legacyFormat = isObj ? EMeshFormat.OBJ : EMeshFormat.Gltf2;
     private readonly string _extension = isObj ? "obj" : "glb";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh, FPackageIndex[] sockets)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
@@ -35,7 +35,7 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
                 materialExports: null,   // materials queued via ExportSession
                 options,
                 options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-                lodIndex: i
+                i
             ).Save(_legacyFormat, ar);
 
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";

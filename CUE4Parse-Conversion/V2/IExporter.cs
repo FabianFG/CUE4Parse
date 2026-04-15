@@ -18,7 +18,7 @@ public interface IExporter2
     public string ObjectPath { get; }
     public string ClassName { get; }
 
-    public Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default);
+    public Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default);
 }
 
 public abstract class ExporterBase2 : IExporter2
@@ -51,13 +51,25 @@ public abstract class ExporterBase2 : IExporter2
             .ForContext("ExporterV2", true);
     }
 
-    public abstract Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default);
+    protected abstract Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default);
+    public async Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            return await DoExportAsync(ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Log.Error(ex, "Failed to export");
+            return [ExportResult.Failure(ObjectPath, ex)];
+        }
+    }
 
-    protected async Task<ExportResult> WriteExportFileAsync(ExportFile file, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
+    protected async Task<ExportResult> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var fileName = $"{ObjectName}{file.NameSuffix}.{file.Extension}";
         var path = ResolveOutputPath(file.Extension, file.NameSuffix);
-        Log.ForContext("FilePath", path).Verbose("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
+        Log.ForContext("FilePath", path).Information("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
 
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
 
@@ -72,7 +84,7 @@ public abstract class ExporterBase2 : IExporter2
         return path.TrimStart('/');
     }
 
-    private string ResolveOutputPath(string ext, string nameSuffix = "")
+    private string ResolveOutputPath(string ext, string? nameSuffix = null)
     {
         var savePath = GetSavePath();
         var fullPath = Path.Combine(Session.BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();

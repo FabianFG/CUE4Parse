@@ -2,7 +2,7 @@
 
 namespace CUE4Parse_Conversion.V2;
 
-public readonly record struct ExportFile(string Extension, byte[] Data, string NameSuffix = "");
+public readonly record struct ExportFile(string Extension, byte[] Data, string? NameSuffix = null);
 
 public sealed record ExportResult(bool Success, string ObjectPath, string? DiskFilePath = null, Exception? Error = null)
 {

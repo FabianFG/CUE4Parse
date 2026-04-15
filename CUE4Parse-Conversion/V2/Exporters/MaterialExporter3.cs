@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.V2.Formats.Materials;
@@ -8,9 +7,9 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public class MaterialExporter3(UMaterialInterface material) : ExporterBase2(material)
+public sealed class MaterialExporter3(UMaterialInterface material) : ExporterBase2(material)
 {
-    public override async Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
+    protected override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
     {
         Log.Debug("Extracting material parameters (format: {Format})", Session.Options.MaterialFormat);
 
@@ -27,7 +26,7 @@ public class MaterialExporter3(UMaterialInterface material) : ExporterBase2(mate
             }
         }
 
-        var result = await WriteExportFileAsync(file, progress, ct).ConfigureAwait(false);
+        var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
         return [result];
     }
 }

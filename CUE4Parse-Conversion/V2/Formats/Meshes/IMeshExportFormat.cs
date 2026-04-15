@@ -3,13 +3,12 @@ using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
-using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Formats.Meshes;
 
 public interface IMeshExportFormat : IExportFormat
 {
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh, FPackageIndex[] sockets);
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh);
 
     public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, UStaticMesh originalMesh, CStaticMesh convertedMesh);
 

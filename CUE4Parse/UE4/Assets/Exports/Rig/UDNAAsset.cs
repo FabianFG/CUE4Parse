@@ -17,7 +17,7 @@ public class UDNAAsset : UObject
     public Dictionary<string, IRawBase> Sections;
     public Dictionary<string, IRawBase> Layers;
     public Lazy<byte[]>? DNAData;
-    public string DnaFileName;
+    public string? DnaFileName;
 
     private readonly byte[] _signature = "DNA"u8.ToArray();
     private readonly byte[] _eof = "AND"u8.ToArray();
@@ -26,7 +26,7 @@ public class UDNAAsset : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        DnaFileName = GetOrDefault(nameof(DnaFileName), string.Empty);
+        DnaFileName = GetOrDefault<string>(nameof(DnaFileName));
 
         if (FDNAAssetCustomVersion.Get(Ar) >= FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {

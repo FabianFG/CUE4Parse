@@ -10,19 +10,19 @@ namespace CUE4Parse_Conversion.V2.Exporters;
 
 public sealed class TextureExporter2(UTexture texture) : ExporterBase2(texture)
 {
-    public override async Task<IReadOnlyList<ExportResult>> ExportAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
+    protected override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
     {
         Log.Debug("Decoding texture for platform {Platform}", Session.Options.Platform);
 
         var decoded = texture.Decode(Session.Options.Platform);
         if (decoded == null)
         {
-            return [ExportResult.Failure(ObjectPath, new Exception("Failed to decode texture"))];
+            throw new Exception("Failed to decode texture");
         }
 
         var format = GetTextureFormat(Session.Options.TextureFormat);
         var file = format.Build(decoded, Session.Options.ExportHdrTexturesAsHdr);
-        var result = await WriteExportFileAsync(file, progress, ct).ConfigureAwait(false);
+        var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
         return [result];
     }
 

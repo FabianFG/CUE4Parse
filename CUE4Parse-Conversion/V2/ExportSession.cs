@@ -8,6 +8,7 @@ using CUE4Parse_Conversion.V2.Exporters;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -35,12 +36,13 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         {
             UTexture texture => Add(new TextureExporter2(texture)),
             UMaterialInterface material => Add(new MaterialExporter3(material)),
-            USkeletalMesh skeletalMesh => Add(new MeshExporter2(skeletalMesh)),
-            UStaticMesh staticMesh => Add(new MeshExporter2(staticMesh)),
-            USkeleton skeleton => Add(new MeshExporter2(skeleton)),
+            USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
+            UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
             UAnimationAsset animation => Add(new AnimationExporter2(animation)),
-            // TODO: landscape
-            // TODO: world
+            UDNAAsset dna => Add(new DnaExporter(dna)),
+            // UWorld world => Add(new WorldExporter(world)),
+            // ALandscapeProxy landscape => Add(new LandscapeExporter2(landscape)),
             // TODO: components?
             _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
         };
@@ -52,6 +54,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
         exporter._session = this;
         _roots.Enqueue(exporter);
+        Interlocked.Increment(ref _totalQueued);
         return this;
     }
 
@@ -81,7 +84,6 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
             }
             if (current.Count == 0) break;
 
-            Interlocked.Add(ref _totalQueued, current.Count);
             await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
         }
 
@@ -90,15 +92,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
         async ValueTask Process(IExporter2 exporter, CancellationToken token)
         {
-            IReadOnlyList<ExportResult> results;
-            try
-            {
-                results = await exporter.ExportAsync(progress, token).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                results = [ExportResult.Failure(exporter.ObjectPath, ex)];
-            }
+            var results = await exporter.ExportAsync(token).ConfigureAwait(false);
 
             foreach (var result in results)
             {
