@@ -82,12 +82,25 @@ public class FByteBulkData
             return;
         }
 
-        _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None)
+        // For IoStore packages with BulkDataMap, the data is at a pre-determined offset
+        // (Header.OffsetInFile relative to BulkDataStartOffset), NOT at the current
+        // sequential read position. The serialization only writes a 4-byte dataIndex
+        // to reference the BulkDataMap entry — the reader must not skip past inline data.
+        var usedBulkDataMap = Ar.Owner is IoPackage { BulkDataMap.Length: > 0 };
+
+        if (usedBulkDataMap)
         {
-            Ar.Position += Header.SizeOnDisk;
+            _dataPosition = Header.OffsetInFile + (Ar.Owner?.Summary.BulkDataStartOffset ?? 0);
+        }
+        else
+        {
+            _dataPosition = Ar.Position;
+            if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None)
+            {
+                Ar.Position += Header.SizeOnDisk;
+            }
         }
 
         if (LazyLoad)
