@@ -72,7 +72,7 @@ public class LandscapeExporter : ExporterBase
                     break;
                 case EMeshFormat.UEFormat: {
                     ext = "uemodel";
-                    new UEModel(ExportName, mesh, new FPackageIndex(), Options).Save(Ar);
+                    new UEModel(ExportName, mesh, Options).Save(Ar);
                     break;
                 }
                 default:

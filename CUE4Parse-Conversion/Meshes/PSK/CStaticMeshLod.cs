@@ -3,40 +3,32 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 
-namespace CUE4Parse_Conversion.Meshes.PSK
+namespace CUE4Parse_Conversion.Meshes.PSK;
+
+public class CStaticMeshLod : CMeshLod
 {
-    public class CStaticMeshLod : CBaseMeshLod
+    public CMeshVertex[]? Verts;
+
+    public override void AllocateVerts(int count)
     {
-        public CMeshVertex[]? Verts;
-
-        public void AllocateVerts(int count)
+        Verts = new CMeshVertex[count];
+        for (var i = 0; i < Verts.Length; i++)
         {
-            Verts = new CMeshVertex[count];
-            for (var i = 0; i < Verts.Length; i++)
-            {
-                Verts[i] = new CMeshVertex(new FVector(), new FPackedNormal(0), new FPackedNormal(0), new FMeshUVFloat(0, 0));
-            }
-
-            NumVerts = count;
-            AllocateUVBuffers();
+            Verts[i] = new CMeshVertex(new FVector(), new FPackedNormal(0), new FPackedNormal(0), new FMeshUVFloat(0, 0));
         }
 
-        public void BuildNormals()
-        {
-            if (HasNormals) return;
-            // BuildNormalsCommon(Verts, Indices);
-            HasNormals = true;
-        }
+        NumVerts = count;
+        AllocateUVBuffers();
+    }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            
-            if (Verts is null)
-                return;
-            
-            Array.Clear(Verts);
-            Verts = null;
-        }
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        if (Verts is null)
+            return;
+
+        Array.Clear(Verts);
+        Verts = null;
     }
 }

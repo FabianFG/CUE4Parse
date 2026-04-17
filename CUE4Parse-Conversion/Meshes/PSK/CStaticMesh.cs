@@ -1,30 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse_Conversion.Meshes.PSK
+namespace CUE4Parse_Conversion.Meshes.PSK;
+
+/// <summary>
+/// TODO: this needs a refactor
+/// </summary>
+public class CStaticMesh : CMesh<CStaticMeshLod>
 {
-    public class CStaticMesh : IDisposable
+    public FPackageIndex? BodySetup { get; init; }
+    public FPackageIndex[]? Sockets { get; init; }
+
+    public CStaticMesh(FBox box, FSphere sphere) : base(box, sphere)
     {
-        public readonly List<CStaticMeshLod> LODs = [];
-        
-        public FBox BoundingBox;
-        public FSphere BoundingSphere;
 
-        public void FinalizeMesh()
-        {
-            foreach (var levelOfDetail in LODs)
-            {
-                levelOfDetail?.BuildNormals();
-            }
-        }
+    }
 
-        public void Dispose()
-        {
-            foreach (var lod in LODs)
-                lod.Dispose();
-            
-            LODs.Clear();
-        }
+    public CStaticMesh(FBoxSphereBounds bounds) : base(bounds)
+    {
+
     }
 }

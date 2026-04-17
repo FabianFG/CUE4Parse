@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.Landscape;
@@ -28,11 +29,14 @@ using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
 
+/// <summary>
+/// TODO: this needs a refactor
+/// </summary>
 public static class MeshConverter
 {
     public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones, out FBox box)
     {
-        bones = new List<CSkelMeshBone>();
+        bones = [];
         box = new FBox();
         for (var i = 0; i < originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo.Length; i++)
         {
@@ -54,33 +58,36 @@ public static class MeshConverter
         return true;
     }
 
-    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this USplineMeshComponent? spline, [MaybeNullWhen(false)] out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
         var originalMesh = spline?.GetStaticMesh().Load<UStaticMesh>();
         if (originalMesh == null)
         {
-            convertedMesh = new CStaticMesh();
+            convertedMesh = null;
             return false;
         }
-        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat);
+
+        return originalMesh.TryConvert(spline, out convertedMesh, naniteFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
-        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat);
+        return originalMesh.TryConvert(null, out convertedMesh, naniteFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline,
-        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline, [MaybeNullWhen(false)] out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
     {
-        convertedMesh = new CStaticMesh();
         if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
+        {
+            convertedMesh = null;
             return false;
+        }
 
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
-        convertedMesh.BoundingBox = new FBox(
-            originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
-            originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
+        convertedMesh = new CStaticMesh(originalMesh.RenderData.Bounds)
+        {
+            BodySetup = originalMesh.BodySetup,
+            Sockets = originalMesh.Sockets
+        };
 
         for (var i = 0; i < originalMesh.RenderData.LODs.Length; i++)
         {
@@ -372,15 +379,10 @@ public static class MeshConverter
         return true;
     }
 
-    public static bool TryConvert(this USkeletalMesh originalMesh, out CSkeletalMesh convertedMesh)
+    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out CSkeletalMesh convertedMesh)
     {
-        convertedMesh = new CSkeletalMesh();
+        convertedMesh = new CSkeletalMesh(originalMesh.ImportedBounds);
         if (originalMesh.LODModels == null) return false;
-
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.ImportedBounds.SphereRadius / 2);
-        convertedMesh.BoundingBox = new FBox(
-            originalMesh.ImportedBounds.Origin - originalMesh.ImportedBounds.BoxExtent,
-            originalMesh.ImportedBounds.Origin + originalMesh.ImportedBounds.BoxExtent);
 
         for (var i = 0; i < originalMesh.LODModels.Length; i++)
         {
@@ -569,7 +571,7 @@ public static class MeshConverter
         // UE3 - normal[1] not restored in vertex shader
     }
 
-    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeExportFlags flags, out CStaticMesh? convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
+    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeExportFlags flags, [MaybeNullWhen(false)] out CStaticMesh convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
     {
         heightMaps = [];
         weightMaps = [];
@@ -774,6 +776,7 @@ public static class MeshConverter
 
         if (!flags.HasFlag(ELandscapeExportFlags.Mesh) || landscapeLod == null)
         {
+            convertedMesh = new CStaticMesh(new FBoxSphereBounds()); // bro...
             return true;
         }
 
@@ -822,16 +825,10 @@ public static class MeshConverter
             return meshIndices.ToArray();
         });
 
-        convertedMesh = new CStaticMesh();
-
         FVector min = new(minX, minY, 0);
         FVector max = new(maxX + 1, maxY + 1, Math.Max(maxX - minX, maxY - minY));
 
-        convertedMesh.BoundingBox = new FBox(min, max);
-
-        FVector extent = (max - min) * 0.5f;
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, extent.Size());
-
+        convertedMesh = new CStaticMesh(new FBox(min, max), new FSphere(0f, 0f, 0f, ((max - min) * 0.5f).Size()));
         convertedMesh.LODs.Add(landscapeLod);
         return true;
     }

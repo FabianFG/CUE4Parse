@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Material;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
@@ -26,6 +28,17 @@ public abstract class MeshExporter2<T>(T mesh) : ExporterBase2(mesh) where T : U
         var tasks = files.Select(file => WriteExportFileAsync(file, ct));
         var results = await Task.WhenAll(tasks).ConfigureAwait(false);
         return results;
+    }
+
+    protected void EnqueueMaterials(params ResolvedObject?[] materials)
+    {
+        foreach (var ptr in materials)
+        {
+            if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
+            {
+                Session.Add(new MaterialExporter3(material));
+            }
+        }
     }
 
     private IMeshExportFormat GetMeshFormat(EMeshFormat format) => format switch

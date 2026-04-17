@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
@@ -18,15 +17,9 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter2
 
         if (Session.Options.ExportMaterials)
         {
-            foreach (var ptr in originalMesh.Materials)
-            {
-                if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
-                {
-                    Session.Add(new MaterialExporter3(material));
-                }
-            }
+            EnqueueMaterials(originalMesh.Materials);
         }
 
-        return format.BuildStaticMesh(ObjectName, Session.Options, originalMesh, convertedMesh);
+        return format.BuildStaticMesh(ObjectName, Session.Options, convertedMesh);
     }
 }

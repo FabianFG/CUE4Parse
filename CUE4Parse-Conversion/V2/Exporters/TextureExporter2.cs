@@ -20,6 +20,11 @@ public sealed class TextureExporter2(UTexture texture) : ExporterBase2(texture)
             throw new Exception("Failed to decode texture");
         }
 
+        if (texture is UTextureCube)
+        {
+            decoded = decoded.ToPanorama();
+        }
+
         var format = GetTextureFormat(Session.Options.TextureFormat);
         var file = format.Build(decoded, Session.Options.ExportHdrTexturesAsHdr);
         var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);

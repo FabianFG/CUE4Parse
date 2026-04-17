@@ -4,7 +4,6 @@ using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 
@@ -40,10 +39,10 @@ public sealed class UEModelMeshFormat : IMeshExportFormat
         return [new ExportFile("uemodel", ar.GetBuffer())];
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, UStaticMesh originalMesh, CStaticMesh convertedMesh)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, CStaticMesh convertedMesh)
     {
         using var ar = new FArchiveWriter();
-        new UEModel(objectName, convertedMesh, originalMesh.BodySetup, options).Save(ar);
+        new UEModel(objectName, convertedMesh, options).Save(ar);
         return [new ExportFile("uemodel", ar.GetBuffer())];
     }
 

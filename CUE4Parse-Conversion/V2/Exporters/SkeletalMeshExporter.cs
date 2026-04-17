@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -19,13 +18,7 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
 
         if (Session.Options.ExportMaterials)
         {
-            foreach (var ptr in originalMesh.Materials)
-            {
-                if (ptr?.TryLoad<UMaterialInterface>(out var material) == true)
-                {
-                    Session.Add(new MaterialExporter3(material));
-                }
-            }
+            EnqueueMaterials(originalMesh.Materials);
         }
 
         foreach (var userData in originalMesh.AssetUserData ?? [])

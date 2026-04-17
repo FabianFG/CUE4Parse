@@ -18,7 +18,7 @@ public sealed class UEModel : UEFormatExport
 {
     protected override string Identifier => "UEMODEL";
 
-    public UEModel(string name, CStaticMesh mesh, FPackageIndex bodySetupLazy, ExporterOptions options) : base(name, options)
+    public UEModel(string name, CStaticMesh mesh, ExporterOptions options) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
@@ -39,7 +39,7 @@ public sealed class UEModel : UEFormatExport
             lodChunk.Serialize(Ar);
         }
 
-        if (bodySetupLazy.TryLoad<UBodySetup>(out var bodySetup) && bodySetup.AggGeom?.ConvexElems is { } convexElems)
+        if (mesh.BodySetup?.TryLoad<UBodySetup>(out var bodySetup) == true && bodySetup.AggGeom?.ConvexElems is { } convexElems)
         {
             using var collisionChunk = new FDataChunk("COLLISION", convexElems.Length);
             foreach (var convexElem in convexElems)

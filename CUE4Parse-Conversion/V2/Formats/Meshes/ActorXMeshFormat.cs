@@ -3,7 +3,6 @@ using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 
@@ -56,7 +55,7 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, UStaticMesh originalMesh, CStaticMesh convertedMesh)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, CStaticMesh convertedMesh)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
@@ -66,7 +65,7 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
             if (lod.SkipLod) continue;
 
             using var ar = new FArchiveWriter();
-            new ActorXMesh(lod, materialExports: null, originalMesh.Sockets, options).Save(ar);
+            new ActorXMesh(lod, materialExports: null, convertedMesh.Sockets ?? [], options).Save(ar);
 
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
             results.Add(new ExportFile("pskx", ar.GetBuffer(), suffix));

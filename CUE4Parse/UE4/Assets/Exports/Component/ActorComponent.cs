@@ -217,7 +217,6 @@ public class ULandscapeGizmoRenderComponent : UPrimitiveComponent;
 public class ULandscapeMeshCollisionComponent : ULandscapeHeightfieldCollisionComponent;
 public class ULandscapeMeshProxyComponent : UStaticMeshComponent;
 public class ULandscapeNaniteComponent : UStaticMeshComponent;
-public class ULandscapeSplinesComponent : UPrimitiveComponent;
 public class ULevelInstanceComponent : USceneComponent;
 public class ULightmassPortalComponent : USceneComponent;
 public class ULineBatchComponent : UPrimitiveComponent;
@@ -230,7 +229,17 @@ public class UMaterialSpriteComponent : UMaterialBillboardComponent;
 public class UMediaComponent : UActorComponent;
 public class UMediaPlateComponent : UActorComponent;
 public class UMediaSoundComponent : USynthComponent;
-public class UMeshComponent : UPrimitiveComponent;
+public class UMeshComponent : UPrimitiveComponent
+{
+    public FPackageIndex?[] OverrideMaterials = [];
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        OverrideMaterials = GetOrDefault(nameof(OverrideMaterials), OverrideMaterials);
+    }
+}
 public class UWaterBodyComponent : UPrimitiveComponent;
 public class UWaterMeshComponent : UMeshComponent;
 public class UMeshWireframeComponent : UMeshComponent;

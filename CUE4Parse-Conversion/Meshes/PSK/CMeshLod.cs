@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse.UE4.Assets.Exports.Material;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public class CBaseMeshLod : IDisposable
+public abstract class CMeshLod : IDisposable
 {
     public int NumVerts = 0;
     public int NumTexCoords = 0;
@@ -23,6 +22,8 @@ public class CBaseMeshLod : IDisposable
     public CVertexColor[]? ExtraVertexColors;
     public Lazy<uint[]>? Indices;
     public bool SkipLod => Sections?.Value.Length < 1 || Indices?.Value.Length < 1;
+
+    public abstract void AllocateVerts(int count);
 
     public void AllocateUVBuffers()
     {
@@ -65,6 +66,20 @@ public class CBaseMeshLod : IDisposable
             }
         }
         return materials;
+    }
+
+    public void BuildNormals()
+    {
+        if (HasNormals) return;
+        // BuildNormalsCommon(Verts, Indices);
+        HasNormals = true;
+    }
+
+    public void BuildTangents()
+    {
+        if (HasTangents) return;
+        // BuildTangentsCommon(Verts, Indices);
+        HasTangents = true;
     }
 
     public virtual void Dispose()

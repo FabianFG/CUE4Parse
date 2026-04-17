@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Formats.Meshes;
@@ -48,7 +47,7 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, UStaticMesh originalMesh, CStaticMesh convertedMesh)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, CStaticMesh convertedMesh)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
@@ -70,6 +69,8 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, USkeleton skeleton) => [];
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, USkeleton skeleton)
+        => throw new NotSupportedException(
+            "glTF does not support skeleton-only exports. Please export a skeletal mesh to get a glTF file containing the skeleton.");
 }
 
