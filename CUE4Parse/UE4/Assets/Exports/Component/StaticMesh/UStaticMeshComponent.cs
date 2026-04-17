@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -39,6 +40,15 @@ public class UStaticMeshComponent : UMeshComponent
             if (bSerializeAsCookedData)
                 MeshPaintTextureCooked = new FPackageIndex(Ar);
         }
+    }
+
+    public override IEnumerable<UObject> GetExportableReferences()
+    {
+        if (GetStaticMesh().TryLoad<UStaticMesh>(out var mesh))
+            yield return mesh;
+
+        foreach (var obj in base.GetExportableReferences())
+            yield return obj;
     }
 
     public virtual FPackageIndex GetStaticMesh()

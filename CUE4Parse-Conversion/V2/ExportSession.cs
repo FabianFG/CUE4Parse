@@ -9,10 +9,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component;
-using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
-using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -39,69 +36,28 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
     public ExportSession Add(UObject export)
     {
-        switch (export)
+        return export switch
         {
             // ------- Exporters -------
-            case UTexture texture: return Add(new TextureExporter2(texture));
-            case UMaterialInterface material: return Add(new MaterialExporter3(material));
-            case USkeletalMesh skeletalMesh: return Add(new SkeletalMeshExporter(skeletalMesh));
-            case UStaticMesh staticMesh: return Add(new StaticMeshExporter(staticMesh));
-            case USkeleton skeleton: return Add(new SkeletonExporter(skeleton));
-            case UAnimationAsset animation: return Add(new AnimationExporter2(animation));
-            case UDNAAsset dna: return Add(new DnaExporter(dna));
-            case UWorld world: return Add(new WorldExporter(world));
-            case ALandscapeProxy landscape: return Add(new LandscapeMeshExporter(landscape));
-            case USplineMeshComponent spline: return Add(new SplineMeshExporter(spline));
+            UTexture texture => Add(new TextureExporter2(texture)),
+            UMaterialInterface material => Add(new MaterialExporter3(material)),
+            USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
+            UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
+            UAnimationAsset animation => Add(new AnimationExporter2(animation)),
+            UDNAAsset dna => Add(new DnaExporter(dna)),
+            UWorld world => Add(new WorldExporter(world)),
+            ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
+            USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
 
-            // ------- References -------
-            case UStaticMeshComponent sm when sm.GetStaticMesh().TryLoad<UStaticMesh>(out var mesh):
-                foreach (var overrideMaterial in sm.OverrideMaterials)
-                {
-                    if (overrideMaterial?.TryLoad<UMaterialInterface>(out var material) == true)
-                    {
-                        Add(material);
-                    }
-                }
-                return Add(mesh);
-            case USkeletalMeshComponent sk when sk.GetSkeletalMesh().TryLoad<USkeletalMesh>(out var mesh):
-                if (sk.AnimationData?.AnimToPlay.TryLoad<UAnimationAsset>(out var animToPlay) == true)
-                {
-                    Add(animToPlay);
-                }
-                foreach (var overrideMaterial in sk.OverrideMaterials)
-                {
-                    if (overrideMaterial?.TryLoad<UMaterialInterface>(out var material) == true)
-                    {
-                        Add(material);
-                    }
-                }
-                return Add(mesh);
-            case UBillboardComponent billboard when billboard.GetSprite() is { } sprite:
-                return Add(sprite);
+            // ------- Resolvers -------
             // case UBrushComponent:
             // case UShapeComponent:
             // case UAudioComponent:
             // case UTextRenderComponent:
-            case ULandscapeComponent landscape when landscape.Outer?.TryLoad<ALandscapeProxy>(out var outer) == true:
-                return Add(outer);
-            case ULandscapeSplinesComponent splines:
-                foreach (var ptr in splines.Segments)
-                {
-                    if (ptr?.TryLoad<ULandscapeSplineSegment>(out var segment) == true)
-                    {
-                        foreach (var meshPtr in segment.LocalMeshComponents)
-                        {
-                            if (meshPtr?.TryLoad<USplineMeshComponent>(out var splineMesh) == true)
-                            {
-                                Add(splineMesh);
-                            }
-                        }
-                    }
-                }
-                return this;
-
-            default: throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.");
-        }
+            IComponentResolver resolver => Resolve(resolver),
+            _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
+        };
     }
 
     public ExportSession Add(ExporterBase2 exporter)
@@ -111,15 +67,6 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         exporter._session = this;
         _roots.Enqueue(exporter);
         Interlocked.Increment(ref _totalQueued);
-        return this;
-    }
-
-    public ExportSession AddRange(IEnumerable<ExporterBase2> exporters)
-    {
-        foreach (var exporter in exporters)
-        {
-            Add(exporter);
-        }
         return this;
     }
 
@@ -159,5 +106,14 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
                 progress?.Report(new ExportProgress(c, total, result));
             }
         }
+    }
+
+    private ExportSession Resolve(IComponentResolver resolver)
+    {
+        foreach (var obj in resolver.GetExportableReferences())
+        {
+            Add(obj);
+        }
+        return this;
     }
 }

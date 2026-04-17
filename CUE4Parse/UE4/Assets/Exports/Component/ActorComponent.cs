@@ -1,21 +1,16 @@
+using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
-using CUE4Parse.UE4.Assets.Exports.Sound;
-using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.Engine;
-using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
 
-public class UActorComponent : UObject
+public class UActorComponent : UObject, IComponentResolver
 {
     [JsonIgnore] public FSimpleMemberReference[]? UCSModifiedProperties;
 
@@ -33,6 +28,11 @@ public class UActorComponent : UObject
             UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
         }
     }
+
+    public virtual IEnumerable<UObject> GetExportableReferences()
+    {
+        yield break;
+    }
 }
 
 public struct FSimpleMemberReference(FAssetArchive Ar)
@@ -48,37 +48,8 @@ public class UActorSequenceComponent : UActorComponent;
 public class UActorTextureStreamingBuildDataComponent : UActorComponent;
 public class UApplicationLifecycleComponent : UActorComponent;
 public class UArchVisCharMovementComponent : UCharacterMovementComponent;
-
-public class UArrowComponent : UPrimitiveComponent
-{
-    public FColor ArrowColor;
-    public float ArrowSize;
-    public float ArrowLength;
-
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
-
-        ArrowColor = GetOrDefault(nameof(ArrowColor), new FColor(255, 0, 0));
-        ArrowSize = GetOrDefault(nameof(ArrowSize), 1.0f);
-        ArrowLength = GetOrDefault(nameof(ArrowLength), 80.0f);
-    }
-}
 public class UAsyncPhysicsInputComponent : UActorComponent;
 public class UAudioCaptureComponent : USynthComponent;
-
-public class UAudioComponent : USceneComponent
-{
-    public USoundBase? Sound { get; protected set; }
-
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
-
-        Sound = GetOrDefault<USoundBase?>(nameof(Sound));
-    }
-}
-
 public class UAudioCurveSourceComponent : UAudioComponent;
 public class UAxisGizmoHandleGroup : UGizmoHandleGroup;
 public class UBaseDynamicMeshComponent : UMeshComponent;
@@ -92,45 +63,12 @@ public class UBasicLineSetComponentBase : UMeshComponent;
 public class UBasicPointSetComponentBase : UMeshComponent;
 public class UBasicTriangleSetComponentBase : UMeshComponent;
 public class UBehaviorTreeComponent : UBrainComponent;
-
-public class UBillboardComponent : UPrimitiveComponent
-{
-    public UTexture2D? GetSprite()
-    {
-        var current = this;
-        while (current != null)
-        {
-            var sprite = current.GetOrDefault<UTexture2D?>("Sprite");
-            if (sprite != null) return sprite;
-
-            current = current.Template?.Load<UBillboardComponent>();
-        }
-
-        return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
-    }
-}
 public class UBlackboardComponent : UActorComponent;
 public class UBoundsCopyComponent : UActorComponent;
 public class UBoxComponent : UShapeComponent;
 public class UBoxFalloff : UFieldNodeFloat;
 public class UBoxReflectionCaptureComponent : UReflectionCaptureComponent;
 public class UBrainComponent : UActorComponent;
-public class UBrushComponent : UPrimitiveComponent
-{
-    public FPackageIndex? Brush { get; protected set; }
-    public FPackageIndex? BrushBodySetup { get; protected set; }
-
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
-
-        Brush = GetOrDefault(nameof(Brush), new FPackageIndex());
-        BrushBodySetup = GetOrDefault(nameof(BrushBodySetup), new FPackageIndex());
-    }
-
-    public UModel? GetBrush() => Brush?.Load<UModel>();
-    public override UBodySetup? GetBodySetup() => BrushBodySetup?.Load<UBodySetup>();
-}
 public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
@@ -229,17 +167,6 @@ public class UMaterialSpriteComponent : UMaterialBillboardComponent;
 public class UMediaComponent : UActorComponent;
 public class UMediaPlateComponent : UActorComponent;
 public class UMediaSoundComponent : USynthComponent;
-public class UMeshComponent : UPrimitiveComponent
-{
-    public FPackageIndex?[] OverrideMaterials = [];
-
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
-
-        OverrideMaterials = GetOrDefault(nameof(OverrideMaterials), OverrideMaterials);
-    }
-}
 public class UWaterBodyComponent : UPrimitiveComponent;
 public class UWaterMeshComponent : UMeshComponent;
 public class UMeshWireframeComponent : UMeshComponent;
@@ -282,7 +209,6 @@ public class UPaperTerrainComponent : UPrimitiveComponent;
 public class UPaperTerrainSplineComponent : USplineComponent;
 public class UPaperTileMapComponent : UMeshComponent;
 public class UPaperTileMapRenderComponent : UPaperTileMapComponent;
-
 public class UParticleSystemComponent : UFXSystemComponent
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -291,7 +217,6 @@ public class UParticleSystemComponent : UFXSystemComponent
         base.Deserialize(Ar, validPos);
     }
 }
-
 public class UParticleSystem : UObject
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)

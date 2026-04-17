@@ -1,4 +1,6 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+﻿using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 
@@ -41,5 +43,14 @@ public class USkinnedMeshComponent : UMeshComponent
     public void SetSkeletalMesh(FPackageIndex mesh)
     {
         PropertyUtil.Set(this, "SkeletalMesh", mesh);
+    }
+
+    public override IEnumerable<UObject> GetExportableReferences()
+    {
+        if (GetSkeletalMesh().TryLoad<USkeletalMesh>(out var mesh))
+            yield return mesh;
+
+        foreach (var obj in base.GetExportableReferences())
+            yield return obj;
     }
 }

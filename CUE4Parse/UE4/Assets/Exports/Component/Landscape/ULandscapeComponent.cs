@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
@@ -109,6 +111,15 @@ public class ULandscapeComponent : UPrimitiveComponent
     public UTexture2D[] GetWeightmapTextures() => WeightmapTextures.Value;
 
     public FWeightmapLayerAllocationInfo[] GetWeightmapLayerAllocations() => WeightmapLayerAllocations;
+
+    public override IEnumerable<UObject> GetExportableReferences()
+    {
+        if (Outer?.TryLoad<ALandscapeProxy>(out var outer) == true)
+            yield return outer;
+
+        foreach (var obj in base.GetExportableReferences())
+            yield return obj;
+    }
 }
 
 public class FLandscapeComponentDerivedData
