@@ -92,7 +92,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                     break;
             };
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == EGame.GAME_DeltaForceHawkOps)
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == EGame.GAME_DeltaForce)
             {
                 PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
             }

@@ -112,7 +112,7 @@ public enum EGame : uint
         GAME_Valorant_PRE_11_2 = GAME_UE4_27 + 5,
         GAME_Gollum = GAME_UE4_27 + 6,
         GAME_Grounded = GAME_UE4_27 + 7,
-        GAME_DeltaForceHawkOps = GAME_UE4_27 + 8,
+        GAME_DeltaForce = GAME_UE4_27 + 8,
         GAME_MortalKombat1 = GAME_UE4_27 + 9,
         GAME_VisionsofMana = GAME_UE4_27 + 10,
         GAME_Spectre = GAME_UE4_27 + 11,

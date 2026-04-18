@@ -349,7 +349,7 @@ public class FScriptStruct
             "VoyagePackedLocalTransform" => new VoyagePackedLocalTransform(Ar),
             "VoyageFloat16" => Ar.Read<FRawStruct<Half>>(),
 
-            "EncVector" when Ar.Game is EGame.GAME_DeltaForceHawkOps => Ar.Read<FVector>(),
+            "EncVector" when Ar.Game is EGame.GAME_DeltaForce => Ar.Read<FVector>(),
 
             "MercunaUsageSpec" when Ar.Game is EGame.GAME_PUBGBlackBudget => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaUsageTypes" when Ar.Game is EGame.GAME_PUBGBlackBudget => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),

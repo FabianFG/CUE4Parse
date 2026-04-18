@@ -701,7 +701,7 @@ namespace CUE4Parse.UE4.Readers
 
         public abstract object Clone();
 
-        private struct FCompressedChunkInfo
+        public struct FCompressedChunkInfo
         {
             public long CompressedSize, UncompressedSize;
         }

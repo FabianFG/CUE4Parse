@@ -132,7 +132,7 @@ public class FStaticMeshLODResources
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
                     EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
-                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
+                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForce => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
                 };
