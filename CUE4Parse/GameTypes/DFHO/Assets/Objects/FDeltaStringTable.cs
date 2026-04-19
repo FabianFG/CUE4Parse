@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using static CUE4Parse.UE4.Readers.FArchive;
@@ -12,16 +13,23 @@ public class FDeltaStringTable
 
     public FDeltaStringTable(FArchive Ar)
     {
-        var initialPos = Ar.Position;
-        Ar.Read<FCompressedChunkInfo>();
-        var summary = Ar.Read<FCompressedChunkInfo>();
-        Ar.Position = initialPos;
+        using var resultStream = new MemoryStream();
+        while (Ar.Position < Ar.Length)
+        {
+            var initialPos = Ar.Position;
+            Ar.Read<FCompressedChunkInfo>();
+            var summary = Ar.Read<FCompressedChunkInfo>();
+            Ar.Position = initialPos;
 
-        var uncompressed = new byte[summary.UncompressedSize];
-        Ar.SerializeCompressedNew(uncompressed, uncompressed.Length, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            var uncompressedChunk = new byte[summary.UncompressedSize];
+            Ar.SerializeCompressedNew(uncompressedChunk, uncompressedChunk.Length, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
 
+            resultStream.Write(uncompressedChunk, 0, uncompressedChunk.Length);
+        }
+
+        var fullUncompressed = resultStream.ToArray();
         // UStringTable without KeysToMetaData
-        var tableAr = new FByteArchive("FDeltaStringTable", uncompressed, Ar.Versions);
+        var tableAr = new FByteArchive("FDeltaStringTable", fullUncompressed, Ar.Versions);
 
         tableAr.Position += 4; // Size
         TableNamespace = tableAr.ReadFString();
