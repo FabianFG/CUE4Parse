@@ -20,8 +20,7 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly byte PriorityApplyDistFactor;
     public readonly sbyte DistOffset;
     public readonly EMidiBehaviorFlags MidiBehaviorFlags;
-    public readonly AkProp[] Props;
-    public readonly AkPropRange[] PropRanges;
+    public readonly AkPropBundle PropBundle;
     public readonly AkPositioningParams PositioningParams;
     public readonly AkAuxParams? AuxParams;
     public readonly EAdvSettings AdvSettingsParams;
@@ -72,9 +71,7 @@ public class BaseHierarchy : AbstractHierarchy
             PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0);
         }
 
-        var propBundle = new AkPropBundle(Ar);
-        Props = propBundle.Props;
-        PropRanges = propBundle.PropRanges;
+        PropBundle = new AkPropBundle(Ar);
 
         PositioningParams = new AkPositioningParams(Ar);
 
@@ -151,11 +148,8 @@ public class BaseHierarchy : AbstractHierarchy
         writer.WritePropertyName(nameof(MidiBehaviorFlags));
         writer.WriteValue(MidiBehaviorFlags.ToString());
 
-        writer.WritePropertyName(nameof(Props));
-        serializer.Serialize(writer, Props);
-
-        writer.WritePropertyName(nameof(PropRanges));
-        serializer.Serialize(writer, PropRanges);
+        writer.WritePropertyName(nameof(PropBundle));
+        serializer.Serialize(writer, PropBundle);
 
         writer.WritePropertyName(nameof(PositioningParams));
         serializer.Serialize(writer, PositioningParams);

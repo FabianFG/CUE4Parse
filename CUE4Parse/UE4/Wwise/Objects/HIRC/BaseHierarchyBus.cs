@@ -38,12 +38,11 @@ public class BaseHierarchyBus : AbstractHierarchy
         {
             int propCount = Ar.Read<byte>();
             var propIds = Ar.ReadArray(propCount, Ar.Read<byte>);
-            var propValues = Ar.ReadArray(propCount, Ar.Read<float>);
 
             Props = new AkProp[propCount];
             for (int i = 0; i < propCount; i++)
             {
-                Props[i] = new AkProp(propIds[i], propValues[i]);
+                Props[i] = new AkProp(propIds[i], AkUnionValue.Read(Ar));
             }
         }
 
