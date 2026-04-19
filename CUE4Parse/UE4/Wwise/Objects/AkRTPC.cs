@@ -9,7 +9,6 @@ public readonly struct AkSwitchGraphPoint
 {
     public readonly float From;
     public readonly uint To;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveInterpolation Interp;
 
     public AkSwitchGraphPoint(FArchive Ar)
@@ -24,7 +23,6 @@ public readonly struct AkRtpcGraphPoint
 {
     public readonly float From;
     public readonly float To;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveInterpolation Interpolation;
 
     public AkRtpcGraphPoint(FArchive Ar)

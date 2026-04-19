@@ -10,14 +10,14 @@ public class BaseHierarchy : AbstractHierarchy
 {
     public readonly bool OverrideFx;
     public readonly AkFxParams FxParams;
-    public readonly byte OverrideParentMetadataFlag;
-    public readonly AkFxChunk[]? FxChunks;
-    public readonly byte OverrideAttachmentParams;
+    public readonly bool OverrideParentMetadataFlag;
+    public readonly AkFxChunk[] FxChunks = [];
+    public readonly bool OverrideAttachmentParams;
     public readonly uint OverrideBusId;
     public readonly uint DirectParentId;
-    public readonly byte Priority;
-    public readonly byte PriorityOverrideParent;
-    public readonly byte PriorityApplyDistFactor;
+    public readonly bool Priority;
+    public readonly bool PriorityOverrideParent;
+    public readonly bool PriorityApplyDistFactor;
     public readonly sbyte DistOffset;
     public readonly EMidiBehaviorFlags MidiBehaviorFlags;
     public readonly AkPropBundle PropBundle;
@@ -39,13 +39,13 @@ public class BaseHierarchy : AbstractHierarchy
 
         if (WwiseVersions.Version > 136)
         {
-            OverrideParentMetadataFlag = Ar.Read<byte>();
+            OverrideParentMetadataFlag = Ar.Read<byte>() != 0;
             FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
         if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
         {
-            OverrideAttachmentParams = Ar.Read<byte>();
+            OverrideAttachmentParams = Ar.Read<byte>() != 0;
         }
 
         OverrideBusId = Ar.Read<uint>();
@@ -53,22 +53,22 @@ public class BaseHierarchy : AbstractHierarchy
 
         if (WwiseVersions.Version <= 56)
         {
-            Priority = Ar.Read<byte>();
-            PriorityOverrideParent = Ar.Read<byte>();
-            PriorityApplyDistFactor = Ar.Read<byte>();
+            Priority = Ar.Read<byte>() != 0;
+            PriorityOverrideParent = Ar.Read<byte>() != 0;
+            PriorityApplyDistFactor = Ar.Read<byte>() != 0;
             DistOffset = Ar.Read<sbyte>();
         }
         else if (WwiseVersions.Version <= 89)
         {
-            PriorityOverrideParent = Ar.Read<byte>();
-            PriorityApplyDistFactor = Ar.Read<byte>();
+            PriorityOverrideParent = Ar.Read<byte>() != 0;
+            PriorityApplyDistFactor = Ar.Read<byte>() != 0;
         }
         else
         {
             MidiBehaviorFlags = Ar.Read<EMidiBehaviorFlags>();
 
-            PriorityOverrideParent = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityOverrideParent ? 1 : 0);
-            PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0);
+            PriorityOverrideParent = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityOverrideParent ? 1 : 0) != 0;
+            PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0) != 0;
         }
 
         PropBundle = new AkPropBundle(Ar);
@@ -113,7 +113,7 @@ public class BaseHierarchy : AbstractHierarchy
         serializer.Serialize(writer, FxParams);
 
         writer.WritePropertyName(nameof(OverrideParentMetadataFlag));
-        writer.WriteValue(OverrideParentMetadataFlag != 0);
+        writer.WriteValue(OverrideParentMetadataFlag);
 
         writer.WritePropertyName(nameof(FxChunks));
         serializer.Serialize(writer, FxChunks);
@@ -134,13 +134,13 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         writer.WritePropertyName(nameof(Priority));
-        writer.WriteValue(Priority != 0);
+        writer.WriteValue(Priority);
 
         writer.WritePropertyName(nameof(PriorityOverrideParent));
-        writer.WriteValue(PriorityOverrideParent != 0);
+        writer.WriteValue(PriorityOverrideParent);
 
         writer.WritePropertyName(nameof(PriorityApplyDistFactor));
-        writer.WriteValue(PriorityApplyDistFactor != 0);
+        writer.WriteValue(PriorityApplyDistFactor);
 
         writer.WritePropertyName(nameof(DistOffset));
         writer.WriteValue(DistOffset);
