@@ -22,7 +22,7 @@ public class FNiagaraShaderScript
         {
             ShaderStageToPermutation = Ar.ReadMap(Ar.Read<int>, Ar.Read<int>);
         }
-        if (Ar.Game >= EGame.GAME_UE5_2 || Ar.Game is EGame.GAME_DuetNightAbyss)
+        if (Ar.Game >= EGame.GAME_UE5_2 || Ar.Game is EGame.GAME_DuetNightAbyss or EGame.GAME_HonorofKingsWorld)
         {
             BaseCompileHash = new FNiagaraCompileHash(Ar);
         }

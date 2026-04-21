@@ -51,6 +51,14 @@ public class FStaticMeshVertexBuffer
                 {
                     goto texture_coordinates;
                 }
+
+                if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+                {
+                    // packed normals, could be 4 or 8 bytes with UseHighPrecisionTangentBasis
+                    Ar.SkipBulkArrayData();
+                    goto texture_coordinates;
+                }
+
                 // BulkSerialize
                 var itemSize = Ar.Read<int>();
                 var itemCount = Ar.Read<int>();
@@ -73,7 +81,7 @@ public class FStaticMeshVertexBuffer
                 itemCount = Ar.Read<int>();
                 position = Ar.Position;
                 var texCoordNumVerts = GetTexCoordNumVerts(itemCount);
-                
+
                 if (itemCount != texCoordNumVerts * NumTexCoords)
                     throw new ParserException($"NumVertices={itemCount} != {texCoordNumVerts * NumTexCoords}");
 
@@ -84,7 +92,7 @@ public class FStaticMeshVertexBuffer
                 UV = new FStaticMeshUVItem[NumVertices];
                 for (var i = 0; i < NumVertices; i++)
                 {
-                    if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor && tempTangents.Length == 0)
+                    if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor or EGame.GAME_HonorofKingsWorld && tempTangents.Length == 0)
                     {
                         UV[i] = new FStaticMeshUVItem([new FPackedNormal(0), new FPackedNormal(0), new FPackedNormal(0)], uv[i]);
                     }
@@ -107,7 +115,7 @@ public class FStaticMeshVertexBuffer
     private int GetTexCoordNumVerts(int itemCount)
     {
         if (itemCount == NumVertices * NumTexCoords) return NumVertices;
-        
+
         var padding = NumVertices > 0 ? NumTexCoords % 2 : 0;
         return NumVertices + padding;
     }

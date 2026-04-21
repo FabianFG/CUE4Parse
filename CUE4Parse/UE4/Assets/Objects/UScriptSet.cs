@@ -30,6 +30,7 @@ public class UScriptSet
                 _ => null
             };
         }
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld && tagData?.Name is "LogicState" or "CategorySet") tagData.InnerType = "EnumProperty";
 
         var innerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptSet needs inner type");
 
@@ -49,6 +50,8 @@ public class UScriptSet
                 EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
                 EGame.GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
+                EGame.GAME_HonorofKingsWorld when tagData.Name is "WaterPhysicalMaterials" => new FPropertyTagData("SoftObjectPath"),
+                EGame.GAME_HonorofKingsWorld when tagData.Name is "InstanceIdsNotToHide" => new FPropertyTagData("Guid"),
                 EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
                 _ => tagData.InnerTypeData
             };

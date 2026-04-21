@@ -43,6 +43,12 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         }
 
         var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        {
+            CustomGameData = Ar.ReadBoolean();
+            bHasSkipSerializationPropertiesData = Ar.ReadBoolean();
+        }
+
         if (bHasSkipSerializationPropertiesData)
         {
             switch (Ar.Game)

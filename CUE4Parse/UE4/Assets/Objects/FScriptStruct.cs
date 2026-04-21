@@ -392,6 +392,8 @@ public class FScriptStruct
             "RulesetId" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
             "HexCell" when Ar.Game is EGame.GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
 
+            "MovieSceneTangentData" when Ar.Game is EGame.GAME_HonorofKingsWorld => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

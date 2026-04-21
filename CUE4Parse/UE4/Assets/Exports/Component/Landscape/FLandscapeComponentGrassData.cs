@@ -31,6 +31,24 @@ public class FLandscapeComponentGrassData
                 Ar.Position +=16; // Guid
             }
 
+            if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+            {
+                NumElements = Ar.Read<int>();
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    _ = new FPackageIndex(Ar);
+                    var elementCount = Ar.Read<int>();
+                    for (var j = 0; j < elementCount; j++)
+                    {
+                        (int type, int _, int length) idk = (Ar.Read<int>(), Ar.Read<int>(), Ar.Read<int>());
+                        Ar.Position += idk.length * 27 + (idk.type == 1 ? 8 : 20);
+                    }
+                }
+
+                return;
+            }
+
             if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
             {
                 var bulkData = new FByteBulkData(Ar);
