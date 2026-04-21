@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 using CUE4Parse.Compression;
+using CUE4Parse.GameTypes.HonorOfKings.Lua;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
@@ -96,6 +97,9 @@ public sealed class FHoKEntry : FPakEntry
                 uncompressedOff += uncompressedSize;
             }
 
+            if (Extension is "lua")
+                _ = new NGRLuaReader(Path, uncompressed, out uncompressed);
+
             var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
             if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
                 return uncompressed;
@@ -115,6 +119,9 @@ public sealed class FHoKEntry : FPakEntry
             Decompress(bytes, 0, compSize, data, uncompressedOffset, uncompSize, CompressionMethod, Ar);
             uncompressedOffset += uncompSize;
         }
+
+        if (Extension is "lua")
+            _ = new NGRLuaReader(Path, data, out data);
 
         if (offset == 0 && requestedSize == data.Length)
             return data;
