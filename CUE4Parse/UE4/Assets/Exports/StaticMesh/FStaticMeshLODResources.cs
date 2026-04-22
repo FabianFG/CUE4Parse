@@ -96,11 +96,12 @@ public class FStaticMeshLODResources
                         if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData();
                         break;
                     case EGame.GAME_HonorofKingsWorld:
-                        Ar.Position += 36;
+                        _ = Ar.ReadArray(2, () => new FRawStaticIndexBuffer(Ar));
+                        Ar.Position += 4;
                         var additionalBuffers = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
-                        if (additionalBuffers[0].Length > 0) Sections[0].CustomData = 1; // flag for custom serialization in FStaticMeshRenderData
+                        if (additionalBuffers[0] is { Buffer: {Length: > 0 }}) Sections[0].CustomData = 1; // flag for custom serialization in FStaticMeshRenderData
                         break;
-                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData.HasValue && x.CustomData.Value == 1):
+                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData is 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }

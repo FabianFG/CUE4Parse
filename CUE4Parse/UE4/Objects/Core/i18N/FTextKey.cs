@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
     {
         public readonly string Str;
         public readonly uint StrHash;
-        
+
         public FTextKey(FArchive Ar, ELocResVersion versionNum)
         {
             StrHash = 0;
@@ -14,8 +14,14 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             {
                 StrHash = Ar.Read<uint>();
             }
-            
+
             Str = Ar.ReadFString();
+        }
+
+        public FTextKey(string str, uint hash = 0)
+        {
+            Str = str;
+            StrHash = hash;
         }
     }
 }

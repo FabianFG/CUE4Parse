@@ -16,5 +16,13 @@ namespace CUE4Parse.UE4.Objects.Core.i18N
             SourceStringHash = Ar.Read<uint>();
             Priority = 0;
         }
+
+        public FEntry(string localizedString, string locResName, uint sourceStringHash, int priority = 0)
+        {
+            LocalizedString = localizedString;
+            LocResName = locResName;
+            SourceStringHash = sourceStringHash;
+            Priority = priority;
+        }
     }
 }

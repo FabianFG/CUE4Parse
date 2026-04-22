@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -238,8 +238,13 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
                         }
                     }
 
-                    var entry = new FHoKEntry(this, container, path, hash, compression);
-                    files[path] = entry;
+#if !DEBUG
+                    if (!path.EndsWith("ind", StringComparison.OrdinalIgnoreCase))
+#endif
+                    {
+                        var entry = new FHoKEntry(this, container, path, hash, compression);
+                        files[path] = entry;
+                    }
                 }
                 else
                 {

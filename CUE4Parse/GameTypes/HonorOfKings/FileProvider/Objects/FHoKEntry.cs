@@ -48,7 +48,7 @@ public sealed class FHoKEntry : FPakEntry
         var requestedSize = (int) Size;
         if (header is { } bulk)
         {
-            if (bulk.BulkDataFlags.HasFlag(EBulkDataFlags.BULKDATA_WorkspaceDomainPayload) && Path.EndsWith("ubulk"))
+            if (bulk.BulkDataFlags.HasFlag(EBulkDataFlags.BULKDATA_WorkspaceDomainPayload) && Extension.Equals("ubulk", StringComparison.OrdinalIgnoreCase))
             {
                 var path = System.IO.Path.ChangeExtension(Path, ".g.ubulk");
                 if (Vfs is HoKdbFileReader reader && reader.Provider.TryGetGameFile(path, out var gbulk))
