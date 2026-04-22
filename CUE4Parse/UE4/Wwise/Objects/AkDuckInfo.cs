@@ -11,7 +11,6 @@ public readonly struct AkDuckInfo
     public readonly float DuckVolume;
     public readonly uint FadeOutTime;
     public readonly uint FadeInTime;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveInterpolation FadeCurve;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkPropID TargetProp;

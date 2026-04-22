@@ -273,7 +273,7 @@ namespace CUE4Parse.UE4.Pak
             int fileCount = 0;
             EncryptedFileCount = 0;
 
-            if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForceHawkOps)
+            if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForce)
             {
                 primaryIndex.Position += 8; // PathHashSeed
                 fileCount = primaryIndex.Read<int>();
@@ -292,7 +292,7 @@ namespace CUE4Parse.UE4.Pak
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
-            if (!(Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForceHawkOps))
+            if (!(Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForce))
             {
                 fileCount = primaryIndex.Read<int>();
                 primaryIndex.Position += 8; // PathHashSeed

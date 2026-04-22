@@ -1,7 +1,5 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
@@ -9,7 +7,6 @@ public readonly struct AkStinger
 {
     public readonly uint TriggerId;
     public readonly uint SegmentId;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkSyncType SyncPlayAt;
     public readonly uint CueFilterHash;
     public readonly int DontRepeatTime;

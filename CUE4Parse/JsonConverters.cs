@@ -3499,3 +3499,16 @@ public class AwbReaderConverter : JsonConverter<AwbReader>
         throw new NotImplementedException();
     }
 }
+
+public class AkPropValueConverter : JsonConverter<AkUnionValue>
+{
+    public override void WriteJson(JsonWriter writer, AkUnionValue value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.Value);
+    }
+
+    public override AkUnionValue ReadJson(JsonReader reader, Type objectType, AkUnionValue existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}

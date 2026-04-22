@@ -83,7 +83,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
                 EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
-                EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
+                EGame.GAME_DeltaForce => DeltaForceAes.DeltaForceDecrypt,
                 EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,

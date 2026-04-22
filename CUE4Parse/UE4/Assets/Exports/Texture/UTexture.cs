@@ -119,7 +119,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
-                if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+                if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForce) Ar.Position += 4;
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {

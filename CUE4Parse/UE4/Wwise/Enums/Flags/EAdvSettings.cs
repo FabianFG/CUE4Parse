@@ -8,6 +8,7 @@ public enum EAdvSettings : byte
     None = 0,
     KillNewest = 1 << 0,
     UseVirtualBehavior = 1 << 1,
+    UnknownFlag2 = 1 << 2, // v154
     IgnoreParentMaxNumInst = 1 << 3,
     VVoicesOptOverrideParent = 1 << 4
 }

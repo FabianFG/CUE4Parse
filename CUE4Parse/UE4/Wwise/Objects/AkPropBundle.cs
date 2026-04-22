@@ -1,28 +1,22 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public readonly struct AkPropBundle
+public readonly struct AkPropBundle(FArchive Ar)
 {
-    public readonly AkProp[] Props;
-    public readonly AkPropRange[] PropRanges;
-
-    public AkPropBundle(FArchive Ar)
-    {
-        Props = Ar.ReadArray(Ar.Read<byte>(), () => new AkProp(Ar));
-        PropRanges = Ar.ReadArray(Ar.Read<byte>(), () => new AkPropRange(Ar));
-    }
+    public readonly AkProp[] Props = ReadSequentialAkProp(Ar);
+    public readonly AkPropRange[] PropRanges = ReadSequentialAkPropRange(Ar);
 
     public static AkProp[] ReadSequentialAkProp(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-
         var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
-        var values = Ar.ReadArray(propCount, Ar.Read<float>);
 
         var props = new AkProp[propCount];
         for (int i = 0; i < propCount; i++)
-            props[i] = new AkProp(ids[i], values[i]);
+            props[i] = new AkProp(ids[i], AkUnionValue.Read(Ar));
 
         return props;
     }
@@ -30,14 +24,13 @@ public readonly struct AkPropBundle
     public static AkPropRange[] ReadSequentialAkPropRange(FArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-
         var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
 
         var ranges = new AkPropRange[propCount];
         for (int i = 0; i < propCount; i++)
         {
-            float min = Ar.Read<float>();
-            float max = Ar.Read<float>();
+            AkUnionValue min = AkUnionValue.Read(Ar);
+            AkUnionValue max = AkUnionValue.Read(Ar);
             ranges[i] = new AkPropRange(ids[i], min, max);
         }
 
@@ -45,41 +38,33 @@ public readonly struct AkPropBundle
     }
 }
 
-public readonly struct AkProp
+public readonly struct AkProp(byte id, AkUnionValue value)
 {
-    public readonly byte Id;
-    public readonly float Value;
-
-    public AkProp(FArchive Ar)
-    {
-        Id = Ar.Read<byte>();
-        Value = Ar.Read<float>();
-    }
-
-    public AkProp(byte id, float value)
-    {
-        Id = id;
-        Value = value;
-    }
+    public readonly byte Id = id;
+    public readonly AkUnionValue Value = value;
 }
 
-public readonly struct AkPropRange
+public readonly struct AkPropRange(byte id, AkUnionValue min, AkUnionValue max)
 {
-    public readonly byte Id;
-    public readonly float Min;
-    public readonly float Max;
+    public readonly byte Id = id;
+    public readonly AkUnionValue Min = min;
+    public readonly AkUnionValue Max = max;
+}
 
-    public AkPropRange(FArchive Ar)
-    {
-        Id = Ar.Read<byte>();
-        Min = Ar.Read<float>();
-        Max = Ar.Read<float>();
-    }
+[JsonConverter(typeof(AkPropValueConverter))]
+[StructLayout(LayoutKind.Explicit)]
+public struct AkUnionValue
+{
+    [FieldOffset(0)] public float f32;
+    [FieldOffset(0)] public uint u32;
+    // Guessing value type, in Wwise it's determined by the subclass, this is simply more convenient
+    public readonly object Value => u32 > 0x10000000 ? f32 : u32;
 
-    public AkPropRange(byte id, float min, float max)
+    public AkUnionValue(uint val) : this() => u32 = val;
+
+    public static AkUnionValue Read(FArchive Ar)
     {
-        Id = id;
-        Min = min;
-        Max = max;
+        uint raw = Ar.Read<uint>();
+        return new AkUnionValue(raw);
     }
 }

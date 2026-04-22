@@ -4,8 +4,10 @@ using Newtonsoft.Json.Converters;
 namespace CUE4Parse.UE4.Wwise.Enums;
 
 [JsonConverter(typeof(StringEnumConverter))]
-public enum EAkGroupType : byte
+public enum EAkJumpToSelType : int
 {
-    Switch,
-    State
+    StartOfPlaylist,
+    SpecificItem,
+    LastPlayedSegment,
+    NextSegment,
 }

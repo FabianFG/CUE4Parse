@@ -349,7 +349,7 @@ public class FScriptStruct
             "VoyagePackedLocalTransform" => new VoyagePackedLocalTransform(Ar),
             "VoyageFloat16" => Ar.Read<FRawStruct<Half>>(),
 
-            "EncVector" when Ar.Game is EGame.GAME_DeltaForceHawkOps => Ar.Read<FVector>(),
+            "EncVector" when Ar.Game is EGame.GAME_DeltaForce => Ar.Read<FVector>(),
 
             "MercunaUsageSpec" when Ar.Game is EGame.GAME_PUBGBlackBudget => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaUsageTypes" when Ar.Game is EGame.GAME_PUBGBlackBudget => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
@@ -391,6 +391,8 @@ public class FScriptStruct
             "HexOffsetCoord" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "RulesetId" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
             "HexCell" when Ar.Game is EGame.GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
+
+            "MovieSceneTangentData" when Ar.Game is EGame.GAME_HonorofKingsWorld => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
 
             _ => Ar.Game switch
             {

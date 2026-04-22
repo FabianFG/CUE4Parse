@@ -36,15 +36,7 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         if (WwiseVersions.Version > 56)
         {
-            int propCount = Ar.Read<byte>();
-            var propIds = Ar.ReadArray(propCount, Ar.Read<byte>);
-            var propValues = Ar.ReadArray(propCount, Ar.Read<float>);
-
-            Props = new AkProp[propCount];
-            for (int i = 0; i < propCount; i++)
-            {
-                Props[i] = new AkProp(propIds[i], propValues[i]);
-            }
+            Props = AkPropBundle.ReadSequentialAkProp(Ar);
         }
 
         if (WwiseVersions.Version > 122)
@@ -138,7 +130,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             writer.WritePropertyName(nameof(p.Id));
             writer.WriteValue(p.Id);
             writer.WritePropertyName(nameof(p.Value));
-            writer.WriteValue(p.Value);
+            writer.WriteValue(p.Value.Value);
             writer.WriteEndObject();
         }
         writer.WriteEndArray();

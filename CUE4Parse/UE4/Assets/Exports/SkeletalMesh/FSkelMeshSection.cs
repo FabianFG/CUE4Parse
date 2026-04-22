@@ -238,7 +238,7 @@ public class FSkelMeshSection
         if (Ar.Game == EGame.GAME_Paragon) Ar.Position += 1; // bool
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
+        if (Ar.Game == EGame.GAME_DeltaForce) Ar.Position += 3;
         if (Ar.Game == EGame.GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy or EGame.GAME_Snowbreak) Ar.Position += 4;

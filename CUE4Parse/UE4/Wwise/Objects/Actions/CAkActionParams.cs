@@ -1,7 +1,5 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
@@ -10,7 +8,6 @@ public class CAkActionParams
     public readonly int TTime;
     public readonly int TTimeMin;
     public readonly int TTimeMax;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveInterpolation FadeCurve;
 
     public CAkActionParams(FArchive Ar)

@@ -95,6 +95,11 @@ public class FStaticMeshLODResources
                         Ar.Position += 4;
                         if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData();
                         break;
+                    case EGame.GAME_HonorofKingsWorld:
+                        Ar.Position += 36;
+                        var additionalBuffers = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
+                        if (additionalBuffers[0].Length > 0) Sections[0].CustomData = 1; // flag for custom serialization in FStaticMeshRenderData
+                        break;
                     case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData.HasValue && x.CustomData.Value == 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
@@ -107,6 +112,12 @@ public class FStaticMeshLODResources
                 {
                     using var tempAr = new FByteArchive("StaticMeshBufferReader", bulkData.Data, Ar.Versions);
                     SerializeBuffers(tempAr);
+                }
+
+                if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+                {
+                    Ar.Position += 8;
+                    Ar.Position += Ar.Read<int>() == 32 ? 64 : 40;
                 }
 
                 // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
@@ -132,7 +143,7 @@ public class FStaticMeshLODResources
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
                     EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
-                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
+                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForce => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
                     _ => 0
                 };

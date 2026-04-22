@@ -9,7 +9,7 @@ public readonly struct AkMeterInfo
     public readonly float Tempo;
     public readonly byte TimeSigNumBeatsBar;
     public readonly byte TimeSigBeatValue;
-    public readonly byte MeterInfoFlag;
+    public readonly bool MeterInfoFlag;
 
     public AkMeterInfo(FArchive Ar)
     {
@@ -18,6 +18,6 @@ public readonly struct AkMeterInfo
         Tempo = Ar.Read<float>();
         TimeSigNumBeatsBar = Ar.Read<byte>();
         TimeSigBeatValue = Ar.Read<byte>();
-        MeterInfoFlag = Ar.Read<byte>();
+        MeterInfoFlag = Ar.Read<byte>() != 0;
     }
 }
