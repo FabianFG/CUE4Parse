@@ -1,49 +1,16 @@
 using System;
-using System.Buffers.Binary;
-using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
+using System.IO;
 using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
 
-public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FByteArchive(name, data, versions)
+public readonly struct FadeFaceHeader(FNGRLuaArchive Ar)
 {
-    public T ReadBE<T>() where T : unmanaged
-    {
-        T value = Read<T>();
-
-        return value switch
-        {
-            ushort v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            uint v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            ulong v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            short v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            int v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            long v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
-            _ => value 
-        };
-    }
-}
-
-public readonly struct FadeFaceHeader
-{
-    public readonly uint Magic;
-    public readonly uint Size;
-    public readonly ulong Hash;
-    public readonly ushort StartIndex;
-    public readonly ushort ChunkSize;
-
-    public FadeFaceHeader(FNGRLuaArchive Ar)
-    {
-        if (Ar.Length < 0x14)
-            throw new ArgumentException("Fade Face header is too small");
-
-        Magic = Ar.ReadBE<uint>();
-        Size = Ar.ReadBE<uint>();
-        Hash = Ar.ReadBE<ulong>();
-        StartIndex = Ar.ReadBE<ushort>();
-        ChunkSize = Ar.ReadBE<ushort>();
-    }
+    public readonly uint Magic = Ar.ReadBE<uint>();
+    public readonly uint Size = Ar.ReadBE<uint>();
+    public readonly ulong Hash = Ar.ReadBE<ulong>();
+    public readonly ushort StartIndex = Ar.ReadBE<ushort>();
+    public readonly ushort ChunkSize = Ar.ReadBE<ushort>();
 }
 
 public readonly struct Chunk(FNGRLuaArchive Ar, int chunkSize)
@@ -58,25 +25,31 @@ public class NGRLuaReader
     private const uint NGR_LUA_MAGIC = 0xFADEFACE;
 
     public FadeFaceHeader Header;
+
     private Chunk[] _luaChunks = [];
     private byte[] _decryptionKey = [];
 
     public NGRLuaReader(string name, byte[] data, out byte[] result)
     {
         var Ar = new FNGRLuaArchive(name, data, null);
-        Header = new FadeFaceHeader(Ar);
+        if (Ar.Length < 0x14)
+        {
+            Log.Warning("Fade Face header is too small");
+            result = data;
+            return;
+        }
 
+        Header = new FadeFaceHeader(Ar);
         if (Header.Magic != NGR_LUA_MAGIC)
         {
-            Log.Error($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
+            Log.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
             result = data;
             return;
         }
 
         ReadChunks(Ar);
         Reorder();
-        result = Rebuild();
-        //result = Restore(result); // TODO: Opcode is still shuffled
+        result = Restore(name, Rebuild());
     }
 
     private void ReadChunks(FNGRLuaArchive Ar)
@@ -111,10 +84,11 @@ public class NGRLuaReader
 
     private void Decrypt(Chunk chunk, byte[] result, int bytesWritten, int toCopy)
     {
+        var clamp = Math.Min(_decryptionKey.Length, 32);
         for (int i = 0; i < toCopy; i++)
         {
             int index = bytesWritten + i;
-            result[index] = (byte) (chunk.Data[i] ^ _decryptionKey[index % Math.Min(_decryptionKey.Length, 32)]); // Always clamped to 32 even when chunk size is larger
+            result[index] = (byte) (chunk.Data[i] ^ _decryptionKey[index % clamp]); // Always clamped to 32 even when chunk size is larger
         }
     }
 
@@ -142,5 +116,20 @@ public class NGRLuaReader
             throw new Exception("Failed to decrypt. Expected Lua magic");
 
         return data;
+    }
+
+    private static byte[] Restore(string name, byte[] decryptedLuaBytecode)
+    {
+        using var Ar = new FNGRLuaArchive(name, decryptedLuaBytecode, null);
+        var lua = new LuaBytecode(Ar);
+
+        using var msOut = new MemoryStream(decryptedLuaBytecode.Length);
+        using (var writer = new FNGRLuaWriter(msOut))
+        {
+            LuaWriter.Write(writer, lua);
+            writer.Flush();
+        }
+
+        return msOut.ToArray();
     }
 }
