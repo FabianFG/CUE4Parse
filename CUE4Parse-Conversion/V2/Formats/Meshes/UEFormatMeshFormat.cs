@@ -9,7 +9,7 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Formats.Meshes;
 
-public sealed class UEModelMeshFormat : IMeshExportFormat
+public sealed class UEFormatMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
 

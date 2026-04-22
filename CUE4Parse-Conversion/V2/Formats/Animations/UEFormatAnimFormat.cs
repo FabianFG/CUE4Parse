@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Formats.Animations;
 
-public sealed class UEAnimExportFormat : IAnimExportFormat
+public sealed class UEFormatAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "UEFormat (ueanim)";
 

@@ -46,7 +46,8 @@ public abstract class MeshExporter2<T>(T mesh) : ExporterBase2(mesh) where T : U
         EMeshFormat.ActorX => new ActorXMeshFormat(),
         EMeshFormat.Gltf2 => new GltfMeshFormat(isObj: false),
         EMeshFormat.OBJ => new GltfMeshFormat(isObj: true),
-        EMeshFormat.UEFormat => new UEModelMeshFormat(),
+        EMeshFormat.UEFormat => new UEFormatMeshFormat(),
+        EMeshFormat.USD => new UsdMeshFormat(),
         _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported mesh format")
     };
 }

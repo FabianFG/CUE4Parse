@@ -4,7 +4,10 @@ using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public abstract class CMesh<TLod>(FBox box, FSphere sphere) : IDisposable where TLod : CMeshLod
+/// <summary>
+/// TODO: make this the main DTO object exporters use and have access to to write data to a file however they want
+/// </summary>
+public abstract class CMesh<TLod, TVertex>(FBox box, FSphere sphere) : IDisposable where TLod : CMeshLod<TVertex> where TVertex : CMeshVertex, new()
 {
     public readonly FBox BoundingBox = box;
     public readonly FSphere BoundingSphere = sphere;

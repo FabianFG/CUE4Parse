@@ -30,7 +30,7 @@ public sealed class AnimationExporter2(UAnimationAsset animation) : ExporterBase
     private IAnimExportFormat GetAnimFormat(EAnimFormat format) => format switch
     {
         EAnimFormat.ActorX => new ActorXAnimFormat(),
-        EAnimFormat.UEFormat => new UEAnimExportFormat(),
+        EAnimFormat.UEFormat => new UEFormatAnimFormat(),
         _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported animation format")
     };
 }

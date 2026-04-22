@@ -6,7 +6,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK;
 /// <summary>
 /// TODO: this needs a refactor
 /// </summary>
-public class CSkeletalMesh : CMesh<CSkelMeshLod>
+public class CSkeletalMesh : CMesh<CSkelMeshLod, CSkelMeshVertex>
 {
     public readonly List<CSkelMeshBone> RefSkeleton = [];
 

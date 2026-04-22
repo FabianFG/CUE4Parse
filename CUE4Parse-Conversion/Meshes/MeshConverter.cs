@@ -40,20 +40,15 @@ public static class MeshConverter
         box = new FBox();
         for (var i = 0; i < originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo.Length; i++)
         {
-            var skeletalMeshBone = new CSkelMeshBone
-            {
-                Name = originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
-                ParentIndex = originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
-                Position = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Translation,
-                Orientation = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
-            };
+            var skeletalMeshBone = new CSkelMeshBone(originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i], originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i]);
 
             // if (i >= 1) // fix skeleton; all bones but 0
             //     skeletalMeshBone.Orientation.Conjugate();
 
             bones.Add(skeletalMeshBone);
-            box.Min = skeletalMeshBone.Position.ComponentMin(box.Min);
-            box.Max = skeletalMeshBone.Position.ComponentMax(box.Max);
+            var position = skeletalMeshBone.Position;
+            box.Min = position.ComponentMin(box.Min);
+            box.Max = position.ComponentMax(box.Max);
         }
         return true;
     }
@@ -538,13 +533,7 @@ public static class MeshConverter
 
         for (var i = 0; i < originalMesh.ReferenceSkeleton.FinalRefBoneInfo.Length; i++)
         {
-            var skeletalMeshBone = new CSkelMeshBone
-            {
-                Name = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
-                ParentIndex = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
-                Position = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Translation,
-                Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation
-            };
+            var skeletalMeshBone = new CSkelMeshBone(originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i], originalMesh.ReferenceSkeleton.FinalRefBonePose[i]);
 
             // if (i >= 1) // fix skeleton; all bones but 0
             //     skeletalMeshBone.Orientation.Conjugate();

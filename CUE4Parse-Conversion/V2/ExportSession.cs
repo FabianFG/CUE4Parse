@@ -16,6 +16,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.Engine.Animation;
 
 namespace CUE4Parse_Conversion.V2;
 
@@ -25,9 +26,11 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     public ExporterOptions Options { get; } = options;
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
 
+    private int _totalQueued;
+    public int TotalQueued => _totalQueued;
+
     private readonly ConcurrentQueue<IExporter2> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
-    private int _totalQueued;
 
     public ExportSession(string baseDirectory, ExporterOptions options) : this(new DirectoryInfo(baseDirectory), options)
     {
@@ -44,6 +47,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
             USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
+            UPoseAsset poseAsset => Add(new PoseAssetExporter2(poseAsset)),
             UAnimationAsset animation => Add(new AnimationExporter2(animation)),
             UDNAAsset dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
@@ -64,6 +68,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
+        exporter.Log.Debug("Queued for export");
         exporter._session = this;
         _roots.Enqueue(exporter);
         Interlocked.Increment(ref _totalQueued);

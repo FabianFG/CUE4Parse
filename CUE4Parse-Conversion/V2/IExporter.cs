@@ -32,7 +32,7 @@ public abstract class ExporterBase2 : IExporter2
     internal ExportSession? _session = null;
     protected ExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
 
-    protected ILogger Log { get; }
+    protected internal ILogger Log { get; }
 
     protected ExporterBase2(UObject export)
     {

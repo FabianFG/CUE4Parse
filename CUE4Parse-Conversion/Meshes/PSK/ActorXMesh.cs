@@ -396,15 +396,7 @@ public class ActorXMesh
 
                     if (targetBoneIdx == -1) continue;
 
-                    var meshBone = new CSkelMeshBone
-                    {
-                        Name = socket.SocketName.Text,
-                        ParentIndex = targetBoneIdx,
-                        Position = socket.RelativeLocation,
-                        Orientation = socket.RelativeRotation.Quaternion()
-                    };
-
-                    bones.Add(meshBone);
+                    bones.Add(new CSkelMeshBone(socket, targetBoneIdx));
                 }
 
                 break;
@@ -439,15 +431,7 @@ public class ActorXMesh
                     var socket = sockets[i].Load<UStaticMeshSocket>();
                     if (socket is null) continue;
 
-                    var meshBone = new CSkelMeshBone
-                    {
-                        Name = socket.SocketName.Text,
-                        ParentIndex = -1,
-                        Position = socket.RelativeLocation,
-                        Orientation = socket.RelativeRotation.Quaternion()
-                    };
-
-                    bones.Add(meshBone);
+                    bones.Add(new CSkelMeshBone(socket));
                 }
 
                 break;

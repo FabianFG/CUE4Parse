@@ -7,7 +7,9 @@ using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse_Conversion.Meshes.PSK;
 
-public abstract class CMeshLod : IDisposable
+[Obsolete("This class is deprecated and will be removed in a future release. Please use CMeshLod<TVertex> instead.")]
+public abstract class CMeshLod : CMeshLod<CMeshVertex>;
+public abstract class CMeshLod<TVertex> : IDisposable where TVertex : CMeshVertex, new()
 {
     public int NumVerts = 0;
     public int NumTexCoords = 0;
@@ -21,9 +23,20 @@ public abstract class CMeshLod : IDisposable
     public FColor[]? VertexColors;
     public CVertexColor[]? ExtraVertexColors;
     public Lazy<uint[]>? Indices;
+    public TVertex[]? Verts;
     public bool SkipLod => Sections?.Value.Length < 1 || Indices?.Value.Length < 1;
 
-    public abstract void AllocateVerts(int count);
+    public void AllocateVerts(int count)
+    {
+        Verts = new TVertex[count];
+        for (var i = 0; i < Verts.Length; i++)
+        {
+            Verts[i] = new TVertex();
+        }
+
+        NumVerts = count;
+        AllocateUVBuffers();
+    }
 
     public void AllocateUVBuffers()
     {
@@ -120,6 +133,12 @@ public abstract class CMeshLod : IDisposable
         {
             Array.Clear(Indices.Value);
             Indices = null;
+        }
+
+        if (Verts is not null)
+        {
+            Array.Clear(Verts);
+            Verts = null;
         }
     }
 }

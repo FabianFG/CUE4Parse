@@ -87,12 +87,12 @@ public static class Exporter2
             {
                 case { Success: true } result:
                     Log.Information("{Message} [{Progress}]",
-                        $"Exported {result.ObjectName}.{result.File?.Extension ?? "Unknown extension"}",
+                        $"Exported at {result.DiskFilePath}",
                         p.DisplayText);
                     break;
                 case { Success: false } failure:
-                    Log.Error("Failed to export {ObjectName}: {Error} [{Progress}]",
-                        failure.ObjectName,
+                    Log.Error("Failed to export {ObjectPath}: {Error} [{Progress}]",
+                        failure.ObjectPath,
                         failure.Error?.Message ?? "Unknown error",
                         p.DisplayText);
                     break;
@@ -163,28 +163,13 @@ public static class Exporter2
 
     private static void AddExporterForAsset(UObject export, ExportSession session)
     {
-        switch (export)
+        try
         {
-            case USkeletalMesh skeletalMesh:
-                Log.Debug("Adding skeletal mesh: {Name}", skeletalMesh.Name);
-                session.Add(new MeshExporter2(skeletalMesh));
-                break;
-            case UStaticMesh staticMesh:
-                Log.Debug("Adding static mesh: {Name}", staticMesh.Name);
-                session.Add(new MeshExporter2(staticMesh));
-                break;
-            case USkeleton skeleton:
-                Log.Debug("Adding skeleton: {Name}", skeleton.Name);
-                session.Add(new MeshExporter2(skeleton));
-                break;
-            case UAnimSequenceBase animSequence:
-                Log.Debug("Adding animation: {Name}", animSequence.Name);
-                session.Add(new AnimationExporter2(animSequence));
-                break;
-            case UTexture texture:
-                Log.Debug("Adding texture: {Name}", texture.Name);
-                session.Add(new TextureExporter2(texture));
-                break;
+            session.Add(export);
+        }
+        catch
+        {
+            //
         }
     }
 }

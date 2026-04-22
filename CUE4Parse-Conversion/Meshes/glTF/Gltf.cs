@@ -250,8 +250,8 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return (jv1, jv2, jv3);
         }
 
-        public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            CMeshLod lod, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, uint[] indices)
+        public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords<TVertex>(
+            CMeshLod<TVertex> lod, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, uint[] indices) where TVertex : CMeshVertex, new()
         {
             return PrepareUVsAndTexCoords(lod.VertexColors ?? new FColor[lod.NumVerts], vert1, vert2, vert3,
                 lod.ExtraUV.Value, indices);

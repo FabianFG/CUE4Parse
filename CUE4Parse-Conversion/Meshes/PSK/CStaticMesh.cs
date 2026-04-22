@@ -6,7 +6,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK;
 /// <summary>
 /// TODO: this needs a refactor
 /// </summary>
-public class CStaticMesh : CMesh<CStaticMeshLod>
+public class CStaticMesh : CMesh<CStaticMeshLod, CMeshVertex>
 {
     public FPackageIndex? BodySetup { get; init; }
     public FPackageIndex[]? Sockets { get; init; }
