@@ -102,16 +102,18 @@ public class LuaFunction
     public LuaFunction[] Protos;
     public LuaDebug Debug;
 
-    // Some obscure opcodes might be still shuffled, I only remapped manually
     private static readonly Dictionary<byte, byte> _opcodeMapping = new()
     {
         { 0x0A, 0x00 },
+        { 0x00, 0x0A },
         { 0x07, 0x03 },
-        { 0x01, 0x09 },
-        { 0x02, 0x08 },
-        { 0x09, 0x01 },
         { 0x03, 0x07 },
+        { 0x01, 0x09 },
+        { 0x09, 0x01 },
+        { 0x02, 0x08 },
+        { 0x08, 0x02 },
         { 0x04, 0x06 },
+        { 0x06, 0x04 },
     };
 
     public LuaFunction(FNGRLuaArchive Ar)
