@@ -284,6 +284,7 @@ public partial class WwiseProvider
                 if (id != soundBankId)
                     continue;
 
+                reader.Position = 0;
                 var wwiseAr = new FWwiseArchive(reader);
                 var soundBank = new WwiseReader(wwiseAr, new WwiseGameFileSource(file.Value));
                 CacheWwiseFile(soundBank);
