@@ -1,14 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkFlangerFXParams(FArchive Ar) : IAkPluginParam
+public class CAkFlangerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkFlangerFXParams Params = new AkFlangerFXParams(Ar);
+    public AkFlangerFXParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -47,7 +46,7 @@ public struct AkFlangerRTPCParams
     public float WetDryMix;
     public bool HasChanged;
 
-    public AkFlangerRTPCParams(FArchive Ar)
+    public AkFlangerRTPCParams(FWwiseArchive Ar)
     {
         DryLevel = Ar.Read<float>();
         FfwdLevel = Ar.Read<float>();
@@ -79,7 +78,7 @@ public struct AkFlangerFXParams
     public AkFlangerRTPCParams RTPC;
     public AkFlangerNonRTPCParams NonRTPC;
 
-    public AkFlangerFXParams(FArchive Ar)
+    public AkFlangerFXParams(FWwiseArchive Ar)
     {
         NonRTPC.DelayTime = Ar.Read<float>();
         RTPC = new AkFlangerRTPCParams(Ar);
@@ -93,7 +92,9 @@ public struct AkFlangerFXParams
 public enum DSPLfoWaveform : uint
 {
     First = 0x0,
+#pragma warning disable CA1069
     Sine = 0x0,
+#pragma warning restore CA1069
     Triangle = 0x1,
     Square = 0x2,
     SawUp = 0x3,

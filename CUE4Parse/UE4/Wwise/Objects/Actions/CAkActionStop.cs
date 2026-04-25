@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class CAkActionStop
@@ -10,10 +8,10 @@ public class CAkActionStop
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionStop::SetActionActiveParams
-    public CAkActionStop(FArchive Ar)
+    public CAkActionStop(FWwiseArchive Ar)
     {
         ActionParams = new CAkActionParams(Ar);
-        if (WwiseVersions.Version > 122)
+        if (Ar.Version > 122)
         {
             var byBitVector = Ar.Read<byte>();
             ApplyToStateTransitions = (byBitVector & (1 << 1)) != 0; // bit 1

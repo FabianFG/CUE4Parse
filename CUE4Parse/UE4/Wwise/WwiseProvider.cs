@@ -7,7 +7,6 @@ using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.Actions;
@@ -285,8 +284,8 @@ public partial class WwiseProvider
                 if (id != soundBankId)
                     continue;
 
-                reader.Position = 0;
-                var soundBank = new WwiseReader(reader, new WwiseGameFileSource(file.Value));
+                var wwiseAr = new FWwiseArchive(reader);
+                var soundBank = new WwiseReader(wwiseAr, new WwiseGameFileSource(file.Value));
                 CacheWwiseFile(soundBank);
                 _wwiseLoadedSoundBanks.Add(soundBankId);
                 return soundBank;
@@ -560,7 +559,7 @@ public partial class WwiseProvider
         if (gameFile is null || !gameFile.TryRead(out var data) || data is not { Length: > 0 } bankData)
             return false;
 
-        using var reader = new FByteArchive(gameFile.NameWithoutExtension, bankData);
+        using var reader = new FWwiseArchive(gameFile.NameWithoutExtension, bankData);
         try
         {
             var wwiseReader = new WwiseReader(reader, new WwiseGameFileSource(gameFile));

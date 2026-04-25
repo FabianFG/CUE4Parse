@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class CAkActionBypassFX
@@ -10,11 +8,11 @@ public class CAkActionBypassFX
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionBypassFX::SetActionParams
-    public CAkActionBypassFX(FArchive Ar)
+    public CAkActionBypassFX(FWwiseArchive Ar)
     {
         bIsBypass = Ar.Read<byte>() != 0;
 
-        switch (WwiseVersions.Version)
+        switch (Ar.Version)
         {
             case >= 146:
                 byFxSlot = Ar.Read<byte>();

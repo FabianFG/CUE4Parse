@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using CommunityToolkit.HighPerformance;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -20,9 +19,9 @@ public class CMBCRuntimeParams : IAkPluginParam
     public bool BypassOther;
     public bool ClipOutput;
     public MBCSidechainMode SideChainMode;
-    public string SidechainOutputName;
+    public string SidechainOutputName = string.Empty;
 
-    public CMBCRuntimeParams(FArchive Ar, int size)
+    public CMBCRuntimeParams(FWwiseArchive Ar, int size)
     {
         var start = Ar.Position; 
         var value = Ar.Read<float>();
@@ -75,7 +74,7 @@ public enum MBCSidechainMode : int
     WriteMultiple = 0x4
 };
 
-public struct MBCBandParams(FArchive Ar)
+public struct MBCBandParams(FWwiseArchive Ar)
 {
     public float Threshold = Ar.Read<float>();
     public float Ratio = Ar.Read<float>();

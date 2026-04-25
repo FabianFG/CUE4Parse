@@ -1,11 +1,10 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.McDSP;
 
-public class CMcDSPLimiterFXParams(FArchive Ar) : IAkPluginParam
+public class CMcDSPLimiterFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public McDSPLimiterFXParams Params = Ar.Read<McDSPLimiterFXParams>();
 }

@@ -1,11 +1,10 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkDelayFXParams(FArchive Ar) : IAkPluginParam
+public class CAkDelayFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkDelayFXParams Params = new AkDelayFXParams(Ar);
+    public AkDelayFXParams Params = new(Ar);
 }
 
 public struct AkDelayRTPCParams
@@ -27,7 +26,7 @@ public struct AkDelayFXParams
     public AkDelayRTPCParams RTPC;
     public AkDelayNonRTPCParams NonRTPC;
 
-    public AkDelayFXParams(FArchive Ar)
+    public AkDelayFXParams(FWwiseArchive Ar)
     {
         NonRTPC.fDelayTime = Ar.Read<float>();
         RTPC.fFeedback = Ar.Read<float>() * 0.01f;

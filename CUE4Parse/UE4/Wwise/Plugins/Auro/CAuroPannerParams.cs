@@ -1,14 +1,12 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Plugins.Auro;
 
-public class CAuroPannerMixerParams(FArchive Ar) : IAkPluginParam
+public class CAuroPannerMixerParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public bool EnableDefaultSpatialization = Ar.Read<byte>() != 0;
     public float PanningLawdB = Ar.Read<float>();
 }
 
-public class CAuroPannerFXParams(FArchive Ar) : IAkPluginParam
+public class CAuroPannerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public bool EnableCustomObjectSpread = Ar.Read<byte>() != 0;
     public float ObjectSpreadX = Ar.Read<float>();

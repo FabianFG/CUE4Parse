@@ -1,11 +1,10 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkPeakLimiterFXParams(FArchive Ar) : IAkPluginParam
+public class CAkPeakLimiterFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkPeakLimiterFXParams Params = new AkPeakLimiterFXParams(Ar);
+    public AkPeakLimiterFXParams Params = new(Ar);
 }
 
 public struct AkPeakLimiterFXParams
@@ -13,7 +12,7 @@ public struct AkPeakLimiterFXParams
     public AkPeakLimiterRTPCParams RTPC;
     public AkPeakLimiterNonRTPCParams NonRTPC;
 
-    public AkPeakLimiterFXParams(FArchive Ar)
+    public AkPeakLimiterFXParams(FWwiseArchive Ar)
     {
         RTPC.fThreshold = Ar.Read<float>();
         RTPC.fRatio = Ar.Read<float>();

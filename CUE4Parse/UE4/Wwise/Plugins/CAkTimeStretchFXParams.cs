@@ -1,13 +1,12 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkTimeStretchFXParams(FArchive Ar) : IAkPluginParam
+public class CAkTimeStretchFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkTimeStretchFXParams Params = new AkTimeStretchFXParams(Ar);
+    public AkTimeStretchFXParams Params = new(Ar);
 }
 
 public struct AkTimeStretchFXParams
@@ -21,12 +20,12 @@ public struct AkTimeStretchFXParams
     public float fTolerance;
     public StereoProcType iStereoProc;
 
-    public AkTimeStretchFXParams(FArchive Ar)
+    public AkTimeStretchFXParams(FWwiseArchive Ar)
     {
         uWindowSize = Ar.Read<uint>();
         fTimeStretch = Ar.Read<float>();
         fTimeStretchRandom = Ar.Read<float>();
-        if (WwiseVersions.Version < 145)
+        if (Ar.Version < 145)
         {
             fOutputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         }

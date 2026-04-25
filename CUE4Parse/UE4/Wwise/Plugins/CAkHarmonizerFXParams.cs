@@ -1,11 +1,10 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-internal class CAkHarmonizerFXParams(FArchive Ar) : IAkPluginParam
+internal class CAkHarmonizerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkHarmonizerFXParams Params = new AkHarmonizerFXParams(Ar);
+    public AkHarmonizerFXParams Params = new(Ar);
 }
 
 internal struct AkHarmonizerFXParams
@@ -18,7 +17,7 @@ internal struct AkHarmonizerFXParams
     public bool bProcessLFE;
     public bool bSyncDry;
 
-    public AkHarmonizerFXParams(FArchive Ar)
+    public AkHarmonizerFXParams(FWwiseArchive Ar)
     {
         Voice = Ar.ReadArray(2, () => new AkPitchVoiceParams(Ar));
 

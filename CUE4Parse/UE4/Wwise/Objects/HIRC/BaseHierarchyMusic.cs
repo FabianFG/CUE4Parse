@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
@@ -10,9 +9,9 @@ public class BaseHierarchyMusic : AbstractHierarchy
     public readonly EMusicFlags Flags;
     public readonly uint[] ChildIds;
 
-    protected BaseHierarchyMusic(FArchive Ar) : base(Ar)
+    protected BaseHierarchyMusic(FWwiseArchive Ar) : base(Ar)
     {
-        Flags = WwiseVersions.Version > 89 ? Ar.Read<EMusicFlags>() : EMusicFlags.None;
+        Flags = Ar.Version > 89 ? Ar.Read<EMusicFlags>() : EMusicFlags.None;
         Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         ContainerHierarchy = new BaseHierarchy(Ar);
         ChildIds = new AkChildren(Ar).ChildIds;

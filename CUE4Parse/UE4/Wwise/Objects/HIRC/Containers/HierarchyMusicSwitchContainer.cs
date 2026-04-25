@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
@@ -15,14 +14,14 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
     public readonly AkDecisionTree DecisionTree;
 
     // CAkMusicSwitchCntr::SetInitialValues
-    public HierarchyMusicSwitchContainer(FArchive Ar) : base(Ar)
+    public HierarchyMusicSwitchContainer(FWwiseArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
         Stingers = AkStinger.ReadArray(Ar);
 
         MusicTransitionRule = new AkMusicTransitionRule(Ar);
 
-        if (WwiseVersions.Version <= 72)
+        if (Ar.Version <= 72)
         {
             DecisionTree = new AkDecisionTree(); // Empty tree for old versions
         }

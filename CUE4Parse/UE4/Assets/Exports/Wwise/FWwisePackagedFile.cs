@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
 using Serilog;
@@ -63,17 +62,17 @@ public class FWwisePackagedFile : FStructFallback
 
             try
             {
-                using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
+                using var reader = new FWwiseArchive("AkAssetData", bulkData.Data, Ar.Versions);
                 BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
             }
             // i know it's ugly, but i don't see other solution without rewriting everything
-            catch (RIFFSectionSizeException e)
+            catch (RIFFSectionSizeException)
             {
                 if (bulkData.TryCombineBulkData(Ar, out var combinedData, out var fullBulkData))
                 {
                     try
                     {
-                        using var reader = new FByteArchive("AkAssetData", combinedData, Ar.Versions);
+                        using var reader = new FWwiseArchive("AkAssetData", combinedData, Ar.Versions);
                         if (fullBulkData != null)
                             BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, fullBulkData));
                         else

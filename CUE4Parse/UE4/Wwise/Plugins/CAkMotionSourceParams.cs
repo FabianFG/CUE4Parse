@@ -1,12 +1,11 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkMotionSourceParams(FArchive Ar) : IAkPluginParam
+public class CAkMotionSourceParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkMotionSourceParams Params = new AkMotionSourceParams(Ar);
+    public AkMotionSourceParams Params = new(Ar);
 }
 
 public struct AkMotionSourceParams
@@ -23,7 +22,7 @@ public struct AkMotionSourceParams
     public EAkMotionSourceCurveType m_uCurveType;
     public ushort[] m_uAssigns;
 
-    public AkMotionSourceParams(FArchive Ar)
+    public AkMotionSourceParams(FWwiseArchive Ar)
     {
         m_fChannel1 = Ar.Read<float>();
         m_fChannel2 = Ar.Read<float>();

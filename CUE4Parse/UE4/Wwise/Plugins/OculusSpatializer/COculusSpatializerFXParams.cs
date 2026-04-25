@@ -1,8 +1,6 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
 
-public class COculusSpatializerFXAttachmentParams(FArchive Ar) : IAkPluginParam
+public class COculusSpatializerFXAttachmentParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public bool BypassSpatializer = Ar.Read<byte>() != 0;
     public bool EnableReflections = Ar.Read<byte>() != 0;
@@ -14,7 +12,7 @@ public class COculusSpatializerFXAttachmentParams(FArchive Ar) : IAkPluginParam
     public bool Ambisonic = Ar.Read<byte>() != 0;
 }
 
-public class COculusSpatializerFXParams(FArchive Ar) : IAkPluginParam
+public class COculusSpatializerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public float Version = Ar.Read<float>();
     public bool Bypass = Ar.Read<byte>() != 0;

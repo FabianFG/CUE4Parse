@@ -1,18 +1,17 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkGranularSynthParams(FArchive Ar) : IAkPluginParam
+public class CAkGranularSynthParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public AkGranularSynthParams Params = new AkGranularSynthParams(Ar);
 }
 
-public class AkGranularSynthParams(FArchive Ar)
+public class AkGranularSynthParams(FWwiseArchive Ar)
 {
     public byte FilterType = Ar.Read<byte>();
-    public AkChannelConfig OutputChannelConfig = new AkChannelConfig(Ar);
+    public AkChannelConfig OutputChannelConfig = new(Ar);
     public float OutputLevel = Ar.Read<float>();
     public FGranularValue GrainRate = Ar.Read<FGranularValue>();
     public FGranularValue GrainTime = Ar.Read<FGranularValue>();

@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -14,7 +13,7 @@ public class CAkSoundSeedWooshParams : IAkPluginParam
     public float TotalPathDistance;
     public AkWooshPathPoint[] Path;
 
-    public CAkSoundSeedWooshParams(FArchive Ar)
+    public CAkSoundSeedWooshParams(FWwiseArchive Ar)
     {
         WooshParams = new AkWooshParams(Ar);
         Deflectors = Ar.ReadArray(Ar.Read<ushort>(), () => new AkWooshDeflectorParams(Ar));
@@ -43,7 +42,7 @@ public struct AkWooshParams
     public FSoundSeedParamvalue[] Values;
     public byte bEnableDistanceBasedAttenuation;
 
-    public AkWooshParams(FArchive Ar)
+    public AkWooshParams(FWwiseArchive Ar)
     {
         Duration = Ar.Read<float>();
         DurationRdm = Ar.Read<float>();
@@ -77,14 +76,14 @@ public enum EAkNoiseColor : ushort
     NOISECOLOR_PURPLE = 3
 }
 
-public struct AkWooshDeflectorParams(FArchive Ar)
+public struct AkWooshDeflectorParams(FWwiseArchive Ar)
 {
     public float Frequency = Ar.Read<float>();
     public float QFactor = Ar.Read<float>();
     public float Gain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 };
 
-public struct AkWooshPathPoint(FArchive Ar)
+public struct AkWooshPathPoint()
 {
     public float DistanceTravelled;
     public float X;

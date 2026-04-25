@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -9,7 +8,7 @@ public class HierarchyActorMixer : BaseHierarchy
     public readonly uint[] ChildIds;
 
     // CAkActorMixer::SetInitialValues
-    public HierarchyActorMixer(FArchive Ar) : base(Ar)
+    public HierarchyActorMixer(FWwiseArchive Ar) : base(Ar)
     {
         ChildIds = new AkChildren(Ar).ChildIds;
     }

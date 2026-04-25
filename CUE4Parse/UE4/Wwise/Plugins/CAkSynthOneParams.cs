@@ -1,17 +1,16 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkSynthOneParams(FArchive Ar) : IAkPluginParam
+public class CAkSynthOneParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkSynthOneParams Params = new AkSynthOneParams(Ar);
+    public AkSynthOneParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct AkSynthOneParams(FArchive Ar)
+public struct AkSynthOneParams(FWwiseArchive Ar)
 {
     public AkSynthOneOperationMode eFreqMode = Ar.Read<AkSynthOneOperationMode>();
     public float fBaseFreq = Ar.Read<float>();

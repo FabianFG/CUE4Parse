@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public class CAkEnvironmentsMgr
@@ -7,15 +6,15 @@ public class CAkEnvironmentsMgr
     public readonly CAkConversionTable[,]? ConversionTableEntries;
 
     // CAkBankMgr::ProcessEnvSettingsChunk
-    public CAkEnvironmentsMgr(FArchive Ar)
+    public CAkEnvironmentsMgr(FWwiseArchive Ar)
     {
-        if (WwiseVersions.Version > 154)
+        if (Ar.Version > 154)
         {
             AttenuationId = Ar.Read<uint>();
             return; // Yes, that's it
         }
 
-        (int maxX, int maxY) = WwiseVersions.Version switch
+        (int maxX, int maxY) = Ar.Version switch
         {
             <= 89 => (2, 2),
             <= 150 => (2, 3),

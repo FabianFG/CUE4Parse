@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -12,7 +13,6 @@ using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
-using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -1287,12 +1287,18 @@ public class FWorldConditionQueryDefinitionConverter : JsonConverter<FWorldCondi
 
 public class WwiseConverter : JsonConverter<WwiseReader>
 {
+    public static readonly ThreadLocal<uint> WwiseVersion = new();
     public override void WriteJson(JsonWriter writer, WwiseReader value, JsonSerializer serializer)
     {
+        WwiseVersion.Value = value.Header.Version;
+
         writer.WriteStartObject();
 
-        writer.WritePropertyName(nameof(value.Header));
-        serializer.Serialize(writer, value.Header);
+        if (value.Header.Version != 0)
+        {
+            writer.WritePropertyName(nameof(value.Header));
+            serializer.Serialize(writer, value.Header);
+        }
 
         if (value.AKPKBankEntries is { Count: > 0 })
         {

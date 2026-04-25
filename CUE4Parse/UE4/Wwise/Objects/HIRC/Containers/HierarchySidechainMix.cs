@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
@@ -11,7 +10,7 @@ public class HierarchySidechainMix : AbstractHierarchy
     public readonly EAkChannelConfigType ChannelConfig;
 
     // CAkSidechainMixIndexable::SetInitialValues
-    public HierarchySidechainMix(FArchive Ar) : base(Ar)
+    public HierarchySidechainMix(FWwiseArchive Ar) : base(Ar)
     {
         SidechainId = Ar.Read<uint>();
         ChannelConfig = Ar.Read<EAkChannelConfigType>();

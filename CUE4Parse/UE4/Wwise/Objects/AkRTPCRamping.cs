@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -16,12 +15,12 @@ public readonly struct AkRTPCRamping
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkBuiltInParam BindToBuiltInParam;
 
-    public AkRTPCRamping(FArchive Ar)
+    public AkRTPCRamping(FWwiseArchive Ar)
     {
         RtpcId = Ar.Read<uint>();
         Value = Ar.Read<float>();
 
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             RampType = Ar.Read<EAkTransitionRampingType>();
             RampUp = Ar.Read<float>();

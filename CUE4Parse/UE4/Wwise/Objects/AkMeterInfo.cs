@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public readonly struct AkMeterInfo
@@ -11,7 +9,7 @@ public readonly struct AkMeterInfo
     public readonly byte TimeSigBeatValue;
     public readonly bool MeterInfoFlag;
 
-    public AkMeterInfo(FArchive Ar)
+    public AkMeterInfo(FWwiseArchive Ar)
     {
         GridPeriod = Ar.Read<double>();
         GridOffset = Ar.Read<double>();
