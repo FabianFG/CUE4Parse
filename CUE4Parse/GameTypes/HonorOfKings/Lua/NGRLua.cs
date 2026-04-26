@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using CUE4Parse.UE4.Lua;
 using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
@@ -124,9 +125,9 @@ public class NGRLuaReader
         var lua = new LuaBytecode(Ar);
 
         using var msOut = new MemoryStream(decryptedLuaBytecode.Length);
-        using (var writer = new FNGRLuaWriter(msOut))
+        using (var writer = new FLuaArchiveWriter(msOut))
         {
-            LuaWriter.Write(writer, lua);
+            FLuaWriter54.Write(writer, lua);
             writer.Flush();
         }
 

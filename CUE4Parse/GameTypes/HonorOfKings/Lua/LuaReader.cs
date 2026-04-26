@@ -2,13 +2,12 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Lua;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
 
-public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FByteArchive(name, data, versions)
+public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLuaArchive(name, data, versions)
 {
     public T ReadBE<T>() where T : unmanaged
     {
@@ -24,47 +23,6 @@ public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions
             long v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
             _ => value
         };
-    }
-
-    public ulong ReadLuaInt()
-    {
-        ulong v = 0;
-        while (true)
-        {
-            int b = Read<byte>();
-            v = (v << 7) | (uint) (b & 0x7F);
-
-            if ((b & 0x80) != 0)
-                break;
-        }
-        return v;
-    }
-
-    public string ReadLuaString()
-    {
-        ulong size = ReadLuaInt();
-        if (size <= 1)
-            return string.Empty;
-
-        int length = (int) size - 1;
-        byte[] buffer = ReadBytes(length);
-
-        return Encoding.UTF8.GetString(buffer);
-    }
-
-    public T[] ReadLuaArray<T>(Func<T> readElement)
-    {
-        int size = (int) ReadLuaInt();
-        if (size <= 0)
-            return [];
-
-        T[] array = new T[size];
-        for (int i = 0; i < size; i++)
-        {
-            array[i] = readElement();
-        }
-
-        return array;
     }
 }
 
@@ -130,20 +88,9 @@ public class LuaFunction
         MapOpcodes(Code); // Opcode is shuffled
 
         Constants = Ar.ReadLuaArray(() => new LuaConstant(Ar));
-        Upvalues = ReadUpvalues(Ar);
+        Upvalues = Ar.ReadLuaArray(() => new LuaUpvalue(Ar));
         Protos = Ar.ReadLuaArray(() => new LuaFunction(Ar));
         Debug = new LuaDebug(Ar);
-    }
-
-    private static LuaUpvalue[] ReadUpvalues(FNGRLuaArchive Ar)
-    {
-        int sizeUp = (int)Ar.ReadLuaInt();
-        var upvalues = new LuaUpvalue[sizeUp];
-        for (int i = 0; i < sizeUp; i++)
-        {
-            upvalues[i] = new LuaUpvalue(Ar);
-        }
-        return upvalues;
     }
 
     private static void MapOpcodes(byte[] code)

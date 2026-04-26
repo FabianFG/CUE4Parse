@@ -1,75 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using CUE4Parse.GameTypes.HonorOfKings.Lua;
 
-namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
+namespace CUE4Parse.UE4.Lua;
 
-public class FNGRLuaWriter(Stream stream) : BinaryWriter(stream)
+// Standard Lua 5.4 bytecode writer, nothing custom whatsoever
+public static class FLuaWriter54
 {
-    public void WriteLuaInt(ulong v)
-    {
-        if (v == 0)
-        {
-            Write((byte) 0x80);
-            return;
-        }
-
-        var bytes = new List<byte>();
-        bool first = true;
-        while (v > 0 || first)
-        {
-            byte x = (byte) (v & 0x7F);
-            if (first)
-                x |= 0x80;
-
-            bytes.Add(x);
-            v >>= 7;
-            first = false;
-        }
-        bytes.Reverse();
-        Write(bytes.ToArray());
-    }
-
-    public void WriteLuaString(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            WriteLuaInt(0);
-            return;
-        }
-
-        byte[] buffer = Encoding.UTF8.GetBytes(value);
-
-        WriteLuaInt((ulong) buffer.Length + 1);
-        Write(buffer);
-    }
-
-    public void WriteLuaArray<T>(T[] array, Action<T> writeElement)
-    {
-        if (array == null)
-        {
-            WriteLuaInt(0);
-            return;
-        }
-
-        WriteLuaInt((ulong) array.Length);
-        foreach (var item in array)
-        {
-            writeElement(item);
-        }
-    }
-}
-
-public static class LuaWriter
-{
-    public static void Write(FNGRLuaWriter writer, LuaBytecode l)
+    public static void Write(FLuaArchiveWriter writer, LuaBytecode l)
     {
         WriteHeader(writer, l.Header);
         WriteFunction(writer, l.MainFunc);
     }
 
-    private static void WriteHeader(FNGRLuaWriter writer, LuaHeader h)
+    private static void WriteHeader(FLuaArchiveWriter writer, LuaHeader h)
     {
         writer.Write(h.Signature);
         writer.Write(h.Version);
@@ -83,7 +25,7 @@ public static class LuaWriter
         writer.Write(h.Closure);
     }
 
-    private static void WriteFunction(FNGRLuaWriter writer, LuaFunction f)
+    private static void WriteFunction(FLuaArchiveWriter writer, LuaFunction f)
     {
         writer.WriteLuaString(f.SourceName);
         writer.WriteLuaInt(f.LineDefined);
@@ -93,7 +35,7 @@ public static class LuaWriter
         writer.Write(f.IsVarArg);
         writer.Write(f.MaxStackSize);
 
-        writer.WriteLuaInt((ulong)(f.Code.Length / 4));
+        writer.WriteLuaInt((ulong) (f.Code.Length / 4));
         writer.Write(f.Code);
 
         writer.WriteLuaArray(f.Constants, c =>
@@ -125,7 +67,7 @@ public static class LuaWriter
         WriteDebug(writer, f.Debug);
     }
 
-    private static void WriteDebug(FNGRLuaWriter writer, LuaDebug d)
+    private static void WriteDebug(FLuaArchiveWriter writer, LuaDebug d)
     {
         writer.WriteLuaInt(d.SizeLineInfo);
         writer.Write(d.LineInfo);
@@ -149,3 +91,4 @@ public static class LuaWriter
         });
     }
 }
+
