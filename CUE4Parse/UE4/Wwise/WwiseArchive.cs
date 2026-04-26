@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Wwise;
 
-public class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
+public sealed class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
 {
     /// <summary>
     /// Wwise version, read from the BankHeader section of the .bnk file
@@ -39,7 +39,7 @@ public class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
         set => archive.Position = value;
     }
 
-    public override object Clone() => new FWwiseArchive(archive);
+    public override object Clone() => new FWwiseArchive(archive) { Version = Version };
 
     public bool IsSupported() => WwiseVersionInfo.IsSupported(Version);
 
