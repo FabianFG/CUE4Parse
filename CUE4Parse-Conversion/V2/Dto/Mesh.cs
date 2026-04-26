@@ -19,7 +19,7 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public abstract class Mesh<TVertex> where TVertex : MeshVertex, new()
+public abstract class Mesh<TVertex> where TVertex : struct, IMeshVertex
 {
     public readonly List<MeshLod<TVertex>> LODs = [];
     public readonly MeshMaterial[] Materials = [];

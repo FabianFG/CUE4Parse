@@ -19,7 +19,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int[] Hash;
         public Lazy<int[]> HashNext;
 
-        public void Prepare<TVertex>(TVertex[] verts) where TVertex : MeshVertex, new()
+        public void Prepare<TVertex>(TVertex[] verts) where TVertex : struct, IMeshVertex
         {
             var numVerts = verts.Length;
 
@@ -84,7 +84,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             return pointIndex;
         }
 
-        private void ComputeBounds<TVertex>(TVertex[] verts, bool updateBounds = false) where TVertex : MeshVertex, new()
+        private void ComputeBounds<TVertex>(TVertex[] verts, bool updateBounds = false) where TVertex : struct, IMeshVertex
         {
             var numVerts = verts.Length;
             if (numVerts <= 0)

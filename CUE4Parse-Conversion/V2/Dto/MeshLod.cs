@@ -18,7 +18,7 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUvs, IReadOnlyDictionary<string, FColor[]>? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : MeshVertex, new()
+public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUvs, IReadOnlyDictionary<string, FColor[]>? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : struct, IMeshVertex
 {
     public readonly Mesh<TVertex> Owner = owner;
     public readonly uint[] Indices = indices;

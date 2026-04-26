@@ -20,22 +20,23 @@ namespace CUE4Parse_Conversion.Meshes.glTF
     using VERTEX = VertexPositionNormalTangent;
     public class Gltf
     {
+        private const float UnitScale = 0.01f;
+
         public readonly ModelRoot Model;
 
         public Gltf(string name, StaticMesh mesh, ExporterOptions options)
         {
             var sceneBuilder = new SceneBuilder(name);
-            var origin = Matrix4x4.Identity;
-            var extent = mesh.Bounds.GetExtent();
+            var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
 
             for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
             {
                 var lod = mesh.LODs[lodIdx];
+                var offsetZ = origin * lodIdx;
+
                 var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{lodIdx}");
                 ExportMeshSections(meshBuilder, lod);
-                sceneBuilder.AddRigidMesh(meshBuilder, origin);
-
-                origin *= Matrix4x4.CreateTranslation(0, 0, -extent.Z * 2);
+                sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, offsetZ));
 
                 if (options.LodFormat == ELodFormat.FirstLod) break;
             }
@@ -46,11 +47,11 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         public Gltf(string name, SkeletalMesh mesh, ExporterOptions options)
         {
             var sceneBuilder = new SceneBuilder(name);
-            var extent = mesh.Bounds.GetExtent();
+            var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
 
             for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
             {
-                var offsetZ = extent.Y * 2 * 0.01f * lodIdx;
+                var offsetZ = origin * lodIdx;
                 var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lodIdx}").WithLocalTranslation(new Vector3(0, 0, offsetZ));
                 var armature = CreateGltfSkeleton(mesh.RefSkeleton, armatureRoot);
 
@@ -78,11 +79,11 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                         {
                             var delta = morphModel.Vertices[j];
                             var vert = lod.Vertices[delta.SourceIdx];
-                            var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position*0.01f),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
+                            var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position * UnitScale),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
                             var index = FindVert(srcVert, verts);
                             if (index == -1)  continue;
 
-                            morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta*0.01f), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
+                            morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta * UnitScale), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
                         }
                     }
 
@@ -143,7 +144,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         private static void CreateBonesRecursive(MeshBone bone, NodeBuilder parent, IReadOnlyList<MeshBone> bones, int index, NodeBuilder[] result)
         {
-            var bonePos = SwapYZ(bone.Transform.Translation * 0.01f);
+            var bonePos = SwapYZ(bone.Transform.Translation * UnitScale);
             var boneRot = SwapYZ(bone.Transform.Rotation);
             var boneSca = SwapYZ(bone.Transform.Scale3D);
             var node = parent.CreateNode(bone.Name).WithLocalRotation(boneRot.ToQuaternion()).WithLocalTranslation(bonePos).WithLocalScale(boneSca);
@@ -161,7 +162,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             }
         }
 
-        private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLod<TVertex> lod) where TVertex : MeshVertex, new()
+        private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLod<TVertex> lod) where TVertex : struct, IMeshVertex
         {
             for (var i = 0; i < lod.Sections.Length; i++)
             {
@@ -227,7 +228,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords<TVertex>(
-            MeshLod<TVertex> lod, MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, uint[] indices) where TVertex : MeshVertex, new()
+            MeshLod<TVertex> lod, IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, uint[] indices) where TVertex : struct, IMeshVertex
         {
             if (lod.VertexColors == null || !lod.VertexColors.TryGetValue("COL0", out var colors))
             {
@@ -238,7 +239,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            FColor[] colors, MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
+            FColor[] colors, IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
         {
             var (uvs1, uvs2, uvs3) = PrepareUVs(vert1, vert2, vert3, uvs, indices);
             var c1 = new VertexColorXTextureX(colors[indices[0]], uvs1);
@@ -247,7 +248,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return (c1, c2, c3);
         }
 
-        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
+        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
         {
             var uvs1 = new List<Vector2>() { (Vector2)vert1.Uv };
             var uvs2 = new List<Vector2>() { (Vector2)vert2.Uv };
@@ -262,11 +263,11 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return (uvs1, uvs2, uvs3);
         }
 
-        private static (VERTEX, VERTEX, VERTEX) PrepareTris(MeshVertex vert1, MeshVertex vert2, MeshVertex vert3)
+        private static (VERTEX, VERTEX, VERTEX) PrepareTris(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3)
         {
-            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position * 0.01f),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
-            var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position * 0.01f), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
-            var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position * 0.01f), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
+            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position * UnitScale),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
+            var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position * UnitScale), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
+            var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position * UnitScale), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
 
             return (v1, v2, v3);
         }

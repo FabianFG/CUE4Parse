@@ -61,7 +61,7 @@ public sealed class UsdMeshLodBuilder
         return this;
     }
 
-    public static UsdPrim BuildFromLod<TVertex>(string primName, MeshLod<TVertex> lod, FBox meshBounds) where TVertex : MeshVertex, new()
+    public static UsdPrim BuildFromLod<TVertex>(string primName, MeshLod<TVertex> lod, FBox meshBounds) where TVertex : struct, IMeshVertex
     {
         var verts = lod.Vertices ?? throw new InvalidOperationException("mesh LOD has no vertices.");
         var indices = lod.Indices ?? throw new InvalidOperationException("mesh LOD has no indices.");

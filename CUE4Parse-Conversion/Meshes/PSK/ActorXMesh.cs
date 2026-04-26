@@ -59,7 +59,7 @@ public class ActorXMesh
         archive.Write(Ar.GetBuffer());
     }
 
-    private void ExportCommonMeshLod<TVertex>(Mesh<TVertex> mesh, int lodIndex = -1) where TVertex : MeshVertex, new()
+    private void ExportCommonMeshLod<TVertex>(Mesh<TVertex> mesh, int lodIndex = -1) where TVertex : struct, IMeshVertex
     {
         if (lodIndex < 0)
         {
@@ -115,7 +115,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportCommonMeshData<TVertex>(MeshLod<TVertex> lod, CVertexShare share) where TVertex : MeshVertex, new()
+    private void ExportCommonMeshData<TVertex>(MeshLod<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
     {
         var mainHdr = new VChunkHeader();
         var ptsHdr = new VChunkHeader();
@@ -240,6 +240,8 @@ public class ActorXMesh
 
     private void ExportSkeletonData(List<MeshBone> bones)
     {
+        if (bones.Count == 0) return;
+
         var boneHdr = new VChunkHeader();
 
         var numBones = bones.Count;
@@ -299,9 +301,9 @@ public class ActorXMesh
         }
     }
 
-    public void ExportMorphTargets<TVertex>(FPackageIndex[]? morphTargets, MeshLod<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : MeshVertex, new()
+    public void ExportMorphTargets<TVertex>(FPackageIndex[]? morphTargets, MeshLod<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
     {
-        if (morphTargets == null) return;
+        if (!Options.ExportMorphTargets || morphTargets == null) return;
 
         var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
         Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");

@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class MeshBone(string name, int parentIndex, FTransform transform)
+public readonly struct MeshBone(string name, int parentIndex, FTransform transform)
 {
     public readonly string Name = name;
     public readonly int ParentIndex = parentIndex;

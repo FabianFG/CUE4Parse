@@ -93,7 +93,7 @@ public sealed class UEModel : UEFormatExport
         // }
     }
 
-    private void SerializeCommonMeshData<TVertex>(FArchiveWriter archive, MeshLod<TVertex> lod) where TVertex : MeshVertex, new()
+    private void SerializeCommonMeshData<TVertex>(FArchiveWriter archive, MeshLod<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var vertexCount = lod.Vertices.Length;
         using var vertexChunk = new FDataChunk("VERTICES", vertexCount);
