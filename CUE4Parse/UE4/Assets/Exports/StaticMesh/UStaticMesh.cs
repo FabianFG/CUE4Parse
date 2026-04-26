@@ -18,15 +18,14 @@ public class UStaticMesh : UObject
     public FGuid LightingGuid { get; private set; }
     public FPackageIndex[] Sockets { get; private set; } // UStaticMeshSocket[]
     public FStaticMeshRenderData? RenderData { get; private set; }
-    public FStaticMaterial[]? StaticMaterials { get; private set; }
-    public ResolvedObject?[] Materials { get; private set; } // UMaterialInterface[]
+    public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
+    public FStaticMaterial[] StaticMaterials { get; private set; } = [];
     public int LODForCollision { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
-        Materials = [];
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
         var stripDataFlags = new FStripDataFlags(Ar);
@@ -125,21 +124,21 @@ public class UStaticMesh : UObject
             {
                 // UE4.14+ - "Materials" are deprecated, added StaticMaterials
                 StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
-
-                Materials = new ResolvedObject[StaticMaterials.Length];
-                for (var i = 0; i < Materials.Length; i++)
-                {
-                    Materials[i] = StaticMaterials[i].MaterialInterface;
-                }
             }
         }
         else if (TryGetValue(out FPackageIndex[] materials, "Materials"))
         {
-            Materials = new ResolvedObject[materials.Length];
+            StaticMaterials = new FStaticMaterial[materials.Length];
             for (var i = 0; i < materials.Length; i++)
             {
-                Materials[i] = materials[i].ResolvedObject!;
+                StaticMaterials[i] = new FStaticMaterial(materials[i]);
             }
+        }
+
+        Materials = new FPackageIndex?[StaticMaterials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = StaticMaterials[i].MaterialInterface;
         }
 
         Ar.Position += Ar.Game switch
@@ -149,17 +148,6 @@ public class UStaticMesh : UObject
             EGame.GAME_DaysGone => Ar.Read<int>() * 4 + 4,
             _ => 0
         };
-    }
-
-    public void OverrideMaterials(FPackageIndex[] materials)
-    {
-        for (var i = 0; i < materials.Length; i++)
-        {
-            if (i >= Materials.Length) break;
-            if (materials[i].IsNull) continue;
-
-            Materials[i] = materials[i].ResolvedObject;
-        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

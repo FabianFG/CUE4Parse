@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.Engine;
 public abstract class TPerPlatformProperty<T> : IUStruct where T : notnull
 {
     public bool bCooked;
-    public T Default;
+    protected T Default;
     public Dictionary<FName, T>? PerPlatform;
     public T Value => Default;
 

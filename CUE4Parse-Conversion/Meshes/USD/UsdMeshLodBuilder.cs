@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 
@@ -21,7 +21,7 @@ public sealed class UsdMeshLodBuilder
     private IEnumerable<FVector4>? _tangents;
     private IEnumerable<FMeshUVFloat>? _primaryUv;
     private readonly List<(int Index, IEnumerable<FMeshUVFloat> UVs)> _extraUvSets = [];
-    private IEnumerable<FColor>? _vertexColors;
+    private IReadOnlyDictionary<string, FColor[]>? _vertexColors;
     private bool _doubleSided;
 
     // Skinning
@@ -30,7 +30,7 @@ public sealed class UsdMeshLodBuilder
     private IEnumerable<float>? _jointWeights;
 
     // Sections / material subsets
-    private IEnumerable<CMeshSection>? _sections;
+    private IEnumerable<MeshSection>? _sections;
 
     private UsdMeshLodBuilder(string primName)
     {
@@ -49,9 +49,9 @@ public sealed class UsdMeshLodBuilder
     public UsdMeshLodBuilder WithTangents(IEnumerable<FVector4> tangents) { _tangents = tangents; return this; }
     public UsdMeshLodBuilder WithPrimaryUV(IEnumerable<FMeshUVFloat> uvs) { _primaryUv = uvs; return this; }
     public UsdMeshLodBuilder WithExtraUVSet(int setIndex, IEnumerable<FMeshUVFloat> uvs) { _extraUvSets.Add((setIndex, uvs)); return this; }
-    public UsdMeshLodBuilder WithVertexColors(IEnumerable<FColor> colors) { _vertexColors = colors; return this; }
+    public UsdMeshLodBuilder WithVertexColors(IReadOnlyDictionary<string, FColor[]> colors) { _vertexColors = colors; return this; }
     public UsdMeshLodBuilder WithDoubleSided(bool doubleSided) { _doubleSided = doubleSided; return this; }
-    public UsdMeshLodBuilder WithSections(IEnumerable<CMeshSection> sections) { _sections = sections; return this; }
+    public UsdMeshLodBuilder WithSections(IEnumerable<MeshSection> sections) { _sections = sections; return this; }
 
     public UsdMeshLodBuilder WithSkinning(int elementSize, IEnumerable<ushort> jointIndices, IEnumerable<float> jointWeights)
     {
@@ -61,33 +61,33 @@ public sealed class UsdMeshLodBuilder
         return this;
     }
 
-    public static UsdPrim BuildFromLod<TVertex>(string primName, CMeshLod<TVertex> lod, FBox meshBounds) where TVertex : CMeshVertex, new()
+    public static UsdPrim BuildFromLod<TVertex>(string primName, MeshLod<TVertex> lod, FBox meshBounds) where TVertex : MeshVertex, new()
     {
-        var verts = lod.Verts ?? throw new InvalidOperationException("mesh LOD has no vertices.");
-        var indices = lod.Indices?.Value ?? throw new InvalidOperationException("mesh LOD has no indices.");
-        var extraUvSets = lod.ExtraUV?.Value ?? [];
+        var verts = lod.Vertices ?? throw new InvalidOperationException("mesh LOD has no vertices.");
+        var indices = lod.Indices ?? throw new InvalidOperationException("mesh LOD has no indices.");
+        var extraUvSets = lod.ExtraUvs ?? [];
 
         var builder = new UsdMeshLodBuilder(primName)
             .WithGeometry(verts.Select(v => v.Position), indices.Select(i => i))
             .WithNormals(verts.Select(v => v.Normal))
             .WithTangents(verts.Select(v => v.Tangent))
-            .WithPrimaryUV(verts.Select(v => v.UV))
+            .WithPrimaryUV(verts.Select(v => v.Uv))
             .WithDoubleSided(lod.IsTwoSided);
 
         if (meshBounds.IsValid != 0) builder.WithBounds(meshBounds);
-        if (lod.Sections?.Value is { } sections) builder.WithSections(sections);
-        if (lod.VertexColors is { Length: > 0 } colors) builder.WithVertexColors(colors);
+        if (lod.Sections is { } sections) builder.WithSections(sections);
+        if (lod.VertexColors is { Count: > 0 } colors) builder.WithVertexColors(colors);
 
         for (var i = 0; i < extraUvSets.Length; i++)
             builder.WithExtraUVSet(i + 1, extraUvSets[i]);
 
-        if (verts is CSkelMeshVertex[] skelVerts)
+        if (verts is SkinnedMeshVertex[] skelVerts)
             ExtractSkinning(builder, skelVerts);
 
         return builder.Build();
     }
 
-    private static void ExtractSkinning(UsdMeshLodBuilder builder, CSkelMeshVertex[] verts)
+    private static void ExtractSkinning(UsdMeshLodBuilder builder, SkinnedMeshVertex[] verts)
     {
         var elementSize = verts.Max(v => v.Influences.Count);
         if (elementSize <= 0) return;
@@ -168,10 +168,10 @@ public sealed class UsdMeshLodBuilder
         }
 
         // Vertex colours
-        if (_vertexColors is not null)
+        if (_vertexColors is not null && _vertexColors.TryGetValue("COL0", out var colors))
         {
-            meshPrim.AddPrimvar("color3f[]", "primvars:displayColor", UsdValue.Array(_vertexColors.Select(c => UsdValue.Tuple(c.R / 255f, c.G / 255f, c.B / 255f))), "vertex");
-            meshPrim.AddPrimvar("float[]", "primvars:displayOpacity", UsdValue.Array(_vertexColors.Select(c => UsdValue.Float(c.A / 255f))), "vertex");
+            meshPrim.AddPrimvar("color3f[]", "primvars:displayColor", UsdValue.Array(colors.Select(c => UsdValue.Tuple(c.R / 255f, c.G / 255f, c.B / 255f))), "vertex");
+            meshPrim.AddPrimvar("float[]", "primvars:displayOpacity", UsdValue.Array(colors.Select(c => UsdValue.Float(c.A / 255f))), "vertex");
         }
 
         meshPrim.Add(UsdAttribute.Uniform("bool", "doubleSided", _doubleSided));
@@ -193,43 +193,43 @@ public sealed class UsdMeshLodBuilder
         // Material subsets
         if (_sections is not null)
         {
-            var sectionArray = _sections.ToArray();
-            for (var i = 0; i < sectionArray.Length; i++)
-            {
-                var subset = BuildSectionSubset(i, sectionArray[i]);
-                if (subset is not null) meshPrim.Add(subset);
-            }
+            // var sectionArray = _sections.ToArray();
+            // for (var i = 0; i < sectionArray.Length; i++)
+            // {
+            //     var subset = BuildSectionSubset(i, sectionArray[i]);
+            //     if (subset is not null) meshPrim.Add(subset);
+            // }
         }
 
         return meshPrim;
     }
 
-    private UsdPrim? BuildSectionSubset(int sectionIndex, CMeshSection section)
-    {
-        if (section.NumFaces <= 0) return null;
-
-        var firstFace = section.FirstIndex / 3;
-        var faceIndices = Enumerable.Range(firstFace, section.NumFaces);
-
-        var subsetName = SanitizePrimName(section.MaterialName) ?? $"Section_{sectionIndex}";
-        var subset = UsdPrim.Def("GeomSubset", subsetName);
-
-        subset.Add(UsdAttribute.Uniform("token", "elementType", "face"));
-        subset.Add(UsdAttribute.Uniform("token", "familyName", "materialBind"));
-        subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(faceIndices)));
-
-        subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
-        subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
-
-        if (!string.IsNullOrWhiteSpace(section.MaterialName))
-            subset.Add(UsdAttribute.CustomUniform("string", "unrealMaterialName", section.MaterialName));
-
-        var materialPath = section.Material?.GetPathName();
-        if (!string.IsNullOrWhiteSpace(materialPath))
-            subset.Add(UsdAttribute.CustomUniform("string", "unrealMaterialPath", materialPath));
-
-        return subset;
-    }
+    // private UsdPrim? BuildSectionSubset(int sectionIndex, MeshSection section)
+    // {
+    //     if (section.NumFaces <= 0) return null;
+    //
+    //     var firstFace = section.FirstIndex / 3;
+    //     var faceIndices = Enumerable.Range(firstFace, section.NumFaces);
+    //
+    //     var subsetName = SanitizePrimName(section.MaterialName) ?? $"Section_{sectionIndex}";
+    //     var subset = UsdPrim.Def("GeomSubset", subsetName);
+    //
+    //     subset.Add(UsdAttribute.Uniform("token", "elementType", "face"));
+    //     subset.Add(UsdAttribute.Uniform("token", "familyName", "materialBind"));
+    //     subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(faceIndices)));
+    //
+    //     subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
+    //     subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
+    //
+    //     if (!string.IsNullOrWhiteSpace(section.MaterialName))
+    //         subset.Add(UsdAttribute.CustomUniform("string", "unrealMaterialName", section.MaterialName));
+    //
+    //     var materialPath = section.Material?.ResolvedObject?.GetPathName();
+    //     if (!string.IsNullOrWhiteSpace(materialPath))
+    //         subset.Add(UsdAttribute.CustomUniform("string", "unrealMaterialPath", materialPath));
+    //
+    //     return subset;
+    // }
 
     public static string? SanitizePrimName(string? name)
     {

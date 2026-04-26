@@ -339,19 +339,19 @@ public class FStaticLODModel
             if (Ar is { Game: >= EGame.GAME_UE5_8, IsFilterEditorOnly: true })
             {
                 var bDiscardBulkData = false;
-                
+
                 var bulkData = new FByteBulkData(Ar);
                 if (bulkData.Header.ElementCount == 0)
                 {
                     bDiscardBulkData = true;
                 }
-                
+
                 if (!bDiscardBulkData)
                     SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
 
                 // We should be checking if bInlined is true too but if we do we loose high-res LODs on majority of SKs
                 // Removing the check would have been probabilistic if we had serialization issue but since we don't it's fine
-                
+
                 if (bulkData is { Data: not null, Header.ElementCount: > 0 })
                 {
                     using var tempAr = new FByteArchive("LodReader", bulkData.Data, Ar.Versions);
@@ -451,13 +451,7 @@ public class FStaticLODModel
             VertexBufferGPUSkin.VertsFloat = new FGPUVertFloat[NumVertices];
             for (var i = 0; i < VertexBufferGPUSkin.VertsFloat.Length; i++)
             {
-                VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat
-                {
-                    Pos = positionVertexBuffer.Verts[i],
-                    Infs = skinWeightVertexBuffer.Weights[i],
-                    Normal = staticMeshVertexBuffer.UV[i].Normal,
-                    UV = staticMeshVertexBuffer.UV[i].UV
-                };
+                VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat(positionVertexBuffer.Verts[i], skinWeightVertexBuffer.Weights[i], staticMeshVertexBuffer.UV[i]);
             }
         }
 
@@ -555,19 +549,13 @@ public class FStaticLODModel
         VertexBufferGPUSkin.VertsFloat = new FGPUVertFloat[NumVertices];
         for (var i = 0; i < VertexBufferGPUSkin.VertsFloat.Length; i++)
         {
-            VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat
-            {
-                Pos = positionVertexBuffer.Verts[i],
-                Infs = skinWeightVertexBuffer.Weights[i],
-                Normal = staticMeshVertexBuffer.UV[i].Normal,
-                UV = staticMeshVertexBuffer.UV[i].UV
-            };
+            VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat(positionVertexBuffer.Verts[i], skinWeightVertexBuffer.Weights[i], staticMeshVertexBuffer.UV[i]);
         }
     }
 
     private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyData)
     {
-        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32 
+        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && bAdjacencyData)
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
@@ -575,9 +563,9 @@ public class FStaticLODModel
         bytesToSkip += 4 * 2; // FPositionVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
-        
+
         Ar.Position += bytesToSkip;
-        
+
         if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
         if (HasClothData())
         {
@@ -592,7 +580,7 @@ public class FStaticLODModel
         }
 
         _ = Ar.ReadArray(Ar.ReadFName); // FSkinWeightProfilesData::SerializeMetaData
-        
+
         if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= EGame.GAME_UE5_6)
         {
             Ar.Position += 6 * 4; // FRayTracingGeometryOfflineDataHeader

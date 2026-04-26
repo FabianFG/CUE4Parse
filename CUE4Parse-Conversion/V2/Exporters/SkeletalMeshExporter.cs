@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -11,24 +11,33 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USkeletalMesh originalMesh, IMeshExportFormat format)
     {
-        if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
+        if (Session.Options.ExportMorphTargets)
         {
-            throw new Exception("Failed to convert skeletal mesh or no LODs");
+            originalMesh.PopulateMorphTargetVerticesData();
+        }
+
+        var dto = new SkeletalMesh(originalMesh);
+        if (dto.LODs.Count == 0)
+        {
+            throw new Exception("Skeletal mesh has no LODs");
         }
 
         if (Session.Options.ExportMaterials)
         {
-            EnqueueMaterials(originalMesh.Materials);
+            EnqueueMaterials(dto.Materials);
         }
 
-        foreach (var userData in originalMesh.AssetUserData ?? [])
+        if (dto.AssetUserData != null)
         {
-            if (userData.TryLoad<UDNAAsset>(out var dna))
+            foreach (var userData in dto.AssetUserData)
             {
-                Session.Add(new DnaExporter(dna));
+                if (userData.TryLoad<UDNAAsset>(out var dna))
+                {
+                    Session.Add(new DnaExporter(dna));
+                }
             }
         }
 
-        return format.BuildSkeletalMesh(ObjectName, Session.Options, originalMesh, convertedMesh);
+        return format.BuildSkeletalMesh(ObjectName, Session.Options, dto);
     }
 }

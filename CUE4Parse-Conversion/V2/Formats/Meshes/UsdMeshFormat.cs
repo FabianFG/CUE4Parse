@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes;
-using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.USD;
-using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -15,27 +13,17 @@ public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
 
-        var sockets = new List<FPackageIndex>();
-        if (options.SocketFormat != ESocketFormat.None)
+        var refSkeleton = dto.RefSkeleton.Count > 0 ? dto.RefSkeleton : null;
+
+        foreach (var lod in dto.LODs)
         {
-            sockets.AddRange(originalMesh.Sockets);
-            if (originalMesh.Skeleton.TryLoad<USkeleton>(out var originalSkeleton))
-                sockets.AddRange(originalSkeleton.Sockets);
-        }
-
-        var refSkeleton = convertedMesh.RefSkeleton.Count > 0 ? convertedMesh.RefSkeleton : null;
-
-        foreach (var lod in convertedMesh.LODs)
-        {
-            if (lod.SkipLod) continue;
-
-            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, convertedMesh.BoundingBox);
-            var stage = AssembleSkeletalMeshStage(objectName, options, meshPrim, refSkeleton, sockets);
+            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds);
+            var stage = AssembleSkeletalMeshStage(objectName, options, meshPrim, refSkeleton, dto.Sockets);
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
             results.Add(stage.ToUsdaExportFile(suffix));
             lodIdx++;
@@ -46,17 +34,15 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, CStaticMesh convertedMesh)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto)
     {
         var results = new List<ExportFile>();
         var lodIdx = 0;
 
-        foreach (var lod in convertedMesh.LODs)
+        foreach (var lod in dto.LODs)
         {
-            if (lod.SkipLod) continue;
-
-            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, convertedMesh.BoundingBox);
-            var stage = AssembleStaticMeshStage(objectName, options, meshPrim, convertedMesh.Sockets);
+            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds);
+            var stage = AssembleStaticMeshStage(objectName, options, meshPrim, dto.Sockets);
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
             results.Add(stage.ToUsdaExportFile(suffix));
             lodIdx++;
@@ -67,9 +53,9 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, USkeleton skeleton)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, Skeleton dto)
     {
-        var skelPrim = UsdSkeletonBuilder.Build(skeleton.ReferenceSkeleton);
+        var skelPrim = UsdSkeletonBuilder.Build(dto.RefSkeleton);
         var root = UsdPrim.Def("SkelRoot", objectName);
         root.Add(skelPrim);
 
@@ -83,7 +69,7 @@ public class UsdMeshFormat : IMeshExportFormat
         string objectName,
         ExporterOptions options,
         UsdPrim meshPrim,
-        List<CSkelMeshBone>? refSkeleton,
+        List<MeshBone>? refSkeleton,
         IEnumerable<FPackageIndex>? sockets)
     {
         var stage = new UsdStage(objectName);

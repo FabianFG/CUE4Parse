@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.RenderCore;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -19,7 +19,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int[] Hash;
         public Lazy<int[]> HashNext;
 
-        public void Prepare(CMeshVertex[] verts)
+        public void Prepare<TVertex>(TVertex[] verts) where TVertex : MeshVertex, new()
         {
             var numVerts = verts.Length;
 
@@ -84,7 +84,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             return pointIndex;
         }
 
-        private void ComputeBounds(CMeshVertex[] verts, bool updateBounds = false)
+        private void ComputeBounds<TVertex>(TVertex[] verts, bool updateBounds = false) where TVertex : MeshVertex, new()
         {
             var numVerts = verts.Length;
             if (numVerts <= 0)

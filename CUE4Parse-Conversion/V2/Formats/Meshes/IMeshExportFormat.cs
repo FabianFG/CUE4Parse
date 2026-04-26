@@ -1,16 +1,14 @@
 ﻿using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes.PSK;
-using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse_Conversion.V2.Dto;
 
 namespace CUE4Parse_Conversion.V2.Formats.Meshes;
 
 public interface IMeshExportFormat : IExportFormat
 {
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, USkeletalMesh originalMesh, CSkeletalMesh convertedMesh);
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto);
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, CStaticMesh convertedMesh);
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto);
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, USkeleton skeleton);
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, Skeleton dto);
 }
 

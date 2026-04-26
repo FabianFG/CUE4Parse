@@ -95,8 +95,5 @@ public abstract class ExporterBase2 : IExporter2
     }
 
     public override bool Equals(object? obj) => obj is ExporterBase2 other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);
-    public override int GetHashCode()
-    {
-        return ObjectPath.GetHashCode();
-    }
+    public override int GetHashCode() => ObjectPath.GetHashCode();
 }

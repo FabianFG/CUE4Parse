@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
@@ -10,16 +10,17 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter2
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(UStaticMesh originalMesh, IMeshExportFormat format)
     {
-        if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
+        var dto = new StaticMesh(originalMesh);
+        if (dto.LODs.Count == 0)
         {
-            throw new Exception("Failed to convert static mesh or no LODs");
+            throw new Exception("Static mesh has no LODs");
         }
 
         if (Session.Options.ExportMaterials)
         {
-            EnqueueMaterials(originalMesh.Materials);
+            EnqueueMaterials(dto.Materials);
         }
 
-        return format.BuildStaticMesh(ObjectName, Session.Options, convertedMesh);
+        return format.BuildStaticMesh(ObjectName, Session.Options, dto);
     }
 }

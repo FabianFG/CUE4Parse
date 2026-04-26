@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using CUE4Parse_Conversion.Materials;
-using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using SharpGLTF.Geometry;
@@ -25,65 +22,76 @@ namespace CUE4Parse_Conversion.Meshes.glTF
     {
         public readonly ModelRoot Model;
 
-        public Gltf(string name, CStaticMeshLod lod, List<MaterialExporter2>? materialExports, ExporterOptions options)
+        public Gltf(string name, StaticMesh mesh, ExporterOptions options)
         {
-            var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
+            var sceneBuilder = new SceneBuilder(name);
+            var origin = Matrix4x4.Identity;
+            var extent = mesh.Bounds.GetExtent();
 
-            for (var i = 0; i < lod.Sections.Value.Length; i++)
+            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
             {
-                ExportStaticMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh, options);
+                var lod = mesh.LODs[lodIdx];
+                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{lodIdx}");
+                ExportMeshSections(meshBuilder, lod);
+                sceneBuilder.AddRigidMesh(meshBuilder, origin);
+
+                origin *= Matrix4x4.CreateTranslation(0, 0, -extent.Z * 2);
+
+                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
 
-            var sceneBuilder = new SceneBuilder();
-            sceneBuilder.AddRigidMesh(mesh, Matrix4x4.Identity);
             Model = sceneBuilder.ToGltf2();
         }
 
-        public Gltf(string name, CSkelMeshLod lod, List<CSkelMeshBone> bones, List<MaterialExporter2>? materialExports, ExporterOptions options, FPackageIndex[]? morphTargets = null, int lodIndex = -1)
+        public Gltf(string name, SkeletalMesh mesh, ExporterOptions options)
         {
-            var mesh = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
+            var sceneBuilder = new SceneBuilder(name);
+            var extent = mesh.Bounds.GetExtent();
 
-            for (var i = 0; i < lod.Sections.Value.Length; i++)
+            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
             {
-                ExportSkelMeshSections(i, lod, lod.Sections.Value[i], materialExports, mesh, options);
-            }
+                var offsetZ = extent.Y * 2 * 0.01f * lodIdx;
+                var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lodIdx}").WithLocalTranslation(new Vector3(0, 0, offsetZ));
+                var armature = CreateGltfSkeleton(mesh.RefSkeleton, armatureRoot);
 
-            if (morphTargets != null)
-            {
-                var targetNames = "{\"targetNames\": [";
-                for (var i = 0; i < morphTargets.Length; i++)
+                var lod = mesh.LODs[lodIdx];
+                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{lodIdx}");
+                ExportMeshSections(meshBuilder, lod);
+                sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, offsetZ), armature);
+
+                if (mesh.MorphTargets is { Length: > 0 } morphTargets)
                 {
-                    var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                    if (morphTarget == null || morphTarget.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1)
-                        continue;
-                    var morphBuilder = mesh.UseMorphTarget(i);
-                    var morphModel = morphTarget.MorphLODModels[lodIndex];
-
-                    targetNames += $"\"{morphTarget.Name}\"";
-                    targetNames += i != morphTargets.Length-1 ? "," : "";
-
-                    var verts = morphBuilder.Vertices.ToArray();
-                    for (int j = 0; j < morphModel.Vertices.Length; j++) // morphModel.NumBaseMeshVerts can be different from verts.Length
+                    var targetNames = "{\"targetNames\": [";
+                    for (var i = 0; i < morphTargets.Length; i++)
                     {
-                        var delta = morphModel.Vertices[j];
-                        var vert = lod.Verts[delta.SourceIdx];
-                        var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position*0.01f),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
-                        var index = FindVert(srcVert, verts);
-                        if (index == -1)  continue;
+                        var morphTarget = morphTargets[i].Load<UMorphTarget>();
+                        if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIdx || lodIdx == -1)
+                            continue;
+                        var morphBuilder = meshBuilder.UseMorphTarget(i);
+                        var morphModel = morphTarget.MorphLODModels[lodIdx];
 
-                        morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta*0.01f), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
+                        targetNames += $"\"{morphTarget.Name}\"";
+                        targetNames += i != morphTargets.Length-1 ? "," : "";
+
+                        var verts = morphBuilder.Vertices.ToArray();
+                        for (int j = 0; j < morphModel.Vertices.Length; j++) // morphModel.NumBaseMeshVerts can be different from verts.Length
+                        {
+                            var delta = morphModel.Vertices[j];
+                            var vert = lod.Vertices[delta.SourceIdx];
+                            var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position*0.01f),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
+                            var index = FindVert(srcVert, verts);
+                            if (index == -1)  continue;
+
+                            morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta*0.01f), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
+                        }
                     }
+
+                    targetNames += "]}";
+                    meshBuilder.Extras = (JsonContent) targetNames;
                 }
 
-                targetNames += "]}";
-                mesh.Extras = (JsonContent) targetNames;
+                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
-
-            var sceneBuilder = new SceneBuilder();
-            var armatureNodeBuilder = new NodeBuilder(name+".ao");
-
-            var armature = CreateGltfSkeleton(bones, armatureNodeBuilder);
-            sceneBuilder.AddSkinnedMesh(mesh, Matrix4x4.Identity, armature);
 
             Model = sceneBuilder.ToGltf2();
         }
@@ -118,118 +126,86 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             }
         }
 
-        public static NodeBuilder[] CreateGltfSkeleton(List<CSkelMeshBone> skeleton, NodeBuilder armatureNode) // TODO optimize
+        public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBone> bones, NodeBuilder armatureNode) // TODO optimize
         {
-            var result = new List<NodeBuilder>();
+            var result = new NodeBuilder[bones.Count];
 
-            for (var i = 0; i < skeleton.Count; i++)
+            for (var i = 0; i < bones.Count; i++)
             {
-                var root = skeleton[i];
-                if (root.ParentIndex != -1) continue;
+                var bone = bones[i];
+                if (bone.ParentIndex != -1) continue;
 
-                var rootCopy = (CSkelMeshBone)root.Clone(); // we don't want to modify the original skeleton
-                // rootCopy.Orientation = FQuat.Conjugate(root.Orientation);
-                result.AddRange(CreateBonesRecursive(rootCopy, armatureNode, skeleton, i));
+                CreateBonesRecursive(bone, armatureNode, bones, i, result);
             }
 
-            return result.ToArray();
+            return result;
         }
 
-        private static List<NodeBuilder> CreateBonesRecursive(CSkelMeshBone bone, NodeBuilder parent, List<CSkelMeshBone> skeleton, int index)
+        private static void CreateBonesRecursive(MeshBone bone, NodeBuilder parent, IReadOnlyList<MeshBone> bones, int index, NodeBuilder[] result)
         {
-            var res = new List<NodeBuilder>();
+            var bonePos = SwapYZ(bone.Transform.Translation * 0.01f);
+            var boneRot = SwapYZ(bone.Transform.Rotation);
+            var boneSca = SwapYZ(bone.Transform.Scale3D);
+            var node = parent.CreateNode(bone.Name).WithLocalRotation(boneRot.ToQuaternion()).WithLocalTranslation(bonePos).WithLocalScale(boneSca);
 
-            var bonePos = SwapYZ(bone.Position*0.01f);
-            var boneRot = SwapYZ(bone.Orientation);
-            var node = parent.CreateNode(bone.Name.ToString())
-                .WithLocalRotation(boneRot.ToQuaternion())
-                .WithLocalTranslation(bonePos);
+            result[index] = node;
 
-            res.Add(node);
-
-            var numBones = skeleton.Count;
-            for (int j = 0; j < numBones; j++)
+            for (int j = 0; j < bones.Count; j++)
             {
                 if (index == j) continue;
-                var bone2 = skeleton[j];
+                var bone2 = bones[j];
                 if (bone2.ParentIndex == index)
                 {
-                    res.AddRange(CreateBonesRecursive(bone2, node, skeleton, j));
+                    CreateBonesRecursive(bone2, node, bones, j, result);
                 }
             }
-            return res;
         }
 
-        public static void ExportSkelMeshSections(int index, CSkelMeshLod lod, CMeshSection sect, List<MaterialExporter2>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4> mesh, ExporterOptions options)
+        private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLod<TVertex> lod) where TVertex : MeshVertex, new()
         {
-            string materialName;
-            if (sect.Material?.Load<UMaterialInterface>() is { } tex)
+            for (var i = 0; i < lod.Sections.Length; i++)
             {
-                materialName = tex.Name;
-                var materialExporter = new MaterialExporter2(tex, options);
-                materialExports?.Add(materialExporter);
-            }
-            else materialName = sect.MaterialName ?? $"material_{index}";
+                var section = lod.Sections[i];
+                var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
+                mat.Name = lod.Owner.GetMaterial(section)?.SlotName ?? $"MaterialSlot_{i}";
 
-            var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
-            mat.Name = materialName;
-
-            var prim = mesh.UsePrimitive(mat);
-            for (int j = 0; j < sect.NumFaces; j++)
-            {
-                var wedgeIndex = new uint[3];
-                for (var k = 0; k < wedgeIndex.Length; k++)
+                var prim = builder.UsePrimitive(mat);
+                for (var j = 0; j < section.NumFaces; j++)
                 {
-                    wedgeIndex[k] = lod.Indices.Value[sect.FirstIndex + j * 3 + k];
+                    var wedgeIndex = new uint[3];
+                    for (var k = 0; k < wedgeIndex.Length; k++)
+                    {
+                        wedgeIndex[k] = lod.Indices[section.FirstIndex + j * 3 + k];
+                    }
+
+                    var vert1 = lod.Vertices[wedgeIndex[0]];
+                    var vert2 = lod.Vertices[wedgeIndex[1]];
+                    var vert3 = lod.Vertices[wedgeIndex[2]];
+
+                    var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
+                    var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
+
+                    IVertexBuilder a, b, c;
+                    if (vert1 is SkinnedMeshVertex j1 && vert2 is SkinnedMeshVertex j2 && vert3 is SkinnedMeshVertex j3)
+                    {
+                        var (jv1, jv2, jv3) = PrepareVertexJoints(j1, j2, j3);
+                        a = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(v1, c1, jv1);
+                        b = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(v2, c2, jv2);
+                        c = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(v3, c3, jv3);
+                    }
+                    else
+                    {
+                        a = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(v1, c1);
+                        b = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(v2, c2);
+                        c = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(v3, c3);
+                    }
+
+                    prim.AddTriangle(a, b, c);
                 }
-
-                var vert1 = lod.Verts[wedgeIndex[0]];
-                var vert2 = lod.Verts[wedgeIndex[1]];
-                var vert3 = lod.Verts[wedgeIndex[2]];
-
-                var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
-                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
-                var (jv1, jv2, jv3) = PrepareVertexJoints(vert1, vert2, vert3);
-
-                prim.AddTriangle((v1, c1, jv1), (v2, c2, jv2), (v3, c3, jv3));
             }
         }
 
-        public static void ExportStaticMeshSections(int index, CStaticMeshLod lod, CMeshSection sect, List<MaterialExporter2>? materialExports, MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty> mesh, ExporterOptions options)
-        {
-            string materialName;
-            if (sect.Material?.Load<UMaterialInterface>() is { } tex)
-            {
-                materialName = tex.Name;
-                var materialExporter = new MaterialExporter2(tex, options);
-                materialExports?.Add(materialExporter);
-            }
-            else materialName = sect.MaterialName ?? $"material_{index}";
-
-            var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
-            mat.Name = materialName;
-
-            var prim = mesh.UsePrimitive(mat);
-            for (int j = 0; j < sect.NumFaces; j++)
-            {
-                var wedgeIndex = new uint[3];
-                for (var k = 0; k < wedgeIndex.Length; k++)
-                {
-                    wedgeIndex[k] = lod.Indices.Value[sect.FirstIndex + j * 3 + k];
-                }
-
-                var vert1 = lod.Verts[wedgeIndex[0]];
-                var vert2 = lod.Verts[wedgeIndex[1]];
-                var vert3 = lod.Verts[wedgeIndex[2]];
-
-                var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
-                var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
-
-                prim.AddTriangle((v1, c1), (v2, c2), (v3, c3));
-            }
-        }
-
-        public static VertexJoints4 PrepareVertexJoint(CSkelMeshVertex vert)
+        public static VertexJoints4 PrepareVertexJoint(SkinnedMeshVertex vert)
         {
             var bindings = new List<(int, float)>();
 
@@ -241,7 +217,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return new VertexJoints4(bindings.ToArray());
         }
 
-        public static (VertexJoints4, VertexJoints4, VertexJoints4) PrepareVertexJoints(CSkelMeshVertex vert1, CSkelMeshVertex vert2, CSkelMeshVertex vert3)
+        public static (VertexJoints4, VertexJoints4, VertexJoints4) PrepareVertexJoints(SkinnedMeshVertex vert1, SkinnedMeshVertex vert2, SkinnedMeshVertex vert3)
         {
             var jv1 = PrepareVertexJoint(vert1);
             var jv2 = PrepareVertexJoint(vert2);
@@ -251,27 +227,31 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords<TVertex>(
-            CMeshLod<TVertex> lod, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, uint[] indices) where TVertex : CMeshVertex, new()
+            MeshLod<TVertex> lod, MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, uint[] indices) where TVertex : MeshVertex, new()
         {
-            return PrepareUVsAndTexCoords(lod.VertexColors ?? new FColor[lod.NumVerts], vert1, vert2, vert3,
-                lod.ExtraUV.Value, indices);
+            if (lod.VertexColors == null || !lod.VertexColors.TryGetValue("COL0", out var colors))
+            {
+                colors = new FColor[lod.Vertices.Length];
+            }
+
+            return PrepareUVsAndTexCoords(colors, vert1, vert2, vert3, lod.ExtraUvs, indices);
         }
 
         public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            FColor[] colors, CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
+            FColor[] colors, MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
         {
             var (uvs1, uvs2, uvs3) = PrepareUVs(vert1, vert2, vert3, uvs, indices);
-            var c1 = new VertexColorXTextureX((Vector4)colors[indices[0]]/255, uvs1);
-            var c2 = new VertexColorXTextureX((Vector4)colors[indices[1]]/255, uvs2);
-            var c3 = new VertexColorXTextureX((Vector4)colors[indices[2]]/255, uvs3);
+            var c1 = new VertexColorXTextureX(colors[indices[0]], uvs1);
+            var c2 = new VertexColorXTextureX(colors[indices[1]], uvs2);
+            var c3 = new VertexColorXTextureX(colors[indices[2]], uvs3);
             return (c1, c2, c3);
         }
 
-        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
+        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(MeshVertex vert1, MeshVertex vert2, MeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
         {
-            var uvs1 = new List<Vector2>() { (Vector2)vert1.UV };
-            var uvs2 = new List<Vector2>() { (Vector2)vert2.UV };
-            var uvs3 = new List<Vector2>() { (Vector2)vert3.UV };
+            var uvs1 = new List<Vector2>() { (Vector2)vert1.Uv };
+            var uvs2 = new List<Vector2>() { (Vector2)vert2.Uv };
+            var uvs3 = new List<Vector2>() { (Vector2)vert3.Uv };
             foreach (var uv in uvs)
             {
                 uvs1.Add((Vector2)uv[indices[0]]);
@@ -282,11 +262,11 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return (uvs1, uvs2, uvs3);
         }
 
-        private static (VERTEX, VERTEX, VERTEX) PrepareTris(CMeshVertex vert1, CMeshVertex vert2, CMeshVertex vert3)
+        private static (VERTEX, VERTEX, VERTEX) PrepareTris(MeshVertex vert1, MeshVertex vert2, MeshVertex vert3)
         {
-            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position*0.01f),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
-            var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position*0.01f), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
-            var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position*0.01f), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
+            var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position * 0.01f),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
+            var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position * 0.01f), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
+            var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position * 0.01f), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
 
             return (v1, v2, v3);
         }
@@ -304,7 +284,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             return res;
         }
 
-        public static FQuat SwapYZ(FQuat quat) => new (quat.X, quat.Z, quat.Y, quat.W);
+        public static FQuat SwapYZ(FQuat quat) => new (quat.X, quat.Z, quat.Y, -quat.W);
 
         public static Vector4 SwapYZAndNormalize(Vector4 vec)
         {

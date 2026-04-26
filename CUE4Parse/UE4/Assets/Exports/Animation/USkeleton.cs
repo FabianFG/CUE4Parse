@@ -21,8 +21,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public Dictionary<FName, FReferencePose> AnimRetargetSources { get; private set; }
         public Dictionary<FName, FSmartNameMapping> NameMappings { get; private set; }
         public FName[] ExistingMarkerNames { get; private set; }
-        public FPackageIndex[] Sockets { get; private set; }
-        public FVirtualBone[] VirtualBones { get; private set; }
+        public FPackageIndex[] Sockets { get; private set; } = [];
+        public FVirtualBone[] VirtualBones { get; private set; } = [];
 
         public int BoneCount => ReferenceSkeleton.FinalRefBoneInfo.Length;
 
@@ -40,8 +40,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
             }
             VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
-            Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
-            VirtualBones = GetOrDefault(nameof(VirtualBones), Array.Empty<FVirtualBone>());
+            Sockets = GetOrDefault(nameof(Sockets), Sockets);
+            VirtualBones = GetOrDefault(nameof(VirtualBones), VirtualBones);
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
             {

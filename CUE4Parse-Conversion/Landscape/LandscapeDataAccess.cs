@@ -13,7 +13,7 @@ namespace CUE4Parse_Conversion.Landscape;
 
 internal class FLandscapeComponentDataInterface {
     // offset of this component's data into heightmap texture
-    private readonly ULandscapeComponent Component;
+    public readonly ULandscapeComponent Component;
     private readonly bool bWorkOnEditingLayer;
     private readonly int HeightmapStride;
     private readonly int HeightmapComponentOffsetX;
@@ -32,8 +32,8 @@ internal class FLandscapeComponentDataInterface {
     private readonly object _dataLock = new();
 
     private bool _bEnsuredWeightmapTexCache;
-    
-    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel) 
+
+    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel)
     {
         Component = inComponent;
         HeightMipData = null;
@@ -61,7 +61,7 @@ internal class FLandscapeComponentDataInterface {
         ComponentSizeVerts = (Component.ComponentSizeQuads + 1) >> MipLevel;
         SubsectionSizeVerts = (Component.SubsectionSizeQuads + 1) >> MipLevel;
         ComponentNumSubsections = Component.NumSubsections;
-        
+
         if (MipLevel < heightMapTexture.PlatformData.Mips.Length) {
             Trace.Assert(heightMapTexture.Owner != null, "heightMapTexture.Owner != null");
             var platform = heightMapTexture.Owner!.Provider!.Versions.Platform;
@@ -97,7 +97,7 @@ internal class FLandscapeComponentDataInterface {
         }
     }
 
-    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo, out int LayerIdx) 
+    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo, out int LayerIdx)
     {
         LayerIdx = -1;
         FWeightmapLayerAllocationInfo[] componentWeightmapLayerAllocations =
@@ -126,7 +126,7 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    public bool EnsureWeightmapTextureDataCache() 
+    public bool EnsureWeightmapTextureDataCache()
     {
         var allocationInfos = Component.GetWeightmapLayerAllocations();
         for (var index = 0; index < allocationInfos.Length; index++) {
@@ -144,7 +144,7 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData) 
+    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData)
     {
         if (_bEnsuredWeightmapTexCache) {
             // can read without lock

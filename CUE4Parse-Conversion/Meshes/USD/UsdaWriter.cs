@@ -45,7 +45,7 @@ public static class UsdaWriter
 
         public void WriteStage(UsdStage stage)
         {
-            Line($"#usda {stage.Version}");
+            Line($"#usda {UsdStage.Version}");
 
             if (stage.Metadata.Count > 0)
             {

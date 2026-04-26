@@ -17,7 +17,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         IAdditionOperators<FVector2D,FVector2D,FVector2D>,
         IAdditionOperators<FVector2D,float,FVector2D>
     {
-        public static readonly FVector2D ZeroVector = new(0, 0);
+        public static readonly FVector2D ZeroVector = new(0);
+        public static readonly FVector2D OneVector = new(1);
 
         public readonly float X;
         public readonly float Y;
@@ -26,6 +27,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             X = x;
             Y = y;
+        }
+
+        public FVector2D(float value)
+        {
+            X = value;
+            Y = value;
         }
 
         public FVector2D(FArchive Ar)

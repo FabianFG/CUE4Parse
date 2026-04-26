@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
@@ -11,22 +10,17 @@ public sealed class SplineMeshExporter(USplineMeshComponent component) : MeshExp
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USplineMeshComponent component, IMeshExportFormat format)
     {
-        var originalMesh = component.GetStaticMesh().Load<UStaticMesh>();
-        if (originalMesh == null)
+        var dto = new StaticMesh(component);
+        if (dto.LODs.Count == 0)
         {
-            throw new Exception("Failed to load static mesh");
-        }
-
-        if (!originalMesh.TryConvert(component, out var convertedMesh) || convertedMesh.LODs.Count == 0)
-        {
-            throw new Exception("Failed to convert static mesh or no LODs");
+            throw new Exception("Spline mesh has no LODs");
         }
 
         if (Session.Options.ExportMaterials)
         {
-            EnqueueMaterials(originalMesh.Materials);
+            EnqueueMaterials(dto.Materials);
         }
 
-        return format.BuildStaticMesh(ObjectName, Session.Options, convertedMesh);
+        return format.BuildStaticMesh(ObjectName, Session.Options, dto);
     }
 }

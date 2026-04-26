@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -7,15 +8,24 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
 [JsonConverter(typeof(FSkelMeshVertexBaseConverter))]
-public class FSkelMeshVertexBase
+public abstract class FSkelMeshVertexBase
 {
     public FVector Pos;
     public FPackedNormal[] Normal;
     public FSkinWeightInfo? Infs;
 
-    public FSkelMeshVertexBase()
+    public abstract FMeshUVFloat[] UVs { get; }
+
+    protected FSkelMeshVertexBase()
     {
         Normal = [];
+    }
+
+    protected FSkelMeshVertexBase(FVector position, FPackedNormal[] normals, FSkinWeightInfo? infs)
+    {
+        Pos = position;
+        Normal = normals;
+        Infs = infs;
     }
 
     public void SerializeForGPU(FArchive Ar, bool bExtraBoneInfluences)

@@ -28,8 +28,7 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
-    public bool SkipLod => VertexBuffer == null || IndexBuffer == null ||
-                           PositionVertexBuffer == null || ColorVertexBuffer == null;
+    public bool SkipLod => VertexBuffer == null || IndexBuffer == null || PositionVertexBuffer == null;
 
     public enum EClassDataStripFlag : byte
     {

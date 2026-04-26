@@ -15,21 +15,13 @@ public readonly record struct UsdMetadata(string Name, UsdValue Value);
 
 public readonly record struct UsdReference(string AssetPath, string? PrimPath = null)
 {
-    public override string ToString() => PrimPath is { Length: > 0 }
-        ? $"{AssetPath}#{PrimPath}"
-        : AssetPath;
+    public override string ToString() => PrimPath is { Length: > 0 } ? $"{AssetPath}#{PrimPath}" : AssetPath;
 }
 
-public sealed class UsdReferenceList
+public sealed class UsdReferenceList(IEnumerable<UsdReference> references, UsdListOpType operation = UsdListOpType.Prepend)
 {
-    public UsdReferenceList(IEnumerable<UsdReference> references, UsdListOpType operation = UsdListOpType.Prepend)
-    {
-        References = [.. references];
-        Operation = operation;
-    }
-
-    public List<UsdReference> References { get; }
-    public UsdListOpType Operation { get; set; }
+    public List<UsdReference> References { get; } = [.. references];
+    public UsdListOpType Operation { get; } = operation;
 }
 
 public readonly record struct UsdValue(UsdValueKind Kind, object? RawValue)
@@ -132,17 +124,14 @@ public abstract class UsdProperty(string name)
 public sealed class UsdAttribute(string typeName, string name, UsdValue value) : UsdProperty(name)
 {
     public string TypeName { get; } = typeName ?? throw new ArgumentNullException(nameof(typeName));
-    public UsdValue Value { get; set; } = value;
+    public UsdValue Value { get; } = value;
 
     // Factory helpers – avoid scattered object-initialiser noise
-    public static UsdAttribute Uniform(string typeName, string name, UsdValue value) =>
-        new(typeName, name, value) { Variability = UsdVariability.Uniform };
+    public static UsdAttribute Uniform(string typeName, string name, UsdValue value) => new(typeName, name, value) { Variability = UsdVariability.Uniform };
 
-    public static UsdAttribute Flagged(string typeName, string name, UsdValue value) =>
-        new(typeName, name, value) { Custom = true };
+    public static UsdAttribute Flagged(string typeName, string name, UsdValue value) => new(typeName, name, value) { Custom = true };
 
-    public static UsdAttribute CustomUniform(string typeName, string name, UsdValue value) =>
-        new(typeName, name, value) { Custom = true, Variability = UsdVariability.Uniform };
+    public static UsdAttribute CustomUniform(string typeName, string name, UsdValue value) => new(typeName, name, value) { Custom = true, Variability = UsdVariability.Uniform };
 
     /// <summary>Creates a primvar attribute with the given interpolation.</summary>
     public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string interpolation)
@@ -155,27 +144,31 @@ public sealed class UsdAttribute(string typeName, string name, UsdValue value) :
 
 public sealed class UsdRelationship(string name, params string[] targets) : UsdProperty(name)
 {
-    public List<string> Targets { get; } = [.. targets.Where(static t => !string.IsNullOrWhiteSpace(t))];
+    public List<string> Targets { get; } = [.. targets.Where(t => !string.IsNullOrWhiteSpace(t))];
 }
 
-public sealed class UsdPrim
+public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier specifier = UsdPrimSpecifier.Def)
 {
-    public UsdPrim(string typeName, string name)
-    {
-        TypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-    }
+    public string TypeName { get; } = typeName ?? throw new ArgumentNullException(nameof(typeName));
+    public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
+    public UsdPrimSpecifier Specifier { get; } = specifier;
 
-    public string TypeName { get; }
-    public string Name { get; }
-    public UsdPrimSpecifier Specifier { get; set; } = UsdPrimSpecifier.Def;
     public List<UsdMetadata> Metadata { get; } = [];
     public List<UsdProperty> Properties { get; } = [];
     public List<UsdPrim> Children { get; } = [];
-    public UsdReferenceList? References { get; set; }
+    public UsdReferenceList? References { get; }
 
-    public UsdPrim Add(UsdProperty property) { Properties.Add(property); return this; }
-    public UsdPrim Add(UsdPrim child) { Children.Add(child); return this; }
+    public UsdPrim Add(UsdProperty property)
+    {
+        Properties.Add(property);
+        return this;
+    }
+
+    public UsdPrim Add(UsdPrim child)
+    {
+        Children.Add(child);
+        return this;
+    }
 
     public UsdPrim AddMetadata(string name, UsdValue value)
     {
@@ -190,25 +183,30 @@ public sealed class UsdPrim
         return this;
     }
 
-    public static UsdPrim Def(string typeName, string name) => new(typeName, name) { Specifier = UsdPrimSpecifier.Def };
-    public static UsdPrim Over(string typeName, string name) => new(typeName, name) { Specifier = UsdPrimSpecifier.Over };
-    public static UsdPrim Class(string typeName, string name) => new(typeName, name) { Specifier = UsdPrimSpecifier.Class };
+    public static UsdPrim Def(string typeName, string name) => new(typeName, name);
+    public static UsdPrim Over(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Over);
+    public static UsdPrim Class(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Class);
 }
 
 public sealed class UsdStage
 {
-    public string Version { get; set; } = "1.0";
+    public const string Version = "1.0";
+
     public List<UsdMetadata> Metadata { get; } = [];
     public List<UsdPrim> Prims { get; } = [];
 
     public UsdStage(string defaultPrim)
     {
         AddMetadata("defaultPrim", defaultPrim);
-        AddMetadata("metersPerUnit", 0.01);
+        AddMetadata("metersPerUnit", 0.01f);
         AddMetadata("upAxis", "Z");
     }
 
-    public UsdStage Add(UsdPrim prim) { Prims.Add(prim); return this; }
+    public UsdStage Add(UsdPrim prim)
+    {
+        Prims.Add(prim);
+        return this;
+    }
 
     public UsdStage AddMetadata(string name, string value) => AddMetadata(name, UsdValue.String(value));
     public UsdStage AddMetadata(string name, double value) => AddMetadata(name, UsdValue.Double(value));

@@ -10,15 +10,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     [StructFallback]
     public class FStaticMaterial
     {
-        public ResolvedObject? MaterialInterface; // UMaterialInterface
+        public FPackageIndex? MaterialInterface; // UMaterialInterface
         public FName MaterialSlotName;
         public FName ImportedMaterialSlotName;
         public FMeshUVChannelInfo? UVChannelData;
-        public FPackageIndex OverlayMaterialInterface;
+        public FPackageIndex? OverlayMaterialInterface;
 
         public FStaticMaterial(FAssetArchive Ar)
         {
-            MaterialInterface = new FPackageIndex(Ar).ResolvedObject;
+            MaterialInterface = new FPackageIndex(Ar);
             MaterialSlotName = Ar.ReadFName();
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
@@ -32,9 +32,15 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (Ar.Game is EGame.GAME_FragPunk or EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
         }
 
+        public FStaticMaterial(FPackageIndex? material)
+        {
+            MaterialInterface = material;
+            MaterialSlotName = material?.Name ?? "None";
+        }
+
         public FStaticMaterial(FStructFallback fallback)
         {
-            MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex().ResolvedObject);
+            MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
             MaterialSlotName = fallback.GetOrDefault(nameof(MaterialSlotName), "None");
             UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
         }

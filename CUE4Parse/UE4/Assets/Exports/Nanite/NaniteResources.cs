@@ -1,7 +1,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -27,12 +26,12 @@ public class FNaniteResources
     public uint[] AssemblyBoneAttachmentData;
     public ulong VoxelMaterialsMask;
     public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
-    
+
     /// <summary>
     /// Dictionary of page ranges relevant to streaming requests and fixups
     /// </summary>
     public FPageRangeKey[] PageRangeLookup;
-    
+
     /// <summary>The number of root pages found outside of the bulk page.</summary>
     public int NumRootPages = 0;
     /// <summary>The precision which which vertex positions are recorded with.</summary>
@@ -78,7 +77,7 @@ public class FNaniteResources
                     AssemblyBoneAttachmentData = Ar.ReadArray<uint>();
                     PageRangeLookup = Ar.ReadArray<FPageRangeKey>();
                 }
-                
+
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
             ImposterAtlas = Ar.ReadArray<ushort>();
@@ -113,6 +112,14 @@ public class FNaniteResources
         }
     }
 
+    public void UnloadAllPages()
+    {
+        for (int i = 0; i < LoadedPages.Length; i++)
+        {
+            LoadedPages[i] = null;
+        }
+    }
+
     public FNaniteStreamableData? GetPage(uint pageIndex)
     {
         if (pageIndex >= PageStreamingStates.Length) return null;
@@ -124,7 +131,7 @@ public class FNaniteResources
             else
                 FailedPages.Add(pageIndex);
         }
-        
+
         return LoadedPages[pageIndex];
     }
 
@@ -154,14 +161,7 @@ public class FNaniteResources
         byte[] buffer = ArrayPool<byte>.Shared.Rent((int)page.BulkSize);
         try
         {
-            if (pageIndex < NumRootPages)
-            {
-                Buffer.BlockCopy(RootData, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
-            }
-            else
-            {
-                Buffer.BlockCopy(StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
-            }
+            Buffer.BlockCopy(pageIndex < NumRootPages ? RootData : StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
 
             using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, versionContainer);
             outPage = new FNaniteStreamableData(pageArchive, this, pageIndex);
