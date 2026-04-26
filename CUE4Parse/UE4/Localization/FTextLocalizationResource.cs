@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.GameTypes.CodeVein2.Encryption;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.UE4.Exceptions;
@@ -18,25 +19,42 @@ public class FTextLocalizationResource
     private readonly FGuid _locResMagic = new (0x7574140Eu, 0xFC034A67u, 0x9D90154Au, 0x1B7F37C3u);
     public readonly Dictionary<FTextKey, Dictionary<FTextKey, FEntry>> Entries = [];
 
-        public FTextLocalizationResource(FArchive Ar)
+    public FTextLocalizationResource(FArchive Ar)
+    {
+        var locResMagic = Ar.Read<FGuid>();
+        var versionNumber = ELocResVersion.Legacy;
+        if (locResMagic == _locResMagic)
         {
-            var locResMagic = Ar.Read<FGuid>();
-            var versionNumber = ELocResVersion.Legacy;
-            if (locResMagic == _locResMagic)
-            {
-                versionNumber = Ar.Read<ELocResVersion>();
-            }
-            else // Legacy LocRes files lack the magic number, assume that's what we're dealing with, and seek back to the start of the file
-            {
-                Ar.Position = 0;
-                Log.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
-            }
+            versionNumber = Ar.Read<ELocResVersion>();
+        }
+        else // Legacy LocRes files lack the magic number, assume that's what we're dealing with, and seek back to the start of the file
+        {
+            Ar.Position = 0;
+            Log.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
+        }
 
         // Is this LocRes file too new to load?
         if (versionNumber > ELocResVersion.Latest)
         {
-            if (Ar.Game != EGame.GAME_StellarBlade)
+            if (Ar.Game is not (EGame.GAME_StellarBlade or EGame.GAME_HonorofKingsWorld))
                 throw new ParserException(Ar, $"LocRes '{Ar.Name}' is too new to be loaded (File Version: {versionNumber:D}, Loader Version: {ELocResVersion.Latest:D})");
+        }
+
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld && versionNumber > ELocResVersion.Latest)
+        {
+            Ar.SkipFixedArray(sizeof(uint));
+            var dts = Ar.ReadArray(() => (Ar.ReadFString(), Ar.Read<int>(), Ar.Read<int>()));
+            var dict = new Dictionary<FTextKey, FEntry>(dts.Sum(x => x.Item2));
+            foreach (var dt in  dts)
+            {
+                var entries = Ar.ReadArray(dt.Item2, () => (Ar.Read<uint>(), Ar.ReadFString(), Ar.Read<uint>(), Ar.ReadFString(), Ar.ReadFString()));
+                foreach (var item in entries)
+                {
+                    dict[new FTextKey(item.Item2, item.Item1)] = new FEntry(item.Item4, Ar.Name, item.Item3);
+                }
+            }
+            Entries.Add(new FTextKey(""), dict);
+            return;
         }
 
         // Read the localized string array

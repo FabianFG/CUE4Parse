@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -13,11 +12,11 @@ public readonly struct AkSwitchGroup
     public readonly EAkGameSyncType RtpcType;
     public readonly AkSwitchGraphPoint[] GraphPoints;
 
-    public AkSwitchGroup(FArchive Ar)
+    public AkSwitchGroup(FWwiseArchive Ar)
     {
         SwitchGroupId = Ar.Read<uint>();
         RtpcId = Ar.Read<uint>();
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
             RtpcType = Ar.Read<EAkGameSyncType>();
         GraphPoints = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchGraphPoint(Ar));
     }

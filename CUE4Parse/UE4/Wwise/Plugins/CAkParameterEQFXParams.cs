@@ -1,13 +1,12 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkParameterEQFXParams(FArchive Ar) : IAkPluginParam
+public class CAkParameterEQFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkParametricEQFXParams Params = new AkParametricEQFXParams(Ar);
+    public AkParametricEQFXParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -26,7 +25,7 @@ public struct AkParametricEQFXParams
     public float fOutputLevel;
     public bool bProcessLFE;
 
-    public AkParametricEQFXParams(FArchive Ar)
+    public AkParametricEQFXParams(FWwiseArchive Ar)
     {
         Band = Ar.ReadArray<EQModuleParams>(3);
         fOutputLevel = Ar.Read<float>();

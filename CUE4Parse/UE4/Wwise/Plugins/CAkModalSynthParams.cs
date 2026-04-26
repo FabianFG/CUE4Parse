@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
@@ -9,7 +8,7 @@ public class CAkModalSynthParams : IAkPluginParam
     public float m_fGlobalGain;
     public AkModalSynthMode[] m_pModes;
 
-    public CAkModalSynthParams(FArchive Ar)
+    public CAkModalSynthParams(FWwiseArchive Ar)
     {
         Params = new AkModalSynthParams(Ar);
         m_fGlobalGain = Ar.Read<float>();
@@ -32,7 +31,7 @@ public struct AkModalSynthParams
     public bool bBWEnable;
     public bool bMagEnable;
 
-    public AkModalSynthParams(FArchive Ar)
+    public AkModalSynthParams(FWwiseArchive Ar)
     {
         fResidualLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);

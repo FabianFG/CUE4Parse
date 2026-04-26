@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using Newtonsoft.Json;
@@ -15,13 +14,13 @@ public readonly struct Hierarchy
     public readonly uint Length;
     public readonly AbstractHierarchy Data;
 
-    public Hierarchy(FArchive Ar)
+    public Hierarchy(FWwiseArchive Ar)
     {
         byte rawType = Ar.Read<byte>();
         Length = Ar.Read<uint>();
         var hierarchyEndPosition = Ar.Position + Length;
 
-        Type = rawType.MapToCurrent();
+        Type = rawType.MapToCurrent(Ar.Version);
 
         // Try/Catch is done to allow for extracting audio even if this fails
         // Due to their complexity it's very likely hierarchies will fail to parse if unsupported
@@ -85,7 +84,7 @@ public class HierarchyConverter : JsonConverter<Hierarchy>
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Type));
-        writer.WriteValue(value.Type.ToVersionString());
+        writer.WriteValue(value.Type.ToVersionString(WwiseConverter.WwiseVersion.Value));
 
 #if DEBUG
         writer.WritePropertyName(nameof(value.Length));

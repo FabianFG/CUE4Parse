@@ -1,9 +1,7 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 // > 118 <= 122, later removed
-public readonly struct AkDiffuseReverberator(FArchive Ar) : ICAkIndexable
+public readonly struct AkDiffuseReverberator(FWwiseArchive Ar) : ICAkIndexable
 {
     public readonly uint Id = Ar.Read<uint>();
     public readonly float Time = Ar.Read<float>();

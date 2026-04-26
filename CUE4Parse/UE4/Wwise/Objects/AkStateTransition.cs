@@ -8,7 +8,7 @@ public readonly struct AkStateTransition
     public readonly uint StateTo;
     public readonly uint TransitionTime;
 
-    public AkStateTransition(FArchive Ar)
+    public AkStateTransition(FWwiseArchive Ar)
     {
         StateFrom = Ar.Read<uint>();
         StateTo = Ar.Read<uint>();

@@ -1,8 +1,6 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public readonly struct AkAcousticTexture(FArchive Ar) : ICAkIndexable
+public readonly struct AkAcousticTexture(FWwiseArchive Ar) : ICAkIndexable
 {
     public readonly uint Id = Ar.Read<uint>();
     public readonly float AbsorptionOffset = Ar.Read<float>();
@@ -14,7 +12,7 @@ public readonly struct AkAcousticTexture(FArchive Ar) : ICAkIndexable
 }
 
 // > 118 <= 122
-public readonly struct AkAcousticTexture_v122(FArchive Ar) : ICAkIndexable
+public readonly struct AkAcousticTexture_v122(FWwiseArchive Ar) : ICAkIndexable
 {
     public readonly uint Id = Ar.Read<uint>();
 

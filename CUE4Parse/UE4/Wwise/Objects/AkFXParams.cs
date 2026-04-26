@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public readonly struct AkFx
@@ -10,9 +8,9 @@ public readonly struct AkFx
     public readonly bool IsShareSet; // Version <= 145
     public readonly bool IsRendered; // Version <= 145
 
-    public AkFx(FArchive Ar)
+    public AkFx(FWwiseArchive Ar)
     {
-        switch (WwiseVersions.Version)
+        switch (Ar.Version)
         {
             case <= 26:
                 // No additional fields for version <= 26
@@ -39,10 +37,10 @@ public readonly struct AkFxParams
     public readonly bool BypassAll;
     public readonly AkFx[] Effects = [];
 
-    public AkFxParams(FArchive Ar)
+    public AkFxParams(FWwiseArchive Ar)
     {
         int count;
-        if (WwiseVersions.Version <= 26)
+        if (Ar.Version <= 26)
         {
             count = Ar.Read<uint>() != 0 ? 1 : 0; // uNumFx (flag check for version <= 26)
         }
@@ -53,11 +51,11 @@ public readonly struct AkFxParams
 
         if (count > 0)
         {
-            if (WwiseVersions.Version <= 26)
+            if (Ar.Version <= 26)
             {
                 // No additional fields for version <= 26
             }
-            else if (WwiseVersions.Version <= 145)
+            else if (Ar.Version <= 145)
             {
                 BypassAll = Ar.Read<byte>() != 0;
             }
@@ -77,7 +75,7 @@ public readonly struct AkFxChunk
     public readonly uint FxId;
     public readonly byte IsShareSet;
 
-    public AkFxChunk(FArchive Ar)
+    public AkFxChunk(FWwiseArchive Ar)
     {
         FxIndex = Ar.Read<byte>();
         FxId = Ar.Read<uint>();
@@ -99,10 +97,10 @@ public class AkFxBus
     public readonly uint FxId0;
     public readonly bool IsShareSet0;
 
-    public AkFxBus(FArchive Ar)
+    public AkFxBus(FWwiseArchive Ar)
     {
         int count = 0;
-        if (WwiseVersions.Version <= 26)
+        if (Ar.Version <= 26)
         {
             var numFX = Ar.Read<uint>();
             if (numFX != 0)
@@ -116,7 +114,7 @@ public class AkFxBus
         }
 
         bool readFx;
-        if (WwiseVersions.Version > 48 && WwiseVersions.Version <= 65)
+        if (Ar.Version > 48 && Ar.Version <= 65)
         {
             readFx = count > 0; // or if is environmental, only possible in versions <= 53, we shouldn't really care about versions < 100
         }
@@ -127,7 +125,7 @@ public class AkFxBus
 
         if (readFx)
         {
-            if (WwiseVersions.Version > 26)
+            if (Ar.Version > 26)
             {
                 BitsFxBypass = Ar.Read<byte>();
             }
@@ -140,14 +138,14 @@ public class AkFxBus
                 var isShareSet = Ar.Read<byte>();
                 FxChunks[i] = new AkFxChunk(fxIndex, fxId, isShareSet);
 
-                if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+                if (Ar.Version > 89 && Ar.Version <= 145)
                 {
                     Ar.Read<byte>(); // unused byte
                 }
             }
         }
 
-        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+        if (Ar.Version > 89 && Ar.Version <= 145)
         {
             FxId0 = Ar.Read<uint>();
             IsShareSet0 = Ar.Read<byte>() != 0;

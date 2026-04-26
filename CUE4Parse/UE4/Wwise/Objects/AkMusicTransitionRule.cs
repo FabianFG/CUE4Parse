@@ -1,9 +1,8 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public readonly struct AkMusicTransitionRule(FArchive Ar)
+public readonly struct AkMusicTransitionRule(FWwiseArchive Ar)
 {
     public readonly TransitionRule[] Rules = Ar.ReadArray((int) Ar.Read<uint>(), () => new TransitionRule(Ar));
 }
@@ -16,18 +15,18 @@ public readonly struct TransitionRule
     public readonly AkMusicTransDestRule DestRules;
     public readonly AkMusicTransitionObject? TransObject;
 
-    public TransitionRule(FArchive Ar)
+    public TransitionRule(FWwiseArchive Ar)
     {
-        int numSrc = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
+        int numSrc = Ar.Version <= 72 ? 1 : Ar.Read<int>();
         SrcIds = Ar.ReadArray<int>(numSrc);
 
-        int numDest = WwiseVersions.Version <= 72 ? 1 : Ar.Read<int>();
+        int numDest = Ar.Version <= 72 ? 1 : Ar.Read<int>();
         DestIds = Ar.ReadArray<int>(numDest);
 
         SrcRules = new AkMusicTransSrcRule(Ar);
         DestRules = new AkMusicTransDestRule(Ar);
 
-        bool hasTransitionObject = WwiseVersions.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
+        bool hasTransitionObject = Ar.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
         if (hasTransitionObject)
         {
             TransObject = new AkMusicTransitionObject(Ar);
@@ -45,16 +44,16 @@ public readonly struct AkMusicTransSrcRule
     public readonly uint CueFilterHash;
     public readonly bool PlayPostExit;
 
-    public AkMusicTransSrcRule(FArchive Ar)
+    public AkMusicTransSrcRule(FWwiseArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
         FadeCurve = (EAkCurveInterpolation) Ar.Read<uint>();
         FadeOffset = Ar.Read<int>();
         SyncType = Ar.Read<EAkSyncType>();
 
-        if (WwiseVersions.Version > 62 && WwiseVersions.Version <= 72)
+        if (Ar.Version > 62 && Ar.Version <= 72)
             MarkerId = Ar.Read<uint>();
-        else if (WwiseVersions.Version > 72)
+        else if (Ar.Version > 72)
             CueFilterHash = Ar.Read<uint>();
 
         PlayPostExit = Ar.Read<byte>() != 0;
@@ -74,26 +73,26 @@ public readonly struct AkMusicTransDestRule
     public readonly bool PlayPreEntry;
     public readonly bool DestMatchSourceCueName;
 
-    public AkMusicTransDestRule(FArchive Ar)
+    public AkMusicTransDestRule(FWwiseArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
         FadeCurve = (EAkCurveInterpolation) Ar.Read<uint>();
         FadeOffset = Ar.Read<int>();
 
-        if (WwiseVersions.Version <= 72)
+        if (Ar.Version <= 72)
             MarkerId = Ar.Read<uint>();
         else
             CueFilterHash = Ar.Read<uint>();
 
         JumpToId = Ar.Read<uint>();
 
-        if (WwiseVersions.Version > 132)
+        if (Ar.Version > 132)
             JumpToType = (EAkJumpToSelType) Ar.Read<ushort>();
 
         EntryType = (EAkEntryType) Ar.Read<ushort>();
         PlayPreEntry = Ar.Read<byte>() != 0;
 
-        if (WwiseVersions.Version > 62)
+        if (Ar.Version > 62)
             DestMatchSourceCueName = Ar.Read<byte>() != 0;
     }
 }
@@ -106,7 +105,7 @@ public readonly struct AkMusicTransitionObject
     public readonly bool PlayPreEntry;
     public readonly bool PlayPostExit;
 
-    public AkMusicTransitionObject(FArchive Ar)
+    public AkMusicTransitionObject(FWwiseArchive Ar)
     {
         SegmentId = Ar.Read<uint>();
         FadeInParams = new AkMusicFade(Ar);

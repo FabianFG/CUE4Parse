@@ -1,11 +1,10 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkToneGenParams(FArchive Ar) : IAkPluginParam
+public class CAkToneGenParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public AkToneGenParams Params = Ar.Read<AkToneGenParams>();
 }

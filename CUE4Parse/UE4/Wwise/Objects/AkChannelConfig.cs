@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -12,7 +11,7 @@ public readonly struct AkChannelConfig
     public readonly EAkChannelConfigType ConfigType;
     public readonly uint ChannelMask;
 
-    public AkChannelConfig(FArchive Ar)
+    public AkChannelConfig(FWwiseArchive Ar)
     {
         var data = Ar.Read<uint>();
         NumChannels = (byte) (data & 0xFF);

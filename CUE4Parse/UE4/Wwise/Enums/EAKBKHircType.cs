@@ -58,18 +58,18 @@ public enum EAKBKHircType_v125 : byte
 
 public static class EHierarchyObjectTypeExtensions
 {
-    public static string ToVersionString(this EAKBKHircType type)
+    public static string ToVersionString(this EAKBKHircType type, uint version)
     {
-        return WwiseVersions.Version switch
+        return version switch
         {
             <= 125 => ((EAKBKHircType_v125) type).ToString(),
             _ => type.ToString()
         };
     }
 
-    public static EAKBKHircType MapToCurrent(this byte rawType)
+    public static EAKBKHircType MapToCurrent(this byte rawType, uint version)
     {
-        if (WwiseVersions.Version > 125)
+        if (version > 125)
             return (EAKBKHircType) rawType;
 
         return (EAKBKHircType_v125) rawType switch

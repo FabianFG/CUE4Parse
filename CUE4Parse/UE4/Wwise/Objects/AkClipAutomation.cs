@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,7 +11,7 @@ public readonly struct AkClipAutomation
     public readonly EAkClipAutomationType AutoType;
     public readonly AkRtpcGraphPoint[] GraphPoints;
 
-    public AkClipAutomation(FArchive Ar)
+    public AkClipAutomation(FWwiseArchive Ar)
     {
         ClipIndex = Ar.Read<uint>();
         AutoType = Ar.Read<EAkClipAutomationType>();

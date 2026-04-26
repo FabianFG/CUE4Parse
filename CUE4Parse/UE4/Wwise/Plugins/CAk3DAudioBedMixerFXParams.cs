@@ -1,16 +1,15 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAk3DAudioBedMixerFXParams(FArchive Ar) : IAkPluginParam
+public class CAk3DAudioBedMixerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public Ak3DAudioBedMixerRTPCParams Params = new Ak3DAudioBedMixerRTPCParams(Ar);
+    public Ak3DAudioBedMixerRTPCParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Ak3DAudioBedMixerRTPCParams(FArchive Ar)
+public struct Ak3DAudioBedMixerRTPCParams(FWwiseArchive Ar)
 {
     public EAkChannelConfig MainMixConfiguration = Ar.Read<EAkChannelConfig>();
     public ushort PassthroughMixPolicy = Ar.Read<ushort>();

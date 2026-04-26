@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -11,9 +10,9 @@ public class CAkMeterFXParams : IAkPluginParam
     public AkMeterBallisticParams? BallisticParams;
     public AkMeterParams? MeterParams;
 
-    public CAkMeterFXParams(FArchive Ar)
+    public CAkMeterFXParams(FWwiseArchive Ar)
     {
-        if (WwiseVersions.Version > 154)
+        if (Ar.Version > 154)
         {
             MeterParams = new AkMeterParams(Ar);
             BallisticParams = new AkMeterBallisticParams(Ar);
@@ -25,19 +24,19 @@ public class CAkMeterFXParams : IAkPluginParam
     }
 }
 
-public struct AkMeterFXParams(FArchive Ar)
+public struct AkMeterFXParams(FWwiseArchive Ar)
 {
-    public AkMeterRTPCParams RTPC = new AkMeterRTPCParams(Ar);
-    public AkMeterNonRTPCParams NonRTPC = new AkMeterNonRTPCParams(Ar);
+    public AkMeterRTPCParams RTPC = new(Ar);
+    public AkMeterNonRTPCParams NonRTPC = new(Ar);
 
-    public struct AkMeterRTPCParams(FArchive Ar)
+    public struct AkMeterRTPCParams(FWwiseArchive Ar)
     {
         public float fAttack = Ar.Read<float>();
         public float fRelease = Ar.Read<float>();
         public float fMin = Ar.Read<float>();
         public float fMax = Ar.Read<float>();
         public float fHold = Ar.Read<float>();
-        public bool bInfiniteHold = WwiseVersions.Version >= 144 && Ar.Read<byte>() != 0;
+        public bool bInfiniteHold = Ar.Version >= 144 && Ar.Read<byte>() != 0;
     }
 
     public struct AkMeterNonRTPCParams
@@ -47,10 +46,10 @@ public struct AkMeterFXParams(FArchive Ar)
         public bool bApplyDownstreamVolume;
         public uint uGameParamID;
 
-        public AkMeterNonRTPCParams(FArchive Ar)
+        public AkMeterNonRTPCParams(FWwiseArchive Ar)
         {
-            eMode = WwiseVersions.Version <= 88 ? null : Ar.Read<AkMeterMode>();
-            eScope = WwiseVersions.Version >= 125 ? Ar.Read<AkMeterScope>() : null;
+            eMode = Ar.Version <= 88 ? null : Ar.Read<AkMeterMode>();
+            eScope = Ar.Version >= 125 ? Ar.Read<AkMeterScope>() : null;
             bApplyDownstreamVolume = Ar.Read<byte>() != 0;
             uGameParamID = Ar.Read<uint>();
         }
@@ -71,7 +70,7 @@ public enum AkMeterScope : byte
     GameObject = 1
 }
 
-public struct AkMeterParams(FArchive Ar)
+public struct AkMeterParams(FWwiseArchive Ar)
 {
     public AkMeterMode eMode = Ar.Read<AkMeterMode>();
     public AkMeterScope eScope = Ar.Read<AkMeterScope>();
@@ -80,7 +79,7 @@ public struct AkMeterParams(FArchive Ar)
     public bool bInfiniteHold = Ar.Read<byte>() != 0;
 }
 
-public struct AkMeterBallisticParams(FArchive Ar)
+public struct AkMeterBallisticParams(FWwiseArchive Ar)
 {
     public uint uGameParamID = Ar.Read<uint>();
     public float fAttack = Ar.Read<float>();
@@ -90,7 +89,7 @@ public struct AkMeterBallisticParams(FArchive Ar)
     public float fHold = Ar.Read<float>();
 }
 
-public struct AkMultibandMeterBandParams(FArchive Ar)
+public struct AkMultibandMeterBandParams(FWwiseArchive Ar)
 {
     public bool bFilterEnabled = Ar.Read<byte>() != 0;
     public byte uNumCascadesLow = Ar.Read<byte>();
@@ -99,9 +98,9 @@ public struct AkMultibandMeterBandParams(FArchive Ar)
     public float fFrequencyHigh = Ar.Read<float>();
 }
 
-public class CAkMultibandMeterFXParams(FArchive Ar) : IAkPluginParam
+public class CAkMultibandMeterFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkMeterParams MeterParams = new AkMeterParams(Ar);
+    public AkMeterParams MeterParams = new(Ar);
     public AkMeterBallisticParams[] BallisticParams= Ar.ReadArray(5, () => new AkMeterBallisticParams(Ar));
     public AkMultibandMeterBandParams[] BandParamss = Ar.ReadArray(5, () => new AkMultibandMeterBandParams(Ar));
 }

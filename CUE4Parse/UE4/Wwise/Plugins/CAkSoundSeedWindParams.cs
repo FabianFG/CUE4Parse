@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
@@ -10,7 +9,7 @@ public class CAkSoundSeedWindParams : IAkPluginParam
     public AkWindDeflectorParams[] m_pDeflectors;
     public CAkConversionTable[] m_Curves;
 
-    public CAkSoundSeedWindParams(FArchive Ar)
+    public CAkSoundSeedWindParams(FWwiseArchive Ar)
     {
         WindParams = new AkWindParams(Ar);
         var deflectorCount = Ar.Read<ushort>();
@@ -32,16 +31,16 @@ public struct AkWindParams
     public float PlaybackRate;
     public FSoundSeedParamvalue[] Values;
 
-    public AkWindParams(FArchive Ar)
+    public AkWindParams(FWwiseArchive Ar)
     {
         Duration = Ar.Read<float>();
         DurationRandom = Ar.Read<float>();
         var value = Ar.Read<ushort>();
         ChannelMask = value switch
         {
-             0 => 4,
-             2 => 0x603,
-             _ => value,
+            0 => 4,
+            2 => 0x603,
+            _ => value,
         };
 
         MinDistance = Ar.Read<float>();
@@ -52,7 +51,7 @@ public struct AkWindParams
     }
 }
 
-public struct AkWindDeflectorParams(FArchive Ar)
+public struct AkWindDeflectorParams(FWwiseArchive Ar)
 {
     public float Distance = Ar.Read<float>();
     public float Angle = Ar.Read<float>();
@@ -61,7 +60,7 @@ public struct AkWindDeflectorParams(FArchive Ar)
     public float Gain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
 }
 
-public struct FSoundSeedParamvalue(FArchive Ar)
+public struct FSoundSeedParamvalue(FWwiseArchive Ar)
 {
     public float BaseValue = Ar.Read<float>();
     public float RandomValue = Ar.Read<float>();

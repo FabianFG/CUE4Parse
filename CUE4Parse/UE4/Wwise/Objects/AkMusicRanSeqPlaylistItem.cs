@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 public readonly struct AkMusicRanSeqPlaylistItem
@@ -11,13 +9,13 @@ public readonly struct AkMusicRanSeqPlaylistItem
     public readonly LoopInfo LoopInfo;
     public readonly WeightInfo WeightInfo;
 
-    public AkMusicRanSeqPlaylistItem(FArchive Ar)
+    public AkMusicRanSeqPlaylistItem(FWwiseArchive Ar)
     {
         SegmentId = Ar.Read<uint>();
         PlaylistItemId = Ar.Read<uint>();
         NumChildren = Ar.Read<uint>();
 
-        if (WwiseVersions.Version <= 36)
+        if (Ar.Version <= 36)
         {
             if (NumChildren != 0)
             {
@@ -33,7 +31,7 @@ public readonly struct AkMusicRanSeqPlaylistItem
         }
         else
         {
-            if (WwiseVersions.Version <= 44)
+            if (Ar.Version <= 44)
             {
                 if (NumChildren == 0)
                 {
@@ -63,11 +61,11 @@ public readonly struct LoopInfo
     public readonly short? LoopMin;
     public readonly short? LoopMax;
 
-    public LoopInfo(FArchive Ar)
+    public LoopInfo(FWwiseArchive Ar)
     {
         Loop = Ar.Read<short>();
 
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             LoopMin = Ar.Read<short>();
             LoopMax = Ar.Read<short>();
@@ -82,9 +80,9 @@ public readonly struct WeightInfo
     public readonly byte IsUsingWeight;
     public readonly byte IsShuffle;
 
-    public WeightInfo(FArchive Ar)
+    public WeightInfo(FWwiseArchive Ar)
     {
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             Weight = Ar.Read<ushort>();
         }

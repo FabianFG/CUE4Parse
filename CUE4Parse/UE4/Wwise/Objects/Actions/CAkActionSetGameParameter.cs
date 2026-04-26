@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -15,15 +14,15 @@ public class CAkActionSetGameParameter
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionSetGameParameter::SetActionSpecificParams
-    public CAkActionSetGameParameter(FArchive Ar)
+    public CAkActionSetGameParameter(FWwiseArchive Ar)
     {
         ActionParams = new CAkActionParams(Ar);
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             BypassTransition = Ar.Read<byte>() != 0;
         }
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             ValueMeaning = (EAkValueMeaning) Ar.Read<uint>();
         }

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -7,7 +6,7 @@ public class AkStateChunk
 {
     public readonly AkStateGroup[] Groups = [];
 
-    public AkStateChunk(FArchive Ar)
+    public AkStateChunk(FWwiseArchive Ar)
     {
         var numGroups = Ar.Read<uint>();
         Groups = new AkStateGroup[(int) numGroups];
@@ -36,29 +35,29 @@ public class AkStateAwareChunk
     public readonly AkStateGroup[] Groups;
 
     // CAkStateAware::ReadStateChunk
-    public AkStateAwareChunk(FArchive Ar)
+    public AkStateAwareChunk(FWwiseArchive Ar)
     {
-        StateProperties = Ar.ReadArray(WwiseReader.Read7BitEncodedIntBE(Ar), () => new AkStatePropertyInfo(Ar));
+        StateProperties = Ar.ReadArray(Ar.Read7BitEncodedIntBE(), () => new AkStatePropertyInfo(Ar));
 
-        int groupCount = WwiseReader.Read7BitEncodedIntBE(Ar);
+        int groupCount = Ar.Read7BitEncodedIntBE();
         Groups = new AkStateGroup[groupCount];
         for (int g = 0; g < groupCount; g++)
         {
             uint groupId = Ar.Read<uint>();
 
-            if (WwiseVersions.Version > 154)
+            if (Ar.Version > 154)
             {
                 var groupUsageId = Ar.Read<uint>();
             }
 
             var stateSyncType = (EAkSyncType) Ar.Read<byte>();
 
-            int stateCount = WwiseReader.Read7BitEncodedIntBE(Ar);
+            int stateCount = Ar.Read7BitEncodedIntBE();
             var states = new AkState[stateCount];
             for (int s = 0; s < stateCount; s++)
             {
                 uint stateId = Ar.Read<uint>();
-                if (WwiseVersions.Version <= 145)
+                if (Ar.Version <= 145)
                 {
                     uint stateInstanceId = Ar.Read<uint>();
                     states[s] = new AkState(stateId, stateInstanceId, []);
