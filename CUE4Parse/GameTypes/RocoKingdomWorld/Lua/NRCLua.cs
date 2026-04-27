@@ -41,13 +41,17 @@ public static class NRCLua
     public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
     {
         var decryptedData = encryptedData.Decrypt();
+
+        if (!FLuaReader.IsValidLuaMagic(decryptedData))
+            throw new InvalidDataException("Failed to decrypt. Expected Lua magic");
+
         using var Ar = new FNRCLuaArchive(name, decryptedData, null);
-        var lua = new LuaBytecode(Ar);
+        var lua = NRCLuaReader.ReadBytecode(Ar);
 
         using var msOut = new MemoryStream();
         using (var writer = new FLuaArchiveWriter(msOut))
         {
-            NRCLuaWriter.Write(writer, lua);
+            FLuaWriter54.Write(writer, lua);
             writer.Flush();
         }
 

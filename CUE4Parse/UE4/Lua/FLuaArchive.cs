@@ -26,7 +26,7 @@ public class FLuaArchive(string name, byte[] data, VersionContainer? versions = 
         return v;
     }
 
-    public string ReadLuaString()
+    public virtual string ReadLuaString()
     {
         ulong size = ReadLuaInt();
         if (size <= 1)
