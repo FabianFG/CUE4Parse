@@ -31,6 +31,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
     private readonly ConcurrentQueue<IExporter2> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> _dirs = new(StringComparer.OrdinalIgnoreCase);
 
     public ExportSession(string baseDirectory, ExporterOptions options) : this(new DirectoryInfo(baseDirectory), options)
     {
@@ -78,7 +79,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     public async Task<IReadOnlyList<ExportResult>> RunAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
         var completed = 0;
-        var allResults = new ConcurrentBag<ExportResult>();
+        var allResults = new ConcurrentQueue<ExportResult>();
         var options = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
 
         var current = new List<IExporter2>();
@@ -104,13 +105,21 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
 
             foreach (var result in results)
             {
-                allResults.Add(result);
+                allResults.Enqueue(result);
 
                 var c = Interlocked.Increment(ref completed);
                 var total = Volatile.Read(ref _totalQueued);
                 progress?.Report(new ExportProgress(c, total, result));
             }
         }
+    }
+
+    internal string ResolveOutputPath(string savePath, string ext, string? nameSuffix = null)
+    {
+        var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
+        var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
+        if (_dirs.TryAdd(dir, 0)) Directory.CreateDirectory(dir);
+        return fullPath.Replace('/', '\\');
     }
 
     private ExportSession Resolve(IComponentResolver resolver)

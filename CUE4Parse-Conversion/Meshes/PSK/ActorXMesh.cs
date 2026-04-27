@@ -42,7 +42,7 @@ public class ActorXMesh
         {
             var bones = new List<MeshBone>();
             ExportStaticSockets(sockets, bones);
-            ExportSkeletonData(bones);
+            ExportSkeletonData(bones.ToArray());
         }
     }
 
@@ -50,8 +50,8 @@ public class ActorXMesh
     {
         ExportCommonMeshLod(mesh, lodIndex);
 
-        ExportSkeletalSockets(mesh);
-        ExportSkeletonData(mesh.RefSkeleton);
+        var additionalBones = ExportSkeletalSockets(mesh);
+        ExportSkeletonData([..mesh.RefSkeleton, ..additionalBones]);
     }
 
     public void Save(FArchiveWriter archive)
@@ -81,7 +81,7 @@ public class ActorXMesh
             if (vert is SkinnedMeshVertex skinnedVert)
             {
                 weightsHash = (uint)StructuralComparisons.StructuralEqualityComparer.GetHashCode(skinnedVert.Influences);
-                numInfluences += skinnedVert.Influences.Count;
+                numInfluences += skinnedVert.Influences.Length;
             }
 
             share.AddVertex(vert.Position, vert.Normal, weightsHash);
@@ -106,7 +106,10 @@ public class ActorXMesh
             }
         }
 
-        ExportVertexColors(lod.VertexColors);
+        if (lod.VertexColors is { Length: > 0 })
+        {
+            ExportVertexColors(lod.VertexColors[0].Colors);
+        }
         ExportExtraUV(lod.ExtraUvs);
 
         if (mesh is SkeletalMesh sk)
@@ -238,13 +241,13 @@ public class ActorXMesh
         }
     }
 
-    private void ExportSkeletonData(List<MeshBone> bones)
+    private void ExportSkeletonData(MeshBone[] bones)
     {
-        if (bones.Count == 0) return;
+        if (bones.Length == 0) return;
 
         var boneHdr = new VChunkHeader();
 
-        var numBones = bones.Count;
+        var numBones = bones.Length;
         boneHdr.DataCount = numBones;
         boneHdr.DataSize = 120;
         Ar.SerializeChunkHeader(boneHdr, "REFSKELT");
@@ -276,10 +279,8 @@ public class ActorXMesh
         }
     }
 
-    public void ExportVertexColors(IReadOnlyDictionary<string, FColor[]>? vertexColors)
+    public void ExportVertexColors(FColor[] colors)
     {
-        if (vertexColors == null || !vertexColors.TryGetValue("COL0", out var colors)) return;
-
         var colorHdr = new VChunkHeader { DataCount = colors.Length, DataSize = 4 };
         Ar.SerializeChunkHeader(colorHdr, "VERTEXCOLOR");
         for (var i = 0; i < colorHdr.DataCount; i++)
@@ -348,9 +349,9 @@ public class ActorXMesh
         }
     }
 
-    public void ExportSkeletalSockets(Skeleton skeleton)
+    public MeshBone[] ExportSkeletalSockets(Skeleton skeleton)
     {
-        if (skeleton.Sockets is not { Length: > 0 } sockets) return;
+        if (skeleton.Sockets is not { Length: > 0 } sockets) return [];
 
         switch (Options.SocketFormat)
         {
@@ -368,17 +369,18 @@ public class ActorXMesh
                     pskSocket.Serialize(Ar);
                 }
 
-                break;
+                return [];
             }
             case ESocketFormat.Bone:
             {
+                var additionalBones = new List<MeshBone>();
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<USkeletalMeshSocket>();
                     if (socket is null) continue;
 
                     var targetBoneIdx = -1;
-                    for (var j = 0; j < skeleton.RefSkeleton.Count; j++)
+                    for (var j = 0; j < skeleton.RefSkeleton.Length; j++)
                     {
                         if (skeleton.RefSkeleton[j].Name.Equals(socket.BoneName.Text, StringComparison.OrdinalIgnoreCase))
                         {
@@ -388,11 +390,12 @@ public class ActorXMesh
                     }
 
                     if (targetBoneIdx == -1) continue;
-                    skeleton.RefSkeleton.Add(new MeshBone(socket, targetBoneIdx));
+                    additionalBones.Add(new MeshBone(socket, targetBoneIdx));
                 }
 
-                break;
+                return additionalBones.ToArray();
             }
+            default: return [];
         }
     }
     public void ExportStaticSockets(FPackageIndex[] sockets, List<MeshBone> bones)

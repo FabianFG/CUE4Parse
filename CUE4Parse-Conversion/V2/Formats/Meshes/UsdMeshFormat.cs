@@ -18,11 +18,11 @@ public class UsdMeshFormat : IMeshExportFormat
         var results = new List<ExportFile>();
         var lodIdx = 0;
 
-        var refSkeleton = dto.RefSkeleton.Count > 0 ? dto.RefSkeleton : null;
+        var refSkeleton = dto.RefSkeleton.Length > 0 ? dto.RefSkeleton : null;
 
         foreach (var lod in dto.LODs)
         {
-            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds);
+            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds, dto.Materials);
             var stage = AssembleSkeletalMeshStage(objectName, options, meshPrim, refSkeleton, dto.Sockets);
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
             results.Add(stage.ToUsdaExportFile(suffix));
@@ -41,7 +41,7 @@ public class UsdMeshFormat : IMeshExportFormat
 
         foreach (var lod in dto.LODs)
         {
-            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds);
+            var meshPrim = UsdMeshLodBuilder.BuildFromLod(objectName, lod, dto.Bounds, dto.Materials);
             var stage = AssembleStaticMeshStage(objectName, options, meshPrim, dto.Sockets);
             var suffix = lodIdx == 0 ? "" : $"_LOD{lodIdx}";
             results.Add(stage.ToUsdaExportFile(suffix));
@@ -69,7 +69,7 @@ public class UsdMeshFormat : IMeshExportFormat
         string objectName,
         ExporterOptions options,
         UsdPrim meshPrim,
-        List<MeshBone>? refSkeleton,
+        MeshBone[]? refSkeleton,
         IEnumerable<FPackageIndex>? sockets)
     {
         var stage = new UsdStage(objectName);

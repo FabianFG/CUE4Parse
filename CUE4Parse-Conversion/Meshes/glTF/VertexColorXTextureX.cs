@@ -24,20 +24,17 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         [VertexAttribute("TEXCOORD_6")] public Vector2 TexCoord6;
         [VertexAttribute("TEXCOORD_7")] public Vector2 TexCoord7;
 
-        public VertexColorXTextureX(Vector4 color, List<Vector2> texCoords)
+        public VertexColorXTextureX(Vector2[] texCoords, Vector4? color = null)
         {
-            Color = color;
-
-            texCoords.Capacity = Math.Max(texCoords.Count, /*MaxTextCoords*/ 8);
-            Resize(texCoords, texCoords.Capacity, new Vector2(0, 0));
-            TexCoord0 = texCoords[0];
-            TexCoord1 = texCoords[1];
-            TexCoord2 = texCoords[2];
-            TexCoord3 = texCoords[3];
-            TexCoord4 = texCoords[4];
-            TexCoord5 = texCoords[5];
-            TexCoord6 = texCoords[6];
-            TexCoord7 = texCoords[7];
+            Color = color ?? Vector4.Zero;
+            TexCoord0 = texCoords.Length > 0 ? texCoords[0] : Vector2.Zero;
+            TexCoord1 = texCoords.Length > 1 ? texCoords[1] : Vector2.Zero;
+            TexCoord2 = texCoords.Length > 2 ? texCoords[2] : Vector2.Zero;
+            TexCoord3 = texCoords.Length > 3 ? texCoords[3] : Vector2.Zero;
+            TexCoord4 = texCoords.Length > 4 ? texCoords[4] : Vector2.Zero;
+            TexCoord5 = texCoords.Length > 5 ? texCoords[5] : Vector2.Zero;
+            TexCoord6 = texCoords.Length > 6 ? texCoords[6] : Vector2.Zero;
+            TexCoord7 = texCoords.Length > 7 ? texCoords[7] : Vector2.Zero;
         }
 
         void IVertexMaterial.SetColor(int setIndex, Vector4 color)

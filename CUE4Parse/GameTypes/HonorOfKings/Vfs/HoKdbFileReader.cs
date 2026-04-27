@@ -49,7 +49,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
 
         // maybe rewrite it to async
         var containerStreams = new HoKdbContainerStream[files.Length];
-        Parallel.ForEach(Enumerable.Range(0, files.Length), i =>
+        Parallel.For(0, files.Length, i =>
         {
             var file = files[i];
             try

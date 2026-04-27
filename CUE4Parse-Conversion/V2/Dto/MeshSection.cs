@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class MeshSection(int index, int firstIndex, int numFaces, bool castShadow)
+public struct MeshSection(int index, int firstIndex, int numFaces, bool castShadow)
 {
     public readonly int MaterialIndex = index;
     public readonly bool CastShadow = castShadow;

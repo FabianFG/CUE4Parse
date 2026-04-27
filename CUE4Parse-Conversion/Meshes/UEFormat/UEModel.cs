@@ -100,14 +100,13 @@ public sealed class UEModel : UEFormatExport
         using var normalsChunk = new FDataChunk("NORMALS", vertexCount);
         using var tangentsChunk = new FDataChunk("TANGENTS", vertexCount);
 
-        var mainUvs = new List<FMeshUVFloat>();
-        foreach (var vertex in lod.Vertices)
+        var mainUvs = new FMeshUVFloat[vertexCount];
+        for (var i = 0; i < vertexCount; i++)
         {
-            var position = vertex.Position;
-            position.Serialize(vertexChunk);
+            var vertex = lod.Vertices[i];
+            vertex.Position.Serialize(vertexChunk);
 
-            var normalSign = vertex.Normal.W;
-            normalsChunk.Write(normalSign); // EUEFormatVersion.SerializeBinormalSign
+            normalsChunk.Write(vertex.Normal.W); // EUEFormatVersion.SerializeBinormalSign
 
             var normal = (FVector) vertex.Normal;
             normal /= MathF.Sqrt(normal | normal);
@@ -117,8 +116,7 @@ public sealed class UEModel : UEFormatExport
             tangent.Normalize();
             tangent.Serialize(tangentsChunk);
 
-            var uv = vertex.Uv;
-            mainUvs.Add(uv);
+            mainUvs[i] = vertex.Uv;
         }
 
         vertexChunk.Serialize(archive);
@@ -151,13 +149,13 @@ public sealed class UEModel : UEFormatExport
             indexChunk.Serialize(archive);
         }
 
-        if (lod.VertexColors is { Count: > 0 })
+        if (lod.VertexColors is { Length: > 0 })
         {
             using var vertexColorChunk = new FDataChunk("VERTEXCOLORS");
             foreach (var vertexColor in lod.VertexColors)
             {
-                vertexColorChunk.WriteFString(vertexColor.Key);
-                vertexColorChunk.WriteArray(vertexColor.Value, (writer, color) => color.Serialize(writer));
+                vertexColorChunk.WriteFString(vertexColor.Name);
+                vertexColorChunk.WriteArray(vertexColor.Colors, (writer, color) => color.Serialize(writer));
                 vertexColorChunk.Count++;
             }
 
@@ -227,7 +225,7 @@ public sealed class UEModel : UEFormatExport
             metaDataChunk.Serialize(archive);
         }
 
-        using (var boneChunk = new FDataChunk("BONES", skeleton.RefSkeleton.Count))
+        using (var boneChunk = new FDataChunk("BONES", skeleton.RefSkeleton.Length))
         {
             foreach (var bone in skeleton.RefSkeleton)
             {

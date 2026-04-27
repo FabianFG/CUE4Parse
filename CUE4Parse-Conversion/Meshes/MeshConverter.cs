@@ -22,7 +22,7 @@ namespace CUE4Parse_Conversion.Meshes;
 /// </summary>
 public static class MeshConverter
 {
-    public static bool TryConvert(this USkeleton originalSkeleton, [MaybeNullWhen(false)] out List<MeshBone> bones, out FBox box)
+    public static bool TryConvert(this USkeleton originalSkeleton, [MaybeNullWhen(false)] out MeshBone[] bones, out FBox box)
     {
         try
         {

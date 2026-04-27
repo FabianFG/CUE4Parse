@@ -10,7 +10,7 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter2
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(UStaticMesh originalMesh, IMeshExportFormat format)
     {
-        var dto = new StaticMesh(originalMesh);
+        using var dto = new StaticMesh(originalMesh);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Static mesh has no LODs");

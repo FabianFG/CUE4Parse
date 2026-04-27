@@ -18,7 +18,7 @@ public static class UsdSkeletonBuilder
         return BuildPrim(primName, jointPaths, parents, localMats);
     }
 
-    public static UsdPrim Build(IReadOnlyList<MeshBone> bones, string primName = "Skeleton")
+    public static UsdPrim Build(MeshBone[] bones, string primName = "Skeleton")
     {
         var parents = bones.Select(b => b.ParentIndex).ToArray();
         var jointPaths = BuildJointPaths(bones.Select(b => (b.Name, b.ParentIndex)).ToArray());

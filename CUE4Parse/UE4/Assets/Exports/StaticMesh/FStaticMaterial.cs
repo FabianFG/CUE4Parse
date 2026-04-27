@@ -12,7 +12,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     {
         public FPackageIndex? MaterialInterface; // UMaterialInterface
         public FName MaterialSlotName;
-        public FName ImportedMaterialSlotName;
+        public FName? ImportedMaterialSlotName;
         public FMeshUVChannelInfo? UVChannelData;
         public FPackageIndex? OverlayMaterialInterface;
 

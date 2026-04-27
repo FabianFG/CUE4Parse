@@ -68,7 +68,7 @@ public abstract class ExporterBase2 : IExporter2
     protected async Task<ExportResult> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var fileName = $"{ObjectName}{file.NameSuffix}.{file.Extension}";
-        var path = ResolveOutputPath(file.Extension, file.NameSuffix);
+        var path = Session.ResolveOutputPath(GetSavePath(), file.Extension, file.NameSuffix);
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
 
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
@@ -82,16 +82,6 @@ public abstract class ExporterBase2 : IExporter2
         var leaf = PackagePath.SubstringAfterLast('/');
         var path = leaf.Equals(ObjectName, StringComparison.OrdinalIgnoreCase) ? PackagePath : PackagePath + '/' + ObjectName;
         return path.TrimStart('/');
-    }
-
-    private string ResolveOutputPath(string ext, string? nameSuffix = null)
-    {
-        var savePath = GetSavePath();
-        var fullPath = Path.Combine(Session.BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
-
-        var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
-        Directory.CreateDirectory(dir);
-        return fullPath.Replace('/', '\\');
     }
 
     public override bool Equals(object? obj) => obj is ExporterBase2 other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);

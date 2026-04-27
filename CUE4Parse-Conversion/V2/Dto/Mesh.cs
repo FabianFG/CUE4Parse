@@ -19,12 +19,12 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public abstract class Mesh<TVertex> where TVertex : struct, IMeshVertex
+public abstract class Mesh<TVertex> : IDisposable where TVertex : struct, IMeshVertex
 {
     public readonly List<MeshLod<TVertex>> LODs = [];
     public readonly MeshMaterial[] Materials = [];
-    public readonly FPackageIndex[]? Sockets;
 
+    public FPackageIndex[]? Sockets { get; private set; }
     public abstract FBox Bounds { get; protected init; }
 
     protected Mesh(UStaticMesh mesh)
@@ -73,12 +73,19 @@ public abstract class Mesh<TVertex> where TVertex : struct, IMeshVertex
 
         return Materials[index];
     }
+
+    public virtual void Dispose()
+    {
+        LODs.Clear();
+        Array.Clear(Materials);
+        Sockets = null;
+    }
 }
 
 public class StaticMesh : Mesh<MeshVertex>
 {
+    public FPackageIndex? BodySetup { get; private set; }
     public sealed override FBox Bounds { get; protected init; }
-    public readonly FPackageIndex? BodySetup;
 
     public StaticMesh(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, USplineMeshComponent? spline = null) : base(mesh)
     {
@@ -157,23 +164,32 @@ public class StaticMesh : Mesh<MeshVertex>
     {
 
     }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        BodySetup = null;
+    }
 }
 
 public class Skeleton : Mesh<SkinnedMeshVertex>
 {
+    public readonly MeshBone[] RefSkeleton;
+
     public sealed override FBox Bounds { get; protected init; }
-    public readonly List<MeshBone> RefSkeleton = [];
-    public readonly string? SkeletonPathName;
-    public readonly FVirtualBone[]? VirtualBones;
+    public string? SkeletonPathName { get; private set; }
+    public FVirtualBone[]? VirtualBones { get; private set; }
 
     protected Skeleton(USkeletalMesh mesh) : base(mesh)
     {
         Bounds = mesh.ImportedBounds.GetBox();
 
         var refSkeleton = mesh.ReferenceSkeleton;
-        for (var i = 0; i < refSkeleton.FinalRefBonePose.Length; i++)
+        RefSkeleton = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        for (var i = 0; i < RefSkeleton.Length; i++)
         {
-            RefSkeleton.Add(new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]));
+            RefSkeleton[i] = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
         }
 
         if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
@@ -186,23 +202,33 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
     public Skeleton(USkeleton skeleton) : base(skeleton)
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
-        for (var i = 0; i < refSkeleton.FinalRefBonePose.Length; i++)
+        RefSkeleton = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        for (var i = 0; i < RefSkeleton.Length; i++)
         {
             var bone = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
             Bounds = Bounds.ExpandBy(bone.Transform.Translation);
-            RefSkeleton.Add(bone);
+            RefSkeleton[i] = bone;
         }
 
         SkeletonPathName = skeleton.GetPathName();
         VirtualBones = skeleton.VirtualBones;
     }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        Array.Clear(RefSkeleton);
+        SkeletonPathName = null;
+        VirtualBones = null;
+    }
 }
 
 public sealed class SkeletalMesh : Skeleton
 {
-    public readonly FPackageIndex? PhysicsAsset;
-    public readonly FPackageIndex[]? MorphTargets;
-    public readonly FPackageIndex[]? AssetUserData;
+    public FPackageIndex? PhysicsAsset { get; private set; }
+    public FPackageIndex[]? MorphTargets { get; private set; }
+    public FPackageIndex[]? AssetUserData { get; private set; }
 
     public SkeletalMesh(USkeletalMesh mesh) : base(mesh)
     {
@@ -218,13 +244,22 @@ public sealed class SkeletalMesh : Skeleton
             LODs.Add(MeshLod<SkinnedMeshVertex>.FromSkeletalMesh(this, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
         }
     }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        PhysicsAsset = null;
+        MorphTargets = null;
+        AssetUserData = null;
+    }
 }
 
 public sealed class LandscapeMesh : StaticMesh
 {
-    public readonly ConcurrentDictionary<string, SKBitmap>? WeightmapTextures;
-    public readonly SKBitmap? NormalTexture;
-    public readonly Image<L16>? HeightmapTexture;
+    public ConcurrentDictionary<string, SKBitmap>? WeightmapTextures { get; private set; }
+    public SKBitmap? NormalTexture { get; private set; }
+    public Image<L16>? HeightmapTexture { get; private set; }
 
     public LandscapeMesh(ALandscapeProxy landscape, ELandscapeExportFlags flags = ELandscapeExportFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
     {
@@ -253,5 +288,15 @@ public sealed class LandscapeMesh : StaticMesh
         }
 
         LODs.Add(MeshLod<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, NormalTexture, HeightmapTexture));
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        WeightmapTextures?.Clear();
+        WeightmapTextures = null;
+        NormalTexture = null;
+        HeightmapTexture = null;
     }
 }

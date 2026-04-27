@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.Landscape;
@@ -18,19 +17,19 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUvs, IReadOnlyDictionary<string, FColor[]>? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : struct, IMeshVertex
+public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : struct, IMeshVertex
 {
     public readonly Mesh<TVertex> Owner = owner;
     public readonly uint[] Indices = indices;
     public readonly TVertex[] Vertices = vertices;
     public readonly MeshSection[] Sections = sections;
     public readonly FMeshUVFloat[][] ExtraUvs = extraUvs;
-    public readonly IReadOnlyDictionary<string, FColor[]>? VertexColors = vertexColors;
+    public readonly MeshVertexColor[]? VertexColors = vertexColors;
     public readonly float ScreenSize = screenSize;
     public readonly bool IsTwoSided = isTwoSided;
 
     private MeshLod(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
-        : this(owner, indices, vertices, sections, extraUv, vertexColors != null ? new Dictionary<string, FColor[]> { { "COL0", vertexColors } } : null, screenSize, isTwoSided)
+        : this(owner, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColor("COL0", vertexColors)] : null, screenSize, isTwoSided)
     {
 
     }
@@ -327,7 +326,7 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
 
         var extraUvs = new FMeshUVFloat[1][];
         var vertices = new MeshVertex[components.Length * componentVertexCount];
-        var vertexColors = new ConcurrentDictionary<string, FColor[]>();
+        MeshVertexColor[]? vertexColors = null;
 
         for (var i = 0; i < extraUvs.Length; i++)
         {
@@ -350,7 +349,7 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
 
             var baseVertIndex = i * componentVertexCount;
 
-            Parallel.ForEach(Enumerable.Range(0, componentVertexCount), vertIndex =>
+            Parallel.For(0, componentVertexCount, vertIndex =>
             {
                 cdi.VertexIndexToXY(vertIndex, out var vertX, out var vertY);
 
@@ -370,12 +369,12 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
                     if (weight == 0) continue;
 
                     var layerName = allocationInfo.GetLayerName();
-                    if (!vertexColors.ContainsKey(layerName))
-                    {
-                        vertexColors.TryAdd(layerName, new FColor[vertices.Length]);
-                    }
-
-                    vertexColors[layerName][baseVertIndex + vertIndex] = new FColor(weight, weight, weight, weight);
+                    // if (!vertexColors.ContainsKey(layerName))
+                    // {
+                    //     vertexColors.TryAdd(layerName, new FColor[vertices.Length]);
+                    // }
+                    //
+                    // vertexColors[layerName][baseVertIndex + vertIndex] = new FColor(weight, weight, weight, weight);
 
                     // if (WeightmapTextures != null)
                     // {

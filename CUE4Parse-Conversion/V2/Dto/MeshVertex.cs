@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using CUE4Parse.UE4.Assets.Exports.Nanite;
+﻿using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -53,7 +51,7 @@ public readonly struct SkinnedMeshVertex : IMeshVertex
     public FVector4 Normal { get; } = FVector4.ZeroVector;
     public FVector4 Tangent { get; } = FVector4.ZeroVector;
     public FMeshUVFloat Uv { get; } = FMeshUVFloat.ZeroVector;
-    public IReadOnlyList<MeshBoneInfluence> Influences { get; } = [];
+    public MeshBoneInfluence[] Influences { get; } = [];
 
     private SkinnedMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
     {
@@ -67,14 +65,25 @@ public readonly struct SkinnedMeshVertex : IMeshVertex
     {
         if (vertex.Infs == null) return;
 
-        var influences = new List<MeshBoneInfluence>();
-        var scale = vertex.Infs.bUse16BitBoneWeight ? Constants.UShort_Bone_Scale : Constants.Byte_Bone_Scale;
-        foreach (var (weight, boneIndex) in vertex.Infs.BoneWeight.Zip(vertex.Infs.BoneIndex))
+        var count = 0;
+        foreach (var weight in vertex.Infs.BoneWeight)
         {
+            if (weight != 0)
+                count++;
+        }
+        if (count == 0) return;
+
+        var scale = vertex.Infs.bUse16BitBoneWeight ? Constants.UShort_Bone_Scale : Constants.Byte_Bone_Scale;
+        var influences = new MeshBoneInfluence[count];
+        var idx = 0;
+        for (var i = 0; i < vertex.Infs.BoneWeight.Length; i++)
+        {
+            var weight = vertex.Infs.BoneWeight[i];
             if (weight == 0) continue;
-            influences.Add(new MeshBoneInfluence(boneMap[boneIndex], weight, weight * scale));
+
+            influences[idx++] = new MeshBoneInfluence(boneMap[vertex.Infs.BoneIndex[i]], weight, weight * scale);
         }
 
-        Influences = influences;
+        Influences = idx == count ? influences : influences[..idx];
     }
 }

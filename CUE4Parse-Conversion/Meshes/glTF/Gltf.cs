@@ -5,7 +5,6 @@ using System.Numerics;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using SharpGLTF.Geometry;
@@ -127,43 +126,59 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             }
         }
 
-        public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBone> bones, NodeBuilder armatureNode) // TODO optimize
+        public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBone> bones, NodeBuilder armatureNode)
         {
             var result = new NodeBuilder[bones.Count];
 
+            // build children lookup in one pass — O(N) instead of O(N²) recursive scan
+            var children = new List<int>[bones.Count];
+            for (var i = 0; i < bones.Count; i++) children[i] = [];
             for (var i = 0; i < bones.Count; i++)
             {
-                var bone = bones[i];
-                if (bone.ParentIndex != -1) continue;
+                var p = bones[i].ParentIndex;
+                if (p >= 0 && p < bones.Count) children[p].Add(i);
+            }
 
-                CreateBonesRecursive(bone, armatureNode, bones, i, result);
+            // process root bones (parentIndex == -1)
+            for (var i = 0; i < bones.Count; i++)
+            {
+                if (bones[i].ParentIndex != -1) continue;
+
+                // iterative DFS — avoids stack overflow on deep hierarchies
+                var stack = new Stack<(int index, NodeBuilder parent)>();
+                stack.Push((i, armatureNode));
+                while (stack.Count > 0)
+                {
+                    var (idx, parentNode) = stack.Pop();
+                    var bone = bones[idx];
+                    var node = parentNode
+                        .CreateNode(bone.Name)
+                        .WithLocalRotation(SwapYZ(bone.Transform.Rotation).ToQuaternion())
+                        .WithLocalTranslation(SwapYZ(bone.Transform.Translation * UnitScale))
+                        .WithLocalScale(SwapYZ(bone.Transform.Scale3D));
+                    result[idx] = node;
+                    foreach (var childIdx in children[idx])
+                        stack.Push((childIdx, node));
+                }
             }
 
             return result;
         }
 
-        private static void CreateBonesRecursive(MeshBone bone, NodeBuilder parent, IReadOnlyList<MeshBone> bones, int index, NodeBuilder[] result)
-        {
-            var bonePos = SwapYZ(bone.Transform.Translation * UnitScale);
-            var boneRot = SwapYZ(bone.Transform.Rotation);
-            var boneSca = SwapYZ(bone.Transform.Scale3D);
-            var node = parent.CreateNode(bone.Name).WithLocalRotation(boneRot.ToQuaternion()).WithLocalTranslation(bonePos).WithLocalScale(boneSca);
-
-            result[index] = node;
-
-            for (int j = 0; j < bones.Count; j++)
-            {
-                if (index == j) continue;
-                var bone2 = bones[j];
-                if (bone2.ParentIndex == index)
-                {
-                    CreateBonesRecursive(bone2, node, bones, j, result);
-                }
-            }
-        }
 
         private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLod<TVertex> lod) where TVertex : struct, IMeshVertex
         {
+            FColor[]? colors = null;
+            if (lod.VertexColors is { Length: > 0 })
+                colors = lod.VertexColors[0].Colors;
+
+            var uvCount = 1 + lod.ExtraUvs.Length;
+            var uvList1 = new Vector2[uvCount];
+            var uvList2 = new Vector2[uvCount];
+            var uvList3 = new Vector2[uvCount];
+
+            var isSkinned = typeof(TVertex) == typeof(SkinnedMeshVertex);
+
             for (var i = 0; i < lod.Sections.Length; i++)
             {
                 var section = lod.Sections[i];
@@ -173,21 +188,33 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 var prim = builder.UsePrimitive(mat);
                 for (var j = 0; j < section.NumFaces; j++)
                 {
-                    var wedgeIndex = new uint[3];
-                    for (var k = 0; k < wedgeIndex.Length; k++)
-                    {
-                        wedgeIndex[k] = lod.Indices[section.FirstIndex + j * 3 + k];
-                    }
+                    var idx0 = lod.Indices[section.FirstIndex + j * 3 + 0];
+                    var idx1 = lod.Indices[section.FirstIndex + j * 3 + 1];
+                    var idx2 = lod.Indices[section.FirstIndex + j * 3 + 2];
 
-                    var vert1 = lod.Vertices[wedgeIndex[0]];
-                    var vert2 = lod.Vertices[wedgeIndex[1]];
-                    var vert3 = lod.Vertices[wedgeIndex[2]];
+                    var vert1 = lod.Vertices[idx0];
+                    var vert2 = lod.Vertices[idx1];
+                    var vert3 = lod.Vertices[idx2];
 
                     var (v1, v2, v3) = PrepareTris(vert1, vert2, vert3);
-                    var (c1, c2, c3) = PrepareUVsAndTexCoords(lod, vert1, vert2, vert3, wedgeIndex);
+
+                    // fill shared UV lists in-place (no per-triangle allocation)
+                    uvList1[0] = (Vector2)vert1.Uv;
+                    uvList2[0] = (Vector2)vert2.Uv;
+                    uvList3[0] = (Vector2)vert3.Uv;
+                    for (var k = 0; k < lod.ExtraUvs.Length; k++)
+                    {
+                        uvList1[k + 1] = (Vector2)lod.ExtraUvs[k][idx0];
+                        uvList2[k + 1] = (Vector2)lod.ExtraUvs[k][idx1];
+                        uvList3[k + 1] = (Vector2)lod.ExtraUvs[k][idx2];
+                    }
+
+                    var c1 = new VertexColorXTextureX(uvList1, colors?[idx0]);
+                    var c2 = new VertexColorXTextureX(uvList2, colors?[idx1]);
+                    var c3 = new VertexColorXTextureX(uvList3, colors?[idx2]);
 
                     IVertexBuilder a, b, c;
-                    if (vert1 is SkinnedMeshVertex j1 && vert2 is SkinnedMeshVertex j2 && vert3 is SkinnedMeshVertex j3)
+                    if (isSkinned && vert1 is SkinnedMeshVertex j1 && vert2 is SkinnedMeshVertex j2 && vert3 is SkinnedMeshVertex j3)
                     {
                         var (jv1, jv2, jv3) = PrepareVertexJoints(j1, j2, j3);
                         a = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(v1, c1, jv1);
@@ -208,14 +235,12 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         public static VertexJoints4 PrepareVertexJoint(SkinnedMeshVertex vert)
         {
-            var bindings = new List<(int, float)>();
-
-            foreach (var influence in vert.Influences)
+            var bindings = new (int, float)[vert.Influences.Length];
+            for (var i = 0; i < bindings.Length; i++)
             {
-                bindings.Add((influence.Bone, influence.Weight));
+                bindings[i] = (vert.Influences[i].Bone, vert.Influences[i].Weight);
             }
-
-            return new VertexJoints4(bindings.ToArray());
+            return new VertexJoints4(bindings);
         }
 
         public static (VertexJoints4, VertexJoints4, VertexJoints4) PrepareVertexJoints(SkinnedMeshVertex vert1, SkinnedMeshVertex vert2, SkinnedMeshVertex vert3)
@@ -225,42 +250,6 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             var jv3 = PrepareVertexJoint(vert3);
 
             return (jv1, jv2, jv3);
-        }
-
-        public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords<TVertex>(
-            MeshLod<TVertex> lod, IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, uint[] indices) where TVertex : struct, IMeshVertex
-        {
-            if (lod.VertexColors == null || !lod.VertexColors.TryGetValue("COL0", out var colors))
-            {
-                colors = new FColor[lod.Vertices.Length];
-            }
-
-            return PrepareUVsAndTexCoords(colors, vert1, vert2, vert3, lod.ExtraUvs, indices);
-        }
-
-        public static (VertexColorXTextureX, VertexColorXTextureX, VertexColorXTextureX) PrepareUVsAndTexCoords(
-            FColor[] colors, IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
-        {
-            var (uvs1, uvs2, uvs3) = PrepareUVs(vert1, vert2, vert3, uvs, indices);
-            var c1 = new VertexColorXTextureX(colors[indices[0]], uvs1);
-            var c2 = new VertexColorXTextureX(colors[indices[1]], uvs2);
-            var c3 = new VertexColorXTextureX(colors[indices[2]], uvs3);
-            return (c1, c2, c3);
-        }
-
-        private static (List<Vector2>, List<Vector2>, List<Vector2>) PrepareUVs(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3, FMeshUVFloat[][] uvs, uint[] indices)
-        {
-            var uvs1 = new List<Vector2>() { (Vector2)vert1.Uv };
-            var uvs2 = new List<Vector2>() { (Vector2)vert2.Uv };
-            var uvs3 = new List<Vector2>() { (Vector2)vert3.Uv };
-            foreach (var uv in uvs)
-            {
-                uvs1.Add((Vector2)uv[indices[0]]);
-                uvs2.Add((Vector2)uv[indices[1]]);
-                uvs3.Add((Vector2)uv[indices[2]]);
-            }
-
-            return (uvs1, uvs2, uvs3);
         }
 
         private static (VERTEX, VERTEX, VERTEX) PrepareTris(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3)
