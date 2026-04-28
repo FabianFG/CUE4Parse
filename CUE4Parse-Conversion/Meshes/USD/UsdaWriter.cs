@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CUE4Parse_Conversion.V2;
 
 namespace CUE4Parse_Conversion.Meshes.USD;
 
@@ -14,8 +13,6 @@ public sealed class UsdaWriterOptions
 
 public static class UsdaWriter
 {
-    private static readonly UTF8Encoding Utf8NoBom = new(false);
-
     public static string Serialize(UsdStage stage, UsdaWriterOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(stage);
@@ -24,16 +21,6 @@ public static class UsdaWriter
         var writer = new Builder(options);
         writer.WriteStage(stage);
         return writer.ToString();
-    }
-
-    public static byte[] SerializeToBytes(UsdStage stage, UsdaWriterOptions? options = null)
-    {
-        return Utf8NoBom.GetBytes(Serialize(stage, options));
-    }
-
-    public static ExportFile CreateExportFile(UsdStage stage, string extension = "usda", string? nameSuffix = null, UsdaWriterOptions? options = null)
-    {
-        return new ExportFile(extension, SerializeToBytes(stage, options), nameSuffix);
     }
 
     private sealed class Builder(UsdaWriterOptions options)
@@ -178,7 +165,7 @@ public static class UsdaWriter
             _sb.Append(relationship.Name);
 
             _sb.Append(" = ");
-            WriteRelationshipTargets(relationship.Targets);
+            WriteRelationshipTargets(relationship.GetPaths());
 
             if (relationship.Metadata.Count > 0)
             {
@@ -215,21 +202,18 @@ public static class UsdaWriter
             }
         }
 
-        private void WriteRelationshipTargets(IReadOnlyList<string> targets)
+        private void WriteRelationshipTargets(string[] targets)
         {
-            if (targets.Count == 1)
+            if (targets.Length == 1)
             {
                 WritePath(targets[0]);
                 return;
             }
 
             _sb.Append('[');
-            for (var i = 0; i < targets.Count; i++)
+            for (var i = 0; i < targets.Length; i++)
             {
-                if (i > 0)
-                {
-                    _sb.Append(", ");
-                }
+                if (i > 0) _sb.Append(", ");
                 WritePath(targets[i]);
             }
             _sb.Append(']');
@@ -393,14 +377,4 @@ public static class UsdaWriter
             _sb.AppendLine(text);
         }
     }
-}
-
-public static class UsdStageExtensions
-{
-    public static string ToUsda(this UsdStage stage, UsdaWriterOptions? options = null) => UsdaWriter.Serialize(stage, options);
-
-    public static byte[] ToUsdaBytes(this UsdStage stage, UsdaWriterOptions? options = null) => UsdaWriter.SerializeToBytes(stage, options);
-
-    public static ExportFile ToUsdaExportFile(this UsdStage stage, string? nameSuffix = null, UsdaWriterOptions? options = null)
-        => UsdaWriter.CreateExportFile(stage, "usda", nameSuffix, options);
 }

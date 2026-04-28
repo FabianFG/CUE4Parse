@@ -19,15 +19,16 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public abstract class Mesh<TVertex> : IDisposable where TVertex : struct, IMeshVertex
+public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : struct, IMeshVertex
 {
+    public readonly string Name = name;
     public readonly List<MeshLod<TVertex>> LODs = [];
     public readonly MeshMaterial[] Materials = [];
 
     public FPackageIndex[]? Sockets { get; private set; }
     public abstract FBox Bounds { get; protected init; }
 
-    protected Mesh(UStaticMesh mesh)
+    protected Mesh(UStaticMesh mesh) : this(mesh.Name)
     {
         Materials = new MeshMaterial[mesh.StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -37,7 +38,7 @@ public abstract class Mesh<TVertex> : IDisposable where TVertex : struct, IMeshV
         Sockets = mesh.Sockets;
     }
 
-    protected Mesh(USkeletalMesh mesh)
+    protected Mesh(USkeletalMesh mesh) : this(mesh.Name)
     {
         Materials = new MeshMaterial[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -53,12 +54,12 @@ public abstract class Mesh<TVertex> : IDisposable where TVertex : struct, IMeshV
         Sockets = sockets.ToArray();
     }
 
-    protected Mesh(USkeleton skeleton)
+    protected Mesh(USkeleton skeleton) : this(skeleton.Name)
     {
         Sockets = skeleton.Sockets;
     }
 
-    protected Mesh(ALandscapeProxy landscape)
+    protected Mesh(ALandscapeProxy landscape) : this(landscape.Name)
     {
         Materials = [new MeshMaterial(null, landscape.LandscapeMaterial)];
     }
@@ -175,6 +176,7 @@ public class StaticMesh : Mesh<MeshVertex>
 
 public class Skeleton : Mesh<SkinnedMeshVertex>
 {
+    public readonly string? SkeletonName;
     public readonly MeshBone[] RefSkeleton;
 
     public sealed override FBox Bounds { get; protected init; }
@@ -194,6 +196,7 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
 
         if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
         {
+            SkeletonName = skeleton.Name;
             SkeletonPathName = skeleton.GetPathName();
             VirtualBones = skeleton.VirtualBones;
         }
@@ -210,6 +213,7 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
             RefSkeleton[i] = bone;
         }
 
+        SkeletonName = skeleton.Name;
         SkeletonPathName = skeleton.GetPathName();
         VirtualBones = skeleton.VirtualBones;
     }

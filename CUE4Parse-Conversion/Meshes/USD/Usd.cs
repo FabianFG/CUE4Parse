@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Text;
 
 namespace CUE4Parse_Conversion.Meshes.USD;
 
@@ -66,14 +68,19 @@ public readonly record struct UsdValue(UsdValueKind Kind, object? RawValue)
             int i => Int(i),
             uint i => Long(i),
             long l => Long(l),
-            ulong l when l <= long.MaxValue => Long((long) l),
-            ulong => throw new ArgumentOutOfRangeException(nameof(value), value, "USD writer does not support ulong values larger than Int64.MaxValue."),
+            ulong l and <= long.MaxValue => Long((long) l),
             float f => Float(f),
             double d => Double(d),
             decimal d => Double((double) d),
             string s => String(s),
             IEnumerable<UsdValue> values => Array(values),
             IEnumerable enumerable => Array(Enumerate(enumerable).ToArray()),
+            Vector2 v2 => Tuple(v2.X, v2.Y),
+            Vector3 v3 => Tuple(v3.X, v3.Y, v3.Z),
+            Vector4 v4 => Tuple(v4.X, v4.Y, v4.Z, v4.W),
+            Quaternion q => Tuple(q.W, q.X, q.Y, q.Z),
+            Matrix4x4 m => Tuple(Tuple(m.M11, m.M12, m.M13, m.M14), Tuple(m.M21, m.M22, m.M23, m.M24), Tuple(m.M31, m.M32, m.M33, m.M34), Tuple(m.M41, m.M42, m.M43, m.M44)),
+            ulong => throw new ArgumentOutOfRangeException(nameof(value), value, "USD writer does not support ulong values larger than Int64.MaxValue."),
             _ => throw new NotSupportedException($"Unsupported USD value type '{value.GetType().FullName}'.")
         };
     }
@@ -134,17 +141,18 @@ public sealed class UsdAttribute(string typeName, string name, UsdValue value) :
     public static UsdAttribute CustomUniform(string typeName, string name, UsdValue value) => new(typeName, name, value) { Custom = true, Variability = UsdVariability.Uniform };
 
     /// <summary>Creates a primvar attribute with the given interpolation.</summary>
-    public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string interpolation)
+    public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string interpolation, params UsdMetadata[] metadata)
     {
         var attr = new UsdAttribute(typeName, name, values) { Custom = false };
         attr.Metadata.Add(new UsdMetadata("interpolation", UsdValue.String(interpolation)));
+        attr.Metadata.AddRange(metadata);
         return attr;
     }
 }
 
-public sealed class UsdRelationship(string name, params string[] targets) : UsdProperty(name)
+public sealed class UsdRelationship(string name, params UsdPrim[] targets) : UsdProperty(name)
 {
-    public List<string> Targets { get; } = [.. targets.Where(t => !string.IsNullOrWhiteSpace(t))];
+    public string[] GetPaths() => targets.Select(p => p.GetPath()).ToArray();
 }
 
 public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier specifier = UsdPrimSpecifier.Def)
@@ -152,21 +160,28 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
     public string TypeName { get; } = typeName ?? throw new ArgumentNullException(nameof(typeName));
     public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
     public UsdPrimSpecifier Specifier { get; } = specifier;
+    public UsdPrim? Parent { get; private set; }
 
     public List<UsdMetadata> Metadata { get; } = [];
     public List<UsdProperty> Properties { get; } = [];
     public List<UsdPrim> Children { get; } = [];
     public UsdReferenceList? References { get; }
 
-    public UsdPrim Add(UsdProperty property)
+    public string GetPath() => $"{Parent?.GetPath()}/{Name}";
+
+    public UsdPrim Add<T>(params T[] properties) where T : UsdProperty
     {
-        Properties.Add(property);
+        Properties.AddRange(properties);
         return this;
     }
 
-    public UsdPrim Add(UsdPrim child)
+    public UsdPrim Add(params UsdPrim[] children)
     {
-        Children.Add(child);
+        foreach (var child in children)
+        {
+            child.Parent = this;
+            Children.Add(child);
+        }
         return this;
     }
 
@@ -177,9 +192,9 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
     }
 
     /// <summary>Adds a primvar attribute with the given interpolation.</summary>
-    public UsdPrim AddPrimvar(string typeName, string name, UsdValue values, string interpolation)
+    public UsdPrim AddPrimvar(string typeName, string name, UsdValue values, string interpolation, params UsdMetadata[] metadata)
     {
-        Properties.Add(UsdAttribute.Primvar(typeName, name, values, interpolation));
+        Properties.Add(UsdAttribute.Primvar(typeName, name, values, interpolation, metadata));
         return this;
     }
 
@@ -202,9 +217,17 @@ public sealed class UsdStage
         AddMetadata("upAxis", "Z");
     }
 
-    public UsdStage Add(UsdPrim prim)
+    public UsdStage(UsdPrim defaultPrim)
     {
-        Prims.Add(prim);
+        AddMetadata("defaultPrim", defaultPrim.Name);
+        AddMetadata("metersPerUnit", 0.01f);
+        AddMetadata("upAxis", "Z");
+        Add(defaultPrim);
+    }
+
+    public UsdStage Add(params UsdPrim[] prims)
+    {
+        Prims.AddRange(prims);
         return this;
     }
 
@@ -216,4 +239,7 @@ public sealed class UsdStage
         Metadata.Add(new UsdMetadata(name, value));
         return this;
     }
+
+    public string SerializeToString() => UsdaWriter.Serialize(this);
+    public byte[] SerializeToBinary() => Encoding.UTF8.GetBytes(SerializeToString());
 }
