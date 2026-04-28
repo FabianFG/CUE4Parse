@@ -1,9 +1,31 @@
 using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using CUE4Parse.UE4.Lua;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
+
+public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLuaArchive(name, data, versions)
+{
+    public T ReadBE<T>() where T : unmanaged
+    {
+        T value = Read<T>();
+
+        return value switch
+        {
+            ushort v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            uint v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            ulong v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            short v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            int v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            long v => (T) (object) BinaryPrimitives.ReverseEndianness(v),
+            _ => value
+        };
+    }
+}
 
 public readonly struct FadeFaceHeader(FNGRLuaArchive Ar)
 {
@@ -30,27 +52,45 @@ public class NGRLuaReader
     private Chunk[] _luaChunks = [];
     private byte[] _decryptionKey = [];
 
-    public NGRLuaReader(string name, byte[] data, out byte[] result)
+    private static readonly Dictionary<byte, byte> _opcodeMapping = new()
     {
-        var Ar = new FNGRLuaArchive(name, data, null);
+        { 0x0A, 0x00 },
+        { 0x00, 0x0A },
+        { 0x07, 0x03 },
+        { 0x03, 0x07 },
+        { 0x01, 0x09 },
+        { 0x09, 0x01 },
+        { 0x02, 0x08 },
+        { 0x08, 0x02 },
+        { 0x04, 0x06 },
+        { 0x06, 0x04 },
+    };
+
+    public static byte[] DecryptLua(string name, byte[] data)
+    {
+        var reader = new NGRLuaReader();
+        return reader.DecryptLuaInternal(name, data);
+    }
+
+    public byte[] DecryptLuaInternal(string name, byte[] data)
+    {
+        using var Ar = new FNGRLuaArchive(name, data, null);
         if (Ar.Length < 0x14)
         {
             Log.Warning("Fade Face header is too small");
-            result = data;
-            return;
+            return data;
         }
 
         Header = new FadeFaceHeader(Ar);
         if (Header.Magic != NGR_LUA_MAGIC)
         {
             Log.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
-            result = data;
-            return;
+            return data;
         }
 
         ReadChunks(Ar);
         Reorder();
-        result = Restore(name, Rebuild());
+        return Restore(name, Rebuild());
     }
 
     private void ReadChunks(FNGRLuaArchive Ar)
@@ -110,11 +150,8 @@ public class NGRLuaReader
             }
         }
 
-        if (data.Length < 4)
-            throw new Exception("Data too short");
-
-        if (data is not [0x1B, 0x4C, 0x75, 0x61, ..]) // "\x1BLua"
-            throw new Exception("Failed to decrypt. Expected Lua magic");
+        if (!FLuaReader.IsValidLuaMagic(data))
+            throw new InvalidDataException("Failed to decrypt. Expected Lua magic");
 
         return data;
     }
@@ -122,7 +159,8 @@ public class NGRLuaReader
     private static byte[] Restore(string name, byte[] decryptedLuaBytecode)
     {
         using var Ar = new FNGRLuaArchive(name, decryptedLuaBytecode, null);
-        var lua = new LuaBytecode(Ar);
+
+        var lua = FLuaReader.ReadLua54(Ar, _opcodeMapping);
 
         using var msOut = new MemoryStream(decryptedLuaBytecode.Length);
         using (var writer = new FLuaArchiveWriter(msOut))

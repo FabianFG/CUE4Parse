@@ -2421,6 +2421,42 @@ public class FByteBulkDataConverter : JsonConverter<FByteBulkData>
     }
 }
 
+public class TBulkDataConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType) => IsTBulkData(objectType);
+
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+    {
+        if (value == null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        var header = value.GetType().GetProperty("Header")!.GetValue(value);
+        serializer.Serialize(writer, header);
+    }
+
+    private static bool IsTBulkData(Type type)
+    {
+        while (type != null && type != typeof(object))
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(TBulkData<>))
+                return true;
+
+            type = type.BaseType!;
+        }
+
+        return false;
+    }
+
+    public override bool CanRead => false;
+    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class FKismetPropertyPointerConverter : JsonConverter<FKismetPropertyPointer>
 {
     public override FKismetPropertyPointer? ReadJson(JsonReader reader, Type objectType, FKismetPropertyPointer? existingValue, bool hasExistingValue, JsonSerializer serializer)

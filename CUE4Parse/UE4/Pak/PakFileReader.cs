@@ -9,6 +9,7 @@ using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.UE4.Assets.Objects;
@@ -144,8 +145,15 @@ namespace CUE4Parse.UE4.Pak
                     uncompressedOff += uncompressedSize;
                 }
 
-                if (Ar.Game is EGame.GAME_RocoKingdomWorld && pakEntry.Extension is "luac")
-                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                switch (Ar.Game)
+                {
+                    case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                        return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                    case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                        return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
+                    default:
+                        break;
+                }
 
                 var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
                 if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
@@ -177,8 +185,15 @@ namespace CUE4Parse.UE4.Pak
             var readSize = (dataOffset + requestedSize).Align(alignment);
             var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
 
-            if (Ar.Game is EGame.GAME_RocoKingdomWorld && pakEntry.Extension is "luac")
-                return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+            switch (Ar.Game)
+            {
+                case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                    return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
+                default:
+                    break;
+            }
 
             if (dataOffset == 0 && requestedSize == data.Length)
                 return data;

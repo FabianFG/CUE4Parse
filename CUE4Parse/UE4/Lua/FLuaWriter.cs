@@ -1,8 +1,6 @@
-using CUE4Parse.GameTypes.HonorOfKings.Lua;
-
 namespace CUE4Parse.UE4.Lua;
 
-// Standard Lua 5.4 bytecode writer, nothing custom whatsoever
+// Standard Lua 5.4 bytecode writer
 public static class FLuaWriter54
 {
     public static void Write(FLuaArchiveWriter writer, LuaBytecode l)

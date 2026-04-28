@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Encryption.Aes;
 
@@ -60,7 +60,7 @@ namespace CUE4Parse.Utils
         public static Span<char> SubstringAfter(this Span<char> s, ReadOnlySpan<char> delimiter)
         {
             var index = s.IndexOf(delimiter);
-            return index == -1 ? s : s[(index + delimiter.Length)..(s.Length - index - delimiter.Length)];
+            return index == -1 ? s : s[(index + delimiter.Length)..];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
