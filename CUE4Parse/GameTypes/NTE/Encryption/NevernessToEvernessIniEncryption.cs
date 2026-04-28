@@ -69,7 +69,7 @@ public static class NevernessToEvernessIniEncryption
             }
         }
 
-        return false;
+        throw new CryptographicException("No valid key found to decrypt .ini file");
     }
 
     private static bool TryDecrypt(byte[] data, int len, Aes aes, byte[] key, out string decrypted)
