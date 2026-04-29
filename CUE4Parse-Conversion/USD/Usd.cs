@@ -6,7 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 
-namespace CUE4Parse_Conversion.Meshes.USD;
+namespace CUE4Parse_Conversion.USD;
 
 public enum UsdPrimSpecifier { Def, Over, Class }
 public enum UsdVariability { Uniform, Config, Varying }
@@ -132,13 +132,13 @@ public sealed class UsdAttribute(string typeName, string name, UsdValue value) :
 {
     public string TypeName { get; } = typeName ?? throw new ArgumentNullException(nameof(typeName));
     public UsdValue Value { get; } = value;
+    public UsdValue[][]? TimeSamples { get; private init; } // TODO: that's kinda ugly to have this here
 
     // Factory helpers – avoid scattered object-initialiser noise
     public static UsdAttribute Uniform(string typeName, string name, UsdValue value) => new(typeName, name, value) { Variability = UsdVariability.Uniform };
-
     public static UsdAttribute Flagged(string typeName, string name, UsdValue value) => new(typeName, name, value) { Custom = true };
-
     public static UsdAttribute CustomUniform(string typeName, string name, UsdValue value) => new(typeName, name, value) { Custom = true, Variability = UsdVariability.Uniform };
+    public static UsdAttribute TimeSampled(string typeName, string name, UsdValue[][] samples) => new(typeName, name, UsdValue.Null) { TimeSamples = samples };
 
     /// <summary>Creates a primvar attribute with the given interpolation.</summary>
     public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string interpolation, params UsdMetadata[] metadata)

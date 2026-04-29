@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CUE4Parse_Conversion.Meshes.USD;
+namespace CUE4Parse_Conversion.USD;
 
 public sealed class UsdaWriterOptions
 {
@@ -134,10 +134,34 @@ public static class UsdaWriter
 
             _sb.Append(attribute.TypeName);
             _sb.Append(' ');
-            _sb.Append(attribute.Name);
 
-            _sb.Append(" = ");
-            WriteValue(attribute.Value);
+            if (attribute.TimeSamples is { } samples)
+            {
+                _sb.Append(attribute.Name);
+                _sb.AppendLine(".timeSamples = {");
+                _indentLevel++;
+                for (var i = 0; i < samples.Length; i++)
+                {
+                    Indent();
+                    _sb.Append(i);
+                    _sb.Append(": [");
+                    for (var j = 0; j < samples[i].Length; j++)
+                    {
+                        if (j > 0) _sb.Append(", ");
+                        WriteValue(samples[i][j]);
+                    }
+                    _sb.AppendLine("],");
+                }
+                _indentLevel--;
+                Indent();
+                _sb.Append('}');
+            }
+            else
+            {
+                _sb.Append(attribute.Name);
+                _sb.Append(" = ");
+                WriteValue(attribute.Value);
+            }
 
             if (attribute.Metadata.Count > 0)
             {

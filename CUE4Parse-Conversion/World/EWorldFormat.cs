@@ -6,6 +6,6 @@ public enum EWorldFormat
 {
     [Description("UEFormat (ueworld)")]
     UEFormat,
-    [Description("Universal Scene Description (usd / usda)")]
+    [Description("Universal Scene Description (usda)")]
     USD
 }

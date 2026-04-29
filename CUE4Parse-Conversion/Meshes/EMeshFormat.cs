@@ -12,6 +12,6 @@ public enum EMeshFormat
     OBJ,
     [Description("UEFormat (uemodel)")]
     UEFormat,
-    [Description("Universal Scene Description (usd / usda)")]
+    [Description("Universal Scene Description (usda)")]
     USD
 }

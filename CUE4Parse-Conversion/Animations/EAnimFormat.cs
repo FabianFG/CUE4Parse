@@ -7,5 +7,7 @@ public enum EAnimFormat
     [Description("ActorX (psa)")]
     ActorX,
     [Description("UEFormat (ueanim)")]
-    UEFormat
+    UEFormat,
+    [Description("Universal Scene Description (usda)")]
+    USD
 }

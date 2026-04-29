@@ -22,7 +22,7 @@ namespace CUE4Parse_Conversion.V2.Dto;
 public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : struct, IMeshVertex
 {
     public readonly string Name = name;
-    public readonly List<MeshLod<TVertex>> LODs = [];
+    public readonly IList<MeshLod<TVertex>> LODs = [];
     public readonly MeshMaterial[] Materials = [];
 
     public FPackageIndex[]? Sockets { get; private set; }

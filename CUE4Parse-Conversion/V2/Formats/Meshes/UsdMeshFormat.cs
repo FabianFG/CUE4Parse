@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using CUE4Parse_Conversion.Meshes;
-using CUE4Parse_Conversion.Meshes.USD;
+using CUE4Parse_Conversion.USD;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -19,8 +18,7 @@ public class UsdMeshFormat : IMeshExportFormat
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto)
     {
         var results = new List<ExportFile>();
-        var root = UsdPrim.Def("SkelRoot", dto.Name);
-        root.Add(CreateSkeleton(dto));
+        var root = dto.ToSkelRoot();
 
         var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
         if (sockets is not null) root.Add(sockets);
@@ -67,41 +65,13 @@ public class UsdMeshFormat : IMeshExportFormat
 
     public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, Skeleton dto)
     {
-        var root = UsdPrim.Def("SkelRoot", dto.Name);
-        root.Add(CreateSkeleton(dto));
+        var root = dto.ToSkelRoot();
 
         var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
         if (sockets is not null) root.Add(sockets);
 
         var stage = new UsdStage(root);
         return [new ExportFile("usda", stage.SerializeToBinary())];
-    }
-
-    private UsdPrim CreateSkeleton(Skeleton dto)
-    {
-        var skeletonPrim = UsdPrim.Def("Skeleton", dto.SkeletonName ?? dto.Name);
-
-        var joints = new UsdValue[dto.RefSkeleton.Length];
-        var rest = new UsdValue[joints.Length];
-        var bind = new Matrix4x4[joints.Length]; // world-space accumulated
-        for (var i = 0; i < joints.Length; i++)
-        {
-            var bone = dto.RefSkeleton[i];
-
-            var path = bone.ParentIndex >= 0 ? $"{joints[bone.ParentIndex].RawValue}/{bone.Name}" : bone.Name;
-            joints[i] = UsdValue.Token(path);
-
-            var local = bone.Transform.ToMatrix4x4();
-            rest[i] = UsdValue.From(local);
-
-            bind[i] = bone.ParentIndex < 0 ? local : Matrix4x4.Multiply(local, bind[bone.ParentIndex]);
-        }
-
-        skeletonPrim.Add(UsdAttribute.Uniform("token[]", "joints", UsdValue.Array(joints)));
-        skeletonPrim.Add(UsdAttribute.Uniform("matrix4d[]", "restTransforms", UsdValue.Array(rest)));
-        skeletonPrim.Add(UsdAttribute.Uniform("matrix4d[]", "bindTransforms", UsdValue.Array(bind.Select(x => UsdValue.From(x)))));
-
-        return skeletonPrim;
     }
 
     private UsdPrim? CreateSockets(FPackageIndex[]? sockets)
