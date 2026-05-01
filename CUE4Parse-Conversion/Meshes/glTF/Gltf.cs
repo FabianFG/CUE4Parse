@@ -52,7 +52,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             {
                 var offsetZ = origin * lodIdx;
                 var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lodIdx}").WithLocalTranslation(new Vector3(0, 0, offsetZ));
-                var armature = CreateGltfSkeleton(mesh.RefSkeleton, armatureRoot);
+                var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
 
                 var lod = mesh.LODs[lodIdx];
                 var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{lodIdx}");

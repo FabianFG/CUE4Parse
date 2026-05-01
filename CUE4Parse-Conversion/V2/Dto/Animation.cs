@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class Animation
+public class Animation : ObjectDto
 {
     public readonly Skeleton Skeleton;
     public readonly IList<AnimationSequence> Sequences = [];
@@ -13,7 +13,7 @@ public class Animation
     public readonly float StartTime;
     public readonly float PlayRate;
 
-    public Animation(UAnimationAsset animation, float startTime = 0f, float playRate = 1f)
+    public Animation(UAnimationAsset animation, float startTime = 0f, float playRate = 1f) : base(animation)
     {
         if (!animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
             throw new ArgumentNullException(nameof(animation), "Animation asset does not have a valid skeleton reference");
@@ -29,13 +29,10 @@ public class Animation
             }
             case UAnimMontage montage:
             {
-                foreach (var slotAnimTrack in montage.SlotAnimTracks)
+                foreach (var track in montage.SlotAnimTracks)
+                foreach (var segment in track.AnimTrack.AnimSegments)
                 {
-                    foreach (var segment in slotAnimTrack.AnimTrack.AnimSegments)
-                    {
-                        AddSegment(segment);
-                        // seq.Name = slotAnimTrack.SlotName.Text;
-                    }
+                    AddSegment(segment, track.SlotName.Text);
                 }
                 break;
             }
@@ -47,8 +44,7 @@ public class Animation
                 }
                 break;
             }
-            default:
-                throw new NotSupportedException($"Unsupported animation asset type: {animation.GetType().Name}");
+            default: throw new NotSupportedException($"Unsupported animation asset type: {animation.GetType().Name}");
         }
 
         if (Sequences.Count > 0)
@@ -58,17 +54,23 @@ public class Animation
         PlayRate = playRate;
     }
 
-    private void AddSegment(FAnimSegment segment)
+    private void AddSegment(FAnimSegment segment, string? name = null)
     {
         if (!segment.AnimReference.TryLoad<UAnimSequence>(out var sequence))
             return;
 
         // seq.AnimEndTime = segment.AnimEndTime;
-        Sequences.Add(new AnimationSequence(sequence, segment.StartPos, segment.LoopingCount));
+        AddSequence(sequence, name, segment.StartPos, segment.LoopingCount);
     }
 
-    private void AddSequence(UAnimSequence sequence)
+    private void AddSequence(UAnimSequence sequence, string? name = null, float startTime = 0.0f, int loopingCount = 1)
     {
+        Sequences.Add(new AnimationSequence(sequence, name, startTime, loopingCount));
+    }
 
+    public override void Dispose()
+    {
+        Sequences.Clear();
+        Skeleton.Dispose();
     }
 }

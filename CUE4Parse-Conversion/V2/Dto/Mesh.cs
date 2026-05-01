@@ -19,16 +19,15 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : struct, IMeshVertex
+public abstract class Mesh<TVertex> : ObjectDto where TVertex : struct, IMeshVertex
 {
-    public readonly string Name = name;
     public readonly IList<MeshLod<TVertex>> LODs = [];
     public readonly MeshMaterial[] Materials = [];
 
     public FPackageIndex[]? Sockets { get; private set; }
     public abstract FBox Bounds { get; protected init; }
 
-    protected Mesh(UStaticMesh mesh) : this(mesh.Name)
+    protected Mesh(UStaticMesh mesh) : base(mesh)
     {
         Materials = new MeshMaterial[mesh.StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -38,7 +37,7 @@ public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : s
         Sockets = mesh.Sockets;
     }
 
-    protected Mesh(USkeletalMesh mesh) : this(mesh.Name)
+    protected Mesh(USkeletalMesh mesh) : base(mesh)
     {
         Materials = new MeshMaterial[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -54,12 +53,12 @@ public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : s
         Sockets = sockets.ToArray();
     }
 
-    protected Mesh(USkeleton skeleton) : this(skeleton.Name)
+    protected Mesh(USkeleton skeleton) : base(skeleton)
     {
         Sockets = skeleton.Sockets;
     }
 
-    protected Mesh(ALandscapeProxy landscape) : this(landscape.Name)
+    protected Mesh(ALandscapeProxy landscape) : base(landscape)
     {
         Materials = [new MeshMaterial(null, landscape.LandscapeMaterial)];
     }
@@ -75,7 +74,7 @@ public abstract class Mesh<TVertex>(string name) : IDisposable where TVertex : s
         return Materials[index];
     }
 
-    public virtual void Dispose()
+    public override void Dispose()
     {
         LODs.Clear();
         Array.Clear(Materials);
@@ -177,7 +176,7 @@ public class StaticMesh : Mesh<MeshVertex>
 public class Skeleton : Mesh<SkinnedMeshVertex>
 {
     public readonly string? SkeletonName;
-    public readonly MeshBone[] RefSkeleton;
+    public readonly MeshBone[] Bones;
 
     public sealed override FBox Bounds { get; protected init; }
     public string? SkeletonPathName { get; private set; }
@@ -188,10 +187,10 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
         Bounds = mesh.ImportedBounds.GetBox();
 
         var refSkeleton = mesh.ReferenceSkeleton;
-        RefSkeleton = new MeshBone[refSkeleton.FinalRefBonePose.Length];
-        for (var i = 0; i < RefSkeleton.Length; i++)
+        Bones = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        for (var i = 0; i < Bones.Length; i++)
         {
-            RefSkeleton[i] = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
+            Bones[i] = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
         }
 
         if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
@@ -205,12 +204,12 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
     public Skeleton(USkeleton skeleton) : base(skeleton)
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
-        RefSkeleton = new MeshBone[refSkeleton.FinalRefBonePose.Length];
-        for (var i = 0; i < RefSkeleton.Length; i++)
+        Bones = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        for (var i = 0; i < Bones.Length; i++)
         {
             var bone = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
             Bounds = Bounds.ExpandBy(bone.Transform.Translation);
-            RefSkeleton[i] = bone;
+            Bones[i] = bone;
         }
 
         SkeletonName = skeleton.Name;
@@ -222,7 +221,7 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
     {
         base.Dispose();
 
-        Array.Clear(RefSkeleton);
+        Array.Clear(Bones);
         SkeletonPathName = null;
         VirtualBones = null;
     }

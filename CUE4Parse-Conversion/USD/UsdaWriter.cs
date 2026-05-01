@@ -62,7 +62,7 @@ public static class UsdaWriter
             _sb.Append(' ');
             _sb.Append(prim.TypeName);
             _sb.Append(' ');
-            WriteQuotedString(prim.Name);
+            WriteQuotedString(prim.EffectiveName);
 
             var primMetadata = new List<UsdMetadata>(prim.Metadata);
             if (prim.References is { References.Count: > 0 })

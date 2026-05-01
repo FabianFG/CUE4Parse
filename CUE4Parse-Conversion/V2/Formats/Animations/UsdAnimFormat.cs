@@ -20,7 +20,7 @@ public class UsdAnimFormat : IAnimExportFormat
         foreach (var sequence in animSet.Sequences)
             sequence.RetargetTracks(animSet.Skeleton);
 
-        var numBones = dto.RefSkeleton.Length;
+        var numBones = dto.Bones.Length;
 
         var fps = animSet.Sequences.Count > 0 ? animSet.Sequences[0].NumFrames / animSet.Sequences[0].AnimEndTime : 30f;
 
@@ -41,15 +41,16 @@ public class UsdAnimFormat : IAnimExportFormat
             for (var b = 0; b < numBones; b++)
             {
                 // default to rest pose
-                var bone = dto.RefSkeleton[b];
+                var bone = dto.Bones[b];
                 var quat = bone.Transform.Rotation;
                 var pos  = bone.Transform.Translation;
                 var scale = bone.Transform.Scale3D;
 
                 foreach (var sequence in animSet.Sequences)
                 {
-                    if (sequence.OriginalSequence.FindTrackForBoneIndex(b) < 0) continue;
-                    if (time < sequence.StartPos || time >= sequence.StartPos + sequence.AnimEndTime) continue;
+                    if (time < sequence.StartPos ||
+                        time >= sequence.StartPos + sequence.AnimEndTime ||
+                        sequence.OriginalSequence.FindTrackForBoneIndex(b) < 0) continue;
 
                     var localFrame = (time - sequence.StartPos) * (sequence.NumFrames / sequence.AnimEndTime);
                     sequence.Tracks[b].GetBoneTransform(localFrame, sequence.NumFrames, ref quat, ref pos, ref scale);

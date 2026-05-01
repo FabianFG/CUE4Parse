@@ -20,13 +20,16 @@ public class UsdMeshFormat : IMeshExportFormat
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
 
-        var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
+        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
         if (sockets is not null) root.Add(sockets);
+
+        var materials = CreateMaterials(dto.Materials, options.ExportMaterials);
+        if (materials is not null) root.Add(materials);
 
         for (var i = 0; i < dto.LODs.Count; i++)
         {
             var suffix = i == 0 ? null : $"_LOD{i}";
-            var lodPrim = CreateLod(dto.LODs[i], suffix);
+            var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
             root.Add(lodPrim);
 
@@ -45,13 +48,16 @@ public class UsdMeshFormat : IMeshExportFormat
         var results = new List<ExportFile>();
         var root = UsdPrim.Def("Xform", dto.Name);
 
-        var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
+        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
         if (sockets is not null) root.Add(sockets);
+
+        var materials = CreateMaterials(dto.Materials, options.ExportMaterials);
+        if (materials is not null) root.Add(materials);
 
         for (var i = 0; i < dto.LODs.Count; i++)
         {
             var suffix = i == 0 ? null : $"_LOD{i}";
-            root.Add(CreateLod(dto.LODs[i], suffix));
+            root.Add(CreateLod(dto.LODs[i], suffix, materials));
 
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
@@ -74,9 +80,9 @@ public class UsdMeshFormat : IMeshExportFormat
         return [new ExportFile("usda", stage.SerializeToBinary())];
     }
 
-    private UsdPrim? CreateSockets(FPackageIndex[]? sockets)
+    private UsdPrim? CreateSockets(FPackageIndex[]? sockets, ESocketFormat format = ESocketFormat.None)
     {
-        if (sockets is not { Length: > 0 }) return null;
+        if (sockets is not { Length: > 0 } || format == ESocketFormat.None) return null;
 
         var scope = UsdPrim.Def("Scope", "Sockets");
         foreach (var ptr in sockets)
@@ -87,7 +93,7 @@ public class UsdMeshFormat : IMeshExportFormat
                 {
                     var socketPrim = UsdPrim.Def("Xform", sk.SocketName.Text);
                     // TODO: compute matrix relative to bone
-                    socketPrim.Add(new FTransform(sk.RelativeRotation, sk.RelativeLocation, sk.RelativeScale).ToAttributes());
+                    socketPrim.Add(new FTransform(sk.RelativeRotation, sk.RelativeLocation, sk.RelativeScale).ToMatrixAttributes());
                     socketPrim.Add(UsdAttribute.CustomUniform("string", "unrealBoneName", sk.BoneName.Text));
                     scope.Add(socketPrim);
                     break;
@@ -95,7 +101,7 @@ public class UsdMeshFormat : IMeshExportFormat
                 case UStaticMeshSocket st:
                 {
                     var socketPrim = UsdPrim.Def("Xform", st.SocketName.Text);
-                    socketPrim.Add(new FTransform(st.RelativeRotation, st.RelativeLocation, st.RelativeScale).ToAttributes());
+                    socketPrim.Add(new FTransform(st.RelativeRotation, st.RelativeLocation, st.RelativeScale).ToMatrixAttributes());
                     scope.Add(socketPrim);
                     break;
                 }
@@ -103,11 +109,31 @@ public class UsdMeshFormat : IMeshExportFormat
         }
         return scope;
     }
-
-    private UsdPrim CreateLod(MeshLod<MeshVertex> meshLod, string? suffix = null) => CreateLod<MeshVertex>(meshLod, suffix);
-    private UsdPrim CreateLod(MeshLod<SkinnedMeshVertex> meshLod, string? suffix = null)
+    private UsdPrim? CreateMaterials(MeshMaterial[] materials, bool define = true)
     {
-        var lodPrim = CreateLod<SkinnedMeshVertex>(meshLod, suffix);
+        if (materials is not { Length: > 0 }) return null;
+
+        var seen = new HashSet<string>();
+        var scope = UsdPrim.Def("Scope", "Materials");
+        foreach (var material in materials)
+        {
+            var name = material.SlotName;
+            if (!seen.Add(name)) continue;
+
+            var materialPrim = UsdPrim.Def("Material", name);
+            if (define)
+            {
+                // TODO: define the prim
+            }
+            scope.Add(materialPrim);
+        }
+        return scope;
+    }
+
+    private UsdPrim CreateLod(MeshLod<MeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null) => CreateLod<MeshVertex>(meshLod, suffix, materials);
+    private UsdPrim CreateLod(MeshLod<SkinnedMeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null)
+    {
+        var lodPrim = CreateLod<SkinnedMeshVertex>(meshLod, suffix, materials);
         lodPrim.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("SkelBindingAPI")));
 
         var elementSize = meshLod.Vertices.Max(v => v.Influences.Length);
@@ -137,7 +163,7 @@ public class UsdMeshFormat : IMeshExportFormat
 
         return lodPrim;
     }
-    private UsdPrim CreateLod<TVertex>(MeshLod<TVertex> meshLod, string? suffix = null) where TVertex : struct, IMeshVertex
+    private UsdPrim CreateLod<TVertex>(MeshLod<TVertex> meshLod, string? suffix = null, UsdPrim? materials = null) where TVertex : struct, IMeshVertex
     {
         var lodPrim = UsdPrim.Def("Mesh", $"{meshLod.Owner.Name}{suffix}");
         lodPrim.Add(UsdAttribute.Uniform("token", "subdivisionScheme", "none"));
@@ -217,17 +243,11 @@ public class UsdMeshFormat : IMeshExportFormat
             subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
             subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
 
-            if (meshLod.Owner.GetMaterial(section) is { } material)
+            if (materials is not null && section.MaterialIndex >= 0 && section.MaterialIndex < materials.Children.Count)
             {
                 subset.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("MaterialBindingAPI")));
-
-                var materialPrim = UsdPrim.Def("Material", material.SlotName);
-                // TODO: define the prim
-                lodPrim.Add(materialPrim);
-
-                subset.Add(new UsdRelationship("material:binding", materialPrim));
+                subset.Add(new UsdRelationship("material:binding", materials.Children[section.MaterialIndex]));
             }
-
             lodPrim.Add(subset);
         }
 

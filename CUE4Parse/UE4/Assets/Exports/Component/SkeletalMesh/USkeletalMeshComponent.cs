@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -29,13 +27,4 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
     }
 
     public override UBodySetup? GetBodySetup() => BodySetup?.Load<UBodySetup>();
-
-    public override IEnumerable<UObject> GetExportableReferences()
-    {
-        if (AnimationData?.AnimToPlay.TryLoad<UAnimationAsset>(out var animToPlay) == true)
-            yield return animToPlay;
-
-        foreach (var obj in base.GetExportableReferences())
-            yield return obj;
-    }
 }

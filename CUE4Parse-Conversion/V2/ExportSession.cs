@@ -8,7 +8,6 @@ using CUE4Parse_Conversion.V2.Exporters;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
@@ -42,7 +41,6 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         return export switch
         {
-            // ------- Exporters -------
             UTexture texture => Add(new TextureExporter2(texture)),
             UMaterialInterface material => Add(new MaterialExporter3(material)),
             USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
@@ -54,13 +52,6 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
             UWorld world => Add(new WorldExporter(world)),
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
             USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
-
-            // ------- Resolvers -------
-            // case UBrushComponent:
-            // case UShapeComponent:
-            // case UAudioComponent:
-            // case UTextRenderComponent:
-            IComponentResolver resolver => Resolve(resolver),
             _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
         };
     }
@@ -120,14 +111,5 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         if (_dirs.TryAdd(dir, 0)) Directory.CreateDirectory(dir);
         return fullPath.Replace('/', '\\');
-    }
-
-    private ExportSession Resolve(IComponentResolver resolver)
-    {
-        foreach (var obj in resolver.GetExportableReferences())
-        {
-            Add(obj);
-        }
-        return this;
     }
 }

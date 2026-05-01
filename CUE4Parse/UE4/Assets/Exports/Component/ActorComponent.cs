@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
@@ -10,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
 
-public class UActorComponent : UObject, IComponentResolver
+public class UActorComponent : UObject
 {
     [JsonIgnore] public FSimpleMemberReference[]? UCSModifiedProperties;
 
@@ -27,11 +26,6 @@ public class UActorComponent : UObject, IComponentResolver
         {
             UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
         }
-    }
-
-    public virtual IEnumerable<UObject> GetExportableReferences()
-    {
-        yield break;
     }
 }
 

@@ -225,9 +225,9 @@ public sealed class UEModel : UEFormatExport
             metaDataChunk.Serialize(archive);
         }
 
-        using (var boneChunk = new FDataChunk("BONES", skeleton.RefSkeleton.Length))
+        using (var boneChunk = new FDataChunk("BONES", skeleton.Bones.Length))
         {
-            foreach (var bone in skeleton.RefSkeleton)
+            foreach (var bone in skeleton.Bones)
             {
                 var boneName = new FString(bone.Name);
                 boneName.Serialize(boneChunk);

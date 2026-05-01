@@ -141,10 +141,10 @@ public sealed class UsdAttribute(string typeName, string name, UsdValue value) :
     public static UsdAttribute TimeSampled(string typeName, string name, UsdValue[][] samples) => new(typeName, name, UsdValue.Null) { TimeSamples = samples };
 
     /// <summary>Creates a primvar attribute with the given interpolation.</summary>
-    public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string interpolation, params UsdMetadata[] metadata)
+    public static UsdAttribute Primvar(string typeName, string name, UsdValue values, string? interpolation = null, params UsdMetadata[] metadata)
     {
         var attr = new UsdAttribute(typeName, name, values) { Custom = false };
-        attr.Metadata.Add(new UsdMetadata("interpolation", UsdValue.String(interpolation)));
+        if (interpolation != null) attr.Metadata.Add(new UsdMetadata("interpolation", UsdValue.String(interpolation)));
         attr.Metadata.AddRange(metadata);
         return attr;
     }
@@ -158,16 +158,22 @@ public sealed class UsdRelationship(string name, params UsdPrim[] targets) : Usd
 public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier specifier = UsdPrimSpecifier.Def)
 {
     public string TypeName { get; } = typeName ?? throw new ArgumentNullException(nameof(typeName));
-    public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
+    public string Name { get; } = SanitizeIdentifier(name ?? throw new ArgumentNullException(nameof(name)));
+
+    private string? _disambiguatedName;
+    public string EffectiveName => _disambiguatedName ?? Name;
+
     public UsdPrimSpecifier Specifier { get; } = specifier;
     public UsdPrim? Parent { get; private set; }
 
     public List<UsdMetadata> Metadata { get; } = [];
     public List<UsdProperty> Properties { get; } = [];
     public List<UsdPrim> Children { get; } = [];
-    public UsdReferenceList? References { get; }
+    public UsdReferenceList? References { get; private set; }
 
-    public string GetPath() => $"{Parent?.GetPath()}/{Name}";
+    private Dictionary<string, int>? _childNameCounts;
+
+    public string GetPath() => $"{Parent?.GetPath()}/{EffectiveName}";
 
     public UsdPrim Add<T>(params T[] properties) where T : UsdProperty
     {
@@ -177,8 +183,21 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
 
     public UsdPrim Add(params UsdPrim[] children)
     {
+        _childNameCounts ??= new Dictionary<string, int>(children.Length, StringComparer.Ordinal);
+
         foreach (var child in children)
         {
+            if (_childNameCounts.TryGetValue(child.Name, out var count))
+            {
+                var newCount = count + 1;
+                _childNameCounts[child.Name] = newCount;
+                child._disambiguatedName = $"{child.Name}_{newCount}";
+            }
+            else
+            {
+                _childNameCounts[child.Name] = 0;
+            }
+
             child.Parent = this;
             Children.Add(child);
         }
@@ -192,15 +211,56 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
     }
 
     /// <summary>Adds a primvar attribute with the given interpolation.</summary>
-    public UsdPrim AddPrimvar(string typeName, string name, UsdValue values, string interpolation, params UsdMetadata[] metadata)
+    public UsdPrim AddPrimvar(string typeName, string name, UsdValue values, string? interpolation = null, params UsdMetadata[] metadata)
     {
         Properties.Add(UsdAttribute.Primvar(typeName, name, values, interpolation, metadata));
+        return this;
+    }
+
+    public UsdPrim SetReference(UsdReferenceList references)
+    {
+        References = references;
         return this;
     }
 
     public static UsdPrim Def(string typeName, string name) => new(typeName, name);
     public static UsdPrim Over(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Over);
     public static UsdPrim Class(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Class);
+
+    private static string SanitizeIdentifier(string name)
+    {
+        if (name.Length == 0) return "_unnamed";
+
+        // Fast path: already valid
+        var needsLeadingUnderscore = char.IsAsciiDigit(name[0]);
+        var anyInvalid = needsLeadingUnderscore;
+        if (!anyInvalid)
+        {
+            foreach (var c in name)
+            {
+                if (!char.IsAsciiLetterOrDigit(c) && c != '_')
+                {
+                    anyInvalid = true;
+                    break;
+                }
+            }
+        }
+        if (!anyInvalid) return name;
+
+        // Build sanitised string
+        var offset = needsLeadingUnderscore ? 1 : 0;
+        var buf = new char[name.Length + offset];
+        if (needsLeadingUnderscore) buf[0] = '_';
+
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            buf[i + offset] = char.IsAsciiLetterOrDigit(c) || c == '_' ? c : '_';
+        }
+
+        var result = new string(buf);
+        return result.Length == 0 ? "_unnamed" : result;
+    }
 }
 
 public sealed class UsdStage

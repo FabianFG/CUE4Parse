@@ -27,7 +27,7 @@ public static class MeshConverter
         try
         {
             var converted = new Skeleton(originalSkeleton);
-            bones = converted.RefSkeleton;
+            bones = converted.Bones;
             box = converted.Bounds;
         }
         catch (Exception e)

@@ -23,12 +23,15 @@ public enum ERelativeTransformSpace : int
 
 public class USceneComponent : UActorComponent
 {
+    public FPackageIndex? AttachParent;
     public FBoxSphereBounds? Bounds;
     public bool bIsCooked;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        AttachParent = GetOrDefault<FPackageIndex?>(nameof(AttachParent));
+
         if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
@@ -107,10 +110,7 @@ public class USceneComponent : UActorComponent
         }
     }
 
-    public USceneComponent? GetAttachParent()
-    {
-        return GetOrDefault<FPackageIndex?>("AttachParent")?.Load<USceneComponent>();
-    }
+    public USceneComponent? GetAttachParent() => AttachParent?.Load<USceneComponent>();
 
     public FTransform GetComponentTransform()
     {

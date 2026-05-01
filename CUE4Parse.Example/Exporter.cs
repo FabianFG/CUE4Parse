@@ -139,11 +139,11 @@ public static class Exporter
                         {
                             Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
 
-                            var exporter = new CUE4Parse_Conversion.Exporter(pointer.Object.Value, options);
-                            if (exporter.TryWriteToDir(new DirectoryInfo(_exportDirectory), out _, out var filePath))
-                            {
-                                WriteToLog(folder, Path.GetFileName(filePath), ref exportCount);
-                            }
+                            // var exporter = new CUE4Parse_Conversion.Exporter(pointer.Object.Value, options);
+                            // if (exporter.TryWriteToDir(new DirectoryInfo(_exportDirectory), out _, out var filePath))
+                            // {
+                            //     WriteToLog(folder, Path.GetFileName(filePath), ref exportCount);
+                            // }
                             break;
                         }
                     }

@@ -31,7 +31,7 @@ public class ActorXMesh
     public ActorXMesh(Skeleton skeleton, ExporterOptions options) : this(options)
     {
         ExportSkeletalSockets(skeleton);
-        ExportSkeletonData(skeleton.RefSkeleton);
+        ExportSkeletonData(skeleton.Bones);
     }
 
     public ActorXMesh(StaticMesh mesh, ExporterOptions options, int lodIndex = -1) : this(options)
@@ -51,7 +51,7 @@ public class ActorXMesh
         ExportCommonMeshLod(mesh, lodIndex);
 
         var additionalBones = ExportSkeletalSockets(mesh);
-        ExportSkeletonData([..mesh.RefSkeleton, ..additionalBones]);
+        ExportSkeletonData([..mesh.Bones, ..additionalBones]);
     }
 
     public void Save(FArchiveWriter archive)
@@ -380,9 +380,9 @@ public class ActorXMesh
                     if (socket is null) continue;
 
                     var targetBoneIdx = -1;
-                    for (var j = 0; j < skeleton.RefSkeleton.Length; j++)
+                    for (var j = 0; j < skeleton.Bones.Length; j++)
                     {
-                        if (skeleton.RefSkeleton[j].Name.Equals(socket.BoneName.Text, StringComparison.OrdinalIgnoreCase))
+                        if (skeleton.Bones[j].Name.Equals(socket.BoneName.Text, StringComparison.OrdinalIgnoreCase))
                         {
                             targetBoneIdx = j;
                             break;
