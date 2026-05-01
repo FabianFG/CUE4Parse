@@ -165,6 +165,11 @@ public partial class WwiseProvider
             if (!eventData.HasValue)
                 continue;
 
+            foreach (var media in eventData.Value.Media)
+            {
+                CacheMediaCookedData(media);
+            }
+
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
                 CacheSoundBankCookedData(soundBank);
@@ -258,6 +263,15 @@ public partial class WwiseProvider
         {
             CacheWwiseFile(bulkPackagedSoundBank);
             _wwiseLoadedSoundBanks.Add(bulkPackagedSoundBank.Header.SoundBankId);
+        }
+    }
+
+    private void CacheMediaCookedData(FWwiseMediaCookedData media)
+    {
+        var bulkPackagedMedia = media.PackagedFile?.BulkData;
+        if (bulkPackagedMedia?.WemFile?.IsValid is true)
+        {
+            _wwiseEncodedMedia[media.MediaId.ToString()] = bulkPackagedMedia.WemFile;
         }
     }
 
