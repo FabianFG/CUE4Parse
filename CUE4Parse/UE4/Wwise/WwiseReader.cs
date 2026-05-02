@@ -25,7 +25,6 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 public class WwiseReader
 {
     public string Path;
-    //private uint Version => Header.Version;
     private readonly WwiseDataSource? _source;
 
     public AkBankHeader Header { get; }
@@ -40,8 +39,8 @@ public class WwiseReader
     public GlobalSettings? GlobalSettings { get; }
     public CAkEnvironmentsMgr? EnvSettings { get; }
     public FDeferredByteData? WemFile { get; }
-    public FDeferredByteData? PluginData { get; }
     public FDeferredByteData? MidiData { get; }
+    public bool IsPlugin { get; }
     public long LoadedSize { get; }
     public long TotalSize { get; }
 
@@ -168,10 +167,15 @@ public class WwiseReader
                     Platform = Ar.Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : Ar.ReadStzString();
                     break;
                 case EChunkID.PLUGIN:
+                    // Plugin container holds audio data encoded specifically for a given Wwise plugin
+                    // For example: ADM3 codec (Crankcase Audio), AK Convolution Reverb impulse response (currently not supported https://github.com/vgmstream/vgmstream/issues/1638)
                     Ar.Position -= 8;
-                    Log.Information($"Wwise plugin section at {Ar.Position} with length {sectionLength}"); // Recently added, I need more info, it's essentially a .wem file in plugin container
-                    PluginData = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
-                    LoadedSize += PluginData.LoadedSize;
+#if DEBUG
+                    Log.Debug($"Found Wwise plugin section with length {sectionLength}");
+#endif
+                    WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
+                    LoadedSize += WemFile.LoadedSize;
+                    IsPlugin = true;
                     break;
                 case EChunkID.MIDI:
                     Ar.Position -= 8;

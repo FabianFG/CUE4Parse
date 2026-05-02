@@ -189,26 +189,33 @@ public partial class WwiseProvider
             if (!eventData.HasValue)
                 continue;
 
-            foreach (var soundBank in eventData.Value.SoundBanks)
-            {
-                ProcessSoundBankCookedData(ownerDirectory, eventData, results);
-            }
-
+            // Track what's in media first so we don't resolve the same audio twice via event resolution
+            var visitedMedia = new HashSet<uint>();
             foreach (var media in eventData.Value.Media)
             {
+                visitedMedia.Add(media.MediaId);
                 ProcessMediaCookedData(ownerDirectory, media, languageData, results);
+            }
+
+            foreach (var leaf in eventData.Value.SwitchContainerLeaves)
+            {
+                foreach (var media in leaf.Media)
+                {
+                    visitedMedia.Add(media.MediaId);
+                    ProcessMediaCookedData(ownerDirectory, media, languageData, results);
+                }
+            }
+
+            foreach (var soundBank in eventData.Value.SoundBanks)
+            {
+                ProcessSoundBankCookedData(ownerDirectory, eventData, results, visitedMedia);
             }
 
             foreach (var leaf in eventData.Value.SwitchContainerLeaves)
             {
                 foreach (var soundBank in leaf.SoundBanks)
                 {
-                    ProcessSoundBankCookedData(ownerDirectory, eventData, results);
-                }
-
-                foreach (var media in leaf.Media)
-                {
-                    ProcessMediaCookedData(ownerDirectory, media, languageData, results);
+                    ProcessSoundBankCookedData(ownerDirectory, eventData, results, visitedMedia);
                 }
             }
         }
@@ -275,8 +282,8 @@ public partial class WwiseProvider
         }
     }
 
-    private void ProcessSoundBankCookedData(string ownerDirectory, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results) =>
-        LoopThroughEvent(eventData!.Value.EventId, results, ownerDirectory, eventData.Value.DebugName.Text);
+    private void ProcessSoundBankCookedData(string ownerDirectory, FWwiseEventCookedData? eventData, List<WwiseExtractedSound> results, HashSet<uint> visitedMedia) =>
+        LoopThroughEvent(eventData!.Value.EventId, results, ownerDirectory, visitedMedia, eventData.Value.DebugName.Text);
 
     private WwiseReader? LoadSoundBankById(uint soundBankId, bool returnBank = false)
     {
@@ -316,10 +323,15 @@ public partial class WwiseProvider
         return null;
     }
 
-    private void LoopThroughEvent(uint eventId, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
+    private void LoopThroughEvent(uint eventId, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null) => LoopThroughEvent(eventId, results, ownerDirectory, [], debugName);
+    private void LoopThroughEvent(uint eventId, List<WwiseExtractedSound> results, string ownerDirectory, HashSet<uint> visitedMedia, string? debugName = null)
     {
         _visitedHierarchies.Clear();
         _visitedWemIds.Clear();
+
+        foreach (var id in visitedMedia)
+            _visitedWemIds.Add(id);
+
         List<CAkActionSetSwitch> _switchStates = [];
         TraverseAndSave(eventId);
 
@@ -465,7 +477,7 @@ public partial class WwiseProvider
             }
             else
             {
-                Log.Error("Failed to load data for '{WemId}' wem loose file during event resolution", wemId);
+                Log.Error("Failed to load data for '{WemId}' wem file during event resolution", wemId);
             }
         }
     }
