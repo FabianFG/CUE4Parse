@@ -99,6 +99,11 @@ public class UsdWorldFormat : IWorldExportFormat
                 break;
         }
 
+        if (component is SkeletalMeshComponentDto { AnimationData: { } animationData })
+        {
+            // TODO
+        }
+
         prim.Add(transform.ToTransformAttributes());
         return prim;
     }

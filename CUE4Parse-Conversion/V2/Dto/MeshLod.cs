@@ -395,8 +395,18 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
 
                 normal /= compTransform.Scale3D;
                 normal.Normalize();
-                FVector4.AsFVector(ref tangentX) /= compTransform.Scale3D;
-                FVector4.AsFVector(ref tangentX).Normalize();
+                if (normal.ContainsNaN())
+                {
+                    normal = FVector.UpVector;
+                }
+
+                ref var tangent = ref FVector4.AsFVector(ref tangentX);
+                tangent /= compTransform.Scale3D;
+                tangent.Normalize();
+                if (tangent.ContainsNaN())
+                {
+                    tangent = FVector.RightVector;
+                }
 
                 vertices[baseVertIndex + vertIndex] = new MeshVertex(position, normal, tangentX, textureUv);
                 extraUvs[0][baseVertIndex + vertIndex] = (textureUv - new FMeshUVFloat(minX, minY)) * uvScale;
