@@ -60,7 +60,7 @@ public static class Exporter2
             MaxDegreeOfParallelism = Environment.ProcessorCount
         };
 
-        const string Map = "Bonsai";
+        const string Map = "Canyon";
         var world = provider.LoadPackageObject<UWorld>($"ShooterGame/Content/Maps/{Map}/{Map}.{Map}");
         session.Add(world);
 

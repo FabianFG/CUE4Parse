@@ -14,7 +14,7 @@ public class UsdWorldFormat : IWorldExportFormat
     {
         var lookup = new MeshLookup(meshes);
 
-        var worldPrim = UsdPrim.Def("Xform", dto.Name);
+        var worldPrim = UsdPrim.Def("Scope", dto.Name);
         foreach (var actor in dto.Actors)
         {
             worldPrim.Add(BuildActorPrim(actor, lookup));
@@ -32,7 +32,10 @@ public class UsdWorldFormat : IWorldExportFormat
     private UsdPrim BuildActorPrim(ActorDto actor, MeshLookup lookup)
     {
         var actorPrim = UsdPrim.Def("Scope", actor.Name);
-        actorPrim.AddPrimvar("token", "visibility", UsdValue.Token(actor.IsVisible ? "inherited" : "invisible"));
+        if (!actor.IsVisible)
+        {
+            actorPrim.AddPrimvar("token", "visibility", UsdValue.Token("invisible"));
+        }
 
         if (actor.RootComponent is { } root)
         {
@@ -51,49 +54,59 @@ public class UsdWorldFormat : IWorldExportFormat
 
     private UsdPrim BuildComponentPrim(SceneComponentDto component, MeshLookup lookup)
     {
-        string primName;
-        UsdReference? reference = null;
-        bool visible = true;
-
-        switch (component)
-        {
-            case InstancedStaticMeshComponentDto:
-                primName = component.Name;
-                break;
-            case StaticMeshComponentDto sm when lookup.TryGet(sm.StaticMesh, out var smPath):
-                primName = sm.StaticMesh.Name;
-                visible = sm.IsVisible;
-                reference = new UsdReference(smPath);
-                break;
-            case SkeletalMeshComponentDto sk when lookup.TryGet(sk.SkinnedMesh, out var skPath):
-                primName = sk.SkinnedMesh.Name;
-                visible = sk.IsVisible;
-                reference = new UsdReference(skPath);
-                break;
-            default:
-                primName = component.Name;
-                break;
-        }
-
         var prim = UsdPrim.Def("Xform", component.Name);
-        prim.AddPrimvar("token", "visibility", UsdValue.Token(visible ? "inherited" : "invisible"));
         prim.Add(component.Transform.ToTransformAttributes());
+        if (component is not MeshComponentDto mesh) return prim;
 
-        if (reference is { } usdReference)
+        if (!mesh.IsVisible)
         {
-            prim.SetReference(new UsdReferenceList([usdReference]));
+            prim.AddPrimvar("token", "visibility", UsdValue.Token("invisible"));
         }
 
-        if (component is InstancedStaticMeshComponentDto { Transforms.Length: > 0 } ism)
+        if (mesh is InstancedStaticMeshComponentDto { Transforms.Length: > 0 } ism)
         {
             prim.Add(BuildPointInstancer(ism, lookup));
+            return prim;
         }
-        else if (reference == null && component is MeshComponentDto)
+
+        if (lookup.TryGet(mesh.MeshPtr, out var path))
         {
-            prim.Add(CreateDummyCube(primName));
+            ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name);
+            prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
+        }
+        else
+        {
+            prim.Add(CreateDummyCube(mesh.MeshPtr.Name));
         }
 
         return prim;
+    }
+
+    private void ApplyMaterialOverrides(UsdPrim componentPrim, MeshComponentDto component, string meshAssetName)
+    {
+        var overrides = component.OverrideMaterials;
+        if (overrides is not { Length: > 0 } || !overrides.Any(m => m is { IsNull: false }))
+            return;
+
+        var materialsScope = UsdPrim.Def("Scope", "OverrideMaterials");
+        componentPrim.Add(materialsScope);
+
+        var meshOver = UsdPrim.Over("Mesh", meshAssetName);
+        componentPrim.Add(meshOver);
+
+        for (var i = 0; i < overrides.Length; i++)
+        {
+            var mat = overrides[i];
+            if (mat is null || mat.IsNull) continue;
+
+            var matPrim = UsdPrim.Def("Material", mat.Name);
+            materialsScope.Add(matPrim);
+
+            var sectionOver = UsdPrim.Over("GeomSubset", $"Section_{i}");
+            sectionOver.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("MaterialBindingAPI")));
+            sectionOver.Add(new UsdRelationship("material:binding", matPrim));
+            meshOver.Add(sectionOver);
+        }
     }
 
     private void BuildChildrenComponent(SceneComponentDto component, UsdPrim parentPrim, MeshLookup lookup)
@@ -120,15 +133,15 @@ public class UsdWorldFormat : IWorldExportFormat
 
         // Build the prototype prim
         UsdPrim prototypePrim;
-        if (lookup.TryGet(ism.StaticMesh, out var meshPath))
+        if (lookup.TryGet(ism.MeshPtr, out var meshPath))
         {
-            // Reference the shared mesh file – same asset, zero duplication
-            prototypePrim = new UsdPrim("Xform", ism.StaticMesh.Name);
+            prototypePrim = new UsdPrim("Xform", ism.MeshPtr.Name);
+            ApplyMaterialOverrides(prototypePrim, ism, ism.MeshPtr.Name);
             prototypePrim.SetReference(new UsdReferenceList([new UsdReference(meshPath)]));
         }
         else
         {
-            prototypePrim = CreateDummyCube(ism.StaticMesh.Name.Length > 0 ? ism.StaticMesh.Name : "Prototype");
+            prototypePrim = CreateDummyCube(ism.MeshPtr.Name);
         }
 
         prototypes.Add(prototypePrim);

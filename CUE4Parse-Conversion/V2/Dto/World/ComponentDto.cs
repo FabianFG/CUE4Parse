@@ -82,6 +82,7 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
 
 public abstract class MeshComponentDto : PrimitiveComponentDto
 {
+    public abstract FPackageIndex MeshPtr { get; }
     public readonly FPackageIndex?[] OverrideMaterials;
 
     protected MeshComponentDto(UMeshComponent component, ActorDto owner) : base(component, owner)
@@ -92,11 +93,11 @@ public abstract class MeshComponentDto : PrimitiveComponentDto
 
 public class StaticMeshComponentDto : MeshComponentDto
 {
-    public readonly FPackageIndex StaticMesh;
+    public override FPackageIndex MeshPtr { get; }
 
     public StaticMeshComponentDto(UStaticMeshComponent component, ActorDto owner) : base(component, owner)
     {
-        StaticMesh = component.Get<FPackageIndex>(nameof(StaticMesh));
+        MeshPtr = component.Get<FPackageIndex>(nameof(StaticMesh));
     }
 }
 
@@ -117,11 +118,11 @@ public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
 
 public abstract class SkinnedMeshComponentDto : MeshComponentDto
 {
-    public readonly FPackageIndex SkinnedMesh;
+    public override FPackageIndex MeshPtr { get; }
 
     protected SkinnedMeshComponentDto(USkinnedMeshComponent component, ActorDto owner) : base(component, owner)
     {
-        SkinnedMesh = component.GetOrDefault<FPackageIndex?>("SkeletalMesh") ?? component.Get<FPackageIndex>("SkinnedAsset");
+        MeshPtr = component.GetOrDefault<FPackageIndex?>("SkeletalMesh") ?? component.Get<FPackageIndex>("SkinnedAsset");
     }
 }
 

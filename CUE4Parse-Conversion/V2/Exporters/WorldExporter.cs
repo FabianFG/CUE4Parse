@@ -80,15 +80,11 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
 
     private void CollectFromComponent(SceneComponentDto? comp, HashSet<FPackageIndex> refs)
     {
-        if (comp is null) return;
-
         switch (comp)
         {
-            case StaticMeshComponentDto { StaticMesh.IsNull: false } sm:
-                refs.Add(sm.StaticMesh);
-                break;
-            case SkinnedMeshComponentDto { SkinnedMesh.IsNull: false } sk:
-                refs.Add(sk.SkinnedMesh);
+            case null: return;
+            case MeshComponentDto { MeshPtr: { IsNull: false } mesh }:
+                refs.Add(mesh);
                 break;
         }
 
@@ -98,10 +94,10 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
         }
     }
 
-    private IWorldExportFormat GetWorldFormat(EWorldFormat fmt) => fmt switch
+    private IWorldExportFormat GetWorldFormat(EWorldFormat format) => format switch
     {
         EWorldFormat.USD => new UsdWorldFormat(),
         EWorldFormat.UEFormat => new UEFormatWorldFormat(),
-        _ => throw new ArgumentOutOfRangeException(nameof(fmt), fmt, "Unsupported world format")
+        _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported world format")
     };
 }

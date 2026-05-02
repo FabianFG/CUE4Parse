@@ -171,7 +171,7 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
     public List<UsdPrim> Children { get; } = [];
     public UsdReferenceList? References { get; private set; }
 
-    private Dictionary<string, int>? _childNameCounts;
+    private HashSet<string>? _takenChildNames;
 
     public string GetPath() => $"{Parent?.GetPath()}/{EffectiveName}";
 
@@ -183,19 +183,17 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
 
     public UsdPrim Add(params UsdPrim[] children)
     {
-        _childNameCounts ??= new Dictionary<string, int>(children.Length, StringComparer.Ordinal);
+        _takenChildNames ??= new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var child in children)
         {
-            if (_childNameCounts.TryGetValue(child.Name, out var count))
+            if (!_takenChildNames.Add(child.Name))
             {
-                var newCount = count + 1;
-                _childNameCounts[child.Name] = newCount;
-                child._disambiguatedName = $"{child.Name}_{newCount}";
-            }
-            else
-            {
-                _childNameCounts[child.Name] = 0;
+                var counter = 1;
+                string candidate;
+                do { candidate = $"{child.Name}_{counter++}"; }
+                while (!_takenChildNames.Add(candidate));
+                child._disambiguatedName = candidate;
             }
 
             child.Parent = this;
