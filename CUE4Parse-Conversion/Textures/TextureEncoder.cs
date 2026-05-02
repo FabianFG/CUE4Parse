@@ -12,7 +12,7 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureEncoder
 {
-    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext)
+    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality = 100)
     {
         if (saveHdrAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
         {
@@ -26,14 +26,21 @@ public static class TextureEncoder
             {
                 ext = "png";
                 using var bmp = bitmap.ToSkBitmap();
-                using var data = bmp.Encode(SKEncodedImageFormat.Png, 100);
+                using var data = bmp.Encode(SKEncodedImageFormat.Png, quality);
                 return data.ToArray();
             }
             case ETextureFormat.Jpeg:
             {
                 ext = "jpg";
                 using var bmp = bitmap.ToSkBitmap();
-                using var data = bmp.Encode(SKEncodedImageFormat.Jpeg, 100);
+                using var data = bmp.Encode(SKEncodedImageFormat.Jpeg, quality);
+                return data.ToArray();
+            }
+            case ETextureFormat.Webp:
+            {
+                ext = "webp";
+                using var bmp = bitmap.ToSkBitmap();
+                using var data = bmp.Encode(SKEncodedImageFormat.Webp, quality);
                 return data.ToArray();
             }
             case ETextureFormat.Tga:

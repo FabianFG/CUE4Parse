@@ -5,12 +5,14 @@ namespace CUE4Parse_Conversion.Textures
     public enum ETextureFormat
     {
         [Description("PNG")]
-        Png,
+        Png = 0,
         [Description("JPEG")]
-        Jpeg,
+        Jpeg = 1,
+        [Description("WebP")]
+        Webp = 4,
         [Description("TGA")]
-        Tga,
+        Tga = 2,
         [Description("DDS (Not Implemented)")]
-        Dds
+        Dds = 3
     }
 }
