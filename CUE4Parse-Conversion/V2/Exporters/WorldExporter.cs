@@ -29,11 +29,12 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
             Session.Add(levelWorld);
         }
 
-        var ptrs = new HashSet<FPackageIndex>();
-        CollectMeshRefs(world.Actors, ptrs);
+        var worlds = new Dictionary<string, string>();
+        var meshRefs = new HashSet<FPackageIndex>();
+        CollectFromActor(world.Actors, meshRefs, worlds);
 
         var meshes = new Dictionary<FPackageIndex, string>();
-        foreach (var ptr in ptrs)
+        foreach (var ptr in meshRefs)
         {
             var obj = ptr.Load<UObject>();
             if (obj is null) continue;
@@ -49,7 +50,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
             }
         }
 
-        var file = format.Build(world, meshes, subLayers);
+        var file = format.Build(world, meshes, subLayers, worlds.Count > 0 ? worlds : null);
         var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
         return [result];
     }
@@ -57,40 +58,56 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
     private string GetRelativeAssetPath(UObject obj)
     {
         var rawPath = obj.Owner?.Name ?? obj.GetPathName();
-        var packagePath = (obj.Owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.').Replace('\\', '/');
-        var worldDir = PackageDirectory.Replace('\\', '/');
+        var packagePath = (obj.Owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.');
 
-        var rel = Path.GetRelativePath(worldDir.Replace('/',  Path.DirectorySeparatorChar), packagePath.Replace('/', Path.DirectorySeparatorChar)).Replace(Path.DirectorySeparatorChar, '/');
-        if (!rel.StartsWith("./") && !rel.StartsWith("../"))
+        // Mirror GetSavePath: append ObjectName when the leaf differs (e.g. sub-object exports)
+        if (!packagePath.SubstringAfterLast('/').Equals(obj.Name, StringComparison.OrdinalIgnoreCase))
         {
-            rel = "./" + rel;
+            packagePath += '/' + obj.Name;
         }
 
-        return rel + ".usda";
+        var sep = Path.DirectorySeparatorChar;
+        var rel = Path.GetRelativePath(
+            PackageDirectory.Replace('/', sep),
+            packagePath.Replace('/', sep)
+        ).Replace(sep, '/');
+
+        return (rel.StartsWith("./") || rel.StartsWith("../") ? rel : "./" + rel) + ".usda";
     }
 
-    private void CollectMeshRefs(IEnumerable<ActorDto> actors, HashSet<FPackageIndex> refs)
+    private void CollectFromActor(IEnumerable<ActorDto> actors, HashSet<FPackageIndex> meshRefs, Dictionary<string, string> worlds)
     {
         foreach (var actor in actors)
         {
-            CollectFromComponent(actor.RootComponent, refs);
-            CollectMeshRefs(actor.ChildActors, refs);
+            if (actor.AdditionalWorlds is { Count: > 0 })
+            {
+                foreach (var w in actor.AdditionalWorlds)
+                {
+                    if (worlds.TryAdd(w.Name, GetRelativeAssetPath(w)))
+                    {
+                        Session.Add(w);
+                    }
+                }
+            }
+
+            CollectFromComponent(actor.RootComponent, meshRefs);
+            CollectFromActor(actor.ChildActors, meshRefs, worlds);
         }
     }
 
-    private void CollectFromComponent(SceneComponentDto? comp, HashSet<FPackageIndex> refs)
+    private void CollectFromComponent(SceneComponentDto? comp, HashSet<FPackageIndex> meshRefs)
     {
         switch (comp)
         {
             case null: return;
             case MeshComponentDto { MeshPtr: { IsNull: false } mesh }:
-                refs.Add(mesh);
+                meshRefs.Add(mesh);
                 break;
         }
 
         foreach (var child in comp.Children)
         {
-            CollectFromComponent(child, refs);
+            CollectFromComponent(child, meshRefs);
         }
     }
 

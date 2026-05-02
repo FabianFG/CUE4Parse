@@ -10,14 +10,14 @@ public class UsdWorldFormat : IWorldExportFormat
 {
     public string DisplayName => "USD World (.usda)";
 
-    public ExportFile Build(WorldDto dto, IReadOnlyDictionary<FPackageIndex, string>? meshes = null, IReadOnlyList<string>? subLayers = null)
+    public ExportFile Build(WorldDto dto, IReadOnlyDictionary<FPackageIndex, string>? meshes = null, IReadOnlyList<string>? subLayers = null, IReadOnlyDictionary<string, string>? worlds = null)
     {
         var lookup = new MeshLookup(meshes);
 
         var worldPrim = UsdPrim.Def("Scope", dto.Name);
         foreach (var actor in dto.Actors)
         {
-            worldPrim.Add(BuildActorPrim(actor, lookup));
+            worldPrim.Add(BuildActorPrim(actor, lookup, worlds));
         }
 
         var stage = new UsdStage(worldPrim);
@@ -29,7 +29,7 @@ public class UsdWorldFormat : IWorldExportFormat
         return new ExportFile("usda", stage.SerializeToBinary());
     }
 
-    private UsdPrim BuildActorPrim(ActorDto actor, MeshLookup lookup)
+    private UsdPrim BuildActorPrim(ActorDto actor, MeshLookup lookup, IReadOnlyDictionary<string, string>? worldPaths)
     {
         var actorPrim = UsdPrim.Def("Scope", actor.Name);
         if (!actor.IsVisible)
@@ -40,13 +40,25 @@ public class UsdWorldFormat : IWorldExportFormat
         if (actor.RootComponent is { } root)
         {
             var rootPrim = BuildComponentPrim(root, lookup);
-            BuildChildrenComponent(root, rootPrim, lookup);
+            BuildChildrenComponent(root, rootPrim, lookup, worldPaths);
+
+            if (actor.AdditionalWorlds is { Count: > 0 } additionalWorlds && worldPaths is not null)
+            {
+                foreach (var world in additionalWorlds)
+                {
+                    if (!worldPaths.TryGetValue(world.Name, out var worldPath)) continue;
+                    var worldRef = UsdPrim.Def("Xform", world.Name);
+                    worldRef.SetReference(new UsdReferenceList([new UsdReference(worldPath)]));
+                    rootPrim.Add(worldRef);
+                }
+            }
+
             actorPrim.Add(rootPrim);
         }
 
         foreach (var child in actor.ChildActors)
         {
-            actorPrim.Add(BuildActorPrim(child, lookup));
+            actorPrim.Add(BuildActorPrim(child, lookup, worldPaths));
         }
 
         return actorPrim;
@@ -109,19 +121,19 @@ public class UsdWorldFormat : IWorldExportFormat
         }
     }
 
-    private void BuildChildrenComponent(SceneComponentDto component, UsdPrim parentPrim, MeshLookup lookup)
+    private void BuildChildrenComponent(SceneComponentDto component, UsdPrim parentPrim, MeshLookup lookup, IReadOnlyDictionary<string, string>? worldPaths)
     {
         foreach (var child in component.Children)
         {
             // Cross-actor boundary → emit a full nested actor Scope
             if (child.Owner != component.Owner && child.Owner.RootComponent == child)
             {
-                parentPrim.Add(BuildActorPrim(child.Owner, lookup));
+                parentPrim.Add(BuildActorPrim(child.Owner, lookup, worldPaths));
                 continue;
             }
 
             var childPrim = BuildComponentPrim(child, lookup);
-            BuildChildrenComponent(child, childPrim, lookup);
+            BuildChildrenComponent(child, childPrim, lookup, worldPaths);
             parentPrim.Add(childPrim);
         }
     }

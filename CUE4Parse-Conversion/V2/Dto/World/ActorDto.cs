@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Dto.World;
@@ -10,6 +11,7 @@ public class ActorDto : ObjectDto
 {
     public readonly SceneComponentDto? RootComponent;
     public readonly List<ActorDto> ChildActors = [];
+    public readonly List<UWorld>? AdditionalWorlds;
     public readonly bool IsVisible = true;
 
     internal ActorDto(UObject actor, WorldParseContext ctx) : base(actor, actor is AActor a && !string.IsNullOrWhiteSpace(a.ActorLabel) ? a.ActorLabel : null)
@@ -26,6 +28,16 @@ public class ActorDto : ObjectDto
         if (actor.TryGetValue(out bool hidden, "bHidden"))
         {
             IsVisible = !hidden;
+        }
+
+        if (actor.TryGetValue(out FSoftObjectPath[] additionalWorlds, "AdditionalWorlds"))
+        {
+            AdditionalWorlds = [];
+            foreach (var additionalWorld in additionalWorlds)
+            {
+                if (!additionalWorld.TryLoad<UWorld>(out var w)) continue;
+                AdditionalWorlds.Add(w);
+            }
         }
     }
 
