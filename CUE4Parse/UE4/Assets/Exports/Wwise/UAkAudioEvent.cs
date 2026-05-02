@@ -33,19 +33,19 @@ public class UAkAudioEvent : UAkAudioType
 
         if (EventCookedData is null) return;
 
-        writer.WritePropertyName("EventCookedData");
+        writer.WritePropertyName(nameof(EventCookedData));
         serializer.Serialize(writer, EventCookedData);
 
-        writer.WritePropertyName("MaximumDuration");
+        writer.WritePropertyName(nameof(MaximumDuration));
         writer.WriteValue(MaximumDuration);
 
-        writer.WritePropertyName("MinimumDuration");
+        writer.WritePropertyName(nameof(MinimumDuration));
         writer.WriteValue(MinimumDuration);
 
-        writer.WritePropertyName("IsInfinite");
+        writer.WritePropertyName(nameof(IsInfinite));
         writer.WriteValue(IsInfinite);
 
-        writer.WritePropertyName("MaxAttenuationRadius");
+        writer.WritePropertyName(nameof(MaxAttenuationRadius));
         writer.WriteValue(MaxAttenuationRadius);
     }
 }

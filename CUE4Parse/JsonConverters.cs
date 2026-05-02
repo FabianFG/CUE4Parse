@@ -1360,6 +1360,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
             writer.WriteValue(true);
         }
 
+        if (value.IsPlugin)
+        {
+            writer.WritePropertyName(nameof(value.IsPlugin));
+            writer.WriteValue(true);
+        }
+
         writer.WriteEndObject();
     }
 
