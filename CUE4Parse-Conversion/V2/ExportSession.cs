@@ -8,6 +8,7 @@ using CUE4Parse_Conversion.V2.Exporters;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
@@ -51,6 +52,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
             UDNAAsset dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
+            ULandscapeComponent landscape => Add(new LandscapeMeshExporter2(landscape)),
             USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
             _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
         };

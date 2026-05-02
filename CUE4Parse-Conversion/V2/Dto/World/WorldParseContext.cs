@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
@@ -47,17 +49,17 @@ internal sealed class WorldParseContext
                     // USplineMeshComponent spline => new SplineMeshComponentDto(spline),
                     UStaticMeshComponent sm => new StaticMeshComponentDto(sm, owner),
                     USkeletalMeshComponent sk => new SkeletalMeshComponentDto(sk, owner),
-                    // ULandscapeComponent landscape => new LandscapeMeshComponent(landscape),
+                    ULandscapeComponent landscape => new LandscapeMeshComponentDto(landscape, owner),
                     // ULandscapeSplinesComponent splines => new LandscapeSplinesComponent(splines),
                     // UBillboardComponent billboard => new BillboardComponent(billboard),
                     // UArrowComponent arrow => new ArrowComponent(arrow),
-                    // UBrushComponent brushComponent when brushComponent.GetBrush() is { } brush => new BrushComponent(brushComponent, brush),
-                    // UShapeComponent shape when shape.Outer?.Object?.Value is not ALevelBounds => shape switch // exclude level bounds because their scale looks weird and overall they provide little value
+                    // UBrushComponent brush => new BrushComponentDto(brush, owner),
+                    // UShapeComponent shape when shape.Outer?.Object?.Value is not ALevelBounds => shape switch
                     // {
-                    //     UBoxComponent box => new BoxComponent(box),
-                    //     USphereComponent sphere => new SphereComponent(sphere),
-                    //     UCapsuleComponent capsule => new CapsuleComponent(capsule),
-                    //     _ => new SpatialComponent(shape)
+                    //     UBoxComponent box => new BoxComponentDto(box, owner),
+                    //     USphereComponent sphere => new SphereComponentDto(sphere, owner),
+                    //     UCapsuleComponent capsule => new CapsuleComponentDto(capsule, owner),
+                    //     _ => new SceneComponentDto(shape, owner)
                     // },
                     // ULightComponentBase light => light switch
                     // {

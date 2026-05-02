@@ -20,7 +20,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
     protected override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
     {
         var format = GetWorldFormat(EWorldFormat.USD);
-        var world = new WorldDto(export);
+        using var world = new WorldDto(export);
 
         var subLayers = new List<string>();
         foreach (var levelWorld in world.StreamingLevels)
@@ -102,6 +102,16 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
             case null: return;
             case MeshComponentDto { MeshPtr: { IsNull: false } mesh }:
                 meshRefs.Add(mesh);
+                break;
+            case LandscapeMeshComponentDto landscape:
+                if (LandscapeMeshComponentDto.PerComponentExport)
+                {
+                    Session.Add(landscape.Component);
+                }
+                else if (landscape.OuterProxy is { } proxy)
+                {
+                    Session.Add(proxy);
+                }
                 break;
         }
 

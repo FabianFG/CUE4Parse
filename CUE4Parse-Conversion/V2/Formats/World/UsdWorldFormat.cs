@@ -2,6 +2,7 @@
 using System.Linq;
 using CUE4Parse_Conversion.USD;
 using CUE4Parse_Conversion.V2.Dto.World;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Formats.World;
@@ -67,38 +68,44 @@ public class UsdWorldFormat : IWorldExportFormat
     private UsdPrim BuildComponentPrim(SceneComponentDto component, MeshLookup lookup)
     {
         var prim = UsdPrim.Def("Xform", component.Name);
-        prim.Add(component.Transform.ToTransformAttributes());
-        if (component is not MeshComponentDto mesh) return prim;
 
-        if (!mesh.IsVisible)
+        if (component is PrimitiveComponentDto { IsVisible: false })
         {
             prim.AddPrimvar("token", "visibility", UsdValue.Token("invisible"));
         }
 
-        if (mesh is InstancedStaticMeshComponentDto { Transforms.Length: > 0 } ism)
+        var transform = component.Transform;
+        switch (component)
         {
-            prim.Add(BuildPointInstancer(ism, lookup));
-            return prim;
+            case InstancedStaticMeshComponentDto { Transforms.Length: > 0 } ism:
+                prim.Add(BuildPointInstancer(ism, lookup));
+                break;
+            case MeshComponentDto mesh when lookup.TryGet(mesh.MeshPtr, out var path):
+                ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name);
+                prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
+                break;
+            case MeshComponentDto mesh:
+                prim.Add(CreateDummyCube(mesh.MeshPtr.Name));
+                break;
+            case LandscapeMeshComponentDto landscape when LandscapeMeshComponentDto.PerComponentExport:
+                transform.Translation = FVector.ZeroVector; // the exporter is gonna offset the mesh by SectionBaseX/Y
+                prim.SetReference(new UsdReferenceList([new UsdReference(landscape.Ref)]));
+                break;
+            case BrushComponentDto brush:
+                prim.Add(brush.ToMeshPrim());
+                break;
+            case ShapeComponentDto shape:
+                prim.Add(shape.ToShapePrim());
+                break;
         }
 
-        if (lookup.TryGet(mesh.MeshPtr, out var path))
-        {
-            ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name);
-            prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
-        }
-        else
-        {
-            prim.Add(CreateDummyCube(mesh.MeshPtr.Name));
-        }
-
+        prim.Add(transform.ToTransformAttributes());
         return prim;
     }
 
     private void ApplyMaterialOverrides(UsdPrim componentPrim, MeshComponentDto component, string meshAssetName)
     {
-        var overrides = component.OverrideMaterials;
-        if (overrides is not { Length: > 0 } || !overrides.Any(m => m is { IsNull: false }))
-            return;
+        if (component.OverrideMaterials is not { Length: > 0 } overrides) return;
 
         var materialsScope = UsdPrim.Def("Scope", "OverrideMaterials");
         componentPrim.Add(materialsScope);
@@ -112,6 +119,10 @@ public class UsdWorldFormat : IWorldExportFormat
             if (mat is null || mat.IsNull) continue;
 
             var matPrim = UsdPrim.Def("Material", mat.Name);
+            // if (define)
+            // {
+            //     // TODO: define the prim
+            // }
             materialsScope.Add(matPrim);
 
             var sectionOver = UsdPrim.Over("GeomSubset", $"Section_{i}");
@@ -190,33 +201,7 @@ public class UsdWorldFormat : IWorldExportFormat
 
     private UsdPrim CreateDummyCube(string name = "Cube")
     {
-        var mesh = UsdPrim.Def("Mesh", name);
-        mesh.Add(UsdAttribute.Uniform("token", "subdivisionScheme", "none"));
-        mesh.Add(UsdAttribute.Uniform("bool",  "doubleSided",       false));
-
-        mesh.Add(new UsdAttribute("point3f[]", "points", UsdValue.Array(
-            UsdValue.Tuple(-50f, -50f, -50f), UsdValue.Tuple( 50f, -50f, -50f),
-            UsdValue.Tuple( 50f,  50f, -50f), UsdValue.Tuple(-50f,  50f, -50f),
-            UsdValue.Tuple(-50f, -50f,  50f), UsdValue.Tuple( 50f, -50f,  50f),
-            UsdValue.Tuple( 50f,  50f,  50f), UsdValue.Tuple(-50f,  50f,  50f))));
-
-        mesh.Add(new UsdAttribute("int[]", "faceVertexCounts",
-            UsdValue.Array(Enumerable.Repeat(3, 12))));
-
-        mesh.Add(new UsdAttribute("int[]", "faceVertexIndices", UsdValue.Array(
-            UsdValue.Int(0), UsdValue.Int(2), UsdValue.Int(1),
-            UsdValue.Int(0), UsdValue.Int(3), UsdValue.Int(2),
-            UsdValue.Int(4), UsdValue.Int(5), UsdValue.Int(6),
-            UsdValue.Int(4), UsdValue.Int(6), UsdValue.Int(7),
-            UsdValue.Int(0), UsdValue.Int(1), UsdValue.Int(5),
-            UsdValue.Int(0), UsdValue.Int(5), UsdValue.Int(4),
-            UsdValue.Int(2), UsdValue.Int(3), UsdValue.Int(7),
-            UsdValue.Int(2), UsdValue.Int(7), UsdValue.Int(6),
-            UsdValue.Int(0), UsdValue.Int(4), UsdValue.Int(7),
-            UsdValue.Int(0), UsdValue.Int(7), UsdValue.Int(3),
-            UsdValue.Int(1), UsdValue.Int(2), UsdValue.Int(6),
-            UsdValue.Int(1), UsdValue.Int(6), UsdValue.Int(5))));
-
+        var mesh = UsdPrim.Def("Cube", name);
         return mesh;
     }
 

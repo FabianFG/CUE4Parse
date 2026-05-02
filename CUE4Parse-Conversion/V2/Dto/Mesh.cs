@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.Landscape;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -26,6 +27,11 @@ public abstract class Mesh<TVertex> : ObjectDto where TVertex : struct, IMeshVer
 
     public FPackageIndex[]? Sockets { get; private set; }
     public abstract FBox Bounds { get; protected init; }
+
+    protected Mesh(UObject owner) : base(owner)
+    {
+
+    }
 
     protected Mesh(UStaticMesh mesh) : base(mesh)
     {
@@ -86,6 +92,11 @@ public class StaticMesh : Mesh<MeshVertex>
 {
     public FPackageIndex? BodySetup { get; private set; }
     public sealed override FBox Bounds { get; protected init; }
+
+    protected StaticMesh(UObject owner) : base(owner)
+    {
+
+    }
 
     public StaticMesh(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, USplineMeshComponent? spline = null) : base(mesh)
     {
@@ -291,6 +302,12 @@ public sealed class LandscapeMesh : StaticMesh
         }
 
         LODs.Add(MeshLod<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, NormalTexture, HeightmapTexture));
+    }
+
+    public LandscapeMesh(ULandscapeComponent component) : base(component)
+    {
+        Bounds = component.CachedLocalBox;
+        LODs.Add(MeshLod<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, NormalTexture, HeightmapTexture));
     }
 
     public override void Dispose()

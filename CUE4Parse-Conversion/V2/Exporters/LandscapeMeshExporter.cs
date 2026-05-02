@@ -6,6 +6,7 @@ using CUE4Parse_Conversion.Landscape;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
 using CUE4Parse.UE4.Assets.Exports.Actor;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using SixLabors.ImageSharp.Formats.Png;
 using SkiaSharp;
 
@@ -54,5 +55,24 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter2
         additional.Add(new ExportFile("", Encoding.UTF8.GetBytes(actor.LandscapeGuid.ToString()), $"/Guid_{actor.LandscapeGuid}"));
 
         return [..format.BuildStaticMesh(ObjectName, Session.Options, dto), ..additional];
+    }
+}
+
+public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : MeshExporter2<ULandscapeComponent>(component)
+{
+    protected override IReadOnlyList<ExportFile> BuildFiles(ULandscapeComponent component, IMeshExportFormat format)
+    {
+        var dto = new LandscapeMesh(component);
+        if (dto.LODs.Count == 0)
+        {
+            throw new Exception("Landscape mesh has no LODs");
+        }
+
+        if (Session.Options.ExportMaterials)
+        {
+            EnqueueMaterials(dto.Materials);
+        }
+
+        return format.BuildStaticMesh(ObjectName, Session.Options, dto);
     }
 }
