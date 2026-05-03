@@ -159,8 +159,11 @@ public static class UsdaWriter
             else
             {
                 _sb.Append(attribute.Name);
-                _sb.Append(" = ");
-                WriteValue(attribute.Value);
+                if (attribute.Value.Kind != UsdValueKind.Declared)
+                {
+                    _sb.Append(" = ");
+                    WriteValue(attribute.Value);
+                }
             }
 
             if (attribute.Metadata.Count > 0)

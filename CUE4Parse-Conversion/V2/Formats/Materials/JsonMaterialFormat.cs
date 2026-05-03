@@ -10,7 +10,7 @@ public sealed class JsonMaterialFormat : IMaterialExportFormat
 {
     public string DisplayName => "JSON";
 
-    public ExportFile Build(string objectName, CMaterialParams2 parameters)
+    public ExportFile Build(string objectName, CMaterialParams2 parameters, string packageDirectory = "")
     {
         var json = JsonConvert.SerializeObject(new MaterialJsonPayload
         {

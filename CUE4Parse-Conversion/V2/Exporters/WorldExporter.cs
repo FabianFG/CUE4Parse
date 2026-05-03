@@ -1,81 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.V2.Dto.World;
 using CUE4Parse_Conversion.V2.Formats.World;
 using CUE4Parse_Conversion.World;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Engine;
-using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
 public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
 {
+    private const string Extension = "usda"; // TODO: technically only usda for now
+
     protected override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
     {
         var format = GetWorldFormat(EWorldFormat.USD);
         using var world = new WorldDto(export);
 
-        var subLayers = new List<string>();
+        var paths = new WorldAssetPaths();
+
         foreach (var levelWorld in world.StreamingLevels)
         {
-            subLayers.Add(GetRelativeAssetPath(levelWorld));
+            paths.SubLayers.Add(Resolve(levelWorld, Extension));
             Session.Add(levelWorld);
         }
 
-        var worlds = new Dictionary<string, string>();
-        var meshRefs = new HashSet<FPackageIndex>();
-        CollectFromActor(world.Actors, meshRefs, worlds);
+        CollectFromActor(world.Actors, paths);
 
-        var meshes = new Dictionary<FPackageIndex, string>();
-        foreach (var ptr in meshRefs)
-        {
-            var obj = ptr.Load<UObject>();
-            if (obj is null) continue;
-
-            meshes[ptr] = GetRelativeAssetPath(obj);
-
-            switch (obj)
-            {
-                case UStaticMesh:
-                case USkeletalMesh:
-                    Session.Add(obj);
-                    break;
-            }
-        }
-
-        var file = format.Build(world, meshes, subLayers, worlds.Count > 0 ? worlds : null);
+        var file = format.Build(world, paths);
         var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
         return [result];
     }
 
-    private string GetRelativeAssetPath(UObject obj)
-    {
-        var rawPath = obj.Owner?.Name ?? obj.GetPathName();
-        var packagePath = (obj.Owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.');
-
-        // Mirror GetSavePath: append ObjectName when the leaf differs (e.g. sub-object exports)
-        if (!packagePath.SubstringAfterLast('/').Equals(obj.Name, StringComparison.OrdinalIgnoreCase))
-        {
-            packagePath += '/' + obj.Name;
-        }
-
-        var sep = Path.DirectorySeparatorChar;
-        var rel = Path.GetRelativePath(
-            PackageDirectory.Replace('/', sep),
-            packagePath.Replace('/', sep)
-        ).Replace(sep, '/');
-
-        return (rel.StartsWith("./") || rel.StartsWith("../") ? rel : "./" + rel) + ".usda";
-    }
-
-    private void CollectFromActor(IEnumerable<ActorDto> actors, HashSet<FPackageIndex> meshRefs, Dictionary<string, string> worlds)
+    private void CollectFromActor(IEnumerable<ActorDto> actors, WorldAssetPaths paths)
     {
         foreach (var actor in actors)
         {
@@ -83,25 +45,45 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
             {
                 foreach (var w in actor.AdditionalWorlds)
                 {
-                    if (worlds.TryAdd(w.Name, GetRelativeAssetPath(w)))
+                    if (paths.Worlds.TryAdd(w.Name, Resolve(w, Extension)))
                     {
                         Session.Add(w);
                     }
                 }
             }
 
-            CollectFromComponent(actor.RootComponent, meshRefs);
-            CollectFromActor(actor.ChildActors, meshRefs, worlds);
+            CollectFromComponent(actor.RootComponent, paths);
+            CollectFromActor(actor.ChildActors, paths);
         }
     }
 
-    private void CollectFromComponent(SceneComponentDto? comp, HashSet<FPackageIndex> meshRefs)
+    private void CollectFromComponent(SceneComponentDto? comp, WorldAssetPaths paths)
     {
         switch (comp)
         {
             case null: return;
-            case MeshComponentDto { MeshPtr: { IsNull: false } mesh }:
-                meshRefs.Add(mesh);
+            case MeshComponentDto meshComp:
+                if (!meshComp.MeshPtr.IsNull && paths.Meshes.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
+                {
+                    paths.Meshes[meshComp.MeshPtr] = Resolve(mesh, Extension);
+                    if (mesh is UStaticMesh or USkeletalMesh) Session.Add(mesh);
+                }
+
+                if (meshComp.OverrideMaterials is { Length: > 0 } overrides)
+                {
+                    foreach (var ptr in overrides)
+                    {
+                        if (ptr is null || ptr.IsNull || !paths.Materials.TryAdd(ptr, "") ||
+                            ptr.Load<UMaterialInterface>() is not { } material) continue;
+
+                        if (Session.Options.ExportMaterials)
+                        {
+                            Session.Add(material);
+                        }
+                        paths.Materials[ptr] = Resolve(material, Extension);
+
+                    }
+                }
                 break;
             case LandscapeMeshComponentDto landscape:
                 if (LandscapeMeshComponentDto.PerComponentExport)
@@ -117,7 +99,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
 
         foreach (var child in comp.Children)
         {
-            CollectFromComponent(child, meshRefs);
+            CollectFromComponent(child, paths);
         }
     }
 

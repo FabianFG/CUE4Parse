@@ -16,11 +16,7 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter2
             throw new Exception("Static mesh has no LODs");
         }
 
-        if (Session.Options.ExportMaterials)
-        {
-            EnqueueMaterials(dto.Materials);
-        }
-
-        return format.BuildStaticMesh(ObjectName, Session.Options, dto);
+        var materialPaths = EnqueueMaterials(dto.Materials);
+        return format.BuildStaticMesh(ObjectName, Session.Options, dto, materialPaths);
     }
 }

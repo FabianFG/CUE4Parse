@@ -9,14 +9,14 @@ public sealed class UEFormatMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new UEModel(objectName, dto, options).Save(ar);
         return [new ExportFile("uemodel", ar.GetBuffer())];
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new UEModel(objectName, dto, options).Save(ar);

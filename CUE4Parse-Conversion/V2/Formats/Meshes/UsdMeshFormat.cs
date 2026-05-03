@@ -15,7 +15,7 @@ public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
@@ -23,7 +23,7 @@ public class UsdMeshFormat : IMeshExportFormat
         var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
         if (sockets is not null) root.Add(sockets);
 
-        var materials = CreateMaterials(dto.Materials, options.ExportMaterials);
+        var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
 
         for (var i = 0; i < dto.LODs.Count; i++)
@@ -43,7 +43,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = UsdPrim.Def("Xform", dto.Name);
@@ -51,7 +51,7 @@ public class UsdMeshFormat : IMeshExportFormat
         var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
         if (sockets is not null) root.Add(sockets);
 
-        var materials = CreateMaterials(dto.Materials, options.ExportMaterials);
+        var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
 
         for (var i = 0; i < dto.LODs.Count; i++)
@@ -109,7 +109,7 @@ public class UsdMeshFormat : IMeshExportFormat
         }
         return scope;
     }
-    private UsdPrim? CreateMaterials(MeshMaterial[] materials, bool define = true)
+    private UsdPrim? CreateMaterials(MeshMaterial[] materials, IReadOnlyDictionary<string, string>? materialPaths)
     {
         if (materials is not { Length: > 0 }) return null;
 
@@ -121,9 +121,9 @@ public class UsdMeshFormat : IMeshExportFormat
             if (!seen.Add(name)) continue;
 
             var materialPrim = UsdPrim.Def("Material", name);
-            if (define)
+            if (materialPaths?.TryGetValue(name, out var path) == true)
             {
-                // TODO: define the prim
+                materialPrim.SetReference(new UsdReferenceList([new UsdReference(path)]));
             }
             scope.Add(materialPrim);
         }
@@ -190,7 +190,7 @@ public class UsdMeshFormat : IMeshExportFormat
             var tangent = (FVector) meshLod.Vertices[i].Tangent;
             tangents[i] = UsdValue.Tuple(tangent.X, -tangent.Y, tangent.Z); // MIRROR_MESH
 
-            uv[i] = UsdValue.Tuple(meshLod.Vertices[i].Uv.U, meshLod.Vertices[i].Uv.V);
+            uv[i] = UsdValue.Tuple(meshLod.Vertices[i].Uv.U, -meshLod.Vertices[i].Uv.V); // MIRROR_MESH
         }
 
         var indices = new UsdValue[meshLod.Indices.Length];

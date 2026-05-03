@@ -11,7 +11,7 @@ namespace CUE4Parse_Conversion.USD;
 public enum UsdPrimSpecifier { Def, Over, Class }
 public enum UsdVariability { Uniform, Config, Varying }
 public enum UsdListOpType { Explicit, Add, Append, Delete, Order, Prepend }
-public enum UsdValueKind { None, Raw, Bool, Int, Long, Float, Double, String, Token, Path, AssetPath, Array, Tuple }
+public enum UsdValueKind { None, Raw, Bool, Int, Long, Float, Double, String, Token, Path, AssetPath, Array, Tuple, Declared }
 
 public readonly record struct UsdMetadata(string Name, UsdValue Value);
 
@@ -29,6 +29,7 @@ public sealed class UsdReferenceList(IEnumerable<UsdReference> references, UsdLi
 public readonly record struct UsdValue(UsdValueKind Kind, object? RawValue)
 {
     public static readonly UsdValue Null = new(UsdValueKind.None, null);
+    public static readonly UsdValue Declared = new(UsdValueKind.Declared, null);
 
     public static UsdValue Raw(string value) => new(UsdValueKind.Raw, value ?? throw new ArgumentNullException(nameof(value)));
     public static UsdValue Bool(bool value) => new(UsdValueKind.Bool, value);

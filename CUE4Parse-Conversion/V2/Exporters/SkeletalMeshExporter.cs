@@ -22,11 +22,6 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
             throw new Exception("Skeletal mesh has no LODs");
         }
 
-        if (Session.Options.ExportMaterials)
-        {
-            EnqueueMaterials(dto.Materials);
-        }
-
         if (dto.AssetUserData != null)
         {
             foreach (var userData in dto.AssetUserData)
@@ -38,6 +33,7 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
             }
         }
 
-        return format.BuildSkeletalMesh(ObjectName, Session.Options, dto);
+        var materialPaths = EnqueueMaterials(dto.Materials);
+        return format.BuildSkeletalMesh(ObjectName, Session.Options, dto, materialPaths);
     }
 }

@@ -51,6 +51,33 @@ public abstract class ExporterBase2 : IExporter2
             .ForContext("ExporterV2", true);
     }
 
+    protected string Resolve(UObject obj, string extension) => Resolve(obj, PackageDirectory, extension);
+    internal static string Resolve(UObject obj, string fromDirectory, string extension)
+    {
+        var owner = obj.Owner;
+        var rawPath = owner?.Name ?? obj.GetPathName();
+        var packagePath = (owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.');
+
+        // replicate GetSavePath()
+        if (!packagePath.SubstringAfterLast('/').Equals(obj.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            packagePath += '/' + obj.Name;
+        }
+
+        if (string.IsNullOrEmpty(fromDirectory))
+        {
+            return "./" + packagePath.TrimStart('/') + "." + extension;
+        }
+
+        var sep = Path.DirectorySeparatorChar;
+        var rel = Path.GetRelativePath(
+            fromDirectory.Replace('/', sep),
+            packagePath.Replace('/', sep)
+        ).Replace(sep, '/');
+
+        return (rel.StartsWith("./") || rel.StartsWith("../") ? rel : "./" + rel) + "." + extension;
+    }
+
     protected abstract Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default);
     public async Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default)
     {

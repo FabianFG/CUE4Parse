@@ -24,11 +24,6 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter2
             throw new Exception("Landscape mesh has no LODs");
         }
 
-        if (Session.Options.ExportMaterials)
-        {
-            EnqueueMaterials(dto.Materials);
-        }
-
         var additional = new List<ExportFile>();
         if (dto.HeightmapTexture is { } heightmap)
         {
@@ -54,7 +49,8 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter2
 
         additional.Add(new ExportFile("", Encoding.UTF8.GetBytes(actor.LandscapeGuid.ToString()), $"/Guid_{actor.LandscapeGuid}"));
 
-        return [..format.BuildStaticMesh(ObjectName, Session.Options, dto), ..additional];
+        var materialPaths = EnqueueMaterials(dto.Materials);
+        return [..format.BuildStaticMesh(ObjectName, Session.Options, dto, materialPaths), ..additional];
     }
 }
 
@@ -68,11 +64,7 @@ public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : Mesh
             throw new Exception("Landscape mesh has no LODs");
         }
 
-        if (Session.Options.ExportMaterials)
-        {
-            EnqueueMaterials(dto.Materials);
-        }
-
-        return format.BuildStaticMesh(ObjectName, Session.Options, dto);
+        var materialPaths = EnqueueMaterials(dto.Materials);
+        return format.BuildStaticMesh(ObjectName, Session.Options, dto, materialPaths);
     }
 }

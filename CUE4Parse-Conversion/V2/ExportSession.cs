@@ -43,7 +43,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         return export switch
         {
             UTexture texture => Add(new TextureExporter2(texture)),
-            UMaterialInterface material => Add(new MaterialExporter3(material)),
+            UMaterialInterface material when Options.ExportMaterials => Add(new MaterialExporter3(material)),
             USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),

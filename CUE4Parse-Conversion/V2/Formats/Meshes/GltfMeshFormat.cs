@@ -14,7 +14,7 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
     private readonly EMeshFormat _legacyFormat = isObj ? EMeshFormat.OBJ : EMeshFormat.Gltf2;
     private readonly string _extension = isObj ? "obj" : "glb";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new Gltf(objectName, dto, options).Save(_legacyFormat, ar);
@@ -22,7 +22,7 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
         return [new ExportFile(_extension, ar.GetBuffer())];
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new Gltf(objectName, dto, options).Save(_legacyFormat, ar);

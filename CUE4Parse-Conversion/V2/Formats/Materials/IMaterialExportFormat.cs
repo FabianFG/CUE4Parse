@@ -4,6 +4,6 @@ namespace CUE4Parse_Conversion.V2.Formats.Materials;
 
 public interface IMaterialExportFormat : IExportFormat
 {
-    public ExportFile Build(string objectName, CMaterialParams2 parameters);
+    public ExportFile Build(string objectName, CMaterialParams2 parameters, string packageDirectory = "");
 }
 

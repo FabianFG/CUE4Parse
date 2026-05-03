@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.V2.Formats.Materials;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -16,7 +18,11 @@ public sealed class MaterialExporter3(UMaterialInterface material) : ExporterBas
         var parameters = new CMaterialParams2();
         material.GetParams(parameters, Session.Options.MaterialFormat);
 
-        var file = new JsonMaterialFormat().Build(ObjectName, parameters);
+        var files = new List<ExportFile> { new JsonMaterialFormat().Build(ObjectName, parameters) };
+        if (Session.Options.MeshFormat == EMeshFormat.USD)
+        {
+            files.Add(new UsdMaterialFormat().Build(ObjectName, parameters, PackageDirectory));
+        }
 
         foreach (var ptr in parameters.Textures.Values)
         {
@@ -26,7 +32,8 @@ public sealed class MaterialExporter3(UMaterialInterface material) : ExporterBas
             }
         }
 
-        var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
-        return [result];
+        var tasks = files.Select(file => WriteExportFileAsync(file, ct));
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+        return results;
     }
 }

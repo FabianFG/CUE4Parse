@@ -30,15 +30,28 @@ public abstract class MeshExporter2<T>(T mesh) : ExporterBase2(mesh) where T : U
         return results;
     }
 
-    protected void EnqueueMaterials(params MeshMaterial[] materials)
+    protected Dictionary<string, string>? EnqueueMaterials(params MeshMaterial[] materials)
     {
-        foreach (var ptr in materials)
+        if (!Session.Options.ExportMaterials) return null;
+
+        // TODO: currently only usda needs such thing, but maybe other formats will need it in the future, so we can keep it for now
+        var paths = Session.Options.MeshFormat == EMeshFormat.USD
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : null;
+
+        foreach (var slot in materials)
         {
-            if (ptr.Material?.TryLoad<UMaterialInterface>(out var material) == true)
+            if (slot.Material?.TryLoad<UMaterialInterface>(out var material) == true)
             {
-                Session.Add(new MaterialExporter3(material));
+                Session.Add(material);
+                if (paths != null)
+                {
+                    paths[slot.SlotName] = Resolve(material, "usda");
+                }
             }
         }
+
+        return paths;
     }
 
     private IMeshExportFormat GetMeshFormat(EMeshFormat format) => format switch
