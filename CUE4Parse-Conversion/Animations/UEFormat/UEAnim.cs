@@ -3,6 +3,7 @@ using System.Linq;
 using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 
@@ -12,7 +13,7 @@ public sealed class UEAnim : UEFormatExport
 {
     protected override string Identifier => "UEANIM";
 
-    public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
+    public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExportOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
         var originalSequence = sequence.OriginalSequence;

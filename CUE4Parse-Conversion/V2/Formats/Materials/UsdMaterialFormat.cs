@@ -1,8 +1,12 @@
-﻿using CUE4Parse_Conversion.USD;
+﻿using CUE4Parse_Conversion.V2.Exporters;
+using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Assets.Exports.Material;
 
 namespace CUE4Parse_Conversion.V2.Formats.Materials;
 
+/// <summary>
+/// TODO: support layers (st, st1, st2, etc)
+/// </summary>
 public sealed class UsdMaterialFormat : IMaterialExportFormat
 {
     public string DisplayName => "USD Material (.usda)";
@@ -20,6 +24,7 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
 
         var hasDiffuseTexture = TryResolveTexture(parameters, [..CMaterialParams2.Diffuse[0], CMaterialParams2.FallbackDiffuse], packageDirectory, out var diffusePath);
         var hasDiffuseTint = parameters.TryGetLinearColor(out var diffuseColor, CMaterialParams2.DiffuseColors[0]);
+        hasDiffuseTint &= diffuseColor.R > 0f || diffuseColor.G > 0f || diffuseColor.B > 0f; // do not use if fully black
 
         if (hasDiffuseTexture)
         {
@@ -79,7 +84,7 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
             var uvTex = MakeUvTexture("Emissive", emissivePath, matName);
             if (parameters.TryGetLinearColor(out var emissiveColor, CMaterialParams2.EmissiveColors[0]))
             {
-                uvTex.Add(new UsdAttribute("float4", "inputs:scale", UsdValue.Tuple(emissiveColor.R, emissiveColor.G, emissiveColor.B)));
+                uvTex.Add(new UsdAttribute("float4", "inputs:scale", UsdValue.Tuple(emissiveColor.R, emissiveColor.G, emissiveColor.B, emissiveColor.A)));
             }
 
             matPrim.Add(uvTex);
@@ -108,7 +113,7 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
     {
         if (parameters.TryGetTexture2d(out var texture, names))
         {
-            path = ExporterBase2.Resolve(texture, packageDirectory, "png"); // TODO: not only PNG
+            path = ExporterBase.Resolve(texture, packageDirectory, "png"); // TODO: not only PNG?
             return true;
         }
         path = string.Empty;

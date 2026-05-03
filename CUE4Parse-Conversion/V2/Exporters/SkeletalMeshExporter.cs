@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExporter2<USkeletalMesh>(originalMesh)
+public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExporter<USkeletalMesh>(originalMesh)
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USkeletalMesh originalMesh, IMeshExportFormat format)
     {

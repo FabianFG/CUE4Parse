@@ -261,7 +261,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         // ???
     }
 
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
         // Default empty method
         // ???

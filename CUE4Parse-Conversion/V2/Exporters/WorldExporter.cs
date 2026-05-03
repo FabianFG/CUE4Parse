@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse_Conversion.V2.Dto.World;
 using CUE4Parse_Conversion.V2.Formats.World;
 using CUE4Parse_Conversion.World;
@@ -13,11 +11,11 @@ using CUE4Parse.UE4.Objects.Engine;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
+public sealed class WorldExporter(UWorld export) : ExporterBase(export)
 {
     private const string Extension = "usda"; // TODO: technically only usda for now
 
-    protected override async Task<IReadOnlyList<ExportResult>> DoExportAsync(CancellationToken ct = default)
+    protected override IReadOnlyList<ExportFile> BuildExportFiles()
     {
         var format = GetWorldFormat(EWorldFormat.USD);
         using var world = new WorldDto(export);
@@ -32,9 +30,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase2(export)
 
         CollectFromActor(world.Actors, paths);
 
-        var file = format.Build(world, paths);
-        var result = await WriteExportFileAsync(file, ct).ConfigureAwait(false);
-        return [result];
+        return [format.Build(world, paths)];
     }
 
     private void CollectFromActor(IEnumerable<ActorDto> actors, WorldAssetPaths paths)

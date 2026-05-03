@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse_Conversion.PoseAsset.Conversion;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
+using CUE4Parse_Conversion.V2.Options;
 
 namespace CUE4Parse_Conversion.PoseAsset.UEFormat;
 
@@ -10,7 +11,7 @@ public sealed class UEPose : UEFormatExport
 {
     protected override string Identifier => "UEPOSE";
 
-    public UEPose(string name, CPoseAsset poseAsset, ExporterOptions options) : base(name, options)
+    public UEPose(string name, CPoseAsset poseAsset, ExportOptions options) : base(name, options)
     {
         SerializePoses(poseAsset);
         SerializeCurves(poseAsset);

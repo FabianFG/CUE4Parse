@@ -4,6 +4,7 @@ using CUE4Parse_Conversion.Meshes.UEFormat.Collision;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse_Conversion.V2.Dto;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -17,20 +18,18 @@ public sealed class UEModel : UEFormatExport
 {
     protected override string Identifier => "UEMODEL";
 
-    public UEModel(string name, StaticMesh mesh, ExporterOptions options) : base(name, options)
+    public UEModel(string name, StaticMesh mesh, ExportOptions options) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
+            for (var i = start; i < end; i++)
             {
-                var lod = mesh.LODs[lodIdx];
-                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
-                SerializeCommonMeshData(subLodChunk, lod);
+                using var subLodChunk = new FStaticDataChunk($"LOD{i}");
+                SerializeCommonMeshData(subLodChunk, mesh.LODs[i]);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
 
             lodChunk.Serialize(Ar);
@@ -49,7 +48,7 @@ public sealed class UEModel : UEFormatExport
 
     }
 
-    public UEModel(string name, Skeleton skeleton, ExporterOptions options) : base(name, options)
+    public UEModel(string name, Skeleton skeleton, ExportOptions options) : base(name, options)
     {
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
@@ -58,22 +57,22 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    public UEModel(string name, SkeletalMesh mesh, ExporterOptions options) : base(name, options)
+    public UEModel(string name, SkeletalMesh mesh, ExportOptions options) : base(name, options)
     {
         if (mesh.LODs.Count > 0)
         {
             using var lodChunk = new FDataChunk("LODS");
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+
+            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
+            for (var i = start; i < end; i++)
             {
-                var lod = mesh.LODs[lodIdx];
-                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
+                var lod = mesh.LODs[i];
+                using var subLodChunk = new FStaticDataChunk($"LOD{i}");
                 SerializeCommonMeshData(subLodChunk, lod);
-                SerializeSkeletalMeshData(subLodChunk, mesh, lodIdx);
+                SerializeSkeletalMeshData(subLodChunk, mesh, i);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
 
             lodChunk.Serialize(Ar);

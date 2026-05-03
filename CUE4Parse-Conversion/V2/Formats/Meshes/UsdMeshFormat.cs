@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse_Conversion.Meshes;
-using CUE4Parse_Conversion.USD;
 using CUE4Parse_Conversion.V2.Dto;
+using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -15,7 +15,7 @@ public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExporterOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
@@ -26,7 +26,8 @@ public class UsdMeshFormat : IMeshExportFormat
         var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
 
-        for (var i = 0; i < dto.LODs.Count; i++)
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
         {
             var suffix = i == 0 ? null : $"_LOD{i}";
             var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
@@ -36,14 +37,13 @@ public class UsdMeshFormat : IMeshExportFormat
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
 
-            if (options.LodFormat == ELodFormat.FirstLod) break;
             root.Children.RemoveAt(root.Children.Count - 1);
         }
 
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExporterOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = UsdPrim.Def("Xform", dto.Name);
@@ -54,7 +54,8 @@ public class UsdMeshFormat : IMeshExportFormat
         var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
 
-        for (var i = 0; i < dto.LODs.Count; i++)
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
         {
             var suffix = i == 0 ? null : $"_LOD{i}";
             root.Add(CreateLod(dto.LODs[i], suffix, materials));
@@ -62,14 +63,13 @@ public class UsdMeshFormat : IMeshExportFormat
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
 
-            if (options.LodFormat == ELodFormat.FirstLod) break;
             root.Children.RemoveAt(root.Children.Count - 1);
         }
 
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExporterOptions options, Skeleton dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, Skeleton dto)
     {
         var root = dto.ToSkelRoot();
 

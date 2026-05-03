@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion.V2.Exporters;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -20,20 +21,19 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 
 namespace CUE4Parse_Conversion.V2;
 
-public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions options)
+public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions options)
 {
     public DirectoryInfo BaseDirectory { get; } = baseDirectory;
-    public ExporterOptions Options { get; } = options;
+    public ExportOptions Options { get; } = options;
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
 
     private int _totalQueued;
     public int TotalQueued => _totalQueued;
 
-    private readonly ConcurrentQueue<IExporter2> _roots = new();
+    private readonly ConcurrentQueue<IExporter> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, byte> _dirs = new(StringComparer.OrdinalIgnoreCase);
 
-    public ExportSession(string baseDirectory, ExporterOptions options) : this(new DirectoryInfo(baseDirectory), options)
+    public ExportSession(string baseDirectory, ExportOptions options) : this(new DirectoryInfo(baseDirectory), options)
     {
 
     }
@@ -42,13 +42,13 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         return export switch
         {
-            UTexture texture => Add(new TextureExporter2(texture)),
-            UMaterialInterface material when Options.ExportMaterials => Add(new MaterialExporter3(material)),
+            UTexture texture => Add(new TextureExporter(texture)),
+            UMaterialInterface material when Options.ExportMaterials => Add(new MaterialExporter(material)),
             USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
-            UPoseAsset poseAsset => Add(new PoseAssetExporter2(poseAsset)),
-            UAnimationAsset animation => Add(new AnimationExporter2(animation)),
+            UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),
+            UAnimationAsset animation => Add(new AnimationExporter(animation)),
             UDNAAsset dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
@@ -58,7 +58,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         };
     }
 
-    public ExportSession Add(ExporterBase2 exporter)
+    public ExportSession Add(ExporterBase exporter)
     {
         if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
@@ -75,7 +75,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         var allResults = new ConcurrentQueue<ExportResult>();
         var options = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
 
-        var current = new List<IExporter2>();
+        var current = new List<IExporter>();
         while (true)
         {
             current.Clear();
@@ -92,7 +92,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
         Interlocked.Exchange(ref _totalQueued, 0);
         return [.. allResults];
 
-        async ValueTask Process(IExporter2 exporter, CancellationToken token)
+        async ValueTask Process(IExporter exporter, CancellationToken token)
         {
             var results = await exporter.ExportAsync(token).ConfigureAwait(false);
 
@@ -111,7 +111,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExporterOptions o
     {
         var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
-        if (_dirs.TryAdd(dir, 0)) Directory.CreateDirectory(dir);
+        Directory.CreateDirectory(dir);
         return fullPath.Replace('/', '\\');
     }
 }

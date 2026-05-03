@@ -1,4 +1,4 @@
-using CUE4Parse_Conversion.ActorX;
+using CUE4Parse_Conversion.V2.Writers.ActorX;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
 
@@ -74,22 +74,21 @@ public sealed class ActorXAnim()
             for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
             {
                 var boneTransform = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
-                var key = new VQuatAnimKey // scale me you fucking idiot
-                {
-                    Position = boneTransform.Translation,
-                    Orientation = boneTransform.Rotation,
-                    Time = 1
-                };
+                var position = boneTransform.Translation;
+                var orientation = boneTransform.Rotation;
+                var scale = boneTransform.Scale3D;
+
                 if (sequence.OriginalSequence.FindTrackForBoneIndex(boneIndex) >= 0)
                 {
-                    var eeehhhohhhhh = FVector.OneVector;
-                    sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref key.Orientation, ref key.Position, ref eeehhhohhhhh);
+                    sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref orientation, ref position, ref scale);
                 }
 
                 // MIRROR_MESH
-                key.Orientation.Y *= -1;
-                if (boneIndex == 0) key.Orientation.W *= -1; // because the importer has invert enabled by default...
-                key.Position.Y *= -1;
+                orientation.Y *= -1;
+                if (boneIndex == 0) orientation.W *= -1; // because the importer has invert enabled by default...
+                position.Y *= -1;
+
+                var key = new VQuatAnimKey(position, orientation, 1);
                 key.Serialize(_archive);
             }
         }
@@ -115,11 +114,7 @@ public sealed class ActorXAnim()
                         sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref boneOrientation, ref bonePosition, ref boneScale);
                     }
 
-                    var key = new VScaleAnimKey
-                    {
-                        ScaleVector = boneScale,
-                        Time = 1
-                    };
+                    var key = new VScaleAnimKey(boneScale, 1);
                     key.Serialize(_archive);
                 }
             }

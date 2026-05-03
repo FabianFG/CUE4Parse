@@ -6,7 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class SplineMeshExporter(USplineMeshComponent component) : MeshExporter2<USplineMeshComponent>(component)
+public sealed class SplineMeshExporter(USplineMeshComponent component) : MeshExporter<USplineMeshComponent>(component)
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USplineMeshComponent component, IMeshExportFormat format)
     {

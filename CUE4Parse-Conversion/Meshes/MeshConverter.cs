@@ -7,12 +7,12 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.V2.Dto;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using SixLabors.ImageSharp;
 using SkiaSharp;
-using CUE4Parse.UE4.Assets.Exports.Nanite;
 using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
@@ -53,7 +53,7 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, USplineMeshComponent? spline = null)
+    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
     {
         try
         {

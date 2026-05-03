@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using CUE4Parse_Conversion.V2.Dto;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
@@ -23,60 +24,59 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         public readonly ModelRoot Model;
 
-        public Gltf(string name, StaticMesh mesh, ExporterOptions options)
+        public Gltf(string name, StaticMesh mesh, ExportOptions options)
         {
             var sceneBuilder = new SceneBuilder(name);
             var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
 
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
+            for (var i = start; i < end; i++)
             {
-                var lod = mesh.LODs[lodIdx];
-                var offsetZ = origin * lodIdx;
+                var lod = mesh.LODs[i];
+                var offsetZ = origin * i;
 
-                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{lodIdx}");
+                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{i}");
                 ExportMeshSections(meshBuilder, lod);
                 sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, offsetZ));
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
 
             Model = sceneBuilder.ToGltf2();
         }
 
-        public Gltf(string name, SkeletalMesh mesh, ExporterOptions options)
+        public Gltf(string name, SkeletalMesh mesh, ExportOptions options)
         {
             var sceneBuilder = new SceneBuilder(name);
             var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
 
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
+            for (var i = start; i < end; i++)
             {
-                var offsetZ = origin * lodIdx;
-                var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lodIdx}").WithLocalTranslation(new Vector3(0, 0, offsetZ));
+                var offsetZ = origin * i;
+                var armatureRoot = new NodeBuilder($"{name}.ao_LOD{i}").WithLocalTranslation(new Vector3(0, 0, offsetZ));
                 var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
 
-                var lod = mesh.LODs[lodIdx];
-                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{lodIdx}");
+                var lod = mesh.LODs[i];
+                var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{i}");
                 ExportMeshSections(meshBuilder, lod);
                 sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, offsetZ), armature);
 
                 if (mesh.MorphTargets is { Length: > 0 } morphTargets)
                 {
                     var targetNames = "{\"targetNames\": [";
-                    for (var i = 0; i < morphTargets.Length; i++)
+                    for (var j = 0; i < morphTargets.Length; j++)
                     {
-                        var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                        if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIdx || lodIdx == -1)
+                        var morphTarget = morphTargets[j].Load<UMorphTarget>();
+                        if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < i || i == -1)
                             continue;
-                        var morphBuilder = meshBuilder.UseMorphTarget(i);
-                        var morphModel = morphTarget.MorphLODModels[lodIdx];
+                        var morphBuilder = meshBuilder.UseMorphTarget(j);
+                        var morphModel = morphTarget.MorphLODModels[i];
 
                         targetNames += $"\"{morphTarget.Name}\"";
-                        targetNames += i != morphTargets.Length-1 ? "," : "";
+                        targetNames += j != morphTargets.Length-1 ? "," : "";
 
                         var verts = morphBuilder.Vertices.ToArray();
-                        for (int j = 0; j < morphModel.Vertices.Length; j++) // morphModel.NumBaseMeshVerts can be different from verts.Length
+                        foreach (var delta in morphModel.Vertices)
                         {
-                            var delta = morphModel.Vertices[j];
                             var vert = lod.Vertices[delta.SourceIdx];
                             var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position * UnitScale),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
                             var index = FindVert(srcVert, verts);
@@ -89,8 +89,6 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                     targetNames += "]}";
                     meshBuilder.Extras = (JsonContent) targetNames;
                 }
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
             }
 
             Model = sceneBuilder.ToGltf2();

@@ -2,8 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.V2.Dto;
+using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.ActorX;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -17,9 +18,9 @@ namespace CUE4Parse_Conversion.Meshes.PSK;
 public class ActorXMesh
 {
     private FArchiveWriter Ar;
-    private readonly ExporterOptions Options;
+    private readonly ExportOptions Options;
 
-    public ActorXMesh(ExporterOptions options)
+    public ActorXMesh(ExportOptions options)
     {
         Options = options;
         Ar = new FArchiveWriter();
@@ -28,13 +29,13 @@ public class ActorXMesh
         Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
     }
 
-    public ActorXMesh(Skeleton skeleton, ExporterOptions options) : this(options)
+    public ActorXMesh(Skeleton skeleton, ExportOptions options) : this(options)
     {
         ExportSkeletalSockets(skeleton);
         ExportSkeletonData(skeleton.Bones);
     }
 
-    public ActorXMesh(StaticMesh mesh, ExporterOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(StaticMesh mesh, ExportOptions options, int lodIndex = -1) : this(options)
     {
         ExportCommonMeshLod(mesh, lodIndex);
 
@@ -46,7 +47,7 @@ public class ActorXMesh
         }
     }
 
-    public ActorXMesh(SkeletalMesh mesh, ExporterOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(SkeletalMesh mesh, ExportOptions options, int lodIndex = -1) : this(options)
     {
         ExportCommonMeshLod(mesh, lodIndex);
 
@@ -77,14 +78,19 @@ public class ActorXMesh
         share.Prepare(lod.Vertices);
         foreach (var vert in lod.Vertices)
         {
-            var weightsHash = 0u;
-            if (vert is SkinnedMeshVertex skinnedVert)
+            if (vert is SkinnedMeshVertex sv)
             {
-                weightsHash = (uint)StructuralComparisons.StructuralEqualityComparer.GetHashCode(skinnedVert.Influences);
-                numInfluences += skinnedVert.Influences.Length;
+                var extraInfo = (uint) StructuralComparisons.StructuralEqualityComparer.GetHashCode(sv.Influences);
+                var newPoint = share.AddVertex(vert.Position, vert.Normal, extraInfo);
+                if (newPoint)
+                {
+                    numInfluences += sv.Influences.Length;
+                }
             }
-
-            share.AddVertex(vert.Position, vert.Normal, weightsHash);
+            else
+            {
+                share.AddVertex(vert.Position, vert.Normal);
+            }
         }
 
         ExportCommonMeshData(lod, share);

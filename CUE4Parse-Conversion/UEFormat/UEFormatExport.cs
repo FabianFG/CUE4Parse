@@ -3,12 +3,13 @@ using System.IO.Compression;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.UEFormat.Enums;
 using CUE4Parse_Conversion.UEFormat.Structs;
+using CUE4Parse_Conversion.V2.Options;
 using OodleDotNet;
 using ZstdSharp;
 
 namespace CUE4Parse_Conversion.UEFormat;
 
-public abstract class UEFormatExport(string objectName, ExporterOptions options)
+public abstract class UEFormatExport(string objectName, ExportOptions options)
 {
     protected abstract string Identifier { get; }
 

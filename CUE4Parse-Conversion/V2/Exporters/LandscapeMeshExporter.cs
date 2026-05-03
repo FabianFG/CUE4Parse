@@ -12,7 +12,7 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Exporters;
 
-public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter2<ALandscapeProxy>(actor)
+public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<ALandscapeProxy>(actor)
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(ALandscapeProxy actor, IMeshExportFormat format)
     {
@@ -54,7 +54,7 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter2
     }
 }
 
-public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : MeshExporter2<ULandscapeComponent>(component)
+public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : MeshExporter<ULandscapeComponent>(component)
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(ULandscapeComponent component, IMeshExportFormat format)
     {

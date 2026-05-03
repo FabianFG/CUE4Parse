@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.Landscape;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
-using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -98,7 +98,7 @@ public class StaticMesh : Mesh<MeshVertex>
 
     }
 
-    public StaticMesh(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, USplineMeshComponent? spline = null) : base(mesh)
+    public StaticMesh(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.LODs, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.Bounds, "Mesh has no bounds");
@@ -106,7 +106,7 @@ public class StaticMesh : Mesh<MeshVertex>
         Bounds = mesh.RenderData.Bounds.GetBox();
         BodySetup = mesh.BodySetup;
 
-        if (naniteFormat != ENaniteMeshFormat.OnlyNaniteLOD)
+        if (naniteFormat != ENaniteMeshFormat.NaniteOnly)
         {
             for (var i = 0; i < mesh.RenderData.LODs.Length; i++)
             {
@@ -122,7 +122,7 @@ public class StaticMesh : Mesh<MeshVertex>
             }
         }
 
-        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.OnlyNormalLODs || LODs.Count == 0;
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
         if (shouldParseNanite && mesh.RenderData.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
             nanite.LoadAllPages();
@@ -148,7 +148,7 @@ public class StaticMesh : Mesh<MeshVertex>
                 var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
                 var naniteLod = MeshLod<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
 
-                if (naniteFormat == ENaniteMeshFormat.AllLayersNaniteFirst)
+                if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
                 {
                     LODs.Insert(0, naniteLod);
                 }
@@ -166,7 +166,7 @@ public class StaticMesh : Mesh<MeshVertex>
         }
     }
 
-    public StaticMesh(USplineMeshComponent spline) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), ENaniteMeshFormat.OnlyNormalLODs, spline)
+    public StaticMesh(USplineMeshComponent spline) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), ENaniteMeshFormat.NoNanite, spline)
     {
 
     }
