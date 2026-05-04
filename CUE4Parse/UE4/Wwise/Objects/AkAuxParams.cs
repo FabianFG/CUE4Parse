@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,7 +11,7 @@ public readonly struct AkAuxParams
     public readonly uint[] AuxIds = [];
     public readonly uint ReflectionsAuxBus;
 
-    public AkAuxParams(FArchive Ar)
+    public AkAuxParams(FWwiseArchive Ar)
     {
         AuxParams = Ar.Read<EAuxParams>();
         if (AuxParams.HasFlag(EAuxParams.HasAux))
@@ -20,7 +19,7 @@ public readonly struct AkAuxParams
             AuxIds = Ar.ReadArray(4, Ar.Read<uint>);
         }
 
-        if (WwiseVersions.Version > 134)
+        if (Ar.Version > 134)
         {
             ReflectionsAuxBus = Ar.Read<uint>();
         }

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.Actions;
 using Newtonsoft.Json;
@@ -13,22 +12,19 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly EAkActionType EventActionType;
     public readonly byte IsBus;
     public readonly uint ReferencedId;
-    public readonly AkProp[] Props;
-    public readonly AkPropRange[] PropRanges;
+    public readonly AkPropBundle PropBundle;
     public readonly object? ActionData;
 
-    public HierarchyEventAction(FArchive Ar) : base(Ar)
+    public HierarchyEventAction(FWwiseArchive Ar) : base(Ar)
     {
         EventActionScope = Ar.Read<EAkActionScope>();
         EventActionType = Ar.Read<EAkActionType>();
         ReferencedId = Ar.Read<uint>();
         IsBus = Ar.Read<byte>();
 
-        var propBundle = new AkPropBundle(Ar);
-        Props = propBundle.Props;
-        PropRanges = propBundle.PropRanges;
+        PropBundle = new AkPropBundle(Ar);
 
-        ActionData = (EventActionType, WwiseVersions.Version) switch
+        ActionData = (EventActionType, Ar.Version) switch
         {
             (EAkActionType.Play, _) => new CAkActionPlay(Ar),
             (EAkActionType.Stop, _) => new CAkActionStop(Ar),
@@ -70,7 +66,7 @@ public class HierarchyEventAction : AbstractHierarchy
         writer.WriteValue(EventActionScope.ToString());
 
         writer.WritePropertyName(nameof(EventActionType));
-        writer.WriteValue(EventActionType.ToVersionString());
+        writer.WriteValue(EventActionType.ToVersionString(WwiseConverter.WwiseVersion.Value));
 
         if (ReferencedId != 0)
         {
@@ -81,11 +77,8 @@ public class HierarchyEventAction : AbstractHierarchy
         writer.WritePropertyName(nameof(IsBus));
         writer.WriteValue(IsBus != 0);
 
-        writer.WritePropertyName(nameof(Props));
-        serializer.Serialize(writer, Props);
-
-        writer.WritePropertyName(nameof(PropRanges));
-        serializer.Serialize(writer, PropRanges);
+        writer.WritePropertyName(nameof(PropBundle));
+        serializer.Serialize(writer, PropBundle);
 
         if (ActionData != null)
         {

@@ -1,9 +1,8 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkGainFXParams(FArchive Ar) : IAkPluginParam
+public class CAkGainFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public AkGainFXParams Params = Ar.Read<AkGainFXParams>();
 }

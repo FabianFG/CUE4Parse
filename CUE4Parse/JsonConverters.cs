@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -12,7 +13,6 @@ using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Material;
-using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -1287,12 +1287,18 @@ public class FWorldConditionQueryDefinitionConverter : JsonConverter<FWorldCondi
 
 public class WwiseConverter : JsonConverter<WwiseReader>
 {
+    public static readonly ThreadLocal<uint> WwiseVersion = new();
     public override void WriteJson(JsonWriter writer, WwiseReader value, JsonSerializer serializer)
     {
+        WwiseVersion.Value = value.Header.Version;
+
         writer.WriteStartObject();
 
-        writer.WritePropertyName(nameof(value.Header));
-        serializer.Serialize(writer, value.Header);
+        if (value.Header.Version != 0)
+        {
+            writer.WritePropertyName(nameof(value.Header));
+            serializer.Serialize(writer, value.Header);
+        }
 
         if (value.AKPKBankEntries is { Count: > 0 })
         {
@@ -1351,6 +1357,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         if (value.WemFile?.IsValid is true)
         {
             writer.WritePropertyName("IsWemFile");
+            writer.WriteValue(true);
+        }
+
+        if (value.IsPlugin)
+        {
+            writer.WritePropertyName(nameof(value.IsPlugin));
             writer.WriteValue(true);
         }
 
@@ -2410,6 +2422,42 @@ public class FByteBulkDataConverter : JsonConverter<FByteBulkData>
 
     public override FByteBulkData ReadJson(JsonReader reader, Type objectType, FByteBulkData existingValue, bool hasExistingValue,
         JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class TBulkDataConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType) => IsTBulkData(objectType);
+
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+    {
+        if (value == null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        var header = value.GetType().GetProperty("Header")!.GetValue(value);
+        serializer.Serialize(writer, header);
+    }
+
+    private static bool IsTBulkData(Type type)
+    {
+        while (type != null && type != typeof(object))
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(TBulkData<>))
+                return true;
+
+            type = type.BaseType!;
+        }
+
+        return false;
+    }
+
+    public override bool CanRead => false;
+    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
@@ -3495,6 +3543,19 @@ public class AwbReaderConverter : JsonConverter<AwbReader>
     }
 
     public override AwbReader ReadJson(JsonReader reader, Type objectType, AwbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AkPropValueConverter : JsonConverter<AkUnionValue>
+{
+    public override void WriteJson(JsonWriter writer, AkUnionValue value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.Value);
+    }
+
+    public override AkUnionValue ReadJson(JsonReader reader, Type objectType, AkUnionValue existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

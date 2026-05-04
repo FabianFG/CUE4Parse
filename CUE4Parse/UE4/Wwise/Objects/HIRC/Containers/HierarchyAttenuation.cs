@@ -13,9 +13,9 @@ public class HierarchyAttenuation : AbstractHierarchy
     public readonly AkRtpc[] RTPCs;
 
     // CAkAttenuation::SetInitialValues
-    public HierarchyAttenuation(FArchive Ar) : base(Ar)
+    public HierarchyAttenuation(FWwiseArchive Ar) : base(Ar)
     {
-        if (WwiseVersions.Version > 136)
+        if (Ar.Version > 136)
         {
             IsHeightSpreadEnabled = Ar.Read<byte>() != 0;
         }
@@ -26,7 +26,7 @@ public class HierarchyAttenuation : AbstractHierarchy
             ConeParams = new ConeParams(Ar);
         }
 
-        int numCurves = WwiseVersions.Version switch
+        int numCurves = Ar.Version switch
         {
             <= 62 => 5,
             <= 72 => 4,
@@ -39,7 +39,7 @@ public class HierarchyAttenuation : AbstractHierarchy
         var curvesToUse = Ar.ReadArray<sbyte>(numCurves);
 
         int numCurvesFinal;
-        if (WwiseVersions.Version <= 36)
+        if (Ar.Version <= 36)
         {
             numCurvesFinal = (int) Ar.Read<uint>(); // Use uint for legacy versions and cast to int
         }
@@ -86,13 +86,13 @@ public class ConeParams
     public float LoPass;
     public float HiPass;
 
-    public ConeParams(FArchive Ar)
+    public ConeParams(FWwiseArchive Ar)
     {
         fInsideDegrees = Ar.Read<float>();
         fOutsideDegrees = Ar.Read<float>();
         fOutsideVolume = Ar.Read<float>();
         LoPass = Ar.Read<float>();
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             HiPass = Ar.Read<float>();
         }

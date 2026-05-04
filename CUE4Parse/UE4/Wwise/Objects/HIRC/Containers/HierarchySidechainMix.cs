@@ -1,31 +1,23 @@
-using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
-// TODO: Check if this is read correctly, I didn't have any test samples
 public class HierarchySidechainMix : AbstractHierarchy
 {
-    public readonly uint SidechainId;
-    public readonly EAkChannelConfigType ChannelConfig;
+    public readonly AkChannelConfig ChannelConfig;
 
     // CAkSidechainMixIndexable::SetInitialValues
-    public HierarchySidechainMix(FArchive Ar) : base(Ar)
+    public HierarchySidechainMix(FWwiseArchive Ar) : base(Ar)
     {
-        SidechainId = Ar.Read<uint>();
-        ChannelConfig = Ar.Read<EAkChannelConfigType>();
+        ChannelConfig = new AkChannelConfig(Ar);
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName(nameof(SidechainId));
-        writer.WriteValue(SidechainId);
-
         writer.WritePropertyName(nameof(ChannelConfig));
-        writer.WriteValue(ChannelConfig.ToString());
+        serializer.Serialize(writer, ChannelConfig);
 
         writer.WriteEndObject();
     }

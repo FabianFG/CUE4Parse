@@ -19,6 +19,13 @@ namespace CUE4Parse.UE4.Readers
             Length = _data.Length;
         }
 
+        public FByteArchive(string name, byte[] data, long length, VersionContainer? versions = null) : base(versions)
+        {
+            _data = data;
+            Name = name;
+            Length = length;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {

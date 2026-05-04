@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.CrankcaseAudioREVModelPlayer;
 
@@ -17,7 +16,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
     public FAccelDecelModelControlData_old? AccelDecelModelControlData_old;
     public float Unknown;
 
-    public CREVSourceModelPlayerParams(FArchive Ar, int size)
+    public CREVSourceModelPlayerParams(FWwiseArchive Ar, int size)
     {
         Gain = Ar.Read<float>();
         Throttle = Ar.Read<float>();
@@ -26,7 +25,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
         Velocity = Ar.Read<float>();
         EnableShifting = Ar.Read<int>() != 0;
         EngineSimulationControlData = new FEngineSimulationControlData(Ar);
-        if (WwiseVersions.Version >= 132)
+        if (Ar.Version >= 132)
         {
             AccelDecelModelControlData = new FAccelDecelModelControlData(Ar);
             Unknown = BinaryPrimitives.ReadSingleBigEndian(Ar.ReadBytes(4));
@@ -37,7 +36,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
         }
     }
 
-    public struct FAccelDecelModelControlData_old(FArchive Ar)
+    public struct FAccelDecelModelControlData_old(FWwiseArchive Ar)
     {
         public short EndianStatus = Ar.Read<short>();
         public ushort Size = Ar.Read<ushort>();
@@ -57,7 +56,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
         public float IdleRampIn = Ar.Read<float>();
     }
 
-    public struct FEngineSimulationControlData(FArchive Ar)
+    public struct FEngineSimulationControlData(FWwiseArchive Ar)
     {
         public short EndianStatus = Ar.Read<short>();
         public ushort Size = Ar.Read<ushort>();
@@ -80,7 +79,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
         public float ClutchRPMMergeTime = Ar.Read<float>();
     }
 
-    public struct FAccelDecelModelControlData(FArchive Ar)
+    public struct FAccelDecelModelControlData(FWwiseArchive Ar)
     {
         public short EndianStatus = Ar.Read<short>();
         public ushort SizeOf = Ar.Read<ushort>();
@@ -98,7 +97,7 @@ public class CREVSourceModelPlayerParams : IAkPluginParam
         public GranularModelControlData[] GranularModelControlData = Ar.ReadArray(2, () => new GranularModelControlData(Ar));
     };
 
-    public struct GranularModelControlData(FArchive Ar)
+    public struct GranularModelControlData(FWwiseArchive Ar)
     {
         public short EndianStatus = Ar.Read<short>();
         public ushort SizeOf = Ar.Read<ushort>();

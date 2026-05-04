@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using Newtonsoft.Json;
@@ -17,7 +16,7 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly IAkPluginParam? PluginParams;
 
     // CAkFxBase::SetInitialValues
-    public BaseHierarchyFx(FArchive Ar) : base(Ar)
+    public BaseHierarchyFx(FWwiseArchive Ar) : base(Ar)
     {
         Plugin = WwisePlugin.GetPluginId(Ar);
         PluginParams = WwisePlugin.TryParsePluginParams(Ar, Plugin);
@@ -25,13 +24,13 @@ public class BaseHierarchyFx : AbstractHierarchy
         MediaList = Ar.ReadArray(Ar.Read<byte>(), () => new AkMediaMap(Ar));
         RTPCs = AkRtpc.ReadArray(Ar);
 
-        if (WwiseVersions.Version <= 89)
+        if (Ar.Version <= 89)
         {
             // Do nothing for versions <= 89
         }
-        else if (WwiseVersions.Version <= 126)
+        else if (Ar.Version <= 126)
         {
-            if (WwiseVersions.Version > 122)
+            if (Ar.Version > 122)
             {
                 // Unused bytes
                 Ar.Read<byte>();
@@ -52,9 +51,9 @@ public class BaseHierarchyFx : AbstractHierarchy
         public readonly int ParamId;
         public readonly float InitValue;
 
-        public RtpcInit(FArchive Ar)
+        public RtpcInit(FWwiseArchive Ar)
         {
-            ParamId = WwiseReader.Read7BitEncodedIntBE(Ar);
+            ParamId = Ar.Read7BitEncodedIntBE();
             InitValue = Ar.Read<float>();
         }
     }
@@ -65,9 +64,9 @@ public class BaseHierarchyFx : AbstractHierarchy
         public readonly EAkRtpcAccum RtpcAccum;
         public readonly float Value;
 
-        public PluginPropertyValue(FArchive Ar)
+        public PluginPropertyValue(FWwiseArchive Ar)
         {
-            PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar);
+            PropertyId = Ar.Read7BitEncodedIntBE();
             RtpcAccum = Ar.Read<EAkRtpcAccum>();
             Value = Ar.Read<float>();
         }

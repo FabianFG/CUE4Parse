@@ -35,6 +35,21 @@ public class UDataTable : UObject
             }
         }
 
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        {
+            Ar.Position += 16;
+            var numRows1 = Ar.Read<int>();
+            RowMap = new Dictionary<FName, FStructFallback>(numRows1);
+            CustomGameData = Ar.ReadMap(numRows1, Ar.ReadFName, () => (Ar.Read<ulong>(),Ar.Read<ulong>(),  Ar.Read<int>()));
+            for (var i = 0; i < numRows1; i++)
+            {
+                var rowName = Ar.ReadFName();
+                RowMap[rowName] = rowStruct != null ? new FStructFallback(Ar, rowStruct) : new FStructFallback(Ar, RowStructName);
+            }
+
+            return;
+        }
+
         var numRows = Ar.Read<int>();
         RowMap = new Dictionary<FName, FStructFallback>(numRows);
         for (var i = 0; i < numRows; i++)

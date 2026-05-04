@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -17,7 +16,7 @@ public struct AkGameSync
         GroupType = groupType;
     }
 
-    public static AkGameSync[] ReadSequential(FArchive Ar, uint count)
+    public static AkGameSync[] ReadSequential(FWwiseArchive Ar, uint count)
     {
         var groupIds = Ar.ReadArray<uint>((int) count);
         var groupTypes = Ar.ReadArray<EAkGroupType>((int) count);

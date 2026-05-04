@@ -1,14 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkGuitarDistortionFXParams(FArchive Ar) : IAkPluginParam
+public class CAkGuitarDistortionFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkGuitarDistortionParams Params = new AkGuitarDistortionParams(Ar);
+    public AkGuitarDistortionParams Params = new(Ar);
 }
 
 public struct AkGuitarDistortionParams
@@ -19,7 +18,7 @@ public struct AkGuitarDistortionParams
     public float fOutputLevel;
     public float fWetDryMix;
 
-    public AkGuitarDistortionParams(FArchive Ar)
+    public AkGuitarDistortionParams(FWwiseArchive Ar)
     {
         PreEQ = Ar.ReadArray<AkFilterBand>(3);
         PostEQ = Ar.ReadArray<AkFilterBand>(3);

@@ -99,6 +99,9 @@ public class UStaticMesh : UObject
                             Ar.SkipMultipleBulkArrayData(2);
                         break;
                     }
+                    case EGame.GAME_HonorofKingsWorld:
+                        Ar.SkipBulkArrayData();
+                        break;
                     default:
                         Ar.SkipFixedArray(12); // Vertices
                         Ar.SkipFixedArray(2); // Indices

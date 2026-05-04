@@ -1,8 +1,6 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Plugins.MetaXRAudio;
 
-public class OculusEndpointSinkParams(FArchive Ar) : IAkPluginParam
+public class OculusEndpointSinkParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public ushort SpatializedVoiceLimit = Ar.Read<ushort>();
     public float GlobalScale = Ar.Read<float>();
@@ -21,14 +19,14 @@ public class OculusEndpointSinkParams(FArchive Ar) : IAkPluginParam
     public float ClutterFactor = Ar.Read<float>();
 }
 
-public class OculusEndpointMetadataParams(FArchive Ar) : IAkPluginParam
+public class OculusEndpointMetadataParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public bool EnableAcoustics = Ar.Read<byte>() != 0;
     public float ReverbSendLevel = Ar.Read<float>();
     public ushort DistanceAttenuationMode = Ar.Read<ushort>();
 }
 
-public class OculusEndpointExperimentalMetadataParams(FArchive Ar) : IAkPluginParam
+public class OculusEndpointExperimentalMetadataParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public ushort DirectivityPattern = Ar.Read<ushort>();
     public float ReflectionSendLevel = Ar.Read<float>();

@@ -210,7 +210,12 @@ public abstract class FTextHistory : IUStruct
             Namespace = Ar.ReadFString();
             Key = Ar.ReadFString();
             SourceString = Ar.ReadFString();
-            LocalizedString = Ar.Owner?.Provider?.Internationalization.SafeGet(Namespace, Key, SourceString) ?? string.Empty;
+            var strNamespace = Namespace;
+            if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+            {
+                strNamespace = "";
+            }
+            LocalizedString = Ar.Owner?.Provider?.Internationalization.SafeGet(strNamespace, Key, SourceString) ?? string.Empty;
         }
 
         public Base(string @namespace, string key, string sourceString, string localizedString = "")

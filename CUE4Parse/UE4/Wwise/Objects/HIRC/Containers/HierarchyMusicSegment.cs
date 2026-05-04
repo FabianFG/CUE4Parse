@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -12,7 +11,7 @@ public class HierarchyMusicSegment : BaseHierarchyMusic
     public readonly AkMusicMarkerWwise[] Markers;
 
     // CAkMusicSegment::SetInitialValues
-    public HierarchyMusicSegment(FArchive Ar) : base(Ar)
+    public HierarchyMusicSegment(FWwiseArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
         Stingers = AkStinger.ReadArray(Ar);

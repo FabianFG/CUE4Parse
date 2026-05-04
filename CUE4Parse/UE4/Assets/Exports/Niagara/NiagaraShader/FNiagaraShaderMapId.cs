@@ -31,17 +31,17 @@ public class FNiagaraShaderMapId
         }
 
         AdditionalDefines = Ar.ReadArray(Ar.ReadFString);
-        if (Ar.Game >= EGame.GAME_UE4_27)
+        if (Ar.Game >= EGame.GAME_UE4_27 || Ar.Game is EGame.GAME_HonorofKingsWorld)
         {
             AdditionalVariables = Ar.ReadArray(Ar.ReadFString);
-        }        
+        }
 
         BaseCompileHash = new FSHAHash(Ar);
         Ar.Position = Ar.Position.Align(8);
         ReferencedCompileHashes = Ar.ReadArray(() => new FSHAHash(Ar));
         LayoutParams = new FPlatformTypeLayoutParameters(Ar);
         Ar.Position = Ar.Position.Align(8);
-        if (Ar.Game >= EGame.GAME_UE4_27)
+        if (Ar.Game >= EGame.GAME_UE4_27 || Ar.Game is EGame.GAME_HonorofKingsWorld)
         {
             ShaderTypeDependencies = Ar.ReadArray(() => new FShaderTypeDependency(Ar));
         }

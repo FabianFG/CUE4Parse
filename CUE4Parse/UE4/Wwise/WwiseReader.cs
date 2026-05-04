@@ -25,7 +25,6 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 public class WwiseReader
 {
     public string Path;
-    private uint Version => Header.Version;
     private readonly WwiseDataSource? _source;
 
     public AkBankHeader Header { get; }
@@ -33,7 +32,6 @@ public class WwiseReader
     public List<AkEntry>? AKPKWemEntries { get; }
     public Dictionary<uint, string>? AKPluginList { get; }
     public MediaHeader[]? WemIndexes { get; }
-    public FDeferredByteData[]? WemSounds { get; }
     public Hierarchy[]? Hierarchies { get; }
     public Dictionary<uint, string> BankIDToFileName { get; } = [];
     public string? Platform { get; }
@@ -41,12 +39,12 @@ public class WwiseReader
     public GlobalSettings? GlobalSettings { get; }
     public CAkEnvironmentsMgr? EnvSettings { get; }
     public FDeferredByteData? WemFile { get; }
-    public FDeferredByteData? PluginData { get; }
     public FDeferredByteData? MidiData { get; }
+    public bool IsPlugin { get; }
     public long LoadedSize { get; }
     public long TotalSize { get; }
 
-    public WwiseReader(FArchive Ar, WwiseDataSource source, long size = -1)
+    public WwiseReader(FWwiseArchive Ar, WwiseDataSource source, long size = -1)
     {
         Path = Ar.Name;
         _source = source;
@@ -66,10 +64,10 @@ public class WwiseReader
                     if (!akpkHeader.Endianness)
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
-                    Ar.Position = akpkHeader.NamesOffset;
+                    Ar.Position = FAKPKHeader.NamesOffset;
                     var folders = Ar.ReadArray(() => new AkFolder(Ar));
                     foreach (var folder in folders)
-                        folder.PopulateName(Ar, akpkHeader.NamesOffset);
+                        folder.PopulateName(Ar, FAKPKHeader.NamesOffset);
 
                     Ar.Position = akpkHeader.BanksOffset;
                     var bankEntries = Ar.ReadArray(() => new AkEntry(Ar, true, false));
@@ -103,13 +101,15 @@ public class WwiseReader
                 case EChunkID.BankHeader:
                     LoadedSize += sectionLength;
                     Header = new AkBankHeader(Ar, sectionLength);
-                    WwiseVersions.SetVersion(Version);
-                    if (!WwiseVersions.IsSupported())
-                        Log.Warning($"Wwise version {Version} is not supported");
+
+                    Ar.Version = Header.Version;
+
+                    if (!Ar.IsSupported())
+                        Log.Warning($"Wwise version {Ar.Version} is not supported");
                     break;
                 case EChunkID.BankInit:
                     LoadedSize += sectionLength;
-                    AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar));
+                    AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Ar.Version <= 136 ? Ar.ReadFString() : Ar.ReadStzString());
                     break;
                 case EChunkID.BankDataIndex:
                     LoadedSize += sectionLength;
@@ -119,13 +119,15 @@ public class WwiseReader
                     if (WemIndexes == null)
                         break;
 
-                    WemSounds = new FDeferredByteData[WemIndexes.Length];
-                    for (var i = 0; i < WemSounds.Length; i++)
+                    for (var i = 0; i < WemIndexes.Length; i++)
                     {
-                        var temp = ReadDeferredByteData(Ar, _source, position + WemIndexes[i].Offset, WemIndexes[i].Size);
-                        WemSounds[i] = temp;
+                        var wemData = WemIndexes[i];
+                        if (wemData.Id == 0)
+                            continue;
+
+                        var temp = ReadDeferredByteData(Ar, _source, position + wemData.Offset, wemData.Size);
                         LoadedSize += temp.LoadedSize;
-                        WwiseEncodedMedias[WemIndexes[i].Id.ToString()] = temp;
+                        WwiseEncodedMedias[wemData.Id.ToString()] = temp;
                     }
                     break;
                 case EChunkID.BankHierarchy:
@@ -145,14 +147,14 @@ public class WwiseReader
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
                 case EChunkID.BankStateMg:
-                    if (WwiseVersions.IsSupported())
+                    if (Ar.IsSupported()) // Let's guard this just in case
                     {
                         LoadedSize += sectionLength;
                         GlobalSettings = new GlobalSettings(Ar);
                     }
                     break;
                 case EChunkID.BankEnvSetting:
-                    if (WwiseVersions.IsSupported()) // Let's guard this just in case
+                    if (Ar.IsSupported()) // Let's guard this just in case
                     {
                         LoadedSize += sectionLength;
                         EnvSettings = new CAkEnvironmentsMgr(Ar);
@@ -162,12 +164,18 @@ public class WwiseReader
                     break;
                 case EChunkID.BankCustomPlatformName:
                     LoadedSize += sectionLength;
-                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : ReadStzString(Ar);
+                    Platform = Ar.Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : Ar.ReadStzString();
                     break;
                 case EChunkID.PLUGIN:
+                    // Plugin container holds audio data encoded specifically for a given Wwise plugin
+                    // For example: ADM3 codec (Crankcase Audio), AK Convolution Reverb impulse response (currently not supported https://github.com/vgmstream/vgmstream/issues/1638)
                     Ar.Position -= 8;
-                    PluginData = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
-                    LoadedSize += PluginData.LoadedSize;
+#if DEBUG
+                    Log.Debug($"Found Wwise plugin section with length {sectionLength}");
+#endif
+                    WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
+                    LoadedSize += WemFile.LoadedSize;
+                    IsPlugin = true;
                     break;
                 case EChunkID.MIDI:
                     Ar.Position -= 8;
@@ -231,41 +239,4 @@ public class WwiseReader
 
         return null;
     }
-
-    #region Readers
-    public static string ReadStzString(FArchive Ar)
-    {
-        var bytes = new List<byte>(16);
-
-        while (true)
-        {
-            var b = Ar.Read<byte>();
-            if (b == 0) break;
-            bytes.Add(b);
-
-            if (bytes.Count >= 255)
-                throw new ArgumentException("ReadStz: string too long (no terminator within 255 bytes).");
-        }
-        return Encoding.UTF8.GetString([.. bytes]);
-    }
-
-    public static int Read7BitEncodedIntBE(FArchive Ar)
-    {
-        int max = 0;
-
-        byte cur = Ar.Read<byte>();
-        int value = cur & 0x7F;
-
-        while ((cur & 0x80) != 0)
-        {
-            if (++max >= 10)
-                throw new FormatException("Unexpected variable loop count");
-
-            cur = Ar.Read<byte>();
-            value = (value << 7) | (cur & 0x7F);
-        }
-
-        return value;
-    }
-    #endregion
 }

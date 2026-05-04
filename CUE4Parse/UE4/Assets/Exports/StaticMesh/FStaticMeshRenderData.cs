@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -85,6 +86,12 @@ public class FStaticMeshRenderData
             }
 
             SerializeInlineDataRepresentations(Ar);
+        }
+
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld &&
+            LODs.Any(x => x.Sections.Length > 0 && x.Sections[0] is { CustomData: 1 }))
+        {
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 41);
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.RENAME_CROUCHMOVESCHARACTERDOWN)
@@ -177,7 +184,7 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is EGame.GAME_DeltaForceHawkOps or EGame.GAME_DeadzoneRogue) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DeltaForce or EGame.GAME_DeadzoneRogue) Ar.Position += 4;
         if (Ar.Game is EGame.GAME_InfinityNikki) Ar.Position += 8;
 
         var screenSizeLength = Ar.Game switch

@@ -1,15 +1,13 @@
-
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkPitchShifterFXParams(FArchive Ar) : IAkPluginParam
+public class CAkPitchShifterFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkPitchShifterFXParams Params = new AkPitchShifterFXParams(Ar);
+    public AkPitchShifterFXParams Params = new(Ar);
 }
 
 // to-do recheck cause BN failed to decompile correctly
@@ -23,7 +21,7 @@ public struct AkPitchShifterFXParams
     public bool bProcessLFE;
     public bool bSyncDry;
 
-    public AkPitchShifterFXParams(FArchive Ar)
+    public AkPitchShifterFXParams(FWwiseArchive Ar)
     {
         eInputType = Ar.Read<AkInputType>();
         fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
@@ -55,7 +53,7 @@ public struct AkPitchVoiceParams
     public float fGain;
     public bool bEnable;
 
-    public AkPitchVoiceParams(FArchive Ar)
+    public AkPitchVoiceParams(FWwiseArchive Ar)
     {
         bEnable = Ar.Read<byte>() != 0;
         fPitchFactor = (float) Math.Pow(2f, Ar.Read<float>() * 0.000833333354f);

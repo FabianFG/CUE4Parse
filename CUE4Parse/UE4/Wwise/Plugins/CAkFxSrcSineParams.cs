@@ -1,16 +1,15 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkFxSrcSineParams(FArchive Ar) : IAkPluginParam
+public class CAkFxSrcSineParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkFxSrcSineParams Params = new AkFxSrcSineParams(Ar);
+    public AkFxSrcSineParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct AkFxSrcSineParams(FArchive Ar)
+public struct AkFxSrcSineParams(FWwiseArchive Ar)
 {
     public float fFrequency = Ar.Read<float>();
     public float fGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);

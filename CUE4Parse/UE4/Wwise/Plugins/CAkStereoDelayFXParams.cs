@@ -1,14 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkStereoDelayFXParams(FArchive Ar) : IAkPluginParam
+public class CAkStereoDelayFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkStereoDelayFXParams Params = new AkStereoDelayFXParams(Ar);
+    public AkStereoDelayFXParams Params = new(Ar);
 }
 
 public struct AkStereoDelayFXParams
@@ -22,7 +21,7 @@ public struct AkStereoDelayFXParams
     public bool bEnableFeedback;
     public bool bEnableCrossFeed;
 
-    public AkStereoDelayFXParams(FArchive Ar)
+    public AkStereoDelayFXParams(FWwiseArchive Ar)
     {
         eInputType[0] = Ar.Read<AkInputChannelType>();
         StereoDelayParams[0] = new AkStereoDelayChannelParams(Ar);
@@ -36,7 +35,7 @@ public struct AkStereoDelayFXParams
         bEnableCrossFeed = Ar.Read<byte>() != 0;
     }
 
-    public struct AkStereoDelayChannelParams(FArchive Ar)
+    public struct AkStereoDelayChannelParams(FWwiseArchive Ar)
     {
         public float fDelayTime = Ar.Read<float>();
         public float fFeedback = MathF.Pow(10f, Ar.Read<float>() * 0.05f);

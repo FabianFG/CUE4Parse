@@ -145,6 +145,7 @@ public class FShaderMapContent
         {
             ShaderPlatform = Ar.Read<EShaderPlatform>();
             Ar.Position = Ar.Position.Align(8);
+            if (Ar.Game is EGame.GAME_HonorofKingsWorld) Ar.Position += 152;
         }
     }
 }
@@ -313,7 +314,7 @@ public class FShaderParameterMapInfo
             TextureSamplers = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
             SRVs = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
         }
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 16;
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or EGame.GAME_HonorofKingsWorld) Ar.Position += 16;
         LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
         Hash = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<ulong>() : 0;
         if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 8;

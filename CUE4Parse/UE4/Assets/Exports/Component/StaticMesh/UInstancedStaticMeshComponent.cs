@@ -43,6 +43,12 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         }
 
         var bHasSkipSerializationPropertiesData = Ar.Ver >= EUnrealEngineObjectUE3Version.BULKSERIALIZE_INSTANCE_DATA && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        {
+            CustomGameData = Ar.ReadBoolean();
+            bHasSkipSerializationPropertiesData = Ar.ReadBoolean();
+        }
+
         if (bHasSkipSerializationPropertiesData)
         {
             switch (Ar.Game)
@@ -92,7 +98,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                     break;
             };
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == EGame.GAME_DeltaForceHawkOps)
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == EGame.GAME_DeltaForce)
             {
                 PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
             }

@@ -1,14 +1,13 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkExpanderFXParams(FArchive Ar) : IAkPluginParam
+public class CAkExpanderFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkExpanderParams Params = new AkExpanderParams(Ar);
+    public AkExpanderParams Params = new(Ar);
 }
 
-public struct AkExpanderParams(FArchive Ar)
+public struct AkExpanderParams(FWwiseArchive Ar)
 {
     public float fThreshold = Ar.Read<float>();
     public float fRatio = Ar.Read<float>();

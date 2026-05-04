@@ -22,6 +22,7 @@ public readonly struct FMovieSceneValue<T> : IUStruct
         }
         else
         {
+            if (Ar.Game is EGame.GAME_HonorofKingsWorld) compact = true;
             if (compact)
             {
                 Tangent = new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>());
