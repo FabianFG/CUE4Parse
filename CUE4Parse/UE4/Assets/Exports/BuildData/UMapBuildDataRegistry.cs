@@ -396,7 +396,7 @@ public class FLegacyLightMap1D : FLightMap
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
     {
         new FPackageIndex(Ar); // Owner
-        new FIntBulkData(Ar); // DirectionalSamples
+        new FColorBulkData(Ar); // DirectionalSamples
         if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
         {
             for (int elementIndex = 0; elementIndex < 3; elementIndex++)
@@ -421,7 +421,7 @@ public class FLegacyLightMap1D : FLightMap
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING)
         {
-            new FIntBulkData(Ar); // SimpleSamples
+            new FColorBulkData(Ar); // SimpleSamples
         }
     }
 }
