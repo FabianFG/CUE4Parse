@@ -19,7 +19,7 @@ public static class WwiseVersionInfo
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight (old), Splitgate 2, Byte Breakers, Le Dernier Don
         154,    // Off The Grid, Dead by Daylight
-        172     // Soglia (Unity)
+        172     // Soglia (Unity), Stardream Prologue
     ];
 
     public static bool IsSupported(uint version) => SupportedVersions.Contains(version);
