@@ -37,6 +37,8 @@ public class FRawStaticIndexBuffer() : FRawIndexBuffer
             {
                 var count = (int)tempAr.Length / 2;
                 SetIndices(tempAr.ReadArray<ushort>(count));
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.RENDERING_REFACTOR) Ar.Read<int>();
             }
 
             if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds && Buffer is not null)

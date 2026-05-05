@@ -156,7 +156,7 @@ public class FPropertyTag
             TagData = new FPropertyTagData(typeName, Name.Text);
 
             Size = Ar.Read<int>();
-            PropertyTagFlags = (EPropertyTagFlags) Ar.ReadByte();
+            PropertyTagFlags = (EPropertyTagFlags) Ar.Read<byte>();
             if (PropertyTagFlags.HasFlag(EPropertyTagFlags.BoolTrue)) TagData.Bool = true;
             ArrayIndex = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) ? Ar.Read<int>() : 0;
             HasPropertyGuid = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyGuid);

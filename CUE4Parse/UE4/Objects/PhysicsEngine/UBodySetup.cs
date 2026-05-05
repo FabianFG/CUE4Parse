@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
 
             BodySetupGuid = Ar.Read<FGuid>();
 
-            var bCooked = Ar.ReadBoolean();
+            var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_BODY_SETUP && Ar.ReadBoolean();
             if (!bCooked) return;
             if (Ar.Game is EGame.GAME_Aion2 && GetOrDefault<bool>("bNeverNeedsCookedCollisionData")) return;
             if (Ar.Game is EGame.GAME_Highguard) return;

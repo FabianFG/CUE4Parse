@@ -28,6 +28,8 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
+    // May include image as DSS or possible other
+    public FByteBulkData? SourceArt { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
@@ -72,6 +74,12 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
+
+        if (Ar.Game < EGame.GAME_UE4_0)
+        {
+            SourceArt = new FByteBulkData(Ar);
+            return;
+        }
 
         var stripFlags = new FStripDataFlags(Ar);
 
