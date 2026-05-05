@@ -91,7 +91,7 @@ namespace CUE4Parse_Conversion.Materials
                 if (bitmap == null)
                     continue;
 
-                var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext);
+                var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext, Options.TextureQuality);
                 var texturePath = FixAndCreatePath(baseDirectory, name, ext);
                 using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                 fs.Write(imageData, 0, imageData.Length);
