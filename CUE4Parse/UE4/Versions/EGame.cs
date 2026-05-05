@@ -137,7 +137,7 @@ public enum EGame : uint
         GAME_DuetNightAbyss = GAME_UE4_27 + 29,
         GAME_LiesofP = GAME_UE4_27 + 30,
         GAME_BloodBowl3 = GAME_UE4_27 + 31,
-        GAME_MyHeroUltraRumble = GAME_UE4_27 + 32,
+        GAME_ChasingKaleidoRIDER = GAME_UE4_27 + 32,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
