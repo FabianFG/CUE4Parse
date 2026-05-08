@@ -50,6 +50,6 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
         EMeshFormat.OBJ => new GltfMeshFormat(isObj: true),
         EMeshFormat.UEFormat => new UEFormatMeshFormat(),
         EMeshFormat.USD => new UsdMeshFormat(),
-        _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported mesh format")
+        _ => throw new NotSupportedException($"Mesh export does not support format {format}")
     };
 }

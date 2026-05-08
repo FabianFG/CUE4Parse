@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
@@ -44,12 +45,15 @@ internal sealed class WorldParseContext
             {
                 USceneComponent scene => scene switch
                 {
-                    UInstancedStaticMeshComponent ism => new InstancedStaticMeshComponentDto(ism, owner),
-                    // USplineMeshComponent spline => new SplineMeshComponentDto(spline),
-                    UStaticMeshComponent sm => new StaticMeshComponentDto(sm, owner),
-                    USkeletalMeshComponent sk => new SkeletalMeshComponentDto(sk, owner),
+                    UStaticMeshComponent sm when sm.TryGetValue<FPackageIndex>(out var mesh, "StaticMesh") => sm switch
+                    {
+                        UInstancedStaticMeshComponent ism => new InstancedStaticMeshComponentDto(mesh, ism, owner),
+                        USplineMeshComponent spline => new SplineMeshComponentDto(mesh, spline, owner),
+                        _ => new StaticMeshComponentDto(mesh, sm, owner)
+                    },
+                    USkeletalMeshComponent sk when sk.TryGetValue<FPackageIndex>(out var mesh, "SkeletalMesh", "SkinnedAsset") => new SkeletalMeshComponentDto(mesh, sk, owner),
                     ULandscapeComponent landscape => new LandscapeMeshComponentDto(landscape, owner),
-                    // ULandscapeSplinesComponent splines => new LandscapeSplinesComponent(splines),
+                    ULandscapeSplinesComponent splines => new LandscapeSplinesComponentDto(splines, owner),
                     // UBillboardComponent billboard => new BillboardComponent(billboard),
                     // UArrowComponent arrow => new ArrowComponent(arrow),
                     // UBrushComponent brush => new BrushComponentDto(brush, owner),

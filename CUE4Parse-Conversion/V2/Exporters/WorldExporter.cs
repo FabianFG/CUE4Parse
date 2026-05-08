@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse_Conversion.V2.Dto.World;
 using CUE4Parse_Conversion.V2.Formats.World;
-using CUE4Parse_Conversion.World;
+using CUE4Parse_Conversion.V2.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -17,7 +17,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
 
     protected override IReadOnlyList<ExportFile> BuildExportFiles()
     {
-        var format = GetWorldFormat(EWorldFormat.USD);
+        var format = GetWorldFormat(Session.Options.MeshFormat);
         using var world = new WorldDto(export);
 
         var paths = new WorldAssetPaths();
@@ -59,38 +59,47 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
         {
             case null: return;
             case MeshComponentDto meshComp:
-                if (!meshComp.MeshPtr.IsNull && paths.Meshes.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
+            {
+                if (!meshComp.MeshPtr.IsNull)
                 {
-                    paths.Meshes[meshComp.MeshPtr] = Resolve(mesh, Extension);
-                    if (mesh is UStaticMesh or USkeletalMesh) Session.Add(mesh);
+                    if (meshComp is SplineMeshComponentDto splineComp)
+                    {
+                        paths.SplineMeshes[splineComp] = Resolve(splineComp._component, Extension);
+                        Session.Add(splineComp._component);
+                    }
+                    else if (paths.Assets.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
+                    {
+                        paths.Assets[meshComp.MeshPtr] = Resolve(mesh, Extension);
+                        if (mesh is UStaticMesh or USkeletalMesh) Session.Add(mesh);
+                    }
                 }
 
                 if (meshComp.OverrideMaterials is { Length: > 0 } overrides)
                 {
                     foreach (var ptr in overrides)
                     {
-                        if (ptr is null || ptr.IsNull || !paths.Materials.TryAdd(ptr, "") ||
+                        if (ptr is null || ptr.IsNull || !paths.Assets.TryAdd(ptr, "") ||
                             ptr.Load<UMaterialInterface>() is not { } material) continue;
 
-                        if (Session.Options.ExportMaterials)
-                        {
-                            Session.Add(material);
-                        }
-                        paths.Materials[ptr] = Resolve(material, Extension);
-
+                        paths.Assets[ptr] = Resolve(material, Extension);
+                        if (Session.Options.ExportMaterials) Session.Add(material);
                     }
                 }
                 break;
-            case LandscapeMeshComponentDto landscape:
+            }
+            case LandscapeMeshComponentDto landscapeComp:
+            {
+                paths.LandscapeMeshes[landscapeComp] = Resolve(landscapeComp._component, Extension);
                 if (LandscapeMeshComponentDto.PerComponentExport)
                 {
-                    Session.Add(landscape.Component);
+                    Session.Add(landscapeComp._component);
                 }
-                else if (landscape.OuterProxy is { } proxy)
+                else if (landscapeComp.OuterProxy is { } proxy)
                 {
                     Session.Add(proxy);
                 }
                 break;
+            }
         }
 
         foreach (var child in comp.Children)
@@ -99,10 +108,10 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
         }
     }
 
-    private IWorldExportFormat GetWorldFormat(EWorldFormat format) => format switch
+    private IWorldExportFormat GetWorldFormat(EMeshFormat format) => format switch
     {
-        EWorldFormat.USD => new UsdWorldFormat(),
-        EWorldFormat.UEFormat => new UEFormatWorldFormat(),
-        _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported world format")
+        EMeshFormat.USD => new UsdWorldFormat(),
+        // EMeshFormat.UEFormat => new UEFormatWorldFormat(),
+        _ => throw new NotSupportedException($"World export does not support format {format}")
     };
 }

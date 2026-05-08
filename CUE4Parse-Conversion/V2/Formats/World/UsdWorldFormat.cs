@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using CUE4Parse_Conversion.V2.Dto.World;
 using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Formats.World;
 
@@ -13,13 +11,10 @@ public class UsdWorldFormat : IWorldExportFormat
 
     public ExportFile Build(WorldDto dto, WorldAssetPaths paths)
     {
-        var lookup = new AssetLookup(paths.Meshes);
-        var matLookup = new AssetLookup(paths.Materials);
-
         var worldPrim = UsdPrim.Def("Scope", dto.Name);
         foreach (var actor in dto.Actors)
         {
-            worldPrim.Add(BuildActorPrim(actor, lookup, paths.Worlds, matLookup));
+            worldPrim.Add(BuildActorPrim(actor, paths));
         }
 
         var stage = new UsdStage(worldPrim);
@@ -31,7 +26,7 @@ public class UsdWorldFormat : IWorldExportFormat
         return new ExportFile("usda", stage.SerializeToBinary());
     }
 
-    private UsdPrim BuildActorPrim(ActorDto actor, AssetLookup lookup, IReadOnlyDictionary<string, string>? worldPaths, AssetLookup matLookup)
+    private UsdPrim BuildActorPrim(ActorDto actor, WorldAssetPaths paths)
     {
         var actorPrim = UsdPrim.Def("Scope", actor.Name);
         if (!actor.IsVisible)
@@ -41,14 +36,14 @@ public class UsdWorldFormat : IWorldExportFormat
 
         if (actor.RootComponent is { } root)
         {
-            var rootPrim = BuildComponentPrim(root, lookup, matLookup);
-            BuildChildrenComponent(root, rootPrim, lookup, worldPaths, matLookup);
+            var rootPrim = BuildComponentPrim(root, paths);
+            BuildChildrenComponent(root, rootPrim, paths);
 
-            if (actor.AdditionalWorlds is { Count: > 0 } additionalWorlds && worldPaths is not null)
+            if (actor.AdditionalWorlds is { Count: > 0 } additionalWorlds)
             {
                 foreach (var world in additionalWorlds)
                 {
-                    if (!worldPaths.TryGetValue(world.Name, out var worldPath)) continue;
+                    if (!paths.Worlds.TryGetValue(world.Name, out var worldPath)) continue;
                     var worldRef = UsdPrim.Def("Xform", world.Name);
                     worldRef.SetReference(new UsdReferenceList([new UsdReference(worldPath)]));
                     rootPrim.Add(worldRef);
@@ -60,13 +55,13 @@ public class UsdWorldFormat : IWorldExportFormat
 
         foreach (var child in actor.ChildActors)
         {
-            actorPrim.Add(BuildActorPrim(child, lookup, worldPaths, matLookup));
+            actorPrim.Add(BuildActorPrim(child, paths));
         }
 
         return actorPrim;
     }
 
-    private UsdPrim BuildComponentPrim(SceneComponentDto component, AssetLookup lookup, AssetLookup matLookup)
+    private UsdPrim BuildComponentPrim(SceneComponentDto component, WorldAssetPaths paths)
     {
         var prim = UsdPrim.Def("Xform", component.Name);
 
@@ -79,18 +74,22 @@ public class UsdWorldFormat : IWorldExportFormat
         switch (component)
         {
             case InstancedStaticMeshComponentDto ism:
-                if (ism.Transforms.Length > 0) prim.Add(BuildPointInstancer(ism, lookup, matLookup));
+                if (ism.Transforms.Length > 0) prim.Add(BuildPointInstancer(ism, paths));
                 break;
-            case MeshComponentDto mesh when lookup.TryGet(mesh.MeshPtr, out var path):
-                ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name, matLookup);
+            case SplineMeshComponentDto spline when paths.SplineMeshes.TryGetValue(spline, out var splinePath):
+                ApplyMaterialOverrides(prim, spline, spline.MeshPtr.Name, paths);
+                prim.SetReference(new UsdReferenceList([new UsdReference(splinePath)]));
+                break;
+            case MeshComponentDto mesh when paths.TryGet(mesh.MeshPtr, out var path):
+                ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name, paths);
                 prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
                 break;
             case MeshComponentDto mesh:
                 prim.Add(CreateDummyCube(mesh.MeshPtr.Name));
                 break;
-            case LandscapeMeshComponentDto landscape when LandscapeMeshComponentDto.PerComponentExport:
+            case LandscapeMeshComponentDto landscape when LandscapeMeshComponentDto.PerComponentExport && paths.LandscapeMeshes.TryGetValue(landscape, out var landscapePath):
                 transform.Translation = FVector.ZeroVector; // the exporter is gonna offset the mesh by SectionBaseX/Y
-                prim.SetReference(new UsdReferenceList([new UsdReference(landscape.Ref)]));
+                prim.SetReference(new UsdReferenceList([new UsdReference(landscapePath)]));
                 break;
             case BrushComponentDto brush:
                 prim.Add(brush.ToMeshPrim());
@@ -109,7 +108,7 @@ public class UsdWorldFormat : IWorldExportFormat
         return prim;
     }
 
-    private void ApplyMaterialOverrides(UsdPrim componentPrim, MeshComponentDto component, string meshAssetName, AssetLookup matLookup)
+    private void ApplyMaterialOverrides(UsdPrim componentPrim, MeshComponentDto component, string meshAssetName, WorldAssetPaths paths)
     {
         if (component.OverrideMaterials is not { Length: > 0 } overrides) return;
 
@@ -125,7 +124,7 @@ public class UsdWorldFormat : IWorldExportFormat
             if (mat is null || mat.IsNull) continue;
 
             var matPrim = UsdPrim.Def("Material", mat.Name);
-            if (matLookup.TryGet(mat, out var matPath))
+            if (paths.TryGet(mat, out var matPath))
             {
                 matPrim.SetReference(new UsdReferenceList([new UsdReference(matPath)]));
             }
@@ -139,34 +138,34 @@ public class UsdWorldFormat : IWorldExportFormat
         }
     }
 
-    private void BuildChildrenComponent(SceneComponentDto component, UsdPrim parentPrim, AssetLookup lookup, IReadOnlyDictionary<string, string>? worldPaths, AssetLookup matLookup)
+    private void BuildChildrenComponent(SceneComponentDto component, UsdPrim parentPrim, WorldAssetPaths paths)
     {
         foreach (var child in component.Children)
         {
             // Cross-actor boundary → emit a full nested actor Scope
             if (child.Owner != component.Owner && child.Owner.RootComponent == child)
             {
-                parentPrim.Add(BuildActorPrim(child.Owner, lookup, worldPaths, matLookup));
+                parentPrim.Add(BuildActorPrim(child.Owner, paths));
                 continue;
             }
 
-            var childPrim = BuildComponentPrim(child, lookup, matLookup);
-            BuildChildrenComponent(child, childPrim, lookup, worldPaths, matLookup);
+            var childPrim = BuildComponentPrim(child, paths);
+            BuildChildrenComponent(child, childPrim, paths);
             parentPrim.Add(childPrim);
         }
     }
 
-    private UsdPrim BuildPointInstancer(InstancedStaticMeshComponentDto ism, AssetLookup lookup, AssetLookup matLookup)
+    private UsdPrim BuildPointInstancer(InstancedStaticMeshComponentDto ism, WorldAssetPaths paths)
     {
         var instancer = UsdPrim.Def("PointInstancer", "Instances");
         var prototypes = UsdPrim.Def("Scope", "Prototypes");
 
         // Build the prototype prim
         UsdPrim prototypePrim;
-        if (lookup.TryGet(ism.MeshPtr, out var meshPath))
+        if (paths.TryGet(ism.MeshPtr, out var meshPath))
         {
             prototypePrim = new UsdPrim("Xform", ism.MeshPtr.Name);
-            ApplyMaterialOverrides(prototypePrim, ism, ism.MeshPtr.Name, matLookup);
+            ApplyMaterialOverrides(prototypePrim, ism, ism.MeshPtr.Name, paths);
             prototypePrim.SetReference(new UsdReferenceList([new UsdReference(meshPath)]));
         }
         else
@@ -210,14 +209,5 @@ public class UsdWorldFormat : IWorldExportFormat
     {
         var mesh = UsdPrim.Def("Cube", name);
         return mesh;
-    }
-
-    private readonly record struct AssetLookup(IReadOnlyDictionary<FPackageIndex, string>? Paths)
-    {
-        public bool TryGet(FPackageIndex mesh, out string path)
-        {
-            path = string.Empty;
-            return !mesh.IsNull && Paths is not null && Paths.TryGetValue(mesh, out path!);
-        }
     }
 }

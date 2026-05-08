@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -12,14 +13,9 @@ using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.V2.Dto.World;
 
-public class ComponentDto : ObjectDto
+public class ComponentDto(UObject component, ActorDto owner) : ObjectDto(component)
 {
-    public readonly ActorDto Owner;
-
-    public ComponentDto(UObject component, ActorDto owner) : base(component)
-    {
-        Owner = owner;
-    }
+    public readonly ActorDto Owner = owner;
 
     public override void Dispose()
     {
@@ -83,15 +79,26 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
     }
 }
 
-public abstract class MeshComponentDto : PrimitiveComponentDto
+/// <summary>
+/// The mesh pointer is resolved by the caller and passed in rather than being looked up inside the ctor
+/// This is intentional because we want to enforce the fact that a <see cref="MeshComponentDto"/> contains a mesh (even tho technically you can pass in any pointer)
+/// if no mesh pointer was found the caller should fall back to <see cref="SceneComponentDto"/> so that child components are not lost
+/// <para>
+/// Example hierarchy where <c>Wire</c> has no mesh assigned but still parents two spline meshes:
+/// <code>
+/// BP_Actor
+/// └─ Root (SceneComponent)
+///    └─ Wire (StaticMeshComponent, no mesh)
+///       ├─ Spline1 (SplineMeshComponent)
+///       └─ Spline2 (SplineMeshComponent)
+/// </code>
+/// If the constructor threw on a missing mesh, <c>Spline1</c> and <c>Spline2</c> would never be visited.
+/// </para>
+/// </summary>
+public abstract class MeshComponentDto(FPackageIndex meshPtr, UMeshComponent component, ActorDto owner) : PrimitiveComponentDto(component, owner)
 {
-    public abstract FPackageIndex MeshPtr { get; }
-    public readonly FPackageIndex?[] OverrideMaterials;
-
-    protected MeshComponentDto(UMeshComponent component, ActorDto owner) : base(component, owner)
-    {
-        OverrideMaterials = component.OverrideMaterials;
-    }
+    public readonly FPackageIndex MeshPtr = meshPtr;
+    public readonly FPackageIndex?[] OverrideMaterials = component.OverrideMaterials;
 }
 
 /// <summary>
@@ -113,8 +120,7 @@ public class LandscapeMeshComponentDto : PrimitiveComponentDto
     public const bool PerComponentExport = true;
 
     public readonly ALandscapeProxy? OuterProxy;
-    public readonly ULandscapeComponent Component;
-    public readonly string Ref;
+    internal readonly ULandscapeComponent _component;
 
     public LandscapeMeshComponentDto(ULandscapeComponent component, ActorDto owner) : base(component, owner)
     {
@@ -124,26 +130,17 @@ public class LandscapeMeshComponentDto : PrimitiveComponentDto
             component.Outer?.TryLoad<ALandscapeProxy>(out OuterProxy);
         }
 
-        Component = component;
-        Ref = $"./{component.Owner?.Name.SubstringAfterLast('/')}/{OuterProxy?.Name ?? component.Name}.usda"; // kinda sketchy
+        _component = component;
     }
 }
 
-public class StaticMeshComponentDto : MeshComponentDto
-{
-    public override FPackageIndex MeshPtr { get; }
-
-    public StaticMeshComponentDto(UStaticMeshComponent component, ActorDto owner) : base(component, owner)
-    {
-        MeshPtr = component.Get<FPackageIndex>(nameof(StaticMesh));
-    }
-}
+public class StaticMeshComponentDto(FPackageIndex meshPtr, UStaticMeshComponent component, ActorDto owner) : MeshComponentDto(meshPtr, component, owner);
 
 public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
 {
     public readonly FTransform[] Transforms;
 
-    public InstancedStaticMeshComponentDto(UInstancedStaticMeshComponent component, ActorDto owner) : base(component, owner)
+    public InstancedStaticMeshComponentDto(FPackageIndex meshPtr, UInstancedStaticMeshComponent component, ActorDto owner) : base(meshPtr, component, owner)
     {
         var instances = component.GetInstances();
         Transforms = new FTransform[instances.Length];
@@ -154,24 +151,36 @@ public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
     }
 }
 
-public abstract class SkinnedMeshComponentDto : MeshComponentDto
+public class SplineMeshComponentDto(FPackageIndex meshPtr, USplineMeshComponent component, ActorDto owner) : StaticMeshComponentDto(meshPtr, component, owner)
 {
-    public override FPackageIndex MeshPtr { get; }
+    internal readonly USplineMeshComponent _component = component;
+}
 
-    protected SkinnedMeshComponentDto(USkinnedMeshComponent component, ActorDto owner) : base(component, owner)
+public class LandscapeSplinesComponentDto : PrimitiveComponentDto
+{
+    public LandscapeSplinesComponentDto(ULandscapeSplinesComponent component, ActorDto owner) : base(component, owner)
     {
-        MeshPtr = component.GetOrDefault<FPackageIndex?>("SkeletalMesh") ?? component.Get<FPackageIndex>("SkinnedAsset");
+        foreach (var ptr in component.Segments)
+        {
+            if (ptr?.TryLoad<ULandscapeSplineSegment>(out var segment) == true)
+            {
+                foreach (var meshPtr in segment.LocalMeshComponents)
+                {
+                    if (meshPtr?.TryLoad<USplineMeshComponent>(out var splineMesh) == true && splineMesh.TryGetValue<FPackageIndex>(out var mesh, "StaticMesh"))
+                    {
+                        Children.Add(new SplineMeshComponentDto(mesh, splineMesh, owner));
+                    }
+                }
+            }
+        }
     }
 }
 
-public class SkeletalMeshComponentDto : SkinnedMeshComponentDto
-{
-    public readonly FSingleAnimationPlayData? AnimationData;
+public abstract class SkinnedMeshComponentDto(FPackageIndex meshPtr, USkinnedMeshComponent component, ActorDto owner) : MeshComponentDto(meshPtr, component, owner);
 
-    public SkeletalMeshComponentDto(USkeletalMeshComponent component, ActorDto owner) : base(component, owner)
-    {
-        AnimationData = component.AnimationData;
-    }
+public class SkeletalMeshComponentDto(FPackageIndex meshPtr, USkeletalMeshComponent component, ActorDto owner) : SkinnedMeshComponentDto(meshPtr, component, owner)
+{
+    public readonly FSingleAnimationPlayData? AnimationData = component.AnimationData;
 }
 
 public abstract class ShapeComponentDto : PrimitiveComponentDto
