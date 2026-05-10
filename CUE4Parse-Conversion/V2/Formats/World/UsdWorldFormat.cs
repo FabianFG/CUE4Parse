@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using CUE4Parse_Conversion.V2.Dto.World;
 using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Formats.World;
 
@@ -63,39 +65,43 @@ public class UsdWorldFormat : IWorldExportFormat
 
     private UsdPrim BuildComponentPrim(SceneComponentDto component, WorldAssetPaths paths)
     {
-        var prim = UsdPrim.Def("Xform", component.Name);
-
-        if (component is PrimitiveComponentDto { IsVisible: false })
-        {
-            prim.AddPrimvar("token", "visibility", UsdValue.Token("invisible"));
-        }
-
         var transform = component.Transform;
+        UsdPrim prim;
+
         switch (component)
         {
             case InstancedStaticMeshComponentDto ism:
-                if (ism.Transforms.Length > 0) prim.Add(BuildPointInstancer(ism, paths));
+                if (ism.Transforms.Length > 0) prim = BuildPointInstancer(ism, paths);
+                else goto default; // break the inheritance chain, we don't want to show a mesh if there are no instances
                 break;
             case SplineMeshComponentDto spline when paths.SplineMeshes.TryGetValue(spline, out var splinePath):
-                ApplyMaterialOverrides(prim, spline, spline.MeshPtr.Name, paths);
-                prim.SetReference(new UsdReferenceList([new UsdReference(splinePath)]));
+                prim = ReferenceMesh("Mesh", component.Name, splinePath, spline.OverrideMaterials, paths);
                 break;
-            case MeshComponentDto mesh when paths.TryGet(mesh.MeshPtr, out var path):
-                ApplyMaterialOverrides(prim, mesh, mesh.MeshPtr.Name, paths);
-                prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
+            case SkinnedMeshComponentDto skinned when paths.TryGet(skinned.MeshPtr, out var skelPath):
+                prim = ReferenceSkinnedMesh(skinned, skelPath, paths);
                 break;
-            case MeshComponentDto mesh:
-                prim.Add(CreateDummyCube(mesh.MeshPtr.Name));
+            case MeshComponentDto mesh when paths.TryGet(mesh.MeshPtr, out var meshPath):
+                prim = ReferenceMesh("Mesh", component.Name, meshPath, mesh.OverrideMaterials, paths);
+                break;
+            case MeshComponentDto:
+                prim = CreateDummyCube(component.Name);
                 break;
             case LandscapeMeshComponentDto landscape when LandscapeMeshComponentDto.PerComponentExport && paths.LandscapeMeshes.TryGetValue(landscape, out var landscapePath):
-                transform.Translation = FVector.ZeroVector; // the exporter is gonna offset the mesh by SectionBaseX/Y
-                prim.SetReference(new UsdReferenceList([new UsdReference(landscapePath)]));
+                transform.Translation = FVector.ZeroVector; // the exporter offsets the mesh by SectionBaseX/Y
+                prim = ReferencePrim("Mesh", component.Name, landscapePath);
+                break;
+            case LightComponentBaseDto light:
+                transform = transform.WithLightOrientationCorrection(-MathF.PI / 2f); // don't ask me why
+                prim = light.ToLightPrim();
                 break;
             case BrushComponentDto brush:
-                prim.Add(brush.ToMeshPrim());
+                prim = brush.ToMeshPrim();
                 break;
             case ShapeComponentDto shape:
-                prim.Add(shape.ToShapePrim());
+                prim = shape.ToShapePrim();
+                break;
+            default:
+                prim = UsdPrim.Def("Xform", component.Name);
                 break;
         }
 
@@ -104,19 +110,47 @@ public class UsdWorldFormat : IWorldExportFormat
             // TODO
         }
 
+        if (component is PrimitiveComponentDto { IsVisible: false })
+        {
+            prim.AddPrimvar("token", "visibility", UsdValue.Token("invisible"));
+        }
         prim.Add(transform.ToTransformAttributes());
         return prim;
     }
 
-    private void ApplyMaterialOverrides(UsdPrim componentPrim, MeshComponentDto component, string meshAssetName, WorldAssetPaths paths)
+    private UsdPrim ReferencePrim(string typeName, string name, string path)
     {
-        if (component.OverrideMaterials is not { Length: > 0 } overrides) return;
+        var prim = UsdPrim.Def(typeName, name);
+        prim.SetReference(new UsdReferenceList([new UsdReference(path)]));
+        return prim;
+    }
 
+    private UsdPrim ReferenceMesh(string typeName, string name, string path, FPackageIndex?[] overrides, WorldAssetPaths paths)
+    {
+        var prim = ReferencePrim(typeName, name, path);
+        if (overrides is { Length: > 0 })
+        {
+            ApplyMaterialOverrides(prim, overrides, paths);
+        }
+        return prim;
+    }
+
+    private UsdPrim ReferenceSkinnedMesh(SkinnedMeshComponentDto skinned, string path, WorldAssetPaths paths)
+    {
+        var prim = ReferencePrim("SkelRoot", skinned.Name, path);
+        if (skinned.OverrideMaterials is { Length: > 0 } overrides)
+        {
+            var meshOver = UsdPrim.Over("Mesh", skinned.MeshPtr.Name);
+            ApplyMaterialOverrides(meshOver, overrides, paths);
+            prim.Add(meshOver);
+        }
+        return prim;
+    }
+
+    private void ApplyMaterialOverrides(UsdPrim meshPrim, FPackageIndex?[] overrides, WorldAssetPaths paths)
+    {
         var materialsScope = UsdPrim.Def("Scope", "OverrideMaterials");
-        componentPrim.Add(materialsScope);
-
-        var meshOver = UsdPrim.Over("Mesh", meshAssetName);
-        componentPrim.Add(meshOver);
+        meshPrim.Add(materialsScope);
 
         for (var i = 0; i < overrides.Length; i++)
         {
@@ -134,7 +168,7 @@ public class UsdWorldFormat : IWorldExportFormat
             var sectionOver = UsdPrim.Over("GeomSubset", $"Section_{i}");
             sectionOver.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("MaterialBindingAPI")));
             sectionOver.Add(new UsdRelationship("material:binding", matPrim));
-            meshOver.Add(sectionOver);
+            meshPrim.Add(sectionOver);
         }
     }
 
@@ -164,13 +198,11 @@ public class UsdWorldFormat : IWorldExportFormat
         UsdPrim prototypePrim;
         if (paths.TryGet(ism.MeshPtr, out var meshPath))
         {
-            prototypePrim = new UsdPrim("Xform", ism.MeshPtr.Name);
-            ApplyMaterialOverrides(prototypePrim, ism, ism.MeshPtr.Name, paths);
-            prototypePrim.SetReference(new UsdReferenceList([new UsdReference(meshPath)]));
+            prototypePrim = ReferenceMesh("Mesh", ism.Name, meshPath, ism.OverrideMaterials, paths);
         }
         else
         {
-            prototypePrim = CreateDummyCube(ism.MeshPtr.Name);
+            prototypePrim = CreateDummyCube(ism.Name);
         }
 
         prototypes.Add(prototypePrim);

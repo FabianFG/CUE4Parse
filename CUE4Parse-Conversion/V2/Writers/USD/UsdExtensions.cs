@@ -13,6 +13,23 @@ public static class UsdExtensions
 {
     public static UsdAttribute[] ToMatrixAttributes(this FTransform transform) => transform.ToMatrix4x4().ToAttributes();
 
+    public static FTransform WithLightOrientationCorrection(this FTransform t, float correctionYRad)
+    {
+        if (correctionYRad == 0f) return t;
+
+        var cy = MathF.Sin(correctionYRad / 2f);
+        var cw = MathF.Cos(correctionYRad / 2f);
+        var r  = t.Rotation;
+
+        var corrected = new FQuat(
+            r.X * cw - r.Z * cy,
+            r.W * cy + r.Y * cw,
+            r.X * cy + r.Z * cw,
+            r.W * cw - r.Y * cy
+        );
+        return new FTransform(corrected, t.Translation, t.Scale3D);
+    }
+
     public static UsdAttribute[] ToTransformAttributes(this FTransform transform)
     {
         var t = transform.Translation;
@@ -182,6 +199,86 @@ public static class UsdExtensions
         prim.Add(UsdAttribute.Uniform("token", "purpose", UsdValue.Token("guide")));
         prim.Add(UsdAttribute.Uniform("token", "model:drawMode", UsdValue.Token("bounds")));
         prim.Add(UsdAttribute.Uniform("bool", "model:applyDrawMode", true));
+        return prim;
+    }
+
+    private static void ApplyLightBase(UsdPrim prim, LightComponentBaseDto light)
+    {
+        var c = light.Color;
+        prim.Add(new UsdAttribute("color3f", "inputs:color", UsdValue.Tuple(c.R, c.G, c.B)));
+        prim.Add(new UsdAttribute("bool", "inputs:castShadows", light.CastShadows));
+    }
+
+    private static void ApplyLightTemperature(UsdPrim prim, LightComponentDto light)
+    {
+        if (light.UseTemperature)
+        {
+            prim.Add(new UsdAttribute("float", "inputs:colorTemperature", UsdValue.Float(light.Temperature)));
+            prim.Add(new UsdAttribute("bool", "inputs:enableColorTemperature", true));
+        }
+    }
+
+    private static float ResolveIntensity(LightComponentDto light) => light.IntensityNits > 0 ? light.IntensityNits : light.Intensity;
+
+    public static UsdPrim ToLightPrim(this LightComponentBaseDto light)
+    {
+        UsdPrim prim;
+        switch (light)
+        {
+            case SpotLightComponentDto spot:
+            {
+                prim = UsdPrim.Def("SphereLight", light.Name);
+                prim.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("ShapingAPI")));
+                prim.Add(new UsdAttribute("float", "inputs:intensity", UsdValue.Float(ResolveIntensity(spot))));
+                prim.Add(new UsdAttribute("float", "inputs:radius", UsdValue.Float(spot.SourceRadius)));
+                prim.Add(new UsdAttribute("float", "inputs:shaping:cone:angle", UsdValue.Float(spot.OuterConeAngle)));
+                var softness = spot.OuterConeAngle > 0 ? Math.Clamp((spot.OuterConeAngle - spot.InnerConeAngle) / spot.OuterConeAngle, 0f, 1f) : 0f;
+                prim.Add(new UsdAttribute("float", "inputs:shaping:cone:softness", UsdValue.Float(softness)));
+                ApplyLightBase(prim, spot);
+                ApplyLightTemperature(prim, spot);
+                break;
+            }
+            case PointLightComponentDto point:
+            {
+                prim = UsdPrim.Def("SphereLight", light.Name);
+                prim.Add(new UsdAttribute("float", "inputs:intensity", UsdValue.Float(ResolveIntensity(point))));
+                prim.Add(new UsdAttribute("float", "inputs:radius", UsdValue.Float(point.SourceRadius)));
+                if (!point.UseInverseSquaredFalloff)
+                    prim.Add(new UsdAttribute("token", "inputs:decayRate", UsdValue.Token("noDecay")));
+                ApplyLightBase(prim, point);
+                ApplyLightTemperature(prim, point);
+                break;
+            }
+            case RectLightComponentDto rect:
+            {
+                prim = UsdPrim.Def("RectLight", light.Name);
+                prim.Add(new UsdAttribute("float", "inputs:intensity", UsdValue.Float(ResolveIntensity(rect))));
+                prim.Add(new UsdAttribute("float", "inputs:width",  UsdValue.Float(rect.SourceHeight)));
+                prim.Add(new UsdAttribute("float", "inputs:height", UsdValue.Float(rect.SourceWidth)));
+                ApplyLightBase(prim, rect);
+                ApplyLightTemperature(prim, rect);
+                break;
+            }
+            case DirectionalLightComponentDto dir:
+            {
+                prim = UsdPrim.Def("DistantLight", light.Name);
+                prim.Add(new UsdAttribute("float", "inputs:intensity", UsdValue.Float(ResolveIntensity(dir))));
+                prim.Add(new UsdAttribute("float", "inputs:angle", UsdValue.Float(dir.LightSourceAngle)));
+                ApplyLightBase(prim, dir);
+                ApplyLightTemperature(prim, dir);
+                break;
+            }
+            case SkyLightComponentDto:
+            {
+                prim = UsdPrim.Def("DomeLight", light.Name);
+                prim.Add(new UsdAttribute("float", "inputs:intensity", UsdValue.Float(light.Intensity)));
+                ApplyLightBase(prim, light);
+                break;
+            }
+            default:
+                throw new NotSupportedException($"Unsupported light type: {light.GetType().Name}");
+        }
+
         return prim;
     }
 }

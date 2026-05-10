@@ -24,11 +24,10 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
 
         var hasDiffuseTexture = TryResolveTexture(parameters, [..CMaterialParams2.Diffuse[0], CMaterialParams2.FallbackDiffuse], packageDirectory, out var diffusePath);
         var hasDiffuseTint = parameters.TryGetLinearColor(out var diffuseColor, CMaterialParams2.DiffuseColors[0]);
-        hasDiffuseTint &= diffuseColor.R > 0f || diffuseColor.G > 0f || diffuseColor.B > 0f; // do not use if fully black
 
         if (hasDiffuseTexture)
         {
-            var uvTex = MakeUvTexture("Diffuse", diffusePath, matName);
+            var uvTex = MakeUvTexture("Diffuse", diffusePath, matName, "sRGB");
             if (hasDiffuseTint)
             {
                 uvTex.Add(new UsdAttribute("float4", "inputs:scale", UsdValue.Tuple(diffuseColor.R, diffuseColor.G, diffuseColor.B, 1f)));
@@ -39,7 +38,15 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
 
             if (parameters.BlendMode != EBlendMode.BLEND_Opaque)
             {
-                shader.Add(new UsdAttribute("float", "inputs:opacity.connect", UsdValue.Path($"/{matName}/Diffuse.outputs:a")));
+                string alphaSource;
+                if (hasDiffuseTint)
+                {
+                    matPrim.Add(MakeUvTexture("DiffuseAlpha", diffusePath, matName, "sRGB"));
+                    alphaSource = "DiffuseAlpha";
+                }
+                else alphaSource = "Diffuse";
+                shader.Add(new UsdAttribute("float", "inputs:opacity.connect", UsdValue.Path($"/{matName}/{alphaSource}.outputs:a")));
+
                 if (parameters.BlendMode == EBlendMode.BLEND_Masked)
                 {
                     shader.Add(new UsdAttribute("float", "inputs:opacityThreshold", UsdValue.Float(0.333f)));
@@ -53,10 +60,9 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
 
         if (TryResolveTexture(parameters, [..CMaterialParams2.Normals[0], CMaterialParams2.FallbackNormals], packageDirectory, out var normalPath))
         {
-            var uvTex = MakeUvTexture("Normal", normalPath, matName);
+            var uvTex = MakeUvTexture("Normal", normalPath, matName, "raw");
             uvTex.Add(new UsdAttribute("float4", "inputs:bias", UsdValue.Tuple(-1f, -1f, -1f, -1f)));
             uvTex.Add(new UsdAttribute("float4", "inputs:scale", UsdValue.Tuple(2f, 2f, 2f, 2f)));
-            uvTex.Add(UsdAttribute.Uniform("token", "inputs:sourceColorSpace", UsdValue.Token("raw")));
             matPrim.Add(uvTex);
 
             shader.Add(new UsdAttribute("normal3f", "inputs:normal.connect", UsdValue.Path($"/{matName}/Normal.outputs:rgb")));
@@ -64,8 +70,7 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
 
         if (TryResolveTexture(parameters, [..CMaterialParams2.SpecularMasks[0], CMaterialParams2.FallbackSpecularMasks], packageDirectory, out var specPath))
         {
-            var uvTex = MakeUvTexture("Specular", specPath, matName, ormOutputs: true);
-            uvTex.Add(UsdAttribute.Uniform("token", "inputs:sourceColorSpace", UsdValue.Token("raw")));
+            var uvTex = MakeUvTexture("Specular", specPath, matName, "raw", true);
             matPrim.Add(uvTex);
 
             shader.Add(new UsdAttribute("float", "inputs:roughness.connect", UsdValue.Path($"/{matName}/Specular.outputs:b")));
@@ -73,15 +78,21 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
         }
         else
         {
-            if (parameters.TryGetScalar(out var roughMax, "RoughnessMax", "SpecRoughnessMax", "Roughness"))
-                shader.Add(new UsdAttribute("float", "inputs:roughness", UsdValue.Float(roughMax)));
+            if (!parameters.TryGetScalar(out var roughness, "RoughnessMax", "SpecRoughnessMax", "Roughness"))
+            {
+                roughness = 1.0f;
+            }
+            shader.Add(new UsdAttribute("float", "inputs:roughness", UsdValue.Float(roughness)));
+
             if (parameters.TryGetScalar(out var metallic, "Metallic", "MetallicScale"))
+            {
                 shader.Add(new UsdAttribute("float", "inputs:metallic", UsdValue.Float(metallic)));
+            }
         }
 
         if (TryResolveTexture(parameters, CMaterialParams2.Emissive[0], packageDirectory, out var emissivePath))
         {
-            var uvTex = MakeUvTexture("Emissive", emissivePath, matName);
+            var uvTex = MakeUvTexture("Emissive", emissivePath, matName, "sRGB");
             if (parameters.TryGetLinearColor(out var emissiveColor, CMaterialParams2.EmissiveColors[0]))
             {
                 uvTex.Add(new UsdAttribute("float4", "inputs:scale", UsdValue.Tuple(emissiveColor.R, emissiveColor.G, emissiveColor.B, emissiveColor.A)));
@@ -120,12 +131,13 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
         return false;
     }
 
-    private UsdPrim MakeUvTexture(string name, string filePath, string matName, bool ormOutputs = false)
+    private UsdPrim MakeUvTexture(string name, string filePath, string matName, string colorSpace, bool ormOutputs = false)
     {
         var prim = UsdPrim.Def("Shader", name);
         prim.Add(UsdAttribute.Uniform("token", "info:id", UsdValue.Token("UsdUVTexture")));
         prim.Add(new UsdAttribute("asset", "inputs:file", UsdValue.AssetPath(filePath)));
         prim.Add(new UsdAttribute("float2", "inputs:st.connect", UsdValue.Path($"/{matName}/Primvar.outputs:result")));
+        prim.Add(UsdAttribute.Uniform("token", "inputs:sourceColorSpace", UsdValue.Token(colorSpace)));
 
         if (ormOutputs)
         {

@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.V2.Dto.World;
 
 public class WorldDto : ObjectDto
 {
-    public readonly HashSet<ActorDto> Actors = [];
+    public readonly List<ActorDto> Actors = [];
     public readonly List<UWorld> StreamingLevels = [];
 
     public WorldDto(UWorld world) : this(world, new WorldParseContext())
@@ -20,7 +20,6 @@ public class WorldDto : ObjectDto
         var level = world.PersistentLevel.Load<ULevel>();
         ArgumentNullException.ThrowIfNull(level, "Failed to load persistent level");
 
-        // collect all actors + flatten all their components in the ctx
         var actors = new List<ActorDto>();
         foreach (var ptr in level.Actors)
         {
@@ -30,17 +29,8 @@ public class WorldDto : ObjectDto
             actors.Add(new ActorDto(data, ctx));
         }
 
-        // resolve actor to actor and component to component hierarchy
-        ctx.WireHierarchy();
-
-        foreach (var actor in actors)
-        {
-            // add top-level or orphaned actors to the world
-            if (actor.RootComponent == null || actor.RootComponent.Parent == null)
-            {
-                Actors.Add(actor);
-            }
-        }
+        ctx.WireActorHierarchy(actors);
+        Actors.AddRange(actors);
 
         foreach (var ptr in world.StreamingLevels)
         {
@@ -66,6 +56,10 @@ public class WorldDto : ObjectDto
 
     public override void Dispose()
     {
+        foreach (var actor in Actors)
+        {
+            actor.Dispose();
+        }
         Actors.Clear();
         StreamingLevels.Clear();
     }

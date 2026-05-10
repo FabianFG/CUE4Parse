@@ -4,12 +4,13 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.V2.Dto.World;
 
@@ -19,21 +20,19 @@ public class ComponentDto(UObject component, ActorDto owner) : ObjectDto(compone
 
     public override void Dispose()
     {
-        throw new NotImplementedException();
+
     }
 }
 
 public class SceneComponentDto : ComponentDto
 {
     internal readonly FPackageIndex? _attachParent;
-    public SceneComponentDto? Parent { get; private set; }
 
     public readonly List<SceneComponentDto> Children = [];
     public readonly FTransform Transform;
     public readonly string? AttachSocketName;
 
-    internal void SetParent(SceneComponentDto parent) => Parent = parent;
-    internal void AddChild(SceneComponentDto child) => Children.Add(child);
+    internal void AddChildComponent(SceneComponentDto child) => Children.Add(child);
 
     public SceneComponentDto(USceneComponent component, ActorDto owner) : base(component, owner)
     {
@@ -53,6 +52,17 @@ public class SceneComponentDto : ComponentDto
         {
             // TODO
         }
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        foreach (var child in Children)
+        {
+            child.Dispose();
+        }
+        Children.Clear();
     }
 }
 
@@ -183,56 +193,75 @@ public class SkeletalMeshComponentDto(FPackageIndex meshPtr, USkeletalMeshCompon
     public readonly FSingleAnimationPlayData? AnimationData = component.AnimationData;
 }
 
-public abstract class ShapeComponentDto : PrimitiveComponentDto
+public abstract class ShapeComponentDto(UShapeComponent component, ActorDto owner) : PrimitiveComponentDto(component, owner)
 {
     protected const float DefaultRadius = 0.5f;
 
-    public readonly FColor ShapeColor;
-
-    protected ShapeComponentDto(UShapeComponent component, ActorDto owner) : base(component, owner)
-    {
-        ShapeColor = component.GetOrDefault<FColor>(nameof(ShapeColor));
-    }
+    public readonly FColor ShapeColor = component.GetOrDefault<FColor>(nameof(ShapeColor));
 }
 
-public class BoxComponentDto : ShapeComponentDto
+public class BoxComponentDto(UBoxComponent component, ActorDto owner) : ShapeComponentDto(component, owner)
 {
-    public readonly FVector BoxExtent;
-
-    public BoxComponentDto(UBoxComponent component, ActorDto owner) : base(component, owner)
-    {
-        BoxExtent = component.GetOrDefault(nameof(BoxExtent), FVector.OneVector * DefaultRadius);
-    }
+    public readonly FVector BoxExtent = component.GetOrDefault(nameof(BoxExtent), FVector.OneVector * DefaultRadius);
 }
 
-public class SphereComponentDto : ShapeComponentDto
+public class SphereComponentDto(USphereComponent component, ActorDto owner) : ShapeComponentDto(component, owner)
 {
-    public readonly float SphereRadius;
-
-    public SphereComponentDto(USphereComponent component, ActorDto owner) : base(component, owner)
-    {
-        SphereRadius = component.GetOrDefault(nameof(SphereRadius), DefaultRadius);
-    }
+    public readonly float SphereRadius = component.GetOrDefault(nameof(SphereRadius), DefaultRadius);
 }
 
-public class CapsuleComponentDto : ShapeComponentDto
+public class CapsuleComponentDto(UCapsuleComponent component, ActorDto owner) : ShapeComponentDto(component, owner)
 {
-    public readonly float CapsuleHalfHeight;
-    public readonly float CapsuleRadius;
-
-    public CapsuleComponentDto(UCapsuleComponent component, ActorDto owner) : base(component, owner)
-    {
-        CapsuleHalfHeight = component.GetOrDefault(nameof(CapsuleHalfHeight), DefaultRadius * 2.3f);
-        CapsuleRadius = component.GetOrDefault(nameof(CapsuleRadius), DefaultRadius);
-    }
+    public readonly float CapsuleHalfHeight = component.GetOrDefault(nameof(CapsuleHalfHeight), DefaultRadius * 2.3f);
+    public readonly float CapsuleRadius = component.GetOrDefault(nameof(CapsuleRadius), DefaultRadius);
 }
 
-public class BrushComponentDto : PrimitiveComponentDto
+public class BrushComponentDto(UBrushComponent component, ActorDto owner) : PrimitiveComponentDto(component, owner)
 {
-    public readonly FPackageIndex BrushPtr;
-
-    public BrushComponentDto(UBrushComponent component, ActorDto owner) : base(component, owner)
-    {
-        BrushPtr = component.Brush ?? throw new InvalidOperationException("Component does not have a Brush");
-    }
+    public readonly FPackageIndex BrushPtr = component.Brush ?? throw new InvalidOperationException("Component does not have a Brush");
 }
+
+public abstract class LightComponentBaseDto(ULightComponentBase component, ActorDto owner) : SceneComponentDto(component, owner)
+{
+    public readonly float Intensity = component.Intensity;
+    public readonly FLinearColor Color = component.GetLightColor();
+    public readonly bool CastShadows = component.CastShadows != 0;
+}
+
+public abstract class LightComponentDto(ULightComponent component, ActorDto owner) : LightComponentBaseDto(component, owner)
+{
+    public readonly float Temperature = component.Temperature;
+    public readonly bool UseTemperature = component.bUseTemperature != 0;
+    public readonly float IntensityNits = component.GetNitIntensity();
+}
+
+public abstract class LocalLightComponentDto(ULocalLightComponent component, ActorDto owner) : LightComponentDto(component, owner)
+{
+    public readonly float AttenuationRadius = component.AttenuationRadius;
+    public readonly ELightUnits IntensityUnits = component.GetLightUnits();
+}
+
+public class PointLightComponentDto(UPointLightComponent component, ActorDto owner) : LocalLightComponentDto(component, owner)
+{
+    public readonly float SourceRadius = component.SourceRadius;
+    public readonly bool UseInverseSquaredFalloff = component.bUseInverseSquaredFalloff;
+}
+
+public class SpotLightComponentDto(USpotLightComponent component, ActorDto owner) : PointLightComponentDto(component, owner)
+{
+    public readonly float InnerConeAngle = component.InnerConeAngle;
+    public readonly float OuterConeAngle = component.OuterConeAngle;
+}
+
+public class RectLightComponentDto(URectLightComponent component, ActorDto owner) : LocalLightComponentDto(component, owner)
+{
+    public readonly float SourceWidth = component.SourceWidth;
+    public readonly float SourceHeight = component.SourceHeight;
+}
+
+public class DirectionalLightComponentDto(UDirectionalLightComponent component, ActorDto owner) : LightComponentDto(component, owner)
+{
+    public readonly float LightSourceAngle = component.LightSourceAngle;
+}
+
+public class SkyLightComponentDto(USkyLightComponent component, ActorDto owner) : LightComponentBaseDto(component, owner);

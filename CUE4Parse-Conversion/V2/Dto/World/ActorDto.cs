@@ -76,6 +76,11 @@ public class ActorDto : ObjectDto
 
     public override void Dispose()
     {
+        foreach (var actor in ChildActors)
+        {
+            actor.Dispose();
+        }
         ChildActors.Clear();
+        RootComponent?.Dispose();
     }
 }

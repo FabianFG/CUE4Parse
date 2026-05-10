@@ -46,19 +46,17 @@ public class UsdMeshFormat : IMeshExportFormat
     public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
-        var root = UsdPrim.Def("Xform", dto.Name);
 
         var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
-        if (sockets is not null) root.Add(sockets);
-
         var materials = CreateMaterials(dto.Materials, materialPaths);
-        if (materials is not null) root.Add(materials);
 
         var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
         for (var i = start; i < end; i++)
         {
             var suffix = i == 0 ? null : $"_LOD{i}";
-            root.Add(CreateLod(dto.LODs[i], suffix, materials));
+            var root = CreateLod(dto.LODs[i], suffix, materials);
+            if (sockets is not null) root.Add(sockets);
+            if (materials is not null) root.Add(materials);
 
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));

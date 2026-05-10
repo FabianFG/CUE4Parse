@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
@@ -17,23 +18,21 @@ internal sealed class WorldParseContext
     /// </summary>
     private readonly Dictionary<FPackageIndex, ComponentDto> _registry = new();
 
-    /// <summary>
-    /// Returns the existing ComponentDto for <paramref name="ptr"/> if already
-    /// registered, otherwise loads the UObject, constructs the appropriate
-    /// ComponentDto subtype, registers it, and returns it.
-    /// Returns null when the pointer is null/zero or fails to load.
-    /// </summary>
     public ComponentDto? GetOrCreate(FPackageIndex? ptr, ActorDto owner)
     {
         if (ptr is not { IsNull: false }) return null;
-
-        if (_registry.TryGetValue(ptr, out var existing))
-            return existing;
+        if (_registry.TryGetValue(ptr, out var existing)) return existing;
 
         var dto = CreateDto(ptr, owner);
         if (dto is null) return null;
 
         _registry[ptr] = dto;
+
+        if (dto is SceneComponentDto { _attachParent: { IsNull: false } parentPtr } scene && GetOrCreate(parentPtr, owner) is SceneComponentDto parentScene)
+        {
+            parentScene.AddChildComponent(scene);
+        }
+
         return dto;
     }
 
@@ -64,14 +63,14 @@ internal sealed class WorldParseContext
                     //     UCapsuleComponent capsule => new CapsuleComponentDto(capsule, owner),
                     //     _ => new SceneComponentDto(shape, owner)
                     // },
-                    // ULightComponentBase light => light switch
-                    // {
-                    //     USpotLightComponent spotLight => new SpotLightComponent(spotLight),
-                    //     UPointLightComponent pointLight => new PointLightComponent(pointLight),
-                    //     URectLightComponent rectLight => new RectLightComponent(rectLight),
-                    //     UDirectionalLightComponent directionalLight => new DirectionalLightComponent(directionalLight),
-                    //     _ => new SpatialComponent(light)
-                    // },
+                    ULightComponentBase light => light switch
+                    {
+                        USpotLightComponent spotLight => new SpotLightComponentDto(spotLight, owner),
+                        UPointLightComponent pointLight => new PointLightComponentDto(pointLight, owner),
+                        URectLightComponent rectLight => new RectLightComponentDto(rectLight, owner),
+                        UDirectionalLightComponent directionalLight => new DirectionalLightComponentDto(directionalLight, owner),
+                        _ => new SceneComponentDto(light, owner)
+                    },
                     // UAudioComponent audio => new AudioComponent(audio),
                     // UTextRenderComponent text => new TextRenderComponent(text),
                     // UCameraComponent camera => new CameraComponent(camera),
@@ -88,32 +87,16 @@ internal sealed class WorldParseContext
         }
     }
 
-    /// <summary>
-    /// Resolves every SceneComponentDto's AttachParentPtr against the registry
-    /// and populates Parent/Children links.  Also detects cross-actor attachment
-    /// (an actor's root component whose parent lives in a different actor) and
-    /// populates ActorDto.ChildActors accordingly.
-    /// Must be called exactly once, after all actors/components are registered.
-    /// </summary>
-    public void WireHierarchy()
+    public void WireActorHierarchy(IReadOnlyList<ActorDto> actors)
     {
-        foreach (var component in _registry.Values)
+        foreach (var actor in actors)
         {
-            if (component is not SceneComponentDto { _attachParent: { IsNull: false } parentPtr } scene)
-                continue;
+            // only the root component's attachment determines actor-to-actor hierarchy
+            if (actor.RootComponent?._attachParent is not { IsNull: false } parentPtr) continue;
+            if (!_registry.TryGetValue(parentPtr, out var parentDto)) continue; // TODO: parent actor was not created somehow, should we create it?
+            if (parentDto is not SceneComponentDto parentScene || parentScene.Owner == actor) continue;
 
-            if (!_registry.TryGetValue(parentPtr, out var parentComponent) || parentComponent is not SceneComponentDto parentScene)
-                continue;
-
-            scene.SetParent(parentScene);
-            parentScene.AddChild(scene);
-
-            // Cross-actor attachment: actor B's root component's parent lives in actor A
-            // → actor B is a child actor of actor A
-            if (parentComponent.Owner != component.Owner && component.Owner.RootComponent == scene)
-            {
-                parentComponent.Owner.AddChildActor(component.Owner);
-            }
+            parentScene.Owner.AddChildActor(actor);
         }
     }
 }
