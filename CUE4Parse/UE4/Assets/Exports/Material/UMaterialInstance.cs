@@ -1,6 +1,9 @@
 using System;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Readers;
@@ -47,17 +50,15 @@ public class UMaterialInstance : UMaterialInterface
 
             if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
             {
+                var saved = Ar.Position;
                 try
                 {
                     DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
                 }
                 catch (Exception e)
                 {
-                    Log.Warning(e, "Failed to deserialize inline shader maps.");
-                }
-                finally
-                {
-                    Ar.Position = validPos;
+                    Log.Error(e, "Failed to deserialize inline shader maps.");
+                    Ar.Position = saved;
                 }
             }
             else
@@ -66,7 +67,16 @@ public class UMaterialInstance : UMaterialInterface
             }
         }
 
-        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource) Ar.Position += 8; // 0.0f and 1.0f, for all
+        if (Ar.Game is EGame.GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
+            CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
+        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource)
+            Ar.Position += 8; // 0.0f and 1.0f, for all
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld && bHasStaticPermutationResource)
+        {
+            // Additional DynamicSwitchParameters
+            CustomGameData = Ar.ReadArray(() => new FRKWStaticSwitchParameter(Ar));
+            Ar.Position += 4;
+        }
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)

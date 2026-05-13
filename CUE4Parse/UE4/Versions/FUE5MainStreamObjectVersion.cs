@@ -377,6 +377,12 @@ public static class FUE5MainStreamObjectVersion
         // Added new material compilation validation for runtime virtual textures
         RuntimeVirtualTextureMaterialValidation,
 
+        // Refactored the composite (plugin) camera actor references.
+        CompositeCameraReferenceRefactor,
+
+        // Skeletal mesh section now contains a bool for whether it contains a unified bone map.
+        SkeletalMeshUnifiedBoneMap,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1

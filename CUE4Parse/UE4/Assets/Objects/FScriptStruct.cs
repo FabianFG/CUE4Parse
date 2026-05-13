@@ -2,7 +2,6 @@ using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
-using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
@@ -14,7 +13,9 @@ using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
+using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
 using CUE4Parse.GameTypes.SuicideSquad.Objects;
 using CUE4Parse.GameTypes.SWJS.Objects;
@@ -87,7 +88,6 @@ public class FScriptStruct
             "RichCurveKey" => type == ReadType.ZERO ? new FRichCurveKey() : Ar.Read<FRichCurveKey>(),
             "SimpleCurveKey" => type == ReadType.ZERO ? new FSimpleCurveKey() : Ar.Read<FSimpleCurveKey>(),
             "ScalarMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<float>() : new FMaterialInput<float>(Ar),
-            //"ShadingModelMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<uint>() : new FMaterialInput<uint>(Ar),
             "VectorMaterialInput" => type == ReadType.ZERO ? new FMaterialInputVector() : new FMaterialInput<FVector>(Ar),
             "Vector2MaterialInput" => type == ReadType.ZERO ? new FMaterialInputVector2D() : new FMaterialInput<FVector2D>(Ar),
             "MaterialAttributesInput" => type == ReadType.ZERO ? new FExpressionInput() : new FExpressionInput(Ar),
@@ -109,6 +109,12 @@ public class FScriptStruct
             "UintVector" => type == ReadType.ZERO ? new TIntVector3<uint>() : Ar.Read<TIntVector3<uint>>(),
             "IntVector4" => type == ReadType.ZERO ? new TIntVector4<int>() : Ar.Read<TIntVector4<int>>(),
             "UintVector4" => type == ReadType.ZERO ? new TIntVector4<uint>() : Ar.Read<TIntVector4<uint>>(),
+            "Int64Vector2" or "Int64Point" => type == ReadType.ZERO ? new TIntVector2<long>() : Ar.Read<TIntVector2<long>>(),
+            "UInt64Vector2" or "UInt64Point" => type == ReadType.ZERO ? new TIntVector2<ulong>() : Ar.Read<TIntVector2<ulong>>(),
+            "Int64Vector" => type == ReadType.ZERO ? new TIntVector3<long>() : Ar.Read<TIntVector3<long>>(),
+            "UInt64Vector" => type == ReadType.ZERO ? new TIntVector3<ulong>() : Ar.Read<TIntVector3<ulong>>(),
+            "Int64Vector4" => type == ReadType.ZERO ? new TIntVector4<long>() : Ar.Read<TIntVector4<long>>(),
+            "UInt64Vector4" => type == ReadType.ZERO ? new TIntVector4<ulong>() : Ar.Read<TIntVector4<ulong>>(),
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
@@ -251,8 +257,8 @@ public class FScriptStruct
             // Metro:Awakening
             "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
 
-            // Marvel Rivals
-            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
+            "MarvelSoftObjectPath" when Ar.Game == EGame.GAME_MarvelRivals => new FMarvelSoftObjectPath(Ar),
+            "SerializablePropertySoftPath" when Ar.Game == EGame.GAME_MarvelRivals => new FSerializablePropertySoftPath(Ar),
 
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
@@ -343,11 +349,11 @@ public class FScriptStruct
             "BlueprintDefinedScript" when Ar.Game is EGame.GAME_OuterWorlds2 => new FBlueprintFunctionLibraryConditional(Ar, false),
             "AIGroupBehaviorClassSelector" when Ar.Game is EGame.GAME_OuterWorlds2 => new FSoftObjectPath(Ar),
 
-            // The Last Caretaker 
+            // The Last Caretaker
             "VoyagePackedLocalTransform" => new VoyagePackedLocalTransform(Ar),
             "VoyageFloat16" => Ar.Read<FRawStruct<Half>>(),
 
-            "EncVector" when Ar.Game is EGame.GAME_DeltaForceHawkOps => Ar.Read<FVector>(),
+            "EncVector" when Ar.Game is EGame.GAME_DeltaForce => Ar.Read<FVector>(),
 
             "MercunaUsageSpec" when Ar.Game is EGame.GAME_PUBGBlackBudget => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaUsageTypes" when Ar.Game is EGame.GAME_PUBGBlackBudget => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
@@ -367,12 +373,35 @@ public class FScriptStruct
 
             "ActorReference" when Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyManofMedan or
                 EGame.GAME_DarkPicturesAnthologyLittleHope or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or
-                EGame.GAME_TheQuarry or EGame.GAME_TheCastingofFrankStone => new FActorReference(Ar),
+                EGame.GAME_TheQuarry or EGame.GAME_TheCastingofFrankStone or EGame.GAME_Directive8020 => new FActorReference(Ar),
 
             "ParameterWrapperArray" when Ar.Game is EGame.GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             "MercunaPawnUsageFlags" when Ar.Game is EGame.GAME_HighOnLife2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaNavUsageTypes" when Ar.Game is EGame.GAME_HighOnLife2 => Ar.Read<FRawUIntStruct>(),
+            "MercunaUsageTypes" => Ar.Read<FRawUIntStruct>(),
+
+            // Windrose
+            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            // Armatus
+            "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "BHVRVariantConfigurator" when Ar.Game is EGame.GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "NiagaraEventGeneratorProperties" when Ar.Game is EGame.GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
+
+            "RulesetActorCreationParams" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 6), (1, -1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "HexOffsetCoord" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "RulesetId" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "HexCell" when Ar.Game is EGame.GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
+
+            "MovieSceneTangentData" when Ar.Game is EGame.GAME_HonorofKingsWorld => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
+
+            "BodyInstance" when Ar.Game is EGame.GAME_ConanExilesEnhanced => new FBodyInstance(Ar),
+
+            // Cloudheim
+            "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             _ => Ar.Game switch
             {

@@ -1,13 +1,12 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-internal class CAkFDNReverbFXParams(FArchive Ar) : IAkPluginParam
+internal class CAkFDNReverbFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkFDNReverbFXParams Params = new AkFDNReverbFXParams(Ar);
+    public AkFDNReverbFXParams Params = new(Ar);
 }
 
 public class AkFDNReverbFXParams
@@ -15,7 +14,7 @@ public class AkFDNReverbFXParams
     public AkFDNReverbRTPCParams RTPC;
     public AkFDNReverbNonRTPCParams NonRTPC;
 
-    public AkFDNReverbFXParams(FArchive Ar)
+    public AkFDNReverbFXParams(FWwiseArchive Ar)
     {
         RTPC.fReverbTime = Ar.Read<float>();
         RTPC.fHFRatio = Ar.Read<float>();

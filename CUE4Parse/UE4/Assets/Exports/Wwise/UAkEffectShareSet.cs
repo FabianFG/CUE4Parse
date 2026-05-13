@@ -15,7 +15,6 @@ public class UAkEffectShareSet : UAkAudioType
         if (Ar.Position >= validPos) return;
 
         ShareSetCookedData = new FWwiseLocalizedShareSetCookedData(new FStructFallback(Ar, "WwiseLocalizedShareSetCookedData"));
-        ShareSetCookedData?.SerializeBulkData(Ar);
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

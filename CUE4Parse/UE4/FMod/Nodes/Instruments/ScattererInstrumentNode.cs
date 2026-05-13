@@ -1,11 +1,12 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
 public class ScattererInstrumentNode : BaseInstrumentNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly int MaximumSpawnPolyphony;
     public readonly int SpawnCount;
     public readonly FRangeFloat SpawnTime;

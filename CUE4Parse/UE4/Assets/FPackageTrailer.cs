@@ -16,10 +16,17 @@ public class FPackageTrailer
 
     public FPackageTrailer(FAssetArchive Ar)
     {
-        Package = (FAssetArchive)Ar.Clone();
-        Header = new FHeader(Ar);
-        Ar.Position += (long)Header.PayloadsDataLength;
-        Footer = new FFooter(Ar);
+        try
+        {
+            Package = (FAssetArchive) Ar.Clone();
+            Header = new FHeader(Ar);
+            Ar.Position += (long) Header.PayloadsDataLength;
+            Footer = new FFooter(Ar);
+        }
+        catch
+        {
+            // just in case, so it doesn't fail asset load
+        }
     }
 
     public long FindPayloadOffsetInFile(FSHAHash id)

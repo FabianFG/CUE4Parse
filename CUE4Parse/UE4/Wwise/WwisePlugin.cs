@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using CUE4Parse.UE4.Wwise.Plugins.atmoky;
@@ -13,14 +12,16 @@ using CUE4Parse.UE4.Wwise.Plugins.Mindseye;
 using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
 using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
 using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    public static IAkPluginParam? TryParsePluginParams(FArchive Ar, EAkPluginId pluginId, bool always = false)
+    public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
+        var pluginId = plugin.PluginId;
         if (pluginId is EAkPluginId.None)
             return null;
         if ((int) pluginId < 0 && !always)
@@ -78,7 +79,7 @@ public class WwisePlugin
                     EAkPluginId.ControllerSpeakerSink or EAkPluginId.AuxiliarySink or EAkPluginId.NoOutputSink or
                     EAkPluginId.RemoteSystemSink => new CAkDefaultSinkParams(),
 
-                // EAkPluginId.AkSoundSeedGrainSrc
+                EAkPluginId.AkSoundSeedGrain => new CAkGranularSynthParams(Ar),
                 EAkPluginId.AkImpacterSource => new CAkImpacterParams(Ar),
                 EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
                 EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),
@@ -149,7 +150,7 @@ public class WwisePlugin
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with WWise version {WwiseVersions.Version}");
+            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
         }
         finally
         {
@@ -161,7 +162,7 @@ public class WwisePlugin
 
             if (Ar.Position != endPosition)
             {
-                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with WWise version {WwiseVersions.Version} correctly (at {Ar.Position}, should be {endPosition})");
+                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
             }
 #endif
             Ar.Position = endPosition;
@@ -170,17 +171,26 @@ public class WwisePlugin
         return Params;
     }
 
-    // Actual Plugin ID Format: 0xPPPPCCCT (PPPP = PluginID, CCC=CompanyID, T=Type)
-    public static uint GetPluginId(FArchive Ar)
+    public static AkPlugin GetPluginId(FWwiseArchive Ar)
     {
-        var pluginId = Ar.Read<uint>();
+        uint rawId = Ar.Read<uint>();
+        if (rawId is uint.MaxValue || rawId is 0)
+            return AkPlugin.None;
 
-        if (pluginId == uint.MaxValue)
-            return uint.MaxValue; // Plugin ID == -1 (invalid)
-
-        // var type = // (pluginId >> 0) & 0x000F
-        // var company = // (pluginId >> 4) & 0x03FF
-
-        return pluginId;
+        return new AkPlugin(rawId);
     }
+}
+
+public readonly struct AkPlugin(uint rawId)
+{
+    private readonly uint _raw = rawId;
+
+    public static readonly AkPlugin None = new(uint.MaxValue);
+
+    public EAkPluginId PluginId => (EAkPluginId) _raw;
+    public AkCompanyID CompanyId => IsValid ? (AkCompanyID) ((_raw >> 4) & 0xFF) : AkCompanyID.Audiokinetic;
+    public EAkPluginType Type => IsValid ? (EAkPluginType) (_raw & 0xF) : EAkPluginType.None;
+
+    [JsonIgnore]
+    public bool IsValid => _raw is not uint.MaxValue && _raw is not 0;
 }

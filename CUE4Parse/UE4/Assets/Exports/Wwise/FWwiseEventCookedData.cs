@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 [StructFallback]
 public readonly struct FWwiseEventCookedData
 {
-    public readonly int EventId;
+    public readonly uint EventId;
     public readonly FWwiseSoundBankCookedData[] SoundBanks;
     public readonly FWwiseMediaCookedData[] Media;
     public readonly FWwiseExternalSourceCookedData[] ExternalSources;
@@ -19,7 +19,7 @@ public readonly struct FWwiseEventCookedData
 
     public FWwiseEventCookedData(FStructFallback fallback)
     {
-        EventId = fallback.GetOrDefault<int>(nameof(EventId));
+        EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId));
         SoundBanks = fallback.GetOrDefault<FWwiseSoundBankCookedData[]>(nameof(SoundBanks), []);
         Media = fallback.GetOrDefault<FWwiseMediaCookedData[]>(nameof(Media), []);
         ExternalSources = fallback.GetOrDefault<FWwiseExternalSourceCookedData[]>(nameof(ExternalSources), []);

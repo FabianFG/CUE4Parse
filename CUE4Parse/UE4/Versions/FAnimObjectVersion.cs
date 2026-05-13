@@ -70,7 +70,7 @@ public static class FAnimObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_DeltaForceHawkOps => Type.StoreMarkerNamesOnSkeleton,
+            EGame.GAME_DeltaForce => Type.StoreMarkerNamesOnSkeleton,
                 
             < EGame.GAME_UE4_21 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE4_25 => Type.StoreMarkerNamesOnSkeleton,

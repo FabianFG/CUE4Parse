@@ -1,41 +1,95 @@
+using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkParameterEQFXParams(FArchive Ar) : IAkPluginParam
+public interface IAkParametricEQFXParams;
+
+public class CAkParameterEQFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkParametricEQFXParams Params = new AkParametricEQFXParams(Ar);
+    public IAkParametricEQFXParams Params = Ar.Version >= 172 ? new AkParametricEQFXParams(Ar) : new AkParametricEQFXParamsOld(Ar);
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct EQModuleParamsDynamic
+{
+    public float BandDynamicsThresholdDb;
+    public float BandDynamicsRangeDb;
+    public float BandDynamicsAttackMs;
+    public float BandDynamicsReleaseMs;
+}
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct EQModuleParamsStatic
+{
+    public AkFilterType FilterType;
+    public byte BandRolloff;
+    public float Frequency;
+    public float GainDb;
+    public float QFactor;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct EQModuleParams
 {
-    public AkFilterType eFilterType;
-    public float fGain;
-    public float fFrequency;
-    public float fQFactor;
-    public bool bOnOff;
+    public EQModuleParamsStatic Static;
+    public EQModuleParamsDynamic Dynamic;
 }
 
-public struct AkParametricEQFXParams
+public struct AkParametricEQFXParamsOld : IAkParametricEQFXParams
 {
-    public EQModuleParams[] Band;
-    public float fOutputLevel;
-    public bool bProcessLFE;
+    public AkFilterBand[] Bands;
+    public float OutputLevel;
+    public bool ProcessLFE;
 
-    public AkParametricEQFXParams(FArchive Ar)
+    public AkParametricEQFXParamsOld(FWwiseArchive Ar)
     {
-        Band = Ar.ReadArray<EQModuleParams>(3);
-        fOutputLevel = Ar.Read<float>();
-        bProcessLFE = Ar.Read<byte>() != 0;
+        Bands = Ar.ReadArray<AkFilterBand>(3);
+        OutputLevel = Ar.Read<float>();
+        ProcessLFE = Ar.Read<byte>() != 0;
     }
 }
 
+public struct AkParametricEQFXParams : IAkParametricEQFXParams
+{
+    public EQModuleParams[] Bands;
+    public float OutputLevel;
+    public bool ProcessLFE;
+    public uint SidechainId;
+    public bool SidechainGlobalScope;
+
+    public AkParametricEQFXParams(FWwiseArchive Ar)
+    {
+        OutputLevel = MathF.Exp(Ar.Read<float>() * 0.05f);
+        ProcessLFE = Ar.Read<byte>() != 0;
+        SidechainId = Ar.Read<uint>();
+        SidechainGlobalScope = Ar.Read<byte>() != 0;
+        var numBands = Ar.Read<byte>();
+        var bandEnabledBitfield = Ar.Read<uint>();
+        var bandDynamicsEnabledBitfield = Ar.Read<uint>();
+        var staticPart = Ar.ReadArray<EQModuleParamsStatic>(numBands);
+        var dynamicPart = bandDynamicsEnabledBitfield != 0 ? Ar.ReadArray<EQModuleParamsDynamic>(numBands) : new EQModuleParamsDynamic[numBands];
+        Bands = new EQModuleParams[numBands];
+        for (int i = 0; i < numBands; i++)
+        {
+            Bands[i].Static = staticPart[i];
+            Bands[i].Dynamic = dynamicPart[i];
+        }
+    }
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct AkFilterParams
+{
+    public AkFilterTypeOld FilterType;
+    public float FilterGain;
+    public float FilterFrequency;
+    public float FilterQFactor;
+}
+
 [JsonConverter(typeof(StringEnumConverter))]
-public enum AkFilterType : uint
+public enum AkFilterTypeOld : uint
 {
     LowShelf = 0x0,
     PeakingEQ = 0x1,
@@ -44,4 +98,18 @@ public enum AkFilterType : uint
     HighPass = 0x4,
     BandPass = 0x5,
     Notch = 0x6
+}
+
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AkFilterType : byte
+{
+    LowPass = 0x0,
+    HighPass = 0x1,
+    BandPass = 0x2,
+    Notch = 0x3,
+    LowShelf = 0x4,
+    HighShelf = 0x5,
+    PeakingEQ = 0x6,
+    LowPassQ = 0x7,
+    HighPassQ = 0x8
 }

@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 [StructFallback]
 public class FWwiseSoundBankCookedData
 {
-    public readonly int SoundBankId;
+    public readonly uint SoundBankId;
     public readonly FName SoundBankPathName;
     public readonly int MemoryAlignment;
     public readonly bool bDeviceMemory;
@@ -19,7 +19,7 @@ public class FWwiseSoundBankCookedData
 
     public FWwiseSoundBankCookedData(FStructFallback fallback)
     {
-        SoundBankId = fallback.GetOrDefault<int>(nameof(SoundBankId));
+        SoundBankId = (uint)fallback.GetOrDefault<int>(nameof(SoundBankId));
         SoundBankPathName = fallback.GetOrDefault<FName>(nameof(SoundBankPathName));
         MemoryAlignment = fallback.GetOrDefault<int>(nameof(MemoryAlignment));
         bDeviceMemory = fallback.GetOrDefault<bool>(nameof(bDeviceMemory));

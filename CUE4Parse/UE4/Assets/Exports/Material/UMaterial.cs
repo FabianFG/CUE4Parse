@@ -24,6 +24,7 @@ public class UMaterial : UMaterialInterface
     public EMaterialShadingModel ShadingModel { get; private set; } = EMaterialShadingModel.MSM_Unlit;
     public float OpacityMaskClipValue { get; private set; } = 0.333f;
     public List<UTexture> ReferencedTextures { get; } = [];
+    public bool bForceNaniteUsage;
 
     private readonly List<IObject> _displayedReferencedTextures = [];
     private bool _shouldDisplay;
@@ -61,17 +62,37 @@ public class UMaterial : UMaterialInterface
         {
             if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
             {
+                var saved = Ar.Position;
                 try
                 {
                     DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                    if (!Ar.IsFilterEditorOnly)
+                    {
+                        bool bLocalSavedCachedExpressionData_DEPRECATED = false;
+                        if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.MaterialSavedCachedData &&
+                            FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData)
+                        {
+                            bLocalSavedCachedExpressionData_DEPRECATED = Ar.ReadBoolean();
+                        }
+                        var bSavedCachedExpressionData_DEPRECATED = GetOrDefault("bSavedCachedExpressionData_DEPRECATED", false);
+                        if (bSavedCachedExpressionData_DEPRECATED)
+                        {
+                            bSavedCachedExpressionData_DEPRECATED = false;
+                            bLocalSavedCachedExpressionData_DEPRECATED = true;
+                        }
+
+                        if (bLocalSavedCachedExpressionData_DEPRECATED)
+                        {
+                            CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
+                        }
+                    }
+                    if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.NaniteForceMaterialUsage)
+                        bForceNaniteUsage = Ar.ReadBoolean();
                 }
                 catch (Exception e)
                 {
-                    Log.Warning(e, "Failed to deserialize inline shader maps.");
-                }
-                finally
-                {
-                    Ar.Position = validPos;
+                    Log.Error(e, "Failed to deserialize inline shader maps.");
+                    Ar.Position = saved;
                 }
             }
             else
@@ -82,7 +103,7 @@ public class UMaterial : UMaterialInterface
     }
 
     public UTexture? GetFirstTexture() => ReferencedTextures.Count > 0 ? ReferencedTextures[0] : null;
-    public UTexture? GetTextureAtIndex(int index) => ReferencedTextures.Count >= index ? ReferencedTextures[index] : null;
+    public UTexture? GetTextureAtIndex(int index) => ReferencedTextures.Count > index ? ReferencedTextures[index] : null;
 
     private void ScanForTextures(FAssetArchive Ar)
     {

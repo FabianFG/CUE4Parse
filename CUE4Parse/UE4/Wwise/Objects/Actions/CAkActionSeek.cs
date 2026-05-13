@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class CAkActionSeek
@@ -10,7 +8,7 @@ public class CAkActionSeek
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionSeek::SetActionParams
-    public CAkActionSeek(FArchive Ar)
+    public CAkActionSeek(FWwiseArchive Ar)
     {
         IsSeekRelativeToDuration = Ar.Read<byte>();
         RandomizerModifier = new AkRandomizerModifier(Ar);

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -13,15 +12,15 @@ public class CAkActionPlay
     public readonly EAkBankTypeEnum BankType;
 
     // CAkActionPlay::SetActionParams
-    public CAkActionPlay(FArchive Ar)
+    public CAkActionPlay(FWwiseArchive Ar)
     {
         ActionParams = new CAkActionParams(Ar);
-        if (WwiseVersions.Version > 26)
+        if (Ar.Version > 26)
         {
             BankId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.Version >= 144)
+        if (Ar.Version >= 144)
         {
             BankType = Ar.Read<EAkBankTypeEnum>();
         }

@@ -14,21 +14,31 @@ public class FImageDataStorage
     public FImageArray[] Buffers;
     public ushort[] CompactedTailOffsets;
     
-    public FImageDataStorage(FMutableArchive Ar)
+    public FImageDataStorage(FMutableArchive Ar, int version)
     {
         Size = Ar.Read<FImageSize>();
-        ImageFormat = Ar.Read<EImageFormat>();
-        NumLODs = Ar.Read<byte>();
-        
-        Ar.Position += 3; // NumLODs ia an uint?
-        
-        var buffersNum = Ar.Read<int>();
-        Buffers = new FImageArray[buffersNum];
-        for (var i = 0; i < buffersNum; i++) 
-            Buffers[i] = Ar.ReadArray<byte>();
-        
-        var compactedTailOffsetNum = Ar.Read<int>();
-        CompactedTailOffsets = Ar.ReadArray<ushort>(compactedTailOffsetNum);
+
+        if (version <= 3)
+        {
+            NumLODs = Ar.Read<byte>();
+            ImageFormat = Ar.Read<EImageFormat>();
+            Buffers = [Ar.ReadArray<byte>()];
+            CompactedTailOffsets = [];
+        }
+        else
+        {
+            ImageFormat = Ar.Read<EImageFormat>();
+            NumLODs = Ar.Read<byte>();
+            Ar.Position += 3; // NumLODs ia an uint?
+
+            var buffersNum = Ar.Read<int>();
+            Buffers = new FImageArray[buffersNum];
+            for (var i = 0; i < buffersNum; i++)
+                Buffers[i] = Ar.ReadArray<byte>();
+
+            CompactedTailOffsets = Ar.ReadArray<ushort>();
+        }
+
     }
 }
 

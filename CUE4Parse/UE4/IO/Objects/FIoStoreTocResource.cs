@@ -36,7 +36,7 @@ namespace CUE4Parse.UE4.IO.Objects
             var streamBuffer = new byte[Ar.Length];
             Ar.Read(streamBuffer, 0, streamBuffer.Length);
             
-            if (Ar.Game == EGame.GAME_TheFinals)
+            if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
             {
                 var decrypted = streamBuffer.Decrypt(FIoStoreTocHeader.SIZE, (int)(Ar.Length - FIoStoreTocHeader.SIZE), new FAesKey("0x5A4741BC469E10E569D48057B7AB43320388C9748759663BB5D13E201CA2052E"));
                 Array.Copy(decrypted, 0, streamBuffer, FIoStoreTocHeader.SIZE, decrypted.Length);

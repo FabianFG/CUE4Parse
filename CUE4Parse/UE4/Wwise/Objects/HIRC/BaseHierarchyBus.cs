@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
@@ -26,34 +25,26 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly AkStateGroup[] StateGroups;
 
     // CAkBus::SetInitialValues
-    public BaseHierarchyBus(FArchive Ar) : base(Ar)
+    public BaseHierarchyBus(FWwiseArchive Ar) : base(Ar)
     {
         OverrideBusId = Ar.Read<uint>();
-        if (WwiseVersions.Version > 126 && OverrideBusId == 0)
+        if (Ar.Version > 126 && OverrideBusId == 0)
         {
             DeviceSharesetId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.Version > 56)
+        if (Ar.Version > 56)
         {
-            int propCount = Ar.Read<byte>();
-            var propIds = Ar.ReadArray(propCount, Ar.Read<byte>);
-            var propValues = Ar.ReadArray(propCount, Ar.Read<float>);
-
-            Props = new AkProp[propCount];
-            for (int i = 0; i < propCount; i++)
-            {
-                Props[i] = new AkProp(propIds[i], propValues[i]);
-            }
+            Props = AkPropBundle.ReadSequentialAkProp(Ar);
         }
 
-        if (WwiseVersions.Version > 122)
+        if (Ar.Version > 122)
         {
             PositioningParams = new AkPositioningParams(Ar);
             AuxParams = new AkAuxParams(Ar);
         }
 
-        switch (WwiseVersions.Version)
+        switch (Ar.Version)
         {
             case <= 53:
                 // TODO: Handle this case
@@ -69,19 +60,19 @@ public class BaseHierarchyBus : AbstractHierarchy
                 break;
         }
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             var stateGroupId = Ar.Read<uint>();
         }
 
         RecoveryTime = Ar.Read<uint>();
 
-        if (WwiseVersions.Version > 38)
+        if (Ar.Version > 38)
         {
             MaxDuckVolume = Ar.Read<float>();
         }
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             var stateSyncType = Ar.Read<uint>();
         }
@@ -90,24 +81,24 @@ public class BaseHierarchyBus : AbstractHierarchy
 
         FxBusParams = new AkFxBus(Ar);
 
-        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+        if (Ar.Version > 89 && Ar.Version <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>();
         }
 
-        if (WwiseVersions.Version > 136)
+        if (Ar.Version > 136)
         {
             FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
         RTPCs = AkRtpc.ReadArray(Ar);
 
-        if (WwiseVersions.Version <= 52)
+        if (Ar.Version <= 52)
         {
             // State chunk inlined
             StateGroups = new AkStateChunk(Ar).Groups;
         }
-        else if (WwiseVersions.Version <= 122)
+        else if (Ar.Version <= 122)
         {
             StateGroups = new AkStateChunk(Ar).Groups;
         }
@@ -116,7 +107,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
-        if (WwiseVersions.Version <= 126)
+        if (Ar.Version <= 126)
         {
             // TODO: FeedbackInfo
             // FeedbackID = Ar.bFeedbackInBank ? Ar.Read<uint>() : 0;
@@ -138,7 +129,7 @@ public class BaseHierarchyBus : AbstractHierarchy
             writer.WritePropertyName(nameof(p.Id));
             writer.WriteValue(p.Id);
             writer.WritePropertyName(nameof(p.Value));
-            writer.WriteValue(p.Value);
+            writer.WriteValue(p.Value.Value);
             writer.WriteEndObject();
         }
         writer.WriteEndArray();

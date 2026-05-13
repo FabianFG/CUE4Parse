@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
@@ -11,7 +10,7 @@ public class BaseHierarchyModulator : AbstractHierarchy
     public readonly AkRtpc[] RtpcCurves;
 
     // CAkModulator::SetInitialValues
-    public BaseHierarchyModulator(FArchive Ar) : base(Ar)
+    public BaseHierarchyModulator(FWwiseArchive Ar) : base(Ar)
     {
         Props = AkPropBundle.ReadSequentialAkProp(Ar);
         PropRanges = AkPropBundle.ReadSequentialAkPropRange(Ar);

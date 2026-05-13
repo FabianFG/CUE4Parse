@@ -1,25 +1,25 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.McDSP;
 
-public class CMcDSPFutzBoxFXParams(FArchive Ar) : IAkPluginParam
+public class CMcDSPFutzBoxFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public McDSPFutzBoxFXParams Params = new McDSPFutzBoxFXParams(Ar);
+    public McDSPFutzBoxFXParams Params = new(Ar);
 }
 
-public struct McDSPFutzBoxFXParams(FArchive Ar)
+public struct McDSPFutzBoxFXParams(FWwiseArchive Ar)
 {
-    public McDSPFutzFiltersFXParams Filters = new McDSPFutzFiltersFXParams(Ar);
-    public McDSPFutzDistortionFXParams Distortion = new McDSPFutzDistortionFXParams(Ar);
-    public McDSPFutzEQFXParams EQ = new McDSPFutzEQFXParams(Ar);
-    public McDSPFutzNoiseFXParams Noise = new McDSPFutzNoiseFXParams(Ar);
-    public McDSPFutzGateFXParams Gate = new McDSPFutzGateFXParams(Ar);
-    public McDSPFutzSIMFXParams SIM = new McDSPFutzSIMFXParams(Ar);
-    public McDSPFutzLoFiFXParams LoFi = new McDSPFutzLoFiFXParams(Ar);
-    public McDSPGlobalFXParams Global = new McDSPGlobalFXParams(Ar);
+    public McDSPFutzFiltersFXParams Filters = new(Ar);
+    public McDSPFutzDistortionFXParams Distortion = new(Ar);
+    public McDSPFutzEQFXParams EQ = new(Ar);
+    public McDSPFutzNoiseFXParams Noise = new(Ar);
+    public McDSPFutzSIMFXParams SIM = new(Ar);
+    public McDSPFutzGateFXParams Gate = new(Ar);
+    public McDSPFutzLoFiFXParams LoFi = new(Ar);
+    public McDSPGlobalFXParams Global = new(Ar);
+    public int Version = Ar.Version >= 150 ? Ar.Read<int>() : 0;
 };
 
 [JsonConverter(typeof(StringEnumConverter))]
@@ -29,7 +29,7 @@ public enum FutzFilterSlope : int
     eFutzFilterSlope24 = 0x1
 }
 
-public struct McDSPFutzFiltersFXParams(FArchive Ar)
+public struct McDSPFutzFiltersFXParams(FWwiseArchive Ar)
 {
     public bool bEnable = Ar.Read<byte>() != 0;
     public FutzFilterSlope LPFSlope = Ar.Read<FutzFilterSlope>();
@@ -55,13 +55,35 @@ public enum FutzDistortionMode : int
     eFutzDistMode_Clip = 0x9
 }
 
-public struct McDSPFutzDistortionFXParams(FArchive Ar)
+public struct McDSPFutzDistortionFXParams
 {
-    public bool bEnable = Ar.Read<byte>() != 0;
-    public FutzDistortionMode iMode = Ar.Read<FutzDistortionMode>();
-    public float fAmount = Ar.Read<float>();
-    public float fIntensity = Ar.Read<float>();
-    public float fRectify = Ar.Read<float>();
+    public bool bEnable;
+    public FutzDistortionMode iMode;
+    public float fAmount;
+    public float fIntensity;
+    public float fRectify;
+
+    public int DistortionIntensityMode;
+    public float DistortionWobble;
+    public float DistortionChopAmount;
+    public int DistortionChopMode;
+
+    public McDSPFutzDistortionFXParams(FWwiseArchive Ar)
+    {
+        bEnable = Ar.Read<byte>() != 0;
+        iMode = Ar.Read<FutzDistortionMode>();
+        fAmount = Ar.Read<float>();
+        fIntensity = Ar.Read<float>();
+        fRectify = Ar.Read<float>();
+
+        if (Ar.Version >= 150)
+        {
+            DistortionIntensityMode = Ar.Read<int>();
+            DistortionWobble = Ar.Read<float>();
+            DistortionChopAmount = Ar.Read<float>();
+            DistortionChopMode = Ar.Read<int>();
+        }
+    }
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
@@ -72,16 +94,16 @@ public enum FutzEQType : int
     eFutzEQType_LPF = 0x2
 }
 
-public struct McDSPFutzEQFXParams(FArchive Ar)
+public struct McDSPFutzEQFXParams(FWwiseArchive Ar)
 {
-    public bool bEnable = Ar.Read<byte>() != 0;
+    public bool bEnable = Ar.Read<byte>() != 0;// not in 150
     public FutzEQType FilterType = Ar.Read<FutzEQType>();
     public float fFreq = Ar.Read<float>();
     public float fQ = Ar.Read<float>();
     public float fGain = Ar.Read<float>();
 }
 
-public struct McDSPFutzNoiseFXParams(FArchive Ar)
+public struct McDSPFutzNoiseFXParams(FWwiseArchive Ar)
 {
     public bool bEnable = Ar.Read<byte>() != 0;
     public float fLevel = Ar.Read<float>();
@@ -261,14 +283,14 @@ public enum FutzSIMType : int
     eFutzSIM_Cylinder_Speakers_Bass = 0xa3
 };
 
-public struct McDSPFutzSIMFXParams(FArchive Ar)
+public struct McDSPFutzSIMFXParams(FWwiseArchive Ar)
 {
     public bool bEnable = Ar.Read<byte>() != 0;
     public FutzSIMType iType = Ar.Read<FutzSIMType>();
     public float fTuning = Ar.Read<float>();
 }
 
-public struct McDSPFutzGateFXParams(FArchive Ar)
+public struct McDSPFutzGateFXParams(FWwiseArchive Ar)
 {
     public bool bEnable = Ar.Read<byte>() != 0;
     public float fThreshold = Ar.Read<float>();
@@ -299,7 +321,7 @@ public enum FutzBitDepthType : int
     eFutzLoFi_BitDepth_2 = 0xf
 };
 
-public struct McDSPFutzLoFiFXParams(FArchive Ar)
+public struct McDSPFutzLoFiFXParams(FWwiseArchive Ar)
 {
     public bool bEnable = Ar.Read<byte>() != 0;
     public FutzBitDepthType iBitDepthType = Ar.Read<FutzBitDepthType>();
@@ -307,9 +329,9 @@ public struct McDSPFutzLoFiFXParams(FArchive Ar)
     public float fFilter = Ar.Read<float>();
 }
 
-public struct McDSPGlobalFXParams(FArchive Ar)
+public struct McDSPGlobalFXParams(FWwiseArchive Ar)
 {
-    public float fInputGain = Ar.Read<float>();
+    public float fInputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
     public float fOutputGain = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
-    public float fBalance = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+    public float fBalance = Ar.Read<float>();
 }

@@ -47,6 +47,7 @@ namespace CUE4Parse.FileProvider
 
         public VersionContainer Versions { get; }
         public StringComparer PathComparer { get; }
+        public StringComparison StringComparison { get; }
 
         public IoStoreOnDemandOptions? OnDemandOptions { get; set; }
         public FileProviderDictionary Files { get; }
@@ -71,6 +72,7 @@ namespace CUE4Parse.FileProvider
         {
             Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
             PathComparer = pathComparer ?? StringComparer.Ordinal;
+            StringComparison = PathComparer.ToComparison();
 
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
@@ -751,7 +753,7 @@ namespace CUE4Parse.FileProvider
             ArgumentException.ThrowIfNullOrEmpty("objectName", pathName.Item2);
 
             var package = LoadPackage(pathName.Item1);
-            return package.GetExport<T>(pathName.Item2);
+            return package.GetExport<T>(pathName.Item2, StringComparison);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -772,7 +774,7 @@ namespace CUE4Parse.FileProvider
             ArgumentException.ThrowIfNullOrEmpty("objectName", pathName.Item2);
 
             var package = await LoadPackageAsync(pathName.Item1).ConfigureAwait(false);
-            return package.GetExport<T>(pathName.Item2);
+            return package.GetExport<T>(pathName.Item2, StringComparison);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

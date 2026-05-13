@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 
@@ -13,7 +14,7 @@ public struct DetourPolyDetail
 
     public DetourPolyDetail(FArchive Ar)
     {
-        if (Ar.Game >= Versions.EGame.GAME_UE5_0)
+        if (Ar.Game >= EGame.GAME_UE5_0)
         {
             VertBase = Ar.Read<ushort>();
             TriBase = Ar.Read<ushort>();

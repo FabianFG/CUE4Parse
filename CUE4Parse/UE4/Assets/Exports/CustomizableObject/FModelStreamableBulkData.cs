@@ -13,8 +13,8 @@ public class FModelStreamableBulkData
     
     public FModelStreamableBulkData(FAssetArchive Ar)
     {
-        ModelStreamables = Ar.ReadMap(Ar.Read<uint>, Ar.Read<FMutableStreamableBlock>);
-        ClothingStreamables = Ar.ReadMap(Ar.Read<uint>, Ar.Read<FClothingStreamable>);
+        ModelStreamables = Ar.ReadMap(Ar.Read<uint>, () => new FMutableStreamableBlock(Ar));
+        ClothingStreamables = Ar.ReadMap(Ar.Read<uint>, () => new FClothingStreamable(Ar));
         RealTimeMorphStreamables = Ar.ReadMap(Ar.Read<uint>, () => new FRealTimeMorphStreamable(Ar));
         StreamableBulkData = Ar.ReadArray(() => new FByteBulkData(Ar));
     }

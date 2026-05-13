@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 
@@ -28,12 +29,12 @@ public struct DetourMeshHeader
     public float walkableHeight; // The height of the agents using the tile.
     public float walkableRadius; // The radius of the agents using the tile.
     public float walkableClimb; // The maximum climb height of the agents using the tile.
-    public float bvQuantFactor; // The bounding volume quantization factor. 
+    public float bvQuantFactor; // The bounding volume quantization factor.
 
 
     public DetourMeshHeader(FArchive Ar, ENavMeshVersion navMeshVersion)
     {
-        if (Ar.Game >= Versions.EGame.GAME_UE5_0)
+        if (Ar.Game >= EGame.GAME_UE5_0)
         {
             Version = Ar.Read<ushort>();
             X = Ar.Read<int>();

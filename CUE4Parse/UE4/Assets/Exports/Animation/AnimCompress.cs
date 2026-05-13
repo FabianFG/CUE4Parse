@@ -6,8 +6,8 @@ public class UAnimCompress : UAnimBoneCompressionCodec
 }
 
 public class UAnimCompress_BitwiseCompressOnly : UAnimCompress;
-public class UAnimCompress_PerTrackCompression : UAnimCompress;
+public class UAnimCompress_PerTrackCompression : UAnimCompress_RemoveLinearKeys;
 public class UAnimCompress_RemoveLinearKeys : UAnimCompress;
 public class UAnimCompress_RemoveEverySecondKey : UAnimCompress;
 public class UAnimCompress_Constant : UAnimCompress;
-public class UAnimCompress_LeastDestructive : UAnimCompress;
+public class UAnimCompress_LeastDestructive : UAnimCompress_BitwiseCompressOnly;

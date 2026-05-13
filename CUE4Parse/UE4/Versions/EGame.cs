@@ -25,6 +25,7 @@ public enum EGame : uint
         GAME_GearsOfWar4 = GAME_UE4_11 + 1,
         GAME_DaysGone = GAME_UE4_11 + 2,
     GAME_UE4_12 = GameUtils.GameUe4Base + (12 << 16),
+        GAME_Abzu = GAME_UE4_12 + 1,
     GAME_UE4_13 = GameUtils.GameUe4Base + (13 << 16),
         GAME_StateOfDecay2 = GAME_UE4_13 + 1,
         GAME_WeHappyFew = GAME_UE4_13 + 2,
@@ -100,9 +101,11 @@ public enum EGame : uint
         GAME_OctopathTravelerCoTC = GAME_UE4_26 + 21,
         GAME_DarkPicturesAnthologyHouseOfAshes = GAME_UE4_26 + 22,
         GAME_DarkPicturesAnthologyManofMedan = GAME_UE4_26 + 23,
-        GAME_DarkPicturesAnthologyTheDevilinMe = GAME_UE4_26 + 24,        
-        GAME_DarkPicturesAnthologyLittleHope = GAME_UE4_26 + 25,        
-        GAME_TheQuarry = GAME_UE4_26 + 26,    
+        GAME_DarkPicturesAnthologyTheDevilinMe = GAME_UE4_26 + 24,
+        GAME_DarkPicturesAnthologyLittleHope = GAME_UE4_26 + 25,
+        GAME_TheQuarry = GAME_UE4_26 + 26,
+        GAME_RocoKingdomWorld = GAME_UE4_26 + 27,
+        GAME_HonorofKingsWorld = GAME_UE4_26 + 28,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,
@@ -111,7 +114,7 @@ public enum EGame : uint
         GAME_Valorant_PRE_11_2 = GAME_UE4_27 + 5,
         GAME_Gollum = GAME_UE4_27 + 6,
         GAME_Grounded = GAME_UE4_27 + 7,
-        GAME_DeltaForceHawkOps = GAME_UE4_27 + 8,
+        GAME_DeltaForce = GAME_UE4_27 + 8,
         GAME_MortalKombat1 = GAME_UE4_27 + 9,
         GAME_VisionsofMana = GAME_UE4_27 + 10,
         GAME_Spectre = GAME_UE4_27 + 11,
@@ -135,6 +138,7 @@ public enum EGame : uint
         GAME_DuetNightAbyss = GAME_UE4_27 + 29,
         GAME_LiesofP = GAME_UE4_27 + 30,
         GAME_BloodBowl3 = GAME_UE4_27 + 31,
+        GAME_ChasingKaleidoRIDER = GAME_UE4_27 + 32,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -154,7 +158,7 @@ public enum EGame : uint
         GAME_Dauntless = GAME_UE5_1 + 5,
         GAME_WorldofJadeDynasty = GAME_UE5_1 + 6,
     GAME_UE5_2 = GameUtils.GameUe5Base + (2 << 16),
-        GAME_DeadByDaylight_Old = GAME_UE5_2 + 1,
+        GAME_Placeholder5 = GAME_UE5_2 + 1,
         GAME_PaxDei = GAME_UE5_2 + 2,
         GAME_TheFirstDescendant = GAME_UE5_2 + 3,
         GAME_MetroAwakening = GAME_UE5_2 + 4,
@@ -166,11 +170,12 @@ public enum EGame : uint
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_BlackStigma = GAME_UE5_3 + 2,
         GAME_Valorant = GAME_UE5_3 + 3,
-        GAME_Placeholder5 = GAME_UE5_3 + 4,
+        GAME_ArcRaiders = GAME_UE5_3 + 4,
         GAME_Aion2 = GAME_UE5_3 + 5,
         GAME_TheFinals = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
         GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
+        GAME_Highguard = GAME_UE5_3 + 9,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
@@ -181,7 +186,7 @@ public enum EGame : uint
         GAME_InZOI = GAME_UE5_4 + 7,
         GAME_TempestRising = GAME_UE5_4 + 8,
         GAME_MindsEye = GAME_UE5_4 + 9,
-        GAME_DeadByDaylight = GAME_UE5_4 + 10,
+        GAME_DeadByDaylight_Old = GAME_UE5_4 + 10,
         GAME_Placeholder1 = GAME_UE5_4 + 11,
         GAME_MafiaTheOldCountry = GAME_UE5_4 + 12,
         GAME_2XKO = GAME_UE5_4 + 13,
@@ -195,7 +200,7 @@ public enum EGame : uint
         GAME_Brickadia = GAME_UE5_5 + 1,
         GAME_Splitgate2 = GAME_UE5_5 + 2,
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
-        GAME_Placeholder6 = GAME_UE5_5 + 4,
+        GAME_Directive8020 = GAME_UE5_5 + 4,
         GAME_Wildgate = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
@@ -209,8 +214,10 @@ public enum EGame : uint
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
         GAME_Grounded2 = GAME_UE5_6 + 1,
         GAME_AshesOfCreation = GAME_UE5_6 + 2,
-        GAME_Placeholder7 = GAME_UE5_6 + 3,
+        GAME_Solasta2 = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
+        GAME_DeadByDaylight = GAME_UE5_6 + 5,
+        GAME_ConanExilesEnhanced = GAME_UE5_6 + 6,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
@@ -220,6 +227,7 @@ public enum EGame : uint
 
 public static class GameUtils
 {
+    public const int GameUe3Base = 0x3000000;
     public const int GameUe4Base = 0x4000000;
     public const int GameUe5Base = 0x5000000;
 
@@ -245,7 +253,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
-                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
+                < EGame.GAME_UE5_7 => new FPackageFileVersion(522, 1017),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }

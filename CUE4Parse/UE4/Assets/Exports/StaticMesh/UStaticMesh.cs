@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
@@ -75,6 +74,8 @@ public class UStaticMesh : UObject
             Ar.Position += 64; // 8 per-platform floats
         }
 
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 4;
+
         if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
@@ -84,6 +85,7 @@ public class UStaticMesh : UObject
                 {
                     case EGame.GAME_CrystalOfAtlan:
                     case EGame.GAME_FragPunk:
+                    case EGame.GAME_RocoKingdomWorld:
                         if (Ar.Game is EGame.GAME_FragPunk && !Ar.ReadBoolean()) break;
                         Ar.SkipMultipleBulkArrayData(3);
                         break;
@@ -95,6 +97,9 @@ public class UStaticMesh : UObject
                             Ar.SkipMultipleBulkArrayData(2);
                         break;
                     }
+                    case EGame.GAME_HonorofKingsWorld:
+                        Ar.SkipBulkArrayData();
+                        break;
                     default:
                         Ar.SkipFixedArray(12); // Vertices
                         Ar.SkipFixedArray(2); // Indices
@@ -104,7 +109,7 @@ public class UStaticMesh : UObject
         }
 
         if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
-        if (Ar.Game is EGame.GAME_TheFinals && Ar.ReadBoolean()) Ar.SkipMultipleBulkArrayData(5);
+        if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders && Ar.ReadBoolean()) Ar.SkipMultipleBulkArrayData(5);
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {

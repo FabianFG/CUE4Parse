@@ -65,7 +65,7 @@ public static class FSequencerObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_DeltaForceHawkOps => Type.ModifyLinearKeysForOldInterp,
+            EGame.GAME_DeltaForce => Type.ModifyLinearKeysForOldInterp,
 
             < EGame.GAME_UE4_14 => Type.BeforeCustomVersionWasAdded,
             < EGame.GAME_UE4_15 => Type.RenameMediaSourcePlatformPlayers,

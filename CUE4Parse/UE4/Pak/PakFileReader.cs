@@ -2,12 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
+using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -89,20 +94,17 @@ namespace CUE4Parse.UE4.Pak
 
             if (pakEntry.IsCompressed)
             {
-#if DEBUG
-                Log.Debug("{EntryName} is compressed with {CompressionMethod}", pakEntry.Name, pakEntry.CompressionMethod);
-#endif
                 switch (Game)
                 {
                     case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                        return PartialEncryptCompressedExtract(reader, pakEntry);
+                        return PartialEncryptCompressedExtract(reader, pakEntry, header);
                     case EGame.GAME_GameForPeace:
                         return GameForPeaceExtract(reader, pakEntry);
                     case EGame.GAME_Rennsport:
                         return RennsportCompressedExtract(reader, pakEntry);
                     case EGame.GAME_DragonQuestXI:
                         return DQXIExtract(reader, pakEntry);
-                    case EGame.GAME_ArenaBreakoutInfinite:
+                    case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                         return ABIExtract(reader, pakEntry);
                 }
 
@@ -123,20 +125,37 @@ namespace CUE4Parse.UE4.Pak
                 var uncompressed = new byte[bufferSize];
                 var uncompressedOff = 0;
 
+                var compressedBuffer = Array.Empty<byte>();
                 // decompress the required blocks
                 for (var blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
                 {
                     var block = pakEntry.CompressionBlocks[blockIndex];
                     var blockSize = (int) block.Size;
                     var srcSize = blockSize.Align(alignment);
+                    if (srcSize > compressedBuffer.Length)
+                    {
+                        compressedBuffer = new byte[srcSize];
+                    }
                     // Read the compressed block
-                    var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
+                    var compressed = ReadAndDecryptAt(compressedBuffer, block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
                     // Calculate the uncompressed size,
                     // its either just the compression block size,
                     // or if it's the last block, it's the remaining data size
                     var uncompressedSize = (int) Math.Min(compressionBlockSize, pakEntry.UncompressedSize - blockIndex * compressionBlockSize);
                     Decompress(compressed, 0, blockSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
                     uncompressedOff += uncompressedSize;
+                }
+
+                switch (Ar.Game)
+                {
+                    case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                        return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                    case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                        return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
+                    case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+                        return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
+                    default:
+                        break;
                 }
 
                 var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
@@ -151,12 +170,12 @@ namespace CUE4Parse.UE4.Pak
             switch (Game)
             {
                 case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
-                    return PartialEncryptExtract(reader, pakEntry);
+                    return PartialEncryptExtract(reader, pakEntry, header);
                 case EGame.GAME_Rennsport:
                     return RennsportExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:
                     return DQXIExtract(reader, pakEntry);
-                case EGame.GAME_ArenaBreakoutInfinite:
+                case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
             }
 
@@ -168,6 +187,18 @@ namespace CUE4Parse.UE4.Pak
             var dataOffset = offset - readOffset;
             var readSize = (dataOffset + requestedSize).Align(alignment);
             var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
+
+            switch (Ar.Game)
+            {
+                case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                    return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
+                case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+                    return SnowbreakLua.DecryptLua(data, requestedSize);
+                default:
+                    break;
+            }
 
             if (dataOffset == 0 && requestedSize == data.Length)
                 return data;
@@ -268,7 +299,7 @@ namespace CUE4Parse.UE4.Pak
             int fileCount = 0;
             EncryptedFileCount = 0;
 
-            if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForceHawkOps)
+            if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForce)
             {
                 primaryIndex.Position += 8; // PathHashSeed
                 fileCount = primaryIndex.Read<int>();
@@ -287,7 +318,7 @@ namespace CUE4Parse.UE4.Pak
             ValidateMountPoint(ref mountPoint);
             MountPoint = mountPoint;
 
-            if (!(Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForceHawkOps))
+            if (!(Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForce))
             {
                 fileCount = primaryIndex.Read<int>();
                 primaryIndex.Position += 8; // PathHashSeed

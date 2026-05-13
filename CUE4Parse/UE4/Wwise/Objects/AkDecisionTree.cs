@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
 // AkDecisionTree::SetTree
@@ -8,19 +6,12 @@ public class AkDecisionTree
 {
     public readonly AkDecisionTreeNode[] Nodes;
 
-    public AkDecisionTree()
-    {
-        Nodes = [];
-    }
+    public AkDecisionTree() => Nodes = [];
+    public AkDecisionTree(FWwiseArchive Ar, uint treeDepth, uint treeDataSize) => Nodes = ParseDecisionTree(Ar, treeDataSize, treeDepth);
 
-    public AkDecisionTree(FArchive Ar, uint treeDepth, uint treeDataSize)
+    private AkDecisionTreeNode[] ParseDecisionTree(FWwiseArchive Ar, uint size, uint maxDepth)
     {
-        Nodes = ParseDecisionTree(Ar, treeDataSize, treeDepth);
-    }
-
-    private AkDecisionTreeNode[] ParseDecisionTree(FArchive Ar, uint size, uint maxDepth)
-    {
-        uint itemSize = DetermineItemSize();
+        uint itemSize = DetermineItemSize(Ar);
         uint countMax = size / itemSize;
 
         var nodes = new AkDecisionTreeNode[1];
@@ -29,9 +20,9 @@ public class AkDecisionTree
         return nodes;
     }
 
-    private static uint DetermineItemSize()
+    private static uint DetermineItemSize(FWwiseArchive Ar)
     {
-        return WwiseVersions.Version switch
+        return Ar.Version switch
         {
             <= 29 => 0x08,
             <= 36 => 0x0C,
@@ -40,7 +31,7 @@ public class AkDecisionTree
         };
     }
 
-    private static void ParseTreeNode(FArchive Ar, AkDecisionTreeNode[] nodes, uint count, uint countMax, int curDepth, int maxDepth, int itemSize, AkDecisionTreeNode? parent)
+    private static void ParseTreeNode(FWwiseArchive Ar, AkDecisionTreeNode[] nodes, uint count, uint countMax, int curDepth, int maxDepth, int itemSize, AkDecisionTreeNode? parent)
     {
         var parsedNodes = new AkDecisionTreeNode[count];
         for (int i = 0; i < count; i++)
@@ -78,7 +69,7 @@ public class AkDecisionTreeNode
     public readonly ushort Probability;
     public readonly AkDecisionTreeNode[] Children;
 
-    public AkDecisionTreeNode(FArchive Ar, uint countMax, int currentDepth, int maxDepth, int itemSize)
+    public AkDecisionTreeNode(FWwiseArchive Ar, uint countMax, int currentDepth, int maxDepth, int itemSize)
     {
         Key = Ar.Read<uint>();
 
@@ -96,19 +87,19 @@ public class AkDecisionTreeNode
 
         Children = ChildrenCount > 0 ? new AkDecisionTreeNode[ChildrenCount] : [];
 
-        if (WwiseVersions.Version > 29 && WwiseVersions.Version <= 36)
+        if (Ar.Version > 29 && Ar.Version <= 36)
         {
             Weight = Ar.Read<ushort>();
             Probability = Ar.Read<ushort>();
         }
-        else if (WwiseVersions.Version > 45)
+        else if (Ar.Version > 45)
         {
             Weight = Ar.Read<ushort>();
             Probability = Ar.Read<ushort>();
         }
     }
 
-    private static bool IsAudioNode(FArchive Ar, uint countMax, int itemSize)
+    private static bool IsAudioNode(FWwiseArchive Ar, uint countMax, int itemSize)
     {
         long originalPosition = Ar.Position;
 

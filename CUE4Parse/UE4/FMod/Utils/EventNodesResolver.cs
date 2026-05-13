@@ -7,20 +7,26 @@ using CUE4Parse.UE4.FMod.Objects;
 using Fmod5Sharp.FmodTypes;
 using Serilog;
 
-namespace CUE4Parse.UE4.FMod.Extensions;
+namespace CUE4Parse.UE4.FMod.Utils;
 
 public static class EventNodesResolver
 {
-    public static Dictionary<FModGuid, List<FmodSample>> ResolveAudioEvents(FModReader reader)
+    public static Dictionary<FModGuid, List<FmodSample>> TryResolveAudioEvents(FModReader reader, out bool allWaveformsResolved)
     {
         var result = new Dictionary<FModGuid, List<FmodSample>>();
-        foreach (var (eventGuid, evNode) in reader.EventNodes)
-        {
-            var samples = ResolveEventNodesWithAudio(reader, evNode);
-            if (samples.Count > 0)
-                result[eventGuid] = samples;
-        }
+        int totalExpected = reader.WavEntries.Count;
 
+        result = reader.EventNodes.ToDictionary(
+            kvp => kvp.Key,
+            kvp => ResolveEventNodesWithAudio(reader, kvp.Value) // If empty we will handle it in the provider
+        );
+
+        int totalUniqueResolved = result.Values
+            .SelectMany(samples => samples)
+            .Distinct()
+            .Count();
+
+        allWaveformsResolved = totalExpected == totalUniqueResolved;
         return result;
     }
 
@@ -123,10 +129,10 @@ public static class EventNodesResolver
                 {
                     if (reader.WavEntries.TryGetValue(wavInstr.WaveformResourceGuid, out var entry) &&
                         reader.SoundBankData.Count > 0 &&
-                        entry.SubsoundIndex < reader.SoundBankData.Count &&
-                        entry.SoundBankIndex < reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
+                        entry.SoundBankIndex < reader.SoundBankData.Count &&
+                        entry.SubsoundIndex < reader.SoundBankData[entry.SoundBankIndex].Samples.Count)
                     {
-                        result.Add(reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex]);
+                        result.Add(reader.SoundBankData[entry.SoundBankIndex].Samples[entry.SubsoundIndex]);
                     }
                 }
             }
@@ -135,6 +141,7 @@ public static class EventNodesResolver
         return [.. result];
     }
 
+#if DEBUG
     private static HashSet<string> GetAllResolvedSampleNames(Dictionary<FModGuid, List<FmodSample>> resolvedEvents)
     {
         var allResolvedNames = new HashSet<string>();
@@ -155,10 +162,10 @@ public static class EventNodesResolver
             var wavGuid = kvp.Key;
             var entry = kvp.Value;
 
-            if (reader.SoundBankData.Count <= 0 || entry.SoundBankIndex >= reader.SoundBankData[entry.SubsoundIndex].Samples.Count)
+            if (reader.SoundBankData.Count <= 0 || entry.SubsoundIndex >= reader.SoundBankData[entry.SoundBankIndex].Samples.Count)
                 continue;
 
-            var sample = reader.SoundBankData[entry.SubsoundIndex].Samples[entry.SoundBankIndex];
+            var sample = reader.SoundBankData[entry.SoundBankIndex].Samples[entry.SubsoundIndex];
 
             if (!allResolved.Contains(sample.Name!))
             {
@@ -191,4 +198,5 @@ public static class EventNodesResolver
             Log.Debug($"'{sample.Value.Name}' sample wasn't resolved (GUID: {sample.Key})");
         }
     }
+#endif
 }

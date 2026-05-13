@@ -27,6 +27,7 @@ public struct FShaderValueTypeHandle : IUStruct
 
         if (Type == EShaderFundamentalType.Struct)
         {
+            Name = Ar.ReadFName();
             StructElements = Ar.ReadArray(() => new FStructElement(Ar));
         }
         else
@@ -44,10 +45,10 @@ public struct FShaderValueTypeHandle : IUStruct
         }
     }
 
-    public struct FStructElement(FAssetArchive ar)
+    public struct FStructElement(FAssetArchive Ar)
     {
-        public FName Name = ar.ReadFName();
-        public EShaderFundamentalType Type = ar.Read<EShaderFundamentalType>();
+        public FName Name = Ar.ReadFName();
+        public FShaderValueTypeHandle Type = new FShaderValueTypeHandle(Ar);
     }
 
     public enum EShaderFundamentalType : byte

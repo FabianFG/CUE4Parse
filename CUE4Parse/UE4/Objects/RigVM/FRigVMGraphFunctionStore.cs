@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.RigVM;
@@ -19,6 +20,9 @@ public struct FRigVMGraphFunctionData
             return;
 
         SerializedCollapsedNode = Ar.ReadFString();
+
+        if (Ar.Game >= EGame.GAME_UE5_8) // can't find anything in source, but it's there for FN
+            Ar.ReadMap(Ar.Read<FGuid>, Ar.Read<int>);
 
         if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.RigVMSaveSerializedGraphInGraphFunctionDataAsByteArray)
             return;

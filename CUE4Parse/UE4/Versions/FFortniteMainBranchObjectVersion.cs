@@ -707,7 +707,118 @@ public static class FFortniteMainBranchObjectVersion
         
         // Introducing FGuid cached to FAnimNext(Soft)VariableReference
         UAFVariableReferenceGUID,
-        
+
+        // Unified source color settings between img media & media io
+        MediaColorSettingsUnification,
+
+        // Changed behavior of the String Operation metadata node in PCG for Substring and Matches
+        PCGMetadataOpStringTypeChange,
+
+        // Compress LiveLink SubSection data
+        LiveLinkCompressSubSectionData,
+
+        // Added option to quantize chaos tri mesh BVH's per-face bounds
+        OptionalQuantizePerFaceBoundsInChaosTriMeshBVH,
+
+        // Add Dataflow Graph Topology Guid to UE::Dataflow:FGraph
+        DataflowAddGraphTopologyGuid,
+
+        // Add material usage flag for mesh deformers
+        AddMeshDeformerUsageFlag,
+
+        // Add landscape texture patch alpha override for height/weight patches
+        LandscapeTexturePatchAlphaOverride,
+
+        // For SpawnActor/AddComponent, allow template to be used for the spawned actor.
+        PCGAllowTemplateWhenSpawningFromAttribute,
+
+        // Chaos collision filters extension from 32 to 64 bit
+        CollisionFilter64Bit,
+
+        // Add the concept of UAFAssetData
+        UAFAssetData,
+
+        // Add an additional rotation offset to root motion modifier and deprecate the 'Opposite' rotation methods
+        RootMotionModifierRotationOffset,
+
+        // Update PolyBezierSpline internal storage structure to use 3 control points per segment instead of 4
+        PolyBezierSplineAnchorTripleLayout,
+
+        // Repairing verse data where we introduced -0.0 value when we flipped the coordinate system
+        VerseRepairDataWithMinusZeroValue,
+
+        // Add new enum property to composite (plugin) UCompositePassColorKeyer to control keying settings
+        CompositePassKeyerSource,
+
+        // OpenColorIO library update to v2.5.1 which transitions from ACES 1.3 to ACES 2.0 defaults
+        OpenColorIOv251,
+
+        // Reparameterize Spline in SplineComponent based on SplineCurves parameterization
+        SplineComponentReparameterizeOnLoad,
+
+        // Deprecating support for external UPackage storing UAF asset entries
+        DeprecateUAFExternalPackages,
+
+        // RigVM object pins hold an object ptr
+        RigVMPinDefaultValueObjectPtr,
+
+        // AnimSequenceTracks now have timestamps
+        AnimSequenceTrackTimestamps,
+
+        // Outdated version bump that was kept for data integrity.
+        PCG_PropertyBagHierarchySupport_Outdated,
+
+        // PCG Graph's Instanced Property Bags now support Hierarchy Editor, post loading existing data into new format
+        PCG_PropertyBagHierarchySupport,
+
+        // Introduce per-proxy overridable landscape grass 
+        OverridableLandscapeGrassTypes,
+
+        // AnimSequenceTransformProviderData now has bounds.
+        AnimSequenceTransformProviderBounds,
+
+        // UEnum now have Underlyingtype
+        EnumUnderlyingType,
+
+        // Composite layer name deprecation
+        Composite_LayerNameDeprecation,
+
+        // FDynamicMeshAttributeSet has triangle labels
+        DynamicMeshAttributesTriangleLabels,
+
+        // Remove RF_Public on entity components and subobjects
+        FixPublicEntityComponentsAndSubobjects,
+
+        // Added override flag for Physical Material
+        AddPhysMatOverrideFlag,
+
+        // Added context DevNotes for translators to FText
+        AddDevNotesToFText,
+
+        // Added default color override for PCG Mesh Sampler and fix bounds in PCG Subdivide Spline
+        PCGMeshSamplerDefaultColorPCGSubdivideSplineBoundsFixes,
+
+        // Serializable dynamic delegate payloads
+        DynamicDelegatePayloads,
+
+        // Compact representation of serializable dynamic delegate payloads which avoids shifting binary data
+        CompactDynamicDelegatePayloads,
+
+        // Added bone attachment serialization for UInstancedSkinnedMeshComponent
+        InstancedSkinnedMeshBoneAttachments,
+
+        // Added toggle to show/hide per-pin attribute creation settings on PCG Custom HLSL nodes
+        PCGCustomHLSLAttributeCreationSettingsToggle,
+
+        // Converting FPCGMetadataAttribute<T> to Generic attributes. 
+        ConvertFPCGMetadataAttributeToGenericAttributes,
+
+        // Merging PCG Metadata Attribute base and Generic ones. 
+        MergePCGMetadataAttributeBaseAndGeneric,
+
+        // AnimSequenceTransformProviderData supports multiple layers
+        AnimSequenceTransformProviderLayers,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1

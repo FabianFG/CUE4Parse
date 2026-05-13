@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
@@ -9,7 +9,9 @@ namespace CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 
 public static class SnowbreakAes
 {
-    private static Dictionary<IAesVfsReader, FAesKey> _aesKeys = new();
+    private static volatile FAesKey? _activeKey;
+    private static ConditionalWeakTable<IAesVfsReader, FAesKey> _aesKeysCache = [];
+    private static readonly object _lock = new();
 
     public static byte[] SnowbreakDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
@@ -17,19 +19,27 @@ public static class SnowbreakAes
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
         if (count % 16 != 0)
             throw new ArgumentException("count must be a multiple of 16");
-        if (reader.AesKey == null)
-            throw new NullReferenceException("reader.AesKey");
 
-        if (!_aesKeys.TryGetValue(reader, out var key))
+        var key = reader.AesKey?? throw new NullReferenceException(nameof(reader.AesKey));
+
+        if (key.IsDefault)
+            return bytes;
+
+        if (!ReferenceEquals(_activeKey, key))
         {
-            key = ConvertSnowbreakAes(reader.Name, reader.AesKey);
-            lock(_aesKeys)
+            lock (_lock)
             {
-                _aesKeys[reader] = key;
+                if (!ReferenceEquals(_activeKey, key))
+                {
+                    _activeKey = key;
+                    _aesKeysCache = [];
+                }
             }
         }
 
-        return bytes.Decrypt(key);
+        var transformedKey = _aesKeysCache.GetValue(reader, r => ConvertSnowbreakAes(r.Name, key));
+
+        return bytes.Decrypt(transformedKey);
     }
 
     private static FAesKey ConvertSnowbreakAes(string name, FAesKey key)

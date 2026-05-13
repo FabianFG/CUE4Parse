@@ -17,12 +17,7 @@ public class FReferenceSkeleton
     {
         FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
         FinalRefBonePose = Ar.ReadArray(() => new FTransform(Ar));
-
-        if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
-        {
-            FinalNameToIndexMap = Ar.ReadMap(() => Ar.ReadFName().Text, Ar.Read<int>);
-        }
-        else FinalNameToIndexMap = [];
+        FinalNameToIndexMap = Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR ? Ar.ReadMap(() => Ar.ReadFName().Text, Ar.Read<int>) : [];
 
         if (Ar.Game == EGame.GAME_DaysGone) Ar.SkipFixedArray(12);
 

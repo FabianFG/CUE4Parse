@@ -1,9 +1,8 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkFxSrcSilenceParams(FArchive Ar) : IAkPluginParam
+public class CAkFxSrcSilenceParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public AkFxSrcSilenceParams Params = Ar.Read<AkFxSrcSilenceParams>();
 }

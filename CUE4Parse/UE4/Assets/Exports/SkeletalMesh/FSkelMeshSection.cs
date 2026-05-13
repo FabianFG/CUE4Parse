@@ -238,10 +238,10 @@ public class FSkelMeshSection
         if (Ar.Game == EGame.GAME_Paragon) Ar.Position += 1; // bool
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
+        if (Ar.Game == EGame.GAME_DeltaForce) Ar.Position += 3;
         if (Ar.Game == EGame.GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy or EGame.GAME_Snowbreak) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy or EGame.GAME_Snowbreak or EGame.GAME_ChasingKaleidoRIDER) Ar.Position += 4;
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
         BaseVertexIndex = Ar.Read<uint>();
         ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
@@ -272,7 +272,7 @@ public class FSkelMeshSection
             EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters => 4,
             EGame.GAME_FragPunk or EGame.GAME_InfinityNikki => 8,
             EGame.GAME_MortalKombat1 => 12,
-            EGame.GAME_FateTrigger => 15,
+            EGame.GAME_FateTrigger => 19,
             EGame.GAME_Strinova => 18,
             EGame.GAME_SuicideSquad => 11,
             _ => 0,

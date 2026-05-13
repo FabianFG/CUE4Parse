@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,9 +11,9 @@ public readonly struct CAkConversionTable
     public readonly int Size; // uint for legacy versions, ushort for modern versions
     public readonly AkRtpcGraphPoint[] GraphPoints;
 
-    public CAkConversionTable(FArchive Ar, bool readScaling = true)
+    public CAkConversionTable(FWwiseArchive Ar, bool readScaling = true)
     {
-        if (WwiseVersions.Version <= 36)
+        if (Ar.Version <= 36)
         {
             Scaling = readScaling ? (EAkCurveScaling) Ar.Read<uint>() : EAkCurveScaling.None;
             Size = (int) Ar.Read<uint>();

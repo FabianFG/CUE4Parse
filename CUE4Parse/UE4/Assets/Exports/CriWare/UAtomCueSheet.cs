@@ -25,11 +25,6 @@ public class UAtomCueSheet : UObject
         using var bulkAr = new FByteArchive("bulk", bulkData.Data);
         AcbReader = new AcbReader(bulkAr);
 
-        if (bulkData.BulkDataFlags is EBulkDataFlags.BULKDATA_None)
-        {
-            Ar.Position = savedPosition + bulkData.Header.ElementCount;
-        }
-
         Ar.Position += 2; // No clue
     }
 

@@ -9,3 +9,9 @@ public struct FRigElementKey(FArchive Ar)
     public ERigElementType Type = EnumUtils.GetValueByName<ERigElementType>(Ar.ReadFName().Text);
     public FName Name = Ar.ReadFName();
 }
+
+public struct FRigElementKeyWithLabel(FArchive Ar)
+{
+    public FRigElementKey Key = new FRigElementKey(Ar);
+    public FName Label = Ar.ReadFName();
+}

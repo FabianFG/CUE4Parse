@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -84,7 +84,7 @@ namespace CUE4Parse.MappingsProvider
             {
                 if (entry == null) continue;
                 var values = entry["values"]!.ToObject<string[]>()!;
-                var i = 0;
+                long i = 0;
                 MappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++);
             }
         }

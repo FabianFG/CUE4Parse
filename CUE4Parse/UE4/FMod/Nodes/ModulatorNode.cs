@@ -2,13 +2,14 @@ using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class ModulatorNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FModGuid OwnerGuid;
     public readonly int PropertyIndex;
     public readonly EModulatorType Type;

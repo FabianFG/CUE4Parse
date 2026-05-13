@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZTrashBoxModelerFXParams(FArchive Ar) : IAkPluginParam
+public class CiZTrashBoxModelerFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public iZTrashBoxModelerFXParams Params = new iZTrashBoxModelerFXParams(Ar);
+    public iZTrashBoxModelerFXParams Params = new(Ar);
 }
 
-public struct iZTrashBoxModelerFXParams(FArchive Ar)
+public struct iZTrashBoxModelerFXParams(FWwiseArchive Ar)
 {
     public iZTrashBoxModelerNonRTPCParams NonRTPC = Ar.Read<iZTrashBoxModelerNonRTPCParams>();
     public iZTrashBoxModelerRTPCParams RTPC = Ar.Read<iZTrashBoxModelerRTPCParams>();

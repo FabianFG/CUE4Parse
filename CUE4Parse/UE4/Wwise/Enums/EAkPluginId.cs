@@ -1,6 +1,10 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace CUE4Parse.UE4.Wwise.Enums;
 
 // Doesn't actually exist, but it's cleaner
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EAkPluginId : uint
 {
     None,

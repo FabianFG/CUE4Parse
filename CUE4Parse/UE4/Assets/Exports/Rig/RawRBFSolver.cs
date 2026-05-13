@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
@@ -23,7 +23,7 @@ public class RawRBFSolver
     public RawRBFSolver(FArchiveBigEndian Ar)
     {
         Size = Ar.Read<uint>();
-        BaseMarker = Ar.Read<uint>();
+        //BaseMarker = Ar.Read<uint>();
         Name = Ar.ReadString();
         RawControlIndices = Ar.ReadArray<ushort>();
         PoseIndices = Ar.ReadArray<ushort>();
@@ -36,7 +36,7 @@ public class RawRBFSolver
         NormalizeMethod = Ar.Read<ushort>();
         FunctionType = Ar.Read<ushort>();
         TwistAxis = (ETwistAxis) Ar.Read<ushort>();
-        SizeMarker = Ar.Read<uint>();
+        //SizeMarker = Ar.Read<uint>();
     }
 }
 

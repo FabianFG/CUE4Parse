@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZHybridReverbFXParams(FArchive Ar) : IAkPluginParam
+public class CiZHybridReverbFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public iZHybridReverbFXParams Params = new iZHybridReverbFXParams(Ar);
+    public iZHybridReverbFXParams Params = new(Ar);
 }
 
-public struct iZHybridReverbFXParams(FArchive Ar)
+public struct iZHybridReverbFXParams(FWwiseArchive Ar)
 {
     public iZHybridReverbNonRTPCParams NonRTPC = Ar.Read<iZHybridReverbNonRTPCParams>();
     public iZHybridReverbRTPCParams RTPC = Ar.Read<iZHybridReverbRTPCParams>();

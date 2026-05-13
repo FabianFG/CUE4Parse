@@ -31,6 +31,32 @@ public class FPositionVertexBuffer
             return;
         }
 
+        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        {
+            var size = Ar.Read<int>();
+            if (size == 32)
+            {
+                NumVertices = Ar.Read<int>();
+                var pos = Ar.Read<FVector>();
+                var extent = Ar.Read<FVector>();
+                Stride = Ar.Read<int>();
+                Ar.Position -= 4;
+                Verts = Ar.ReadBulkArray(() => (FVector) Ar.Read<FVector3UnsignedShortScale>());
+                for (int i = 0; i < Verts.Length; i++)
+                {
+                    Verts[i] = Verts[i] * extent / 65536 + pos;
+                }
+            }
+            else if (size == 12)
+            {
+                Stride = size;
+                NumVertices = Ar.Read<int>();
+                Verts = Ar.ReadBulkArray<FVector>();
+            }
+
+            return;
+        }
+
         if (Ar.Game is EGame.GAME_Farlight84)
         {
             bool bUseHalfPrecisionPositions = Ar.ReadBoolean();
@@ -103,6 +129,16 @@ public class FPositionVertexBuffer
             {
                 4 => Ar.ReadBulkArray(() => (FVector) Ar.Read<FVector3Packed32>()),
                 8 => Ar.ReadBulkArray(() => (FVector) Ar.Read<FVector3UnsignedShortScale>()),
+                12 => Ar.ReadBulkArray<FVector>(),
+                _ => throw new ArgumentOutOfRangeException($"Unknown stride {Stride} for FPositionVertexBuffer")
+            };
+            return;
+        }
+        if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+        {
+            Verts = Stride switch
+            {
+                8 => Ar.ReadBulkArray(() => (FVector) Ar.Read<FVector3SignedShortScale>()),
                 12 => Ar.ReadBulkArray<FVector>(),
                 _ => throw new ArgumentOutOfRangeException($"Unknown stride {Stride} for FPositionVertexBuffer")
             };

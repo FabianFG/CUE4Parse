@@ -39,7 +39,7 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
             return;
         }
 
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps)
+        if (Ar.Game == EGame.GAME_DeltaForce)
         {
             StructFallback = new FStructFallback(Ar, "MovieSceneChannel");
             return;

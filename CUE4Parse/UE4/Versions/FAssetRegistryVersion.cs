@@ -40,6 +40,8 @@ public enum FAssetRegistryVersionType
     PackageSavedHash,					// Replaced FAssetPackageData::PackageGuid with PackageSavedHash
     ExternalActorToWorldIsEditorOnly,   // FPackageDependencyData::LoadDependenciesFromPackageHeader changed how it calculates PackageDependencies
     ManageDependenciesCookRule,			// CookRule property added to EDependencyProperties for EDependencyCategory::Manage
+    TagSetMapSupports64BitStringNum,	// 64-bit arrays for strings
+    MemoryMappedTagDataStore,			// Tag data store is now memory mapped
 
     // -----<new versions can be added above this line>-------------------------------------------------
     VersionPlusOne,

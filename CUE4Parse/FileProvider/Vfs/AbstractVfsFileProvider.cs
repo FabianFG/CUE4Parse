@@ -11,6 +11,7 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
+using CUE4Parse.GameTypes.ArcRaiders.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
@@ -25,6 +26,7 @@ using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
@@ -81,7 +83,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
                 EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
                 EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
-                EGame.GAME_DeltaForceHawkOps => DeltaForceAes.DeltaForceDecrypt,
+                EGame.GAME_DeltaForce => DeltaForceAes.DeltaForceDecrypt,
                 EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
                 EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
                 EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
@@ -96,6 +98,8 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
                 EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
+                EGame.GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
+                EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
                 _ => null
             };
         }
@@ -233,12 +237,16 @@ namespace CUE4Parse.FileProvider.Vfs
             var downloader = new IoStoreOnDemandDownloader(OnDemandOptions);
             foreach (var container in chunkToc.Containers)
             {
-                PostLoadReader(new IoStoreOnDemandReader(
-                    new FStreamArchive($"{container.ContainerName}.utoc",
-                    await downloader.Download($"{chunkToc.Header.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc").ConfigureAwait(false), Versions),
-                    chunkToc,
-                    container,
-                    downloader));
+                try
+                {
+                    var url = $"{chunkToc.Header.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc";
+                    var data = await downloader.Download(url).ConfigureAwait(false);
+                    PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.ContainerName}.utoc", data, Versions), chunkToc, container, downloader));
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
+                }
             }
         }
 

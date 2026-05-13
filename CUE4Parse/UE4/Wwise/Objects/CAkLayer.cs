@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -15,18 +14,18 @@ public class CAkLayer
     public readonly float RtpcCrossfadingDefaultValue;
     public readonly AkAssociatedLayerChild[] Associations;
 
-    public CAkLayer(FArchive Ar)
+    public CAkLayer(FWwiseArchive Ar)
     {
         LayerId = Ar.Read<uint>();
         Rtpcs = AkRtpc.ReadArray(Ar);
         RtpcId = Ar.Read<uint>();
 
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             RtpcType = Ar.Read<EAkGameSyncType>();
         }
 
-        if (WwiseVersions.Version <= 59)
+        if (Ar.Version <= 59)
         {
             RtpcCrossfadingDefaultValue = Ar.Read<float>();
         }
@@ -40,13 +39,13 @@ public class CAkLayer
         public readonly uint AssociatedChildId;
         public readonly AkRtpcGraphPoint[] GraphPoints;
 
-        public AkAssociatedLayerChild(FArchive Ar)
+        public AkAssociatedLayerChild(FWwiseArchive Ar)
         {
             AssociatedChildId = Ar.Read<uint>();
             GraphPoints = AkRtpcGraphPoint.ReadArray(Ar);
         }
 
-        public static AkAssociatedLayerChild[] ReadArray(FArchive Ar) =>
+        public static AkAssociatedLayerChild[] ReadArray(FWwiseArchive Ar) =>
             Ar.ReadArray(Ar.Read<int>(), () => new AkAssociatedLayerChild(Ar));
     }
 }

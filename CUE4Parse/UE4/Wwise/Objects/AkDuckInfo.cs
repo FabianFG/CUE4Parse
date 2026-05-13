@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -11,12 +10,11 @@ public readonly struct AkDuckInfo
     public readonly float DuckVolume;
     public readonly uint FadeOutTime;
     public readonly uint FadeInTime;
-    [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkCurveInterpolation FadeCurve;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkPropID TargetProp;
 
-    public AkDuckInfo(FArchive Ar)
+    public AkDuckInfo(FWwiseArchive Ar)
     {
         BusId = Ar.Read<uint>();
         DuckVolume = Ar.Read<float>();
@@ -25,7 +23,7 @@ public readonly struct AkDuckInfo
 
         var byBitVector = Ar.Read<byte>();
         FadeCurve = (EAkCurveInterpolation) (byBitVector & 0x1F);
-        if (WwiseVersions.Version > 65)
+        if (Ar.Version > 65)
         {
             TargetProp = Ar.Read<EAkPropID>();
         }

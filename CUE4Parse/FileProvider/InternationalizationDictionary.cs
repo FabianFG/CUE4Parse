@@ -52,7 +52,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         foreach (var instruction in instructions.Where(x => x.InstructionType == InstructionType.Add))
         {
             var parts = instruction.Value.Trim('"').Split(';');
-            _cultureMappings.Add(parts[0], parts[1]);
+            _cultureMappings[parts[0]] = parts[1];
         }
 
         instructions.Clear();

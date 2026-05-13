@@ -43,8 +43,10 @@ public class FPCGLandscapeCacheEntry
         PointHalfSize = new FVector(Ar);
         Stride = Ar.Read<int>();
         LayerDataNames = Ar.ReadArray(Ar.ReadFName);
-        var BulkData = new FByteBulkData(Ar);
-        using var reader = new FByteArchive("FPCGLandscapeCacheEntry", BulkData.Data, Ar.Versions);
+        var bulkData = new FByteBulkData(Ar);
+        if (bulkData.Data is null)
+            return;
+        using var reader = new FByteArchive("FPCGLandscapeCacheEntry", bulkData.Data, Ar.Versions);
         PositionsAndNormals = reader.ReadArray(() => new FVector(reader));
         LayerData = reader.ReadArray(() => reader.ReadArray<byte>());
     }

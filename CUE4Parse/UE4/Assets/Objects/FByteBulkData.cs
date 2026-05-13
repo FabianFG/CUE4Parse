@@ -1,10 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.CompilerServices;
-using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -14,203 +11,138 @@ using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
-[JsonConverter(typeof(FByteBulkDataConverter))]
-public class FByteBulkData
+/// <summary>
+/// Custom wrapper class for a bulk byte[] data without FByteBulkDataHeader
+/// </summary>
+public sealed class FByteArrayData : TBulkData<byte>
 {
-    public static bool LazyLoad = true;
+    public FByteArrayData(byte[] data) : base(data) { }
 
-    public readonly FByteBulkDataHeader Header;
-    public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
+    public FByteArrayData(Lazy<byte[]?> data) : base(data) { }
 
-    public byte[]? Data => _data?.Value;
-    private readonly Lazy<byte[]?>? _data;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int GetDataSize() => Data!.Length;
+}
 
-    private readonly FAssetArchive _savedAr;
-    private readonly long _dataPosition;
+[JsonConverter(typeof(FByteBulkDataConverter))]
+public sealed class FByteBulkData : TBulkData<byte>
+{
+    public FByteBulkData(FAssetArchive Ar) : base(Ar) { }
 
-    public FByteBulkData(byte[] data)
+    /// <summary>
+    /// Creates a new FByteBulkData instance for a portion of the original bulk data.
+    /// </summary>
+    public FByteBulkData(FAssetArchive Ar, FByteBulkData bulkData, long offset, int size) : base()
     {
-        _data = new Lazy<byte[]>(data);
-    }
-
-    public FByteBulkData(Lazy<byte[]?> data)
-    {
-        _data = data;
-    }
-
-    public FByteBulkData(FAssetArchive Ar)
-    {
-        Header = new FByteBulkDataHeader(Ar);
-        if (Header.ElementCount == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        var header = bulkData.Header;
+        Header = new FByteBulkDataHeader(header.BulkDataFlags, size, (uint) size, header.OffsetInFile + offset, header.CookedIndex);
+        _dataPosition = bulkData._dataPosition;
+        if (!header.BulkDataFlags.HasFlag(BULKDATA_OptionalPayload | BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
         {
-            // Log.Warning("Bulk with no data");
+            _dataPosition += offset;
+        }
+
+        if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        {
             return;
         }
 
-        _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable)
+        _data = new Lazy<byte[]?>(() =>
         {
-            Ar.Position += Header.ElementCount;
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB) && !BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile)) // but where is data? inlined or in separate file?
-        {
-            throw new ParserException(Ar, "TODO: CompressedZlib");
-        }
-
-        if (LazyLoad)
-        {
-            _data = new Lazy<byte[]?>(() =>
-            {
-                var data = new byte[Header.ElementCount];
-                return ReadBulkDataInto(data) ? data : null;
-            });
-        }
-        else
-        {
-            var data = new byte[Header.ElementCount];
-            if (ReadBulkDataInto(data)) _data = new Lazy<byte[]?>(() => data);
-        }
+            return ReadBulkDataInto(out var data) ? data : null;
+        });
     }
 
-    protected FByteBulkData(FAssetArchive Ar, bool skip = false)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int GetDataSize() => Header.ElementCount;
+
+    /// <summary>
+    /// Reads bulk data once without storing it in this instance.
+    /// If data is already cached, optionally returns a copy of a cached data.
+    /// </summary>
+    public byte[]? ReadDataOnce(bool returnCachedData = true)
     {
-        Header = new FByteBulkDataHeader(Ar);
-
-        if (BulkDataFlags.HasFlag(BULKDATA_Unused | BULKDATA_PayloadInSeperateFile | BULKDATA_PayloadAtEndOfFile))
+        if (_data is { IsValueCreated: true })
         {
-            return;
+            var cached = _data.Value;
+            if (cached is null) return null;
+
+            return returnCachedData ? cached : (byte[]) cached.Clone();
         }
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || Header.OffsetInFile == Ar.Position)
-        {
-            Ar.Position += Header.SizeOnDisk;
-        }
+        return ReadBulkDataInto(out var data) ? data : null;
     }
 
-    private bool ReadBulkDataInto(byte[] data, int offset = 0)
+    public bool TryCreateReader(string name, [NotNullWhen(true)] out FArchive reader, bool useCachedData = true)
     {
-        if (data.Length - offset < Header.ElementCount)
+        try
         {
-            Log.Error("Data buffer is too small");
+            var data = ReadDataOnce(useCachedData) ?? throw new ParserException();
+            reader = new FByteArchive(name, data, _savedAr?.Versions);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Could not create {0} reader for FByteBulkData", name);
+            reader = null!;
+        }
+        return reader != null;
+    }
+
+    protected override bool ReadBulkDataInto(out byte[] data)
+    {
+        data = [];
+        if (!GetBulkArchive(out var archive, out var position))
+        {
             return false;
         }
 
-        var archive = _savedAr;
-        var position = _dataPosition;
-
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
+        data = new byte[(int) Header.SizeOnDisk];
+        var read = archive.ReadAt(position, data, 0, (int) Header.SizeOnDisk);
+        if (read != Header.SizeOnDisk)
         {
-#if DEBUG
-            Log.Debug("bulk data in .uexp file (Force Inline Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
-#endif
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
-        {
-#if DEBUG
-            Log.Debug("bulk data in {CookedIndex}.uptnl file (Optional Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
-#endif
-            if (!TryGetBulkPayload(archive, PayloadType.UPTNL, out var uptnlAr))
-                return false;
-
-            archive = uptnlAr;
-            position = uptnlAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
-        {
-#if DEBUG
-            Log.Debug("bulk data in {CookedIndex}.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
-#endif
-            if (!TryGetBulkPayload(archive, PayloadType.UBULK, out var ubulkAr))
-                return false;
-
-            archive = ubulkAr;
-            position = ubulkAr.Length == Header.ElementCount ? 0 : Header.OffsetInFile;
-
-            if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
-            {
-                var compressedData = new byte[Header.SizeOnDisk];
-                ubulkAr.ReadAt(position, compressedData, offset, compressedData.Length);
-                using var dataAr = new FByteArchive("", compressedData, _savedAr.Versions);
-                dataAr.SerializeCompressedNew(data, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-                return true;
-            }
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
-        {
-#if DEBUG
-            Log.Debug("bulk data in .uexp file (Payload At End Of File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
-#endif
-            if (Header.OffsetInFile + Header.ElementCount > archive.Length)
-                throw new ParserException(archive, $"Failed to read PayloadAtEndOfFile, {Header.OffsetInFile} is out of range");
-
-            // stored in same file, but at different position
-            // save archive position
-            position = Header.OffsetInFile;
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
-        {
-            throw new ParserException(archive, "TODO: CompressedZlib");
-        }
-        else if (BulkDataFlags.HasFlag(BULKDATA_LazyLoadable) || BulkDataFlags.HasFlag(BULKDATA_None))
-        {
-            //
+            Log.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
         }
 
-        var read = archive.ReadAt(position, data, offset, Header.ElementCount);
-        if (read != Header.ElementCount)
+        if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
         {
-            Log.Warning("Read {read} bytes, expected {Header.ElementCount}", read, Header.ElementCount);
-            // return false; // should we???
+            var uncompressedData = new byte[Header.ElementCount];
+            using var dataAr = new FByteArchive("", data, _savedAr?.Versions);
+            dataAr.SerializeCompressedNew(uncompressedData, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            data = uncompressedData;
         }
+
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryGetBulkPayload(FAssetArchive Ar, PayloadType type, [MaybeNullWhen(false)] out FAssetArchive payloadAr)
+    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkData? fullBulkData)
     {
-        payloadAr = null;
-        if (Header.CookedIndex.IsDefault)
-        {
-            Ar.TryGetPayload(type, out payloadAr, Header);
-        }
-        else if (Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
-        {
-            var path = Path.ChangeExtension(Ar.Name, $"{Header.CookedIndex}.{type.ToString().ToLowerInvariant()}");
-            if (vfsFileProvider.TryGetGameFile(path, out var file) && file.TryCreateReader(out var reader, Header))
-            {
-                payloadAr = new FAssetArchive(reader, Ar.Owner);
-            }
-        }
-        return payloadAr != null;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetDataSize() => Header.ElementCount;
-
-    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData)
-    {
+        fullBulkData = null;
         combinedData = [];
+        var saved = Ar.Position;
         try
         {
             var secondChunk = new FByteBulkData(Ar);
-            if (Data is null || secondChunk.Data is null) return false;
+            var secondChunkData = secondChunk.ReadDataOnce();
+            var data = ReadDataOnce();
+            if (data is null || secondChunkData is null) return false;
 
-            if (Data.Length < secondChunk.Data.Length && secondChunk.Data.AsSpan()[..Data.Length].SequenceEqual(Data))
+            if (data.Length < secondChunkData.Length && secondChunkData.AsSpan()[..data.Length].SequenceEqual(data))
             {
-                combinedData = secondChunk.Data;
+                combinedData = secondChunkData;
+                fullBulkData = secondChunk;
                 return true;
             }
 
-            combinedData = new byte[GetDataSize() + secondChunk.GetDataSize()];
-            Buffer.BlockCopy(Data, 0, combinedData, 0, GetDataSize());
-            Buffer.BlockCopy(secondChunk.Data, 0, combinedData, GetDataSize(), secondChunk.GetDataSize());
+            combinedData = new byte[data.Length + secondChunkData.Length];
+            data.CopyTo(combinedData.AsSpan());
+            secondChunkData.CopyTo(combinedData.AsSpan(data.Length));
             return true;
         }
         catch
         {
-
+            Ar.Position = saved;
             return false;
         }
     }

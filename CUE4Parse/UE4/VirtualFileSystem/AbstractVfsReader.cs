@@ -75,7 +75,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         private void VerifyReadOrder()
         {
             ReadOrder = GetPakOrderFromPakFilePath();
-            if (!Name.EndsWith("_P.pak") && !Name.EndsWith("_P.utoc") && !Name.EndsWith("_P.o.utoc"))
+            if (!Name.EndsWith("_P.pak", StringComparison.OrdinalIgnoreCase) && !Name.EndsWith("_P.utoc", StringComparison.OrdinalIgnoreCase) && !Name.EndsWith("_P.o.utoc", StringComparison.OrdinalIgnoreCase))
                 return;
 
             var chunkVersionNumber = 1u;

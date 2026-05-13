@@ -1,34 +1,33 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkStereoDelayFXParams(FArchive Ar) : IAkPluginParam
+public class CAkStereoDelayFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkStereoDelayFXParams Params = new AkStereoDelayFXParams(Ar);
+    public AkStereoDelayFXParams Params = new(Ar);
 }
 
 public struct AkStereoDelayFXParams
 {
     public AkInputChannelType[] eInputType = new AkInputChannelType[2];
     public AkStereoDelayChannelParams[] StereoDelayParams = new AkStereoDelayChannelParams[2];
-    public AkStereoDelayFilterParams FilterParams;
+    public AkFilterParams FilterParams;
     public float fDryLevel;
     public float fWetLevel;
     public float fFrontRearBalance;
     public bool bEnableFeedback;
     public bool bEnableCrossFeed;
 
-    public AkStereoDelayFXParams(FArchive Ar)
+    public AkStereoDelayFXParams(FWwiseArchive Ar)
     {
         eInputType[0] = Ar.Read<AkInputChannelType>();
         StereoDelayParams[0] = new AkStereoDelayChannelParams(Ar);
         eInputType[1] = Ar.Read<AkInputChannelType>();
         StereoDelayParams[1] = new AkStereoDelayChannelParams(Ar);
-        FilterParams = Ar.Read<AkStereoDelayFilterParams>();
+        FilterParams = Ar.Read<AkFilterParams>();
         fDryLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fWetLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         fFrontRearBalance = Ar.Read<float>();
@@ -36,20 +35,11 @@ public struct AkStereoDelayFXParams
         bEnableCrossFeed = Ar.Read<byte>() != 0;
     }
 
-    public struct AkStereoDelayChannelParams(FArchive Ar)
+    public struct AkStereoDelayChannelParams(FWwiseArchive Ar)
     {
         public float fDelayTime = Ar.Read<float>();
         public float fFeedback = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
         public float fCrossFeed = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public struct AkStereoDelayFilterParams
-    {
-        public AkFilterType eFilterType;
-        public float fFilterGain;
-        public float fFilterFrequency;
-        public float fFilterQFactor;
     }
 
     [JsonConverter(typeof(StringEnumConverter))]

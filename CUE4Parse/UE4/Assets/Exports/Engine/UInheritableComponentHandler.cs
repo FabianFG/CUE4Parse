@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -6,12 +7,12 @@ using CUE4Parse.UE4.Objects.UObject;
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
 [StructFallback]
-public struct FComponentKey: IUStruct 
+public struct FComponentKey: IUStruct
 {
     public UClass OwnerClass;
     public FName SCSVariableName;
     public FGuid AssociatedGuid;
-    
+
     public FComponentKey(FStructFallback fallback)
     {
         OwnerClass = fallback.GetOrDefault<UClass>("OwnerClass");
@@ -21,14 +22,14 @@ public struct FComponentKey: IUStruct
 }
 
 [StructFallback]
-public struct FComponentOverrideRecord : IUStruct 
+public struct FComponentOverrideRecord : IUStruct
 {
     public FPackageIndex ComponentClass;
     public FPackageIndex? ComponentTemplate; // UActorComponent*
     public FComponentKey ComponentKey;
     // public FBlueprintCookedComponentInstancingData CookedComponentInstancingData;
-    
-    public FComponentOverrideRecord(FStructFallback fallback) 
+
+    public FComponentOverrideRecord(FStructFallback fallback)
     {
         ComponentClass = fallback.GetOrDefault<FPackageIndex>(nameof(ComponentClass));
         ComponentTemplate = fallback.GetOrDefault<FPackageIndex>(nameof(ComponentTemplate));
@@ -39,31 +40,40 @@ public struct FComponentOverrideRecord : IUStruct
 
 // https://github.com/EpicGames/UnrealEngine/blob/c830445187784f1269f43b56f095493a27d5a636/Engine/Source/Runtime/Engine/Classes/Engine/InheritableComponentHandler.h#L92
 // Stores data to override (in children classes) components (created by SCS) from parent classes
-public class UInheritableComponentHandler: UObject 
+public class UInheritableComponentHandler: UObject
 {
-    /** All component records */
-    public FComponentOverrideRecord[] GetRecords() => GetOrDefault<FComponentOverrideRecord[]>("Records", []);
+    public FComponentOverrideRecord[] Records = [];
 
-    public FComponentKey FindKey(string variableName) 
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        foreach (var record in GetRecords()) 
+        base.Deserialize(Ar, validPos);
+
+        Records = GetOrDefault(nameof(Records), Records);
+    }
+
+    /** All component records */
+    public FComponentOverrideRecord[] GetRecords() => Records;
+
+    public FComponentKey FindKey(string variableName)
+    {
+        foreach (var record in GetRecords())
         {
-            if (record.ComponentKey.SCSVariableName == variableName || (record.ComponentTemplate != null && record.ComponentTemplate.Name == variableName)) 
+            if (record.ComponentKey.SCSVariableName == variableName || (record.ComponentTemplate != null && record.ComponentTemplate.Name == variableName))
             {
                 return record.ComponentKey;
-            }    
+            }
         }
         return default;
     }
-    
-    public FPackageIndex? FindTemplate(string variableName) 
+
+    public FPackageIndex? FindTemplate(string variableName)
     {
-        foreach (var record in GetRecords()) 
+        foreach (var record in GetRecords())
         {
-            if (record.ComponentKey.SCSVariableName == variableName || (record.ComponentTemplate != null && record.ComponentTemplate.Name == variableName)) 
+            if (record.ComponentKey.SCSVariableName == variableName || (record.ComponentTemplate != null && record.ComponentTemplate.Name == variableName))
             {
                 return record.ComponentTemplate;
-            }    
+            }
         }
         return null;
     }

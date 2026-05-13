@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine;
 
@@ -19,7 +20,7 @@ public abstract class TPerPlatformProperty<T> : IUStruct where T : notnull
     {
         bCooked = Ar.ReadBoolean();
         Default = getValue();
-        if (!Ar.IsFilterEditorOnly && !bCooked)
+        if (Ar.Game >= EGame.GAME_UE5_8 || (!Ar.IsFilterEditorOnly && !bCooked))
         {
             PerPlatform = Ar.ReadMap(Ar.ReadFName, getValue);
         }

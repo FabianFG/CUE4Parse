@@ -1,11 +1,12 @@
 using System.IO;
 using CUE4Parse.UE4.FMod.Objects;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes.Effects;
 
 public class PluginEffectNode : BaseEffectNode
 {
-    public readonly FModGuid BaseGuid;
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly string PluginName;
     public readonly string Name = string.Empty;
     public ParameterizedEffectNode? ParamEffectBody;

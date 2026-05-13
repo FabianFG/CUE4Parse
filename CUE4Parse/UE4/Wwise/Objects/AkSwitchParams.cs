@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -15,18 +14,18 @@ public readonly struct AkSwitchParams
     public readonly int FadeOutTime;
     public readonly int FadeInTime;
 
-    public AkSwitchParams(FArchive Ar)
+    public AkSwitchParams(FWwiseArchive Ar)
     {
         NodeId = Ar.Read<uint>();
 
-        if (WwiseVersions.Version <= 89)
+        if (Ar.Version <= 89)
         {
             IsFirstOnly = Ar.Read<byte>() != 0;
             ContinuePlayback = Ar.Read<byte>() != 0;
             var onSwitchModeBitVector = Ar.Read<byte>();
             OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
         }
-        else if (WwiseVersions.Version <= 150)
+        else if (Ar.Version <= 150)
         {
             var bitVector = Ar.Read<byte>();
             IsFirstOnly = (bitVector & 0b00000001) != 0;

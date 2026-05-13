@@ -1,9 +1,8 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZTrashFiltersFXParams(FArchive Ar) : IAkPluginParam
+public class CiZTrashFiltersFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public iZTrashFiltersFXParams Params = Ar.Read<iZTrashFiltersFXParams>();
 }
