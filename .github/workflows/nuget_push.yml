@@ -3,8 +3,8 @@ name: NuGet Push
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ master, dotnet-10 ]
+  schedule:
+    - cron: '0 9 1 * *' # At 09:00 on day-of-month 1
 
 permissions:
   contents: read
@@ -41,9 +41,11 @@ jobs:
             throw "Could not parse 3-part SemVer <Version> from Directory.Build.props. Found: '$content'"
           }
           
-          $version = "$baseVersion.$($env:GITHUB_RUN_NUMBER)"
+          $year  = (Get-Date).ToString("yyyy")
+          $month = (Get-Date).ToString("MM")
+          $version = "$baseVersion.$year$month"
           "packageVersion=$version" >> $env:GITHUB_OUTPUT
-          Write-Host "PackageVersion=$version (parsed base: '$baseVersion' + run: $($env:GITHUB_RUN_NUMBER))"
+          Write-Host "PackageVersion=$version"
 
       - name: Restore dependencies
         run: dotnet restore
