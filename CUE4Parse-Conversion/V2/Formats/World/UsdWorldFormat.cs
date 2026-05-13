@@ -55,11 +55,6 @@ public class UsdWorldFormat : IWorldExportFormat
             actorPrim.Add(rootPrim);
         }
 
-        foreach (var child in actor.ChildActors)
-        {
-            actorPrim.Add(BuildActorPrim(child, paths));
-        }
-
         return actorPrim;
     }
 

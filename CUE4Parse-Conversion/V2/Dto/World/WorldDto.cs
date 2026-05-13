@@ -29,7 +29,6 @@ public class WorldDto : ObjectDto
             actors.Add(new ActorDto(data, ctx));
         }
 
-        ctx.WireActorHierarchy(actors);
         Actors.AddRange(actors);
 
         foreach (var ptr in world.StreamingLevels)

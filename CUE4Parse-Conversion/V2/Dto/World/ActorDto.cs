@@ -10,7 +10,6 @@ namespace CUE4Parse_Conversion.V2.Dto.World;
 public class ActorDto : ObjectDto
 {
     public readonly SceneComponentDto? RootComponent;
-    public readonly List<ActorDto> ChildActors = [];
     public readonly List<UWorld>? AdditionalWorlds;
     public readonly bool IsVisible = true;
 
@@ -30,6 +29,8 @@ public class ActorDto : ObjectDto
             IsVisible = !hidden;
         }
 
+        // TODO: TextureData
+
         if (actor.TryGetValue(out FSoftObjectPath[] additionalWorlds, "AdditionalWorlds"))
         {
             AdditionalWorlds = [];
@@ -40,8 +41,6 @@ public class ActorDto : ObjectDto
             }
         }
     }
-
-    internal void AddChildActor(ActorDto child) => ChildActors.Add(child);
 
     private IEnumerable<FPackageIndex?> FindComponents(UObject actor)
     {
@@ -72,15 +71,10 @@ public class ActorDto : ObjectDto
         }
     }
 
-    public override string ToString() => $"{base.ToString()} (RootComponent: {RootComponent?.Name ?? "none"}, ChildActors: {ChildActors.Count}, Visible: {IsVisible})";
+    public override string ToString() => $"{base.ToString()} (RootComponent: {RootComponent?.Name ?? "None"}, Visible: {IsVisible})";
 
     public override void Dispose()
     {
-        foreach (var actor in ChildActors)
-        {
-            actor.Dispose();
-        }
-        ChildActors.Clear();
         RootComponent?.Dispose();
     }
 }

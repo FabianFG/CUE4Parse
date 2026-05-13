@@ -86,17 +86,4 @@ internal sealed class WorldParseContext
             return null;
         }
     }
-
-    public void WireActorHierarchy(IReadOnlyList<ActorDto> actors)
-    {
-        foreach (var actor in actors)
-        {
-            // only the root component's attachment determines actor-to-actor hierarchy
-            if (actor.RootComponent?._attachParent is not { IsNull: false } parentPtr) continue;
-            if (!_registry.TryGetValue(parentPtr, out var parentDto)) continue; // TODO: parent actor was not created somehow, should we create it?
-            if (parentDto is not SceneComponentDto parentScene || parentScene.Owner == actor) continue;
-
-            parentScene.Owner.AddChildActor(actor);
-        }
-    }
 }

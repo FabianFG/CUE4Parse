@@ -28,9 +28,9 @@ public class SceneComponentDto : ComponentDto
 {
     internal readonly FPackageIndex? _attachParent;
 
-    public readonly List<SceneComponentDto> Children = [];
+    public readonly List<SceneComponentDto> Children = []; // this list of children can be owned by different actors
     public readonly FTransform Transform;
-    public readonly string? AttachSocketName;
+    public readonly string? AttachSocketName; // TODO: use it
 
     internal void AddChildComponent(SceneComponentDto child) => Children.Add(child);
 

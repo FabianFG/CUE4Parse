@@ -49,7 +49,6 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
             }
 
             CollectFromComponent(actor.RootComponent, paths);
-            CollectFromActor(actor.ChildActors, paths);
         }
     }
 
