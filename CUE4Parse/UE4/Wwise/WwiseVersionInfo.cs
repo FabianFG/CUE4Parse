@@ -8,8 +8,9 @@ public static class WwiseVersionInfo
     // Should be noted that Wwise added support for Unreal Engine around version 100, so we can safely ignore older ones
     public static readonly uint[] SupportedVersions =
     [
+        88,     // Assasin Creed Unity
         112,    // Dead by Daylight (old)
-        113,    // Dead by Daylight (old), Styx: Shards of Drakness
+        113,    // Dead by Daylight (old), Styx: Shards of Drakness, Abzu
         120,    // Code Vein
         125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
@@ -19,7 +20,7 @@ public static class WwiseVersionInfo
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight (old), Splitgate 2, Byte Breakers, Le Dernier Don
         154,    // Off The Grid, Dead by Daylight
-        172     // Soglia (Unity)
+        172     // Soglia (Unity), Stardream Prologue
     ];
 
     public static bool IsSupported(uint version) => SupportedVersions.Contains(version);

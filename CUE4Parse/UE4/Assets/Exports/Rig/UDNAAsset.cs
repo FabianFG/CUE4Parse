@@ -49,7 +49,7 @@ public class UDNAAsset : UObject
 #if DEBUG
             Log.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
 #endif
-            if (Version.FileVersion < FileVersion.v24)
+            if (Version.FileVersion < FileVersion.v23)
             {
                 var sectionLookupTable = new SectionLookupTable(endianAr);
                 var indexTable = new IndexTable(sectionLookupTable, Version);

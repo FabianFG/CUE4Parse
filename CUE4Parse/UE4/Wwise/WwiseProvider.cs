@@ -583,10 +583,10 @@ public partial class WwiseProvider
 
     private bool TryLoadAndCacheWwiseFile(GameFile? gameFile)
     {
-        if (gameFile is null || !gameFile.TryRead(out var data) || data is not { Length: > 0 } bankData)
+        if (gameFile is null || !gameFile.TryRead(out var data) || data is not { Length: > 0 })
             return false;
 
-        using var reader = new FWwiseArchive(gameFile.NameWithoutExtension, bankData);
+        using var reader = new FWwiseArchive(gameFile.NameWithoutExtension, data);
         try
         {
             var wwiseReader = new WwiseReader(reader, new WwiseGameFileSource(gameFile));

@@ -146,6 +146,7 @@ public class FWorldTileLayer
         {
             DistanceStreamingEnabled = Ar.ReadBoolean();
         }
+        if (Ar.Game is EGame.GAME_ConanExilesEnhanced) Ar.Position += 4;
     }
 }
 
@@ -161,7 +162,7 @@ public struct FWorldTileLODInfo
 
     public FWorldTileLODInfo(FAssetArchive Ar)
     {
-        if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_DuneAwakening or EGame.GAME_ConanExilesEnhanced) Ar.Position += 4;
         RelativeStreamingDistance = Ar.Read<int>();
         Ar.Position += 16;
     }

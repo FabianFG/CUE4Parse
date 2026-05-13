@@ -46,7 +46,7 @@ public class FMorphTargetLODModel
         }
         else
         {
-            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry)
+            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry or EGame.GAME_Directive8020)
             {
                 Ar.Position += 4; // NumVertices
                 NumBaseMeshVerts = 1;

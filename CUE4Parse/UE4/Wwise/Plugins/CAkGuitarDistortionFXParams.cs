@@ -15,36 +15,36 @@ public struct AkGuitarDistortionParams
     public AkFilterBand[] PreEQ;
     public AkFilterBand[] PostEQ;
     public AkDistortionParams Distortion;
-    public float fOutputLevel;
-    public float fWetDryMix;
+    public float OutputLevel;
+    public float WetDryMix;
 
     public AkGuitarDistortionParams(FWwiseArchive Ar)
     {
         PreEQ = Ar.ReadArray<AkFilterBand>(3);
         PostEQ = Ar.ReadArray<AkFilterBand>(3);
         Distortion = Ar.Read<AkDistortionParams>();
-        fOutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
-        fWetDryMix = Ar.Read<float>();
+        OutputLevel = MathF.Pow(10f, Ar.Read<float>() * 0.05f);
+        WetDryMix = Ar.Read<float>();
     }
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct AkFilterBand
 {
-    public AkFilterType eFilterType;
-    public float fGain;
-    public float fFrequency;
-    public float fQFactor;
-    public bool bOnOff;
+    public AkFilterTypeOld FilterType;
+    public float Gain;
+    public float Frequency;
+    public float QFactor;
+    public bool OnOff;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct AkDistortionParams
 {
-    public AkDistortionType eDistortionType;
-    public float fDrive;
-    public float fTone;
-    public float fRectification;
+    public AkDistortionType DistortionType;
+    public float Drive;
+    public float Tone;
+    public float Rectification;
 }
 
 [JsonConverter(typeof(StringEnumConverter))]

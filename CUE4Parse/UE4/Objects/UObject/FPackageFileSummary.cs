@@ -305,7 +305,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             ThumbnailTableOffset = Ar.Read<int>();
 
-            if (FileVersionUE >= EUnrealEngineObjectUE5Version.IMPORT_TYPE_HIERARCHIES)
+            if (FileVersionUE >= EUnrealEngineObjectUE5Version.IMPORT_TYPE_HIERARCHIES || Ar.Game is EGame.GAME_DeltaForce)
             {
                 ImportTypeHierarchiesCount = Ar.Read<int>();
                 ImportTypeHierarchiesOffset = Ar.Read<int>();
@@ -343,8 +343,6 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             Generations = Ar.ReadArray<FGenerationInfo>();
-
-            if (Ar.Game == EGame.GAME_DeltaForce) Ar.Position += 16;
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ENGINE_VERSION_OBJECT)
             {
