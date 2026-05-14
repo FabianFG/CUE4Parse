@@ -406,6 +406,8 @@ public class FScriptStruct
 
             "PackedNormal" when Ar.Game is EGame.GAME_TheDivisionResurgence => new FPackedNormal(Ar),
 
+            "UWEWorldPopSpatialLayer" when Ar.Game is EGame.GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
