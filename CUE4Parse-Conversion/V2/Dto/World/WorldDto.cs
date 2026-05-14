@@ -20,16 +20,17 @@ public class WorldDto : ObjectDto
         var level = world.PersistentLevel.Load<ULevel>();
         ArgumentNullException.ThrowIfNull(level, "Failed to load persistent level");
 
-        var actors = new List<ActorDto>();
         foreach (var ptr in level.Actors)
         {
             if (ptr == null || !ptr.TryLoad<UObject>(out var data))
                 continue;
 
-            actors.Add(new ActorDto(data, ctx));
+            var actor = new ActorDto(data, ctx);
+            if (actor.RootComponent?._attachParent == null)
+            {
+                Actors.Add(actor);
+            }
         }
-
-        Actors.AddRange(actors);
 
         foreach (var ptr in world.StreamingLevels)
         {

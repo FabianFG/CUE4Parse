@@ -171,7 +171,7 @@ public class UsdWorldFormat : IWorldExportFormat
     {
         foreach (var child in component.Children)
         {
-            // Cross-actor boundary → emit a full nested actor Scope
+            // a different actor is attached to this component, write it down
             if (child.Owner != component.Owner && child.Owner.RootComponent == child)
             {
                 parentPrim.Add(BuildActorPrim(child.Owner, paths));
