@@ -113,7 +113,7 @@ public class FWorldTileInfo
             Ar.SkipFString();
         }
 
-        if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) return;
+        if (Ar.Game is EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_Lego2KDrive) return;
 
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
         {

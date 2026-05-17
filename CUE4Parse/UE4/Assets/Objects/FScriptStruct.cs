@@ -409,6 +409,12 @@ public class FScriptStruct
 
             "UWEWorldPopSpatialLayer" when Ar.Game is EGame.GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),
 
+            "LegoConnectionPoint" when Ar.Game is EGame.GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "LegoPartLODGeometry" when Ar.Game is EGame.GAME_Lego2KDrive => new FLegoPartLODGeometry(Ar),
+            "LegoPartInstance" when Ar.Game is EGame.GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "PerPlatformUObject" or "PerPlatformSoftObjectPtr" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformSoftObject() : new FPerPlatformSoftObject(Ar),
+            "PerPlatformMediaSource" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformUObject() : new FPerPlatformUObject(Ar),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

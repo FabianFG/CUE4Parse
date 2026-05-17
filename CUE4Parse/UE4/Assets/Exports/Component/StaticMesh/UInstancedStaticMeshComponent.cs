@@ -136,6 +136,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
+            if (Ar.Game is EGame.GAME_Lego2KDrive) Ar.SkipBulkArrayData();
         }
 
         if (Ar.Game is EGame.GAME_Valorant) Ar.Position += 4;
