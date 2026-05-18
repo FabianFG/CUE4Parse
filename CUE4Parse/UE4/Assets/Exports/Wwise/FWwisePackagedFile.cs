@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
 using Serilog;
@@ -58,11 +59,11 @@ public class FWwisePackagedFile : FStructFallback
         if (PackagingStrategy is EWwisePackagingStrategy.BulkData)
         {
             var bulkData = new FByteBulkData(Ar);
-            if (bulkData.Data is null) return;
+            if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
             try
             {
-                using var reader = new FWwiseArchive("AkAssetData", bulkData.Data, Ar.Versions);
+                using var reader = new FWwiseArchive(dataAr);
                 BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
             }
             // i know it's ugly, but i don't see other solution without rewriting everything

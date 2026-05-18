@@ -626,6 +626,7 @@ public class FUniformExpressionSet
         {
             UniformVectorPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
             UniformScalarPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
+            if (Ar.Game is EGame.GAME_TheDivisionResurgence) Ar.Position += 32;
             UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
             UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));

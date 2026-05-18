@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
 
@@ -14,11 +15,9 @@ public class UAkAssetData : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
+        if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
-        if (bulkData.Data is null) return;
-
-        using var reader = new FWwiseArchive("AkAssetData", bulkData.Data, Ar.Versions);
+        using var reader = new FWwiseArchive(dataAr);
         Data = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
     }
 
