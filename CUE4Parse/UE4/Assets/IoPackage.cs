@@ -254,7 +254,6 @@ public sealed class IoPackage : AbstractUePackage
                 Ar.AbsoluteOffset = newPos ? cookedHeaderSize - allExportDataOffset : (int) export.CookedSerialOffset - pos;
                 Ar.Position = pos;
                 DeserializeObject(obj, Ar, (long) export.CookedSerialSize);
-                // TODO right place ???
                 obj.Flags |= EObjectFlags.RF_LoadCompleted;
                 obj.PostLoad();
                 return obj;

@@ -948,7 +948,9 @@ public enum EUnrealEngineObjectUE3Version
     DeprecatedHeritageTable = 68,
     PanUVRemovedFromPoly = 78,
     CompMipsDeprecated = 84,
+    PlaneAddedToPoly = 86,
     AddedHideCategoriesToUClass = 99,
+    LightMapIndexRemovedFromPoly = 101,
     LightMapScaleAddedToPoly = 106,
     Release119 = 119,
     AddedCppTextToUStruct = 120,
@@ -972,6 +974,7 @@ public enum EUnrealEngineObjectUE3Version
     temp8 = 128,
     // StaticMeshActor Socket Type Added
     temp9 = 128,
+    AddedIsValidToFBox = 146,
     MovedFriendlyNameToUFunction = 160,
     TextureDeprecatedFromPoly = 170,
     // Deprecated FCompactIndex
