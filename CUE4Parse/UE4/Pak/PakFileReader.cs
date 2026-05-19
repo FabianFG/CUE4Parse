@@ -10,6 +10,7 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.NTE.Encryption;
+using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
@@ -196,6 +197,8 @@ namespace CUE4Parse.UE4.Pak
                     return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
                 case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
                     return SnowbreakLua.DecryptLua(data, requestedSize);
+                case EGame.GAME_GameForPeace when pakEntry.Extension is "lua":
+                    return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
                 default:
                     break;
             }

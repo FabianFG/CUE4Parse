@@ -2,7 +2,9 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using CUE4Parse.UE4.Lua;
+using CUE4Parse.UE4.Lua.Archives;
+using CUE4Parse.UE4.Lua.Readers;
+using CUE4Parse.UE4.Lua.Writers;
 
 namespace CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 
@@ -49,7 +51,7 @@ public static class NRCLua
         var lua = NRCLuaReader.ReadBytecode(Ar);
 
         using var msOut = new MemoryStream();
-        using (var writer = new FLuaArchiveWriter(msOut))
+        using (var writer = new FLua54ArchiveWriter(msOut))
         {
             FLuaWriter54.Write(writer, lua);
             writer.Flush();

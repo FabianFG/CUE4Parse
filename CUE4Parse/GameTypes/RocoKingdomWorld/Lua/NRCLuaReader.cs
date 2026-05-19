@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Text;
-using CUE4Parse.UE4.Lua;
+using CUE4Parse.UE4.Lua.Archives;
+using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 
-public class FNRCLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLuaArchive(name, data, versions)
+public class FNRCLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua54Archive(name, data, versions)
 {
     // Strings are encrypted
     public override string ReadLuaString()
@@ -41,7 +42,7 @@ public class NRCLuaReader
 
     public static LuaBytecode ReadBytecode(FNRCLuaArchive Ar)
     {
-        var header = FLuaReader.ReadHeader(Ar);
+        var header = FLua54Reader.ReadHeader(Ar);
         header.Version = 0x54; // Header is standard except the version
 
         var result = new LuaBytecode
@@ -62,13 +63,13 @@ public class NRCLuaReader
             Code = [.. Ar.ReadLuaArray(() => Ar.ReadBytes(4)).SelectMany(x => x)],
             LastLineDefined = Ar.ReadLuaInt(), // Shuffled
             NumParams = Ar.Read<byte>(), // Shuffled
-            Constants = Ar.ReadLuaArray(() => FLuaReader.ReadConstant(Ar)),
+            Constants = Ar.ReadLuaArray(() => FLua54Reader.ReadConstant(Ar)),
             IsVarArg = Ar.Read<byte>() // Shuffled
         };
 
         f.Upvalues = ReadUpvalues(Ar, f);
         f.Protos = Ar.ReadLuaArray(() => ReadFunction(Ar));
-        f.Debug = FLuaReader.ReadDebug(Ar);
+        f.Debug = FLua54Reader.ReadDebug(Ar);
 
         MapOpcodes(f.Code); // Opcode is shuffled
 
@@ -83,7 +84,7 @@ public class NRCLuaReader
         var upvalues = new LuaUpvalue[sizeUp];
         for (int i = 0; i < sizeUp; i++)
         {
-            upvalues[i] = FLuaReader.ReadUpvalue(Ar);
+            upvalues[i] = FLua54Reader.ReadUpvalue(Ar);
         }
         return upvalues;
     }
