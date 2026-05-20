@@ -59,7 +59,7 @@ public class ULandscapeComponent : UPrimitiveComponent
             GrassData = new FLandscapeComponentGrassData(Ar);
         }
 
-        if (!Ar.IsFilterEditorOnly)
+        if (!Ar.IsFilterEditorOnly && Ar.Game >= EGame.GAME_UE4_0)
         {
             Ar.Position += sizeof(int); // SelectedType
         }
@@ -79,7 +79,7 @@ public class ULandscapeComponent : UPrimitiveComponent
             return;
         }
 
-        if (Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
+        if (Ar.Game >= EGame.GAME_UE4_0 && Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
         {
             var bCookedMobileData = Ar.ReadBoolean();
             if (bCookedMobileData)

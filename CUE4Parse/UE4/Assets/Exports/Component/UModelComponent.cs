@@ -23,7 +23,7 @@ public class UModelComponent : UPrimitiveComponent
         if (Ar.Ver <= EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             Ar.Position += 4; // DummyZoneIndex
         Elements = Ar.ReadArray(() => new FModelElement(Ar));
-        ComponentIndex = Ar.Read<int>();
+        ComponentIndex = Ar.Game < EGame.GAME_UE4_0 ? Ar.Read<ushort>() : Ar.Read<int>();
         Nodes = Ar.ReadArray<ushort>();
     }
 }

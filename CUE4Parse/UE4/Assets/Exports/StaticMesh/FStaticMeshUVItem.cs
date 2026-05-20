@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -11,10 +12,21 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     {
         public readonly FPackedNormal[] Normal;
         public readonly FMeshUVFloat[] UV;
+        public readonly FVector Position;
+        public readonly FColor Color;
 
         public FStaticMeshUVItem(FArchive Ar, bool useHighPrecisionTangents, int numStaticUVSets, bool useStaticFloatUVs)
         {
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem)
+            {
+                Position = Ar.Read<FVector>();
+                Color = Ar.Read<FColor>();
+            }
             Normal = SerializeTangents(Ar, useHighPrecisionTangents);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXCOLOR && Ar.Ver < EUnrealEngineObjectUE3Version.MESH_PAINT_SYSTEM)
+            {
+                Color = Ar.Read<FColor>();
+            }
             UV = SerializeTexcoords(Ar, numStaticUVSets, useStaticFloatUVs);
         }
 

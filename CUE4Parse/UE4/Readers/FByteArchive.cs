@@ -91,6 +91,23 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T Read<T>()
         {
+            if (ReverseBytes)
+            {
+                if (_read.TryGetValue(typeof(T), out var func))
+                    return (T) func(this);
+
+                if (typeof(T).IsEnum)
+                {
+                    var underlying = Enum.GetUnderlyingType(typeof(T));
+
+                    if (_read.TryGetValue(underlying, out var enumReader))
+                    {
+                        var value = enumReader(this);
+                        return (T) Enum.ToObject(typeof(T), value);
+                    }
+                }
+            }
+
             var size = Unsafe.SizeOf<T>();
             var result = Unsafe.ReadUnaligned<T>(ref _data[Position]);
             Position += size;

@@ -349,7 +349,6 @@ public class UMaterial : UMaterialInterface
                 Regex.IsMatch(texture.Name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
             {
                 parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
-                continue;
             }
         }
     }
