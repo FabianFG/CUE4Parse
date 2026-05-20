@@ -10,6 +10,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO.Objects.OnDemand;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -506,14 +507,16 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
-        public string ReadFUtf8String()
+        public string ReadFUtf8String() => ReadFUtf8String(Read<int>());
+        public string ReadFUtf8String(int length)
         {
-            var length = Read<int>();
+            if (length < 0) throw new InvalidOperationException($"Negative Utf8String length '{length}'");
+            if (length > Length - Position) throw new InvalidOperationException($"Invalid Utf8String length '{length}'");
+            
+            if (length == 0) return string.Empty;
 
-            if (length < 0) throw new ParserException($"Negative Utf8String length '{length}'");
-            if (length > Length - Position) throw new ParserException($"Invalid Utf8String length '{length}'");
-
-            return Encoding.UTF8.GetString(ReadBytes(length));
+            var span = ReadBytes(length).AsSpan();
+            return Encoding.UTF8.GetString(span);
         }
 
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
