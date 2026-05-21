@@ -206,7 +206,7 @@ public enum EGame : uint
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
-        GAME_Squad = GAME_UE5_5 + 9,
+        GAME_Placeholder6 = GAME_UE5_5 + 9,
         GAME_Borderlands4 = GAME_UE5_5 + 10,
         GAME_Rennsport = GAME_UE5_5 + 11,
         GAME_GrayZoneWarfare = GAME_UE5_5 + 12,
@@ -224,7 +224,9 @@ public enum EGame : uint
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
+        GAME_Squad = GAME_UE5_7 + 2,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
+    GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_8
 }
