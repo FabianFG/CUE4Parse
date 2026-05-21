@@ -26,6 +26,18 @@ public class FInstancedStaticMeshInstanceData
         TransformData.SetFromMatrix(Transform);
     }
 
+    public FInstancedStaticMeshInstanceData(FMatrix matrix)
+    {
+        Transform = matrix;
+        TransformData.SetFromMatrix(Transform);
+    }
+
+    public FInstancedStaticMeshInstanceData(FTransform transform)
+    {
+        Transform = null!;
+        TransformData = transform;
+    }
+
     public override string ToString()
     {
         return TransformData.ToString();
