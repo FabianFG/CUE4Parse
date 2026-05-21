@@ -221,6 +221,7 @@ public enum EGame : uint
         GAME_DeadByDaylight = GAME_UE5_6 + 5,
         GAME_ConanExilesEnhanced = GAME_UE5_6 + 6,
         GAME_Subnautica2 = GAME_UE5_6 + 7,
+        GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),

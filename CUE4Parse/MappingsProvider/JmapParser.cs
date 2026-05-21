@@ -170,7 +170,7 @@ public class JmapParser
                 break;
 
             if (index == 0 && reader.TokenType == JsonTokenType.String)
-                enumName = reader.GetString();
+                enumName = reader.GetString()?.SubstringAfter("::");
             else if (index == 1 && reader.TokenType == JsonTokenType.Number && reader.TryGetInt64(out var value))
                 enumIndex = value;
             else

@@ -415,6 +415,9 @@ public class FScriptStruct
             "PerPlatformUObject" or "PerPlatformSoftObjectPtr" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformSoftObject() : new FPerPlatformSoftObject(Ar),
             "PerPlatformMediaSource" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformUObject() : new FPerPlatformUObject(Ar),
 
+            "TtScalableShadowFloat" or "TtScalableLightFloat" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "TtScalableShadowBool" => new FStructFallback(Ar, structName, new FRawHeader([(0,1)])),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

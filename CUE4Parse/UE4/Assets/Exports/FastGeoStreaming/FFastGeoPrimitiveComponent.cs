@@ -37,6 +37,7 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         bRasterizeAsFilledConvexVolume = Ar.ReadBoolean();
         bCanEverAffectNavigation = Ar.ReadBoolean();
         bMultiBodyOverlap = Ar.Game >= EGame.GAME_UE5_8 && Ar.ReadBoolean();
+        if (Ar.Game is EGame.GAME_LEGOBatmanLegacyoftheDarkKnight) Ar.Position += 4;
         SurrogateComponentDescriptorIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
         CustomPrimitiveData = Ar.ReadArray<float>();
         DetailMode = Ar.Game < EGame.GAME_UE5_8 ? Ar.Read<EDetailMode>() : EDetailMode.Low;
