@@ -1,5 +1,4 @@
 using System;
-using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.GameTypes.UDWN.Encryption.Aes;
@@ -65,12 +64,13 @@ public static class ToaaAes
 
     private static void ExpandKey(ReadOnlySpan<byte> key, Span<uint> rk)
     {
-        Span<uint> internalKey = stackalloc uint[4];
-
-        internalKey[0] = GETU32(key) ^ 0xB9B7ED68;
-        internalKey[1] = GETU32(key[4..]) ^ 0x71750A9F;
-        internalKey[2] = GETU32(key[8..]) ^ 0xA6070525;
-        internalKey[3] = GETU32(key[12..]) ^ 0x3AA8C2C5;
+        Span<uint> internalKey =
+        [
+            GETU32(key) ^ 0xB9B7ED68,
+            GETU32(key[4..]) ^ 0x71750A9F,
+            GETU32(key[8..]) ^ 0xA6070525,
+            GETU32(key[12..]) ^ 0x3AA8C2C5,
+        ];
 
         for (var i = 0; i < 32; i++)
         {

@@ -58,7 +58,7 @@ public class GameForPeaceLua
         return msOut.ToArray();
     }
 
-    public static LuaBytecode ReadBytecode(FGFPLuaArchive Ar)
+    private static LuaBytecode ReadBytecode(FGFPLuaArchive Ar)
     {
         var lua = new LuaBytecode
         {
@@ -70,7 +70,7 @@ public class GameForPeaceLua
         return lua;
     }
 
-    public static LuaHeader ReadHeader(FGFPLuaArchive Ar)
+    private static LuaHeader ReadHeader(FGFPLuaArchive Ar)
     {
         var header = new LuaHeader
         {
@@ -87,7 +87,7 @@ public class GameForPeaceLua
             LuacNum = Ar.ReadBytes(8)
         };
 
-        header.Format = 0; // 1 -> 0 
+        header.Format = FLuaReader.LUAC_FORMAT; // 1 -> 0 
 
         return header;
     }
