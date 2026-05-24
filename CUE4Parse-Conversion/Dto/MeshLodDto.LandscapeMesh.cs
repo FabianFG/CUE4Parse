@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -14,7 +15,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromLandscapeMesh(StaticMeshDto owner, ULandscapeComponent[] components, int sizeQuads, ELandscapeExportFlags flags, out ConcurrentDictionary<string, SKBitmap>? bitmaps, out Image<L16>? heightmap)
+    internal static MeshLodDto<MeshVertex> FromLandscapeMesh(StaticMeshDto owner, ULandscapeComponent[] components, int sizeQuads, ELandscapeFlags flags, out ConcurrentDictionary<string, SKBitmap>? bitmaps, out Image<L16>? heightmap)
     {
         var componentSizeQuads = ((sizeQuads + 1) >> 0 /*Landscape->ExportLOD*/) - 1;
         var scale = (float)componentSizeQuads / sizeQuads;
@@ -67,8 +68,8 @@ public partial class MeshLodDto<TVertex>
             extraUvs[i] = new FMeshUVFloat[vertices.Length];
         }
 
-        var heightmapTexture = flags.HasFlag(ELandscapeExportFlags.Heightmap) ? new Image<L16>(width, height) : null;
-        var bitmapTextures = flags.HasFlag(ELandscapeExportFlags.Weightmap) ? new ConcurrentDictionary<string, SKBitmap>() : null;
+        var heightmapTexture = flags.HasFlag(ELandscapeFlags.Heightmap) ? new Image<L16>(width, height) : null;
+        var bitmapTextures = flags.HasFlag(ELandscapeFlags.Weightmap) ? new ConcurrentDictionary<string, SKBitmap>() : null;
 
         for (var i = 0; i < components.Length; i++)
         {

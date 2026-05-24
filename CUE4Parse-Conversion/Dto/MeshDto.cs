@@ -199,7 +199,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     }
 }
 
-public class Skeleton : MeshDto<SkinnedMeshVertex>
+public class SkeletonDto : MeshDto<SkinnedMeshVertex>
 {
     public readonly string? SkeletonName;
     public readonly MeshBoneDto[] Bones;
@@ -208,7 +208,7 @@ public class Skeleton : MeshDto<SkinnedMeshVertex>
     public string? SkeletonPathName { get; private set; }
     public FVirtualBone[]? VirtualBones { get; private set; }
 
-    protected Skeleton(USkeletalMesh mesh) : base(mesh)
+    protected SkeletonDto(USkeletalMesh mesh) : base(mesh)
     {
         Bounds = mesh.ImportedBounds.GetBox();
 
@@ -227,7 +227,7 @@ public class Skeleton : MeshDto<SkinnedMeshVertex>
         }
     }
 
-    public Skeleton(USkeleton skeleton) : base(skeleton)
+    public SkeletonDto(USkeleton skeleton) : base(skeleton)
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
@@ -253,13 +253,13 @@ public class Skeleton : MeshDto<SkinnedMeshVertex>
     }
 }
 
-public sealed class SkeletalMesh : Skeleton
+public sealed class SkeletalMeshDto : SkeletonDto
 {
     public FPackageIndex? PhysicsAsset { get; private set; }
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMesh(USkeletalMesh mesh) : base(mesh)
+    public SkeletalMeshDto(USkeletalMesh mesh) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
 
@@ -289,7 +289,7 @@ public sealed class LandscapeMeshDto : StaticMeshDto
     public readonly ConcurrentDictionary<string, SKBitmap>? BitmapTextures;
     public readonly Image<L16>? HeightmapTexture;
 
-    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeExportFlags flags = ELandscapeExportFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
+    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags = ELandscapeFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
     {
         var sizeQuads = landscape.ComponentSizeQuads;
 
@@ -321,7 +321,7 @@ public sealed class LandscapeMeshDto : StaticMeshDto
     public LandscapeMeshDto(ULandscapeComponent component) : base(component)
     {
         Bounds = component.CachedLocalBox;
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeExportFlags.Mesh, out BitmapTextures, out HeightmapTexture));
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeFlags.Mesh, out BitmapTextures, out HeightmapTexture));
     }
 
     public override void Dispose()

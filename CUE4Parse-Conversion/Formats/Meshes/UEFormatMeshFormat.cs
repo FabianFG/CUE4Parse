@@ -10,7 +10,7 @@ public sealed class UEFormatMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new UEModel(objectName, dto, options).Save(ar);
@@ -24,7 +24,7 @@ public sealed class UEFormatMeshFormat : IMeshExportFormat
         return [new ExportFile("uemodel", ar.GetBuffer())];
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, Skeleton dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
     {
         using var ar = new FArchiveWriter();
         new UEModel(objectName, dto, options).Save(ar);

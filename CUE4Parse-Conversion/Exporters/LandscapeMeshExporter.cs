@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
+using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -16,7 +17,7 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(ALandscapeProxy actor, IMeshExportFormat format)
     {
-        const ELandscapeExportFlags flags = ELandscapeExportFlags.All; // TODO: options
+        const ELandscapeFlags flags = ELandscapeFlags.All; // TODO: options
 
         var dto = new LandscapeMeshDto(actor, flags);
         if (dto.LODs.Count == 0)

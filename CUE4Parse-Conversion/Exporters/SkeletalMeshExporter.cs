@@ -16,7 +16,7 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
             originalMesh.PopulateMorphTargetVerticesData();
         }
 
-        using var dto = new SkeletalMesh(originalMesh);
+        using var dto = new SkeletalMeshDto(originalMesh);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Skeletal mesh has no LODs");

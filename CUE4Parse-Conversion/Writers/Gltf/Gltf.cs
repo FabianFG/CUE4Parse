@@ -44,7 +44,7 @@ public class Gltf
         Model = sceneBuilder.ToGltf2();
     }
 
-    public Gltf(string name, SkeletalMesh mesh, ExportOptions options)
+    public Gltf(string name, SkeletalMeshDto mesh, ExportOptions options)
     {
         var sceneBuilder = new SceneBuilder(name);
         var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
@@ -61,7 +61,7 @@ public class Gltf
             ExportMeshSections(meshBuilder, lod);
             sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, offsetZ), armature);
 
-            if (mesh.MorphTargets is { Length: > 0 } morphTargets)
+            if (options.ExportMorphTargets && mesh.MorphTargets is { Length: > 0 } morphTargets)
             {
                 var targetNames = "{\"targetNames\": [";
                 for (var j = 0; i < morphTargets.Length; j++)

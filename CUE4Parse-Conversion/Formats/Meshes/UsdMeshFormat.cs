@@ -4,6 +4,7 @@ using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.USD;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -15,7 +16,7 @@ public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
@@ -33,6 +34,11 @@ public class UsdMeshFormat : IMeshExportFormat
             var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
             root.Add(lodPrim);
+
+            if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
+            {
+                AddBlendShapes(lodPrim, morphTargets, i);
+            }
 
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
@@ -67,7 +73,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, Skeleton dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
     {
         var root = dto.ToSkelRoot();
 
@@ -126,6 +132,53 @@ public class UsdMeshFormat : IMeshExportFormat
             scope.Add(materialPrim);
         }
         return scope;
+    }
+
+    private void AddBlendShapes(UsdPrim meshPrim, FPackageIndex[] morphTargets, int lodIndex)
+    {
+        var blendShapeNames = new List<UsdValue>();
+        var blendShapeTargetPrims = new List<UsdPrim>();
+        var blendShapesScope = UsdPrim.Def("Scope", "BlendShapes");
+
+        foreach (var ptr in morphTargets)
+        {
+            var morph = ptr.Load<UMorphTarget>();
+            if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length) continue;
+
+            var morphLod = morph.MorphLODModels[lodIndex];
+            if (morphLod.Vertices is not { Length: > 0 } vertices) continue;
+
+            var blendShape = UsdPrim.Def("BlendShape", morph.Name);
+
+            var offsets = new UsdValue[vertices.Length];
+            var normalOffsets = new UsdValue[vertices.Length];
+            var pointIndices = new UsdValue[vertices.Length];
+
+            for (var j = 0; j < vertices.Length; j++)
+            {
+                var pos = vertices[j].PositionDelta;
+                offsets[j] = UsdValue.Tuple(pos.X, -pos.Y, pos.Z); // MIRROR_MESH
+
+                var tan = vertices[j].TangentZDelta;
+                normalOffsets[j] = UsdValue.Tuple(tan.X, -tan.Y, tan.Z); // MIRROR_MESH
+
+                pointIndices[j] = UsdValue.Int((int) vertices[j].SourceIdx);
+            }
+
+            blendShape.Add(new UsdAttribute("point3f[]", "offsets", UsdValue.Array(offsets)));
+            blendShape.Add(new UsdAttribute("int[]", "pointIndices", UsdValue.Array(pointIndices)));
+            blendShape.Add(new UsdAttribute("vector3f[]", "normalOffsets", UsdValue.Array(normalOffsets)));
+
+            blendShapesScope.Add(blendShape);
+            blendShapeNames.Add(UsdValue.Token(morph.Name));
+            blendShapeTargetPrims.Add(blendShape);
+        }
+
+        if (blendShapeNames.Count == 0) return;
+
+        meshPrim.Add(blendShapesScope);
+        meshPrim.Add(new UsdAttribute("token[]", "skel:blendShapes", UsdValue.Array(blendShapeNames)));
+        meshPrim.Add(new UsdRelationship("skel:blendShapeTargets", blendShapeTargetPrims.ToArray()));
     }
 
     private UsdPrim CreateLod(MeshLodDto<MeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null) => CreateLod<MeshVertex>(meshLod, suffix, materials);

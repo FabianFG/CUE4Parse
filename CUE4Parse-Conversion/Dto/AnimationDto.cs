@@ -6,7 +6,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public class AnimationDto : ObjectDto
 {
-    public readonly Skeleton Skeleton;
+    public readonly SkeletonDto Skeleton;
     public readonly IList<AnimationSequenceDto> Sequences = [];
 
     public readonly float Duration;
@@ -18,7 +18,7 @@ public class AnimationDto : ObjectDto
         if (!animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
             throw new ArgumentNullException(nameof(animation), "Animation asset does not have a valid skeleton reference");
 
-        Skeleton = new Skeleton(skeleton);
+        Skeleton = new SkeletonDto(skeleton);
 
         switch (animation)
         {

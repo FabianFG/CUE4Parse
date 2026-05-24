@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace CUE4Parse_Conversion.Writers;
+namespace CUE4Parse_Conversion.Options;
 
 [Flags]
-public enum ELandscapeExportFlags
+public enum ELandscapeFlags
 {
     Heightmap = 1 << 0,
     Weightmap = 1 << 1,

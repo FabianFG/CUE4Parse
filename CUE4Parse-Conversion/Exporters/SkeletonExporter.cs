@@ -9,7 +9,7 @@ public sealed class SkeletonExporter(USkeleton originalSkeleton) : MeshExporter<
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USkeleton originalSkeleton, IMeshExportFormat format)
     {
-        using var dto = new Skeleton(originalSkeleton);
+        using var dto = new SkeletonDto(originalSkeleton);
         return format.BuildSkeleton(ObjectName, Session.Options, dto);
     }
 }

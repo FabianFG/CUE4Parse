@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<SkinnedMeshVertex> FromSkeletalMesh(SkeletalMesh owner, FStaticLODModel lod, float screenSize)
+    internal static MeshLodDto<SkinnedMeshVertex> FromSkeletalMesh(SkeletalMeshDto owner, FStaticLODModel lod, float screenSize)
     {
         ArgumentNullException.ThrowIfNull(lod.Indices?.Buffer, "LOD has no index buffer");
 

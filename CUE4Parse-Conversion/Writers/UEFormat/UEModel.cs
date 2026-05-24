@@ -47,7 +47,7 @@ public sealed class UEModel : UEFormatExport
 
     }
 
-    public UEModel(string name, Skeleton skeleton, ExportOptions options) : base(name, options)
+    public UEModel(string name, SkeletonDto skeleton, ExportOptions options) : base(name, options)
     {
         using (var skeletonChunk = new FDataChunk("SKELETON", 1))
         {
@@ -56,7 +56,7 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    public UEModel(string name, SkeletalMesh mesh, ExportOptions options) : base(name, options)
+    public UEModel(string name, SkeletalMeshDto mesh, ExportOptions options) : base(name, options)
     {
         if (mesh.LODs.Count > 0)
         {
@@ -68,7 +68,7 @@ public sealed class UEModel : UEFormatExport
                 var lod = mesh.LODs[i];
                 using var subLodChunk = new FStaticDataChunk($"LOD{i}");
                 SerializeCommonMeshData(subLodChunk, lod);
-                SerializeSkeletalMeshData(subLodChunk, mesh, i);
+                SerializeSkeletalMeshData(subLodChunk, mesh, i, options.ExportMorphTargets);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
@@ -177,7 +177,7 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletalMeshData(FArchiveWriter archive, SkeletalMesh mesh, int lodIndex)
+    private void SerializeSkeletalMeshData(FArchiveWriter archive, SkeletalMeshDto mesh, int lodIndex, bool exportMorphTargets)
     {
         using (var weightsChunk = new FDataChunk("WEIGHTS"))
         {
@@ -197,7 +197,7 @@ public sealed class UEModel : UEFormatExport
             weightsChunk.Serialize(archive);
         }
 
-        if (mesh.MorphTargets is { Length: > 0 })
+        if (exportMorphTargets && mesh.MorphTargets is { Length: > 0 })
         {
             using var morphTargetsChunk = new FDataChunk("MORPHTARGETS");
             foreach (var morphTarget in mesh.MorphTargets)
@@ -215,7 +215,7 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, Skeleton skeleton)
+    private void SerializeSkeletonData(FArchiveWriter archive, SkeletonDto skeleton)
     {
         using (var metaDataChunk = new FDataChunk("METADATA", 1))
         {

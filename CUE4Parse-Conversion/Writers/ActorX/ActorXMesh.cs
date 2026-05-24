@@ -30,7 +30,7 @@ public class ActorXMesh
         Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
     }
 
-    public ActorXMesh(Skeleton skeleton, ExportOptions options) : this(options)
+    public ActorXMesh(SkeletonDto skeleton, ExportOptions options) : this(options)
     {
         ExportSkeletalSockets(skeleton);
         ExportSkeletonData(skeleton.Bones);
@@ -48,7 +48,7 @@ public class ActorXMesh
         }
     }
 
-    public ActorXMesh(SkeletalMesh mesh, ExportOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(SkeletalMeshDto mesh, ExportOptions options, int lodIndex = -1) : this(options)
     {
         ExportCommonMeshLod(mesh, lodIndex);
 
@@ -119,9 +119,9 @@ public class ActorXMesh
         }
         ExportExtraUV(lod.ExtraUvs);
 
-        if (mesh is SkeletalMesh sk)
+        if (Options.ExportMorphTargets && mesh is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
-            ExportMorphTargets(sk.MorphTargets, lod, share, lodIndex);
+            ExportMorphTargets(morphTargets, lod, share, lodIndex);
         }
     }
 
@@ -309,10 +309,8 @@ public class ActorXMesh
         }
     }
 
-    public void ExportMorphTargets<TVertex>(FPackageIndex[]? morphTargets, MeshLodDto<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
+    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
     {
-        if (!Options.ExportMorphTargets || morphTargets == null) return;
-
         var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
         Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
 
@@ -356,7 +354,7 @@ public class ActorXMesh
         }
     }
 
-    public MeshBoneDto[] ExportSkeletalSockets(Skeleton skeleton)
+    public MeshBoneDto[] ExportSkeletalSockets(SkeletonDto skeleton)
     {
         if (skeleton.Sockets is not { Length: > 0 } sockets) return [];
 

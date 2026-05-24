@@ -26,7 +26,7 @@ public static class MeshConverter
     {
         try
         {
-            var converted = new Skeleton(originalSkeleton);
+            var converted = new SkeletonDto(originalSkeleton);
             bones = converted.Bones;
             box = converted.Bounds;
         }
@@ -67,11 +67,11 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
-    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMesh convertedMesh)
+    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh)
     {
         try
         {
-            convertedMesh = new SkeletalMesh(originalMesh);
+            convertedMesh = new SkeletalMeshDto(originalMesh);
         }
         catch (Exception e)
         {
@@ -81,7 +81,7 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
-    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeExportFlags flags, [MaybeNullWhen(false)] out LandscapeMeshDto convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
+    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeFlags flags, [MaybeNullWhen(false)] out LandscapeMeshDto convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
     {
         heightMaps = [];
         weightMaps = [];

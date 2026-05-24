@@ -67,7 +67,7 @@ public static class UsdExtensions
                Matrix4x4.CreateTranslation(new Vector3(t.X, -t.Y, t.Z));
     }
 
-    public static UsdPrim ToSkelRoot(this Skeleton dto)
+    public static UsdPrim ToSkelRoot(this SkeletonDto dto)
     {
         var root = UsdPrim.Def("SkelRoot", dto.Name);
         var skeletonPrim = UsdPrim.Def("Skeleton", dto.SkeletonName ?? root.Name);

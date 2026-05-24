@@ -10,7 +10,7 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "ActorX (psk / pskx)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 
@@ -44,7 +44,7 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, Skeleton dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
     {
         using var ar = new FArchiveWriter();
         new ActorXMesh(dto, options).Save(ar);

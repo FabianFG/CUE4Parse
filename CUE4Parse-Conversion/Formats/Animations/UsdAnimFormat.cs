@@ -15,7 +15,7 @@ public class UsdAnimFormat : IAnimExportFormat
 
     public IReadOnlyList<ExportFile> Build(string objectName, ExportOptions options, CAnimSet animSet)
     {
-        var dto = new Skeleton(animSet.Skeleton);
+        var dto = new SkeletonDto(animSet.Skeleton);
         var root = dto.ToSkelRoot();
 
         foreach (var sequence in animSet.Sequences)
