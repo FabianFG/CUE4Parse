@@ -18,3 +18,17 @@ public class FClothLODDataCommon : FStructFallback
         if (Ar.Game == EGame.GAME_Borderlands4) Ar.Position += 4;
     }
 }
+
+public class FClothLODData : FStructFallback
+{
+    public readonly FMeshToMeshVertData[] TransitionDownSkinData = [];
+    public readonly FMeshToMeshVertData[] TransitionUPSkinData = [];
+
+    public FClothLODData() { }
+
+    public FClothLODData(FAssetArchive Ar) : base(Ar, "ClothLODData")
+    {
+        TransitionUPSkinData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+        TransitionDownSkinData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+    }
+}

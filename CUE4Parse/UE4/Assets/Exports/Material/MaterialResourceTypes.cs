@@ -69,7 +69,7 @@ public abstract class FShaderMapBase
     public FPointerTableBase PointerTable;
     public FSHAHash? ResourceHash;
     public FShaderMapResourceCode? Code;
-    [JsonConverter(typeof(StringEnumConverter))] public EShaderPlatform ShaderPlatform;
+    public EShaderPlatform ShaderPlatform;
     public FMemoryImageResult FrozenArchive;
 
     public void Deserialize(FMaterialResourceProxyReader Ar)
@@ -79,7 +79,8 @@ public abstract class FShaderMapBase
 
         Content.Deserialize(new FMemoryImageArchive(new FByteArchive("FShaderMapContent", FrozenArchive.FrozenObject, Ar.Versions))
         {
-            Names = FrozenArchive.GetNames()
+            Names = FrozenArchive.GetNames(),
+            PointerTable = PointerTable
         });
 
         var bShareCode = Ar.ReadBoolean();
@@ -114,7 +115,6 @@ public class FShaderMapContent
     public int[] ShaderPermutations;
     public FShader[] Shaders;
     public FShaderPipeline[] ShaderPipelines;
-    [JsonConverter(typeof(StringEnumConverter))]
     public EShaderPlatform ShaderPlatform;
 
     public FShaderMapContent()
@@ -166,7 +166,7 @@ public class FShaderPipeline
 
     public FShaderPipeline(FMemoryImageArchive Ar)
     {
-        TypeName = new FHashedName(Ar);
+        TypeName = Ar.Read<FHashedName>();
         Shaders = new FShader[SF_NumGraphicsFrequencies];
         for (int i = 0; i < Shaders.Length; i++)
         {
@@ -183,23 +183,41 @@ public class FShaderPipeline
     }
 }
 
-public class FShader(FMemoryImageArchive Ar)
+public class FShader
 {
-    public FShaderParameterBindings Bindings = new FShaderParameterBindings(Ar);
-    public FShaderParameterMapInfo ParameterMapInfo = new FShaderParameterMapInfo(Ar);
-    public FHashedName[] UniformBufferParameterStructs = Ar.ReadArray<FHashedName>();
-    public FShaderUniformBufferParameter[] UniformBufferParameters = Ar.ReadArray<FShaderUniformBufferParameter>();
-    public ulong Type = Ar.Read<ulong>(); // TIndexedPtr<FShaderType>
-    public ulong VFType = Ar.Read<ulong>(); // TIndexedPtr<FVertexFactoryType>
-    public FShaderTarget Target = Ar.Read<FShaderTarget>();
-    public int ResourceIndex = Ar.Read<int>();
-    public uint NumInstructions = Ar.Read<uint>();
-    public uint SortKey = Ar.Game >= EGame.GAME_UE5_0 ? Ar.Read<uint>() : 0;
+    public FShaderParameterBindings Bindings;
+    public FShaderParameterMapInfo ParameterMapInfo;
+    public FHashedName[] UniformBufferParameterStructs;
+    public FShaderUniformBufferParameter[] UniformBufferParameters;
+    public FHashedName Type; // TIndexedPtr<FShaderType>
+    public FHashedName VFType; // TIndexedPtr<FVertexFactoryType>
+    public FShaderTarget Target;
+    public int ResourceIndex;
+    public uint NumInstructions;
+    public uint SortKey;
+
+    public FShader(FMemoryImageArchive Ar)
+    {
+        Bindings = new FShaderParameterBindings(Ar);
+        ParameterMapInfo = new FShaderParameterMapInfo(Ar);
+        UniformBufferParameterStructs = Ar.ReadArray<FHashedName>();
+        UniformBufferParameters = Ar.ReadArray<FShaderUniformBufferParameter>();
+
+        var type = Ar.Read<ulong>() >> 1;
+        Type = Ar.PointerTable is FShaderMapPointerTable pointerTable && type < (ulong)pointerTable.Types.Length ? pointerTable.Types[type] : new(type);
+        var vfType = Ar.Read<ulong>() >> 1;
+        VFType = Ar.PointerTable is FShaderMapPointerTable pointerTable1 && vfType < (ulong)pointerTable1.VFTypes.Length ? pointerTable1.VFTypes[vfType] : new(vfType);
+        Target = Ar.Read<FShaderTarget>();
+        ResourceIndex = Ar.Read<int>();
+        NumInstructions = Ar.Game < EGame.GAME_UE5_6 ? Ar.Read<uint>() : 0u;
+        SortKey = Ar.Game is >= EGame.GAME_UE5_0 and < EGame.GAME_UE5_9 ? Ar.Read<uint>() : 0;
+    }
 }
 
+[JsonConverter(typeof(FShaderParameterBindingsJsonConverter))]
 public class FShaderParameterBindings
 {
-    public FParameter[]? Parameters;
+    public FParameter[] Parameters;
     public FResourceParameter[]? Textures;
     public FResourceParameter[]? SRVs;
     public FResourceParameter[]? UAVs;
@@ -220,7 +238,7 @@ public class FShaderParameterBindings
         Parameters = Ar.ReadArray<FParameter>();
         if (Ar.Game>= EGame.GAME_UE4_26)
         {
-            ResourceParameters = Ar.ReadArray<FResourceParameter>();
+            ResourceParameters = Ar.ReadArray(() => new FResourceParameter(Ar));
         }
         else
         {
@@ -233,8 +251,8 @@ public class FShaderParameterBindings
             GraphUAVs = Ar.ReadArray(() => new FResourceParameter(Ar));
         }
 
-        BindlessResourceParameters = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FBindlessResourceParameter>() : Array.Empty<FBindlessResourceParameter>();
-        GraphUniformBuffers = Ar.Game >= EGame.GAME_UE4_26 ? Ar.ReadArray<FParameterStructReference>() : Array.Empty<FParameterStructReference>();
+        BindlessResourceParameters = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FBindlessResourceParameter>() : [];
+        GraphUniformBuffers = Ar.Game >= EGame.GAME_UE4_26 ? Ar.ReadArray<FParameterStructReference>() : [];
         ParameterReferences = Ar.ReadArray<FParameterStructReference>();
         if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 16;
 
@@ -251,26 +269,25 @@ public class FShaderParameterBindings
         public ushort ByteSize;
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 4)]
     public struct FResourceParameter
     {
         public ushort ByteOffset;
-        public byte BaseIndex;
-        [JsonConverter(typeof(StringEnumConverter))]
+        public ushort BaseIndex;
         public EUniformBufferBaseType BaseType = EUniformBufferBaseType.UBMT_INVALID;
-        //4.26+
-        //LAYOUT_FIELD(uint16, ByteOffset);
-        //LAYOUT_FIELD(uint8, BaseIndex);
-        //LAYOUT_FIELD(EUniformBufferBaseType, BaseType);
-
-        //4.26-
-        //LAYOUT_FIELD(uint16, BaseIndex);
-        //LAYOUT_FIELD(uint16, ByteOffset);
 
         public FResourceParameter(FMemoryImageArchive Ar)
         {
-            BaseIndex = (byte)Ar.Read<ushort>();
-            ByteOffset = Ar.Read<ushort>();
+            if (Ar.Game >= EGame.GAME_UE4_26)
+            {
+                BaseIndex = Ar.Read<ushort>();
+                ByteOffset = Ar.Read<ushort>();
+            }
+            else
+            {
+                ByteOffset = Ar.Read<ushort>();
+                BaseIndex = Ar.Read<byte>();
+                BaseType = Ar.Read<EUniformBufferBaseType>();
+            }
         }
     }
 
@@ -279,7 +296,6 @@ public class FShaderParameterBindings
     {
         public ushort ByteOffset;
         public ushort GlobalConstantOffset;
-        [JsonConverter(typeof(StringEnumConverter))]
         public EUniformBufferBaseType BaseType;
     }
 
@@ -288,6 +304,50 @@ public class FShaderParameterBindings
     {
         public ushort BufferIndex;
         public ushort ByteOffset;
+    }
+}
+
+public class FShaderParameterBindingsJsonConverter : JsonConverter<FShaderParameterBindings>
+{
+    public override void WriteJson(JsonWriter writer, FShaderParameterBindings? value, JsonSerializer serializer)
+    {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        writer.WriteStartObject();
+        WriteArray(writer, serializer, nameof(value.Parameters), value.Parameters);
+        WriteArray(writer, serializer, nameof(value.Textures), value.Textures);
+        WriteArray(writer, serializer, nameof(value.SRVs), value.SRVs);
+        WriteArray(writer, serializer, nameof(value.UAVs), value.UAVs);
+        WriteArray(writer, serializer, nameof(value.Samplers), value.Samplers);
+        WriteArray(writer, serializer, nameof(value.GraphTextures), value.GraphTextures);
+        WriteArray(writer, serializer, nameof(value.GraphSRVs), value.GraphSRVs);
+        WriteArray(writer, serializer, nameof(value.GraphUAVs), value.GraphUAVs);
+        WriteArray(writer, serializer, nameof(value.ResourceParameters), value.ResourceParameters);
+        WriteArray(writer, serializer, nameof(value.BindlessResourceParameters), value.BindlessResourceParameters);
+        WriteArray(writer, serializer, nameof(value.GraphUniformBuffers), value.GraphUniformBuffers);
+        WriteArray(writer, serializer, nameof(value.ParameterReferences), value.ParameterReferences);
+        writer.WritePropertyName(nameof(value.StructureLayoutHash));
+        writer.WriteValue(value.StructureLayoutHash);
+        writer.WritePropertyName(nameof(value.RootParameterBufferIndex));
+        writer.WriteValue(value.RootParameterBufferIndex);
+        writer.WriteEndObject();
+    }
+
+    public override FShaderParameterBindings ReadJson(JsonReader reader, Type objectType, FShaderParameterBindings? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void WriteArray<T>(JsonWriter writer, JsonSerializer serializer, string name, T[]? value)
+    {
+        if (value is null || value.Length == 0) return;
+
+        writer.WritePropertyName(name);
+        serializer.Serialize(writer, value);
     }
 }
 
@@ -303,7 +363,7 @@ public class FShaderParameterMapInfo
     {
         if (Ar.Game >= EGame.GAME_UE5_1)
         {
-            UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar));
+            UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar), false);
             TextureSamplers = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
             if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 16;
             SRVs = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
@@ -381,12 +441,13 @@ public class FShaderUniformBufferParameterInfo : FShaderParameterInfo
 
 public struct FShaderTarget
 {
-#pragma warning disable CS0169
     private uint _packed;
-#pragma warning restore CS0169
+    public EShaderFrequency Frequency => (EShaderFrequency)(_packed & 0xF);
+    public EShaderPlatform Platform => (EShaderPlatform)((_packed >> 4) & 0xFFFF); // was 7 bits before 5.0
 }
 
 /** The base type of a value in a shader parameter structure. */
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EUniformBufferBaseType : byte
 {
     UBMT_INVALID,
@@ -626,6 +687,7 @@ public class FUniformExpressionSet
         {
             UniformVectorPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
             UniformScalarPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
+            if (Ar.Game is EGame.GAME_TheDivisionResurgence) Ar.Position += 32;
             UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
             UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
@@ -1148,7 +1210,6 @@ public class FShaderEntry(FArchive Ar)
 {
     public byte[] Code = Ar.ReadArray<byte>();
     public int UncompressedSize = Ar.Read<int>();
-    [JsonConverter(typeof(StringEnumConverter))]
     public EShaderFrequency Frequency = Ar.Read<EShaderFrequency>();
 }
 
@@ -1156,19 +1217,18 @@ public class FShaderCodeResource
 {
     public struct FHeader
     {
-        int UncompressedSize = 0;		// full size of code array before compression
-        int ShaderCodeSize = 0;		// uncompressed size excluding optional data
-        [JsonConverter(typeof(StringEnumConverter))]
-        EShaderFrequency Frequency = EShaderFrequency.SF_NumFrequencies;
+        public int UncompressedSize = 0;		// full size of code array before compression
+        public int ShaderCodeSize = 0;		// uncompressed size excluding optional data
+        public EShaderFrequency Frequency = EShaderFrequency.SF_NumFrequencies;
         byte _Pad0 = 0;
         ushort _Pad1 = 0;
 
         public FHeader() { }
     };
 
-    FHeader Header;		// The above FHeader struct persisted in a shared buffer
-    FSharedBuffer Code;			// The bytecode buffer as constructed by FShaderCode::FinalizeShaderCode
-    FCompressedBuffer? Symbols;	// Buffer containing the symbols for this bytecode; will be empty if symbols are disabled
+    public FHeader Header;		// The above FHeader struct persisted in a shared buffer
+    public FSharedBuffer Code;			// The bytecode buffer as constructed by FShaderCode::FinalizeShaderCode
+    public FCompressedBuffer? Symbols;	// Buffer containing the symbols for this bytecode; will be empty if symbols are disabled
 
     public FShaderCodeResource(FArchive Ar)
     {
@@ -1183,7 +1243,7 @@ public class FShaderCodeResource
 public class FSharedBuffer
 {
     public long Len;
-    public byte[] Data;
+    [JsonIgnore] public byte[] Data;
 
     public FSharedBuffer(FArchive Ar)
     {
@@ -1295,9 +1355,13 @@ public class FShaderMapPointerTable : FPointerTableBase
     }
 }
 
-public struct FHashedName(FArchive Ar)
+public struct FHashedName
 {
-    public ulong Hash = Ar.Read<ulong>();
+    public ulong Hash;
+
+    public FHashedName(ulong value) => Hash = value;
+
+    public FHashedName(FMemoryImageArchive Ar) => Hash = Ar.Read<ulong>();
 }
 
 public class FPointerTableBase
@@ -1430,6 +1494,7 @@ public enum EUniformBufferBindingFlags : byte
     StaticAndShader = Static | Shader
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EShaderPlatform : byte
 {
     SP_PCD3D_SM5					= 0,

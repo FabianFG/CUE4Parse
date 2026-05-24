@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -13,7 +13,7 @@ public class FShaderTypeDependency
 
     public FShaderTypeDependency(FArchive Ar)
     {
-        ShaderTypeName = new FHashedName(Ar);
+        ShaderTypeName = Ar.Read<FHashedName>();
         SourceHash = new FSHAHash(Ar);
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.ShaderPermutationId)
         {
@@ -23,7 +23,7 @@ public class FShaderTypeDependency
 
     public FShaderTypeDependency(FMemoryImageArchive Ar)
     {
-        ShaderTypeName = new FHashedName(Ar);
+        ShaderTypeName = Ar.Read<FHashedName>();
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.ShaderPermutationId)
         {
             PermutationId = Ar.Read<int>();
