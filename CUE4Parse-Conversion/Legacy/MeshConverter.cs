@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using CUE4Parse_Conversion.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
@@ -95,12 +95,7 @@ public static class MeshConverter
                 heightMaps.Add("Heightmap", heightmap);
             }
 
-            if (convertedMesh.NormalTexture is { } normal)
-            {
-                weightMaps.Add("NormalMap_DX", normal);
-            }
-
-            if (convertedMesh.WeightmapTextures is { } weightmaps)
+            if (convertedMesh.BitmapTextures is { } weightmaps)
             {
                 foreach (var kv in weightmaps)
                 {

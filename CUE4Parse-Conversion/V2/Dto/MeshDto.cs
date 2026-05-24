@@ -2,13 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse_Conversion.Landscape;
 using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -106,63 +107,19 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         Bounds = mesh.RenderData.Bounds.GetBox();
         BodySetup = mesh.BodySetup;
 
-        if (naniteFormat != ENaniteMeshFormat.NaniteOnly)
+        if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
         {
-            for (var i = 0; i < mesh.RenderData.LODs.Length; i++)
-            {
-                if (mesh.RenderData.LODs[i].SkipLod) continue;
-
-                var screenSize = 0.0f;
-                if (i < mesh.RenderData.ScreenSize.Length)
-                {
-                    screenSize = mesh.RenderData.ScreenSize[i];
-                }
-
-                LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, mesh.RenderData.LODs[i], screenSize, spline));
-            }
+            ParseMeshRenderData(mesh.RenderData, spline);
         }
 
         var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
         if (shouldParseNanite && mesh.RenderData.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
-            nanite.LoadAllPages();
-
-            // Identify all high quality clusters
-            var clusters = nanite.LoadedPages.Where(p => p != null)
-                .SelectMany(p => p!.Clusters).Where(x => x.EdgeLength < 0.0f)
-                .ToArray();
-
-            // Check if we even have tris to parse.
-            var numTris = 0;
-            var numVerts = 0;
-            var numUVs = 0u;
-            foreach (var cluster in clusters)
-            {
-                numTris += cluster.TriIndices.Length;
-                numVerts += cluster.Vertices.Length;
-                numUVs = Math.Max(numUVs, cluster.NumUVs);
-            }
-
-            if (numTris > 0 && numVerts > 0)
-            {
-                var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
-                var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
-
-                if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
-                {
-                    LODs.Insert(0, naniteLod);
-                }
-                else
-                {
-                    LODs.Add(naniteLod); // covers: OnlyNaniteLOD, AllLayersNaniteLast, and the OnlyNormalLODs fallback
-                }
-            }
-
-            // aggressively garbage collect since the asset is re-parsed every time by FModel
-            // we don't need most of this data to still exist post mesh export anyway.
-            // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
-            nanite.UnloadAllPages();
-            GC.Collect();
+            ParseNaniteResources(nanite, naniteFormat);
+        }
+        else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
+        {
+            ParseMeshRenderData(mesh.RenderData, spline);
         }
     }
 
@@ -174,6 +131,64 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     protected StaticMeshDto(ALandscapeProxy landscape) : base(landscape)
     {
 
+    }
+
+    private void ParseMeshRenderData(FStaticMeshRenderData renderData, USplineMeshComponent? spline = null)
+    {
+        for (var i = 0; i < renderData.LODs!.Length; i++)
+        {
+            if (renderData.LODs[i].SkipLod) continue;
+
+            var screenSize = 0.0f;
+            if (i < renderData.ScreenSize.Length)
+            {
+                screenSize = renderData.ScreenSize[i];
+            }
+
+            LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, renderData.LODs[i], screenSize, spline));
+        }
+    }
+
+    private void ParseNaniteResources(FNaniteResources nanite, ENaniteMeshFormat naniteFormat)
+    {
+        nanite.LoadAllPages();
+
+        // Identify all high quality clusters
+        var clusters = nanite.LoadedPages.Where(p => p != null)
+            .SelectMany(p => p!.Clusters).Where(x => x.EdgeLength < 0.0f)
+            .ToArray();
+
+        // Check if we even have tris to parse.
+        var numTris = 0;
+        var numVerts = 0;
+        var numUVs = 0u;
+        foreach (var cluster in clusters)
+        {
+            numTris += cluster.TriIndices.Length;
+            numVerts += cluster.Vertices.Length;
+            numUVs = Math.Max(numUVs, cluster.NumUVs);
+        }
+
+        if (numTris > 0 && numVerts > 0)
+        {
+            var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
+            var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
+
+            if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
+            {
+                LODs.Insert(0, naniteLod);
+            }
+            else
+            {
+                LODs.Add(naniteLod); // covers: OnlyNaniteLOD, AllLayersNaniteLast, and the OnlyNormalLODs fallback
+            }
+        }
+
+        // aggressively garbage collect since the asset is re-parsed every time by FModel
+        // we don't need most of this data to still exist post mesh export anyway.
+        // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
+        nanite.UnloadAllPages();
+        GC.Collect();
     }
 
     public override void Dispose()
@@ -271,9 +286,8 @@ public sealed class SkeletalMesh : Skeleton
 
 public sealed class LandscapeMeshDto : StaticMeshDto
 {
-    public ConcurrentDictionary<string, SKBitmap>? WeightmapTextures { get; private set; }
-    public SKBitmap? NormalTexture { get; private set; }
-    public Image<L16>? HeightmapTexture { get; private set; }
+    public readonly ConcurrentDictionary<string, SKBitmap>? BitmapTextures;
+    public readonly Image<L16>? HeightmapTexture;
 
     public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeExportFlags flags = ELandscapeExportFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
     {
@@ -301,22 +315,19 @@ public sealed class LandscapeMeshDto : StaticMeshDto
             Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
         }
 
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, NormalTexture, HeightmapTexture));
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, flags, out BitmapTextures, out HeightmapTexture));
     }
 
     public LandscapeMeshDto(ULandscapeComponent component) : base(component)
     {
         Bounds = component.CachedLocalBox;
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, NormalTexture, HeightmapTexture));
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeExportFlags.Mesh, out BitmapTextures, out HeightmapTexture));
     }
 
     public override void Dispose()
     {
         base.Dispose();
 
-        WeightmapTextures?.Clear();
-        WeightmapTextures = null;
-        NormalTexture = null;
-        HeightmapTexture = null;
+        BitmapTextures?.Clear();
     }
 }

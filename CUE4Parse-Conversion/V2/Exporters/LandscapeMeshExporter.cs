@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CUE4Parse_Conversion.Landscape;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Formats.Meshes;
+using CUE4Parse_Conversion.V2.Writers;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using SixLabors.ImageSharp.Formats.Png;
@@ -32,15 +32,9 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<
             additional.Add(new ExportFile("png", stream.GetBuffer(), "/heightmap"));
         }
 
-        if (dto.NormalTexture is { } normal)
+        if (dto.BitmapTextures is { } bitmaps)
         {
-            var imageData = normal.Encode(SKEncodedImageFormat.Png, 100).ToArray();
-            additional.Add(new ExportFile("png", imageData, "/NormalMap_DX"));
-        }
-
-        if (dto.WeightmapTextures is { } weightmaps)
-        {
-            foreach (var kv in weightmaps)
+            foreach (var kv in bitmaps)
             {
                 var imageData = kv.Value.Encode(SKEncodedImageFormat.Png, 100).ToArray();
                 additional.Add(new ExportFile("png", imageData, $"/{kv.Key}"));

@@ -9,7 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse_Conversion.Landscape;
+namespace CUE4Parse_Conversion.V2.Dto;
 
 internal class FLandscapeComponentDataInterface {
     // offset of this component's data into heightmap texture
