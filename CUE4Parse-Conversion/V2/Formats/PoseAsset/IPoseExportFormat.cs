@@ -1,5 +1,5 @@
-﻿using CUE4Parse_Conversion.PoseAsset.Conversion;
-using CUE4Parse_Conversion.V2.Options;
+﻿using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.ActorX.Structs.Animations;
 
 namespace CUE4Parse_Conversion.V2.Formats.PoseAsset;
 

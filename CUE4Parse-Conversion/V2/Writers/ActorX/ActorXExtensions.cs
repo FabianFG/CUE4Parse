@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CUE4Parse_Conversion.V2.Writers.ActorX.Structs;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Writers.ActorX;

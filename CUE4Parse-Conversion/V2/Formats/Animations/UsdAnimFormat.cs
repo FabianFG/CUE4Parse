@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.ActorX.Structs.Animations;
 using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Objects.Core.Math;
 

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.Gltf;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Formats.Meshes;

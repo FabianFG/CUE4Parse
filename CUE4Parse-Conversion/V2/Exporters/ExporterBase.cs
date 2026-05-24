@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.Utils;
 using Serilog;
@@ -49,6 +50,11 @@ public abstract class ExporterBase : IExporter
             .ForContext(nameof(ObjectName), ObjectName)
             .ForContext(nameof(ClassName), ClassName)
             .ForContext("ExporterV2", true);
+    }
+
+    protected internal ExporterBase(GameFile file)
+    {
+        // TODO
     }
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles();

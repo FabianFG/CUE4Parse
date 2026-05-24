@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using CUE4Parse_Conversion.Animations.PSA;
-using CUE4Parse_Conversion.Animations.UEFormat;
 using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.V2.Writers.ActorX.Structs.Animations;
+using CUE4Parse_Conversion.V2.Writers.UEFormat;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.V2.Formats.Animations;
