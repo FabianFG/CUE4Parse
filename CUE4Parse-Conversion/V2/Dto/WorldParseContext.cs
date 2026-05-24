@@ -9,7 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
 using Serilog;
 
-namespace CUE4Parse_Conversion.V2.Dto.World;
+namespace CUE4Parse_Conversion.V2.Dto;
 
 internal sealed class WorldParseContext
 {

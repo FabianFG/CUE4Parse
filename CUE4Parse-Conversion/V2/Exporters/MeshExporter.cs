@@ -19,7 +19,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
         return BuildFiles(mesh, GetMeshFormat(Session.Options.MeshFormat));
     }
 
-    protected Dictionary<string, string>? EnqueueMaterials(params MeshMaterial[] materials)
+    protected Dictionary<string, string>? EnqueueMaterials(params MeshMaterialDto[] materials)
     {
         if (!Session.Options.ExportMaterials) return null;
 

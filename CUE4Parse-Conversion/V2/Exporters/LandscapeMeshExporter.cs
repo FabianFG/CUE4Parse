@@ -18,7 +18,7 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<
     {
         const ELandscapeExportFlags flags = ELandscapeExportFlags.All; // TODO: options
 
-        var dto = new LandscapeMesh(actor, flags);
+        var dto = new LandscapeMeshDto(actor, flags);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Landscape mesh has no LODs");
@@ -58,7 +58,7 @@ public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : Mesh
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(ULandscapeComponent component, IMeshExportFormat format)
     {
-        var dto = new LandscapeMesh(component);
+        var dto = new LandscapeMeshDto(component);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Landscape mesh has no LODs");

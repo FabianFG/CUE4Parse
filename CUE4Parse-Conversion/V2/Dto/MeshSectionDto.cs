@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public struct MeshSection(int index, int firstIndex, int numFaces, bool castShadow)
+public struct MeshSectionDto(int index, int firstIndex, int numFaces, bool castShadow)
 {
     public readonly int MaterialIndex = index;
     public readonly bool CastShadow = castShadow;
@@ -12,12 +12,12 @@ public struct MeshSection(int index, int firstIndex, int numFaces, bool castShad
 
     public bool IsValid => MaterialIndex > -1;
 
-    public MeshSection(FStaticMeshSection section) : this(section.MaterialIndex, section.FirstIndex, section.NumTriangles, section.bCastShadow)
+    public MeshSectionDto(FStaticMeshSection section) : this(section.MaterialIndex, section.FirstIndex, section.NumTriangles, section.bCastShadow)
     {
 
     }
 
-    public MeshSection(FSkelMeshSection section) : this(section.MaterialIndex, section.BaseIndex, section.NumTriangles, section.bCastShadow)
+    public MeshSectionDto(FSkelMeshSection section) : this(section.MaterialIndex, section.BaseIndex, section.NumTriangles, section.bCastShadow)
     {
 
     }

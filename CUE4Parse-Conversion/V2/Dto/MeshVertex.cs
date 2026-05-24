@@ -51,7 +51,7 @@ public readonly struct SkinnedMeshVertex : IMeshVertex
     public FVector4 Normal { get; } = FVector4.ZeroVector;
     public FVector4 Tangent { get; } = FVector4.ZeroVector;
     public FMeshUVFloat Uv { get; } = FMeshUVFloat.ZeroVector;
-    public MeshBoneInfluence[] Influences { get; } = [];
+    public MeshBoneInfluenceDto[] Influences { get; } = [];
 
     private SkinnedMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
     {
@@ -74,14 +74,14 @@ public readonly struct SkinnedMeshVertex : IMeshVertex
         if (count == 0) return;
 
         var scale = vertex.Infs.bUse16BitBoneWeight ? Constants.UShort_Bone_Scale : Constants.Byte_Bone_Scale;
-        var influences = new MeshBoneInfluence[count];
+        var influences = new MeshBoneInfluenceDto[count];
         var idx = 0;
         for (var i = 0; i < vertex.Infs.BoneWeight.Length; i++)
         {
             var weight = vertex.Infs.BoneWeight[i];
             if (weight == 0) continue;
 
-            influences[idx++] = new MeshBoneInfluence(boneMap[vertex.Infs.BoneIndex[i]], weight, weight * scale);
+            influences[idx++] = new MeshBoneInfluenceDto(boneMap[vertex.Infs.BoneIndex[i]], weight, weight * scale);
         }
 
         Influences = idx == count ? influences : influences[..idx];

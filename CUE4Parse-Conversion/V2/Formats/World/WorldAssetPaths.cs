@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using CUE4Parse_Conversion.V2.Dto.World;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.V2.Formats.World;

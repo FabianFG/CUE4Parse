@@ -18,7 +18,7 @@ public sealed class UEModel : UEFormatExport
 {
     protected override string Identifier => "UEMODEL";
 
-    public UEModel(string name, StaticMesh mesh, ExportOptions options) : base(name, options)
+    public UEModel(string name, StaticMeshDto mesh, ExportOptions options) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
@@ -92,7 +92,7 @@ public sealed class UEModel : UEFormatExport
         // }
     }
 
-    private void SerializeCommonMeshData<TVertex>(FArchiveWriter archive, MeshLod<TVertex> lod) where TVertex : struct, IMeshVertex
+    private void SerializeCommonMeshData<TVertex>(FArchiveWriter archive, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var vertexCount = lod.Vertices.Length;
         using var vertexChunk = new FDataChunk("VERTICES", vertexCount);

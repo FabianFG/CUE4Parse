@@ -27,7 +27,7 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 

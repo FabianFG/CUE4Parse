@@ -22,7 +22,7 @@ namespace CUE4Parse_Conversion.Meshes;
 /// </summary>
 public static class MeshConverter
 {
-    public static bool TryConvert(this USkeleton originalSkeleton, [MaybeNullWhen(false)] out MeshBone[] bones, out FBox box)
+    public static bool TryConvert(this USkeleton originalSkeleton, [MaybeNullWhen(false)] out MeshBoneDto[] bones, out FBox box)
     {
         try
         {
@@ -39,11 +39,11 @@ public static class MeshConverter
         return bones != null;
     }
 
-    public static bool TryConvert(this USplineMeshComponent spline, [MaybeNullWhen(false)] out StaticMesh convertedMesh)
+    public static bool TryConvert(this USplineMeshComponent spline, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh)
     {
         try
         {
-            convertedMesh = new StaticMesh(spline);
+            convertedMesh = new StaticMeshDto(spline);
         }
         catch (Exception e)
         {
@@ -53,11 +53,11 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
+    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
     {
         try
         {
-            convertedMesh = new StaticMesh(originalMesh, naniteFormat, spline);
+            convertedMesh = new StaticMeshDto(originalMesh, naniteFormat, spline);
         }
         catch (Exception e)
         {
@@ -81,14 +81,14 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
-    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeExportFlags flags, [MaybeNullWhen(false)] out LandscapeMesh convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
+    public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeExportFlags flags, [MaybeNullWhen(false)] out LandscapeMeshDto convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
     {
         heightMaps = [];
         weightMaps = [];
 
         try
         {
-            convertedMesh = new LandscapeMesh(landscape, flags, landscapeComponents);
+            convertedMesh = new LandscapeMeshDto(landscape, flags, landscapeComponents);
 
             if (convertedMesh.HeightmapTexture is { } heightmap)
             {

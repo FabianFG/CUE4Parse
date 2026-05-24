@@ -20,35 +20,35 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public abstract class Mesh<TVertex> : ObjectDto where TVertex : struct, IMeshVertex
+public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMeshVertex
 {
-    public readonly IList<MeshLod<TVertex>> LODs = [];
-    public readonly MeshMaterial[] Materials = [];
+    public readonly IList<MeshLodDto<TVertex>> LODs = [];
+    public readonly MeshMaterialDto[] Materials = [];
 
     public FPackageIndex[]? Sockets { get; private set; }
     public abstract FBox Bounds { get; protected init; }
 
-    protected Mesh(UObject owner) : base(owner)
+    protected MeshDto(UObject owner) : base(owner)
     {
 
     }
 
-    protected Mesh(UStaticMesh mesh) : base(mesh)
+    protected MeshDto(UStaticMesh mesh) : base(mesh)
     {
-        Materials = new MeshMaterial[mesh.StaticMaterials.Length];
+        Materials = new MeshMaterialDto[mesh.StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
-            Materials[i] = new MeshMaterial(mesh.StaticMaterials[i]);
+            Materials[i] = new MeshMaterialDto(mesh.StaticMaterials[i]);
         }
         Sockets = mesh.Sockets;
     }
 
-    protected Mesh(USkeletalMesh mesh) : base(mesh)
+    protected MeshDto(USkeletalMesh mesh) : base(mesh)
     {
-        Materials = new MeshMaterial[mesh.SkeletalMaterials.Length];
+        Materials = new MeshMaterialDto[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
-            Materials[i] = new MeshMaterial(mesh.SkeletalMaterials[i]);
+            Materials[i] = new MeshMaterialDto(mesh.SkeletalMaterials[i]);
         }
 
         var sockets = new List<FPackageIndex>(mesh.Sockets);
@@ -59,17 +59,17 @@ public abstract class Mesh<TVertex> : ObjectDto where TVertex : struct, IMeshVer
         Sockets = sockets.ToArray();
     }
 
-    protected Mesh(USkeleton skeleton) : base(skeleton)
+    protected MeshDto(USkeleton skeleton) : base(skeleton)
     {
         Sockets = skeleton.Sockets;
     }
 
-    protected Mesh(ALandscapeProxy landscape) : base(landscape)
+    protected MeshDto(ALandscapeProxy landscape) : base(landscape)
     {
-        Materials = [new MeshMaterial(null, landscape.LandscapeMaterial)];
+        Materials = [new MeshMaterialDto(null, landscape.LandscapeMaterial)];
     }
 
-    public MeshMaterial? GetMaterial(MeshSection section)
+    public MeshMaterialDto? GetMaterial(MeshSectionDto section)
     {
         var index = section.MaterialIndex;
         if (index < 0 || index >= Materials.Length)
@@ -88,17 +88,17 @@ public abstract class Mesh<TVertex> : ObjectDto where TVertex : struct, IMeshVer
     }
 }
 
-public class StaticMesh : Mesh<MeshVertex>
+public class StaticMeshDto : MeshDto<MeshVertex>
 {
     public FPackageIndex? BodySetup { get; private set; }
     public sealed override FBox Bounds { get; protected init; }
 
-    protected StaticMesh(UObject owner) : base(owner)
+    protected StaticMeshDto(UObject owner) : base(owner)
     {
 
     }
 
-    public StaticMesh(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)
+    public StaticMeshDto(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.LODs, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.Bounds, "Mesh has no bounds");
@@ -118,7 +118,7 @@ public class StaticMesh : Mesh<MeshVertex>
                     screenSize = mesh.RenderData.ScreenSize[i];
                 }
 
-                LODs.Add(MeshLod<MeshVertex>.FromStaticMesh(this, mesh.RenderData.LODs[i], screenSize, spline));
+                LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, mesh.RenderData.LODs[i], screenSize, spline));
             }
         }
 
@@ -146,7 +146,7 @@ public class StaticMesh : Mesh<MeshVertex>
             if (numTris > 0 && numVerts > 0)
             {
                 var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
-                var naniteLod = MeshLod<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
+                var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
 
                 if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
                 {
@@ -166,12 +166,12 @@ public class StaticMesh : Mesh<MeshVertex>
         }
     }
 
-    public StaticMesh(USplineMeshComponent spline) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), ENaniteMeshFormat.NoNanite, spline)
+    public StaticMeshDto(USplineMeshComponent spline) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), ENaniteMeshFormat.NoNanite, spline)
     {
 
     }
 
-    protected StaticMesh(ALandscapeProxy landscape) : base(landscape)
+    protected StaticMeshDto(ALandscapeProxy landscape) : base(landscape)
     {
 
     }
@@ -184,10 +184,10 @@ public class StaticMesh : Mesh<MeshVertex>
     }
 }
 
-public class Skeleton : Mesh<SkinnedMeshVertex>
+public class Skeleton : MeshDto<SkinnedMeshVertex>
 {
     public readonly string? SkeletonName;
-    public readonly MeshBone[] Bones;
+    public readonly MeshBoneDto[] Bones;
 
     public sealed override FBox Bounds { get; protected init; }
     public string? SkeletonPathName { get; private set; }
@@ -198,10 +198,10 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
         Bounds = mesh.ImportedBounds.GetBox();
 
         var refSkeleton = mesh.ReferenceSkeleton;
-        Bones = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
         for (var i = 0; i < Bones.Length; i++)
         {
-            Bones[i] = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
+            Bones[i] = new MeshBoneDto(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
         }
 
         if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
@@ -215,10 +215,10 @@ public class Skeleton : Mesh<SkinnedMeshVertex>
     public Skeleton(USkeleton skeleton) : base(skeleton)
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
-        Bones = new MeshBone[refSkeleton.FinalRefBonePose.Length];
+        Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
         for (var i = 0; i < Bones.Length; i++)
         {
-            var bone = new MeshBone(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
+            var bone = new MeshBoneDto(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
             Bounds = Bounds.ExpandBy(bone.Transform.Translation);
             Bones[i] = bone;
         }
@@ -255,7 +255,7 @@ public sealed class SkeletalMesh : Skeleton
         for (var i = 0; i < mesh.LODModels.Length; i++)
         {
             if (mesh.LODModels[i].SkipLod) continue;
-            LODs.Add(MeshLod<SkinnedMeshVertex>.FromSkeletalMesh(this, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
         }
     }
 
@@ -269,13 +269,13 @@ public sealed class SkeletalMesh : Skeleton
     }
 }
 
-public sealed class LandscapeMesh : StaticMesh
+public sealed class LandscapeMeshDto : StaticMeshDto
 {
     public ConcurrentDictionary<string, SKBitmap>? WeightmapTextures { get; private set; }
     public SKBitmap? NormalTexture { get; private set; }
     public Image<L16>? HeightmapTexture { get; private set; }
 
-    public LandscapeMesh(ALandscapeProxy landscape, ELandscapeExportFlags flags = ELandscapeExportFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
+    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeExportFlags flags = ELandscapeExportFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
     {
         var sizeQuads = landscape.ComponentSizeQuads;
 
@@ -301,13 +301,13 @@ public sealed class LandscapeMesh : StaticMesh
             Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
         }
 
-        LODs.Add(MeshLod<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, NormalTexture, HeightmapTexture));
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, NormalTexture, HeightmapTexture));
     }
 
-    public LandscapeMesh(ULandscapeComponent component) : base(component)
+    public LandscapeMeshDto(ULandscapeComponent component) : base(component)
     {
         Bounds = component.CachedLocalBox;
-        LODs.Add(MeshLod<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, NormalTexture, HeightmapTexture));
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, NormalTexture, HeightmapTexture));
     }
 
     public override void Dispose()

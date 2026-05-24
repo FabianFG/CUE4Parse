@@ -35,13 +35,13 @@ public class ActorXMesh
         ExportSkeletonData(skeleton.Bones);
     }
 
-    public ActorXMesh(StaticMesh mesh, ExportOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(StaticMeshDto mesh, ExportOptions options, int lodIndex = -1) : this(options)
     {
         ExportCommonMeshLod(mesh, lodIndex);
 
         if (mesh.Sockets is { Length: > 0 } sockets)
         {
-            var bones = new List<MeshBone>();
+            var bones = new List<MeshBoneDto>();
             ExportStaticSockets(sockets, bones);
             ExportSkeletonData(bones.ToArray());
         }
@@ -60,7 +60,7 @@ public class ActorXMesh
         archive.Write(Ar.GetBuffer());
     }
 
-    private void ExportCommonMeshLod<TVertex>(Mesh<TVertex> mesh, int lodIndex = -1) where TVertex : struct, IMeshVertex
+    private void ExportCommonMeshLod<TVertex>(MeshDto<TVertex> mesh, int lodIndex = -1) where TVertex : struct, IMeshVertex
     {
         if (lodIndex < 0)
         {
@@ -124,7 +124,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportCommonMeshData<TVertex>(MeshLod<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
+    private void ExportCommonMeshData<TVertex>(MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
     {
         var mainHdr = new VChunkHeader();
         var ptsHdr = new VChunkHeader();
@@ -247,7 +247,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportSkeletonData(MeshBone[] bones)
+    private void ExportSkeletonData(MeshBoneDto[] bones)
     {
         if (bones.Length == 0) return;
 
@@ -308,7 +308,7 @@ public class ActorXMesh
         }
     }
 
-    public void ExportMorphTargets<TVertex>(FPackageIndex[]? morphTargets, MeshLod<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
+    public void ExportMorphTargets<TVertex>(FPackageIndex[]? morphTargets, MeshLodDto<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
     {
         if (!Options.ExportMorphTargets || morphTargets == null) return;
 
@@ -355,7 +355,7 @@ public class ActorXMesh
         }
     }
 
-    public MeshBone[] ExportSkeletalSockets(Skeleton skeleton)
+    public MeshBoneDto[] ExportSkeletalSockets(Skeleton skeleton)
     {
         if (skeleton.Sockets is not { Length: > 0 } sockets) return [];
 
@@ -379,7 +379,7 @@ public class ActorXMesh
             }
             case ESocketFormat.Bone:
             {
-                var additionalBones = new List<MeshBone>();
+                var additionalBones = new List<MeshBoneDto>();
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<USkeletalMeshSocket>();
@@ -396,7 +396,7 @@ public class ActorXMesh
                     }
 
                     if (targetBoneIdx == -1) continue;
-                    additionalBones.Add(new MeshBone(socket, targetBoneIdx));
+                    additionalBones.Add(new MeshBoneDto(socket, targetBoneIdx));
                 }
 
                 return additionalBones.ToArray();
@@ -404,7 +404,7 @@ public class ActorXMesh
             default: return [];
         }
     }
-    public void ExportStaticSockets(FPackageIndex[] sockets, List<MeshBone> bones)
+    public void ExportStaticSockets(FPackageIndex[] sockets, List<MeshBoneDto> bones)
     {
         if (sockets.Length == 0) return;
         switch (Options.SocketFormat)
@@ -432,7 +432,7 @@ public class ActorXMesh
                     var socket = sockets[i].Load<UStaticMeshSocket>();
                     if (socket is null) continue;
 
-                    bones.Add(new MeshBone(socket));
+                    bones.Add(new MeshBoneDto(socket));
                 }
 
                 break;

@@ -17,7 +17,7 @@ public sealed class UEFormatMeshFormat : IMeshExportFormat
         return [new ExportFile("uemodel", ar.GetBuffer())];
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         using var ar = new FArchiveWriter();
         new UEModel(objectName, dto, options).Save(ar);

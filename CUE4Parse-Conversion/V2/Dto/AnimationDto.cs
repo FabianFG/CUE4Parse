@@ -4,16 +4,16 @@ using CUE4Parse.UE4.Assets.Exports.Animation;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class Animation : ObjectDto
+public class AnimationDto : ObjectDto
 {
     public readonly Skeleton Skeleton;
-    public readonly IList<AnimationSequence> Sequences = [];
+    public readonly IList<AnimationSequenceDto> Sequences = [];
 
     public readonly float Duration;
     public readonly float StartTime;
     public readonly float PlayRate;
 
-    public Animation(UAnimationAsset animation, float startTime = 0f, float playRate = 1f) : base(animation)
+    public AnimationDto(UAnimationAsset animation, float startTime = 0f, float playRate = 1f) : base(animation)
     {
         if (!animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
             throw new ArgumentNullException(nameof(animation), "Animation asset does not have a valid skeleton reference");
@@ -65,7 +65,7 @@ public class Animation : ObjectDto
 
     private void AddSequence(UAnimSequence sequence, string? name = null, float startTime = 0.0f, int loopingCount = 1)
     {
-        Sequences.Add(new AnimationSequence(sequence, name, startTime, loopingCount));
+        Sequences.Add(new AnimationSequenceDto(sequence, name, startTime, loopingCount));
     }
 
     public override void Dispose()

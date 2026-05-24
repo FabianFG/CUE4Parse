@@ -24,7 +24,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
 
         public readonly ModelRoot Model;
 
-        public Gltf(string name, StaticMesh mesh, ExportOptions options)
+        public Gltf(string name, StaticMeshDto mesh, ExportOptions options)
         {
             var sceneBuilder = new SceneBuilder(name);
             var origin = mesh.Bounds.GetExtent().Y * 2 * UnitScale;
@@ -124,7 +124,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             }
         }
 
-        public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBone> bones, NodeBuilder armatureNode)
+        public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBoneDto> bones, NodeBuilder armatureNode)
         {
             var result = new NodeBuilder[bones.Count];
 
@@ -164,7 +164,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         }
 
 
-        private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLod<TVertex> lod) where TVertex : struct, IMeshVertex
+        private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
         {
             FColor[]? colors = null;
             if (lod.VertexColors is { Length: > 0 })

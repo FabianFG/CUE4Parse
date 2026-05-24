@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using CUE4Parse_Conversion.V2.Dto.World;
+using CUE4Parse_Conversion.V2.Dto;
 using CUE4Parse_Conversion.V2.Writers.USD;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;

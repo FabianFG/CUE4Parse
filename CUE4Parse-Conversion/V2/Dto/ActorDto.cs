@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse_Conversion.V2.Dto.World;
+namespace CUE4Parse_Conversion.V2.Dto;
 
 public class ActorDto : ObjectDto
 {

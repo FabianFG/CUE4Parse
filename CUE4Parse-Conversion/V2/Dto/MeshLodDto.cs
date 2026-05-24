@@ -16,24 +16,24 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : struct, IMeshVertex
+public class MeshLodDto<TVertex>(MeshDto<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false) where TVertex : struct, IMeshVertex
 {
-    public readonly Mesh<TVertex> Owner = owner;
+    public readonly MeshDto<TVertex> Owner = owner;
     public readonly uint[] Indices = indices;
     public readonly TVertex[] Vertices = vertices;
-    public readonly MeshSection[] Sections = sections;
+    public readonly MeshSectionDto[] Sections = sections;
     public readonly FMeshUVFloat[][] ExtraUvs = extraUvs;
-    public readonly MeshVertexColor[]? VertexColors = vertexColors;
+    public readonly MeshVertexColorDto[]? VertexColors = vertexColors;
     public readonly float ScreenSize = screenSize;
     public readonly bool IsTwoSided = isTwoSided;
 
-    private MeshLod(Mesh<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSection[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
-        : this(owner, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColor("COL0", vertexColors)] : null, screenSize, isTwoSided)
+    private MeshLodDto(MeshDto<TVertex> owner, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
+        : this(owner, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided)
     {
 
     }
 
-    internal static MeshLod<MeshVertex> FromStaticMesh(StaticMesh owner, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
+    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
     {
         ArgumentNullException.ThrowIfNull(lod.IndexBuffer?.Buffer, "LOD has no index buffer");
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
@@ -75,21 +75,21 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
             }
         }
 
-        var sections = new MeshSection[lod.Sections.Length];
+        var sections = new MeshSectionDto[lod.Sections.Length];
         for (var i = 0; i < sections.Length; i++)
         {
-            sections[i] = new MeshSection(lod.Sections[i]);
+            sections[i] = new MeshSectionDto(lod.Sections[i]);
         }
 
-        return new MeshLod<MeshVertex>(owner, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
+        return new MeshLodDto<MeshVertex>(owner, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
     }
 
-    internal static MeshLod<MeshVertex> FromNaniteClusters(StaticMesh owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices)
+    internal static MeshLodDto<MeshVertex> FromNaniteClusters(StaticMeshDto owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices)
     {
-        var sections = new MeshSection[sectionCount];
+        var sections = new MeshSectionDto[sectionCount];
         for (var i = 0; i < sectionCount; i++)
         {
-            sections[i] = new MeshSection(i, 0, 0, true);
+            sections[i] = new MeshSectionDto(i, 0, 0, true);
         }
 
         // pass 1: count the number of faces for each section
@@ -178,10 +178,10 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
             }
         });
 
-        return new MeshLod<MeshVertex>(owner, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
+        return new MeshLodDto<MeshVertex>(owner, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
     }
 
-    internal static MeshLod<SkinnedMeshVertex> FromSkeletalMesh(SkeletalMesh owner, FStaticLODModel lod, float screenSize)
+    internal static MeshLodDto<SkinnedMeshVertex> FromSkeletalMesh(SkeletalMesh owner, FStaticLODModel lod, float screenSize)
     {
         ArgumentNullException.ThrowIfNull(lod.Indices?.Buffer, "LOD has no index buffer");
 
@@ -270,16 +270,16 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
             }
         }
 
-        var sections = new MeshSection[lod.Sections.Length];
+        var sections = new MeshSectionDto[lod.Sections.Length];
         for (var i = 0; i < sections.Length; i++)
         {
-            sections[i] = new MeshSection(lod.Sections[i]);
+            sections[i] = new MeshSectionDto(lod.Sections[i]);
         }
 
-        return new MeshLod<SkinnedMeshVertex>(owner, lod.Indices.Buffer, vertices, sections, extraUvs, vertexColors, screenSize);
+        return new MeshLodDto<SkinnedMeshVertex>(owner, lod.Indices.Buffer, vertices, sections, extraUvs, vertexColors, screenSize);
     }
 
-    internal static MeshLod<MeshVertex> FromLandscapeMesh(StaticMesh owner, ULandscapeComponent[] components, int sizeQuads, SKBitmap? normalTexture = null, Image<L16>? heightmapTexture = null)
+    internal static MeshLodDto<MeshVertex> FromLandscapeMesh(StaticMeshDto owner, ULandscapeComponent[] components, int sizeQuads, SKBitmap? normalTexture = null, Image<L16>? heightmapTexture = null)
     {
         var componentSizeQuads = ((sizeQuads + 1) >> 0 /*Landscape->ExportLOD*/) - 1;
         var scale = (float)componentSizeQuads / sizeQuads;
@@ -325,7 +325,7 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
 
         var extraUvs = new FMeshUVFloat[1][];
         var vertices = new MeshVertex[components.Length * componentVertexCount];
-        MeshVertexColor[]? vertexColors = null;
+        MeshVertexColorDto[]? vertexColors = null;
 
         for (var i = 0; i < extraUvs.Length; i++)
         {
@@ -428,6 +428,6 @@ public class MeshLod<TVertex>(Mesh<TVertex> owner, uint[] indices, TVertex[] ver
             });
         }
 
-        return new MeshLod<MeshVertex>(owner, indices.ToArray(), vertices, [new MeshSection(0, 0, numFaces, false)], extraUvs, vertexColors, 1.0f);
+        return new MeshLodDto<MeshVertex>(owner, indices.ToArray(), vertices, [new MeshSectionDto(0, 0, numFaces, false)], extraUvs, vertexColors, 1.0f);
     }
 }

@@ -43,7 +43,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 
@@ -107,7 +107,7 @@ public class UsdMeshFormat : IMeshExportFormat
         }
         return scope;
     }
-    private UsdPrim? CreateMaterials(MeshMaterial[] materials, IReadOnlyDictionary<string, string>? materialPaths)
+    private UsdPrim? CreateMaterials(MeshMaterialDto[] materials, IReadOnlyDictionary<string, string>? materialPaths)
     {
         if (materials is not { Length: > 0 }) return null;
 
@@ -128,8 +128,8 @@ public class UsdMeshFormat : IMeshExportFormat
         return scope;
     }
 
-    private UsdPrim CreateLod(MeshLod<MeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null) => CreateLod<MeshVertex>(meshLod, suffix, materials);
-    private UsdPrim CreateLod(MeshLod<SkinnedMeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null)
+    private UsdPrim CreateLod(MeshLodDto<MeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null) => CreateLod<MeshVertex>(meshLod, suffix, materials);
+    private UsdPrim CreateLod(MeshLodDto<SkinnedMeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null)
     {
         var lodPrim = CreateLod<SkinnedMeshVertex>(meshLod, suffix, materials);
         lodPrim.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("SkelBindingAPI")));
@@ -161,7 +161,7 @@ public class UsdMeshFormat : IMeshExportFormat
 
         return lodPrim;
     }
-    private UsdPrim CreateLod<TVertex>(MeshLod<TVertex> meshLod, string? suffix = null, UsdPrim? materials = null) where TVertex : struct, IMeshVertex
+    private UsdPrim CreateLod<TVertex>(MeshLodDto<TVertex> meshLod, string? suffix = null, UsdPrim? materials = null) where TVertex : struct, IMeshVertex
     {
         var lodPrim = UsdPrim.Def("Mesh", $"{meshLod.Owner.Name}{suffix}");
         lodPrim.Add(UsdAttribute.Uniform("token", "subdivisionScheme", "none"));

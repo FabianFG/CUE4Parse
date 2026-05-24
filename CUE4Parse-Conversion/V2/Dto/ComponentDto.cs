@@ -12,7 +12,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse_Conversion.V2.Dto.World;
+namespace CUE4Parse_Conversion.V2.Dto;
 
 public class ComponentDto(UObject component, ActorDto owner) : ObjectDto(component)
 {

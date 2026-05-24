@@ -5,13 +5,13 @@ using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.V2.Dto;
 
-public readonly struct MeshBone
+public readonly struct MeshBoneDto
 {
     public readonly string Name;
     public readonly int ParentIndex;
     public readonly FTransform Transform;
 
-    public MeshBone(string name, int parentIndex, FTransform transform)
+    public MeshBoneDto(string name, int parentIndex, FTransform transform)
     {
         Name = name;
         ParentIndex = parentIndex;
@@ -24,17 +24,17 @@ public readonly struct MeshBone
         Transform = transform;
     }
 
-    public MeshBone(FMeshBoneInfo info, FTransform transform) : this(info.Name.Text, info.ParentIndex, transform)
+    public MeshBoneDto(FMeshBoneInfo info, FTransform transform) : this(info.Name.Text, info.ParentIndex, transform)
     {
 
     }
 
-    public MeshBone(USkeletalMeshSocket socket, int parentIndex) : this(socket.SocketName.Text, parentIndex, new FTransform(socket.RelativeRotation.Quaternion(), socket.RelativeLocation, socket.RelativeScale))
+    public MeshBoneDto(USkeletalMeshSocket socket, int parentIndex) : this(socket.SocketName.Text, parentIndex, new FTransform(socket.RelativeRotation.Quaternion(), socket.RelativeLocation, socket.RelativeScale))
     {
 
     }
 
-    public MeshBone(UStaticMeshSocket socket) : this(socket.SocketName.Text, -1, new FTransform(socket.RelativeRotation.Quaternion(), socket.RelativeLocation, socket.RelativeScale))
+    public MeshBoneDto(UStaticMeshSocket socket) : this(socket.SocketName.Text, -1, new FTransform(socket.RelativeRotation.Quaternion(), socket.RelativeLocation, socket.RelativeScale))
     {
 
     }

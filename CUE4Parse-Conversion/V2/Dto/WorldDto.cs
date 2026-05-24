@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Objects.Engine;
 
-namespace CUE4Parse_Conversion.V2.Dto.World;
+namespace CUE4Parse_Conversion.V2.Dto;
 
 public class WorldDto : ObjectDto
 {
