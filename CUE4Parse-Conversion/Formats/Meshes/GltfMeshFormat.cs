@@ -1,0 +1,37 @@
+﻿using System;
+using System.Collections.Generic;
+using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Options;
+using CUE4Parse_Conversion.Writers.Gltf;
+using CUE4Parse.UE4.Writers;
+
+namespace CUE4Parse_Conversion.Formats.Meshes;
+
+public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
+{
+    public string DisplayName => isObj ? "Wavefront OBJ" : "glTF 2.0 (binary)";
+
+    private readonly EMeshFormat _legacyFormat = isObj ? EMeshFormat.OBJ : EMeshFormat.Gltf2;
+    private readonly string _extension = isObj ? "obj" : "glb";
+
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMesh dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    {
+        using var ar = new FArchiveWriter();
+        new Gltf(objectName, dto, options).Save(_legacyFormat, ar);
+
+        return [new ExportFile(_extension, ar.GetBuffer())];
+    }
+
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    {
+        using var ar = new FArchiveWriter();
+        new Gltf(objectName, dto, options).Save(_legacyFormat, ar);
+
+        return [new ExportFile(_extension, ar.GetBuffer())];
+    }
+
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, Skeleton dto)
+        => throw new NotSupportedException(
+            "glTF does not support skeleton-only exports. Please export a skeletal mesh to get a glTF file containing the skeleton.");
+}
+

@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using CUE4Parse_Conversion.V2.Options;
+using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using OffiUtils;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CUE4Parse_Conversion.V2.Writers.ActorX.Structs.Animations;
+using CUE4Parse_Conversion.Writers.ActorX.Structs.Animations;
 using CUE4Parse.ACL;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
