@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.IO.Objects.OnDemand.V1;
 public class FOnDemandContainerEntry : IOnDemandContainerEntry
 {
     public FIoContainerId ContainerId;
-    public string ContainerName;
+    public string ContainerName { get; }
     public string EncryptionKeyGuid;
     public FOnDemandTocEntry[] Entries;
     public uint[] BlockSizes;
@@ -35,7 +35,6 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
             Ar.SkipFixedArray(sizeof(byte)); // Header
     }
 
-    public string GetContainerName() => ContainerName;
     public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
     {
         foreach (var entry in Entries)
