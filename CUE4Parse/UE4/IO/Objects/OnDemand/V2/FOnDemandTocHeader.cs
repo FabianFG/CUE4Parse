@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects.OnDemand.V2;
@@ -19,10 +20,10 @@ public class FOnDemandTocHeader
     public FOnDemandTocHeader(FArchive Ar)
     {
         Signature = new FOnDemandTocSignature(Ar);
-        if (!Signature.IsValid()) throw new InvalidOperationException("Invalid Header Signature");
+        if (!Signature.IsValid()) throw new ParserException("Invalid FOnDemandTocHeader Signature");
         
         Version = Ar.Read<FOnDemandTocVersion>(); 
-        if (!Version.IsValid()) throw new InvalidOperationException("Invalid Toc Version");
+        if (!Version.IsValid()) throw new ParserException("Invalid FOnDemandTocHeader Toc Version");
 
         Ar.Position += sizeof(uint); // Pad
         EpochTimeStamp = DateTimeOffset.FromUnixTimeSeconds(Ar.Read<long>()).UtcDateTime;

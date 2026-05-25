@@ -1,4 +1,5 @@
 ﻿using System;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects.OnDemand.V1;
@@ -19,11 +20,11 @@ public class FOnDemandTocHeader
     {
         Magic = Ar.Read<ulong>();
         if (Magic != _expectedMagic)
-            throw new InvalidOperationException("Invalid File Magic");
+            throw new ParserException("Invalid FOnDemandTocHeader File Magic");
 
         Version = Ar.Read<EOnDemandTocVersion>();
         if (Version == EOnDemandTocVersion.Invalid || Version >= EOnDemandTocVersion.LatestPlusOne)
-            throw new InvalidOperationException("Invalid OnDemandTocVersion");
+            throw new ParserException("Invalid FOnDemandTocHeader Version");
         
         Flags = Ar.Read<EOnDemandTocFlags>();
         BlockSize = Ar.Read<uint>();

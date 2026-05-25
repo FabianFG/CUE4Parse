@@ -241,7 +241,8 @@ namespace CUE4Parse.FileProvider.Vfs
                 {
                     var url = $"{chunkToc.OnDemandToc.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc";
                     var data = await downloader.Download(url).ConfigureAwait(false);
-                    PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.ContainerName}.utoc", data, Versions), chunkToc, container, downloader));
+                    // added _OnDemand suffix to prevent conflicts with regular IoStore UTOCs
+                    PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.ContainerName}_OnDemand.utoc", data, Versions), chunkToc, container, downloader));
                 }
                 catch (Exception e)
                 {
