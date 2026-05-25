@@ -36,18 +36,18 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
     }
 
     public string GetContainerName() => ContainerName;
-    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash containerHash)
+    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
     {
         foreach (var entry in Entries)
         {
             if (chunkId != entry.ChunkId) 
                 continue;
             
-            containerHash = entry.Hash;
+            fileEntryHash = entry.Hash;
             return true;
         }
 
-        containerHash = default;
+        fileEntryHash = default;
         return false;
     }
 }

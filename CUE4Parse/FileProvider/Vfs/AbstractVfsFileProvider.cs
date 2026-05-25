@@ -239,7 +239,7 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 try
                 {
-                    var url = $"{chunkToc.OnDemandToc.ChunksDirectory}/{container.UTocHash.ToString()}.utoc";
+                    var url = $"{chunkToc.OnDemandToc.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc";
                     var data = await downloader.Download(url).ConfigureAwait(false);
                     PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.GetContainerName()}.utoc", data, Versions), chunkToc, container, downloader));
                 }

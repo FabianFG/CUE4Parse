@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using CUE4Parse.UE4.Objects.Core.Misc;
+﻿using CUE4Parse.UE4.Objects.Core.Misc;
 
 namespace CUE4Parse.UE4.IO.Objects.OnDemand;
 
@@ -8,5 +7,5 @@ public interface IOnDemandContainerEntry
     public FSHAHash UTocHash { get; }
 
     public string GetContainerName();
-    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash containerHash);
+    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash);
 }
