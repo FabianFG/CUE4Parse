@@ -8,7 +8,7 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
 {
     public FGuid EncryptionKeyGuid;
     public FIoContainerId ContainerId;
-    public FOnDemandStringEntry ContainerName;
+    public string ContainerName { get; }
     public uint ContainerHeaderSize;
     public uint DataOffset;
     public uint DataSize;
@@ -26,16 +26,11 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
     public FOnDemandChunkEntry[]? ChunkEntries { get; set; }
     public FOnDemandPartitionEntry[]? PartitionEntries { get; set; }
     
-    private string? _containerName;
-    private readonly Func<FOnDemandStringEntry, string> _func;
-    
     public FOnDemandContainerEntry(FArchive Ar, Func<FOnDemandStringEntry, string> func)
     {
-        _func = func;
-        
         EncryptionKeyGuid = Ar.Read<FGuid>();
         ContainerId = Ar.Read<FIoContainerId>();
-        ContainerName = Ar.Read<FOnDemandStringEntry>();
+        ContainerName = func(Ar.Read<FOnDemandStringEntry>());
         ContainerHeaderSize = Ar.Read<uint>();
         DataOffset = Ar.Read<uint>();
         DataSize = Ar.Read<uint>();
@@ -52,7 +47,6 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
         Ar.Position += 32;
     }
 
-    public string GetContainerName() => _containerName ??= _func.Invoke(ContainerName);
     public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
     {
         if (ChunkIds == null || ChunkEntries == null)

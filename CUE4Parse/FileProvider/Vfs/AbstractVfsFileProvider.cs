@@ -241,11 +241,11 @@ namespace CUE4Parse.FileProvider.Vfs
                 {
                     var url = $"{chunkToc.OnDemandToc.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc";
                     var data = await downloader.Download(url).ConfigureAwait(false);
-                    PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.GetContainerName()}.utoc", data, Versions), chunkToc, container, downloader));
+                    PostLoadReader(new IoStoreOnDemandReader(new FStreamArchive($"{container.ContainerName}.utoc", data, Versions), chunkToc, container, downloader));
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.GetContainerName());
+                    Log.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
                 }
             }
         }

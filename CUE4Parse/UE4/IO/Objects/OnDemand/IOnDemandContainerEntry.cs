@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.IO.Objects.OnDemand;
 public interface IOnDemandContainerEntry
 {
     public FSHAHash UTocHash { get; }
+    public string ContainerName { get; }
 
-    public string GetContainerName();
     public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash);
 }
