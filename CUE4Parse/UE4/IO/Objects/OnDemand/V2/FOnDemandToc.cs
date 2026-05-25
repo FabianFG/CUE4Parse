@@ -21,6 +21,16 @@ public class FOnDemandToc : IOnDemandToc
         _header = new FOnDemandTocHeader(Ar);
         _stringTable = Ar.ReadBytes((int) _header.StringTableLength);
         _containerEntries = Ar.ReadArray((int) _header.ContainerCount, () => new FOnDemandContainerEntry(Ar, GetOnDemandString));
+
+        var savedPos = Ar.Position;
+        foreach (var container in _containerEntries)
+        {
+            Ar.Position = savedPos + container.DataOffset;
+
+            container.PartitionEntries = Ar.ReadArray((int) container.PartitionCount, () => new FOnDemandPartitionEntry(Ar));
+            container.ChunkIds = Ar.ReadArray<FIoChunkId>((int) container.ChunkCount);
+            container.ChunkEntries = Ar.ReadArray((int) container.ChunkCount, () => new FOnDemandChunkEntry(Ar));
+        }
     }
 
     private string GetOnDemandString(FOnDemandStringEntry stringEntry) =>

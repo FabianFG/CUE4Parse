@@ -20,7 +20,12 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
     public FSHAHash UTocHash { get; }
     public EOnDemandContainerEntryFlags ContainerFlags;
     public EIoContainerFlags FileContainerFlags;
+    public uint PartitionCount;
 
+    public FIoChunkId[]? ChunkIds { get; set; }
+    public FOnDemandChunkEntry[]? ChunkEntries { get; set; }
+    public FOnDemandPartitionEntry[]? PartitionEntries { get; set; }
+    
     private string? _containerName;
     private readonly Func<FOnDemandStringEntry, string> _func;
     
@@ -42,14 +47,29 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
         UTocHash = new FSHAHash(Ar);
         ContainerFlags = Ar.Read<EOnDemandContainerEntryFlags>();
         FileContainerFlags = Ar.Read<EIoContainerFlags>();
+        PartitionCount = Ar.Read<uint>();
 
-        Ar.Position += 36;
+        Ar.Position += 32;
     }
 
     public string GetContainerName() => _containerName ??= _func.Invoke(ContainerName);
-    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash containerHash)
+    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
     {
-        throw new NotImplementedException();
+        if (ChunkIds == null || ChunkEntries == null)
+        {
+            fileEntryHash = default;
+            return false;
+        }
+        
+        var index = Array.IndexOf(ChunkIds, chunkId);
+        if (index == -1)
+        {
+            fileEntryHash = default;
+            return false;
+        }
+
+        fileEntryHash = ChunkEntries[index].Hash;
+        return true;
     }
 }
 

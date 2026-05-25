@@ -36,18 +36,10 @@ public class IoStoreOnDemandReader : IoStoreReader
 
     public override byte[] Read(FIoChunkId chunkId)
     {
-        if (!Container.TryGetFileEntryHash(chunkId, out var fileHash))
+        if (!Container.TryGetFileEntryHash(chunkId, out var fileHash) || !TryResolve(chunkId, out var offsetLength))
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
 
-        return Read(chunkId, fileHash);
-    }
-    
-    private byte[] Read(FIoChunkId chunkId, FSHAHash hash)
-    {
-        if (TryResolve(chunkId, out var offsetLength)) 
-            return Read(hash.ToString(), (long)offsetLength.Offset, (long)offsetLength.Length);
-        
-        throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
+        return Read(fileHash.ToString().ToLower(), (long)offsetLength.Offset, (long)offsetLength.Length);
     }
 
     private byte[] Read(string hash, long offset, long length)

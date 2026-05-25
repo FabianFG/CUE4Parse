@@ -27,6 +27,7 @@ public enum EOnDemandTocMinorVersion : ushort
 {
     Invalid			= 0,
     MemoryMapped	= 1,
+    Partitions		= 2,
 
     LatestPlusOne,
     Latest			= (LatestPlusOne - 1)
