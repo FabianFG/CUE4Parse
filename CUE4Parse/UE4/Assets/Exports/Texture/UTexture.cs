@@ -28,7 +28,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
-    // May include image as DSS or possible other
     public FByteBulkData? SourceArt { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;

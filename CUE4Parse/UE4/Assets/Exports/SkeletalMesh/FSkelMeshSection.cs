@@ -80,14 +80,7 @@ public class FSkelMeshSection
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES)
-            {
-                NumTriangles = Ar.Read<short>();
-            }
-            else
-            {
-                NumTriangles = Ar.Read<int>();
-            }
+            NumTriangles = Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES ? Ar.Read<int>() : Ar.Read<short>();
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SORTING_OPTIONS && skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)

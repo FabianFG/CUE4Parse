@@ -10,7 +10,7 @@ public class UMorphTargetSet : UObject
         base.Deserialize(Ar, validPos);
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SERIALIZE_MORPHTARGETRAWVERTSINDICES && Ar.Game < EGame.GAME_UE4_0)
         {
-            Ar.ReadArray<int>(); // RawWedgePointIndices
+            Ar.ReadArray(() => Ar.ReadArray<int>()); // RawWedgePointIndices
         }
     }
 }

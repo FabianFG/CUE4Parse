@@ -131,7 +131,10 @@ public class FStaticParameterSet
         }
         StaticSwitchParameters = Ar.ReadArray(() => new FStaticSwitchParameter(Ar));
         StaticComponentMaskParameters = Ar.ReadArray(() => new FStaticComponentMaskParameter(Ar));
-        TerrainLayerWeightParameters = Ar.ReadArray(() => new FStaticTerrainLayerWeightParameter(Ar));
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_TERRAINLAYERWEIGHT_PARAMETERS)
+        {
+            TerrainLayerWeightParameters = Ar.ReadArray(() => new FStaticTerrainLayerWeightParameter(Ar));
+        }
 
         if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.MaterialLayersParameterSerializationRefactor)
         {

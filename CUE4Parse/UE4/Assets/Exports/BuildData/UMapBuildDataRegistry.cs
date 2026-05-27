@@ -392,13 +392,13 @@ public class FLightMap(FAssetArchive Ar)
 public class FLegacyLightMap1D : FLightMap
 {
     private int NUM_DIRECTIONAL_LIGHTMAP_COEF = 2;
-    private int NUM_GATHERED_LIGHTMAP_COEF_LEGACY = 3;
-
+    private int NUM_GATHERED_LIGHTMAP_COEF = 4;
+    
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
     {
         new FPackageIndex(Ar); // Owner
-        new FColorBulkData(Ar); // DirectionalSamples
-        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
+        new FIntBulkData(Ar); // DirectionalSamples
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128 && Ar.Game is not EGame.GAME_RocketLeague)
         {
             for (int elementIndex = 0; elementIndex < 3; elementIndex++)
             {
@@ -414,7 +414,7 @@ public class FLegacyLightMap1D : FLightMap
         }
         else
         {
-            for (int elementIndex = 0; elementIndex < NUM_DIRECTIONAL_LIGHTMAP_COEF; elementIndex++)
+            for (int elementIndex = 0; elementIndex < 3; elementIndex++)
             {
                 Ar.Read<FVector>();
             }
@@ -422,7 +422,7 @@ public class FLegacyLightMap1D : FLightMap
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING)
         {
-            new FColorBulkData(Ar); // SimpleSamples
+            new FIntBulkData(Ar); // SimpleSamples
         }
     }
 }
