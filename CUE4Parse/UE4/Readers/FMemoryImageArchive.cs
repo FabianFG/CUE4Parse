@@ -41,6 +41,7 @@ public class FMemoryImageArchive : FArchive
 {
     public readonly FArchive InnerArchive;
     public IReadOnlyDictionary<int, (FName, bool)>? Names;
+    public FPointerTableBase? PointerTable;
     private readonly int ArrayAlign = 4;
 
     public FMemoryImageArchive(FArchive Ar) : base(Ar.Versions)
@@ -132,6 +133,33 @@ public class FMemoryImageArchive : FArchive
         {
             data[i] = getter();
             Position = Position.Align(ArrayAlign);
+        }
+        Position = continuePos;
+        return data;
+    }
+
+    public T[] ReadArray<T>(Func<T> getter, bool realignAfterElement)
+    {
+        var initialPos = Position;
+        var dataPtr = new FFrozenMemoryImagePtr(this);
+        var arrayNum = Read<int>();
+        var arrayMax = Read<int>();
+        if (arrayNum != arrayMax)
+        {
+            throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
+        }
+        if (arrayNum == 0)
+        {
+            return [];
+        }
+
+        var continuePos = Position;
+        Position = initialPos + dataPtr.OffsetFromThis;
+        var data = new T[arrayNum];
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = getter();
+            if (realignAfterElement) Position = Position.Align(ArrayAlign);
         }
         Position = continuePos;
         return data;

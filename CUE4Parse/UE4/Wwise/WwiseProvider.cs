@@ -184,16 +184,17 @@ public partial class WwiseProvider
             }
         }
 
+        // Track what's in media first so we don't resolve the same audio twice via event resolution
+        var visitedMedia = new HashSet<uint>();
         foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
         {
             if (!eventData.HasValue)
                 continue;
 
-            // Track what's in media first so we don't resolve the same audio twice via event resolution
-            var visitedMedia = new HashSet<uint>();
             foreach (var media in eventData.Value.Media)
             {
-                visitedMedia.Add(media.MediaId);
+                if (!visitedMedia.Add(media.MediaId))
+                    continue;
                 ProcessMediaCookedData(ownerDirectory, media, languageData, results);
             }
 
@@ -201,10 +202,17 @@ public partial class WwiseProvider
             {
                 foreach (var media in leaf.Media)
                 {
-                    visitedMedia.Add(media.MediaId);
+                    if (!visitedMedia.Add(media.MediaId))
+                        continue;
                     ProcessMediaCookedData(ownerDirectory, media, languageData, results);
                 }
             }
+        }
+
+        foreach (var (languageData, eventData) in wwiseData.Value.EventLanguageMap)
+        {
+            if (!eventData.HasValue)
+                continue;
 
             foreach (var soundBank in eventData.Value.SoundBanks)
             {
@@ -246,7 +254,7 @@ public partial class WwiseProvider
         if (data is null)
             Log.Error("Failed to load data for '{WemFileName}' wem loose file", wemFileName);
 
-        var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text)
+        var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text) && !media.DebugName.IsNone
             ? media.DebugName.Text.SubstringBeforeLast('.')
             : wemFileName;
 
@@ -442,9 +450,6 @@ public partial class WwiseProvider
                         break;
 
                     default:
-                        if (hierarchy.Type is EAKBKHircType.AudioBus or EAKBKHircType.ActorMixer) // Not needed for resolving audio
-                            break;
-
                         Log.Warning("Unhandled hierarchy type {0}, while traversing through Event {1}", hierarchy.Type, eventId);
                         break;
                 }
@@ -459,7 +464,7 @@ public partial class WwiseProvider
             var fileName = wemId.ToString();
             if (_looseWemFilesLookup.TryGetValue(wemId, out var wemGameFile) | _wwiseEncodedMedia.TryGetValue(fileName, out var wemData))
             {
-                if (!string.IsNullOrEmpty(debugName))
+                if (!string.IsNullOrEmpty(debugName) && !debugName.Equals("None"))
                     fileName = $"{debugName} ({fileName})";
 
                 var outputPath = Path.Combine(ownerDirectory, fileName);
@@ -619,6 +624,9 @@ public partial class WwiseProvider
         {
             foreach (var h in wwiseReader.Hierarchies)
             {
+                // Not needed for resolving audio
+                if (h.Type is EAKBKHircType.AudioBus or EAKBKHircType.ActorMixer)
+                    continue;
                 uint id = h.Data.Id;
                 if (_wwiseHierarchyTables.TryGetValue(id, out var existing))
                 {

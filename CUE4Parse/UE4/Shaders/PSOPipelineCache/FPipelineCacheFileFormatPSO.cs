@@ -1,10 +1,10 @@
 using CUE4Parse.UE4.Assets.Exports.Texture;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.RHI;
 using CUE4Parse.UE4.Readers;
-using Org.BouncyCastle.Crypto;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Shaders;
 
@@ -267,6 +267,7 @@ public enum DescriptorType : uint
     RayTracing = 2,
 };
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EShaderFrequency : byte
 {
     SF_Vertex			= 0,

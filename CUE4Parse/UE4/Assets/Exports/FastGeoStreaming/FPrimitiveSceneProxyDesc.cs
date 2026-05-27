@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
@@ -35,6 +36,7 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public bool bVisibleInReflectionCaptures = Ar.ReadBoolean();
     public bool bVisibleInRealTimeSkyCaptures = Ar.ReadBoolean();
     public bool bVisibleInRayTracing = Ar.ReadBoolean();
+    public bool bVisibleInReflections = Ar.Game >= EGame.GAME_UE5_8 && Ar.ReadBoolean();
     public bool bRenderInDepthPass = Ar.ReadBoolean();
     public bool bRenderInMainPass = Ar.ReadBoolean();
     public bool bTreatAsBackgroundForOcclusion = Ar.ReadBoolean();
@@ -76,9 +78,9 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public EComponentMobility Mobility = Ar.Read<EComponentMobility>();
     public int TranslucencySortPriority = Ar.Read<int>();
     public float TranslucencySortDistanceOffset = Ar.Read<float>();
-    public int CustomDepthStencilValue = Ar.Read<int>();
     public ELightmapType LightmapType = Ar.Read<ELightmapType>();
     public ESceneDepthPriorityGroup ViewOwnerDepthPriorityGroup = Ar.Read<ESceneDepthPriorityGroup>();
+    public int CustomDepthStencilValue = Ar.Read<int>();
     public ERendererStencilMask CustomDepthStencilWriteMask = Ar.Read<ERendererStencilMask>();
     public FLightingChannels LightingChannels = new FLightingChannels(Ar);
     public ERayTracingGroupCullingPriority RayTracingGroupCullingPriority = Ar.Read<ERayTracingGroupCullingPriority>();
@@ -91,10 +93,10 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public int VisibilityId = Ar.Read<int>();
     public float CachedMaxDrawDistance = Ar.Read<float>();
     public float MinDrawDistance = Ar.Read<float>();
-    public float VirtualTextureMainPassMaxDrawDistance = Ar.Read<float>();
     public float BoundsScale = Ar.Read<float>();
     public int RayTracingGroupId = Ar.Read<int>();
     public ERuntimeVirtualTextureMainPassType VirtualTextureRenderPassType = Ar.Read<ERuntimeVirtualTextureMainPassType>();
+    public float VirtualTextureMainPassMaxDrawDistance = Ar.Read<float>();
 }
 
 public class FSkinnedMeshSceneProxyDesc(FFastGeoArchive Ar)// : FPrimitiveSceneProxyDesc

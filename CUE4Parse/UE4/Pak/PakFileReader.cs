@@ -10,9 +10,12 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.NTE.Encryption;
+using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
+using CUE4Parse.GameTypes.Strinova.Lua;
+using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -154,6 +157,11 @@ namespace CUE4Parse.UE4.Pak
                         return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
                     case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
                         return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
+                    case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+                        return UndawnLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                    case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+                        uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
+                        break;
                     default:
                         break;
                 }
@@ -196,6 +204,13 @@ namespace CUE4Parse.UE4.Pak
                     return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
                 case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
                     return SnowbreakLua.DecryptLua(data, requestedSize);
+                case EGame.GAME_GameForPeace when pakEntry.Extension is "lua":
+                    return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+                    return UndawnLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+                    data = StrinovaLua.DecryptLuaBytecode(data);
+                    break;
                 default:
                     break;
             }
