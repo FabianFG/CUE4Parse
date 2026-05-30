@@ -270,6 +270,10 @@ public enum DescriptorType : uint
 [JsonConverter(typeof(StringEnumConverter))]
 public enum EShaderFrequency : byte
 {
+    SF_NumBits          = 4,
+    SF_NumGraphicsFrequencies = 5,
+    SF_NumStandardFrequencies = 6,
+
     SF_Vertex			= 0,
     SF_Mesh				= 1,
     SF_Amplification	= 2,
@@ -283,8 +287,4 @@ public enum EShaderFrequency : byte
     SF_WorkGraphRoot    = 10,
     SF_WorkGraphComputeNode = 11,
     SF_NumFrequencies	= 12,
-    //
-    SF_NumGraphicsFrequencies = 5,
-    SF_NumStandardFrequencies = 6,
-    SF_NumBits			= 4,
 };
