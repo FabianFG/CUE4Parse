@@ -54,7 +54,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 for (var i = 0; i < morphTargets.Length; i++)
                 {
                     var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                    if (morphTarget == null || morphTarget.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1)
+                    if (morphTarget?.MorphLODModels is null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1)
                         continue;
                     var morphBuilder = mesh.UseMorphTarget(i);
                     var morphModel = morphTarget.MorphLODModels[lodIndex];
