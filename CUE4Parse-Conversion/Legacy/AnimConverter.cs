@@ -26,11 +26,14 @@ namespace CUE4Parse_Conversion.Animations
 
         public static CAnimSet ConvertAnims(this UAnimationAsset asset)
         {
+            if (!asset.Skeleton.TryLoad<USkeleton>(out var skeleton))
+                throw new ArgumentException("Failed to load skeleton for animation asset " + asset.Name);
+
             return asset switch
             {
-                UAnimSequence animSequence when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animSequence),
-                UAnimMontage animMontage when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animMontage),
-                UAnimComposite animComposite when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animComposite),
+                UAnimSequence animSequence => skeleton.ConvertAnims(animSequence),
+                UAnimMontage animMontage => skeleton.ConvertAnims(animMontage),
+                UAnimComposite animComposite => skeleton.ConvertAnims(animComposite),
                 _ => throw new ArgumentException("Unknown animation type")
             };
         }

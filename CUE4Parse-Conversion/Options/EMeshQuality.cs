@@ -9,7 +9,7 @@ public enum EMeshQuality
     Highest,
     [Description("Lowest Quality Only")]
     Lowest,
-    [Description("All Qualities")]
+    [Description("All Qualities (Individual Files)")]
     All
 }
 

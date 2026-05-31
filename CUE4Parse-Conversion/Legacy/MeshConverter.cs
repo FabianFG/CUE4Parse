@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
@@ -17,11 +16,10 @@ using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
 
-/// <summary>
-/// TODO: this needs a refactor
-/// </summary>
+[Obsolete("This class is deprecated. Please use the respective DTO constructors directly and handle exceptions as needed.")]
 public static class MeshConverter
 {
+    [Obsolete("This method is deprecated. Please use SkeletonDto constructor directly and handle exceptions as needed.")]
     public static bool TryConvert(this USkeleton originalSkeleton, [MaybeNullWhen(false)] out MeshBoneDto[] bones, out FBox box)
     {
         try
@@ -39,6 +37,7 @@ public static class MeshConverter
         return bones != null;
     }
 
+    [Obsolete("This method is deprecated. Please use StaticMeshDto constructor directly and handle exceptions as needed.")]
     public static bool TryConvert(this USplineMeshComponent spline, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh)
     {
         try
@@ -53,6 +52,7 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
+    [Obsolete("This method is deprecated. Please use StaticMeshDto constructor directly and handle exceptions as needed.")]
     public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
     {
         try
@@ -67,6 +67,7 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
+    [Obsolete("This method is deprecated. Please use SkeletalMeshDto constructor directly and handle exceptions as needed.")]
     public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh)
     {
         try
@@ -81,6 +82,7 @@ public static class MeshConverter
         return convertedMesh != null;
     }
 
+    [Obsolete("This method is deprecated. Please use LandscapeMeshDto constructor directly and handle exceptions as needed.")]
     public static bool TryConvert(this ALandscapeProxy landscape, ULandscapeComponent[]? landscapeComponents, ELandscapeFlags flags, [MaybeNullWhen(false)] out LandscapeMeshDto convertedMesh, out Dictionary<string,Image> heightMaps, out Dictionary<string, SKBitmap> weightMaps)
     {
         heightMaps = [];

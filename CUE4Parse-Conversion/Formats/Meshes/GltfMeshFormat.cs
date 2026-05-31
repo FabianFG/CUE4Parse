@@ -16,18 +16,36 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
 
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
-        using var ar = new FArchiveWriter();
-        new Gltf(objectName, dto, options).Save(_legacyFormat, ar);
+        var results = new List<ExportFile>();
 
-        return [new ExportFile(_extension, ar.GetBuffer())];
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
+        {
+            using var ar = new FArchiveWriter();
+            new Gltf(objectName, dto, i, options.ExportMorphTargets).Save(_legacyFormat, ar);
+
+            var suffix = i == 0 ? "" : $"_LOD{i}";
+            results.Add(new ExportFile(_extension, ar.GetBuffer(), suffix));
+        }
+
+        return results;
     }
 
     public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
-        using var ar = new FArchiveWriter();
-        new Gltf(objectName, dto, options).Save(_legacyFormat, ar);
+        var results = new List<ExportFile>();
 
-        return [new ExportFile(_extension, ar.GetBuffer())];
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
+        {
+            using var ar = new FArchiveWriter();
+            new Gltf(objectName, dto, i).Save(_legacyFormat, ar);
+
+            var suffix = i == 0 ? "" : $"_LOD{i}";
+            results.Add(new ExportFile(_extension, ar.GetBuffer(), suffix));
+        }
+
+        return results;
     }
 
     public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
