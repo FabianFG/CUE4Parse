@@ -159,6 +159,7 @@ public partial class MeshLodDto<TVertex>
         heightmap = heightmapTexture;
         return new MeshLodDto<MeshVertex>(
             owner,
+            0,
             indices.ToArray(),
             vertices,
             [new MeshSectionDto(0, 0, numFaces, false)],

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
@@ -207,11 +208,13 @@ public partial class USkeletalMesh : UObject
             return;
         }
 
+        var validLods = new List<int>(LODModels.Length);
         var maxLodLevel = -1;
         for (int i = 0; i < LODModels.Length; i++)
         {
             if (LODModels[i].MorphTargetVertexInfoBuffers is not null)
             {
+                validLods.Add(i);
                 maxLodLevel = i + 1;
             }
         }
@@ -239,7 +242,7 @@ public partial class USkeletalMesh : UObject
                 continue;
             }
 
-            for (int j = 0; j < morphLODModels.Length; j++)
+            foreach (var j in validLods)
             {
                 if (morphTarget.TryGetCompressedLODModel(j, out var compressedLodModel))
                 {

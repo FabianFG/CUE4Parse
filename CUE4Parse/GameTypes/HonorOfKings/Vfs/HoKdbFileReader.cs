@@ -13,7 +13,6 @@ using CUE4Parse.GameTypes.HonorOfKings.FileProvider.Objects;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -100,8 +99,6 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         var hashToCompression = new Dictionary<ulong, byte>(entriesOffsets.Length);
         ReadEntriesData(entriesOffsets, hashToCompression);
 
-        var tasks = new List<Task>();
-
         Dictionary<ulong, FHoKEntry> unknownFiles = [];
         foreach (var container in _containerStreams)
         {
@@ -110,44 +107,47 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
                 byte compression = hashToCompression.GetValueOrDefault(hash, (byte)0);
                 if (HashMap.ContainsKey(hash)) continue;
                 var entry = new FHoKEntry(this, container, "", hash, compression);
-                if (indexHashes.Contains(hash))
-                {
-                    tasks.Add(Task.Run(() => ProcessIndexFileEntries(entry)));
-                }
-                else
-                {
-                    unknownFiles[hash] = entry;
-                }
+                unknownFiles[hash] = entry;
+
             }
         }
 
-        await Task.WhenAll(tasks).ConfigureAwait(false);
+        var pending = new Queue<(ulong Hash, string BaseDir)>();
 
-        if (unknownFiles.TryGetValue(4965186788785877985, out var uprojectentry))
+        var ngrTreeHash = FHoKFileHash.Compute("/NGR/dirtree.txt", false);
+        if (unknownFiles.ContainsKey(ngrTreeHash))
         {
-            indexHashes.Add(4965186788785877985);
-            ProcessIndexFileEntries(uprojectentry);
+            indexHashes.Add(ngrTreeHash);
+            pending.Enqueue((ngrTreeHash, "NGR"));
         }
 
-        tasks.Clear();
-        foreach (var kvp in unknownFiles)
+        var engineTreeHash = FHoKFileHash.Compute("/Engine/dirtree.txt", false);
+        if (unknownFiles.ContainsKey(engineTreeHash))
         {
-            var hash = kvp.Key;
-            if (indexHashes.Contains(hash) || HashMap.ContainsKey(hash)) continue;
-            var entry = kvp.Value;
+            indexHashes.Add(engineTreeHash);
+            pending.Enqueue((engineTreeHash, "Engine"));
+        }
 
-            var isSmall = entry.Size < 65536;
-            var data = isSmall ? entry.Read() : entry.Read(new FByteBulkDataHeader(EBulkDataFlags.BULKDATA_None, 65536, 65536, 0, FBulkDataCookedIndex.Default));
-            if (entry.Size < 8) continue;
 
-            if ((BitConverter.ToUInt64(data) & 0xffffffffff) is (0x2f52474e2f or 0x69676e452f))
+        var processed = new HashSet<ulong>();
+        while (pending.Count > 0)
+        {
+            (ulong hash, string baseDir) = pending.Dequeue();
+            if (!processed.Add(hash)) continue;
+            if (!unknownFiles.TryGetValue(hash, out var entry)) continue;
+
+            var directories = ProcessIndexFileEntries(entry, baseDir);
+            foreach (var directory in directories)
             {
-                indexHashes.Add(hash);
-                tasks.Add(Task.Run(() => ProcessIndexFileEntries(entry)));
+                var childTreePath = string.Concat(directory, "/dirtree.txt");
+                var childTreeHash = FHoKFileHash.Compute(childTreePath, true);
+                HashMap[childTreeHash] = childTreePath;
+                if (indexHashes.Add(childTreeHash) && unknownFiles.ContainsKey(childTreeHash))
+                {
+                    pending.Enqueue((childTreeHash, directory));
+                }
             }
         }
-
-        await Task.WhenAll(tasks).ConfigureAwait(false);
 
         _ = WriteIndexFileAsync(indexFile);
 
@@ -182,31 +182,37 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
     }
 
-    private static void ProcessIndexFileEntries(FHoKEntry entry)
+    private static List<string> ProcessIndexFileEntries(FHoKEntry entry, string baseDir)
     {
+        List<string> directories = [];
         var data = entry.Read();
+        _indexFiles[entry.Hash] = baseDir + "/dirtree.txt";
         var ind = Array.IndexOf(data, (byte) 0x7c);
-        if (ind == -1) return;
-
-        var indexPath = Encoding.UTF8.GetString(data.AsSpan()[1..ind]);
-        _indexFiles[entry.Hash] = indexPath + "/" + "Index.ind";
-        var span = data.AsSpan()[(ind + 1)..^3];
-        int pos = 0;
+        var span = data.AsSpan(ind != -1 ? ind + 1 : 0);
         while (true)
         {
-            pos = span.IndexOf<byte>(0x2c);
+            var pos = span.IndexOf<byte>(0x2c);
             var infoSpan = pos != -1 ? span[..pos] : span;
             var fileInfo = Encoding.UTF8.GetString(infoSpan);
             var parts = fileInfo.Split(':');
-            if (parts.Length == 3 && int.TryParse(parts[2], out var type) && type == 0)
+            if (parts.Length == 3 && int.TryParse(parts[2], out var type))
             {
-                var path = indexPath + '/' + parts[0];
-                HashMap[FHoKFileHash.Compute(path, true)] = path;
+                var path = string.Concat(baseDir, "/", parts[0]);
+                if (type == 0)
+                {
+                    HashMap[FHoKFileHash.Compute(path, true)] = path;
+                }
+                else if (type == 1)
+                {
+                    directories.Add(path);
+                }
             }
 
             if (pos == -1) break;
             span = span[(pos + 1)..];
         }
+
+        return directories;
     }
 
     private void ReadIndex(StringComparer pathComparer)
@@ -239,7 +245,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
                     }
 
 #if !DEBUG
-                    if (!path.EndsWith("ind", StringComparison.OrdinalIgnoreCase))
+                    if (!path.EndsWith("ind", StringComparison.OrdinalIgnoreCase) && !path.EndsWith("dirtree.txt", StringComparison.OrdinalIgnoreCase))
 #endif
                     {
                         var entry = new FHoKEntry(this, container, path, hash, compression);

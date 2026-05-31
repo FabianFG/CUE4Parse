@@ -102,6 +102,6 @@ public partial class MeshLodDto<TVertex>
             }
         });
 
-        return new MeshLodDto<MeshVertex>(owner, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
+        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
     }
 }

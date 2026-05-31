@@ -121,7 +121,7 @@ public class ActorXMesh
 
         if (Options.ExportMorphTargets && mesh is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
-            ExportMorphTargets(morphTargets, lod, share, lodIndex);
+            ExportMorphTargets(morphTargets, lod, share);
         }
     }
 
@@ -309,7 +309,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod, CVertexShare share, int lodIndex) where TVertex : struct, IMeshVertex
+    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
     {
         var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
         Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
@@ -318,10 +318,10 @@ public class ActorXMesh
         for (var i = 0; i < morphTargets.Length; i++)
         {
             var morphTarget = morphTargets[i].Load<UMorphTarget>();
-            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex)
+            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lod.SourceLodIndex)
                 continue;
 
-            var morphModel = morphTarget.MorphLODModels[lodIndex];
+            var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
             var morphVertCount = 0;
             var localMorphDeltas = new List<VMorphData>();
             for (var j = 0; j < morphModel.Vertices.Length; j++)

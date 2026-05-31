@@ -130,9 +130,105 @@ public static class PlatformDeswizzlers
         return output;
     }
 
+    // https://github.com/Shadowth117/DrSwizzler/blob/main/Swizzling/PS5Swizzler.cs
+    // Based on RawTex implementation
+    public static byte[] DeswizzlePS5(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
+    {
+        var width = mip.SizeX;
+        var height = mip.SizeY;
+
+        int sourceBytesPerPixelSet = formatInfo.BlockBytes;
+        int pixelBlockSize = formatInfo.BlockSizeX;
+        int formatBpp = sourceBytesPerPixelSet * 8 / (pixelBlockSize * pixelBlockSize);
+
+        int calculatedBufferSize = formatBpp * width * height / 8;
+        var outBuffer = new byte[Math.Max(calculatedBufferSize, data.Length)];
+        var tempBuffer = new byte[sourceBytesPerPixelSet];
+
+        int verticalBlockCount = height / pixelBlockSize;
+        int horizontalBlockCount = width / pixelBlockSize;
+
+        int num7 = sourceBytesPerPixelSet switch
+        {
+            16 => 1,
+            8 => 2,
+            4 => 4,
+            _ => 1
+        };
+
+        int streamPos = 0;
+        if (pixelBlockSize == 1)
+        {
+            for (int index1 = 0; index1 < (verticalBlockCount + 127) / 128; ++index1)
+            {
+                for (int index2 = 0; index2 < (horizontalBlockCount + 127) / 128; ++index2)
+                {
+                    for (int t = 0; t < 512; ++t)
+                    {
+                        int pixelIndex = Morton(t, 32, 16);
+                        int num9 = pixelIndex % 32;
+                        int num10 = pixelIndex / 32;
+
+                        for (int index3 = 0; index3 < 32 && streamPos + 0x10 < data.Length; ++index3)
+                        {
+                            Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
+
+                            int xBlock = index2 * 128 + num9 * 4 + index3 % 4;
+                            int yBlock = index1 * 128 + num10 * 8 + index3 / 4;
+
+                            if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
+                            {
+                                int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
+                                Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                            }
+
+                            streamPos += sourceBytesPerPixelSet;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int index1 = 0; index1 < (verticalBlockCount + 63) / 64; ++index1)
+            {
+                for (int index2 = 0; index2 < (horizontalBlockCount + 63) / 64; ++index2)
+                {
+                    for (int t = 0; t < 256 / num7; ++t)
+                    {
+                        int pixelIndex = Morton(t, 16, 16 / num7);
+                        int num9 = pixelIndex / 16;
+                        int num10 = pixelIndex % 16;
+
+                        for (int index3 = 0; index3 < 16; ++index3)
+                        {
+                            for (int index4 = 0; index4 < num7 && streamPos + 0x10 < data.Length; ++index4)
+                            {
+                                Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
+
+                                int xBlock = index2 * 64 + (num9 * 4 + index3 / 4) * num7 + index4;
+                                int yBlock = index1 * 64 + num10 * 4 + index3 % 4;
+
+                                if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
+                                {
+                                    int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
+                                    Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                                }
+
+                                streamPos += sourceBytesPerPixelSet;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return outBuffer;
+    }
+
     // https://github.com/tge-was-taken/GFD-Studio/blob/master/GFDLibrary/Textures/Swizzle/PS4SwizzleAlgorithm.cs
-    // Used for both Xbox and Playstation textures
-    public static byte[] DeswizzleXBPS(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
+    // Used for both Xbox and Playstation 4 textures
+    public static byte[] DeswizzleXBPS4(byte[] data, FTexture2DMipMap mip, FPixelFormatInfo formatInfo)
     {
         var outData = new byte[data.Length];
 

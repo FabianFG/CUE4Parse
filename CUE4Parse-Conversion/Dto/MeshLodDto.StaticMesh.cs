@@ -8,7 +8,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
+    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, uint sourceLodIndex, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
     {
         ArgumentNullException.ThrowIfNull(lod.IndexBuffer?.Buffer, "LOD has no index buffer");
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
@@ -56,6 +56,6 @@ public partial class MeshLodDto<TVertex>
             sections[i] = new MeshSectionDto(lod.Sections[i]);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
+        return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
     }
 }

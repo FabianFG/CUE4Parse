@@ -64,16 +64,17 @@ public class Gltf
             if (options.ExportMorphTargets && mesh.MorphTargets is { Length: > 0 } morphTargets)
             {
                 var targetNames = "{\"targetNames\": [";
-                for (var j = 0; i < morphTargets.Length; j++)
+                for (var j = 0; j < morphTargets.Length; j++)
                 {
                     var morphTarget = morphTargets[j].Load<UMorphTarget>();
-                    if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < i || i == -1)
+                    if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lod.SourceLodIndex)
                         continue;
+
                     var morphBuilder = meshBuilder.UseMorphTarget(j);
-                    var morphModel = morphTarget.MorphLODModels[i];
+                    var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
 
                     targetNames += $"\"{morphTarget.Name}\"";
-                    targetNames += j != morphTargets.Length-1 ? "," : "";
+                    targetNames += j != morphTargets.Length - 1 ? "," : "";
 
                     var verts = morphBuilder.Vertices.ToArray();
                     foreach (var delta in morphModel.Vertices)

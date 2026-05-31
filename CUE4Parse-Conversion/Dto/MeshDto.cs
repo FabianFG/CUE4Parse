@@ -135,7 +135,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     private void ParseMeshRenderData(FStaticMeshRenderData renderData, USplineMeshComponent? spline = null)
     {
-        for (var i = 0; i < renderData.LODs!.Length; i++)
+        for (var i = 0u; i < renderData.LODs!.Length; i++)
         {
             if (renderData.LODs[i].SkipLod) continue;
 
@@ -145,7 +145,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
                 screenSize = renderData.ScreenSize[i];
             }
 
-            LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, renderData.LODs[i], screenSize, spline));
+            LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, i, renderData.LODs[i], screenSize, spline));
         }
     }
 
@@ -267,10 +267,10 @@ public sealed class SkeletalMeshDto : SkeletonDto
         MorphTargets = mesh.MorphTargets;
         AssetUserData = mesh.AssetUserData;
 
-        for (var i = 0; i < mesh.LODModels.Length; i++)
+        for (var i = 0u; i < mesh.LODModels.Length; i++)
         {
             if (mesh.LODModels[i].SkipLod) continue;
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, i, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
         }
     }
 

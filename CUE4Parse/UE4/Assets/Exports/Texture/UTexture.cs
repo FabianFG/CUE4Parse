@@ -28,6 +28,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
+    public ETextureCookPlatformTilingSettings CookPlatformTilingSettings { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
@@ -72,6 +73,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
+        CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
 
         var stripFlags = new FStripDataFlags(Ar);
 
@@ -212,7 +214,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             for (var i = 0; i < vt.NumMips; i++)
             {
                 var tileOffsetData = vt.GetTileOffsetData(i);
-                if ((tileOffsetData.Width * tileSize <= maxXSize || tileOffsetData.Height * tileSize <= maxYSize))
+                if (tileOffsetData.Width * tileSize <= maxXSize || tileOffsetData.Height * tileSize <= maxYSize)
                     return i;
 
             }

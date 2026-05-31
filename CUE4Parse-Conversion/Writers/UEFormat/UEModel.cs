@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Writers.UEFormat;
@@ -68,7 +69,7 @@ public sealed class UEModel : UEFormatExport
                 var lod = mesh.LODs[i];
                 using var subLodChunk = new FStaticDataChunk($"LOD{i}");
                 SerializeCommonMeshData(subLodChunk, lod);
-                SerializeSkeletalMeshData(subLodChunk, mesh, i, options.ExportMorphTargets);
+                SerializeSkeletalMeshData(subLodChunk, lod, options.ExportMorphTargets ? mesh.MorphTargets : null);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
@@ -177,13 +178,13 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    private void SerializeSkeletalMeshData(FArchiveWriter archive, SkeletalMeshDto mesh, int lodIndex, bool exportMorphTargets)
+    private void SerializeSkeletalMeshData(FArchiveWriter archive, MeshLodDto<SkinnedMeshVertex> lod, FPackageIndex[]? morphTargets)
     {
         using (var weightsChunk = new FDataChunk("WEIGHTS"))
         {
-            for (var vertexIndex = 0; vertexIndex < mesh.LODs[lodIndex].Vertices.Length; vertexIndex++)
+            for (var vertexIndex = 0; vertexIndex < lod.Vertices.Length; vertexIndex++)
             {
-                var vert = mesh.LODs[lodIndex].Vertices[vertexIndex];
+                var vert = lod.Vertices[vertexIndex];
 
                 foreach (var influence in vert.Influences)
                 {
@@ -197,15 +198,15 @@ public sealed class UEModel : UEFormatExport
             weightsChunk.Serialize(archive);
         }
 
-        if (exportMorphTargets && mesh.MorphTargets is { Length: > 0 })
+        if (morphTargets is { Length: > 0 })
         {
             using var morphTargetsChunk = new FDataChunk("MORPHTARGETS");
-            foreach (var morphTarget in mesh.MorphTargets)
+            foreach (var morphTarget in morphTargets)
             {
                 var morph = morphTarget.Load<UMorphTarget>();
-                if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length) continue;
+                if (morph?.MorphLODModels is null || lod.SourceLodIndex >= morph.MorphLODModels.Length) continue;
 
-                var morphLod = morph.MorphLODModels[lodIndex];
+                var morphLod = morph.MorphLODModels[lod.SourceLodIndex];
 
                 var morphData = new FMorphTarget(morph.Name, morphLod);
                 morphData.Serialize(morphTargetsChunk);

@@ -33,12 +33,11 @@ public class UsdMeshFormat : IMeshExportFormat
             var suffix = i == 0 ? null : $"_LOD{i}";
             var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
-            root.Add(lodPrim);
-
             if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
             {
-                AddBlendShapes(lodPrim, morphTargets, i);
+                AddBlendShapes(lodPrim, morphTargets, dto.LODs[i].SourceLodIndex);
             }
+            root.Add(lodPrim);
 
             var stage = new UsdStage(root);
             results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
@@ -134,7 +133,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return scope;
     }
 
-    private void AddBlendShapes(UsdPrim meshPrim, FPackageIndex[] morphTargets, int lodIndex)
+    private void AddBlendShapes(UsdPrim meshPrim, FPackageIndex[] morphTargets, uint sourceLodIndex)
     {
         var blendShapeNames = new List<UsdValue>();
         var blendShapeTargetPrims = new List<UsdPrim>();
@@ -143,9 +142,9 @@ public class UsdMeshFormat : IMeshExportFormat
         foreach (var ptr in morphTargets)
         {
             var morph = ptr.Load<UMorphTarget>();
-            if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length) continue;
+            if (morph?.MorphLODModels is null || sourceLodIndex >= morph.MorphLODModels.Length) continue;
 
-            var morphLod = morph.MorphLODModels[lodIndex];
+            var morphLod = morph.MorphLODModels[sourceLodIndex];
             if (morphLod.Vertices is not { Length: > 0 } vertices) continue;
 
             var blendShape = UsdPrim.Def("BlendShape", morph.Name);
