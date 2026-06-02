@@ -17,6 +17,8 @@ namespace CUE4Parse.UE4.Assets;
 [JsonConverter(typeof(PackageConverter))]
 public abstract class AbstractUePackage : UObject, IPackage
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<AbstractUePackage>();
+    
     public IFileProvider? Provider { get; }
     public TypeMappings? Mappings => Provider?.MappingsForGame;
 

@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FInstancedStructConverter))]
 public class FInstancedStruct : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FEditorBulkData>();
+    
     public FStructFallback NonConstStruct => NonConstIUSturct as FStructFallback ?? new FStructFallback();
     public readonly IUStruct? NonConstIUSturct;
     public readonly string? StringData;

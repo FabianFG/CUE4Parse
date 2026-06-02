@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
 public class UDataTable : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UDataTable>();
+    
     public Dictionary<FName, FStructFallback> RowMap { get; protected set; }
     public string? RowStructName { get; protected set; } // Set by inheritor or during deserialization
 

@@ -8,6 +8,8 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2MapDataFile : FAion2DataFile
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FAion2MapDataFile>();
+    
     public FAion2MapDataFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();

@@ -18,12 +18,15 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
+using Serilog;
 using static CUE4Parse.Compression.Compression;
 
 namespace CUE4Parse.GameTypes.AshEchoes.FileProvider;
 
 public class AEDefaultFileProvider : DefaultFileProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<AEDefaultFileProvider>();
+    
     public AEDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null,
         StringComparer? pathComparer = null) : base(directory, searchOption, versions, pathComparer)
     {

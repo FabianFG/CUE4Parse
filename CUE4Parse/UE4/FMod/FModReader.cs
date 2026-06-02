@@ -21,6 +21,8 @@ namespace CUE4Parse.UE4.FMod;
 [JsonConverter(typeof(FModConverter))]
 public class FModReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FModReader>();
+    
     public readonly string BankName;
     public static int Version => FormatInfo.FileVersion;
     public static FFormatInfo FormatInfo;

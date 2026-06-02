@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UStruct : UField
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UStruct>();
+    
     public FPackageIndex SuperStruct;
     public FPackageIndex[] Children;
     public FField[] ChildProperties;

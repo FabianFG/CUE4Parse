@@ -10,6 +10,8 @@ namespace CUE4Parse_Conversion.Textures.BC;
 
 public static class DetexHelper
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(DetexHelper));
+    
     private const string MANIFEST_URL = "CUE4Parse_Conversion.Resources.Detex.dll";
     public const string DLL_NAME = "Detex.dll";
 

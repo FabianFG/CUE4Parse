@@ -42,6 +42,8 @@ public class UVAL_PremiumItemAsset : UPrimaryDataAsset
 
 public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FVAL_CharacterCustomizationVariantOptionsArray>();
+    
     public FPackageIndex OptionStruct;
     public IUStruct[] Options = [];
     public FVAL_CharacterCustomizationVariantOptionsArray(FAssetArchive Ar)

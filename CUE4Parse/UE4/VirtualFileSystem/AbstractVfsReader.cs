@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 {
     public abstract partial class AbstractVfsReader : IVfsReader
     {
-        protected static readonly ILogger Log = Serilog.Log.ForContext<AbstractVfsReader>();
+        private static readonly ILogger Log = Serilog.Log.ForContext<AbstractVfsReader>();
 
         public string Path { get; }
         public string Name { get; }

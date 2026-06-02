@@ -42,6 +42,11 @@ public enum ExportType
 
 public static class Exporter
 {
+    private static readonly ILogger Log = new LoggerConfiguration()
+        .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
+        .CreateLogger()
+        .ForContext(typeof(Exporter));
+    
     private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
     private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
     private const string _mapping = "./++Fortnite+Release-33.20-CL-39082670-Windows_oo.usmap";
@@ -52,8 +57,6 @@ public static class Exporter
 
     private static void Export(ExportType type)
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
-
         ZlibHelper.Initialize();
         OodleHelper.Initialize();
 

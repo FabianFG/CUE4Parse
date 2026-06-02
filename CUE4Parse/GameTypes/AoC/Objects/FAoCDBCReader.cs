@@ -29,6 +29,8 @@ public struct FAoCDataChunk
 [JsonConverter(typeof(FAoCDBCReaderConverter))]
 public sealed class FAoCDBCReader : FAssetArchive
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FAoCDBCReader>();
+    
     private Dictionary<int, string> NameMap = [];
     public FAoCDataChunk[] Chunks = [];
 

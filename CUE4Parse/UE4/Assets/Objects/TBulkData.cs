@@ -18,6 +18,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<TBulkData<T>>();
+    
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 

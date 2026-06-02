@@ -40,6 +40,8 @@ public enum EFlags
 
 public class FEditorBulkData
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FEditorBulkData>();
+    
     public EFlags Flags { get; set; }
     public FGuid BulkDataId { get; set; }
     public FSHAHash PayloadContentId { get; set; }

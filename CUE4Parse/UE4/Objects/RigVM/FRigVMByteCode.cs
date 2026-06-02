@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.Objects.RigVM;
 
 public class FRigVMByteCode
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FRigVMByteCode>();
+    
     public List<IRigInstruction> Instructions = [];
     public string[] Entries = [];
     public FRigVMBranchInfo[] BranchInfos = [];

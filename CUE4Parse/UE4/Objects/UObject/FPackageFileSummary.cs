@@ -1,7 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
-using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -35,6 +33,8 @@ namespace CUE4Parse.UE4.Objects.UObject
     [JsonConverter(typeof(FPackageFileSummaryConverter))]
     public class FPackageFileSummary
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<FPackageFileSummary>();
+        
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7

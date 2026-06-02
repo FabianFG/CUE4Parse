@@ -47,6 +47,8 @@ public readonly struct Chunk(FNGRLuaArchive Ar, int chunkSize)
 
 public class NGRLuaReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<NGRLuaReader>();
+    
     private const uint NGR_LUA_MAGIC = 0xFADEFACE;
 
     public FadeFaceHeader Header;

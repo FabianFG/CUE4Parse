@@ -1,15 +1,17 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 using CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 using CUE4Parse.UE4.Readers;
+using Serilog;
 
 namespace CUE4Parse.UE4.Objects.NavigationSystem.NavMesh;
 
 public class URecastNavMeshDataChunk : Assets.Exports.UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<URecastNavMeshDataChunk>();
+    
     public ENavMeshVersion NavMeshVersion;
     public FRecastTileData[] Tiles = [];
 

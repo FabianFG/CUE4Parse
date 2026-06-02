@@ -6,6 +6,8 @@ namespace CUE4Parse.UE4.FMod.Metadata;
 
 public readonly struct FFormatInfo
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FFormatInfo>();
+    
     public readonly int FileVersion;
     public readonly int CompatVersion;
 

@@ -18,6 +18,8 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [JsonConverter(typeof(FSoftObjectPathConverter))]
 public readonly struct FSoftObjectPath : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FSoftObjectPath>();
+    
     /** Asset path, patch to a top level object in a package. This is /package/path.assetname */
     public readonly FName AssetPathName;
     /** Optional FString for subobject within an asset. This is the sub path after the : */

@@ -79,6 +79,8 @@ public static class FPropertyTypeNameUtils
 
 public class FPropertyTag
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FPropertyTag>();
+    
     public FName Name;
     public FName PropertyType;
     public int Size;

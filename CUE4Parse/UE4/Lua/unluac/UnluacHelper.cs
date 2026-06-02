@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Lua.unluac;
 
 public static class UnluacHelper
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(UnluacHelper));
+    
     public const uint LuaMagic = 0x61754c1B;
     private const string _currentVersion = "1.0.0";
 

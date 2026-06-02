@@ -30,6 +30,8 @@ namespace CUE4Parse_Conversion.Meshes;
 
 public static class MeshConverter
 {
+    private static ILogger Log = Serilog.Log.ForContext(typeof(MeshConverter));
+    
     public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones, out FBox box)
     {
         bones = new List<CSkelMeshBone>();

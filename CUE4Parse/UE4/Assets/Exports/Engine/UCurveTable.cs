@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
 {
     public class UCurveTable : UObject
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<UCurveTable>();
+        
         public Dictionary<FName, FStructFallback> RowMap { get; private set; } // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
         public ECurveTableMode CurveTableMode { get; private set; }
 
