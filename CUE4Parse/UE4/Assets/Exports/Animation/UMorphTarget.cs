@@ -25,18 +25,13 @@ public class UMorphTarget : UObject
             return;
         }
 
-        if (Ar.Game == EGame.GAME_MortalKombat1)
-        {
-            Ar.Position += 38;
-            return;
-        }
-
         var stripFlags = new FStripDataFlags(Ar);
         if (stripFlags.IsAudioVisualDataStripped())
             return;
 
         var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_NevernessToEverness) bCooked = Ar.ReadBoolean();
+        if (Ar.Game == EGame.GAME_MortalKombat1) Ar.SkipFixedArray(4);
 
         MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
 

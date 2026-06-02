@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
@@ -17,10 +16,10 @@ public readonly struct AkBankHeader
     public readonly EAltValues AltValues;
     public readonly uint ProjectId;
     public readonly EAkBankTypeEnum SoundBankType;
-    public readonly byte[] BankHash;
+    public readonly byte[] BankHash = [];
 
     // CAkBankMgr::ProcessBankHeader
-    public AkBankHeader(FArchive Ar, int sectionLength)
+    public AkBankHeader(FWwiseArchive Ar, int sectionLength)
     {
         Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, support for versions < 100 isn't needed anyway
         SoundBankId = Ar.Read<uint>();
@@ -74,7 +73,7 @@ public readonly struct AkBankHeader
     }
 }
 
-public readonly struct FAKPKHeader(FArchive Ar)
+public readonly struct FAKPKHeader(FWwiseArchive Ar)
 {
     public readonly bool Endianness = Ar.ReadBoolean();
     public readonly uint NamesSectionLength = Ar.Read<uint>();
@@ -82,7 +81,7 @@ public readonly struct FAKPKHeader(FArchive Ar)
     public readonly uint SoundsSectionLength = Ar.Read<uint>();
     public readonly uint ExternalSoundsSectionLength = Ar.Read<uint>();
 
-    public readonly long NamesOffset => 28; // sectionHeader + sizeof(FAKPKHeader)
+    public static long NamesOffset => 28; // sectionHeader + sizeof(FAKPKHeader)
     public readonly long BanksOffset => NamesOffset + NamesSectionLength;
     public readonly long WemsOffset => BanksOffset + BanksSectionLength;
     public readonly long ExternalWemsOffset => WemsOffset + SoundsSectionLength;

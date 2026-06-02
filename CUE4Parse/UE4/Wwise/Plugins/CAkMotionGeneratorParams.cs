@@ -1,12 +1,11 @@
 using System;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkMotionGeneratorParams(FArchive Ar) : IAkPluginParam
+public class CAkMotionGeneratorParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkMotionGeneratorParams Params = new AkMotionGeneratorParams(Ar);
+    public AkMotionGeneratorParams Params = new(Ar);
 }
 
 public struct AkMotionGeneratorParams
@@ -23,7 +22,7 @@ public struct AkMotionGeneratorParams
     public ushort m_eDurationType;
     public CAkConversionTable[] m_Curves;
 
-    public AkMotionGeneratorParams(FArchive Ar)
+    public AkMotionGeneratorParams(FWwiseArchive Ar)
     {
         m_fPeriod = Ar.Read<float>();
         m_fPeriodMultiplier = Ar.Read<float>();

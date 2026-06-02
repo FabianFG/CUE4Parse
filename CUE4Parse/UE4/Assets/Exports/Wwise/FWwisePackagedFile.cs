@@ -59,21 +59,21 @@ public class FWwisePackagedFile : FStructFallback
         if (PackagingStrategy is EWwisePackagingStrategy.BulkData)
         {
             var bulkData = new FByteBulkData(Ar);
-            if (bulkData.Data is null) return;
+            if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
             try
             {
-                using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
+                using var reader = new FWwiseArchive(dataAr);
                 BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
             }
             // i know it's ugly, but i don't see other solution without rewriting everything
-            catch (RIFFSectionSizeException e)
+            catch (RIFFSectionSizeException)
             {
                 if (bulkData.TryCombineBulkData(Ar, out var combinedData, out var fullBulkData))
                 {
                     try
                     {
-                        using var reader = new FByteArchive("AkAssetData", combinedData, Ar.Versions);
+                        using var reader = new FWwiseArchive("AkAssetData", combinedData, Ar.Versions);
                         if (fullBulkData != null)
                             BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, fullBulkData));
                         else

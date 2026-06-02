@@ -1,24 +1,23 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkRoomVerbFXParams(FArchive Ar) : IAkPluginParam
+public class CAkRoomVerbFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkRoomVerbFXParams Params = new AkRoomVerbFXParams(Ar);
+    public AkRoomVerbFXParams Params = new(Ar);
 }
 
-public struct AkRoomVerbFXParams(FArchive Ar)
+public struct AkRoomVerbFXParams(FWwiseArchive Ar)
 {
-    public AkRoomVerbRTPCParams RTPCParams = new AkRoomVerbRTPCParams(Ar);
-    public AkRoomVerbInvariantParams InvariantParams = new AkRoomVerbInvariantParams(Ar);
+    public AkRoomVerbRTPCParams RTPCParams = new(Ar);
+    public AkRoomVerbInvariantParams InvariantParams = new(Ar);
     public AkRoomVerbAlgoTunings AlgoTunings = Ar.Read<AkRoomVerbAlgoTunings>();
 }
 
-public struct AkRoomVerbRTPCParams(FArchive Ar)
+public struct AkRoomVerbRTPCParams(FWwiseArchive Ar)
 {
     public float DecayTime = Ar.Read<float>();
     public float HFDamping = Ar.Read<float>();
@@ -42,7 +41,7 @@ public struct AkRoomVerbRTPCParams(FArchive Ar)
     public float ReverbLevel = (float) Math.Pow(10f, Ar.Read<float>() * 0.05 - 0.15);
 }
 
-public struct AkRoomVerbInvariantParams(FArchive Ar)
+public struct AkRoomVerbInvariantParams(FWwiseArchive Ar)
 {
     public bool bEnableEarlyReflections = Ar.Read<byte>() != 0;
     public uint ERPattern = Ar.Read<uint>();

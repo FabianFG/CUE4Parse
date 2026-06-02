@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
@@ -16,7 +15,7 @@ public class HierarchySwitchContainer : BaseHierarchy
     public readonly AkSwitchParams[] SwitchParams;
 
     // CAkSwitchCntr::SetInitialValues
-    public HierarchySwitchContainer(FArchive Ar) : base(Ar)
+    public HierarchySwitchContainer(FWwiseArchive Ar) : base(Ar)
     {
         GroupType = Ar.Read<EAkGroupType>();
         GroupId = Ar.Read<uint>();

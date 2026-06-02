@@ -1,12 +1,10 @@
-using System.Text;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkRecorderADMFXParams(FArchive Ar) : IAkPluginParam
+public class CAkRecorderADMFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkRecorderADMFXParams Params = new AkRecorderADMFXParams(Ar);
+    public AkRecorderADMFXParams Params = new(Ar);
 }
 
 public struct AkRecorderADMFXParams{
@@ -19,7 +17,7 @@ public struct AkRecorderADMFXParams{
     public bool Hold;
     public string GameFilename;
 
-    public AkRecorderADMFXParams(FArchive Ar)
+    public AkRecorderADMFXParams(FWwiseArchive Ar)
     {
         Profile = Ar.Read<short>();
         ChannelCount = Ar.Read<short>();
@@ -28,6 +26,6 @@ public struct AkRecorderADMFXParams{
         PreserveExtraBeds = Ar.Read<byte>() != 0;
         ApplyDownstreamVolume = Ar.Read<byte>() != 0;
         Hold = Ar.Read<byte>() != 0;
-        GameFilename = WwiseReader.ReadStzString(Ar);
+        GameFilename = Ar.ReadStzString();
     }
 }

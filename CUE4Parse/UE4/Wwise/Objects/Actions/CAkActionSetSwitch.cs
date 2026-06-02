@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public struct CAkActionSetSwitch
@@ -8,7 +6,7 @@ public struct CAkActionSetSwitch
     public readonly uint SwitchStateId;
 
     // CAkActionSetSwitch::SetActionParams
-    public CAkActionSetSwitch(FArchive Ar)
+    public CAkActionSetSwitch(FWwiseArchive Ar)
     {
         SwitchGroupId = Ar.Read<uint>();
         SwitchStateId = Ar.Read<uint>();

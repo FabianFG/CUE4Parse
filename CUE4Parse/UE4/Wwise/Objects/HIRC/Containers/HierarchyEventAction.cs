@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.Actions;
 using Newtonsoft.Json;
@@ -16,7 +15,7 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly AkPropBundle PropBundle;
     public readonly object? ActionData;
 
-    public HierarchyEventAction(FArchive Ar) : base(Ar)
+    public HierarchyEventAction(FWwiseArchive Ar) : base(Ar)
     {
         EventActionScope = Ar.Read<EAkActionScope>();
         EventActionType = Ar.Read<EAkActionType>();
@@ -25,7 +24,7 @@ public class HierarchyEventAction : AbstractHierarchy
 
         PropBundle = new AkPropBundle(Ar);
 
-        ActionData = (EventActionType, WwiseVersions.Version) switch
+        ActionData = (EventActionType, Ar.Version) switch
         {
             (EAkActionType.Play, _) => new CAkActionPlay(Ar),
             (EAkActionType.Stop, _) => new CAkActionStop(Ar),
@@ -53,7 +52,8 @@ public class HierarchyEventAction : AbstractHierarchy
             (EAkActionType.Pause, _) => new CAkActionPause(Ar),
             (EAkActionType.Break or
                 EAkActionType.Trigger, < 150) => new CAkActionBypassFX(Ar),
-            (EAkActionType.SetBypassEffectSlot or EAkActionType.SetBypassAllEffects, _) => new CAkActionBypassFX(Ar),
+            (EAkActionType.SetBypassEffectSlot or EAkActionType.SetBypassAllEffects or
+                EAkActionType.ResetBypassEffectSlot or EAkActionType.ResetBypassEffects, _) => new CAkActionBypassFX(Ar),
             // TODO: add all action types
             _ => null,
         };
@@ -67,7 +67,7 @@ public class HierarchyEventAction : AbstractHierarchy
         writer.WriteValue(EventActionScope.ToString());
 
         writer.WritePropertyName(nameof(EventActionType));
-        writer.WriteValue(EventActionType.ToVersionString());
+        writer.WriteValue(EventActionType.ToVersionString(WwiseConverter.WwiseVersion.Value));
 
         if (ReferencedId != 0)
         {

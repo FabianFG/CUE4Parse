@@ -175,9 +175,9 @@ public enum EEventActionType_v72_to_v150 : byte
 
 public static class EventActionTypeExtensions
 {
-    public static string ToVersionString(this EAkActionType actionType)
+    public static string ToVersionString(this EAkActionType actionType, uint version)
     {
-        return WwiseVersions.Version switch
+        return version switch
         {
             < 150 => ((EEventActionType_v72_to_v150) (byte) actionType).ToString(),
             _ => actionType.ToString()

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -12,9 +11,9 @@ public class HierarchyEvent : AbstractHierarchy
     public readonly uint[] EventActionIds;
 
     // CAkEvent::SetInitialValues
-    public HierarchyEvent(FArchive Ar) : base(Ar)
+    public HierarchyEvent(FWwiseArchive Ar) : base(Ar)
     {
-        if (WwiseVersions.Version > 154)
+        if (Ar.Version > 154)
         {
             LimitScope = Ar.Read<byte>();
             InstanceLimit = Ar.Read<ushort>();
@@ -22,13 +21,13 @@ public class HierarchyEvent : AbstractHierarchy
         }
 
         int eventActionCount;
-        if (WwiseVersions.Version <= 122)
+        if (Ar.Version <= 122)
         {
             eventActionCount = (int) Ar.Read<uint>();
         }
         else
         {
-            eventActionCount = WwiseReader.Read7BitEncodedIntBE(Ar);
+            eventActionCount = Ar.Read7BitEncodedIntBE();
         }
         EventActionIds = Ar.ReadArray<uint>(eventActionCount);
     }
@@ -37,7 +36,7 @@ public class HierarchyEvent : AbstractHierarchy
     {
         writer.WriteStartObject();
 
-        if (WwiseVersions.Version > 154)
+        if (WwiseConverter.WwiseVersion.Value > 154)
         {
             writer.WritePropertyName(nameof(LimitScope));
             writer.WriteValue(LimitScope);

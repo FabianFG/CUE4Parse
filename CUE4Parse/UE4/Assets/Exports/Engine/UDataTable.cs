@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
 public class UDataTable : UObject
 {
-    public Dictionary<FName, FStructFallback> RowMap { get; private set; }
+    public Dictionary<FName, FStructFallback> RowMap { get; protected set; }
     public string? RowStructName { get; protected set; } // Set by inheritor or during deserialization
 
     public override void Deserialize(FAssetArchive Ar, long validPos)

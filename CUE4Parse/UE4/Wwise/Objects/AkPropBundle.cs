@@ -1,15 +1,14 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public readonly struct AkPropBundle(FArchive Ar)
+public readonly struct AkPropBundle(FWwiseArchive Ar)
 {
     public readonly AkProp[] Props = ReadSequentialAkProp(Ar);
     public readonly AkPropRange[] PropRanges = ReadSequentialAkPropRange(Ar);
 
-    public static AkProp[] ReadSequentialAkProp(FArchive Ar)
+    public static AkProp[] ReadSequentialAkProp(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
         var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
@@ -21,7 +20,7 @@ public readonly struct AkPropBundle(FArchive Ar)
         return props;
     }
 
-    public static AkPropRange[] ReadSequentialAkPropRange(FArchive Ar)
+    public static AkPropRange[] ReadSequentialAkPropRange(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
         var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
@@ -62,7 +61,7 @@ public struct AkUnionValue
 
     public AkUnionValue(uint val) : this() => u32 = val;
 
-    public static AkUnionValue Read(FArchive Ar)
+    public static AkUnionValue Read(FWwiseArchive Ar)
     {
         uint raw = Ar.Read<uint>();
         return new AkUnionValue(raw);

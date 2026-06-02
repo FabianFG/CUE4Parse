@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
@@ -46,6 +47,7 @@ public partial class PakFileReader
             Decompress(compressed, 0, blockSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
             uncompressedOff += (int) pakEntry.CompressionBlockSize;
         }
+
         if (pakEntry.Extension == "ini" && BitConverter.ToUInt64(uncompressed, 0) == 0x4b4457585d5d5b7d)
         {
             for (var i = 0; i < uncompressed.Length; i++)
@@ -53,6 +55,10 @@ public partial class PakFileReader
                 uncompressed[i] ^= GameForPeaceIniDecrypt[i % GameForPeaceIniDecrypt.Length];
             }
         }
+
+        if (pakEntry.Extension is "lua")
+            return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+
         return uncompressed;
     }
 

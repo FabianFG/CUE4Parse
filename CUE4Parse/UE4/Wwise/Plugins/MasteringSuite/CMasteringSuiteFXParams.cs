@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
 
-public class CMasteringSuiteFXParams(FArchive Ar) : IAkPluginParam
+public class CMasteringSuiteFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public MasteringSuiteFXParams Params = new MasteringSuiteFXParams(Ar);
 }
 
-public struct MasteringSuiteFXParams(FArchive Ar)
+public struct MasteringSuiteFXParams(FWwiseArchive Ar)
 {
     public bool[] moduleBypassFlags = Ar.ReadArray(4, () => Ar.Read<byte>() != 0);
     public SceAudioOut2MasteringParamEqParamsV2 paramEqParams = new SceAudioOut2MasteringParamEqParamsV2(Ar);
@@ -26,7 +25,7 @@ public struct SceAudioOut2MasteringParamEqFilterParams
     public float resonance;
 };
 
-public struct SceAudioOut2MasteringParamEqParamsV2(FArchive Ar)
+public struct SceAudioOut2MasteringParamEqParamsV2(FWwiseArchive Ar)
 {
     public uint numBands = Ar.Read<uint>();
     public bool[] m_eqBandsBypassFlags = Ar.ReadArray(6, () => Ar.Read<byte>() != 0);
@@ -44,7 +43,7 @@ public struct SceAudioOut2MasteringCompressorBandParams
     public float knee;
 };
 
-public struct SceAudioOut2MasteringCompressorParamsV2(FArchive Ar)
+public struct SceAudioOut2MasteringCompressorParamsV2(FWwiseArchive Ar)
 {
     public uint numBands = Ar.Read<uint>();
     public uint linkMode = Ar.Read<uint>();
@@ -55,7 +54,7 @@ public struct SceAudioOut2MasteringCompressorParamsV2(FArchive Ar)
     public SceAudioOut2MasteringCompressorBandParams[] bandParams = Ar.ReadArray<SceAudioOut2MasteringCompressorBandParams>(4);
 };
 
-public struct SceAudioOut2MasteringLimiterParamsV2(FArchive Ar)
+public struct SceAudioOut2MasteringLimiterParamsV2(FWwiseArchive Ar)
 {
     public uint mode = Ar.Read<uint>();
     public float threshold = Ar.Read<float>();

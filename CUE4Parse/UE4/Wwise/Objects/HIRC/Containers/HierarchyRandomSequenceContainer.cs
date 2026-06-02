@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
@@ -22,17 +21,17 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public readonly AkPlayListItem[] Playlist;
 
     // CAkRanSeqCntr::SetInitialValues
-    public HierarchyRandomSequenceContainer(FArchive Ar) : base(Ar)
+    public HierarchyRandomSequenceContainer(FWwiseArchive Ar) : base(Ar)
     {
         LoopCount = Ar.Read<ushort>();
 
-        if (WwiseVersions.Version > 72)
+        if (Ar.Version > 72)
         {
             LoopModMin = Ar.Read<ushort>();
             LoopModMax = Ar.Read<ushort>();
         }
 
-        if (WwiseVersions.Version <= 38)
+        if (Ar.Version <= 38)
         {
             TransitionTime = Ar.Read<int>();
             TransitionTimeModMin = Ar.Read<int>();
@@ -47,14 +46,14 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
 
         AvoidRepeatCount = Ar.Read<ushort>();
 
-        if (WwiseVersions.Version > 36)
+        if (Ar.Version > 36)
         {
             TransitionMode = Ar.Read<EAkTransitionMode>();
             RandomMode = Ar.Read<EAkRandomMode>();
             Mode = Ar.Read<EAkContainerMode>();
         }
 
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             PlaylistFlags = Ar.Read<EPlayListFlags>();
         }

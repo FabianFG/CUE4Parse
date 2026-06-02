@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
@@ -10,9 +9,9 @@ public class CAkActionParams
     public readonly int TTimeMax;
     public readonly EAkCurveInterpolation FadeCurve;
 
-    public CAkActionParams(FArchive Ar)
+    public CAkActionParams(FWwiseArchive Ar)
     {
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             TTime = Ar.Read<int>();
             TTimeMin = Ar.Read<int>();

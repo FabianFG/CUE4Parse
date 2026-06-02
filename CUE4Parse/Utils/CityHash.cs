@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.Utils
@@ -61,6 +61,16 @@ namespace CUE4Parse.Utils
 
                 return HashLen16(HashLen16(v.Item1, w.Item1) + ShiftMix(y) * K1 + z, HashLen16(v.Item2, w.Item2) + x);
             }
+        }
+
+        public static ulong CityHash64WithSeed(byte[] buffer, ulong seed)
+        {
+            return CityHash64WithSeeds(buffer, K2, seed);
+        }
+
+        public static ulong CityHash64WithSeeds(byte[] buffer, ulong seed0, ulong seed1)
+        {
+            return HashLen16(CityHash64(buffer) - seed0, seed1);
         }
 
         private static ulong HashLen0to16(byte* s, uint len)

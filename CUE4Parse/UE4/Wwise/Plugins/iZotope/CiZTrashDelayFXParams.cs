@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZTrashDelayFXParams(FArchive Ar) : IAkPluginParam
+public class CiZTrashDelayFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public iZTrashDelayFXParams Params = new iZTrashDelayFXParams(Ar);
+    public iZTrashDelayFXParams Params = new(Ar);
 }
 
-public struct iZTrashDelayFXParams(FArchive Ar)
+public struct iZTrashDelayFXParams(FWwiseArchive Ar)
 {
     public iZTrashDelayRTPCParams RTPC = Ar.Read<iZTrashDelayRTPCParams>();
 }

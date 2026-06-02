@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -11,7 +10,7 @@ public readonly struct AkSwitchGraphPoint
     public readonly uint To;
     public readonly EAkCurveInterpolation Interp;
 
-    public AkSwitchGraphPoint(FArchive Ar)
+    public AkSwitchGraphPoint(FWwiseArchive Ar)
     {
         From = Ar.Read<float>();
         To = Ar.Read<uint>();
@@ -25,14 +24,14 @@ public readonly struct AkRtpcGraphPoint
     public readonly float To;
     public readonly EAkCurveInterpolation Interpolation;
 
-    public AkRtpcGraphPoint(FArchive Ar)
+    public AkRtpcGraphPoint(FWwiseArchive Ar)
     {
         From = Ar.Read<float>();
         To = Ar.Read<float>();
         Interpolation = (EAkCurveInterpolation) Ar.Read<uint>();
     }
 
-    public static AkRtpcGraphPoint[] ReadArray(FArchive Ar) =>
+    public static AkRtpcGraphPoint[] ReadArray(FWwiseArchive Ar) =>
         Ar.ReadArray((int) Ar.Read<uint>(), () => new AkRtpcGraphPoint(Ar));
 }
 
@@ -48,27 +47,27 @@ public readonly struct AkRtpc
     public readonly uint RtpcCurveId;
     public readonly CAkConversionTable ConversionTable;
 
-    public AkRtpc(FArchive Ar)
+    public AkRtpc(FWwiseArchive Ar)
     {
         RtpcId = Ar.Read<uint>();
 
-        if (WwiseVersions.Version > 89)
+        if (Ar.Version > 89)
         {
             RtpcType = Ar.Read<EAkGameSyncType>();
             RtpcAccum = Ar.Read<EAkRtpcAccum>();
         }
 
-        ParamId = WwiseVersions.Version switch
+        ParamId = Ar.Version switch
         {
             <= 89 => Ar.Read<int>(),
             <= 113 => Ar.Read<byte>(),
-            _ => Ar.Read7BitEncodedInt()
+            _ => Ar.Read7BitEncodedIntBE()
         };
 
         RtpcCurveId = Ar.Read<uint>();
         ConversionTable = new CAkConversionTable(Ar);
     }
 
-    public static AkRtpc[] ReadArray(FArchive Ar) =>
+    public static AkRtpc[] ReadArray(FWwiseArchive Ar) =>
         Ar.ReadArray(Ar.Read<ushort>(), () => new AkRtpc(Ar));
 }

@@ -1,13 +1,12 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkReflectFXParams(FArchive Ar) : IAkPluginParam
+public class CAkReflectFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkReflectFXParams Params = new AkReflectFXParams(Ar);
+    public AkReflectFXParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -24,12 +23,15 @@ public struct AkReflectFXParams
     public AkFilteredFracDelayLineParams delayLineParams;
     public float fPrevDryGain;
     public AkChannelConfig OutputChannelConfig;
+    public float DelayErrorTolerance;
     public float DistanceWarping;
     public float DiffractionWarping;
     public AkDecorrParams DecorrParams;
     public float FadeTime;
+    public bool HardwareProcessing;
+    public float MaxImageSourceDelayTime;
 
-    public AkReflectFXParams(FArchive Ar)
+    public AkReflectFXParams(FWwiseArchive Ar)
     {
         delayLineParams.SpeedOfSound = Math.Max(Ar.Read<float>(), 0.001f);
         CenterPerc = Ar.Read<float>();
@@ -44,16 +46,25 @@ public struct AkReflectFXParams
         delayLineParams.PitchThreshold = Ar.Read<float>();
         delayLineParams.DistanceThreshold = Ar.Read<float>();
         delayLineParams.ThresholdMode = Ar.Read<uint>();
-        if (WwiseVersions.Version >= 145)
+        if (Ar.Version >= 172)
+        {
+            DelayErrorTolerance = Ar.Read<float>();
+        }
+        if (Ar.Version >= 145)
         {
             DistanceWarping = Ar.Read<float>();
             DiffractionWarping = Ar.Read<float>();
         }
         OutputChannelConfig = new AkChannelConfig(Ar);
-        if (WwiseVersions.Version >= 145)
+        if (Ar.Version >= 145)
         {
             DecorrParams = new AkDecorrParams(Ar);
             FadeTime = Ar.Read<float>();
+        }
+        if (Ar.Version >= 172)
+        {
+            HardwareProcessing = Ar.Read<byte>() != 0;
+            MaxImageSourceDelayTime = Ar.Read<float>();
         }
         var curvesCount = Ar.Read<ushort>();
         m_Curves = new CAkConversionTable[curvesCount];
@@ -77,7 +88,7 @@ public struct AkFilteredFracDelayLineParams
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct AkDecorrParams(FArchive Ar)
+public struct AkDecorrParams(FWwiseArchive Ar)
 {
     public float FusingTime = Ar.Read<float>();
     public float DecorrStrength = Ar.Read<float>();

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -11,7 +10,7 @@ public class HierarchyMusicRandomSequenceContainer : BaseHierarchyMusic
     public readonly AkMusicRanSeqPlaylistItem[] Playlist;
 
     // CAkBankMgr::StdBankRead<CAkMusicRanSeqCntr>
-    public HierarchyMusicRandomSequenceContainer(FArchive Ar) : base(Ar)
+    public HierarchyMusicRandomSequenceContainer(FWwiseArchive Ar) : base(Ar)
     {
         MeterInfo = new AkMeterInfo(Ar);
         Stingers = AkStinger.ReadArray(Ar);

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -9,7 +8,7 @@ public readonly struct AkMusicFade
     public readonly EAkCurveInterpolation FadeCurve;
     public readonly int FadeOffset;
 
-    public AkMusicFade(FArchive Ar)
+    public AkMusicFade(FWwiseArchive Ar)
     {
         TransitionTime = Ar.Read<int>();
         FadeCurve = (EAkCurveInterpolation)Ar.Read<uint>();

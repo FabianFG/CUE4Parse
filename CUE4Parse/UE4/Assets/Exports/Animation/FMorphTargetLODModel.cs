@@ -46,10 +46,10 @@ public class FMorphTargetLODModel
         }
         else
         {
-            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry)
+            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry or EGame.GAME_Directive8020 or EGame.GAME_MortalKombat1)
             {
                 Ar.Position += 4; // NumVertices
-                NumBaseMeshVerts = 1;
+                NumBaseMeshVerts = Ar.Game is not EGame.GAME_MortalKombat1 ? 1 : Ar.Read<int>();
                 Vertices = [];
                 SectionIndices = Ar.ReadArray<int>();
                 bGeneratedByEngine = Ar.ReadBoolean();

@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.IO.Objects.OnDemand;
+using CUE4Parse.UE4.IO.Objects.OnDemand.V2;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -13,40 +15,16 @@ namespace CUE4Parse.UE4.IO;
 
 public class IoChunkToc
 {
-    public readonly FOnDemandTocHeader Header;
-    public readonly FTocMeta Meta;
-    public readonly FOnDemandTocContainerEntry[] Containers;
-    public readonly FOnDemandTocAdditionalFile[] AdditionalFiles;
-    public readonly FOnDemandTocTagSet[] TagSets;
+    public IOnDemandToc OnDemandToc;
+
     public IoChunkToc(string file, VersionContainer versions) : this(new FileInfo(file), versions) { }
     public IoChunkToc(FileInfo file, VersionContainer versions) : this(new FByteArchive(file.FullName, File.ReadAllBytes(file.FullName), versions)) { }
     public IoChunkToc(FArchive Ar)
     {
-        Header = new FOnDemandTocHeader(Ar);
-
-        if (Header.IsLegacy)
-        {
-            if (Header.LegacyVersion >= EOnDemandTocVersion.Meta)
-                Meta = new FTocMeta(Ar);
-
-            Containers = Ar.ReadArray(() => new FOnDemandTocContainerEntry(Ar, Header));
-
-            if (Header.LegacyVersion >= EOnDemandTocVersion.AdditionalFiles)
-                AdditionalFiles = Ar.ReadArray(() => new FOnDemandTocAdditionalFile(Ar));
-
-            if (Header.LegacyVersion >= EOnDemandTocVersion.TagSets)
-                TagSets = Ar.ReadArray(() => new FOnDemandTocTagSet(Ar));
-        }
-        else
-        {
-            Meta = new FTocMeta(Header.EpochTimestamp, Header.BuildVersion, Header.TargetPlatform);
-            Containers = Ar.ReadArray((int)Header.ContainerCount, () => new FOnDemandTocContainerEntry(Ar, Header));
-
-            Ar.ForEach(Containers, entry =>
-            {
-                entry.ContainerData = new FOnDemandContainerData(Ar, entry);
-            });
-        }
+        var bIsLegacy = Ar.Read<ulong>() == 0x6f6e64656d616e64;
+        Ar.Position = 0;
+        
+        OnDemandToc = bIsLegacy ? new Objects.OnDemand.V1.FOnDemandToc(Ar) : new FOnDemandToc(Ar);
     }
 }
 

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,11 +11,11 @@ public readonly struct AkStatePropertyInfo
     public readonly EAkRtpcAccum AccumType;
     public readonly byte InDb;
 
-    public AkStatePropertyInfo(FArchive Ar)
+    public AkStatePropertyInfo(FWwiseArchive Ar)
     {
-        PropertyId = WwiseReader.Read7BitEncodedIntBE(Ar);
+        PropertyId = Ar.Read7BitEncodedIntBE();
         AccumType = Ar.Read<EAkRtpcAccum>();
-        if (WwiseVersions.Version > 126)
+        if (Ar.Version > 126)
         {
             InDb = Ar.Read<byte>();
         }

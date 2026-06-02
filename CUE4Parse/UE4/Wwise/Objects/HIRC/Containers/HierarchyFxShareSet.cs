@@ -1,10 +1,9 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
 // CAkBankMgr::StdBankRead<CAkFxShareSet>
-public class HierarchyFxShareSet(FArchive Ar) : BaseHierarchyFx(Ar)
+public class HierarchyFxShareSet(FWwiseArchive Ar) : BaseHierarchyFx(Ar)
 {
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

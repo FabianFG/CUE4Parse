@@ -1,9 +1,8 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZTrashMultibandDistortionFXParams(FArchive Ar) : IAkPluginParam
+public class CiZTrashMultibandDistortionFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
     public TrashMultibandDistortionFXParams Params = Ar.Read<TrashMultibandDistortionFXParams>();
 }

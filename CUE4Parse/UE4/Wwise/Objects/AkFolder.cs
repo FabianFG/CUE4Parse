@@ -1,5 +1,4 @@
 using System.Text;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -11,13 +10,13 @@ public class AkFolder
     public readonly uint Id;
     public string? Name;
 
-    public AkFolder(FArchive Ar)
+    public AkFolder(FWwiseArchive Ar)
     {
         Offset = Ar.Read<uint>();
         Id = Ar.Read<uint>();
     }
 
-    public void PopulateName(FArchive Ar, long namesOffset)
+    public void PopulateName(FWwiseArchive Ar, long namesOffset)
     {
         Ar.Position = namesOffset + Offset;
         var sb = new StringBuilder();

@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using CUE4Parse.UE4.Wwise.Plugins;
@@ -23,14 +22,14 @@ public class AkBankSourceData
     public readonly bool HasPluginParams;
     public readonly IAkPluginParam? PluginParams;
 
-    public AkBankSourceData(FArchive Ar)
+    public AkBankSourceData(FWwiseArchive Ar)
     {
         Plugin = WwisePlugin.GetPluginId(Ar);
-        SourceType = WwiseVersions.Version <= 89 ? (EAKBKSourceType)Ar.Read<uint>() : Ar.Read<EAKBKSourceType>();
+        SourceType = Ar.Version <= 89 ? (EAKBKSourceType)Ar.Read<uint>() : Ar.Read<EAKBKSourceType>();
 
-        if (WwiseVersions.Version <= 46)
+        if (Ar.Version <= 46)
         {
-            if (WwiseVersions.Version <= 26)
+            if (Ar.Version <= 26)
             {
                 DataIndex = Ar.Read<uint>();
                 SampleRate = Ar.Read<uint>();
@@ -44,7 +43,7 @@ public class AkBankSourceData
         }
 
         SourceId = Ar.Read<uint>();
-        switch (WwiseVersions.Version)
+        switch (Ar.Version)
         {
             case <= 26:
                 // Do nothing
@@ -58,7 +57,7 @@ public class AkBankSourceData
                 }
                 break;
             case <= 150:
-                if (WwiseVersions.Version <= 112)
+                if (Ar.Version <= 112)
                 {
                     FileId = Ar.Read<uint>();
                     if (SourceType is not EAKBKSourceType.Streaming)
@@ -78,7 +77,7 @@ public class AkBankSourceData
         }
 
         var sourceBits = Ar.Read<byte>();
-        if (WwiseVersions.Version <= 112)
+        if (Ar.Version <= 112)
         {
             BankSourceFlags = ((EBankSourceFlags_v112) sourceBits).MapToCurrent();
         }
@@ -88,7 +87,7 @@ public class AkBankSourceData
         }
 
         bool alwaysParam;
-        switch (WwiseVersions.Version)
+        switch (Ar.Version)
         {
             case <= 26:
                 HasPluginParams = true;

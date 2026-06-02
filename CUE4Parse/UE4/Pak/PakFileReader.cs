@@ -9,10 +9,15 @@ using CommunityToolkit.HighPerformance.Buffers;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.NTE.Encryption;
+using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
+using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
+using CUE4Parse.GameTypes.Strinova.Lua;
+using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -144,6 +149,23 @@ namespace CUE4Parse.UE4.Pak
                     uncompressedOff += uncompressedSize;
                 }
 
+                switch (Ar.Game)
+                {
+                    case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                        return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                    case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                        return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
+                    case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+                        return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
+                    case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+                        return UndawnLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
+                    case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+                        uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
+                        break;
+                    default:
+                        break;
+                }
+
                 var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
                 if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
                     return uncompressed;
@@ -173,6 +195,25 @@ namespace CUE4Parse.UE4.Pak
             var dataOffset = offset - readOffset;
             var readSize = (dataOffset + requestedSize).Align(alignment);
             var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
+
+            switch (Ar.Game)
+            {
+                case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                    return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
+                case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+                    return SnowbreakLua.DecryptLua(data, requestedSize);
+                case EGame.GAME_GameForPeace when pakEntry.Extension is "lua":
+                    return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+                    return UndawnLua.DecryptLuaBytecode(pakEntry.Path, data);
+                case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+                    data = StrinovaLua.DecryptLuaBytecode(data);
+                    break;
+                default:
+                    break;
+            }
 
             if (dataOffset == 0 && requestedSize == data.Length)
                 return data;

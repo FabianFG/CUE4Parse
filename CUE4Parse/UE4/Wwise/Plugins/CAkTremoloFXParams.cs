@@ -1,12 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkTremoloFXParams(FArchive Ar) : IAkPluginParam
+public class CAkTremoloFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkTremoloFXParams Params = new AkTremoloFXParams(Ar);
+    public AkTremoloFXParams Params = new(Ar);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -16,7 +15,7 @@ public struct AkTremoloRTPCParams
     public DSPALLParams ModParams;
     public float OutputGain;
 
-    public AkTremoloRTPCParams(FArchive Ar)
+    public AkTremoloRTPCParams(FWwiseArchive Ar)
     {
         ModDepth = Ar.Read<float>() * 0.01f;
         ModParams.LfoParams.Frequency = Ar.Read<float>();
@@ -40,7 +39,7 @@ public struct AkTremoloFXParams
     public AkTremoloRTPCParams RTPC;
     public AkTremoloNonRTPCParams NonRTPC;
 
-    public AkTremoloFXParams(FArchive Ar)
+    public AkTremoloFXParams(FWwiseArchive Ar)
     {
         RTPC = new AkTremoloRTPCParams(Ar);
         NonRTPC.ProcessCenter = Ar.Read<byte>() != 0;

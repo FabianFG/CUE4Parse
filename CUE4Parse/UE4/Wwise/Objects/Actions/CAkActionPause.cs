@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -13,15 +12,15 @@ public class CAkActionPause
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionPause::SetActionSpecificParams
-    public CAkActionPause(FArchive Ar)
+    public CAkActionPause(FWwiseArchive Ar)
     {
         ActionParams = new CAkActionParams(Ar);
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             Ar.Read<uint>(); // IsMaster
         }
-        else if (WwiseVersions.Version <= 62)
+        else if (Ar.Version <= 62)
         {
             Ar.Read<byte>(); // IsMaster
         }

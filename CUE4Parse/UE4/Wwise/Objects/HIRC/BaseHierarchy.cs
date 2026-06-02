@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
@@ -32,18 +31,18 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly AkRtpc[] RtpcList;
 
     // CAkParameterNodeBase::SetNodeBaseParams
-    public BaseHierarchy(FArchive Ar) : base(Ar)
+    public BaseHierarchy(FWwiseArchive Ar) : base(Ar)
     {
         OverrideFx = Ar.Read<byte>() != 0;
         FxParams = new AkFxParams(Ar);
 
-        if (WwiseVersions.Version > 136)
+        if (Ar.Version > 136)
         {
             OverrideParentMetadataFlag = Ar.Read<byte>() != 0;
             FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
-        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+        if (Ar.Version > 89 && Ar.Version <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>() != 0;
         }
@@ -51,14 +50,14 @@ public class BaseHierarchy : AbstractHierarchy
         OverrideBusId = Ar.Read<uint>();
         DirectParentId = Ar.Read<uint>();
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             Priority = Ar.Read<byte>() != 0;
             PriorityOverrideParent = Ar.Read<byte>() != 0;
             PriorityApplyDistFactor = Ar.Read<byte>() != 0;
             DistOffset = Ar.Read<sbyte>();
         }
-        else if (WwiseVersions.Version <= 89)
+        else if (Ar.Version <= 89)
         {
             PriorityOverrideParent = Ar.Read<byte>() != 0;
             PriorityApplyDistFactor = Ar.Read<byte>() != 0;
@@ -75,7 +74,7 @@ public class BaseHierarchy : AbstractHierarchy
 
         PositioningParams = new AkPositioningParams(Ar);
 
-        if (WwiseVersions.Version > 65)
+        if (Ar.Version > 65)
         {
             AuxParams = new AkAuxParams(Ar);
         }
@@ -86,12 +85,12 @@ public class BaseHierarchy : AbstractHierarchy
         BelowThresholdBehavior = Ar.Read<EAkBelowThresholdBehavior>();
         HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
 
-        if (WwiseVersions.Version <= 52)
+        if (Ar.Version <= 52)
         {
             // TODO: State chunk inlined
             StateGroups = new AkStateChunk(Ar).Groups;
         }
-        else if (WwiseVersions.Version <= 122)
+        else if (Ar.Version <= 122)
         {
             StateGroups = new AkStateChunk(Ar).Groups;
         }

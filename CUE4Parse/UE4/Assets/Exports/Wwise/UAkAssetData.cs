@@ -15,10 +15,9 @@ public class UAkAssetData : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
-        if (bulkData.Data is null) return;
+        if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
-        using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
+        using var reader = new FWwiseArchive(dataAr);
         Data = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
     }
 

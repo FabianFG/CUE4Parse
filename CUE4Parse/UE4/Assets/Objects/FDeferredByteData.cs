@@ -52,5 +52,5 @@ public sealed class FBulkDataDeferredByteData : FDeferredByteData
 
     public override bool IsValid => BulkData is not null;
 
-    public override byte[] GetData() => BulkData.Data ?? [];
+    public override byte[] GetData() => BulkData.ReadDataOnce() ?? [];
 }

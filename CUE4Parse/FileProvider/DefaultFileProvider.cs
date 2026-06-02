@@ -105,7 +105,7 @@ namespace CUE4Parse.FileProvider
                 if (uproject is null && OnDemandOptions is not null && upperExt is "UONDEMANDTOC")
                 {
                     var ioChunkTok = new IoChunkToc(file.FullName, Versions);
-                    RegisterVfs(ioChunkTok, OnDemandOptions);
+                    RegisterVfs(ioChunkTok);
                     continue;
                 }
 

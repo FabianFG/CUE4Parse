@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins.iZotope;
 
-public class CiZTrashDistortionFXParams(FArchive Ar) : IAkPluginParam
+public class CiZTrashDistortionFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public iZTrashDistortionFXParams Params = new iZTrashDistortionFXParams(Ar);
+    public iZTrashDistortionFXParams Params = new(Ar);
 }
 
-public struct iZTrashDistortionFXParams(FArchive Ar)
+public struct iZTrashDistortionFXParams(FWwiseArchive Ar)
 {
     public iZTrashDistortionRTPCParams RTPC = Ar.Read<iZTrashDistortionRTPCParams>();
 }

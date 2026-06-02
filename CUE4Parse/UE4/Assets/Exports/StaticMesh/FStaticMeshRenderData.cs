@@ -180,7 +180,8 @@ public class FStaticMeshRenderData
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
-            Ar.Position += 4 * MAX_STATIC_UV_SETS_UE4; // StreamingTextureFactor for each UV set
+            var uvsets = Ar.Game is not EGame.GAME_Abzu ? MAX_STATIC_UV_SETS_UE4 : 4;
+            Ar.Position += 4 * uvsets; // StreamingTextureFactor for each UV set
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 

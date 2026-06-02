@@ -1,11 +1,10 @@
 using System;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
 
-public class CAkSidechainSendFXParams(FArchive Ar) : IAkPluginParam
+public class CAkSidechainSendFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkSidechainSendFXParams Params = new AkSidechainSendFXParams(Ar);
+    public AkSidechainSendFXParams Params = new(Ar);
 }
 
 public struct AkSidechainSendFXParams
@@ -13,7 +12,7 @@ public struct AkSidechainSendFXParams
     public AkSidechainRTPCParams RTPC;
     public AkSidechainNonRTPCParams NonRTPC;
 
-    public AkSidechainSendFXParams(FArchive Ar)
+    public AkSidechainSendFXParams(FWwiseArchive Ar)
     {
         NonRTPC.SidechainId = Ar.Read<uint>();
         NonRTPC.SidechainScope = Ar.Read<int>();
@@ -24,9 +23,9 @@ public struct AkSidechainSendFXParams
     }
 }
 
-public class CAkSidechainRecvFXParams(FArchive Ar) : IAkPluginParam
+public class CAkSidechainRecvFXParams(FWwiseArchive Ar) : IAkPluginParam
 {
-    public AkSidechainRecvFXParams Params = new AkSidechainRecvFXParams(Ar);
+    public AkSidechainRecvFXParams Params = new(Ar);
 }
 
 public struct AkSidechainRecvFXParams
@@ -34,7 +33,7 @@ public struct AkSidechainRecvFXParams
     public AkSidechainRTPCParams RTPC;
     public AkSidechainNonRTPCParams NonRTPC;
 
-    public AkSidechainRecvFXParams(FArchive Ar)
+    public AkSidechainRecvFXParams(FWwiseArchive Ar)
     {
         NonRTPC.SidechainId = Ar.Read<uint>();
         NonRTPC.SidechainScope = Ar.Read<int>();

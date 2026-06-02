@@ -11,12 +11,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 [JsonConverter(typeof(FTexture2DMipMapConverter))]
 public class FTexture2DMipMap
 {
-    public FByteBulkData? BulkData;
+    public TBulkData<byte>? BulkData;
     public int SizeX;
     public int SizeY;
     public int SizeZ;
 
-    public FTexture2DMipMap(FByteBulkData bulkData, int sizeX, int sizeY, int sizeZ)
+    public FTexture2DMipMap(TBulkData<byte> bulkData, int sizeX, int sizeY, int sizeZ)
     {
         BulkData = bulkData;
         SizeX = sizeX;
@@ -59,7 +59,9 @@ public class FTexture2DMipMap
 
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
-        if (BulkData?.Data != null) return true;
+        var bulkData = BulkData?.Data;
+        if (bulkData != null && bulkData.Length > 0)
+            return true;
 
         switch (provider)
         {
@@ -78,7 +80,7 @@ public class FTexture2DMipMap
                     return destination;
                 });
 
-                BulkData = new FByteBulkData(data);
+                BulkData = new FByteArrayData(data);
                 return true;
             }
             // default: throw new NotImplementedException("unknown mip data provider");

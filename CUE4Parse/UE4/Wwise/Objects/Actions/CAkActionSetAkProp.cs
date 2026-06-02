@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -14,11 +13,11 @@ public class CAkActionSetAkProp
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionSetAkProp::SetActionSpecificParams
-    public CAkActionSetAkProp(FArchive Ar)
+    public CAkActionSetAkProp(FWwiseArchive Ar)
     {
         ActionParams = new CAkActionParams(Ar);
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 56)
         {
             ValueMeaning = (EAkValueMeaning) Ar.Read<uint>();
         }

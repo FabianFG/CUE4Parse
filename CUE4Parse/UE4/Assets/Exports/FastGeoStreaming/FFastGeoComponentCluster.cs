@@ -1,3 +1,5 @@
+using CUE4Parse.UE4.Versions;
+
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
 public class FFastGeoComponentCluster
@@ -18,6 +20,6 @@ public class FFastGeoComponentCluster
         InstancedStaticMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedStaticMeshComponent(Ar));
         SkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoSkinnedMeshComponent(Ar));
         InstancedSkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedSkinnedMeshComponent(Ar));
-        ProceduralISMComponents = Ar.ReadArray(() => new FFastGeoProceduralISMComponent(Ar));
+        ProceduralISMComponents = Ar.Game >= EGame.GAME_UE5_7 ? Ar.ReadArray(() => new FFastGeoProceduralISMComponent(Ar)) : [];
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
@@ -18,43 +17,43 @@ public class GlobalSettings
     public List<ICAkIndexable> VirtualAcoustics = [];
 
     // CAkBankMgr::ProcessGlobalSettingsChunk
-    public GlobalSettings(FArchive Ar)
+    public GlobalSettings(FWwiseArchive Ar)
     {
         // AkFilterBehavior::SetInternal
-        if (WwiseVersions.Version > 140)
+        if (Ar.Version > 140)
             FilterBehavior = Ar.Read<EAkFilterBehavior>();
 
         // AK::SoundEngine::SetVolumeThresholdInternal
         VolumeThreshold = Ar.Read<float>();
 
         // AK::SoundEngine::SetMaxNumVoicesLimitInternal
-        if (WwiseVersions.Version > 53)
+        if (Ar.Version > 53)
             MaxNumVoicesLimitInternal = Ar.Read<ushort>();
 
         // AK::SoundEngine::SetMaxNumDangerousVirtVoicesLimitInternal
-        if (WwiseVersions.Version > 126)
+        if (Ar.Version > 126)
             MaxNumDangerousVirtVoicesLimitInternal = Ar.Read<ushort>();
 
         // AK::SoundEngine::SetHSFEmphasis
-        if (WwiseVersions.Version > 154)
+        if (Ar.Version > 154)
             HSFEmphasis = Ar.Read<float>();
 
         // CAkStateMgr::AddStateGroup
         StateGroups = Ar.ReadArray(() => new AkStateGroupInfo(Ar));
         SwitchGroups = Ar.ReadArray(() => new AkSwitchGroup(Ar));
-        if (WwiseVersions.Version <= 38)
+        if (Ar.Version <= 38)
             return;
         RTPCRampingParams = Ar.ReadArray(() => new AkRTPCRamping(Ar));
 
         // CAkVirtualAcousticsMgr::AddAcousticTexture
-        VirtualAcoustics.AddRange(WwiseVersions.Version switch
+        VirtualAcoustics.AddRange(Ar.Version switch
         {
             <= 118 => [],
             <= 122 => Ar.ReadArray<ICAkIndexable>(() => new AkAcousticTexture_v122(Ar)),
             _ => Ar.ReadArray<ICAkIndexable>(() => new AkAcousticTexture(Ar))
         });
 
-        if (WwiseVersions.Version is > 118 and <= 122)
+        if (Ar.Version is > 118 and <= 122)
         {
             VirtualAcoustics.AddRange(Ar.ReadArray<ICAkIndexable>(() => new AkDiffuseReverberator(Ar)));
         }

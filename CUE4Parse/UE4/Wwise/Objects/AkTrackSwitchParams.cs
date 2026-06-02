@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -10,7 +9,7 @@ public class AkTrackSwitchParams
     public readonly uint DefaultSwitch;
     public readonly uint[] SwitchAssociationIds;
 
-    public AkTrackSwitchParams(FArchive Ar)
+    public AkTrackSwitchParams(FWwiseArchive Ar)
     {
         GroupType = Ar.Read<EAkGroupType>();
         GroupId = Ar.Read<uint>();

@@ -48,6 +48,7 @@ public class UMapBuildDataRegistry : UObject
             }
 
             if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) return;
+            if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 12;
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
             {
                 Ar.SkipFixedArray(1);

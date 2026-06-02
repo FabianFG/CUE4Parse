@@ -1,5 +1,3 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 
 public class CAkActionSetFX
@@ -11,7 +9,7 @@ public class CAkActionSetFX
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionSetFX::SetActionParams
-    public CAkActionSetFX(FArchive Ar)
+    public CAkActionSetFX(FWwiseArchive Ar)
     {
         IsAudioDeviceElement = Ar.Read<byte>() != 0;
         SlotIndex = Ar.Read<byte>();
