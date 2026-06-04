@@ -38,6 +38,8 @@
     <EmbeddedResource Include="Resources\Detex.dll" />
     <None Remove="Resources\tegra_swizzle_x64.dll" />
     <EmbeddedResource Include="Resources\tegra_swizzle_x64.dll" />
+    <None Remove="Resources\crunch.dll" />
+    <EmbeddedResource Include="Resources\crunch.dll" />
   </ItemGroup>
 
 </Project>
