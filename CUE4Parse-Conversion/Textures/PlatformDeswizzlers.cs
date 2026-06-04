@@ -179,17 +179,15 @@ public static class PlatformDeswizzlers
                         int num9 = pixelIndex % 32;
                         int num10 = pixelIndex / 32;
 
-                        for (int index3 = 0; index3 < 32 && streamPos + 0x10 < data.Length; ++index3)
+                        for (int index3 = 0; index3 < 32 && streamPos + sourceBytesPerPixelSet <= data.Length; ++index3)
                         {
-                            Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
-
                             int xBlock = index2 * 128 + num9 * 4 + index3 % 4;
                             int yBlock = index1 * 128 + num10 * 8 + index3 / 4;
 
                             if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
                             {
                                 int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
-                                Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                                Array.Copy(data, streamPos, outBuffer, destIndex, sourceBytesPerPixelSet);
                             }
 
                             streamPos += sourceBytesPerPixelSet;
@@ -212,17 +210,15 @@ public static class PlatformDeswizzlers
 
                         for (int index3 = 0; index3 < 16; ++index3)
                         {
-                            for (int index4 = 0; index4 < num7 && streamPos + 0x10 < data.Length; ++index4)
+                            for (int index4 = 0; index4 < num7 && streamPos + sourceBytesPerPixelSet <= data.Length; ++index4)
                             {
-                                Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
-
                                 int xBlock = index2 * 64 + (num9 * 4 + index3 / 4) * num7 + index4;
                                 int yBlock = index1 * 64 + num10 * 4 + index3 % 4;
 
                                 if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
                                 {
                                     int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
-                                    Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                                    Array.Copy(data, streamPos, outBuffer, destIndex, sourceBytesPerPixelSet);
                                 }
 
                                 streamPos += sourceBytesPerPixelSet;
