@@ -1,22 +1,33 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.Exporters;
 
-public class RawDataExporter(GameFile file, IFileProvider provider) : ExporterBase(file)
+/// <summary>
+/// hacky raw data exporter just to delegate the work to our new export session thing
+/// instead of letting the user do the dirty work
+/// </summary>
+public sealed class RawDataExporter(GameFile gameFile, IFileProvider provider) : ExporterBase(gameFile)
 {
     protected override IReadOnlyList<ExportFile> BuildExportFiles()
     {
-        var assets = provider.SavePackage(file);
+        var assets = provider.SavePackage(gameFile);
 
         var result = new List<ExportFile>();
         foreach (var kvp in assets)
         {
-            // TODO
             result.Add(new ExportFile(kvp.Key, kvp.Value));
         }
 
         return result;
+    }
+
+    protected override (string, string) ResolveOutputPath(ExportFile file)
+    {
+        var parts = file.Extension.Split('.');
+        var path = Session.ResolveOutputPath(parts[0], parts[1], file.NameSuffix);
+        return (file.Extension.SubstringAfterLast('/'), path);
     }
 }

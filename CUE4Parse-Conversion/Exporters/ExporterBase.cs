@@ -36,25 +36,31 @@ public abstract class ExporterBase : IExporter
 
     protected internal ILogger Log { get; }
 
-    protected ExporterBase(UObject export)
+    private ExporterBase(string packagePath, string objectName, string className)
     {
-        PackagePath = BuildPackagePath(export);
+        PackagePath = packagePath;
         PackageDirectory = PackagePath.Contains('/') ? PackagePath.SubstringBeforeLast('/') : string.Empty;
-        ObjectName = export.Name;
+        ObjectName = objectName;
         ObjectPath = PackagePath + '.' + ObjectName;
-        ClassName = export.ExportType;
+        ClassName = className;
 
         // TODO: contextualized logs will be inaccurate for component based export like landscape and splines
         // because ObjectName is not unique in levels but it's mostly fine tbh
-        Log = Serilog.Log
+        Log = Serilog.Log.ForContext(GetType())
             .ForContext(nameof(ObjectName), ObjectName)
             .ForContext(nameof(ClassName), ClassName)
             .ForContext("ExporterV2", true);
     }
 
-    protected internal ExporterBase(GameFile file)
+    protected ExporterBase(UObject export) : this(BuildPackagePath(export), export.Name, export.ExportType)
     {
-        // TODO
+
+    }
+
+    protected internal ExporterBase(GameFile file) : this(file.PathWithoutExtension, file.NameWithoutExtension, "RawData")
+    {
+        if (!file.IsUePackage)
+            throw new ArgumentException("GameFile must be a UE package", nameof(file));
     }
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles();
@@ -81,13 +87,18 @@ public abstract class ExporterBase : IExporter
 
     private async Task<ExportResult> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
-        var fileName = $"{ObjectName}{file.NameSuffix}.{file.Extension}";
-        var path = Session.ResolveOutputPath(GetSavePath(), file.Extension, file.NameSuffix);
+        var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
 
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
 
         return new ExportResult(true, ObjectPath, path);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected virtual (string, string) ResolveOutputPath(ExportFile file)
+    {
+        return ($"{ObjectName}{file.NameSuffix}.{file.Extension}", Session.ResolveOutputPath(GetSavePath(), file.Extension, file.NameSuffix));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

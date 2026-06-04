@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CUE4Parse_Conversion;
+using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -20,7 +22,7 @@ public static class Exporter2
 {
     private const string ArchiveDirectory = "D:\\Games\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Paks";
     private const string AesKey = "0x4BE71AF2459CF83899EC9DC2CB60E22AC4B3047E0211034BBABE9D174C069DD6";
-    private const string Mapping = "D:\\FModel\\.data\\VALORANT_12.01_zs.usmap";
+    private const string Mapping = "D:\\FModel\\.data\\VALORANT_12.10_zs.usmap";
     private const EGame Version = EGame.GAME_Valorant;
     private const string ExportDirectory = "./exports_v2";
 
@@ -60,9 +62,17 @@ public static class Exporter2
             MaxDegreeOfParallelism = Environment.ProcessorCount
         };
 
-        const string Map = "Canyon";
-        var world = provider.LoadPackageObject<UWorld>($"ShooterGame/Content/Maps/{Map}/{Map}.{Map}");
-        session.Add(world);
+        const string folder = "ShooterGame/Content/Maps/Bonsai/";
+        Parallel.ForEach(
+            provider.Files.Values.Where(f => f.IsUePackage && f.Path.StartsWith(folder, StringComparison.OrdinalIgnoreCase)),
+            file => session.Add(new RawDataExporter(file, provider))
+        );
+
+        // session.Add(new RawDataExporter(provider.Files["ShooterGame/Content/Maps/Bonsai/Bonsai_Art_A_BuiltData.uasset"], provider));
+
+        // const string Map = "Bonsai";
+        // var world = provider.LoadPackageObject<UWorld>($"ShooterGame/Content/Maps/{Map}/{Map}.{Map}");
+        // session.Add(world);
 
         var results = await session.RunAsync();
     }
