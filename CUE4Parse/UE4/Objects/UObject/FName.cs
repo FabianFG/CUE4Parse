@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public override bool Equals(object? obj) => obj is FName other && this == other;
 
-        public override int GetHashCode() => ComparisonMethod == FNameComparisonMethod.Text ? StringComparer.OrdinalIgnoreCase.GetHashCode(Text.GetHashCode()) : HashCode.Combine(Index, Number);
+        public override int GetHashCode() => ComparisonMethod == FNameComparisonMethod.Text ? StringComparer.OrdinalIgnoreCase.GetHashCode(Text) : HashCode.Combine(Index, Number);
 
         public int CompareTo(FName other) => string.Compare(Text, other.Text, StringComparison.OrdinalIgnoreCase);
 

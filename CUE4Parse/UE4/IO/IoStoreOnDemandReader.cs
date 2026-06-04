@@ -1,136 +1,108 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.IO.Objects.OnDemand;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 
-namespace CUE4Parse.UE4.IO
+namespace CUE4Parse.UE4.IO;
+
+public class IoStoreOnDemandReader : IoStoreReader
 {
-    public class IoStoreOnDemandReader : IoStoreReader
+    public IoChunkToc ChunkToc { get; }
+    public IOnDemandContainerEntry Container { get; }
+
+    private readonly IoStoreOnDemandDownloader _downloader;
+
+    public IoStoreOnDemandReader(FArchive tocStream, IoChunkToc chunkToc, IOnDemandContainerEntry container, IoStoreOnDemandDownloader downloader)
+        : base(tocStream, it => new FByteArchive(it, [], tocStream.Versions))
     {
-        public IoChunkToc ChunkToc { get; }
-        public FOnDemandTocContainerEntry Container { get; }
+        ChunkToc = chunkToc;
+        Container = container;
+        _downloader = downloader;
+    }
 
-        private readonly IoStoreOnDemandDownloader _downloader;
+    public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
+    {
+        if (entry is not FIoStoreEntry ioEntry || entry.Vfs != this)
+            throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
 
-        public IoStoreOnDemandReader(FArchive tocStream, IoChunkToc chunkToc, FOnDemandTocContainerEntry container, IoStoreOnDemandDownloader downloader)
-            : base(tocStream, it => new FByteArchive(it, Array.Empty<byte>(), tocStream.Versions))
-        {
-            ChunkToc = chunkToc;
-            Container = container;
-            _downloader = downloader;
-        }
+        return Read(ioEntry.ChunkId);
+    }
 
-        public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
-        {
-            if (entry is not FIoStoreEntry ioEntry || entry.Vfs != this)
-                throw new ArgumentException($"Wrong io store reader, required {entry.Vfs.Path}, this is {Path}");
-
-            return Read(ioEntry.ChunkId);
-        }
-
-        public override byte[] Read(FIoChunkId chunkId)
-        {
-            if (ChunkToc.Header.IsLegacy)
-            {
-                return Read(Container.Entries.FirstOrDefault(entry => entry.ChunkId == chunkId));
-            }
-
-            var index = Array.IndexOf(Container.ContainerData.ChunkIds, chunkId);
-            if (index >= 0)
-            {
-                return Read(chunkId, Container.ContainerData.ChunkEntries[index]);
-            }
-
+    public override byte[] Read(FIoChunkId chunkId)
+    {
+        if (!Container.TryGetFileEntryHash(chunkId, out var fileHash) || !TryResolve(chunkId, out var offsetLength))
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
-        }
-        private byte[] Read(FOnDemandTocEntry? onDemandEntry)
+
+        return Read(fileHash.ToString().ToLower(), (long)offsetLength.Offset, (long)offsetLength.Length);
+    }
+
+    private byte[] Read(string hash, long offset, long length)
+    {
+        var reader = _downloader.Download($"{ChunkToc.OnDemandToc.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
+
+        var compressionBlockSize = TocResource.Header.CompressionBlockSize;
+        var dst = new byte[length];
+        var firstBlockIndex = (int) (offset / compressionBlockSize);
+        var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
+        var offsetInBlock = offset % compressionBlockSize;
+        var remainingSize = length;
+        var dstOffset = 0;
+
+        var compressedBuffer = Array.Empty<byte>();
+        var uncompressedBuffer = Array.Empty<byte>();
+
+        for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
         {
-            if (onDemandEntry == null) throw new ParserException("Can't read unknown on-demand entry");
-            if (TryResolve(onDemandEntry.ChunkId, out var offsetLength))
+            ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
+
+            var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
+            if (compressedBuffer.Length < rawSize)
             {
-                return Read(onDemandEntry.Hash.ToString().ToLower(), (long) offsetLength.Offset, (long) offsetLength.Length);
-            }
-            throw new KeyNotFoundException($"Couldn't find chunk {onDemandEntry.ChunkId} in IoStoreOnDemand {Name}");
-        }
-
-        private byte[] Read(FIoChunkId chunkId, FOnDemandChunkEntry? onDemandEntry)
-        {
-            if (onDemandEntry == null) throw new ParserException("Can't read unknown on-demand entry");
-            if (TryResolve(chunkId, out var offsetLength))
-            {
-                return Read(onDemandEntry.Hash.ToString().ToLower(), (long)offsetLength.Offset, (long)offsetLength.Length);
-            }
-            throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
-        }
-
-        private byte[] Read(string hash, long offset, long length)
-        {
-            var reader = _downloader.Download($"{ChunkToc.Header.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
-
-            var compressionBlockSize = TocResource.Header.CompressionBlockSize;
-            var dst = new byte[length];
-            var firstBlockIndex = (int) (offset / compressionBlockSize);
-            var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
-            var offsetInBlock = offset % compressionBlockSize;
-            var remainingSize = length;
-            var dstOffset = 0;
-
-            var compressedBuffer = Array.Empty<byte>();
-            var uncompressedBuffer = Array.Empty<byte>();
-
-            for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
-            {
-                ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
-
-                var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
-                if (compressedBuffer.Length < rawSize)
-                {
-                    //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");
-                    compressedBuffer = new byte[rawSize];
-                }
-
-                var uncompressedSize = compressionBlock.UncompressedSize;
-                if (uncompressedBuffer.Length < uncompressedSize)
-                {
-                    //Console.WriteLine($"{chunkId}: block {blockIndex} UncompressedBuffer size: {uncompressedSize} - Had to create copy");
-                    uncompressedBuffer = new byte[uncompressedSize];
-                }
-
-                reader.ReadExactly(compressedBuffer, 0, (int) rawSize);
-                compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
-
-                byte[] src;
-                if (compressionBlock.CompressionMethodIndex == 0)
-                {
-                    src = compressedBuffer;
-                }
-                else
-                {
-                    var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
-                    Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0, (int) uncompressedSize, compressionMethod);
-                    src = uncompressedBuffer;
-                }
-
-                var sizeInBlock = (int) Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
-                Buffer.BlockCopy(src, (int) offsetInBlock, dst, dstOffset, sizeInBlock);
-                offsetInBlock = 0;
-                remainingSize -= sizeInBlock;
-                dstOffset += sizeInBlock;
+                //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");
+                compressedBuffer = new byte[rawSize];
             }
 
-            return dst;
+            var uncompressedSize = compressionBlock.UncompressedSize;
+            if (uncompressedBuffer.Length < uncompressedSize)
+            {
+                //Console.WriteLine($"{chunkId}: block {blockIndex} UncompressedBuffer size: {uncompressedSize} - Had to create copy");
+                uncompressedBuffer = new byte[uncompressedSize];
+            }
+
+            reader.ReadExactly(compressedBuffer, 0, (int) rawSize);
+            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize);
+
+            byte[] src;
+            if (compressionBlock.CompressionMethodIndex == 0)
+            {
+                src = compressedBuffer;
+            }
+            else
+            {
+                var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
+                Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0, (int) uncompressedSize, compressionMethod);
+                src = uncompressedBuffer;
+            }
+
+            var sizeInBlock = (int) Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
+            Buffer.BlockCopy(src, (int) offsetInBlock, dst, dstOffset, sizeInBlock);
+            offsetInBlock = 0;
+            remainingSize -= sizeInBlock;
+            dstOffset += sizeInBlock;
         }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            _downloader.Dispose();
-        }
+        return dst;
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _downloader.Dispose();
     }
 }

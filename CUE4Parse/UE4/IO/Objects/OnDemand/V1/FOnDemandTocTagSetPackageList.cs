@@ -1,15 +1,15 @@
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.IO.Objects;
+namespace CUE4Parse.UE4.IO.Objects.OnDemand.V1;
 
 public class FOnDemandTocTagSetPackageList
 {
     public uint ContainerIndex;
-    public uint[] PackageIndicies;
-    
+    public uint[] PackageIndices;
+
     public FOnDemandTocTagSetPackageList(FArchive Ar)
     {
         ContainerIndex = Ar.Read<uint>();
-        PackageIndicies = Ar.ReadArray<uint>();
+        PackageIndices = Ar.ReadArray<uint>();
     }
 }

@@ -8,6 +8,7 @@ using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
+using CUE4Parse.GameTypes.MK1.Assets.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
 using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
@@ -49,6 +50,7 @@ using CUE4Parse.UE4.Objects.MovieScene;
 using CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 using CUE4Parse.UE4.Objects.Niagara;
 using CUE4Parse.UE4.Objects.PCG;
+using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Objects.StateTree;
 using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Objects.UObject;
@@ -184,6 +186,7 @@ public class FScriptStruct
             "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
             "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
             "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
+            "ClothLODData" => type == ReadType.ZERO ? new FClothLODData() : new FClothLODData(Ar),
             "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
             "Matrix" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar),
             "Matrix44f" => type == ReadType.ZERO ? new FMatrix() : new FMatrix(Ar, false),
@@ -382,7 +385,8 @@ public class FScriptStruct
             "MercunaUsageTypes" => Ar.Read<FRawUIntStruct>(),
 
             // Windrose
-            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "R5CollisionApproximation"  => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "R5SoftAssetPath" => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             // Armatus
             "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
@@ -396,17 +400,31 @@ public class FScriptStruct
             "RulesetId" when Ar.Game is EGame.GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
             "HexCell" when Ar.Game is EGame.GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
 
-            "MovieSceneTangentData" when Ar.Game is EGame.GAME_HonorofKingsWorld => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
+            "MovieSceneTangentData" when Ar.Game is EGame.GAME_HonorofKingsWorld or EGame.GAME_TheDivisionResurgence => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
 
             "BodyInstance" when Ar.Game is EGame.GAME_ConanExilesEnhanced => new FBodyInstance(Ar),
 
             // Cloudheim
             "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            "PackedNormal" when Ar.Game is EGame.GAME_TheDivisionResurgence => new FPackedNormal(Ar),
+
+            "UWEWorldPopSpatialLayer" when Ar.Game is EGame.GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),
+
+            "LegoConnectionPoint" when Ar.Game is EGame.GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "LegoPartLODGeometry" when Ar.Game is EGame.GAME_Lego2KDrive => new FLegoPartLODGeometry(Ar),
+            "LegoPartInstance" when Ar.Game is EGame.GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "PerPlatformUObject" or "PerPlatformSoftObjectPtr" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformSoftObject() : new FPerPlatformSoftObject(Ar),
+            "PerPlatformMediaSource" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformUObject() : new FPerPlatformUObject(Ar),
+
+            "TtScalableShadowFloat" or "TtScalableLightFloat" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "TtScalableShadowBool" => new FStructFallback(Ar, structName, new FRawHeader([(0,1)])),
+
             _ => Ar.Game switch
             {
                 EGame.GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
                 EGame.GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
+                EGame.GAME_MortalKombat1 => MK1Structs.ParseMK1Struct(Ar, structName, struc, type),
                 EGame.GAME_Borderlands4 => Borderlands4Structs.ParseBl4Struct(Ar, structName, struc, type),
                 _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
                 _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)

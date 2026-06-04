@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using CUE4Parse.GameTypes._2XKO.Kismet;
+using CUE4Parse.GameTypes.Borderlands4.Kismet;
+using CUE4Parse.GameTypes.DFHO.Kismet;
+using CUE4Parse.GameTypes.WuWa.Kismet;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Objects;
@@ -129,6 +132,7 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("AddEquals")) return $"({parametersList[0]} += {parametersList[1]})";
             if (functionName.StartsWith("Subtract")) return $"({parametersList[0]} - {parametersList[1]})";
             if (functionName.StartsWith("Divide")) return $"({parametersList[0]} / {parametersList[1]})";
+            if (functionName.StartsWith("MultiplyByPi")) return $"({parametersList[0]} * π)";
             if (functionName.StartsWith("Multiply")) return $"({parametersList[0]} * {parametersList[1]})";
             if (functionName.StartsWith("BooleanAND")) return $"{parametersList[0]} && {parametersList[1]}";
             if (functionName.StartsWith("BooleanNAND")) return $"!({parametersList[0]} && {parametersList[1]})";
@@ -1730,10 +1734,6 @@ public static class BlueprintDecompilerUtils
             {
                 return propertyConst.Property.ToString();
             }
-            case EX_FixedPointConst fp:
-            {
-                return fp.Value.ToString();
-            }
             case EX_WireTracepoint:
             case EX_Tracepoint:
             {
@@ -1768,11 +1768,25 @@ public static class BlueprintDecompilerUtils
                 return "";
             }
 
+            // Custom Game Expressions
+            case EX_FixedPointConst fp:
+            {
+                return fp.Value.ToString();
+            }
+            case EX_WuWaInstr1:
+            case EX_WuWaInstr2:
+            {
+                return expression.ToString() ?? "";
+            }
+            case EX_DFInstr:
+            case EX_DamageSourceContainer:
+            case EX_GbxDefPtr:
+            case EX_GameDataHandle:
+                return "";
             /*
                 EExprToken.EX_Assert
                 EExprToken.EX_Skip
                 EExprToken.EX_InstrumentationEvent
-                EExprToken.EX_FieldPathConst
                 EExprToken.EX_ClassContext it's like EX_Context
             */
             default:

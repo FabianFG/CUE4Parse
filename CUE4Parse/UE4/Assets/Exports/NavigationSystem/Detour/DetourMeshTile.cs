@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 
@@ -31,6 +32,8 @@ public class DetourMeshTile
         DetailTris = new byte[sizeInfo.DetailTriCount][];
         for (var i = 0; i < DetailTris.Length; i++)
             DetailTris[i] = Ar.ReadArray<byte>(4);
+
+        if (Ar.Game is EGame.GAME_MongilStarDive) Ar.Position += sizeInfo.PolyCount;
         
         BvTree = Ar.ReadArray(sizeInfo.BvNodeCount, () => new DetourBVNode(Ar));
         OffMeshConnections = Ar.ReadArray(sizeInfo.OffMeshConCount, () => new DetourOffMeshConnection(Ar));

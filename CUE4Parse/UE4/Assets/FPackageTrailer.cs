@@ -31,12 +31,12 @@ public class FPackageTrailer
 
     public long FindPayloadOffsetInFile(FSHAHash id)
     {
-        if (id.Hash.All(b => b == 0) || Header.PayloadLookupTable is null)
+        if (!id.IsValid() || Header.PayloadLookupTable is null)
             return -1;
 
         foreach (var entry in Header.PayloadLookupTable)
         {
-            if (entry.Identifier.Hash.SequenceEqual(id.Hash))
+            if (entry.Identifier.Equals(id.Hash))
             {
                 return entry.AccessMode switch
                 {

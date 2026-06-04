@@ -1,7 +1,6 @@
-using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.IO.Objects;
+namespace CUE4Parse.UE4.IO.Objects.OnDemand.V1;
 
 public class FOnDemandTocTagSet
 {

@@ -59,7 +59,9 @@ public class FTexture2DMipMap
 
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
-        if (BulkData?.Data != null) return true;
+        var bulkData = BulkData?.Data;
+        if (bulkData != null && bulkData.Length > 0)
+            return true;
 
         switch (provider)
         {

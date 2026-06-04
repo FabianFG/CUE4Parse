@@ -1,8 +1,10 @@
 using System;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -52,12 +54,13 @@ namespace CUE4Parse.UE4.IO.Objects
         MAX
     }
 
+    [JsonConverter(typeof(FIoChunkIdJsonConverter))]
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct FIoChunkId : IEquatable<FIoChunkId>
     {
         public readonly ulong ChunkId;
         public readonly ushort _chunkIndex;
-        private readonly byte _padding;
+        public readonly byte _padding;
         public readonly byte ChunkType;
 
         public FIoChunkId(ulong chunkId, ushort chunkIndex, byte chunkType)
@@ -130,5 +133,27 @@ namespace CUE4Parse.UE4.IO.Objects
         }
 
         public override string ToString() => $"0x{ChunkId:X8} | {ChunkType}";
+    }
+
+    public sealed class FIoChunkIdJsonConverter : JsonConverter<FIoChunkId>
+    {
+        public override bool CanRead => false;
+
+        public override FIoChunkId ReadJson(JsonReader reader, Type objectType, FIoChunkId existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, FIoChunkId value, JsonSerializer serializer)
+        {
+            Span<byte> bytes = stackalloc byte[12];
+
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes[..8], value.ChunkId);
+            BinaryPrimitives.WriteUInt16LittleEndian(bytes[8..10], value._chunkIndex);
+            bytes[10] = value._padding;
+            bytes[11] = value.ChunkType;
+
+            writer.WriteValue(Convert.ToHexString(bytes));
+        }
     }
 }

@@ -222,9 +222,23 @@ public class FRocoBinData
             "EBool" => Ar.ReadByte() != 0,
             "EString" => ReadRocoString(Ar),
             "EStruct" => ParseNestedStruct(Ar, prop.Struct!, locAr),
-            "ELocalizedString" => locAr?.LocalizationStrings[Ar.Read<int>()] ?? string.Empty, // Would be better to show all localizations at once but they haven't translated any so there's no need
+            "ELocalizedString" => ReadLocalizedString(Ar, locAr), // Would be better to show all localizations at once but they haven't translated any so there's no need
             _ => throw new Exception($"Unknown type: {prop.Type}")
         };
+    }
+
+    private string ReadLocalizedString(FArchive Ar, FRocoBinData? locAr = null)
+    {
+        var stringIndex = Ar.Read<int>();
+        if (locAr != null && locAr.LocalizationStrings.Count >= stringIndex)
+        {
+            return locAr.LocalizationStrings[stringIndex];
+        }
+        else
+        {
+            Log.Warning("Expected localization string with index {index}, but it wasn't present in localization table", stringIndex);
+            return string.Empty;
+        }
     }
 
     private Dictionary<string, object?> ParseStruct(FArchive Ar, FRocoSchema schema, FRocoBinData? locAr = null)

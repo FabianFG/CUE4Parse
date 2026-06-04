@@ -35,6 +35,7 @@ public class IoGlobalData
         }
 
         var numScriptObjects = metaAr.Read<int>();
+        ScriptObjectEntriesMap = new Dictionary<FPackageObjectIndex, FScriptObjectEntry>(numScriptObjects);
         var scriptObjectEntries = metaAr.ReadArray<FScriptObjectEntry>(numScriptObjects);
         foreach (var scriptObjectEntry in scriptObjectEntries)
         {

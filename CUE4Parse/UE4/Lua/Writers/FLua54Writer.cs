@@ -1,15 +1,18 @@
-namespace CUE4Parse.UE4.Lua;
+using CUE4Parse.UE4.Lua.Archives;
+using CUE4Parse.UE4.Lua.Readers;
+
+namespace CUE4Parse.UE4.Lua.Writers;
 
 // Standard Lua 5.4 bytecode writer
 public static class FLuaWriter54
 {
-    public static void Write(FLuaArchiveWriter writer, LuaBytecode l)
+    public static void Write(FLua54ArchiveWriter writer, LuaBytecode l)
     {
         WriteHeader(writer, l.Header);
         WriteFunction(writer, l.MainFunc);
     }
 
-    private static void WriteHeader(FLuaArchiveWriter writer, LuaHeader h)
+    private static void WriteHeader(FLua54ArchiveWriter writer, LuaHeader h)
     {
         writer.Write(h.Signature);
         writer.Write(h.Version);
@@ -23,7 +26,7 @@ public static class FLuaWriter54
         writer.Write(h.Closure);
     }
 
-    private static void WriteFunction(FLuaArchiveWriter writer, LuaFunction f)
+    private static void WriteFunction(FLua54ArchiveWriter writer, LuaFunction f)
     {
         writer.WriteLuaString(f.SourceName);
         writer.WriteLuaInt(f.LineDefined);
@@ -65,7 +68,7 @@ public static class FLuaWriter54
         WriteDebug(writer, f.Debug);
     }
 
-    private static void WriteDebug(FLuaArchiveWriter writer, LuaDebug d)
+    private static void WriteDebug(FLua54ArchiveWriter writer, LuaDebug d)
     {
         writer.WriteLuaInt(d.SizeLineInfo);
         writer.Write(d.LineInfo);
@@ -89,4 +92,3 @@ public static class FLuaWriter54
         });
     }
 }
-

@@ -1,15 +1,16 @@
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.UE4.Shaders
-{
-    // https://github.com/EpicGames/UnrealEngine/blob/803688920e030c9a86c3659ac986030fba963833/Engine/Source/Runtime/RenderCore/Public/ShaderCodeArchive.h#L134
-    public class FShaderTypeHashes
-    {
-        public ulong[] Data;
+namespace CUE4Parse.UE4.Shaders;
 
-        public FShaderTypeHashes(FArchive Ar)
-        {
-            Data = Ar.ReadArray<ulong>();
-        }
+// https://github.com/EpicGames/UnrealEngine/blob/803688920e030c9a86c3659ac986030fba963833/Engine/Source/Runtime/RenderCore/Public/ShaderCodeArchive.h#L134
+// this isn't actually FShaderTypeHashes class but rather TArray<FShaderTypeHashes> ShaderTypes;
+public class FShaderTypeHashes
+{
+    public FHashedName[][] Data;
+
+    public FShaderTypeHashes(FArchive Ar)
+    {
+        Data = Ar.ReadArray(Ar.ReadArray<FHashedName>);
     }
 }

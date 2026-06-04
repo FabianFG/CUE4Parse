@@ -92,6 +92,7 @@ public struct DetourMeshHeader
             BMin = new FVector(Ar);
             BMax = new FVector(Ar);
             bvQuantFactor = Ar.ReadFReal();
+            if (Ar.Game is EGame.GAME_WutheringWaves) Ar.Position += 4;
             ClusterCount = Ar.Read<int>();
 
             OffMeshSegConCount = Ar.Read<int>();

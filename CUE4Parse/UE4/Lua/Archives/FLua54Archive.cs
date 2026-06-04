@@ -6,12 +6,12 @@ using System.Text;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.Lua;
+namespace CUE4Parse.UE4.Lua.Archives;
 
-public class FLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FByteArchive(name, data, versions)
+public class FLua54Archive(string name, byte[] data, VersionContainer? versions = null) : FByteArchive(name, data, versions)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong ReadLuaInt()
+    public virtual ulong ReadLuaInt()
     {
         ulong v = 0;
         while (true)
@@ -38,7 +38,7 @@ public class FLuaArchive(string name, byte[] data, VersionContainer? versions = 
         return Encoding.UTF8.GetString(buffer);
     }
 
-    public T[] ReadLuaArray<T>(Func<T> readElement)
+    public virtual T[] ReadLuaArray<T>(Func<T> readElement)
     {
         int size = (int) ReadLuaInt();
         if (size <= 0)
@@ -54,7 +54,7 @@ public class FLuaArchive(string name, byte[] data, VersionContainer? versions = 
     }
 }
 
-public class FLuaArchiveWriter(Stream stream) : BinaryWriter(stream)
+public class FLua54ArchiveWriter(Stream stream) : BinaryWriter(stream)
 {
     public void WriteLuaInt(ulong v)
     {
@@ -94,7 +94,7 @@ public class FLuaArchiveWriter(Stream stream) : BinaryWriter(stream)
         Write(buffer);
     }
 
-    public void WriteLuaArray<T>(T[] array, Action<T> writeElement)
+    public void WriteLuaArray<T>(T[]? array, Action<T> writeElement)
     {
         if (array == null)
         {

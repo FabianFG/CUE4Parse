@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
@@ -11,6 +12,8 @@ public class FSceneProxyDesc
     public FInstancedStaticMeshSceneProxyDesc? InstancedStaticMeshSceneProxyDesc;
     public FSkinnedMeshSceneProxyDesc? SkinnedMeshSceneProxyDesc;
     public FInstancedSkinnedMeshSceneProxyDesc? InstancedSkinnedMeshSceneProxyDesc;
+
+    public FSceneProxyDesc() { }
 
     public FSceneProxyDesc(FFastGeoArchive Ar)
     {
@@ -35,6 +38,7 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public bool bVisibleInReflectionCaptures = Ar.ReadBoolean();
     public bool bVisibleInRealTimeSkyCaptures = Ar.ReadBoolean();
     public bool bVisibleInRayTracing = Ar.ReadBoolean();
+    public bool bVisibleInReflections = Ar.Game >= EGame.GAME_UE5_8 && Ar.ReadBoolean();
     public bool bRenderInDepthPass = Ar.ReadBoolean();
     public bool bRenderInMainPass = Ar.ReadBoolean();
     public bool bTreatAsBackgroundForOcclusion = Ar.ReadBoolean();
@@ -76,9 +80,9 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public EComponentMobility Mobility = Ar.Read<EComponentMobility>();
     public int TranslucencySortPriority = Ar.Read<int>();
     public float TranslucencySortDistanceOffset = Ar.Read<float>();
-    public int CustomDepthStencilValue = Ar.Read<int>();
     public ELightmapType LightmapType = Ar.Read<ELightmapType>();
     public ESceneDepthPriorityGroup ViewOwnerDepthPriorityGroup = Ar.Read<ESceneDepthPriorityGroup>();
+    public int CustomDepthStencilValue = Ar.Read<int>();
     public ERendererStencilMask CustomDepthStencilWriteMask = Ar.Read<ERendererStencilMask>();
     public FLightingChannels LightingChannels = new FLightingChannels(Ar);
     public ERayTracingGroupCullingPriority RayTracingGroupCullingPriority = Ar.Read<ERayTracingGroupCullingPriority>();
@@ -91,10 +95,10 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public int VisibilityId = Ar.Read<int>();
     public float CachedMaxDrawDistance = Ar.Read<float>();
     public float MinDrawDistance = Ar.Read<float>();
-    public float VirtualTextureMainPassMaxDrawDistance = Ar.Read<float>();
     public float BoundsScale = Ar.Read<float>();
     public int RayTracingGroupId = Ar.Read<int>();
     public ERuntimeVirtualTextureMainPassType VirtualTextureRenderPassType = Ar.Read<ERuntimeVirtualTextureMainPassType>();
+    public float VirtualTextureMainPassMaxDrawDistance = Ar.Read<float>();
 }
 
 public class FSkinnedMeshSceneProxyDesc(FFastGeoArchive Ar)// : FPrimitiveSceneProxyDesc
@@ -126,29 +130,63 @@ public class FInstancedSkinnedMeshSceneProxyDesc(FFastGeoArchive Ar)// : FSkinne
     public int InstanceEndCullDistance = Ar.Read<int>();
 }
 
-public class FStaticMeshSceneProxyDesc(FFastGeoArchive Ar)// : FPrimitiveSceneProxyDesc
+public class FStaticMeshSceneProxyDesc
 {
-    public FPackageIndex StaticMesh = Ar.ReadFPackageIndex();
-    public FPackageIndex OverlayMaterial = Ar.ReadFPackageIndex();
-    public FPackageIndex[] MaterialSlotsOverlayMaterial = Ar.ReadArray(Ar.ReadFPackageIndex);
-    public float OverlayMaterialMaxDrawDistance = Ar.Read<float>();
-    public int ForcedLodModel = Ar.Read<int>();
-    public int MinLOD = Ar.Read<int>();
-    public float WorldPositionOffsetDisableDistance = Ar.Read<float>();
-    public float NanitePixelProgrammableDistance = Ar.Read<float>();
-    public float DistanceFieldSelfShadowBias = Ar.Read<float>();
-    public float DistanceFieldIndirectShadowMinVisibility = Ar.Read<float>();
-    public int StaticLightMapResolution = Ar.Read<int>();
-    public bool bReverseCulling = Ar.ReadBoolean();
-    public bool bEvaluateWorldPositionOffset = Ar.ReadBoolean();
-    public bool bOverrideMinLOD = Ar.ReadBoolean();
-    public bool bCastDistanceFieldIndirectShadow = Ar.ReadBoolean();
-    public bool bOverrideDistanceFieldSelfShadowBias = Ar.ReadBoolean();
-    public bool bEvaluateWorldPositionOffsetInRayTracing = Ar.ReadBoolean();
-    public bool bSortTriangles = Ar.ReadBoolean();
-    public bool bDisallowNanite = Ar.ReadBoolean();
-    public bool bForceDisableNanite = Ar.ReadBoolean();
-    public bool bForceNaniteForMasked = Ar.ReadBoolean();
+    public FPackageIndex StaticMesh;
+    public FPackageIndex MeshPaintTexture;
+    public FPackageIndex OverlayMaterial;
+    public FPackageIndex[] MaterialSlotsOverlayMaterial;
+    public float OverlayMaterialMaxDrawDistance;
+    public int ForcedLodModel;
+    public int MinLOD;
+    public float WorldPositionOffsetDisableDistance;
+    public float NanitePixelProgrammableDistance;
+    public float DistanceFieldSelfShadowBias;
+    public float DistanceFieldIndirectShadowMinVisibility;
+    public int StaticLightMapResolution;
+    public int MeshPaintTextureCoordinateIndex;
+    public bool bReverseCulling;
+    public bool bEvaluateWorldPositionOffset;
+    public bool bOverrideMinLOD;
+    public bool bCastDistanceFieldIndirectShadow;
+    public bool bOverrideDistanceFieldSelfShadowBias;
+    public bool bEvaluateWorldPositionOffsetInRayTracing;
+    public bool bSortTriangles;
+    public bool bDisallowNanite;
+    public bool bForceDisableNanite;
+    public bool bForceNaniteForMasked;
+
+    public FStaticMeshSceneProxyDesc(FFastGeoArchive Ar)
+    {
+        StaticMesh = Ar.ReadFPackageIndex();
+        if (Ar.Game is EGame.GAME_WutheringWavesFastGeo)
+        {
+            Ar.Position += 68;
+            return;
+        }
+        MeshPaintTexture = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadFPackageIndex() : new FPackageIndex();
+        OverlayMaterial = Ar.ReadFPackageIndex();
+        MaterialSlotsOverlayMaterial = Ar.ReadArray(Ar.ReadFPackageIndex);
+        OverlayMaterialMaxDrawDistance = Ar.Read<float>();
+        ForcedLodModel = Ar.Read<int>();
+        MinLOD = Ar.Read<int>();
+        WorldPositionOffsetDisableDistance = Ar.Read<float>();
+        NanitePixelProgrammableDistance = Ar.Read<float>();
+        DistanceFieldSelfShadowBias = Ar.Read<float>();
+        DistanceFieldIndirectShadowMinVisibility = Ar.Read<float>();
+        StaticLightMapResolution = Ar.Read<int>();
+        MeshPaintTextureCoordinateIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        bReverseCulling = Ar.ReadBoolean();
+        bEvaluateWorldPositionOffset = Ar.ReadBoolean();
+        bOverrideMinLOD = Ar.ReadBoolean();
+        bCastDistanceFieldIndirectShadow = Ar.ReadBoolean();
+        bOverrideDistanceFieldSelfShadowBias = Ar.ReadBoolean();
+        bEvaluateWorldPositionOffsetInRayTracing = Ar.ReadBoolean();
+        bSortTriangles = Ar.ReadBoolean();
+        bDisallowNanite = Ar.ReadBoolean();
+        bForceDisableNanite = Ar.ReadBoolean();
+        bForceNaniteForMasked = Ar.ReadBoolean();
+    }
 }
 
 public class FInstancedStaticMeshSceneProxyDesc(FFastGeoArchive Ar)// : FStaticMeshSceneProxyDesc

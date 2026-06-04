@@ -65,7 +65,7 @@ public class UEModel : UEFormatExport
 
                 using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
                 SerializeStaticMeshData(subLodChunk, lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
-                SerializeSkeletalMeshData(subLodChunk, lod.Verts, morphTargets, lodIdx);
+                SerializeSkeletalMeshData(subLodChunk, lod.Verts, morphTargets, lod.LODIndex);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
