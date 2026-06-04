@@ -20,7 +20,7 @@ public class URecastNavMeshDataChunk : Assets.Exports.UObject
 
         NavMeshVersion = Ar.Read<ENavMeshVersion>();
         var recastNavMeshSizePos = Ar.Position;
-        var recastNavMeshSizeBytes = Ar.Read<long>();
+        var recastNavMeshSizeBytes = Ar.Game != EGame.GAME_WutheringWaves ? Ar.Read<long>() : 8;
 
         if (NavMeshVersion < ENavMeshVersion.NAVMESHVER_MIN_COMPATIBLE)
         {

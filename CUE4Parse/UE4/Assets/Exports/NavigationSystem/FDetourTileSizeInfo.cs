@@ -34,6 +34,7 @@ public class FDetourTileSizeInfo
         }
         else
         {
+            if (Ar.Game is EGame.GAME_WutheringWaves) Ar.Position += 4;
             VertCount = Ar.Read<int>();
             PolyCount = Ar.Read<int>();
             MaxLinkCount = Ar.Read<int>();

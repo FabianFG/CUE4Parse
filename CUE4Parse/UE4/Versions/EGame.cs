@@ -226,6 +226,7 @@ public enum EGame : uint
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
         GAME_Squad = GAME_UE5_7 + 2,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
+        GAME_WutheringWavesFastGeo = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_8
