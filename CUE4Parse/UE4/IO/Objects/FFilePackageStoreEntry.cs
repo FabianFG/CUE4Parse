@@ -10,7 +10,7 @@ namespace CUE4Parse.UE4.IO.Objects
         public int ExportCount;
         public int ExportBundleCount;
         public FPackageId[] ImportedPackages;
-        public FSHAHash[] ShaderMapHashes;
+        //public FSHAHash[] ShaderMapHashes;
 
         public FFilePackageStoreEntry(FArchive Ar, EIoContainerHeaderVersion version)
         {
@@ -23,7 +23,8 @@ namespace CUE4Parse.UE4.IO.Objects
                 }
 
                 ImportedPackages = ReadCArrayView<FPackageId>(Ar);
-                ShaderMapHashes = ReadCArrayView(Ar, () => new FSHAHash(Ar));
+                Ar.Position += 8;
+                //ShaderMapHashes = ReadCArrayView(Ar, () => new FSHAHash(Ar));
             }
             else
             {
