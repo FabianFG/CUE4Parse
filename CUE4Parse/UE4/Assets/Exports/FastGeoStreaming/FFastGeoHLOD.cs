@@ -15,7 +15,7 @@ public class FFastGeoHLOD : FFastGeoComponentCluster
         bRequireWarmup = Ar.ReadBoolean();
         SourceCellGuid = Ar.Read<FGuid>();
         StandaloneHLODGuid = Ar.Read<FGuid>();
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game is >= EGame.GAME_UE5_7 and not EGame.GAME_WutheringWavesFastGeo)
             CustomHLODGuid = Ar.Read<FGuid>();
     }
 }

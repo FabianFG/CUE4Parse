@@ -12,7 +12,8 @@ public static class PlatformDeswizzlers
 {
     static PlatformDeswizzlers()
     {
-        PrepareDllFile();
+        PrepareDllFile("tegra_swizzle_x64.dll");
+        PrepareDllFile("crunch.dll");
     }
 
     [DllImport("tegra_swizzle_x64", EntryPoint = "deswizzle_block_linear")]
@@ -27,11 +28,20 @@ public static class PlatformDeswizzlers
     [DllImport("tegra_swizzle_x64", EntryPoint = "mip_block_height")]
     private static extern ulong MipBlockHeightX64(ulong mipHeight, ulong blockHeightMip0);
 
-    private static void PrepareDllFile()
+    [DllImport("crunch", EntryPoint = "crnd_unpack_begin")]
+    public static extern unsafe void* crnd_unpack_begin(byte* pData, uint data_size);
+
+    [DllImport("crunch", EntryPoint = "crnd_unpack_level_segmented")]
+    public static extern unsafe bool crnd_unpack_level_segmented(void* pContext, byte* pSrc, uint src_size, void** ppDst, uint dst_size, uint row_pitch_in_bytes, uint level_index);
+
+    [DllImport("crunch", EntryPoint = "crnd_unpack_end")]
+    public static extern unsafe bool crnd_unpack_end(void* pContext);
+
+    private static void PrepareDllFile(string dllName)
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse_Conversion.Resources.tegra_swizzle_x64.dll");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"CUE4Parse_Conversion.Resources.{dllName}");
         if (stream == null)
-            throw new MissingManifestResourceException("Couldn't find tegra_swizzle_x64.dll in Embedded Resources");
+            throw new MissingManifestResourceException($"Couldn't find {dllName} in Embedded Resources");
         var ba = new byte[(int) stream.Length];
         _ = stream.Read(ba, 0, (int) stream.Length);
 
@@ -41,9 +51,9 @@ public static class PlatformDeswizzlers
         {
             var fileHash = BitConverter.ToString(sha1.ComputeHash(ba)).Replace("-", string.Empty);
 
-            if (File.Exists("tegra_swizzle_x64.dll"))
+            if (File.Exists(dllName))
             {
-                var bb = File.ReadAllBytes("tegra_swizzle_x64.dll");
+                var bb = File.ReadAllBytes(dllName);
                 var fileHash2 = BitConverter.ToString(sha1.ComputeHash(bb)).Replace("-", string.Empty);
 
                 fileOk = fileHash == fileHash2;
@@ -56,7 +66,7 @@ public static class PlatformDeswizzlers
 
         if (!fileOk)
         {
-            File.WriteAllBytes("tegra_swizzle_x64.dll", ba);
+            File.WriteAllBytes(dllName, ba);
         }
     }
 
@@ -169,17 +179,15 @@ public static class PlatformDeswizzlers
                         int num9 = pixelIndex % 32;
                         int num10 = pixelIndex / 32;
 
-                        for (int index3 = 0; index3 < 32 && streamPos + 0x10 < data.Length; ++index3)
+                        for (int index3 = 0; index3 < 32 && streamPos + sourceBytesPerPixelSet <= data.Length; ++index3)
                         {
-                            Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
-
                             int xBlock = index2 * 128 + num9 * 4 + index3 % 4;
                             int yBlock = index1 * 128 + num10 * 8 + index3 / 4;
 
                             if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
                             {
                                 int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
-                                Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                                Array.Copy(data, streamPos, outBuffer, destIndex, sourceBytesPerPixelSet);
                             }
 
                             streamPos += sourceBytesPerPixelSet;
@@ -202,17 +210,15 @@ public static class PlatformDeswizzlers
 
                         for (int index3 = 0; index3 < 16; ++index3)
                         {
-                            for (int index4 = 0; index4 < num7 && streamPos + 0x10 < data.Length; ++index4)
+                            for (int index4 = 0; index4 < num7 && streamPos + sourceBytesPerPixelSet <= data.Length; ++index4)
                             {
-                                Array.Copy(data, streamPos, tempBuffer, 0, sourceBytesPerPixelSet);
-
                                 int xBlock = index2 * 64 + (num9 * 4 + index3 / 4) * num7 + index4;
                                 int yBlock = index1 * 64 + num10 * 4 + index3 % 4;
 
                                 if (xBlock < horizontalBlockCount && yBlock < verticalBlockCount)
                                 {
                                     int destIndex = sourceBytesPerPixelSet * (yBlock * horizontalBlockCount + xBlock);
-                                    Array.Copy(tempBuffer, 0, outBuffer, destIndex, sourceBytesPerPixelSet);
+                                    Array.Copy(data, streamPos, outBuffer, destIndex, sourceBytesPerPixelSet);
                                 }
 
                                 streamPos += sourceBytesPerPixelSet;
