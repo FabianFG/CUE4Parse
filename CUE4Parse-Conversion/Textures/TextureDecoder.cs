@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using AssetRipper.TextureDecoder.Bc;
@@ -10,6 +11,7 @@ using CUE4Parse.Utils;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
+using Serilog;
 
 namespace CUE4Parse_Conversion.Textures;
 
@@ -128,6 +130,7 @@ public static class TextureDecoder
                 var packedOutputSize = packedStride * tileHeightInBlocks;
 
                 var layerData = ArrayPool<byte>.Shared.Rent(packedOutputSize);
+                var crunchContextCache = new Dictionary<(int ChunkIndex, uint Layer), IntPtr>();
 
                 for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
                 {
@@ -139,6 +142,57 @@ public static class TextureDecoder
 
                     if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.ZippedGPU_DEPRECATED)
                         Compression.Decompress(vt.Chunks[chunkIndex].BulkData.Data!, (int)tileStart, (int)tileLength, layerData, 0, packedOutputSize, CompressionMethod.Zlib);
+                    else if (vt.Chunks[chunkIndex].CodecType[layer] == EVirtualTextureCodec.Crunch_DEPRECATED)
+                    {
+                        var chunk = vt.Chunks[chunkIndex];
+                        var chunkData = chunk.BulkData.Data!;
+                        var contextKey = (chunkIndex, layer);
+                        try
+                        {
+                            if (!crunchContextCache.TryGetValue(contextKey, out var ctx))
+                            {
+                                var headerOffset = (int) chunk.CodecPayloadOffset[layer];
+                                var headerEnd = (int) chunk.CodecPayloadSize;
+                                if (layer + 1 < chunk.CodecPayloadOffset.Length)
+                                {
+                                    var nextOffset = (int) chunk.CodecPayloadOffset[layer + 1];
+                                    if (nextOffset > headerOffset)
+                                        headerEnd = nextOffset;
+                                }
+
+                                var headerSize = headerEnd - headerOffset;
+                                if (headerSize <= 0 || (headerOffset + headerSize) > chunkData.Length)
+                                    throw new ParserException("Incorrect crunch codec payload");
+
+                                fixed (byte* pHeader = &chunkData[headerOffset])
+                                {
+                                    ctx = (IntPtr) PlatformDeswizzlers.crnd_unpack_begin(pHeader, (uint) headerSize);
+                                }
+
+                                if (ctx == IntPtr.Zero)
+                                    throw new ParserException("Failed to unpack crunch codec header");
+
+                                crunchContextCache[contextKey] = ctx;
+                            }
+
+                            fixed (byte* srcPtr = &chunkData[(int) tileStart])
+                            fixed (byte* outPtr = layerData)
+                            {
+                                void* dst = outPtr;
+                                uint rowPitch = (uint) (tilePixelSize / formatInfo.BlockSizeX * formatInfo.BlockBytes);
+
+                                bool ok = PlatformDeswizzlers.crnd_unpack_level_segmented((void*) ctx, srcPtr, tileLength, &dst, (uint) packedOutputSize, rowPitch, 0);
+
+                                if (!ok)
+                                    throw new ParserException($"Failed to unpack tile ({tileX}, {tileY}) at {tileStart}");
+                            }
+                        }
+                        catch (ParserException e)
+                        {
+                            Log.Error(e, "Failed to decompress crunch codec texture");
+                            break;
+                        }
+                    }
                     else
                         Array.Copy(vt.Chunks[chunkIndex].BulkData.Data!, tileStart, layerData, 0, packedOutputSize);
 
@@ -166,6 +220,12 @@ public static class TextureDecoder
                         var destSpan = result.Slice(offset);
                         srcSpan.CopyTo(destSpan);
                     }
+                }
+
+                // free crunch context
+                foreach (var ctx in crunchContextCache.Values)
+                {
+                    PlatformDeswizzlers.crnd_unpack_end((void*) ctx);
                 }
 
                 ArrayPool<byte>.Shared.Return(layerData);
