@@ -385,7 +385,8 @@ public class FScriptStruct
             "MercunaUsageTypes" => Ar.Read<FRawUIntStruct>(),
 
             // Windrose
-            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "R5CollisionApproximation"  => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "R5SoftAssetPath" => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             // Armatus
             "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
