@@ -16,5 +16,6 @@ public enum CompressionMethod
     Zstd,
     XB1Zlib,
     XboxOneGDKZlib,
+    Brotli,
     Unknown
 }

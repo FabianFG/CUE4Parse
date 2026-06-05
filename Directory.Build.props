@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<Version>1.2.2</Version>
+    <Version>1.2.2</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,7 +22,7 @@
   <PropertyGroup>
     <NeutralLanguage>en</NeutralLanguage>
     <Authors>FabianFG</Authors>
-    <Copyright>Copyright (c) 2025 FabianFG</Copyright>
+    <Copyright>Copyright (c) 2026 FabianFG</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

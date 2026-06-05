@@ -44,7 +44,7 @@ public class URigHierarchy : UObject
             var uncompressedBytes = new byte[uncompressedSize];
             if (bStoreCompressedBytes)
             {
-                OodleHelper.Decompress(compressedBytes, 0, compressedBytes.Length, uncompressedBytes, 0, uncompressedBytes.Length);
+                Compression.Compression.Decompress(compressedBytes, 0, compressedBytes.Length, uncompressedBytes, 0, uncompressedBytes.Length, CompressionMethod.Oodle, Ar);
             }
 
             using var baseArchive = new FByteArchive("Archive for elements", bStoreCompressedBytes ? uncompressedBytes : compressedBytes, Ar.Versions);
