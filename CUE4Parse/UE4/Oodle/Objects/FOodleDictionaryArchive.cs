@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Oodle.Objects
             {
                 outData = new byte[decompressedLength];
                 var compressedData = _innerArchive.ReadBytes(compressedLength);
-                OodleHelper.Decompress(compressedData, 0, compressedLength, outData, 0, decompressedLength);
+                Compression.Compression.Decompress(compressedData, 0, compressedLength, outData, 0, decompressedLength, CompressionMethod.Oodle, _innerArchive);
             }
 
             return outData.Length == decompressedLength;

@@ -50,7 +50,7 @@ namespace CUE4Parse.UE4.VirtualFileCache.Manifest
                 {
                     data = new byte[dataSizeUncompressed];
                     var compressed = reader.ReadBytes(dataSizeCompressed);
-                    ZlibHelper.Decompress(compressed, 0, compressed.Length, data, 0, data.Length);
+                    Compression.Compression.Decompress(compressed, 0, compressed.Length, data, 0, data.Length, CompressionMethod.Zlib, reader);
                     break;
                 }
                 case EManifestStorageFlags.Encrypted:
