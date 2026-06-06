@@ -30,6 +30,12 @@ public static class NaniteConstants
     /// <summary>The maximum number of bits used to serialize a color channel for a vertex color.</summary>
     public const int NANITE_MAX_COLOR_QUANTIZATION_BITS = 8;
 
+    public const int NANITE_MAX_CLUSTER_BONE_INFLUENCES = 16;
+    public const int NANITE_MAX_HIERARCHY_BONE_INFLUENCES = 16;
+    public const int NANITE_HIERARCHY_NUM_BONES_BITS = 5;
+    public const int NANITE_HIERARCHY_BONE_INDICES_OFFSET_BITS = 27;
+    public const int NANITE_MAX_VOXEL_ANIMATION_BONE_INFLUENCES = 1;
+
     /// <summary>The maximum amount of clusters that can be contained in a page.</summary>
     public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500 = 8;
     public const int NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504 =
@@ -61,7 +67,7 @@ public static class NaniteConstants
     // 5.5+
     public const int NANITE_MAX_GROUP_PARTS_BITS_505 = 5;
     public const int NANITE_MAX_GROUP_PARTS_MASK_505 = ((1 << NANITE_MAX_GROUP_PARTS_BITS_505) - 1);
-    
+
     public const int NANITE_PAGE_RANGE_KEY_COUNT_BITS = NANITE_MAX_GROUP_PARTS_BITS_505;
     public const uint NANITE_PAGE_RANGE_KEY_FLAG_MULTI_RANGE = 1u << 31;
     public const uint NANITE_PAGE_RANGE_KEY_FLAG_HAS_STREAMING_PAGES = 1u << 30; // used by the GPU to prevent superfluous streaming requests

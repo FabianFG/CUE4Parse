@@ -20,6 +20,8 @@ public class FHierarchyNodeSlice
     public uint NumPages;
     public uint AssemblyTransformIndex;
     public uint ResourcePageRangeKey;
+    public uint	NumBones;
+    public uint	BoneIndicesOffsetInDwords;
     public bool bEnabled;
     public bool bLoaded;
     public bool bLeaf;
@@ -40,17 +42,20 @@ public class FHierarchyNodeSlice
 
             if (Ar.Game >= EGame.GAME_UE5_8)
             {
-                var misc2 = Ar.Read<TIntVector3<uint>>(); 
+                var misc2 = Ar.Read<TIntVector3<uint>>();
                 x = misc2.X;
                 y = misc2.Y;
+
+                BoneIndicesOffsetInDwords = GetBits(misc2.Z, NANITE_HIERARCHY_BONE_INDICES_OFFSET_BITS, 0);
+                NumBones = GetBits(misc2.Z, NANITE_HIERARCHY_NUM_BONES_BITS, NANITE_HIERARCHY_BONE_INDICES_OFFSET_BITS);
             }
             else
             {
-                var misc2 = Ar.Read<TIntVector2<uint>>(); 
+                var misc2 = Ar.Read<TIntVector2<uint>>();
                 x = misc2.X;
                 y = misc2.Y;
             }
-            
+
             AssemblyTransformIndex = GetBits(y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
             NumChildren = GetBits(y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
 
@@ -75,6 +80,8 @@ public class FHierarchyNodeSlice
             bEnabled = misc2 != 0u;
             bLeaf = misc2 != 0xFFFFFFFFu;
             AssemblyTransformIndex = 0xFFFFFFFFu;
+            BoneIndicesOffsetInDwords = 0xFFFFFFFFu;
+            NumBones = 0xFFFFFFFFu;
         }
     }
 }
