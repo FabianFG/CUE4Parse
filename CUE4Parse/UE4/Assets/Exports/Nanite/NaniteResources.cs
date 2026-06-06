@@ -28,12 +28,12 @@ public class FNaniteResources
     public uint[] BoneIndices;
     public ulong VoxelMaterialsMask;
     public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
-    
+
     /// <summary>
     /// Dictionary of page ranges relevant to streaming requests and fixups
     /// </summary>
     public FPageRangeKey[] PageRangeLookup;
-    
+
     /// <summary>The number of root pages found outside of the bulk page.</summary>
     public int NumRootPages = 0;
     /// <summary>The precision which which vertex positions are recorded with.</summary>
@@ -81,13 +81,13 @@ public class FNaniteResources
                     AssemblyBoneAttachmentData = Ar.ReadArray<uint>();
                     if (Ar.Game >= EGame.GAME_UE5_8)
                         BoneIndices = Ar.ReadArray<uint>();
-                    
+
                     PageRangeLookup = Ar.ReadArray<FPageRangeKey>();
                 }
-                
+
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
-            if (Ar.Game <= EGame.GAME_UE5_7) ImposterAtlas = Ar.ReadArray<ushort>();
+            if (Ar.Game < EGame.GAME_UE5_8) ImposterAtlas = Ar.ReadArray<ushort>();
             if (Ar.Game is EGame.GAME_Aion2) Ar.SkipFixedArray(1); // same length as ImposterAtlas
             NumRootPages = Ar.Read<int>();
             PositionPrecision = Ar.Read<int>();
@@ -131,7 +131,7 @@ public class FNaniteResources
             else
                 FailedPages.Add(pageIndex);
         }
-        
+
         return LoadedPages[pageIndex];
     }
 
