@@ -30,8 +30,9 @@ public class IoChunkToc
 
 public class IoStoreOnDemandOptions
 {
-    public Uri ChunkHostUri { get; set; }
-    public DirectoryInfo ChunkCacheDirectory { get; set; }
+    public HttpClient? DownloaderClient { get; set; }
+    public required Uri ChunkHostUri { get; init; }
+    public DirectoryInfo? ChunkCacheDirectory { get; init; }
     public AuthenticationHeaderValue? Authorization { get; set; }
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
 
@@ -42,24 +43,26 @@ public class IoStoreOnDemandDownloader : IDisposable
 {
     private readonly IoStoreOnDemandOptions _options;
     private readonly HttpClient _client;
+    private readonly bool _disposeClient;
 
     public IoStoreOnDemandDownloader(IoStoreOnDemandOptions options)
     {
         _options = options;
-        _client = new HttpClient(new HttpClientHandler
+        _client = options.DownloaderClient ?? new HttpClient(new SocketsHttpHandler
         {
             UseProxy = false,
             UseCookies = false,
-            CheckCertificateRevocationList = false,
-            UseDefaultCredentials = false,
             AutomaticDecompression = DecompressionMethods.None
         }) { Timeout = options.Timeout };
+        _disposeClient = options.DownloaderClient is null;
     }
 
     public async Task<Stream> Download(string url, long position = 0)
     {
-        var cachePath = _options.ChunkCacheDirectory.Exists ? Path.Combine(_options.ChunkCacheDirectory.FullName, url.SubstringAfterLast('/')) : null;
-        if (cachePath != null && File.Exists(cachePath))
+        var cachePath = _options.ChunkCacheDirectory is not null && _options.ChunkCacheDirectory.Exists
+            ? Path.Combine(_options.ChunkCacheDirectory.FullName, url.SubstringAfterLast('/'))
+            : null;
+        if (cachePath is not null && File.Exists(cachePath))
         {
             var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             fs.Position = position;
@@ -71,9 +74,9 @@ public class IoStoreOnDemandDownloader : IDisposable
         using var response = await _client.SendAsync(requestMessage).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         var outData = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-        var outStream = new MemoryStream(outData, false);
+        var outStream = new MemoryStream(outData, 0, outData.Length, false, true);
 
-        if (cachePath != null)
+        if (cachePath is not null)
         {
             await using var cacheFs = new FileStream(cachePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             await outStream.CopyToAsync(cacheFs).ConfigureAwait(false);
@@ -85,6 +88,7 @@ public class IoStoreOnDemandDownloader : IDisposable
 
     public void Dispose()
     {
-        _client.Dispose();
+        if (_disposeClient)
+            _client.Dispose();
     }
 }
