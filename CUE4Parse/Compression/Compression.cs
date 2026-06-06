@@ -19,6 +19,8 @@ public static class Compression
 {
     public const int LOADING_COMPRESSION_CHUNK_SIZE = 131072;
 
+    public static IDecompressor Decompressor => _decompressor;
+
     private static unsafe IDecompressor _decompressor = DecompressorBuilder.Default
         .Add(CompressionAlgorithm.Oodle, OodleDecompressor.TryDecompress)
         .Add(CompressionAlgorithm.LZ4, static (source, destination, out written)
