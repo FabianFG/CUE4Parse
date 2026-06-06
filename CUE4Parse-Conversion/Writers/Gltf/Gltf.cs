@@ -53,7 +53,7 @@ public class Gltf
             for (var j = 0; j < morphTargets.Length; j++)
             {
                 var morphTarget = morphTargets[j].Load<UMorphTarget>();
-                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lod.SourceLodIndex)
+                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lod.SourceLodIndex || morphTarget.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
                     continue;
 
                 var morphBuilder = meshBuilder.UseMorphTarget(j);

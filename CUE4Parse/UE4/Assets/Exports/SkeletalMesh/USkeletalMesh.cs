@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -208,13 +205,11 @@ public partial class USkeletalMesh : UObject
             return;
         }
 
-        var validLods = new List<int>(LODModels.Length);
         var maxLodLevel = -1;
         for (int i = 0; i < LODModels.Length; i++)
         {
             if (LODModels[i].MorphTargetVertexInfoBuffers is not null)
             {
-                validLods.Add(i);
                 maxLodLevel = i + 1;
             }
         }
@@ -242,7 +237,7 @@ public partial class USkeletalMesh : UObject
                 continue;
             }
 
-            foreach (var j in validLods)
+            for (int j = 0; j < morphLODModels.Length; j++)
             {
                 if (morphTarget.TryGetCompressedLODModel(j, out var compressedLodModel))
                 {
@@ -250,7 +245,7 @@ public partial class USkeletalMesh : UObject
                 }
                 else
                 {
-                    if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0) continue;
+                    if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0 || LODModels[j].MorphTargetVertexInfoBuffers is null) continue;
                     morphLODModels[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, morphLODModels[j].SectionIndices);
                 }
             }
@@ -261,7 +256,10 @@ public partial class USkeletalMesh : UObject
             Array.Copy(morphLODModels, newMorphLods, morphLODModels.Length);
             for (int j = morphLODModels.Length; j < maxLodLevel; j++)
             {
-                newMorphLods[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, []);
+                if (LODModels[j].MorphTargetVertexInfoBuffers is not null)
+                    newMorphLods[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, []);
+                else
+                    newMorphLods[j] = new FMorphTargetLODModel();
             }
 
             morphTarget.MorphLODModels = newMorphLods;

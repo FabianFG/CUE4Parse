@@ -204,7 +204,8 @@ public sealed class UEModel : UEFormatExport
             foreach (var morphTarget in morphTargets)
             {
                 var morph = morphTarget.Load<UMorphTarget>();
-                if (morph?.MorphLODModels is null || lod.SourceLodIndex >= morph.MorphLODModels.Length) continue;
+                if (morph?.MorphLODModels is null || lod.SourceLodIndex >= morph.MorphLODModels.Length || morph.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
+                    continue;
 
                 var morphLod = morph.MorphLODModels[lod.SourceLodIndex];
 

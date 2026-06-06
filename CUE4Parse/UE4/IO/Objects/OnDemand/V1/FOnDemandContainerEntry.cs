@@ -15,38 +15,38 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
     public FIoBlockHash[] BlockHashes;
     public FSHAHash UTocHash { get; }
     public EOnDemandContainerFlags ContainerFlags;
-    
+
     public FOnDemandContainerEntry(FArchive Ar, EOnDemandTocVersion version)
     {
         if (version >= EOnDemandTocVersion.ContainerId)
             ContainerId = Ar.Read<FIoContainerId>();
-        
+
         ContainerName = Ar.ReadFString();
         EncryptionKeyGuid = Ar.ReadFString();
         Entries = Ar.ReadArray(() => new FOnDemandTocEntry(Ar));
         BlockSizes = Ar.ReadArray<uint>();
         BlockHashes = Ar.ReadArray<FIoBlockHash>();
         UTocHash = new FSHAHash(Ar);
-        
+
         if (version >= EOnDemandTocVersion.ContainerFlags)
             ContainerFlags = Ar.Read<EOnDemandContainerFlags>();
-        
+
         if (version >= EOnDemandTocVersion.ContainerHeader)
             Ar.SkipFixedArray(sizeof(byte)); // Header
     }
 
-    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
+    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FOnDemandFileEntry fileEntry)
     {
         foreach (var entry in Entries)
         {
-            if (chunkId != entry.ChunkId) 
+            if (chunkId != entry.ChunkId)
                 continue;
-            
-            fileEntryHash = entry.Hash;
+
+            fileEntry = new FOnDemandFileEntry(entry.Hash);
             return true;
         }
 
-        fileEntryHash = default;
+        fileEntry = default;
         return false;
     }
 }

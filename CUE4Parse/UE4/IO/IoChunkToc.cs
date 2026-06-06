@@ -23,7 +23,7 @@ public class IoChunkToc
     {
         var bIsLegacy = Ar.Read<ulong>() == 0x6f6e64656d616e64;
         Ar.Position = 0;
-        
+
         OnDemandToc = bIsLegacy ? new Objects.OnDemand.V1.FOnDemandToc(Ar) : new FOnDemandToc(Ar);
     }
 }
@@ -56,18 +56,20 @@ public class IoStoreOnDemandDownloader : IDisposable
         }) { Timeout = options.Timeout };
     }
 
-    public async Task<Stream> Download(string url)
+    public async Task<Stream> Download(string url, long position = 0)
     {
         var cachePath = _options.ChunkCacheDirectory.Exists ? Path.Combine(_options.ChunkCacheDirectory.FullName, url.SubstringAfterLast('/')) : null;
         if (cachePath != null && File.Exists(cachePath))
         {
             var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            fs.Position = position;
             return fs;
         }
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.ChunkHostUri, url));
         if (_options.UseAuth) requestMessage.Headers.Authorization = _options.Authorization;
         using var response = await _client.SendAsync(requestMessage).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
         var outData = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
         var outStream = new MemoryStream(outData, false);
 
@@ -77,7 +79,7 @@ public class IoStoreOnDemandDownloader : IDisposable
             await outStream.CopyToAsync(cacheFs).ConfigureAwait(false);
         }
 
-        outStream.Position = 0L;
+        outStream.Position = position;
         return outStream;
     }
 
