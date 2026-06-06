@@ -20,6 +20,8 @@ public class FHierarchyNodeSlice
     public uint NumPages;
     public uint AssemblyTransformIndex;
     public uint ResourcePageRangeKey;
+    public uint	NumBones;
+    public uint	BoneIndicesOffsetInDwords;
     public bool bEnabled;
     public bool bLoaded;
     public bool bLeaf;
@@ -35,14 +37,32 @@ public class FHierarchyNodeSlice
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
         if (Ar.Game >= EGame.GAME_UE5_7)
         {
-            var misc2 = Ar.Read<TIntVector2<uint>>();
-            AssemblyTransformIndex = GetBits(misc2.Y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
-            NumChildren = GetBits(misc2.Y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
+            uint x;
+            uint y;
 
-            bLeaf = misc2.X != 0xFFFFFFFFu;
+            if (Ar.Game >= EGame.GAME_UE5_8)
+            {
+                var misc2 = Ar.Read<TIntVector3<uint>>();
+                x = misc2.X;
+                y = misc2.Y;
+
+                BoneIndicesOffsetInDwords = GetBits(misc2.Z, NANITE_HIERARCHY_BONE_INDICES_OFFSET_BITS, 0);
+                NumBones = GetBits(misc2.Z, NANITE_HIERARCHY_NUM_BONES_BITS, NANITE_HIERARCHY_BONE_INDICES_OFFSET_BITS);
+            }
+            else
+            {
+                var misc2 = Ar.Read<TIntVector2<uint>>();
+                x = misc2.X;
+                y = misc2.Y;
+            }
+
+            AssemblyTransformIndex = GetBits(y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
+            NumChildren = GetBits(y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
+
+            bLeaf = x != 0xFFFFFFFFu;
             if (bLeaf)
             {
-                ResourcePageRangeKey = misc2.X;
+                ResourcePageRangeKey = x;
                 bEnabled = ResourcePageRangeKey != NANITE_PAGE_RANGE_KEY_EMPTY_RANGE || NumChildren > 0;
             }
             else
@@ -60,6 +80,8 @@ public class FHierarchyNodeSlice
             bEnabled = misc2 != 0u;
             bLeaf = misc2 != 0xFFFFFFFFu;
             AssemblyTransformIndex = 0xFFFFFFFFu;
+            BoneIndicesOffsetInDwords = 0xFFFFFFFFu;
+            NumBones = 0xFFFFFFFFu;
         }
     }
 }
