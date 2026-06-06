@@ -35,14 +35,29 @@ public class FHierarchyNodeSlice
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
         if (Ar.Game >= EGame.GAME_UE5_7)
         {
-            var misc2 = Ar.Read<TIntVector2<uint>>();
-            AssemblyTransformIndex = GetBits(misc2.Y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
-            NumChildren = GetBits(misc2.Y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
+            uint x;
+            uint y;
 
-            bLeaf = misc2.X != 0xFFFFFFFFu;
+            if (Ar.Game >= EGame.GAME_UE5_8)
+            {
+                var misc2 = Ar.Read<TIntVector3<uint>>(); 
+                x = misc2.X;
+                y = misc2.Y;
+            }
+            else
+            {
+                var misc2 = Ar.Read<TIntVector2<uint>>(); 
+                x = misc2.X;
+                y = misc2.Y;
+            }
+            
+            AssemblyTransformIndex = GetBits(y, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS, 0);
+            NumChildren = GetBits(y, NANITE_MAX_CLUSTERS_PER_GROUP_BITS, NANITE_HIERARCHY_ASSEMBLY_TRANSFORM_INDEX_BITS);
+
+            bLeaf = x != 0xFFFFFFFFu;
             if (bLeaf)
             {
-                ResourcePageRangeKey = misc2.X;
+                ResourcePageRangeKey = x;
                 bEnabled = ResourcePageRangeKey != NANITE_PAGE_RANGE_KEY_EMPTY_RANGE || NumChildren > 0;
             }
             else
