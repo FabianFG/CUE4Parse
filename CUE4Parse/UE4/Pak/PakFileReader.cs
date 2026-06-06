@@ -11,6 +11,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
+using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
@@ -134,7 +135,9 @@ namespace CUE4Parse.UE4.Pak
                 {
                     var block = pakEntry.CompressionBlocks[blockIndex];
                     var blockSize = (int) block.Size;
-                    var srcSize = blockSize.Align(alignment);
+                    var srcSize = pakEntry.IsEncrypted && ProSpiAes.IsProSpiArchive(Path)
+                        ? (blockSize + ProSpiAes.EncryptedBlockTrailerSize).Align(alignment)
+                        : blockSize.Align(alignment);
                     if (srcSize > compressedBuffer.Length)
                     {
                         compressedBuffer = new byte[srcSize];
@@ -193,7 +196,9 @@ namespace CUE4Parse.UE4.Pak
 
             var readOffset = offset & ~((long) alignment - 1);
             var dataOffset = offset - readOffset;
-            var readSize = (dataOffset + requestedSize).Align(alignment);
+            var readSize = pakEntry.IsEncrypted && header is null && ProSpiAes.IsProSpiArchive(Path)
+                ? (dataOffset + requestedSize + ProSpiAes.EncryptedBlockTrailerSize).Align(alignment)
+                : (dataOffset + requestedSize).Align(alignment);
             var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
 
             switch (Ar.Game)

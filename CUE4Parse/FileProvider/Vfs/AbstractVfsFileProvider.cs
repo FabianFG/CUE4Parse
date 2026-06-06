@@ -26,6 +26,7 @@ using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
+using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
@@ -263,7 +264,11 @@ namespace CUE4Parse.FileProvider.Vfs
 
             _unloadedVfs[reader] = null;
             reader.IsConcurrent = isConcurrent;
-            if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
+            if (ProSpiAes.IsProSpiArchive(reader.Path))
+            {
+                reader.CustomEncryption = ProSpiAes.ProSpiDecrypt;
+            }
+            else if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
             {
                 reader.CustomEncryption = CustomEncryption;
             }
@@ -280,7 +285,7 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 VerifyGlobalData(reader);
 
-                if (reader.IsEncrypted && CustomEncryption == null || !reader.HasDirectoryIndex)
+                if (reader.IsEncrypted && reader.CustomEncryption == null || !reader.HasDirectoryIndex)
                     continue;
 
                 tasks.AddLast(Task.Run(() =>
