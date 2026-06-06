@@ -291,7 +291,7 @@ public class FShaderParameterBindings
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 8)]
+    [StructLayout(LayoutKind.Sequential, Size = 6)]
     public struct FBindlessResourceParameter
     {
         public ushort ByteOffset;
