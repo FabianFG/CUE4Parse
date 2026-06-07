@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
@@ -21,7 +18,7 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 
 namespace CUE4Parse_Conversion;
 
-public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions options)
+public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions options) : INotifyPropertyChanged
 {
     public DirectoryInfo BaseDirectory { get; } = baseDirectory;
     public ExportOptions Options { get; } = options;
@@ -65,7 +62,9 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
         exporter.Log.Debug("Queued for export");
         exporter._session = this;
         _roots.Enqueue(exporter);
+
         Interlocked.Increment(ref _totalQueued);
+        OnPropertyChanged(nameof(TotalQueued));
         return this;
     }
 
@@ -90,6 +89,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
         }
 
         Interlocked.Exchange(ref _totalQueued, 0);
+        OnPropertyChanged(nameof(TotalQueued));
         return [.. allResults];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
@@ -114,4 +114,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
         Directory.CreateDirectory(dir);
         return fullPath.Replace('/', '\\');
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

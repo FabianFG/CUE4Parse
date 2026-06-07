@@ -59,8 +59,8 @@ public abstract class ExporterBase : IExporter
 
     protected internal ExporterBase(GameFile file) : this(file.PathWithoutExtension, file.NameWithoutExtension, "RawData")
     {
-        if (!file.IsUePackage)
-            throw new ArgumentException("GameFile must be a UE package", nameof(file));
+        if (file.IsUePackagePayload)
+            throw new ArgumentException("GameFile must not be a UE package payload file", nameof(file));
     }
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles();
