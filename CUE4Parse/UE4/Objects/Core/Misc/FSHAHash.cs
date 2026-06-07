@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Readers;
@@ -15,17 +14,17 @@ public readonly struct FSHAHash : IUStruct, IEquatable<FSHAHash>
     public FSHAHash(FArchive Ar)
     {
         Hash = default;
-        Ar.Read(Hash);
+        Ar.ReadExactly(Hash);
     }
 
     public FSHAHash(FArchive Ar, int customSize)
     {
         Hash = default;
         if (customSize <= SIZE)
-            Ar.Read(Hash[..customSize]);
+            Ar.ReadExactly(Hash[..customSize]);
         else
         {
-            Ar.Read(Hash);
+            Ar.ReadExactly(Hash);
             Ar.Position += customSize - SIZE;
         }
     }

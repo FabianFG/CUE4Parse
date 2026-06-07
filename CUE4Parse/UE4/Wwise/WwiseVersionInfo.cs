@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace CUE4Parse.UE4.Wwise;
 
 public static class WwiseVersionInfo
@@ -16,11 +14,12 @@ public static class WwiseVersionInfo
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
-        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis, The Outlast Trials, Little Nightmares 3
+        140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis, The Outlast Trials, Little Nightmares 3, eBaseball PRO SPIRIT
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight (old), Splitgate 2, Byte Breakers, Le Dernier Don
         154,    // Off The Grid, Dead by Daylight
-        172     // Soglia (Unity), Stardream Prologue
+        172,    // Soglia (Unity), Stardream Prologue
+        174
     ];
 
     public static bool IsSupported(uint version) => SupportedVersions.Contains(version);
@@ -67,7 +66,8 @@ public static class WwiseVersionInfo
     // 154, // 0x9A Wwise 2024.1
     // 160, // 0xA8 Wwise 2025.1.0-B
     // 168, // 0xA8 Wwise 2025.1.0-B
-    // 169, // 0xA9 Wwise 2025.1.1-B 
+    // 169, // 0xA9 Wwise 2025.1.1-B
     // 171, // 0xAB Wwise 2025.1.2-B
     // 172, // 0xAC Wwise 2025.1.3
+    // 174, // 0xAE Wwise 2026.1.1
 }
