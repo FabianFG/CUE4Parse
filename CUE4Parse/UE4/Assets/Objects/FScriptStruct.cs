@@ -87,6 +87,7 @@ public class FScriptStruct
             "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
             "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
             "NameCurveKey" => type == ReadType.ZERO ? new FNameCurveKey() : new FNameCurveKey(Ar),
+            "StringCurveKey" => type == ReadType.ZERO ? new FStringCurveKey() : new FStringCurveKey(Ar),
             "RichCurveKey" => type == ReadType.ZERO ? new FRichCurveKey() : Ar.Read<FRichCurveKey>(),
             "SimpleCurveKey" => type == ReadType.ZERO ? new FSimpleCurveKey() : Ar.Read<FSimpleCurveKey>(),
             "ScalarMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<float>() : new FMaterialInput<float>(Ar),
