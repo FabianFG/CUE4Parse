@@ -231,7 +231,20 @@ namespace CUE4Parse.UE4.Pak
             watch.Start();
 
             if (Info.Version >= PakFile_Version_PathHashIndex)
-                ReadIndexUpdated(pathComparer);
+            {
+                switch (Game)
+                {
+                    case EGame.GAME_CrystalOfAtlan:
+                        CoAReadIndexUpdated(pathComparer);
+                        break;
+                    case EGame.GAME_DragonSwordAwakening:
+                        DragonSwordReadIndexUpdated(pathComparer);
+                        break;
+                    default:
+                        ReadIndexUpdated(pathComparer);
+                        break;
+                }
+            }
             else if (Info.IndexIsFrozen)
                 ReadFrozenIndex(pathComparer);
             else
@@ -303,12 +316,6 @@ namespace CUE4Parse.UE4.Pak
 
         private void ReadIndexUpdated(StringComparer pathComparer)
         {
-            if (Ar.Game == EGame.GAME_CrystalOfAtlan)
-            {
-                CoAReadIndexUpdated(pathComparer);
-                return;
-            }
-
             // Prepare primary index and decrypt if necessary
             Ar.Position = Info.IndexOffset;
             using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
