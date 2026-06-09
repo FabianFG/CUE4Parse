@@ -148,7 +148,7 @@ public class UClass : UStruct
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
             var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
             var arrayDim = property.ArrayDim > 1 ? $"[{property.ArrayDim}]" : "";
-            var specifiers = GetPropertySpecifiers(property.PropertyFlags);
+            var specifiers = GetPropertySpecifiers(property);
             variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{arrayDim}{bitfield}{value};", property.GetAccessMode());
         }
 
@@ -362,12 +362,17 @@ public class UClass : UStruct
         return stringBuilder.ToString();
     }
 
-    private static string GetPropertySpecifiers(EPropertyFlags flags)
+    private static string GetPropertySpecifiers(FProperty property)
     {
+        var flags = property.PropertyFlags;
         var specifiers = new List<string>();
         if (flags.HasFlag(EPropertyFlags.Edit)) specifiers.Add("EditAnywhere");
         if (flags.HasFlag(EPropertyFlags.BlueprintVisible)) specifiers.Add(flags.HasFlag(EPropertyFlags.BlueprintReadOnly) ? "BlueprintReadOnly" : "BlueprintReadWrite");
-        if (flags.HasFlag(EPropertyFlags.Net)) specifiers.Add("Replicated");
+        if (flags.HasFlag(EPropertyFlags.Net))
+        {
+            specifiers.Add(property.RepNotifyFunc.IsNone ? "Replicated" : $"ReplicatedUsing={property.RepNotifyFunc.Text}");
+            if (property.BlueprintReplicationCondition != ELifetimeCondition.COND_None) specifiers.Add(property.BlueprintReplicationCondition.ToString());
+        }
         if (flags.HasFlag(EPropertyFlags.Transient)) specifiers.Add("Transient");
         if (flags.HasFlag(EPropertyFlags.SaveGame)) specifiers.Add("SaveGame");
         if (flags.HasFlag(EPropertyFlags.Config)) specifiers.Add("Config");
