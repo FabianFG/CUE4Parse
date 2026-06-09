@@ -164,9 +164,9 @@ namespace CUE4Parse.UE4.IO.Objects
                 if (Header.Version == EIoStoreTocVersion.OnDemandMetaData && Header.ContainerFlags.HasFlag(EIoContainerFlags.OnDemand))
                 {
                     // FIoStoreTocOnDemandChunkMeta (FIoHash) OnDemandChunkMeta;
-                    Ar.Position += Header.TocEntryCount * FSHAHash.SIZE;
+                    archive.Position += Header.TocEntryCount * FSHAHash.SIZE;
                     // FIoStoreTocOnDemandCompressedBlockMeta (FIoHash) OnDemandCompressedBlockMeta;
-                    Ar.Position += Header.TocCompressedBlockEntryCount * FSHAHash.SIZE;
+                    archive.Position += Header.TocCompressedBlockEntryCount * FSHAHash.SIZE;
                 }
             }
         }
