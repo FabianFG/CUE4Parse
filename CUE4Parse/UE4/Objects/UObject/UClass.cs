@@ -147,8 +147,9 @@ public class UClass : UStruct
 
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
             var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
+            var arrayDim = property.ArrayDim > 1 ? $"[{property.ArrayDim}]" : "";
             var specifiers = GetPropertySpecifiers(property.PropertyFlags);
-            variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{bitfield}{value};", property.GetAccessMode());
+            variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{arrayDim}{bitfield}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
