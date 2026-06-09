@@ -366,6 +366,12 @@ public static class BlueprintDecompilerUtils
                 type += $"TArray<{innerType}>";
                 break;
             }
+            case FSetProperty setProperty:
+            {
+                var (_, innerType) = GetPropertyType(setProperty.ElementProp!);
+                type += $"TSet<{innerType}>";
+                break;
+            }
             case FStructProperty structProperty:
             {
                 var structType = structProperty.Struct.Name;
@@ -440,6 +446,26 @@ public static class BlueprintDecompilerUtils
                 type = $"TOptional<{keyinnerType}>";
                 break;
             }
+            case FFieldPathProperty fieldPathProperty:
+            {
+                type = $"TFieldPath<F{fieldPathProperty.PropertyClass}>";
+                break;
+            }
+            case FMulticastInlineDelegateProperty multicastInlineDelegateProperty:
+            {
+                type = $"F{multicastInlineDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case FMulticastDelegateProperty multicastDelegateProperty:
+            {
+                type = $"F{multicastDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case FDelegateProperty delegateProperty:
+            {
+                type = $"F{delegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
             default:
             {
                 Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
@@ -491,6 +517,15 @@ public static class BlueprintDecompilerUtils
 
                     //value = customStringBuilder.ToString();
                     type += $"TArray<{innerType}>";
+                }
+                break;
+            }
+            case USetProperty setProperty:
+            {
+                if (setProperty.ElementProp.Load() is UProperty elementProp)
+                {
+                    var (_, innerType) = GetPropertyType(elementProp);
+                    type += $"TSet<{innerType}>";
                 }
                 break;
             }
@@ -547,6 +582,21 @@ public static class BlueprintDecompilerUtils
                     var (_, valueinnerType) = GetPropertyType(valueProp);
                     type = $"TMap<{keyinnerType}, {valueinnerType}>";
                 }
+                break;
+            }
+            case UMulticastInlineDelegateProperty multicastInlineDelegateProperty:
+            {
+                type = $"F{multicastInlineDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case UMulticastDelegateProperty multicastDelegateProperty:
+            {
+                type = $"F{multicastDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case UDelegateProperty delegateProperty:
+            {
+                type = $"F{delegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
                 break;
             }
             case UEnumProperty enumProperty:
