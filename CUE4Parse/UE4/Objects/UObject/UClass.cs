@@ -146,7 +146,9 @@ public class UClass : UStruct
                 continue;
 
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
-            variables.TryAdd($"{variableType} {property.Name.Text}{value};", property.GetAccessMode());
+            var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
+            var specifiers = GetPropertySpecifiers(property.PropertyFlags);
+            variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{bitfield}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -296,9 +298,14 @@ public class UClass : UStruct
             }
 
             var flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
-            var functionQualifiers = function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? "static " : "";
-            var functionConst = function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Const) ? " const" : "";
-            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {key.Text}({string.Join(", ", parametersList)}){functionConst}";
+            var functionFlags = function.FunctionFlags;
+            var isBlueprintEvent = functionFlags.HasFlag(EFunctionFlags.FUNC_BlueprintEvent);
+            var functionQualifiers = functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? "static "
+                : isBlueprintEvent && !functionFlags.HasFlag(EFunctionFlags.FUNC_Final) ? "virtual " : "";
+            var functionConst = functionFlags.HasFlag(EFunctionFlags.FUNC_Const) ? " const" : "";
+            var functionOverride = IsOverriddenFunction(key) ? " override" : "";
+            var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{key.Text}_Implementation" : key.Text;
+            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
@@ -350,6 +357,34 @@ public class UClass : UStruct
 
         stringBuilder.CloseBlock("};");
         return stringBuilder.ToString();
+    }
+
+    private static string GetPropertySpecifiers(EPropertyFlags flags)
+    {
+        var specifiers = new List<string>();
+        if (flags.HasFlag(EPropertyFlags.Edit)) specifiers.Add("EditAnywhere");
+        if (flags.HasFlag(EPropertyFlags.BlueprintVisible)) specifiers.Add(flags.HasFlag(EPropertyFlags.BlueprintReadOnly) ? "BlueprintReadOnly" : "BlueprintReadWrite");
+        if (flags.HasFlag(EPropertyFlags.Net)) specifiers.Add("Replicated");
+        if (flags.HasFlag(EPropertyFlags.Transient)) specifiers.Add("Transient");
+        if (flags.HasFlag(EPropertyFlags.SaveGame)) specifiers.Add("SaveGame");
+        if (flags.HasFlag(EPropertyFlags.Config)) specifiers.Add("Config");
+        return specifiers.Count > 0 ? $"// ({string.Join(", ", specifiers)})\n" : "";
+    }
+
+    private bool IsOverriddenFunction(FName name)
+    {
+        var current = SuperStruct.Load<UStruct>();
+        var depth = 0;
+        while (current is UClass parent && parent is not UScriptClass && depth++ < 100)
+        {
+            foreach (var parentFunction in parent.FuncMap.Keys)
+            {
+                if (string.Equals(parentFunction.Text, name.Text, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            current = parent.SuperStruct.Load<UStruct>();
+        }
+        return false;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
