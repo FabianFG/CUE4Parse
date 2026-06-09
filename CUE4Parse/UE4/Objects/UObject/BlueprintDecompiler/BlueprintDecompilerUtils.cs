@@ -111,9 +111,9 @@ public static class BlueprintDecompilerUtils
         if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
         {
             if (functionName.StartsWith("EqualEqual_ByteByte")) return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
-            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) !== (!{parametersList[1]}))";
+            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) != (!{parametersList[1]}))";
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.StartsWith("NotEqualExactly_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.StartsWith("LessEqual_")) return $"({parametersList[0]} <= {parametersList[1]})";
             if (functionName.StartsWith("Less_")) return $"({parametersList[0]} < {parametersList[1]})";
@@ -212,7 +212,7 @@ public static class BlueprintDecompilerUtils
         if (className == "KismetStringLibrary")
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
 
             if (functionName.EndsWith("ToDouble")) return $"(double){parametersList[0]}";
             if (functionName.EndsWith("ToFloat")) return $"(float){parametersList[0]}";
@@ -225,7 +225,6 @@ public static class BlueprintDecompilerUtils
             if (functionName.EndsWith("ToName")) return $"FName({parametersList[0]})";
             if (functionName.StartsWith("Concat_StrStr")) return string.Join(" += ", parametersList);
             if (functionName.StartsWith("ParseIntoArray")) return $"{parametersList[0]}.Split({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
-            if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
             if (functionName.StartsWith("JoinStringArray")) return $"{parametersList[0]}.Join({parametersList[1]})";
             if (functionName.StartsWith("Replace")) return $"{parametersList[0]}.Replace({parametersList[1]}, {parametersList[2]}, /* SearchCase = */ {parametersList[3]})";
             if (functionName.StartsWith("StartsWith")) return $"{parametersList[0]}.startswith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
@@ -247,7 +246,7 @@ public static class BlueprintDecompilerUtils
         if (className == "KismetInputLibrary" || className == "BlueprintGameplayTagLibrary" || className == "FortKismetLibrary" || className == "KismetTextLibrary")
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.EndsWith("ToText")) return $"FText({parametersList[0]})";
             if (functionName.EndsWith("ToString"))  return $"FString({parametersList[0]})";
         }
