@@ -54,7 +54,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 for (var i = 0; i < morphTargets.Length; i++)
                 {
                     var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                    if (morphTarget?.MorphLODModels is null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1 || morphTarget.MorphLODModels[lodIndex].Vertices.Length == 0)
+                    if (morphTarget?.MorphLODModels is null || morphTarget.MorphLODModels.Length <= lodIndex || lodIndex == -1 || morphTarget.MorphLODModels[lodIndex].Vertices.Length == 0)
                         continue;
                     var morphBuilder = mesh.UseMorphTarget(i);
                     var morphModel = morphTarget.MorphLODModels[lodIndex];
@@ -66,6 +66,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                     for (int j = 0; j < morphModel.Vertices.Length; j++) // morphModel.NumBaseMeshVerts can be different from verts.Length
                     {
                         var delta = morphModel.Vertices[j];
+                        if (delta.SourceIdx >= lod.Verts.Length) continue;
                         var vert = lod.Verts[delta.SourceIdx];
                         var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position*0.01f),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
                         var index = FindVert(srcVert, verts);
