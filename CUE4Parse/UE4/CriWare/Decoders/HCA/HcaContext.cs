@@ -173,7 +173,7 @@ internal class HcaContext
 
             for (int i = 0; i < CommentLength; i++)
             {
-                commentStringBuilder.Append(bitReader.Read(8));
+                commentStringBuilder.Append((char) bitReader.Read(8));
             }
 
             Comment = commentStringBuilder.ToString();
