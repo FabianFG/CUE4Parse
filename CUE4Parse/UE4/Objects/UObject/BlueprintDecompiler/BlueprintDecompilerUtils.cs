@@ -1573,7 +1573,7 @@ public static class BlueprintDecompilerUtils
                     properties.Add(GetLineExpression(property));
                 }
 
-                if (structConst.Struct.Name == "LatentActionInfo") return properties[0]; // used for cleaning code output.
+                if (structConst.Struct.Name == "LatentActionInfo") return properties.Count > 0 ? properties[0] : ""; // used for cleaning code output.
 
                 return $"F{structConst.Struct.Name}({string.Join(", ", properties)})";
             }
@@ -1617,7 +1617,7 @@ public static class BlueprintDecompilerUtils
 
                 var elements = setMap.Elements;
 
-                for (int i = 0; i < elements.Length; i += 2)
+                for (int i = 0; i + 1 < elements.Length; i += 2)
                 {
                     var keyText = GetLineExpression(elements[i]);
                     var valueText = GetLineExpression(elements[i + 1]);
@@ -1643,7 +1643,7 @@ public static class BlueprintDecompilerUtils
 
                 var elements = mapConst.Elements;
 
-                for (int i = 0; i < elements.Length; i += 2)
+                for (int i = 0; i + 1 < elements.Length; i += 2)
                 {
                     var keyText = GetLineExpression(elements[i]);
                     var valueText = GetLineExpression(elements[i + 1]);
