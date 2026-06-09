@@ -345,6 +345,26 @@ public static class BlueprintDecompilerUtils
 
         switch (property)
         {
+            case FSoftClassProperty softClassProperty:
+            {
+                type += $"TSoftClassPtr<{GetClassWithPrefix(softClassProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case FClassProperty classProperty:
+            {
+                type += $"TSubclassOf<{GetClassWithPrefix(classProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case FSoftObjectProperty softObjectProperty:
+            {
+                type += $"TSoftObjectPtr<{GetClassWithPrefix(softObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case FWeakObjectProperty weakObjectProperty:
+            {
+                type += $"TWeakObjectPtr<{GetClassWithPrefix(weakObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
             case FObjectProperty objectProperty:
             {
                 // Looks bad and provides useless information.
@@ -384,7 +404,7 @@ public static class BlueprintDecompilerUtils
             {
                 if (property is FByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
                 {
-                    type = enumObj.Name;
+                    type = $"TEnumAsByte<{enumObj.Name}>";
                 }
                 else
                 {
@@ -496,6 +516,31 @@ public static class BlueprintDecompilerUtils
 
         switch (property)
         {
+            case USoftClassProperty softClassProperty:
+            {
+                type += $"TSoftClassPtr<{GetClassWithPrefix(softClassProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case UClassProperty classProperty:
+            {
+                type += $"TSubclassOf<{GetClassWithPrefix(classProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case USoftObjectProperty softObjectProperty:
+            {
+                type += $"TSoftObjectPtr<{GetClassWithPrefix(softObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case UWeakObjectProperty weakObjectProperty:
+            {
+                type += $"TWeakObjectPtr<{GetClassWithPrefix(weakObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case ULazyObjectProperty lazyObjectProperty:
+            {
+                type += $"TLazyObjectPtr<{GetClassWithPrefix(lazyObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
             case UObjectProperty objectProperty:
             {
                 // Looks bad and provides useless information.
@@ -541,7 +586,7 @@ public static class BlueprintDecompilerUtils
             {
                 if (property is UByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
                 {
-                    type = enumObj.Name;
+                    type = $"TEnumAsByte<{enumObj.Name}>";
                 }
                 else
                 {

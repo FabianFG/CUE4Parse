@@ -116,6 +116,11 @@ public class UClass : UStruct
         bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
 
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
+        foreach (var implementedInterface in Interfaces)
+        {
+            if (implementedInterface.Class.IsNull) continue;
+            c += $", public I{implementedInterface.Class.Name}";
+        }
         if (emptyClass) return $"{c};";
 
         var stringBuilder = new CustomStringBuilder();
