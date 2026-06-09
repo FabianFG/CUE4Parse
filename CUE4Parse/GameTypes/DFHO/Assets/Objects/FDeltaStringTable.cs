@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using static CUE4Parse.UE4.Readers.FArchive;
@@ -9,7 +7,13 @@ namespace CUE4Parse.GameTypes.DFHO.Assets.Objects;
 public class FDeltaStringTable
 {
     public string TableNamespace;
-    public Dictionary<string, string> KeysToEntries;
+    public Dictionary<string, TableEntry> KeysToEntries;
+
+    public struct TableEntry(FByteArchive Ar)
+    {
+        public string Name = Ar.ReadFString();
+        public uint Id = Ar.Read<uint>();
+    }
 
     public FDeltaStringTable(FArchive Ar)
     {
@@ -32,7 +36,8 @@ public class FDeltaStringTable
         var tableAr = new FByteArchive("FDeltaStringTable", fullUncompressed, Ar.Versions);
 
         tableAr.Position += 4; // Size
+        tableAr.Position += 4;
         TableNamespace = tableAr.ReadFString();
-        KeysToEntries = tableAr.ReadMap(tableAr.ReadFString, tableAr.ReadFString);
+        KeysToEntries = tableAr.ReadMap(tableAr.ReadFString, () => new TableEntry(tableAr));
     }
 }
