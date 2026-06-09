@@ -389,7 +389,7 @@ public static class BlueprintDecompilerUtils
             }
             case FInterfaceProperty interfaceProperty:
             {
-                type = $"F{interfaceProperty.InterfaceClass.Name}";
+                type = $"I{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
             case FBoolProperty boolProperty:
@@ -517,7 +517,7 @@ public static class BlueprintDecompilerUtils
             }
             case UInterfaceProperty interfaceProperty:
             {
-                type = $"F{interfaceProperty.InterfaceClass.Name}";
+                type = $"I{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
             case UBoolProperty boolProperty:
@@ -542,7 +542,7 @@ public static class BlueprintDecompilerUtils
             }
             case UMapProperty mapProperty:
             {
-                if (mapProperty.KeyProp.Load() is UProperty innerProp && mapProperty.KeyProp.Load() is UProperty valueProp)
+                if (mapProperty.KeyProp.Load() is UProperty innerProp && mapProperty.ValueProp.Load() is UProperty valueProp)
                 {
                     var (_, keyinnerType) = GetPropertyType(innerProp);
                     var (_, valueinnerType) = GetPropertyType(valueProp);
