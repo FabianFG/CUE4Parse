@@ -460,7 +460,7 @@ public class FNumberFormattingOptions : IUStruct
 
     public FNumberFormattingOptions(FAssetArchive Ar)
     {
-        AlwaysSign = FEditorObjectVersion.Get(Ar) > FEditorObjectVersion.Type.AddedAlwaysSignNumberFormattingOption && Ar.ReadBoolean();
+        AlwaysSign = FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.AddedAlwaysSignNumberFormattingOption && Ar.ReadBoolean();
         UseGrouping = Ar.ReadBoolean();
         RoundingMode = Ar.Read<ERoundingMode>();
         MinimumIntegralDigits = Ar.Read<int>();
