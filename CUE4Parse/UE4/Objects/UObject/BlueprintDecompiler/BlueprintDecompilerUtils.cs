@@ -1588,6 +1588,14 @@ public static class BlueprintDecompilerUtils
 
                 return customStringBuilder.ToString();
             }
+            case EX_Assert assertExpr:
+            {
+                return $"assert({GetLineExpression(assertExpr.AssertExpression)})";
+            }
+            case EX_Skip skip:
+            {
+                return GetLineExpression(skip.SkipExpression);
+            }
             case EX_Jump jump:
             {
                 var targetIndex = (int)jump.CodeOffset;
@@ -1776,41 +1784,15 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SwitchValue switchValue:
             {
-                if (switchValue.Cases.Length == 2)
+                var indexTerm = GetLineExpression(switchValue.IndexTerm);
+                var result = GetLineExpression(switchValue.DefaultTerm);
+                for (int i = switchValue.Cases.Length - 1; i >= 0; i--)
                 {
-                    var indexTerm = GetLineExpression(switchValue.IndexTerm);
-
-                    var case0 = GetLineExpression(switchValue.Cases[0].CaseTerm);
-                    var case1 = GetLineExpression(switchValue.Cases[1].CaseTerm);
-
-                    return $"{indexTerm} ? {case1} : {case0}";
+                    var caseIndex = GetLineExpression(switchValue.Cases[i].CaseIndexValueTerm);
+                    var caseTerm = GetLineExpression(switchValue.Cases[i].CaseTerm);
+                    result = $"{indexTerm} == {caseIndex} ? {caseTerm} : {result}";
                 }
-
-                var stringBuilder = new CustomStringBuilder();
-                stringBuilder.AppendLine($"switch ({GetLineExpression(switchValue.IndexTerm)})");
-                stringBuilder.OpenBlock();
-
-                foreach (var caseItem in switchValue.Cases)
-                {
-                    stringBuilder.AppendLine($"case {GetLineExpression(caseItem.CaseIndexValueTerm)}:");
-                    stringBuilder.OpenBlock();
-
-                    stringBuilder.AppendLine($"return {GetLineExpression(caseItem.CaseTerm)};");
-                    stringBuilder.AppendLine("break;");
-
-                    stringBuilder.CloseBlock("}\n");
-                }
-
-                stringBuilder.AppendLine("default:");
-                stringBuilder.OpenBlock();
-
-                stringBuilder.AppendLine($"return {GetLineExpression(switchValue.DefaultTerm)};");
-                stringBuilder.AppendLine("break;");
-
-                stringBuilder.CloseBlock("}\n");
-                stringBuilder.CloseBlock();
-
-                return stringBuilder.ToString();
+                return switchValue.Cases.Length > 0 ? $"({result})" : result;
             }
             case EX_StructMemberContext structMemberContext:
             {

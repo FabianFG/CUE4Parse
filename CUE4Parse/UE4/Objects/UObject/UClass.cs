@@ -181,6 +181,8 @@ public class UClass : UStruct
 
                 switch (expression)
                 {
+                    case EX_Skip:
+                        break;
                     case EX_Jump jump:
                         var targetIndex = (int)jump.CodeOffset;
                         targetIndex = Array.FindIndex(function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
