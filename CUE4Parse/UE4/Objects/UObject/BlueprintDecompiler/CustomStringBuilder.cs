@@ -7,7 +7,7 @@ public class CustomStringBuilder
 {
     private readonly StringBuilder _stringBuilder;
     private int _indentationLevel;
-    private string _currentIndent;
+    private string _currentIndent = string.Empty;
 
     public CustomStringBuilder()
     {

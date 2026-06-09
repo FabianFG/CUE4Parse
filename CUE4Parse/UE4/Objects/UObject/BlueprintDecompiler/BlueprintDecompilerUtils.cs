@@ -25,7 +25,7 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 public static class BlueprintDecompilerUtils
 {
     public static TypeMappings? Mappings { get; set; }
-    private static UFunction _function;
+    private static UFunction _function = null!;
     public static UFunction Function
     {
         get => _function;
@@ -871,7 +871,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.AssetObjectProperty: // AssetObjectProperty is the old name of SoftObjectProperty
             {
-                var softObjectPath = propertyTag.Tag.GenericValue;
+                var softObjectPath = propertyTag.Tag?.GenericValue;
 
                 type = "FSoftObjectPath";
                 value = $"FSoftObjectPath(\"{softObjectPath}\")";
@@ -1273,8 +1273,10 @@ public static class BlueprintDecompilerUtils
         return !string.IsNullOrWhiteSpace(value);
     }
 
-    public static string GetLineExpression(KismetExpression expression)
+    public static string GetLineExpression(KismetExpression? expression)
     {
+        if (expression is null) return "";
+
         switch (expression)
         {
             case EX_VariableBase variableBase:
@@ -1310,8 +1312,8 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context context:
             {
-                var function = context?.ContextExpression is not null ? GetLineExpression(context?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
-                var obj = context?.ObjectExpression is not null ? GetLineExpression(context?.ObjectExpression) : "failedplaceholder";
+                var function = context.ContextExpression is not null ? GetLineExpression(context.ContextExpression).SubstringAfter("::") : "failedplaceholder";
+                var obj = context.ObjectExpression is not null ? GetLineExpression(context.ObjectExpression) : "failedplaceholder";
 
                 var customStringBuilder = new CustomStringBuilder();
                 if (expression is EX_Context_FailSilent)
@@ -1577,7 +1579,7 @@ public static class BlueprintDecompilerUtils
                 customStringBuilder.IncreaseIndentation();
                 var targetIndex = (int)jumpIfNot.CodeOffset;
                 targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
-                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && Function.ScriptBytecode[targetIndex] is EX_Return)
                 {
                     customStringBuilder.Append($"return");
                 }
@@ -1600,7 +1602,7 @@ public static class BlueprintDecompilerUtils
             {
                 var targetIndex = (int)jump.CodeOffset;
                 targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
-                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && Function.ScriptBytecode[targetIndex] is EX_Return)
                 {
                     return "return";
                 }
