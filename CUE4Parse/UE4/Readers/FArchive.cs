@@ -454,7 +454,8 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            if (Math.Abs(length) > Length - Position)
+            var strlength = length >= 0 ? (long) length : -(long) length * sizeof(ushort);
+            if (strlength > Length - Position)
             {
                 throw new ParserException($"Invalid FString length '{length}'");
             }
