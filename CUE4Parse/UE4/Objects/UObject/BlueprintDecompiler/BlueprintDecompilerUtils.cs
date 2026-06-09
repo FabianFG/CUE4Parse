@@ -25,7 +25,16 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 public static class BlueprintDecompilerUtils
 {
     public static TypeMappings? Mappings { get; set; }
-    public static UFunction Function { get; set; }
+    private static UFunction _function;
+    public static UFunction Function
+    {
+        get => _function;
+        set
+        {
+            _function = value;
+            _executionFlowStack.Clear();
+        }
+    }
     private static readonly Stack<int> _executionFlowStack = new();
 
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
