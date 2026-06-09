@@ -328,16 +328,14 @@ public static class BlueprintDecompilerUtils
             "ObjectProperty" or "ClassProperty" => "UObject*",
             "StructProperty" => $"F{tagType.StructType}",
             "InterfaceProperty" => $"I{tagType.StructType}",
-            _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
+            _ => tagType?.Type ?? "unknown"
         };
 
-    private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+    private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
 
-    private static bool IsPointer(UProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+    private static bool IsPointer(UProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(UObjectProperty);
 
