@@ -404,7 +404,6 @@ public static class BlueprintDecompilerUtils
                 var structType = structProperty.Struct.Name;
 
                 type += $"struct F{structType}";
-                value = structProperty.Struct.ToString();
                 break;
             }
             case FNumericProperty:
@@ -498,6 +497,11 @@ public static class BlueprintDecompilerUtils
                 type = $"F{delegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
                 break;
             }
+            case FReferenceProperty:
+            {
+                type = "Reference";
+                break;
+            }
             default:
             {
                 Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
@@ -508,7 +512,7 @@ public static class BlueprintDecompilerUtils
         if (IsPointer(property))
             type += "*";
 
-        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+        if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
             type += "&";
 
         return (value, type);
@@ -591,7 +595,6 @@ public static class BlueprintDecompilerUtils
                 var structType = structProperty.Struct.Name;
 
                 type += $"struct F{structType}";
-                value = structProperty.Struct.ToString();
                 break;
             }
             case UNumericProperty:
@@ -671,7 +674,7 @@ public static class BlueprintDecompilerUtils
         if (IsPointer(property))
             type += "*";
 
-        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+        if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
             type += "&";
 
         return (value, type);
@@ -1526,7 +1529,7 @@ public static class BlueprintDecompilerUtils
                     ECastToken.CST_DoubleToFloat => "float",
                     ECastToken.CST_FloatToDouble => "double",
                     ECastToken.CST_ObjectToInterface => "Interface",
-                    _ => throw new NotImplementedException($"ConversionType {cast.ConversionType} is currently not implemented")
+                    _ => cast.ConversionType.ToString()
                 };
 
                 return $"Cast<{conversionType}>({target})";
@@ -1693,11 +1696,11 @@ public static class BlueprintDecompilerUtils
             }
             case EX_FloatConst floatConst:
             {
-                return floatConst.Value.ToString(CultureInfo.CurrentCulture);
+                return floatConst.Value.ToString(CultureInfo.InvariantCulture);
             }
             case EX_DoubleConst doubleConst:
             {
-                return doubleConst.Value.ToString(CultureInfo.CurrentCulture);
+                return doubleConst.Value.ToString(CultureInfo.InvariantCulture);
             }
             case EX_AddMulticastDelegate multicastDelegate:
             {
