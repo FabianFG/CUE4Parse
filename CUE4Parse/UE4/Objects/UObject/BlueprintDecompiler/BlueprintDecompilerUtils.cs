@@ -1333,10 +1333,17 @@ public static class BlueprintDecompilerUtils
                 var functionName = stackNode.SubstringAfter(':').Trim('\'');
                 var className = stackNode.SubstringAfter('.').SubstringBefore(':');
 
-                if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
-                if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
+                try
+                {
+                    if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
+                    if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
 
-                return FinalFunctionCleaner(className, functionName, parametersList, parameters);
+                    return FinalFunctionCleaner(className, functionName, parametersList, parameters);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
+                }
             }
             case EX_VirtualFunction virtualFunc:
             {
@@ -1885,7 +1892,8 @@ public static class BlueprintDecompilerUtils
                 EExprToken.EX_ClassContext it's like EX_Context
             */
             default:
-                throw new NotImplementedException($"KismetExpression '{expression.GetType().Name}' is currently not supported");
+                Log.Warning($"KismetExpression '{expression.GetType().Name}' is currently not supported");
+                return "";
         }
     }
 }
