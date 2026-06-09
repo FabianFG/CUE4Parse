@@ -23,7 +23,7 @@
         {
             var id = Ar.Read<uint>();
             Type = (EValueType) ((id << _INDEX_BITS) >> _INDEX_BITS);
-            Index = (int)id >> _TYPE_BITS;
+            Index = (int)(id >> _TYPE_BITS);
         }
     }
 }
