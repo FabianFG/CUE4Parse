@@ -437,6 +437,11 @@ public static class BlueprintDecompilerUtils
                 type = "FString";
                 break;
             }
+            case FUtf8StrProperty:
+            {
+                type = "FUtf8String";
+                break;
+            }
             case FTextProperty:
             {
                 type = "FText";

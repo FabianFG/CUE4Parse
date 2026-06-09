@@ -296,7 +296,9 @@ public class UClass : UStruct
             }
 
             var flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
-            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {returnType} {key.Text}({string.Join(", ", parametersList)})";
+            var functionQualifiers = function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? "static " : "";
+            var functionConst = function.FunctionFlags.HasFlag(EFunctionFlags.FUNC_Const) ? " const" : "";
+            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {key.Text}({string.Join(", ", parametersList)}){functionConst}";
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
