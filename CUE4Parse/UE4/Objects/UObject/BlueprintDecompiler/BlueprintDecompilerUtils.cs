@@ -1020,7 +1020,8 @@ public static class BlueprintDecompilerUtils
                 var x = floatVector3.X;
                 var y = floatVector3.Y;
                 var z = floatVector3.Z;
-                value = $"TIntVector4<float>({x}, {y}, {z})";
+                var w = floatVector3.W;
+                value = $"TIntVector4<float>({x}, {y}, {z}, {w})";
                 break;
             }
             case FVector2D vector2d:
@@ -1128,7 +1129,7 @@ public static class BlueprintDecompilerUtils
             }
             case FColor color:
             {
-                var r = color.B;
+                var r = color.R;
                 var g = color.G;
                 var b = color.B;
                 var a = color.A;
@@ -1597,7 +1598,7 @@ public static class BlueprintDecompilerUtils
                 var roll = rotationConst.Value.Roll;
                 var yaw = rotationConst.Value.Yaw;
 
-                return $"FRotator({pitch}, {roll}, {yaw})";
+                return $"FRotator({pitch}, {yaw}, {roll})";
             }
             case EX_SetMap setMap:
             {
