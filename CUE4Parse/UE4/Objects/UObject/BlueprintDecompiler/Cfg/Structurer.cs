@@ -24,7 +24,6 @@ internal sealed class Structurer
         root = null;
         if (!dom.IsReducible) return null;
         if (dom.BackEdges.Count > 0) return null;
-        if (UsesExecutionFlowStack(cfg)) return null;
 
         var structurer = new Structurer(cfg, dom);
         var built = structurer.Build(cfg.EntryIndex, cfg.ExitIndex, 0);
@@ -110,15 +109,5 @@ internal sealed class Structurer
         if (target == follow) return new SeqNode([]);
         if (target == _cfg.ExitIndex) return new ReturnNode();
         return Build(target, follow, depth);
-    }
-
-    private static bool UsesExecutionFlowStack(ControlFlowGraph cfg)
-    {
-        foreach (var statement in cfg.Statements)
-        {
-            if (statement is EX_PushExecutionFlow or EX_PopExecutionFlow or EX_PopExecutionFlowIfNot)
-                return true;
-        }
-        return false;
     }
 }
