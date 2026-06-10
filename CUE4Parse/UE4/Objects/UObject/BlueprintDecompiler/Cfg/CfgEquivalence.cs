@@ -24,7 +24,7 @@ internal sealed class CfgEquivalence
             return false;
 
         var verifier = new CfgEquivalence(cfg, expected);
-        var entry = verifier.Flow(root, cfg.ExitIndex);
+        var entry = verifier.Flow(root, cfg.ExitIndex, null);
         if (!verifier._ok || entry != cfg.EntryIndex)
             return false;
 
@@ -131,7 +131,7 @@ internal sealed class CfgEquivalence
         return reachable;
     }
 
-    private int Flow(StructuredNode? node, int cont)
+    private int Flow(StructuredNode? node, int cont, (int Header, int Follow)? loop)
     {
         switch (node)
         {
@@ -141,13 +141,23 @@ internal sealed class CfgEquivalence
             {
                 var c = cont;
                 for (var i = seq.Children.Count - 1; i >= 0; i--)
-                    c = Flow(seq.Children[i], c);
+                    c = Flow(seq.Children[i], c, loop);
                 return c;
             }
             case GotoNode jump:
                 return jump.Target;
             case ReturnNode:
                 return _cfg.ExitIndex;
+            case BreakNode:
+                if (loop is null) { _ok = false; return cont; }
+                return loop.Value.Follow;
+            case ContinueNode:
+                if (loop is null) { _ok = false; return cont; }
+                return loop.Value.Header;
+            case LoopNode loopNode:
+                if (Flow(loopNode.Body, loopNode.Header, (loopNode.Header, cont)) != loopNode.Header)
+                    _ok = false;
+                return loopNode.Header;
             case BlockNode block:
             {
                 _emitCount[block.Block]++;
@@ -164,7 +174,7 @@ internal sealed class CfgEquivalence
                         CheckSingle(block.Block, block.GotoTarget);
                         break;
                     case TermKind.If:
-                        CheckBranch(block.Block, Flow(block.Then, cont), Flow(block.Else, cont));
+                        CheckBranch(block.Block, Flow(block.Then, cont, loop), Flow(block.Else, cont, loop));
                         break;
                 }
                 return block.Block;

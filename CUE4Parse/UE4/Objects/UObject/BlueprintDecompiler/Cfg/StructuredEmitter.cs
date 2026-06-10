@@ -31,10 +31,30 @@ internal sealed class StructuredEmitter
             case ReturnNode:
                 Line("return;");
                 break;
+            case BreakNode:
+                Line("break;");
+                break;
+            case ContinueNode:
+                Line("continue;");
+                break;
+            case LoopNode loop:
+                EmitLoop(loop);
+                break;
             case BlockNode block:
                 EmitBlock(block);
                 break;
         }
+    }
+
+    private void EmitLoop(LoopNode loop)
+    {
+        Line("while (true)");
+        OpenBraces();
+        var body = loop.Body;
+        if (body is SeqNode seq && seq.Children.Count > 0 && seq.Children[^1] is ContinueNode)
+            body = new SeqNode(seq.Children.GetRange(0, seq.Children.Count - 1));
+        Emit(body);
+        CloseBraces();
     }
 
     private void EmitBlock(BlockNode node)

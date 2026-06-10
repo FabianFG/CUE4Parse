@@ -48,4 +48,20 @@ internal sealed class GotoNode : StructuredNode
     }
 }
 
+internal sealed class LoopNode : StructuredNode
+{
+    public readonly int Header;
+    public readonly StructuredNode Body;
+
+    public LoopNode(int header, StructuredNode body)
+    {
+        Header = header;
+        Body = body;
+    }
+}
+
 internal sealed class ReturnNode : StructuredNode;
+
+internal sealed class BreakNode : StructuredNode;
+
+internal sealed class ContinueNode : StructuredNode;
