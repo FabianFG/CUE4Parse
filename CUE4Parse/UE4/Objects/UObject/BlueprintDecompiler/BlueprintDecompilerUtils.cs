@@ -1553,16 +1553,14 @@ public static class BlueprintDecompilerUtils
             case EX_Cast cast:
             {
                 var target = GetLineExpression(cast.Target);
-                var conversionType = cast.ConversionType switch
+                return cast.ConversionType switch
                 {
-                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => "bool",
-                    ECastToken.CST_DoubleToFloat => "float",
-                    ECastToken.CST_FloatToDouble => "double",
-                    ECastToken.CST_ObjectToInterface => "Interface",
-                    _ => cast.ConversionType.ToString()
+                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => $"({target} != nullptr)",
+                    ECastToken.CST_DoubleToFloat => $"(float){target}",
+                    ECastToken.CST_FloatToDouble => $"(double){target}",
+                    ECastToken.CST_ObjectToInterface => target,
+                    _ => $"Cast<{cast.ConversionType}>({target})"
                 };
-
-                return $"Cast<{conversionType}>({target})";
             }
             case EX_PopExecutionFlowIfNot popExecutionFlowIfNot:
             {
