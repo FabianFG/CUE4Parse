@@ -1064,6 +1064,8 @@ public static class BlueprintDecompilerUtils
                     {
                         var property = fallback.Properties[i];
                         GetPropertyTagVariable(property, out string _, out string tagValue);
+                        if (string.IsNullOrWhiteSpace(tagValue))
+                            tagValue = "nullptr";
                         bool isLast = i == fallback.Properties.Count - 1;
                         stringBuilder.AppendLine($"\"{property.Name}\": {tagValue}{(isLast ? "" : ",")}");
                     }
