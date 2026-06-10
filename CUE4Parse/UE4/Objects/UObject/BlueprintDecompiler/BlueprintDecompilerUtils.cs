@@ -1388,7 +1388,7 @@ public static class BlueprintDecompilerUtils
                 var target = GetLineExpression(setSet.SetProperty);
                 if (setSet.Elements.Length == 0)
                 {
-                    return $"{target} = TArray {{ }};";
+                    return $"{target} = TArray {{ }}";
                 }
 
                 var values = new List<string>(setSet.Elements.Length);
@@ -1398,13 +1398,13 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var joined = string.Join(", ", values);
-                return $"{target} = TArray {{ {joined} }};";
+                return $"{target} = TArray {{ {joined} }}";
             }
             case EX_SetConst setConst:
             {
                 if (setConst.Elements.Length == 0)
                 {
-                    return "TArray { };";
+                    return "TArray { }";
                 }
 
                 var values = new List<string>(setConst.Elements.Length);
@@ -1414,7 +1414,7 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var joined = string.Join(", ", values);
-                return $"TArray {{ {joined} }};";
+                return $"TArray {{ {joined} }}";
             }
             case EX_ArrayConst constArray:
             {
