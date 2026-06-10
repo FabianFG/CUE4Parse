@@ -26,7 +26,7 @@ public static class BlueprintCfg
             if (SwitchFold.Depth(folded) > MaxOutputNesting)
                 return false;
 
-            new StructuredEmitter(cfg, structurer.GotoTargets, builder).Emit(folded);
+            new StructuredEmitter(cfg, structurer.GotoTargets, FoldPlan.Compute(cfg), builder).Emit(folded);
             return true;
         }
         catch

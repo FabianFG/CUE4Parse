@@ -7,13 +7,15 @@ internal sealed class StructuredEmitter
 {
     private readonly ControlFlowGraph _cfg;
     private readonly HashSet<int> _gotoTargets;
+    private readonly FoldPlan _fold;
     private readonly CustomStringBuilder _builder;
     private bool _fresh = true;
 
-    public StructuredEmitter(ControlFlowGraph cfg, HashSet<int> gotoTargets, CustomStringBuilder builder)
+    public StructuredEmitter(ControlFlowGraph cfg, HashSet<int> gotoTargets, FoldPlan fold, CustomStringBuilder builder)
     {
         _cfg = cfg;
         _gotoTargets = gotoTargets;
+        _fold = fold;
         _builder = builder;
     }
 
@@ -149,9 +151,9 @@ internal sealed class StructuredEmitter
         for (var i = block.Start; i <= leafEnd; i++)
         {
             var statement = _cfg.Statements[i];
-            if (ControlFlowGraph.IsSkipped(statement))
+            if (ControlFlowGraph.IsSkipped(statement) || _fold.DroppedDefs.Contains(i))
                 continue;
-            var expression = BlueprintDecompilerUtils.GetLineExpression(statement);
+            var expression = RenderLeaf(statement, i);
             if (string.IsNullOrWhiteSpace(expression))
                 continue;
             if (label != null)
@@ -164,6 +166,21 @@ internal sealed class StructuredEmitter
         }
         if (label != null)
             Line(label);
+    }
+
+    private string RenderLeaf(KismetExpression statement, int index)
+    {
+        if (!_fold.Inlined.TryGetValue(index, out var value))
+            return BlueprintDecompilerUtils.GetLineExpression(statement);
+        var variable = statement switch
+        {
+            EX_Let let => let.Variable,
+            EX_LetBase letBase => letBase.Variable,
+            _ => null
+        };
+        return variable is null
+            ? BlueprintDecompilerUtils.GetLineExpression(statement)
+            : $"{BlueprintDecompilerUtils.GetLineExpression(variable)} = {BlueprintDecompilerUtils.GetLineExpression(value)}";
     }
 
     private void EmitIf(KismetExpression condition, StructuredNode? thenNode, StructuredNode? elseNode)
@@ -219,9 +236,9 @@ internal sealed class StructuredEmitter
         var leafEnd = _cfg.LeafEnd(block);
         for (var i = block.Start; i <= leafEnd; i++)
         {
-            if (ControlFlowGraph.IsSkipped(_cfg.Statements[i]))
+            if (ControlFlowGraph.IsSkipped(_cfg.Statements[i]) || _fold.DroppedDefs.Contains(i))
                 continue;
-            if (!string.IsNullOrWhiteSpace(BlueprintDecompilerUtils.GetLineExpression(_cfg.Statements[i])))
+            if (!string.IsNullOrWhiteSpace(RenderLeaf(_cfg.Statements[i], i)))
                 return true;
         }
         return false;
