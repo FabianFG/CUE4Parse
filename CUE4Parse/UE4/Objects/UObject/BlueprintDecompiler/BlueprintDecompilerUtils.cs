@@ -969,6 +969,8 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.AppendLine($"{keyValueString}");
                     customStringBuilder.CloseBlock();
 
+                    if (string.IsNullOrEmpty(keyType)) keyType = GetTagTypes(propertyTag.TagData?.InnerTypeData);
+                    if (string.IsNullOrEmpty(valueType)) valueType = GetTagTypes(propertyTag.TagData?.ValueTypeData);
                     type = $"TMap<{keyType}, {valueType}>";
                     value = customStringBuilder.ToString();
                 }
