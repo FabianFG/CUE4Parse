@@ -1121,6 +1121,22 @@ public static class BlueprintDecompilerUtils
                 value = $"FIntPoint({x}, {y})";
                 break;
             }
+            case FIntVector intVector:
+            {
+                var x = intVector.X;
+                var y = intVector.Y;
+                var z = intVector.Z;
+                value = $"FIntVector({x}, {y}, {z})";
+                break;
+            }
+            case FUIntVector uintVector:
+            {
+                var x = uintVector.X;
+                var y = uintVector.Y;
+                var z = uintVector.Z;
+                value = $"FUIntVector({x}, {y}, {z})";
+                break;
+            }
             case TIntVector3<float> floatVector3:
             {
                 var x = floatVector3.X;
@@ -1165,11 +1181,11 @@ public static class BlueprintDecompilerUtils
                 value = $"FBox({min}, {max}, {isValid})";
                 break;
             }
-            case TBox2<FVector2D> box2D:
+            case TBox2<float> box2f:
             {
-                GetPropertyTagVariable(box2D.Min, out var min);
-                GetPropertyTagVariable(box2D.Max, out var max);
-                var isValid = box2D.bIsValid;
+                GetPropertyTagVariable(box2f.Min, out var min);
+                GetPropertyTagVariable(box2f.Max, out var max);
+                var isValid = box2f.bIsValid;
 
                 value = $"FBox2D({min}, {max}, {isValid})";
                 break;
@@ -1266,9 +1282,17 @@ public static class BlueprintDecompilerUtils
                 value = $"FRichCurveKey({InterpMode}, {TangentMode}, {TangentWeightMode}, {Time}, {Value}, {ArriveTangent}, {ArriveTangentWeight}, {LeaveTangent}, {LeaveTangentWeight})";
                 break;
             }
+            case FInstancedStruct instancedStruct:
+            {
+                if (instancedStruct.NonConstIUSturct is { } inner)
+                    GetPropertyTagVariable(inner, out value);
+                else
+                    value = "{}";
+                break;
+            }
             default:
             {
-                value = uStruct.ToString() ?? string.Empty;
+                value = "{}";
                 Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
                 break;
             }
