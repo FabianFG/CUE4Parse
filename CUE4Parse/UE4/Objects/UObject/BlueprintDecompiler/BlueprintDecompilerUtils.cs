@@ -331,6 +331,8 @@ public static class BlueprintDecompilerUtils
             _ => tagType?.Type ?? "unknown"
         };
 
+    private static string EscapeCpp(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r\n", "\\n").Replace("\n", "\\n");
+
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
@@ -751,7 +753,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.NameProperty:
             {
                 type = "FName";
-                value = $"FName(\"{propertyTag.GetGenericValueStr<FName>()}\")";
+                value = $"FName(\"{EscapeCpp(propertyTag.GetGenericValueStr<FName>())}\")";
                 break;
             }
             case EPropertyType.DoubleProperty:
@@ -826,13 +828,13 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.StrProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
+                value = $"\"{EscapeCpp(propertyTag.GetGenericValueStr<string>())}\"";
                 break;
             }
             case EPropertyType.VerseStringProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
+                value = $"\"{EscapeCpp(propertyTag.GetGenericValueStr<string>())}\"";
                 break;
             }
             case EPropertyType.MulticastDelegateProperty:
@@ -864,8 +866,8 @@ public static class BlueprintDecompilerUtils
 
                 type = "FText";
                 value = genericValue.Flags == 0
-                    ? $"FText(\"{text}\")"
-                    : $"FText(\"{text}\", {flags})";
+                    ? $"FText(\"{EscapeCpp(text)}\")"
+                    : $"FText(\"{EscapeCpp(text)}\", {flags})";
 
                 break;
             }
@@ -1524,7 +1526,7 @@ public static class BlueprintDecompilerUtils
             }
             case KismetExpression<string> stringConst:
             {
-                return $"\"{stringConst.Value.Replace("\r\n", "\\n").Replace("\n", "\\n")}\"";
+                return $"\"{EscapeCpp(stringConst.Value)}\"";
             }
             case EX_InstanceDelegate del:
             {
