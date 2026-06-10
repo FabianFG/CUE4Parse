@@ -4,10 +4,8 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 
 public static class BlueprintCfg
 {
-    public static bool TryStructure(UFunction function, List<int> jumpTargets, out string body)
+    public static bool TryStructure(UFunction function, List<int> jumpTargets, CustomStringBuilder builder)
     {
-        body = string.Empty;
-
         try
         {
             var cfg = ControlFlowGraph.Build(function);
@@ -15,14 +13,19 @@ public static class BlueprintCfg
                 return false;
 
             var dom = Dominators.Compute(cfg);
-            if (!dom.IsReducible)
+            var structurer = Structurer.Structure(cfg, dom, out var root);
+            if (structurer is null || root is null)
                 return false;
+
+            if (!CfgEquivalence.Verify(cfg, root))
+                return false;
+
+            new StructuredEmitter(cfg, structurer.GotoTargets, builder).Emit(root);
+            return true;
         }
         catch
         {
             return false;
         }
-
-        return false;
     }
 }

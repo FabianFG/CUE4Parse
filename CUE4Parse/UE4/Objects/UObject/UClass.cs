@@ -325,9 +325,8 @@ public class UClass : UStruct
                 continue;
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
-            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, jumpCodeOffsets, out var structuredBody))
+            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, jumpCodeOffsets, functionStringBuilder))
             {
-                functionStringBuilder.Append(structuredBody);
                 functionStringBuilder.CloseBlock();
                 stringBuilder.AppendLine(functionStringBuilder.ToString());
                 if (index < totalFuncMapCount) stringBuilder.AppendLine();

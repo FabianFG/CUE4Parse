@@ -152,12 +152,50 @@ internal sealed class ControlFlowGraph
 
         for (var b = 0; b < exitIndex; b++)
         {
-            if (!visited[b])
+            if (!visited[b] && !IsTriviallyEmpty(code, blocks[b]))
                 return null;
         }
 
         return new ControlFlowGraph(code, blocks, 0, exitIndex);
     }
+
+    public int LabelNumber(int block) => Statements[Blocks[block].Start].StatementIndex;
+
+    public int LeafEnd(BasicBlock block) => IsControlTerminator(Statements[block.End]) ? block.End - 1 : block.End;
+
+    public static bool IsTriviallyEmpty(KismetExpression[] code, BasicBlock block)
+    {
+        for (var i = block.Start; i <= block.End; i++)
+        {
+            if (!IsSkipped(code[i]))
+                return false;
+        }
+        return true;
+    }
+
+    public static bool IsSkipped(KismetExpression s) =>
+        s is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript;
+
+    public static bool IsControlTerminator(KismetExpression s) => s switch
+    {
+        EX_JumpIfNot => true,
+        EX_Skip => false,
+        EX_Jump => true,
+        EX_Return => true,
+        EX_EndOfScript => true,
+        EX_PopExecutionFlow => true,
+        EX_PopExecutionFlowIfNot => true,
+        _ => false
+    };
+
+    public static bool IsConditional(KismetExpression s) => s is EX_JumpIfNot or EX_PopExecutionFlowIfNot;
+
+    public static KismetExpression ConditionOf(KismetExpression s) => s switch
+    {
+        EX_JumpIfNot jumpIfNot => jumpIfNot.BooleanExpression,
+        EX_PopExecutionFlowIfNot popIfNot => popIfNot.BooleanExpression,
+        _ => s
+    };
 
     private sealed class FlowStack
     {
