@@ -987,8 +987,8 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.EnumProperty:
             {
-                value = propertyTag.GetGenericValueStr<FName>(); // .SubstringAfter("::")
-                type = $"enum";//{propertyTag.TagData?.EnumName}
+                value = propertyTag.GetGenericValueStr<FName>();
+                type = $"enum {value.SubstringBefore("::")}";
                 break;
             }
             case EPropertyType.FieldPathProperty:
