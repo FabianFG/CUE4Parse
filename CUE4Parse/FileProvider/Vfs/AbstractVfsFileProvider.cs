@@ -101,6 +101,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 EGame.GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
                 EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
+                EGame.GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
                 _ => null
             };
         }
@@ -264,11 +265,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
             _unloadedVfs[reader] = null;
             reader.IsConcurrent = isConcurrent;
-            if (ProSpiAes.IsProSpiArchive(reader.Path))
-            {
-                reader.CustomEncryption = ProSpiAes.ProSpiDecrypt;
-            }
-            else if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
+            if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
             {
                 reader.CustomEncryption = CustomEncryption;
             }
@@ -285,7 +282,7 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 VerifyGlobalData(reader);
 
-                if (reader.IsEncrypted && reader.CustomEncryption == null || !reader.HasDirectoryIndex)
+                if (reader.IsEncrypted && CustomEncryption == null || !reader.HasDirectoryIndex)
                     continue;
 
                 tasks.AddLast(Task.Run(() =>

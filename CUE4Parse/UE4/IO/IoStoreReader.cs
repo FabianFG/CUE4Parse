@@ -239,7 +239,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
         var compressedBuffer = Array.Empty<byte>();
         var uncompressedBuffer = Array.Empty<byte>();
-        var proSpiEncryptedPayload = IsEncrypted && ProSpiAes.IsProSpiArchive(Path);
 
         FArchive?[]? clonedReaders = null;
         long size = 0;
@@ -248,15 +247,16 @@ public partial class IoStoreReader : AbstractAesVfsReader
             ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
 
             var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
-            var encryptedReadSize = proSpiEncryptedPayload
-                ? (compressionBlock.CompressedSize + ProSpiAes.EncryptedBlockTrailerSize).Align(Aes.ALIGN)
-                : rawSize;
-
-            size += encryptedReadSize;
-            if (compressedBuffer.Length < encryptedReadSize)
+            if (Game is EGame.GAME_eBaseballProSpirit)
             {
-                // ProSpi stores a 0x18-byte trailer per encrypted IoStore payload block that is not included in the TOC compressed size.
-                compressedBuffer = new byte[encryptedReadSize];
+                rawSize = (compressionBlock.CompressedSize + ProSpiEncryption.EncryptionDataTrailerSize).Align(Aes.ALIGN);
+            }
+
+            size += rawSize;
+            if (compressedBuffer.Length < rawSize)
+            {
+                //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");
+                compressedBuffer = new byte[rawSize];
             }
 
             var partitionIndex = (int) ((ulong) compressionBlock.Offset / TocResource.Header.PartitionSize);
@@ -271,9 +271,9 @@ public partial class IoStoreReader : AbstractAesVfsReader
             }
             else reader = ContainerStreams[partitionIndex];
 
-            reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) encryptedReadSize);
+            reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
-            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) encryptedReadSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
             if (compressionBlock.CompressionMethodIndex == 0)

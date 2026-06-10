@@ -110,6 +110,8 @@ namespace CUE4Parse.UE4.Pak
                         return DQXIExtract(reader, pakEntry);
                     case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                         return ABIExtract(reader, pakEntry);
+                    case EGame.GAME_eBaseballProSpirit:
+                        return ProSpiExtract(reader, pakEntry, alignment, header);
                 }
 
                 var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -135,9 +137,7 @@ namespace CUE4Parse.UE4.Pak
                 {
                     var block = pakEntry.CompressionBlocks[blockIndex];
                     var blockSize = (int) block.Size;
-                    var srcSize = pakEntry.IsEncrypted && ProSpiAes.IsProSpiArchive(Path)
-                        ? (blockSize + ProSpiAes.EncryptedBlockTrailerSize).Align(alignment)
-                        : blockSize.Align(alignment);
+                    var srcSize = blockSize.Align(alignment);
                     if (srcSize > compressedBuffer.Length)
                     {
                         compressedBuffer = new byte[srcSize];
@@ -188,6 +188,8 @@ namespace CUE4Parse.UE4.Pak
                     return DQXIExtract(reader, pakEntry);
                 case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
+                case EGame.GAME_eBaseballProSpirit:
+                    return ProSpiExtract(reader, pakEntry, alignment, header);
             }
 
             // Pak Entry is written before the file data,
@@ -196,9 +198,7 @@ namespace CUE4Parse.UE4.Pak
 
             var readOffset = offset & ~((long) alignment - 1);
             var dataOffset = offset - readOffset;
-            var readSize = pakEntry.IsEncrypted && header is null && ProSpiAes.IsProSpiArchive(Path)
-                ? (dataOffset + requestedSize + ProSpiAes.EncryptedBlockTrailerSize).Align(alignment)
-                : (dataOffset + requestedSize).Align(alignment);
+            var readSize = (dataOffset + requestedSize).Align(alignment);
             var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
 
             switch (Ar.Game)

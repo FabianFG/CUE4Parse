@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -34,6 +34,8 @@
     <EmbeddedResource Include="Resources\PUBGNameHashMap.json" />
     <None Remove="Resources\BL4SoundTagsMap.json" />
     <EmbeddedResource Include="Resources\BL4SoundTagsMap.json" />
+    <None Remove="Resources\ProSpiDecryptor.dll" />
+    <EmbeddedResource Include="Resources\ProSpiDecryptor.dll" />
   </ItemGroup>
 
   <PropertyGroup>
