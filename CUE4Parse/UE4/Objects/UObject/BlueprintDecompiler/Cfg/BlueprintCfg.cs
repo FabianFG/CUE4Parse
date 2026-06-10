@@ -8,18 +8,18 @@ public static class BlueprintCfg
     {
         body = string.Empty;
 
-        ControlFlowGraph? cfg;
         try
         {
-            cfg = ControlFlowGraph.Build(function);
+            var cfg = ControlFlowGraph.Build(function);
+            if (cfg is null)
+                return false;
+
+            _ = Dominators.Compute(cfg);
         }
         catch
         {
             return false;
         }
-
-        if (cfg is null)
-            return false;
 
         return false;
     }
