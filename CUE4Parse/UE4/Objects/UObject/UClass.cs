@@ -110,6 +110,7 @@ public class UClass : UStruct
         BlueprintDecompilerUtils.Mappings = mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
+        if (baseClass == "IInterface") baseClass = "UInterface";
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
 
         var classDefaultObject = ClassDefaultObject.Load();
@@ -305,7 +306,7 @@ public class UClass : UStruct
             var isBlueprintEvent = functionFlags.HasFlag(EFunctionFlags.FUNC_BlueprintEvent);
             var functionQualifiers = functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? "static "
                 : isBlueprintEvent && !functionFlags.HasFlag(EFunctionFlags.FUNC_Final) ? "virtual " : "";
-            var functionConst = functionFlags.HasFlag(EFunctionFlags.FUNC_Const) ? " const" : "";
+            var functionConst = functionFlags.HasFlag(EFunctionFlags.FUNC_Const) && !functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? " const" : "";
             var functionOverride = IsOverriddenFunction(key) ? " override" : "";
             var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{key.Text}_Implementation" : key.Text;
             var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
