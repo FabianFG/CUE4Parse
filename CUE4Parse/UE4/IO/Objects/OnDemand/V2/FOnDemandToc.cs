@@ -9,13 +9,13 @@ public class FOnDemandToc : IOnDemandToc
 {
     private string? _chunksDirectory;
     public string ChunksDirectory => _chunksDirectory ??= GetOnDemandString(_header.ChunksDirectory);
-    
+
     public IReadOnlyList<IOnDemandContainerEntry> Containers => _containerEntries;
 
     private readonly FOnDemandTocHeader _header;
     private readonly byte[] _stringTable;
     private readonly FOnDemandContainerEntry[] _containerEntries;
-    
+
     public FOnDemandToc(FArchive Ar)
     {
         _header = new FOnDemandTocHeader(Ar);
@@ -29,7 +29,7 @@ public class FOnDemandToc : IOnDemandToc
 
             container.PartitionEntries = Ar.ReadArray((int) container.PartitionCount, () => new FOnDemandPartitionEntry(Ar));
             container.ChunkIds = Ar.ReadArray<FIoChunkId>((int) container.ChunkCount);
-            container.ChunkEntries = Ar.ReadArray((int) container.ChunkCount, () => new FOnDemandChunkEntry(Ar));
+            container.ChunkEntries = Ar.ReadArray((int) container.ChunkCount, () => new FOnDemandChunkEntry(Ar, _header.Version.Minor));
         }
     }
 

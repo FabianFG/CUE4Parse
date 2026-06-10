@@ -247,7 +247,19 @@ public class FSkelMeshSection
         ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
         BoneMap = Ar.ReadArray<ushort>();
         NumVertices = Ar.Read<int>();
-        MaxBoneInfluences = Ar.Read<int>();
+
+        if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalMeshUnifiedBoneMap)
+        {
+            const uint unifiedBoneMapBit = 1u << 31;
+            var packedBits = Ar.Read<int>();
+
+            MaxBoneInfluences = (int)(packedBits & ~unifiedBoneMapBit);
+        }
+        else
+        {
+            MaxBoneInfluences = Ar.Read<int>();
+        }
+        
         CorrespondClothAssetIndex = Ar.Read<short>();
         ClothingData = Ar.Read<FClothingSectionData>();
 

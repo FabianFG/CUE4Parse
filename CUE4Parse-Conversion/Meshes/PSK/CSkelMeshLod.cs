@@ -8,7 +8,9 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     public class CSkelMeshLod : CBaseMeshLod
     {
         public CSkelMeshVertex[]? Verts;
-        
+        // LOD index in the original SK mesh, needed for the correct index into MorphLODModels array
+        public int LODIndex;
+
         public void AllocateVerts(int count)
         {
             Verts = new CSkelMeshVertex[count];

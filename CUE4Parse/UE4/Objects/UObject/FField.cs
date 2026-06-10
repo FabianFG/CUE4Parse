@@ -2,6 +2,7 @@ using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
@@ -16,7 +17,8 @@ public class FField
     public virtual void Deserialize(FAssetArchive Ar)
     {
         Name = Ar.ReadFName();
-        Flags = Ar.Read<EObjectFlags>();
+        if (Ar.Game < EGame.GAME_UE5_8 || !Ar.IsFilterEditorOnly)
+            Flags = Ar.Read<EObjectFlags>();
     }
 
     protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)

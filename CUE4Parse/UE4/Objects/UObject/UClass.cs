@@ -159,7 +159,6 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         if (totalFuncMapCount > 0) stringBuilder.AppendLine();
 
-
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
         foreach (var value in FuncMap.Values.Reverse())
         {
@@ -183,6 +182,11 @@ public class UClass : UStruct
                         }
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
+                        break;
+                    case EX_VirtualFunction final:
+                        label = final.VirtualFunctionName.Text.Split('.').Last().Split('[')[0];
+                        if (final.Parameters is [EX_IntConst intConstVirtual])
+                            offset = intConstVirtual.Value;
                         break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];

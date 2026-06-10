@@ -30,7 +30,7 @@ public class FMeshSurface
             BoneMapCount = Ar.Read<uint>();
             if (Version >= 1)
             {
-                var bCastShadow = Ar.ReadBoolean();
+                var bCastShadow = Ar.ReadFlag();
             }
             Id = Ar.Read<uint>();
         }

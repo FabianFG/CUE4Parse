@@ -100,6 +100,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
                 EGame.GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
                 EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
+                EGame.GAME_DragonSwordAwakening => DragonSwordAes.DragonSwordDecrypt,
                 _ => null
             };
         }

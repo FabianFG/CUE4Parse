@@ -574,4 +574,59 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public static implicit operator Vector3(FVector v) => new(v.X, v.Y, v.Z);
         public static implicit operator FVector(Vector3d v) => new((float)v.x, (float)v.y, (float)v.z);
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FVector3d : IUStruct,
+        IMultiplyOperators<FVector3d, FVector3d, FVector3d>,
+        IMultiplyOperators<FVector3d, float, FVector3d>,
+        ISubtractionOperators<FVector3d, FVector3d, FVector3d>,
+        ISubtractionOperators<FVector3d, float, FVector3d>,
+        IAdditionOperators<FVector3d, FVector3d, FVector3d>,
+        IAdditionOperators<FVector3d, float, FVector3d>
+    {
+        public static readonly FVector3d ZeroVector = new(0, 0, 0);
+
+        public readonly double X;
+        public readonly double Y;
+        public readonly double Z;
+
+        public FVector3d(float x, float y, float z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public FVector3d(double x, double y, double z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public FVector3d(FArchive Ar)
+        {
+            X = Ar.Read<double>();
+            Y = Ar.Read<double>();
+            Z = Ar.Read<double>();
+        }
+
+        public static FVector3d operator +(FVector3d a, FVector3d b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        public static FVector3d operator -(FVector3d a, FVector3d b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public static FVector3d operator *(FVector3d a, FVector3d b) => new(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+        public static FVector3d operator /(FVector3d a, FVector3d b) => new(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
+
+        public static FVector3d operator +(FVector3d a, float b) => new(a.X + b, a.Y + b, a.Z + b);
+        public static FVector3d operator *(FVector3d a, float b) => new(a.X * b, a.Y * b, a.Z * b);
+        public static FVector3d operator -(FVector3d a, float b) => new(a.X - b, a.Y - b, a.Z - b);
+
+        public static FVector3d operator +(FVector3d a, double b) => new(a.X + b, a.Y + b, a.Z + b);
+        public static FVector3d operator *(FVector3d a, double b) => new(a.X * b, a.Y * b, a.Z * b);
+        public static FVector3d operator -(FVector3d a, double b) => new(a.X - b, a.Y - b, a.Z - b);
+
+        public override string ToString() => $"X={X,3:F3} Y={Y,3:F3}";
+
+        public static implicit operator FVector(FVector3d v) => new(v.X, v.Y, v.Z);
+    }
+
 }

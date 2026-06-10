@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Internationalization;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -390,6 +388,8 @@ public abstract class FTextHistory : IUStruct
                 SourceString = t;
                 LocalizedString = Ar.Owner.Provider.Internationalization.SafeGet(table.StringTable.TableNamespace, Key, t);
             }
+            
+            if (Ar.Game is EGame.GAME_DeltaForce) Ar.Position += 4;
         }
     }
 

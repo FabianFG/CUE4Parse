@@ -19,6 +19,8 @@ public class FStaticMeshSection
     public bool bAffectDistanceFieldLighting;
     public int? CustomData;
 
+    public FStaticMeshSection() { }
+
     public FStaticMeshSection(FArchive Ar)
     {
         MaterialIndex = Ar.Read<int>();

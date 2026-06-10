@@ -19,12 +19,27 @@ public readonly struct FLayoutBlock
 
     public FLayoutBlock(FMutableArchive Ar, int version = 6)
     {
-        Min = Ar.Read<FIntVector2>();
-        Size = Ar.Read<FIntVector2>();
-        Id = Ar.Read<ulong>();
+        if (Ar.Game <= Versions.EGame.GAME_UE5_5)
+        {
+            var min = Ar.Read<TIntVector2<ushort>>();
+            Min = new FIntVector2(min.X, min.Y);
+            var size = Ar.Read<TIntVector2<ushort>>();
+            Size = new FIntVector2(size.X, size.Y);
+            if (Ar.Game is Versions.EGame.GAME_Gothic1Remake) Ar.Position += 4;
+            Id = (ulong)Ar.Read<int>();
+        }
+        else
+        {
+            Min = Ar.Read<FIntVector2>();
+            Size = Ar.Read<FIntVector2>();
+            Id = Ar.Read<ulong>();
+        }
+
         Priority = Ar.Read<int>();
 
-        if (version >= 5)
-            Packed = Ar.Read<uint>();
+        if (version >= 6)
+            Packed = Ar.Game <= Versions.EGame.GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>();
+        else if (version == 5)
+            Packed = Ar.Read<byte>();
     }
 }

@@ -53,6 +53,7 @@ public static class ZlibHelper
     {
         Instance?.Dispose();
         Instance = instance;
+        Compression.UseNativeZlib(instance);
     }
 
     public static bool DownloadDll(string? path = null, string? url = null)

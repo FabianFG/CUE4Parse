@@ -277,7 +277,7 @@ public class FShaderParameterBindings
 
         public FResourceParameter(FMemoryImageArchive Ar)
         {
-            if (Ar.Game >= EGame.GAME_UE4_26)
+            if (Ar.Game < EGame.GAME_UE4_26)
             {
                 BaseIndex = Ar.Read<ushort>();
                 ByteOffset = Ar.Read<ushort>();
@@ -291,7 +291,7 @@ public class FShaderParameterBindings
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 8)]
+    [StructLayout(LayoutKind.Sequential, Size = 6)]
     public struct FBindlessResourceParameter
     {
         public ushort ByteOffset;
@@ -364,15 +364,15 @@ public class FShaderParameterMapInfo
         if (Ar.Game >= EGame.GAME_UE5_1)
         {
             UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar), false);
-            TextureSamplers = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
+            TextureSamplers = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar), false);
             if (Ar.Game is EGame.GAME_DuneAwakening) Ar.Position += 16;
-            SRVs = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar));
+            SRVs = Ar.ReadArray(() => new FShaderResourceParameterInfo(Ar), false);
         }
         else //4.25-5.0
         {
-            UniformBuffers = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
-            TextureSamplers = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
-            SRVs = Ar.ReadArray(() => new FShaderParameterInfo(Ar));
+            UniformBuffers = Ar.ReadArray(() => new FShaderParameterInfo(Ar), false);
+            TextureSamplers = Ar.ReadArray(() => new FShaderParameterInfo(Ar), false);
+            SRVs = Ar.ReadArray(() => new FShaderParameterInfo(Ar), false);
         }
         if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or EGame.GAME_HonorofKingsWorld) Ar.Position += 16;
         LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
@@ -408,22 +408,60 @@ public class FShaderParameterInfo
 
     public FShaderParameterInfo() { }
 }
+
 public struct FShaderLooseParameterInfo
 {
     public ushort BaseIndex, Size;
 }
 
+[JsonConverter(typeof(FShaderResourceParameterInfoConverter))]
 public class FShaderResourceParameterInfo : FShaderParameterInfo
 {
     public byte BufferIndex;
-    public byte Type; // EShaderParameterType
+    public EShaderParameterType Type;
 
     public FShaderResourceParameterInfo(FMemoryImageArchive Ar)
     {
         BaseIndex = Ar.Read<ushort>();
         BufferIndex = Ar.Read<byte>();
-        Type = Ar.Read<byte>();
+        Type = Ar.Read<EShaderParameterType>();
     }
+}
+
+public class FShaderResourceParameterInfoConverter : JsonConverter<FShaderResourceParameterInfo>
+{
+    public override void WriteJson(JsonWriter writer, FShaderResourceParameterInfo? value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+        writer.WritePropertyName(nameof(value.BaseIndex));
+        writer.WriteValue(value.BaseIndex);
+        writer.WritePropertyName(nameof(value.BufferIndex));
+        writer.WriteValue(value.BufferIndex);
+        writer.WritePropertyName(nameof(value.Type));
+        serializer.Serialize(writer, value.Type);
+        writer.WriteEndObject();
+    }
+
+    public override FShaderResourceParameterInfo? ReadJson(JsonReader reader, Type objectType, FShaderResourceParameterInfo? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+[JsonConverter(typeof(StringEnumConverter))]
+public enum EShaderParameterType : byte
+{
+    LooseData,
+    UniformBuffer,
+    Sampler,
+    SRV,
+    UAV,
+
+    BindlessSampler,
+    BindlessSRV,
+    BindlessUAV,
+
+    DescriptorRange,
 }
 
 public struct FShaderUniformBufferParameter
@@ -431,11 +469,28 @@ public struct FShaderUniformBufferParameter
     public ushort BaseIndex;
 }
 
+[JsonConverter(typeof(FShaderUniformBufferParameterInfoConverter))]
 public class FShaderUniformBufferParameterInfo : FShaderParameterInfo
 {
     public FShaderUniformBufferParameterInfo(FMemoryImageArchive Ar)
     {
         BaseIndex = Ar.Read<ushort>();
+    }
+}
+
+public class FShaderUniformBufferParameterInfoConverter : JsonConverter<FShaderUniformBufferParameterInfo>
+{
+    public override void WriteJson(JsonWriter writer, FShaderUniformBufferParameterInfo? value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+        writer.WritePropertyName(nameof(value.BaseIndex));
+        writer.WriteValue(value.BaseIndex);
+        writer.WriteEndObject();
+    }
+
+    public override FShaderUniformBufferParameterInfo? ReadJson(JsonReader reader, Type objectType, FShaderUniformBufferParameterInfo? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
     }
 }
 

@@ -113,7 +113,7 @@ public class ActorXMesh
 
         ExportVertexColors(lod.VertexColors, lod.NumVerts);
         ExportExtraUV(lod.ExtraUV.Value, lod.NumVerts, lod.NumTexCoords);
-        ExportMorphTargets(lod, share, morphTargets, lodIndex);
+        ExportMorphTargets(lod, share, morphTargets, lod.LODIndex);
     }
 
     private void ExportCommonMeshData(CMeshSection[] sections, CMeshVertex[] verts,
@@ -320,7 +320,7 @@ public class ActorXMesh
         for (var i = 0; i < morphTargets.Length; i++)
         {
             var morphTarget = morphTargets[i].Load<UMorphTarget>();
-            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex)
+            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex || morphTarget.MorphLODModels[lodIndex].Vertices.Length == 0)
                 continue;
 
             var morphModel = morphTarget.MorphLODModels[lodIndex];
