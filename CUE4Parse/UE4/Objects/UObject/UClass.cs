@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
+using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -324,6 +325,15 @@ public class UClass : UStruct
                 continue;
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
+            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, jumpCodeOffsets, out var structuredBody))
+            {
+                functionStringBuilder.Append(structuredBody);
+                functionStringBuilder.CloseBlock();
+                stringBuilder.AppendLine(functionStringBuilder.ToString());
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                index++;
+                continue;
+            }
             for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
                 var kismetExpression = function.ScriptBytecode[i];
