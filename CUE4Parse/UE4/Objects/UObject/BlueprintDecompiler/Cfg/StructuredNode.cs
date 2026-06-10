@@ -60,6 +60,18 @@ internal sealed class LeafRangeNode : StructuredNode
     }
 }
 
+internal sealed class ComputedGotoNode : StructuredNode
+{
+    public readonly int Block;
+    public readonly List<int> Entries;
+
+    public ComputedGotoNode(int block, List<int> entries)
+    {
+        Block = block;
+        Entries = entries;
+    }
+}
+
 internal sealed class LoopNode : StructuredNode
 {
     public readonly int Header;

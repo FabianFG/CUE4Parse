@@ -100,7 +100,8 @@ internal sealed class CfgEquivalence
                     list.Add(popTarget[block.End]);
                     break;
                 case EX_ComputedJump:
-                    return null;
+                    list.AddRange(cfg.Blocks[b].Successors);
+                    break;
                 default:
                     list.Add(b + 1);
                     break;
@@ -148,6 +149,10 @@ internal sealed class CfgEquivalence
                 return jump.Target;
             case ReturnNode:
                 return _cfg.ExitIndex;
+            case ComputedGotoNode dispatch:
+                _emitCount[dispatch.Block]++;
+                CheckMulti(dispatch.Block, dispatch.Entries);
+                return dispatch.Block;
             case BreakNode:
                 if (loop is null) { _ok = false; return cont; }
                 return loop.Value.Follow;
@@ -197,5 +202,23 @@ internal sealed class CfgEquivalence
         var expected = _expected[block];
         if (expected.Count != 2 || expected[0] != thenTarget || expected[1] != elseTarget)
             _ok = false;
+    }
+
+    private void CheckMulti(int block, List<int> targets)
+    {
+        var expected = _expected[block];
+        if (expected.Count != targets.Count)
+        {
+            _ok = false;
+            return;
+        }
+        foreach (var target in targets)
+        {
+            if (!expected.Contains(target))
+            {
+                _ok = false;
+                return;
+            }
+        }
     }
 }

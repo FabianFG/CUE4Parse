@@ -6,11 +6,11 @@ public static class BlueprintCfg
 {
     private const int MaxOutputNesting = 12;
 
-    public static bool TryStructure(UFunction function, List<int> jumpTargets, CustomStringBuilder builder)
+    public static bool TryStructure(UFunction function, List<int> entryOffsets, CustomStringBuilder builder)
     {
         try
         {
-            var cfg = ControlFlowGraph.Build(function);
+            var cfg = ControlFlowGraph.Build(function, entryOffsets);
             if (cfg is null)
                 return false;
 

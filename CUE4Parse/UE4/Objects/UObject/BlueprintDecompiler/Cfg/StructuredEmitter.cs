@@ -46,10 +46,22 @@ internal sealed class StructuredEmitter
             case LeafRangeNode range:
                 EmitLeaves(_cfg.Blocks[range.Block], _gotoTargets.Contains(range.Block) ? $"Label_{_cfg.LabelNumber(range.Block)}:" : null, range.LeafEnd);
                 break;
+            case ComputedGotoNode dispatch:
+                EmitComputedGoto(dispatch);
+                break;
             case BlockNode block:
                 EmitBlock(block);
                 break;
         }
+    }
+
+    private void EmitComputedGoto(ComputedGotoNode node)
+    {
+        var block = _cfg.Blocks[node.Block];
+        EmitLeaves(block, _gotoTargets.Contains(node.Block) ? $"Label_{_cfg.LabelNumber(node.Block)}:" : null);
+        var offset = ((EX_ComputedJump) _cfg.Statements[block.End]).CodeOffsetExpression;
+        var rendered = BlueprintDecompilerUtils.GetLineExpression(offset);
+        Line(offset is EX_VariableBase ? $"goto {rendered};" : $"{rendered};");
     }
 
     private void EmitSwitch(SwitchNode node)

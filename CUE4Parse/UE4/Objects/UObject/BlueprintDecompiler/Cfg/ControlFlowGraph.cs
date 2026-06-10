@@ -18,7 +18,7 @@ internal sealed class ControlFlowGraph
         ExitIndex = exitIndex;
     }
 
-    public static ControlFlowGraph? Build(UFunction function)
+    public static ControlFlowGraph? Build(UFunction function, List<int> entryOffsets)
     {
         var code = function.ScriptBytecode;
         if (code == null || code.Length == 0)
@@ -34,7 +34,14 @@ internal sealed class ControlFlowGraph
             switch (code[i])
             {
                 case EX_ComputedJump:
-                    return null;
+                    if (entryOffsets.Count == 0) return null;
+                    foreach (var entry in entryOffsets)
+                    {
+                        if (!offsetToIndex.TryGetValue(entry, out var entryTarget)) return null;
+                        leaders.Add(entryTarget);
+                    }
+                    if (i + 1 < code.Length) leaders.Add(i + 1);
+                    break;
                 case EX_JumpIfNot jumpIfNot:
                     if (!offsetToIndex.TryGetValue((int) jumpIfNot.CodeOffset, out var jumpIfNotTarget)) return null;
                     leaders.Add(jumpIfNotTarget);
@@ -101,6 +108,10 @@ internal sealed class ControlFlowGraph
             var successors = new List<(int Block, FlowStack? Stack)>(2);
             switch (code[block.End])
             {
+                case EX_ComputedJump:
+                    foreach (var entry in entryOffsets)
+                        successors.Add((indexToBlock[offsetToIndex[entry]], stack));
+                    break;
                 case EX_JumpIfNot jumpIfNot:
                     successors.Add((bi + 1, stack));
                     successors.Add((indexToBlock[offsetToIndex[(int) jumpIfNot.CodeOffset]], stack));
@@ -185,6 +196,7 @@ internal sealed class ControlFlowGraph
         EX_EndOfScript => true,
         EX_PopExecutionFlow => true,
         EX_PopExecutionFlowIfNot => true,
+        EX_ComputedJump => true,
         _ => false
     };
 

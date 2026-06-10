@@ -99,6 +99,21 @@ internal sealed class Structurer
                 children.Add(new BlockNode(current, TermKind.Exit));
                 return new SeqNode(children);
             }
+            if (term is EX_ComputedJump)
+            {
+                if (loop is not null) return null;
+                children.Add(new ComputedGotoNode(current, block.Successors));
+                foreach (var entry in block.Successors)
+                {
+                    if (_cfg.Blocks[entry].Predecessors.Count != 1) return null;
+                    GotoTargets.Add(entry);
+                    if (_emitted[entry]) continue;
+                    var region = Build(entry, _cfg.ExitIndex, depth, loop);
+                    if (region is null) return null;
+                    children.Add(region);
+                }
+                return new SeqNode(children);
+            }
             if (ControlFlowGraph.IsConditional(term))
             {
                 if (block.Successors.Count != 2 || depth >= MaxNesting) return null;

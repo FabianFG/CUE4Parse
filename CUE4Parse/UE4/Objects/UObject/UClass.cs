@@ -170,6 +170,7 @@ public class UClass : UStruct
         if (totalFuncMapCount > 0) stringBuilder.AppendLine();
 
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
+        var entryOffsetsMap = new Dictionary<string, List<int>>();
         foreach (var value in FuncMap.Values.Reverse())
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
@@ -180,6 +181,7 @@ public class UClass : UStruct
             {
                 string? label = null;
                 int? offset = null;
+                var isEntryCall = false;
 
                 switch (expression)
                 {
@@ -199,11 +201,13 @@ public class UClass : UStruct
                         label = final.VirtualFunctionName.Text.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConstVirtual])
                             offset = intConstVirtual.Value;
+                        isEntryCall = true;
                         break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
                             offset = intConst.Value;
+                        isEntryCall = true;
                         break;
                     case EX_CallMath math:
                         // creates Labels for Delayed jumps
@@ -235,6 +239,14 @@ public class UClass : UStruct
                         jumpCodeOffsetsMap[label] = list = [];
 
                     list.Add(offset.Value);
+
+                    if (isEntryCall)
+                    {
+                        if (!entryOffsetsMap.TryGetValue(label, out var entryList))
+                            entryOffsetsMap[label] = entryList = [];
+
+                        entryList.Add(offset.Value);
+                    }
                 }
             }
         }
@@ -325,7 +337,8 @@ public class UClass : UStruct
                 continue;
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
-            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, jumpCodeOffsets, functionStringBuilder))
+            var entryCodeOffsets = entryOffsetsMap.TryGetValue(function.Name, out var entryList) ? entryList : [];
+            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, entryCodeOffsets, functionStringBuilder))
             {
                 functionStringBuilder.CloseBlock();
                 stringBuilder.AppendLine(functionStringBuilder.ToString());
