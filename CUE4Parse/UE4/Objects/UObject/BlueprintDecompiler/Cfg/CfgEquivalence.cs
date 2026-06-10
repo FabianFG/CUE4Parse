@@ -1,22 +1,29 @@
 using System.Collections.Generic;
+using CUE4Parse.UE4.Kismet;
 
 namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 
 internal sealed class CfgEquivalence
 {
     private readonly ControlFlowGraph _cfg;
+    private readonly List<int>[] _expected;
     private readonly int[] _emitCount;
     private bool _ok = true;
 
-    private CfgEquivalence(ControlFlowGraph cfg)
+    private CfgEquivalence(ControlFlowGraph cfg, List<int>[] expected)
     {
         _cfg = cfg;
+        _expected = expected;
         _emitCount = new int[cfg.Blocks.Length];
     }
 
     public static bool Verify(ControlFlowGraph cfg, SeqNode root)
     {
-        var verifier = new CfgEquivalence(cfg);
+        var expected = DeriveEdges(cfg);
+        if (expected is null)
+            return false;
+
+        var verifier = new CfgEquivalence(cfg, expected);
         var entry = verifier.Flow(root, cfg.ExitIndex);
         if (!verifier._ok || entry != cfg.EntryIndex)
             return false;
@@ -24,11 +31,84 @@ internal sealed class CfgEquivalence
         var reachable = verifier.Reachable();
         for (var b = 0; b < cfg.ExitIndex; b++)
         {
-            var expected = reachable[b] ? 1 : 0;
-            if (verifier._emitCount[b] != expected)
+            if (verifier._emitCount[b] != (reachable[b] ? 1 : 0))
                 return false;
         }
         return true;
+    }
+
+    private static List<int>[]? DeriveEdges(ControlFlowGraph cfg)
+    {
+        var code = cfg.Statements;
+        var exit = cfg.ExitIndex;
+
+        var offsetToIndex = new Dictionary<int, int>(code.Length);
+        for (var i = 0; i < code.Length; i++)
+            offsetToIndex[code[i].StatementIndex] = i;
+
+        var indexToBlock = new int[code.Length];
+        for (var b = 0; b < exit; b++)
+            for (var i = cfg.Blocks[b].Start; i <= cfg.Blocks[b].End; i++)
+                indexToBlock[i] = b;
+
+        var popTarget = new Dictionary<int, int>();
+        var simStack = new Stack<int>();
+        for (var i = 0; i < code.Length; i++)
+        {
+            switch (code[i])
+            {
+                case EX_PushExecutionFlow push:
+                    simStack.Push((int) push.PushingAddress);
+                    break;
+                case EX_PopExecutionFlow:
+                case EX_PopExecutionFlowIfNot:
+                    if (simStack.Count == 0) popTarget[i] = exit;
+                    else if (!offsetToIndex.TryGetValue(simStack.Pop(), out var popIndex)) return null;
+                    else popTarget[i] = indexToBlock[popIndex];
+                    break;
+            }
+        }
+
+        var expected = new List<int>[cfg.Blocks.Length];
+        for (var b = 0; b < exit; b++)
+        {
+            var block = cfg.Blocks[b];
+            var list = new List<int>(2);
+            switch (code[block.End])
+            {
+                case EX_JumpIfNot jumpIfNot:
+                    if (!offsetToIndex.TryGetValue((int) jumpIfNot.CodeOffset, out var jumpIfNotTarget)) return null;
+                    list.Add(b + 1);
+                    list.Add(indexToBlock[jumpIfNotTarget]);
+                    break;
+                case EX_Skip:
+                    list.Add(b + 1);
+                    break;
+                case EX_Jump jump:
+                    if (!offsetToIndex.TryGetValue((int) jump.CodeOffset, out var jumpTarget)) return null;
+                    list.Add(indexToBlock[jumpTarget]);
+                    break;
+                case EX_Return:
+                case EX_EndOfScript:
+                    list.Add(exit);
+                    break;
+                case EX_PopExecutionFlow:
+                    list.Add(popTarget[block.End]);
+                    break;
+                case EX_PopExecutionFlowIfNot:
+                    list.Add(b + 1);
+                    list.Add(popTarget[block.End]);
+                    break;
+                case EX_ComputedJump:
+                    return null;
+                default:
+                    list.Add(b + 1);
+                    break;
+            }
+            expected[b] = list;
+        }
+        expected[exit] = [];
+        return expected;
     }
 
     private bool[] Reachable()
@@ -39,7 +119,7 @@ internal sealed class CfgEquivalence
         queue.Enqueue(_cfg.EntryIndex);
         while (queue.Count > 0)
         {
-            foreach (var succ in _cfg.Blocks[queue.Dequeue()].Successors)
+            foreach (var succ in _expected[queue.Dequeue()])
             {
                 if (!reachable[succ])
                 {
@@ -97,14 +177,14 @@ internal sealed class CfgEquivalence
 
     private void CheckSingle(int block, int target)
     {
-        var expected = _cfg.Blocks[block].Successors;
+        var expected = _expected[block];
         if (expected.Count != 1 || expected[0] != target)
             _ok = false;
     }
 
     private void CheckBranch(int block, int thenTarget, int elseTarget)
     {
-        var expected = _cfg.Blocks[block].Successors;
+        var expected = _expected[block];
         if (expected.Count != 2 || expected[0] != thenTarget || expected[1] != elseTarget)
             _ok = false;
     }
