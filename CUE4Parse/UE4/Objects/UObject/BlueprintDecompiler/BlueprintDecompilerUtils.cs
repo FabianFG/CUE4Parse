@@ -1452,11 +1452,17 @@ public static class BlueprintDecompilerUtils
                     values.Add(GetLineExpression(element));
                 }
 
-               // var arrayProp = constArray.InnerProperty.New.ResolvedOwner.Load<UArrayProperty>();
-               // var objProp = arrayProp.Inner.Load<UObjectProperty>();
-              //  return objProp.PropertyClass?.Name ?? "Unknown";
+                var innerType = constArray.InnerProperty.ToString();
+                if (constArray.InnerProperty.New is { ResolvedOwner: not null, Path.Length: > 0 } fieldPath &&
+                    fieldPath.ResolvedOwner.Load<UStruct>() is { } owner &&
+                    owner.GetProperty(fieldPath.Path[0], out var field) &&
+                    field is FArrayProperty { Inner: { } inner })
+                {
+                    var (_, resolvedType) = GetPropertyType(inner);
+                    if (!string.IsNullOrEmpty(resolvedType)) innerType = resolvedType;
+                }
 
-                return $"TArray<{constArray.InnerProperty}>({string.Join(", ", values)})";
+                return $"TArray<{innerType}>({string.Join(", ", values)})";
             }
             case EX_SetArray setArray:
             {
