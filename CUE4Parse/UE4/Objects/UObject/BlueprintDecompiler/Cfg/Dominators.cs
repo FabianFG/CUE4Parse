@@ -8,12 +8,14 @@ internal sealed class Dominators
     public readonly int[] Idom;
     public readonly int[] PostIdom;
     public readonly List<(int From, int To)> BackEdges;
+    public readonly bool IsReducible;
 
-    private Dominators(int[] idom, int[] postIdom, List<(int From, int To)> backEdges)
+    private Dominators(int[] idom, int[] postIdom, List<(int From, int To)> backEdges, bool isReducible)
     {
         Idom = idom;
         PostIdom = postIdom;
         BackEdges = backEdges;
+        IsReducible = isReducible;
     }
 
     public static Dominators Compute(ControlFlowGraph cfg)
@@ -34,7 +36,41 @@ internal sealed class Dominators
             }
         }
 
-        return new Dominators(idom, postIdom, backEdges);
+        var isReducible = IsReducibleGraph(blocks, cfg.EntryIndex, idom);
+        return new Dominators(idom, postIdom, backEdges, isReducible);
+    }
+
+    private static bool IsReducibleGraph(BasicBlock[] blocks, int entry, int[] idom)
+    {
+        var color = new byte[blocks.Length];
+        var iter = new int[blocks.Length];
+        var stack = new Stack<int>();
+        stack.Push(entry);
+        color[entry] = 1;
+        while (stack.Count > 0)
+        {
+            var u = stack.Peek();
+            var succs = blocks[u].Successors;
+            if (iter[u] < succs.Count)
+            {
+                var v = succs[iter[u]++];
+                if (color[v] == 0)
+                {
+                    color[v] = 1;
+                    stack.Push(v);
+                }
+                else if (color[v] == 1 && !Dominates(idom, v, u))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                color[u] = 2;
+                stack.Pop();
+            }
+        }
+        return true;
     }
 
     public bool Dominates(int a, int b) => Dominates(Idom, a, b);

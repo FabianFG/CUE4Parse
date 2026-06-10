@@ -14,7 +14,9 @@ public static class BlueprintCfg
             if (cfg is null)
                 return false;
 
-            _ = Dominators.Compute(cfg);
+            var dom = Dominators.Compute(cfg);
+            if (!dom.IsReducible)
+                return false;
         }
         catch
         {
