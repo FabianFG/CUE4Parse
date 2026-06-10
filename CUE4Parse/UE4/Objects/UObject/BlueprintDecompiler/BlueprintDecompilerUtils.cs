@@ -513,7 +513,7 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        if (IsPointer(property))
+        if (IsPointer(property) && !type.Contains('<'))
             type += "*";
 
         if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
@@ -675,7 +675,7 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        if (IsPointer(property))
+        if (IsPointer(property) && !type.Contains('<'))
             type += "*";
 
         if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
@@ -708,7 +708,7 @@ public static class BlueprintDecompilerUtils
                     var enumValue = name.ToString();
 
                     value = $"{enumValue}";
-                    type = $"enum {enumValue.SubstringBefore("::")}";
+                    type = enumValue.Contains("::") ? $"enum {enumValue.SubstringBefore("::")}" : propertyTag.TagData?.EnumName is { Length: > 0 } enumName ? $"enum {enumName}" : "enum";
                 }
                 else
                 {
@@ -992,7 +992,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.EnumProperty:
             {
                 value = propertyTag.GetGenericValueStr<FName>();
-                type = $"enum {value.SubstringBefore("::")}";
+                type = value.Contains("::") ? $"enum {value.SubstringBefore("::")}" : propertyTag.TagData?.EnumName is { Length: > 0 } enumName ? $"enum {enumName}" : "enum";
                 break;
             }
             case EPropertyType.FieldPathProperty:
