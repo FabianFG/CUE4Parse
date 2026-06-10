@@ -40,10 +40,63 @@ internal sealed class StructuredEmitter
             case LoopNode loop:
                 EmitLoop(loop);
                 break;
+            case SwitchNode switchNode:
+                EmitSwitch(switchNode);
+                break;
+            case LeafRangeNode range:
+                EmitLeaves(_cfg.Blocks[range.Block], _gotoTargets.Contains(range.Block) ? $"Label_{_cfg.LabelNumber(range.Block)}:" : null, range.LeafEnd);
+                break;
             case BlockNode block:
                 EmitBlock(block);
                 break;
         }
+    }
+
+    private void EmitSwitch(SwitchNode node)
+    {
+        Line($"switch ({node.Subject})");
+        OpenBraces();
+        foreach (var switchCase in node.Cases)
+        {
+            Line($"case {switchCase.Label}:");
+            _builder.IncreaseIndentation();
+            _fresh = true;
+            Emit(switchCase.Body);
+            if (!AlwaysTerminates(switchCase.Body))
+                Line("break;");
+            _builder.DecreaseIndentation();
+        }
+        if (node.Default is not null && !IsEmptyNode(node.Default))
+        {
+            Line("default:");
+            _builder.IncreaseIndentation();
+            _fresh = true;
+            Emit(node.Default);
+            _builder.DecreaseIndentation();
+        }
+        CloseBraces();
+    }
+
+    private bool IsEmptyNode(StructuredNode node) => EmitsNothing(node);
+
+    private static bool AlwaysTerminates(StructuredNode? node) => node switch
+    {
+        GotoNode or ReturnNode or BreakNode or ContinueNode => true,
+        BlockNode block => block.Kind is TermKind.Return or TermKind.Exit or TermKind.Goto
+            || (block.Kind == TermKind.If && AlwaysTerminates(block.Then) && AlwaysTerminates(block.Else)),
+        SeqNode seq => seq.Children.Count > 0 && AlwaysTerminates(seq.Children[^1]),
+        SwitchNode switchNode => SwitchAlwaysTerminates(switchNode),
+        _ => false
+    };
+
+    private static bool SwitchAlwaysTerminates(SwitchNode node)
+    {
+        if (node.Default is null || !AlwaysTerminates(node.Default)) return false;
+        foreach (var switchCase in node.Cases)
+        {
+            if (!AlwaysTerminates(switchCase.Body)) return false;
+        }
+        return true;
     }
 
     private void EmitLoop(LoopNode loop)
@@ -77,9 +130,10 @@ internal sealed class StructuredEmitter
         }
     }
 
-    private void EmitLeaves(BasicBlock block, string? label)
+    private void EmitLeaves(BasicBlock block, string? label) => EmitLeaves(block, label, _cfg.LeafEnd(block));
+
+    private void EmitLeaves(BasicBlock block, string? label, int leafEnd)
     {
-        var leafEnd = _cfg.LeafEnd(block);
         for (var i = block.Start; i <= leafEnd; i++)
         {
             var statement = _cfg.Statements[i];

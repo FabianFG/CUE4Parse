@@ -4,6 +4,8 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 
 public static class BlueprintCfg
 {
+    private const int MaxOutputNesting = 12;
+
     public static bool TryStructure(UFunction function, List<int> jumpTargets, CustomStringBuilder builder)
     {
         try
@@ -20,7 +22,11 @@ public static class BlueprintCfg
             if (!CfgEquivalence.Verify(cfg, root))
                 return false;
 
-            new StructuredEmitter(cfg, structurer.GotoTargets, builder).Emit(root);
+            var folded = SwitchFold.Fold(root, cfg);
+            if (SwitchFold.Depth(folded) > MaxOutputNesting)
+                return false;
+
+            new StructuredEmitter(cfg, structurer.GotoTargets, builder).Emit(folded);
             return true;
         }
         catch

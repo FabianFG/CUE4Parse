@@ -48,6 +48,18 @@ internal sealed class GotoNode : StructuredNode
     }
 }
 
+internal sealed class LeafRangeNode : StructuredNode
+{
+    public readonly int Block;
+    public readonly int LeafEnd;
+
+    public LeafRangeNode(int block, int leafEnd)
+    {
+        Block = block;
+        LeafEnd = leafEnd;
+    }
+}
+
 internal sealed class LoopNode : StructuredNode
 {
     public readonly int Header;
@@ -65,3 +77,29 @@ internal sealed class ReturnNode : StructuredNode;
 internal sealed class BreakNode : StructuredNode;
 
 internal sealed class ContinueNode : StructuredNode;
+
+internal sealed class SwitchCase
+{
+    public readonly string Label;
+    public readonly StructuredNode Body;
+
+    public SwitchCase(string label, StructuredNode body)
+    {
+        Label = label;
+        Body = body;
+    }
+}
+
+internal sealed class SwitchNode : StructuredNode
+{
+    public readonly string Subject;
+    public readonly List<SwitchCase> Cases;
+    public readonly StructuredNode? Default;
+
+    public SwitchNode(string subject, List<SwitchCase> cases, StructuredNode? @default)
+    {
+        Subject = subject;
+        Cases = cases;
+        Default = @default;
+    }
+}

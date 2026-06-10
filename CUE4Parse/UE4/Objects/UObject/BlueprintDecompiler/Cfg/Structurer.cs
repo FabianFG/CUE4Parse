@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 
 internal sealed class Structurer
 {
-    private const int MaxNesting = 12;
+    private const int MaxNesting = 64;
 
     private enum Transfer
     {
