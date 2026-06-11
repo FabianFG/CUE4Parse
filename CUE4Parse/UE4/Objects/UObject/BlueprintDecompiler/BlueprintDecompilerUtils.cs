@@ -862,7 +862,7 @@ public static class BlueprintDecompilerUtils
                     return false;
                 }
 
-                type = $"struct F{propertyTag.TagData?.StructType}";
+                type = propertyTag.TagData?.StructType is { Length: > 0 } structName ? $"struct F{structName}" : "struct";
                 break;
             }
             case EPropertyType.StrProperty:
@@ -986,7 +986,8 @@ public static class BlueprintDecompilerUtils
                     foreach (var (mapKey, mapValue) in scriptMap.Properties)
                     {
                         var innerTypeData = propertyTag.TagData?.InnerTypeData;
-                        var keyProperty = new FPropertyTag(new FName(innerTypeData?.Type), mapKey, innerTypeData);
+                        var keyTypeName = !string.IsNullOrEmpty(innerTypeData?.Type) ? innerTypeData!.Type : mapKey.GetType().Name;
+                        var keyProperty = new FPropertyTag(new FName(keyTypeName), mapKey, innerTypeData);
 
                         if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
@@ -995,12 +996,13 @@ public static class BlueprintDecompilerUtils
                         }
 
                         var valueTypeData = propertyTag.TagData?.ValueTypeData;
-                        var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type), mapValue, valueTypeData);
+                        var valueTypeName = !string.IsNullOrEmpty(valueTypeData?.Type) ? valueTypeData!.Type : mapValue?.GetType().Name;
+                        var valueProperty = new FPropertyTag(new FName(valueTypeName), mapValue, valueTypeData);
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
                             Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
-                                mapValue.GetType().Name);
+                                mapValue?.GetType().Name);
                         }
 
                         keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
