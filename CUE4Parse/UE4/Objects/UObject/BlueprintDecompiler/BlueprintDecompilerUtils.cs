@@ -33,11 +33,74 @@ public static class BlueprintDecompilerUtils
         {
             _function = value;
             _executionFlowStack.Clear();
+            ComputeDelegateFolds(value);
         }
     }
     private static readonly Stack<int> _executionFlowStack = new();
 
     private static bool RaiseIdioms => Function?.Owner?.Provider?.RaiseBlueprintIdioms ?? false;
+
+    private static readonly HashSet<KismetExpression> _foldedDelegateBinds = new();
+    private static readonly Dictionary<KismetExpression, string> _foldedDelegateTargets = new();
+
+    private static void ComputeDelegateFolds(UFunction? function)
+    {
+        _foldedDelegateBinds.Clear();
+        _foldedDelegateTargets.Clear();
+        if (function?.ScriptBytecode is not { } code || !(function.Owner?.Provider?.RaiseBlueprintIdioms ?? false))
+            return;
+
+        var builder = new System.Text.StringBuilder();
+        foreach (var statement in code)
+        {
+            if (statement is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript)
+                continue;
+            builder.Append(GetLineExpression(statement));
+            builder.Append('\n');
+        }
+        var rendered = builder.ToString();
+
+        foreach (var statement in code)
+        {
+            if (statement is not EX_BindDelegate bind || bind.Delegate is not EX_VariableBase bindVariable)
+                continue;
+
+            var localName = bindVariable.Variable.ToString();
+            if (!IsIdentifierName(localName))
+                continue;
+            if (System.Text.RegularExpressions.Regex.Matches(rendered, $@"\b{System.Text.RegularExpressions.Regex.Escape(localName)}\b").Count != 2)
+                continue;
+
+            foreach (var consumer in code)
+            {
+                KismetExpression? toAdd = consumer switch
+                {
+                    EX_AddMulticastDelegate add => add.DelegateToAdd,
+                    EX_RemoveMulticastDelegate remove => remove.DelegateToAdd,
+                    _ => null
+                };
+                if (toAdd is not EX_VariableBase addVariable || addVariable.Variable.ToString() != localName)
+                    continue;
+
+                _foldedDelegateBinds.Add(bind);
+                _foldedDelegateTargets[consumer] = $"{GetLineExpression(bind.ObjectTerm)}->{SanitizeIdentifier(bind.FunctionName.Text)}";
+                break;
+            }
+        }
+
+        _executionFlowStack.Clear();
+    }
+
+    private static bool IsIdentifierName(string name)
+    {
+        if (name.Length == 0) return false;
+        foreach (var c in name)
+        {
+            if (c != '_' && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9'))
+                return false;
+        }
+        return true;
+    }
 
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
@@ -1769,7 +1832,7 @@ public static class BlueprintDecompilerUtils
                 var objectTerm = GetLineExpression(bindDelegate.ObjectTerm);
                 var functionName = $"FName(\"{bindDelegate.FunctionName.Text}\")";
 
-                return $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
+                return RaiseIdioms && _foldedDelegateBinds.Contains(bindDelegate) ? "" : $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
             }
             case EX_StructConst structConst:
             {
@@ -1796,7 +1859,9 @@ public static class BlueprintDecompilerUtils
                 var delegatee = GetLineExpression(multicastDelegate.Delegate);
                 var delegateToAdd = GetLineExpression(multicastDelegate.DelegateToAdd);
 
-                return RaiseIdioms ? $"{delegatee} += {delegateToAdd}" : $"{delegatee}->Add({delegateToAdd})";
+                if (!RaiseIdioms)
+                    return $"{delegatee}->Add({delegateToAdd})";
+                return _foldedDelegateTargets.TryGetValue(multicastDelegate, out var addTarget) ? $"{delegatee} += {addTarget}" : $"{delegatee} += {delegateToAdd}";
             }
             case EX_RotationConst rotationConst:
             {
@@ -1903,7 +1968,9 @@ public static class BlueprintDecompilerUtils
 
                 var separator = delegateExpr.Token == EExprToken.EX_Context ? "->" : ".";
 
-                return RaiseIdioms ? $"{delegateTarget} -= {delegateToRemove}" : $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
+                if (!RaiseIdioms)
+                    return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
+                return _foldedDelegateTargets.TryGetValue(removeMulticastDelegate, out var removeTarget) ? $"{delegateTarget} -= {removeTarget}" : $"{delegateTarget} -= {delegateToRemove}";
             }
             case EX_ClearMulticastDelegate clearMulticastDelegate:
             {
