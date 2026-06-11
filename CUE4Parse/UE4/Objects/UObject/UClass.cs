@@ -310,6 +310,9 @@ public class UClass : UStruct
             var functionOverride = IsOverriddenFunction(key) ? " override" : "";
             var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{key.Text}_Implementation" : key.Text;
             var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
+            var replicationSpecifiers = GetFunctionReplicationSpecifiers(functionFlags);
+            if (replicationSpecifiers.Length > 0)
+                functionStringBuilder.AppendLine($"// {replicationSpecifiers}");
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
@@ -378,6 +381,18 @@ public class UClass : UStruct
         if (flags.HasFlag(EPropertyFlags.SaveGame)) specifiers.Add("SaveGame");
         if (flags.HasFlag(EPropertyFlags.Config)) specifiers.Add("Config");
         return specifiers.Count > 0 ? $"// ({string.Join(", ", specifiers)})\n" : "";
+    }
+
+    private static string GetFunctionReplicationSpecifiers(EFunctionFlags flags)
+    {
+        if (!flags.HasFlag(EFunctionFlags.FUNC_Net)) return "";
+        var specifiers = new List<string>();
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetServer)) specifiers.Add("Server");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetClient)) specifiers.Add("Client");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetMulticast)) specifiers.Add("NetMulticast");
+        specifiers.Add(flags.HasFlag(EFunctionFlags.FUNC_NetReliable) ? "Reliable" : "Unreliable");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetValidate)) specifiers.Add("WithValidation");
+        return $"UFUNCTION({string.Join(", ", specifiers)})";
     }
 
     private bool IsOverriddenFunction(FName name)
