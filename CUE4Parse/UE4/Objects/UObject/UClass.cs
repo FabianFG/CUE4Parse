@@ -150,7 +150,7 @@ public class UClass : UStruct
             var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
             var arrayDim = property.ArrayDim > 1 ? $"[{property.ArrayDim}]" : "";
             var specifiers = GetPropertySpecifiers(property);
-            variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{arrayDim}{bitfield}{value};", property.GetAccessMode());
+            variables.TryAdd($"{specifiers}{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.Text)}{arrayDim}{bitfield}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -263,7 +263,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             foreach (var child in function.Children ?? [])
@@ -281,7 +281,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             var functionStringBuilder = new CustomStringBuilder();

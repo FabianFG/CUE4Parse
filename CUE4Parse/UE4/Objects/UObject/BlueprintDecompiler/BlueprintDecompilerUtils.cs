@@ -335,6 +335,44 @@ public static class BlueprintDecompilerUtils
 
     private static string EscapeCpp(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r\n", "\\n").Replace("\n", "\\n");
 
+    private static readonly HashSet<string> ReservedIdentifiers = new()
+    {
+        "alignas", "alignof", "auto", "bool", "break", "case", "catch", "char", "class", "const",
+        "constexpr", "continue", "decltype", "default", "delete", "do", "double", "else", "enum",
+        "explicit", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int",
+        "long", "mutable", "namespace", "new", "noexcept", "nullptr", "operator", "private",
+        "protected", "public", "register", "return", "short", "signed", "sizeof", "static",
+        "struct", "switch", "template", "this", "throw", "true", "try", "typedef", "typename",
+        "union", "unsigned", "using", "virtual", "void", "volatile", "while"
+    };
+
+    public static string SanitizeIdentifier(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+
+        var valid = true;
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (i > 0 && c >= '0' && c <= '9'))
+                continue;
+            valid = false;
+            break;
+        }
+        if (valid && !ReservedIdentifiers.Contains(name)) return name;
+
+        var chars = name.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (c != '_' && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9'))
+                chars[i] = '_';
+        }
+
+        var sanitized = char.IsDigit(chars[0]) ? "_" + new string(chars) : new string(chars);
+        return ReservedIdentifiers.Contains(sanitized) ? sanitized + "_" : sanitized;
+    }
+
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
@@ -1313,12 +1351,12 @@ public static class BlueprintDecompilerUtils
         {
             case EX_VariableBase variableBase:
             {
-                return variableBase.Variable.ToString();
+                return SanitizeIdentifier(variableBase.Variable.ToString());
             }
             case EX_LetValueOnPersistentFrame persistent:
             {
                 var variableAssignment = GetLineExpression(persistent.AssignmentExpression);
-                var variableToBeAssigned = persistent.DestinationProperty.ToString();
+                var variableToBeAssigned = SanitizeIdentifier(persistent.DestinationProperty.ToString());
                 return $"{(variableToBeAssigned.Contains("K2Node_") ? "UberGraphFrame->" + variableToBeAssigned : variableToBeAssigned)} = {variableAssignment}";
             }
             case EX_LetBool letBool:
@@ -1834,7 +1872,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_StructMemberContext structMemberContext:
             {
-                var property = structMemberContext.Property.ToString();
+                var property = SanitizeIdentifier(structMemberContext.Property.ToString());
                 var structExpression = GetLineExpression(structMemberContext.StructExpression);
 
                 return $"{structExpression}.{property}";
@@ -1869,7 +1907,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_PropertyConst propertyConst:
             {
-                return propertyConst.Property.ToString();
+                return SanitizeIdentifier(propertyConst.Property.ToString());
             }
             case EX_WireTracepoint:
             case EX_Tracepoint:

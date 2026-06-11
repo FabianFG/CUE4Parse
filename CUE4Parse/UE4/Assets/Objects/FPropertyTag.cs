@@ -259,7 +259,7 @@ public class FPropertyTag
         }
 
         var assignment = string.IsNullOrEmpty(variableValue) ? string.Empty : $" = {variableValue}";
-        return $"{variableType} {Name.Text}{assignment};";
+        return $"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(Name.Text)}{assignment};";
     }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";
