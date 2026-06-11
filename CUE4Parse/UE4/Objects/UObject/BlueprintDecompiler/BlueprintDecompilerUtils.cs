@@ -805,7 +805,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.ArrayProperty:
             {
                 var scriptArray = propertyTag.GetGenericValue<UScriptArray>();
-                if (scriptArray == null || scriptArray.Properties == null || scriptArray.InnerType == null || scriptArray.InnerTagData == null)
+                if (scriptArray?.Properties == null)
                 {
                     value = "{}";
                     type = "TArray<unknown>";
@@ -815,7 +815,7 @@ public static class BlueprintDecompilerUtils
                 if (scriptArray.Properties.Count == 0)
                 {
                     value = "{}";
-                    var innerType = GetTagTypes(scriptArray.InnerTagData);
+                    var innerType = scriptArray.InnerTagData != null ? GetTagTypes(scriptArray.InnerTagData) : "unknown";
 
                     type = $"TArray<{innerType}>";
                 }
@@ -826,15 +826,16 @@ public static class BlueprintDecompilerUtils
                     for (int i = 0; i < scriptArray.Properties.Count; i++)
                     {
                         var property = scriptArray.Properties[i];
+                        var elementType = !string.IsNullOrEmpty(scriptArray.InnerType) ? scriptArray.InnerType : property.GetType().Name;
                         if (!GetPropertyTagVariable(
-                                new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
+                                new FPropertyTag(new FName(elementType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
-                            Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
+                            Log.Warning("Failed to get ArrayElement of type {type}", elementType);
                             continue;
                         }
 
-                        if (scriptArray.InnerType == "EnumProperty")
+                        if (elementType == "EnumProperty")
                         {
                             innerValue = innerValue.SubstringAfter("::");
                         }
