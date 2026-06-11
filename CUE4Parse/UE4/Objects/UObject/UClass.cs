@@ -251,10 +251,21 @@ public class UClass : UStruct
             }
         }
 
+        UFunction? inlineUbergraph = null;
+        UbergraphInlinePlan? inlinePlan = null;
+        var eventInlineOffset = new Dictionary<FName, int>();
+        if (Owner?.Provider?.RaiseBlueprintIdioms ?? false)
+            inlinePlan = PlanUbergraphInlining(entryOffsetsMap, out inlineUbergraph, eventInlineOffset);
+        if (inlinePlan != null)
+            totalFuncMapCount--;
+
         var index = 1;
         foreach (var (key, value) in FuncMap)
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
+                continue;
+
+            if (inlinePlan != null && function == inlineUbergraph)
                 continue;
 
             BlueprintDecompilerUtils.Function = function;
@@ -326,6 +337,17 @@ public class UClass : UStruct
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
+
+            if (inlinePlan != null && eventInlineOffset.TryGetValue(key, out var inlineOffset))
+            {
+                BlueprintDecompilerUtils.Function = inlineUbergraph!;
+                inlinePlan.TryEmit(inlineOffset, functionStringBuilder);
+                functionStringBuilder.CloseBlock();
+                stringBuilder.AppendLine(functionStringBuilder.ToString());
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                index++;
+                continue;
+            }
 
             if (function?.ScriptBytecode == null || function?.ScriptBytecode.Length == 0)
             {
@@ -400,6 +422,92 @@ public class UClass : UStruct
         if (flags.HasFlag(EPropertyFlags.SaveGame)) specifiers.Add("SaveGame");
         if (flags.HasFlag(EPropertyFlags.Config)) specifiers.Add("Config");
         return specifiers.Count > 0 ? $"// ({string.Join(", ", specifiers)})\n" : "";
+    }
+
+    private enum UbergraphCall { None, Pure, Impure }
+
+    private UbergraphInlinePlan? PlanUbergraphInlining(Dictionary<string, List<int>> entryOffsetsMap, out UFunction? ubergraph, Dictionary<FName, int> eventInlineOffset)
+    {
+        ubergraph = null;
+
+        UFunction? found = null;
+        foreach (var (_, value) in FuncMap)
+        {
+            if (!value.TryLoad(out var export) || export is not UFunction fn || !fn.FunctionFlags.HasFlag(EFunctionFlags.FUNC_UbergraphFunction))
+                continue;
+            if (found != null) return null;
+            found = fn;
+        }
+        if (found is null || found.ScriptBytecode is not { Length: > 0 })
+            return null;
+        if (!entryOffsetsMap.TryGetValue(found.Name, out var entries) || entries.Count == 0)
+            return null;
+
+        var plan = BlueprintCfg.TryPlanUbergraphInline(found, entries);
+        if (plan is null)
+            return null;
+
+        var offsetToEvent = new Dictionary<int, FName>();
+        foreach (var (key, value) in FuncMap)
+        {
+            if (!value.TryLoad(out var export) || export is not UFunction fn || fn == found)
+                continue;
+            switch (AnalyzeUbergraphCaller(fn, found.Name, out var offset))
+            {
+                case UbergraphCall.Pure:
+                    if (!plan.Contains(offset) || !offsetToEvent.TryAdd(offset, key)) return null;
+                    break;
+                case UbergraphCall.Impure:
+                    return null;
+            }
+        }
+        if (offsetToEvent.Count != plan.EntryOffsets.Count)
+            return null;
+
+        ubergraph = found;
+        foreach (var (offset, eventKey) in offsetToEvent)
+            eventInlineOffset[eventKey] = offset;
+        return plan;
+    }
+
+    private static UbergraphCall AnalyzeUbergraphCaller(UFunction function, string ubergraphName, out int offset)
+    {
+        offset = 0;
+        if (function.ScriptBytecode is not { } code)
+            return UbergraphCall.None;
+
+        var dispatches = 0;
+        var meaningful = 0;
+        foreach (var statement in code)
+        {
+            if (statement is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_Return)
+                continue;
+            meaningful++;
+            if (TryUbergraphDispatch(statement, ubergraphName, out var dispatchOffset))
+            {
+                dispatches++;
+                offset = dispatchOffset;
+            }
+        }
+
+        if (dispatches == 0) return UbergraphCall.None;
+        return dispatches == 1 && meaningful == 1 ? UbergraphCall.Pure : UbergraphCall.Impure;
+    }
+
+    private static bool TryUbergraphDispatch(KismetExpression statement, string ubergraphName, out int offset)
+    {
+        offset = 0;
+        switch (statement)
+        {
+            case EX_FinalFunction local when local.StackNode.Name.Split('.').Last().Split('[')[0] == ubergraphName && local.Parameters is [EX_IntConst localConst]:
+                offset = localConst.Value;
+                return true;
+            case EX_VirtualFunction virtualFunc when virtualFunc.VirtualFunctionName.Text.Split('.').Last().Split('[')[0] == ubergraphName && virtualFunc.Parameters is [EX_IntConst virtualConst]:
+                offset = virtualConst.Value;
+                return true;
+            default:
+                return false;
+        }
     }
 
     private bool IsOverriddenFunction(FName name)

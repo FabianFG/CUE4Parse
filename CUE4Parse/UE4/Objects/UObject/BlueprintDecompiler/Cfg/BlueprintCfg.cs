@@ -8,6 +8,9 @@ public static class BlueprintCfg
 {
     private const int MaxOutputNesting = 12;
 
+    public static UbergraphInlinePlan? TryPlanUbergraphInline(UFunction function, List<int> entryOffsets)
+        => UbergraphInlinePlan.TryCreate(function, entryOffsets);
+
     public static bool TryStructure(UFunction function, List<int> entryOffsets, CustomStringBuilder builder)
     {
         try
