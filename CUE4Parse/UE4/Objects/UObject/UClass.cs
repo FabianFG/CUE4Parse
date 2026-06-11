@@ -133,6 +133,7 @@ public class UClass : UStruct
         var variables = new Dictionary<string, EAccessMode>();
 
         var containerStructByName = new Dictionary<string, string>();
+        var containerTypeByName = new Dictionary<string, string>();
         var scope = (UStruct?) this;
         for (var depth = 0; scope is not null and not UScriptClass && depth < 100; scope = scope.SuperStruct.Load<UStruct>(), depth++)
         {
@@ -149,6 +150,10 @@ public class UClass : UStruct
                 };
                 if (element is FStructProperty structElement)
                     containerStructByName.TryAdd(property.Name.Text, structElement.Struct.Name);
+
+                var containerType = BlueprintDecompilerUtils.ResolveContainerType(property);
+                if (containerType is not null)
+                    containerTypeByName.TryAdd(property.Name.Text, containerType);
             }
         }
 
@@ -157,6 +162,8 @@ public class UClass : UStruct
         {
             if (!distinct.Add(property.Name.Text)) continue;
             var cppVariable = property.GetCppVariable();
+            if (containerTypeByName.TryGetValue(property.Name.Text, out var containerType))
+                cppVariable = BlueprintDecompilerUtils.ReplaceUnknownContainer(cppVariable, containerType);
             if (containerStructByName.TryGetValue(property.Name.Text, out var structName)
                 && System.Text.RegularExpressions.Regex.Matches(cppVariable, @"\bstruct\b(?! F)").Count == 1)
                 cppVariable = System.Text.RegularExpressions.Regex.Replace(cppVariable, @"\bstruct\b(?! F)", $"struct F{structName}");

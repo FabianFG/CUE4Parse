@@ -625,6 +625,44 @@ public static class BlueprintDecompilerUtils
         return (value, type);
     }
 
+    public static string? ResolveContainerType(FProperty property)
+    {
+        switch (property)
+        {
+            case FMapProperty { KeyProp: { } keyProp, ValueProp: { } valueProp }:
+            {
+                var (_, keyType) = GetPropertyType(keyProp);
+                var (_, valueType) = GetPropertyType(valueProp);
+                return IsResolvedType(keyType) && IsResolvedType(valueType) ? $"TMap<{keyType}, {valueType}>" : null;
+            }
+            case FArrayProperty { Inner: { } inner }:
+            {
+                var (_, innerType) = GetPropertyType(inner);
+                return IsResolvedType(innerType) ? $"TArray<{innerType}>" : null;
+            }
+            case FSetProperty { ElementProp: { } element }:
+            {
+                var (_, innerType) = GetPropertyType(element);
+                return IsResolvedType(innerType) ? $"TSet<{innerType}>" : null;
+            }
+            default:
+                return null;
+        }
+    }
+
+    private static bool IsResolvedType(string? type) => !string.IsNullOrEmpty(type) && !type.Contains("unknown");
+
+    public static string ReplaceUnknownContainer(string cppVariable, string resolvedType)
+    {
+        string? placeholder = null;
+        if (resolvedType.StartsWith("TMap<")) placeholder = "TMap<unknown, unknown>";
+        else if (resolvedType.StartsWith("TArray<")) placeholder = "TArray<unknown>";
+        else if (resolvedType.StartsWith("TSet<")) placeholder = "TSet<unknown>";
+        if (placeholder is null || !cppVariable.StartsWith(placeholder + " "))
+            return cppVariable;
+        return resolvedType + cppVariable[placeholder.Length..];
+    }
+
     // Legacy UProperty Support
      public static (string?, string?) GetPropertyType(UProperty property)
     {
