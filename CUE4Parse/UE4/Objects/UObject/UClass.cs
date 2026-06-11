@@ -132,11 +132,35 @@ public class UClass : UStruct
         var distinct = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
 
+        var containerStructByName = new Dictionary<string, string>();
+        var scope = (UStruct?) this;
+        for (var depth = 0; scope is not null and not UScriptClass && depth < 100; scope = scope.SuperStruct.Load<UStruct>(), depth++)
+        {
+            foreach (var childProperty in scope.ChildProperties ?? [])
+            {
+                if (childProperty is not FProperty property)
+                    continue;
+                FProperty? element = property switch
+                {
+                    FMapProperty map => map.ValueProp,
+                    FArrayProperty array => array.Inner,
+                    FSetProperty set => set.ElementProp,
+                    _ => null
+                };
+                if (element is FStructProperty structElement)
+                    containerStructByName.TryAdd(property.Name.Text, structElement.Struct.Name);
+            }
+        }
+
         var combined = Properties.Concat(classDefaultObject?.Properties ?? []).Concat(classDefaultObject?.SerializedSparseClassData?.Properties ?? []);
         foreach (var property in combined)
         {
             if (!distinct.Add(property.Name.Text)) continue;
-            variables.TryAdd(property.GetCppVariable(), EAccessMode.Public); // should always be public
+            var cppVariable = property.GetCppVariable();
+            if (containerStructByName.TryGetValue(property.Name.Text, out var structName)
+                && System.Text.RegularExpressions.Regex.Matches(cppVariable, @"\bstruct\b(?! F)").Count == 1)
+                cppVariable = System.Text.RegularExpressions.Regex.Replace(cppVariable, @"\bstruct\b(?! F)", $"struct F{structName}");
+            variables.TryAdd(cppVariable, EAccessMode.Public); // should always be public
         }
         foreach (var childProperty in ChildProperties ?? [])
         {
