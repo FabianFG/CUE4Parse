@@ -151,7 +151,7 @@ public class UClass : UStruct
             var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
             var arrayDim = property.ArrayDim > 1 ? $"[{property.ArrayDim}]" : "";
             var specifiers = GetPropertySpecifiers(property);
-            variables.TryAdd($"{specifiers}{variableType} {property.Name.Text}{arrayDim}{bitfield}{value};", property.GetAccessMode());
+            variables.TryAdd($"{specifiers}{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.Text)}{arrayDim}{bitfield}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -287,7 +287,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             foreach (var child in function.Children ?? [])
@@ -305,7 +305,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             var functionStringBuilder = new CustomStringBuilder();
@@ -334,6 +334,9 @@ public class UClass : UStruct
             var functionOverride = IsOverriddenFunction(key) ? " override" : "";
             var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{key.Text}_Implementation" : key.Text;
             var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
+            var replicationSpecifiers = GetFunctionReplicationSpecifiers(functionFlags);
+            if (replicationSpecifiers.Length > 0)
+                functionStringBuilder.AppendLine($"// {replicationSpecifiers}");
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
@@ -508,6 +511,18 @@ public class UClass : UStruct
             default:
                 return false;
         }
+    }
+
+    private static string GetFunctionReplicationSpecifiers(EFunctionFlags flags)
+    {
+        if (!flags.HasFlag(EFunctionFlags.FUNC_Net)) return "";
+        var specifiers = new List<string>();
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetServer)) specifiers.Add("Server");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetClient)) specifiers.Add("Client");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetMulticast)) specifiers.Add("NetMulticast");
+        specifiers.Add(flags.HasFlag(EFunctionFlags.FUNC_NetReliable) ? "Reliable" : "Unreliable");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetValidate)) specifiers.Add("WithValidation");
+        return $"UFUNCTION({string.Join(", ", specifiers)})";
     }
 
     private bool IsOverriddenFunction(FName name)
