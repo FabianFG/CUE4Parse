@@ -1485,7 +1485,7 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var stackNode = final.StackNode.ToString();
-                var functionName = stackNode.SubstringAfter(':').Trim('\'');
+                var functionName = SanitizeIdentifier(stackNode.SubstringAfter(':').Trim('\''));
                 var className = stackNode.SubstringAfter('.').SubstringBefore(':');
 
                 try
@@ -1509,7 +1509,7 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var parameters = string.Join(", ", parametersList);
-                var functionName = virtualFunc.VirtualFunctionName.Text;
+                var functionName = SanitizeIdentifier(virtualFunc.VirtualFunctionName.Text);
 
                 return $"{functionName}({parameters})";
             }

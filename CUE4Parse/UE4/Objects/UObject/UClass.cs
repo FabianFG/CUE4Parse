@@ -332,7 +332,8 @@ public class UClass : UStruct
                 : isBlueprintEvent && !functionFlags.HasFlag(EFunctionFlags.FUNC_Final) ? "virtual " : "";
             var functionConst = functionFlags.HasFlag(EFunctionFlags.FUNC_Const) && !functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? " const" : "";
             var functionOverride = IsOverriddenFunction(key) ? " override" : "";
-            var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{key.Text}_Implementation" : key.Text;
+            var sanitizedFunctionName = BlueprintDecompilerUtils.SanitizeIdentifier(key.Text);
+            var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{sanitizedFunctionName}_Implementation" : sanitizedFunctionName;
             var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
             var replicationSpecifiers = GetFunctionReplicationSpecifiers(functionFlags);
             if (replicationSpecifiers.Length > 0)
