@@ -37,6 +37,8 @@ public static class BlueprintDecompilerUtils
     }
     private static readonly Stack<int> _executionFlowStack = new();
 
+    private static bool RaiseIdioms => Function?.Owner?.Provider?.RaiseBlueprintIdioms ?? false;
+
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
         if (prefixClassStruct?.Name is not { Length: > 0 } name)
@@ -1794,7 +1796,7 @@ public static class BlueprintDecompilerUtils
                 var delegatee = GetLineExpression(multicastDelegate.Delegate);
                 var delegateToAdd = GetLineExpression(multicastDelegate.DelegateToAdd);
 
-                return $"{delegatee}->Add({delegateToAdd})";
+                return RaiseIdioms ? $"{delegatee} += {delegateToAdd}" : $"{delegatee}->Add({delegateToAdd})";
             }
             case EX_RotationConst rotationConst:
             {
@@ -1901,7 +1903,7 @@ public static class BlueprintDecompilerUtils
 
                 var separator = delegateExpr.Token == EExprToken.EX_Context ? "->" : ".";
 
-                return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
+                return RaiseIdioms ? $"{delegateTarget} -= {delegateToRemove}" : $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
             }
             case EX_ClearMulticastDelegate clearMulticastDelegate:
             {
