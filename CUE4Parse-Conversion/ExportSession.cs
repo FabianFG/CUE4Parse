@@ -78,7 +78,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
         while (true)
         {
             current.Clear();
-            while (_roots.TryDequeue(out var exporter))
+            while (_roots.TryDequeue(out var exporter) && _paths.TryRemove(exporter.ObjectPath, out _))
             {
                 ct.ThrowIfCancellationRequested();
                 current.Add(exporter);
@@ -88,21 +88,21 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
             await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
         }
 
-        Interlocked.Exchange(ref _totalQueued, 0);
-        OnPropertyChanged(nameof(TotalQueued));
         return [.. allResults];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
         {
             var results = await exporter.ExportAsync(token).ConfigureAwait(false);
 
+            var remaining = Interlocked.Decrement(ref _totalQueued);
+            OnPropertyChanged(nameof(TotalQueued));
+
             foreach (var result in results)
             {
                 allResults.Enqueue(result);
 
                 var c = Interlocked.Increment(ref completed);
-                var total = Volatile.Read(ref _totalQueued);
-                progress?.Report(new ExportProgress(c, total, result));
+                progress?.Report(new ExportProgress(c, c + remaining, result));
             }
         }
     }
