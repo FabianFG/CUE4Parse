@@ -17,5 +17,6 @@ public enum CompressionMethod
     XB1Zlib,
     XboxOneGDKZlib,
     Brotli,
+    PWC,
     Unknown
 }

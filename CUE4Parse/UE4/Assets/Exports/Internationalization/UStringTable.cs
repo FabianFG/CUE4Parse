@@ -1,4 +1,3 @@
-using System.IO;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -21,7 +20,8 @@ public class UStringTable : UObject
         {
             var deltaStringTable = new FDeltaStringTable(reader);
             StringTable.TableNamespace = deltaStringTable.TableNamespace;
-            StringTable.KeysToEntries = deltaStringTable.KeysToEntries;
+            StringTable.KeysToEntries = deltaStringTable.KeysToEntries.ToDictionary(pair => pair.Key, pair => pair.Value.Name);
+            Ar.Position += 8;
         }
     }
 

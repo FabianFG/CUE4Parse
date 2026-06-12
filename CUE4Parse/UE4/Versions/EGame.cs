@@ -140,6 +140,7 @@ public enum EGame : uint
         GAME_BloodBowl3 = GAME_UE4_27 + 31,
         GAME_ChasingKaleidoRIDER = GAME_UE4_27 + 32,
         GAME_Lego2KDrive = GAME_UE4_27 + 33,
+        GAME_CenturyAgeofAshes = GAME_UE4_27 + 34,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -177,6 +178,7 @@ public enum EGame : uint
         GAME_Avowed = GAME_UE5_3 + 7,
         GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
         GAME_Highguard = GAME_UE5_3 + 9,
+        GAME_DragonSwordAwakening = GAME_UE5_3 + 10,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
