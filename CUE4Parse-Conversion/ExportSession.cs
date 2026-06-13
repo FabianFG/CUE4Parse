@@ -18,11 +18,15 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 
 namespace CUE4Parse_Conversion;
 
-public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions options) : INotifyPropertyChanged
+public sealed class ExportSession : INotifyPropertyChanged
 {
-    public DirectoryInfo BaseDirectory { get; } = baseDirectory;
-    public ExportOptions Options { get; } = options;
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
+
+    private DirectoryInfo? _baseDirectory;
+    internal DirectoryInfo BaseDirectory => _baseDirectory ?? throw new InvalidOperationException("Session is not currently running.");
+
+    private ExportOptions? _options;
+    internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
     private int _totalQueued;
     public int TotalQueued => _totalQueued;
@@ -30,17 +34,12 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
     private readonly ConcurrentQueue<IExporter> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
 
-    public ExportSession(string baseDirectory, ExportOptions options) : this(new DirectoryInfo(baseDirectory), options)
-    {
-
-    }
-
     public ExportSession Add(UObject export)
     {
         return export switch
         {
             UTexture texture => Add(new TextureExporter(texture)),
-            UMaterialInterface material when Options.ExportMaterials => Add(new MaterialExporter(material)),
+            UMaterialInterface material => Add(new MaterialExporter(material)),
             USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
@@ -76,12 +75,15 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
         OnPropertyChanged(nameof(TotalQueued));
     }
 
-    public async Task<IReadOnlyList<ExportResult>> RunAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ExportResult>> RunAsync(string baseDirectory, ExportOptions options, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
+        _baseDirectory = new DirectoryInfo(baseDirectory);
+        _options = options;
+
         var completed = 0;
         var total = _totalQueued;
         var allResults = new ConcurrentQueue<ExportResult>();
-        var options = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
 
         var current = new List<IExporter>();
         while (true)
@@ -94,10 +96,13 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
             }
             if (current.Count == 0) break;
 
-            await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
+            await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
         }
 
         progress?.Report(new ExportProgress(completed, total)); // that's kinda cheating but useful too
+
+        _baseDirectory = null;
+        _options = null;
         return [.. allResults];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)

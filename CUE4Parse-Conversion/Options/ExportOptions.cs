@@ -29,7 +29,7 @@ public class ExportOptions(
     public readonly bool ExportHdrTexturesAsHdr = exportHdrTexturesAsHdr;
 
     public readonly EMaterialDepth MaterialDepth = materialDepth;
-    public readonly bool ExportMaterials = exportMaterials;
+    public readonly bool ExportMaterials = exportMaterials; // not to be confused, when we export a mesh we will look (or not) for its materials and export them (or not)
 
     public readonly bool ExportMorphTargets = exportMorphTargets;
     public readonly ESocketFormat SocketFormat = socketFormat;
