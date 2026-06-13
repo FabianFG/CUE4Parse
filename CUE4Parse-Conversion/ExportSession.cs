@@ -59,18 +59,27 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
     {
         if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
-        exporter.Log.Debug("Queued for export");
         exporter._session = this;
         _roots.Enqueue(exporter);
 
         Interlocked.Increment(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
+        exporter.Log.Debug("Queued for export");
         return this;
+    }
+
+    public void Clear()
+    {
+        _roots.Clear();
+        _paths.Clear();
+        Interlocked.Exchange(ref _totalQueued, 0);
+        OnPropertyChanged(nameof(TotalQueued));
     }
 
     public async Task<IReadOnlyList<ExportResult>> RunAsync(IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
         var completed = 0;
+        var total = _totalQueued;
         var allResults = new ConcurrentQueue<ExportResult>();
         var options = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
 
@@ -88,13 +97,14 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
             await Parallel.ForEachAsync(current, options, Process).ConfigureAwait(false);
         }
 
+        progress?.Report(new ExportProgress(completed, total)); // that's kinda cheating but useful too
         return [.. allResults];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
         {
             var results = await exporter.ExportAsync(token).ConfigureAwait(false);
 
-            var remaining = Interlocked.Decrement(ref _totalQueued);
+            Interlocked.Decrement(ref _totalQueued);
             OnPropertyChanged(nameof(TotalQueued));
 
             foreach (var result in results)
@@ -102,7 +112,7 @@ public sealed class ExportSession(DirectoryInfo baseDirectory, ExportOptions opt
                 allResults.Enqueue(result);
 
                 var c = Interlocked.Increment(ref completed);
-                progress?.Report(new ExportProgress(c, c + remaining, result));
+                progress?.Report(new ExportProgress(c, total, result));
             }
         }
     }
