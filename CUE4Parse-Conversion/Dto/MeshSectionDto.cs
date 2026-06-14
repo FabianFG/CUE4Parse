@@ -12,6 +12,11 @@ public struct MeshSectionDto(int index, int firstIndex, int numFaces, bool castS
 
     public bool IsValid => MaterialIndex > -1;
 
+    public MeshSectionDto(int index, MeshSectionDto section) : this(index, section.FirstIndex, section.NumFaces, section.CastShadow)
+    {
+
+    }
+
     public MeshSectionDto(FStaticMeshSection section) : this(section.MaterialIndex, section.FirstIndex, section.NumTriangles, section.bCastShadow)
     {
 

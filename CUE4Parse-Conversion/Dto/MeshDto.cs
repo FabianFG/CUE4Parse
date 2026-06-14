@@ -162,17 +162,32 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         var numTris = 0;
         var numVerts = 0;
         var numUVs = 0u;
+        var sectionCount = Materials.Length;
         foreach (var cluster in clusters)
         {
             numTris += cluster.TriIndices.Length;
             numVerts += cluster.Vertices.Length;
             numUVs = Math.Max(numUVs, cluster.NumUVs);
+
+            // unfortunately we can't trust these indices
+            if (!cluster.ShouldUseMaterialTable())
+            {
+                Clamp(ref cluster.Material0Index);
+                Clamp(ref cluster.Material1Index);
+                Clamp(ref cluster.Material2Index);
+            }
+            else for (var i = 0; i < cluster.MaterialRanges.Length; i++)
+            {
+                var index = cluster.MaterialRanges[i].MaterialIndex;
+                Clamp(ref index);
+                cluster.MaterialRanges[i] = new FMaterialRange(cluster.MaterialRanges[i], index);
+            }
         }
 
         if (numTris > 0 && numVerts > 0)
         {
             var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
-            var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, Materials.Length, numTexCoords, numVerts);
+            var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, sectionCount, numTexCoords, numVerts);
 
             if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
             {
@@ -189,6 +204,11 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
         nanite.UnloadAllPages();
         GC.Collect();
+
+        void Clamp(ref uint materialIndex)
+        {
+            materialIndex = Math.Clamp(materialIndex, 0, (uint) sectionCount - 1);
+        }
     }
 
     public override void Dispose()
