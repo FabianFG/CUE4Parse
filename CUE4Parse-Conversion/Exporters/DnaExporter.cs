@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class DnaExporter(UDNAAsset dna) : ExporterBase(dna)
 {
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         var bytes = dna.DNAData?.Value ?? [];
         if (bytes.Length == 0)

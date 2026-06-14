@@ -12,7 +12,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
 {
     protected abstract IReadOnlyList<ExportFile> BuildFiles(T original, IMeshExportFormat format);
 
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Converting mesh to {Format} at {Quality} quality ({NaniteFormat})", Session.Options.MeshFormat, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat);
 

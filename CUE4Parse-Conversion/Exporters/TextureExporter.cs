@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
 {
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Decoding texture for platform {Platform} as {Format}", Session.Options.TexturePlatform, Session.Options.TextureFormat);
 

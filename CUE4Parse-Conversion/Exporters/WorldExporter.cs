@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse_Conversion.Dto;
+﻿using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.World;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
@@ -15,7 +13,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
 {
     private const string Extension = "usda"; // TODO: technically only usda for now
 
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         var format = GetWorldFormat(Session.Options.MeshFormat);
         using var world = new WorldDto(export);
@@ -28,15 +26,16 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
             Session.Add(levelWorld);
         }
 
-        CollectFromActor(world.Actors, paths);
+        CollectFromActor(world.Actors, paths, ct);
 
         return [format.Build(world, paths)];
     }
 
-    private void CollectFromActor(IEnumerable<ActorDto> actors, WorldAssetPaths paths)
+    private void CollectFromActor(IEnumerable<ActorDto> actors, WorldAssetPaths paths, CancellationToken ct = default)
     {
         foreach (var actor in actors)
         {
+            ct.ThrowIfCancellationRequested();
             if (actor.AdditionalWorlds is { Count: > 0 })
             {
                 foreach (var w in actor.AdditionalWorlds)

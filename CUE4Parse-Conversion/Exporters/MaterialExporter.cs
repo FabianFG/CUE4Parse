@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase(material)
 {
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Extracting material parameters (depth: {Depth})", Session.Options.MaterialDepth);
 
@@ -22,6 +22,7 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
 
         foreach (var texture in parameters.Textures.Values)
         {
+            ct.ThrowIfCancellationRequested();
             Session.Add(texture);
         }
 

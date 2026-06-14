@@ -69,13 +69,13 @@ public abstract class ExporterBase : IExporter
             throw new ArgumentException("GameFile must not be a UE package payload file", nameof(file));
     }
 
-    protected abstract IReadOnlyList<ExportFile> BuildExportFiles();
+    protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
     public async Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default)
     {
         try
         {
-            var files = BuildExportFiles();
+            var files = BuildExportFiles(ct);
             if (files.Count == 0)
             {
                 throw new Exception("Format produced no files");

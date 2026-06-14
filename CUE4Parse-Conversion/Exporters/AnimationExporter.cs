@@ -9,7 +9,7 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class AnimationExporter(UAnimationAsset animation) : ExporterBase(animation)
 {
-    protected override IReadOnlyList<ExportFile> BuildExportFiles()
+    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Converting animation to {Format}", Session.Options.MeshFormat);
 
