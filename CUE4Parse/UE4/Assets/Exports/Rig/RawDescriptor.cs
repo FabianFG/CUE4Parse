@@ -1,4 +1,3 @@
-﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -36,6 +35,20 @@ public class RawDescriptor : IRawBase
     }
 }
 
+public class RawDescriptorExt : IRawBase
+{
+    public ERotationSequence RotationSequence;
+    public (ERotationDirection X, ERotationDirection Y, ERotationDirection Z) RotationSign;
+    public EFaceWindingOrder FaceWindingOrder; //added in v28
+
+    public RawDescriptorExt(FArchiveBigEndian Ar, FileVersion fileVersion)
+    {
+        RotationSequence = Ar.Read<ERotationSequence>();
+        RotationSign = (Ar.Read<ERotationDirection>(), Ar.Read<ERotationDirection>(), Ar.Read<ERotationDirection>());
+        FaceWindingOrder = fileVersion >= FileVersion.v28 ? Ar.Read<EFaceWindingOrder>() : EFaceWindingOrder.CCW;
+    }
+}
+
 [JsonConverter(typeof(EnumConverter<EArchetype>))]
 public enum EArchetype : byte
 {
@@ -47,7 +60,7 @@ public enum EArchetype : byte
     Other
 }
 
-[JsonConverter(typeof(EnumConverter<EGender>))] 
+[JsonConverter(typeof(EnumConverter<EGender>))]
 public enum EGender : byte
 {
     Male,
@@ -67,4 +80,30 @@ public enum ERotationUnit : byte
 {
     Degrees,
     Radians
+}
+
+[JsonConverter(typeof(EnumConverter<ERotationSequence>))]
+public enum ERotationSequence
+{
+    XYZ,
+    XZY,
+    YXZ,
+    YZX,
+    ZXY,
+    ZYX
+}
+
+[JsonConverter(typeof(EnumConverter<ERotationDirection>))]
+public enum ERotationDirection : int
+{
+    None = 0,
+    Positive = 1,
+    Negative = -1
+}
+
+[JsonConverter(typeof(EnumConverter<EFaceWindingOrder>))]
+public enum EFaceWindingOrder : byte
+{
+    CCW = 0,
+    CW = 1
 }
