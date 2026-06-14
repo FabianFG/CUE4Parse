@@ -353,7 +353,7 @@ public class FCluster
             uint tangentBytesPerValue = (TangentPrecision + 1 + 7) / 8;
             Vector128<int> prevPassTangent = Vector128<int>.Zero;
             var tangentLowMidHighOffsets = nextLowMidHighOffsets;
-            var tangentMask = 1 << (int) (TangentPrecision + 1) - 1;
+            var tangentMask = (1 << (int) (TangentPrecision + 1)) - 1;
             if (bHasTangents)
             {
                 nextLowMidHighOffsets += LowMidHighIncrement(tangentBytesPerValue, numNonRefVertices);

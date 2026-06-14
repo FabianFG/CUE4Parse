@@ -129,7 +129,7 @@ public class UBinaryAsset : UObject
 
             var length = type switch
             {
-                >= 0xc4 and <= 0xc or >= 0xd4 and <= 0xd8 => throw new NotImplementedException("OctopathTraveler array with type info inside is not implemented"),
+                >= 0xc4 and <= 0xc9 or >= 0xd4 and <= 0xd8 => throw new NotImplementedException("OctopathTraveler array with type info inside is not implemented"),
                 >= 0x90 and <= 0x9f => type & 0xf,
                 0xdc => BinaryPrimitives.ReverseEndianness(Ar.Read<ushort>()),
                 0xdd => (int) BinaryPrimitives.ReverseEndianness(Ar.Read<uint>()),

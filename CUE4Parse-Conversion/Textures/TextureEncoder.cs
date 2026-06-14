@@ -397,14 +397,14 @@ public static class TextureEncoder
                         *outPtr = conversionFunc(value);
                         outPtr += sizeof(byte);
                     }
-                    FillMissingChannels(outPtr, channelCount);
+                    FillMissingChannels(ref outPtr, channelCount);
                 }
             }
         }
         return retPtr;
     }
 
-    private static unsafe void FillMissingChannels(byte* outPtr, int channelCount)
+    private static unsafe void FillMissingChannels(ref byte* outPtr, int channelCount)
     {
         for (int i = channelCount; i < 4; i++)
         {

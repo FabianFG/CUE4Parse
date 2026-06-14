@@ -94,7 +94,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
         {
             var offset = WideStringOffsets[index];
             var length = 0;
-            while (WideStrings[offset + length] != 0 && WideStrings[offset + length + 1] != 0) length += 2;
+            while (WideStrings[offset + length] != 0 || WideStrings[offset + length + 1] != 0) length += 2;
             return Encoding.Unicode.GetString(WideStrings, (int)offset, length);
         }
 

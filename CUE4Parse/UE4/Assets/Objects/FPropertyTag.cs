@@ -258,7 +258,8 @@ public class FPropertyTag
             Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
         }
 
-        return $"{variableType} {Name.Text} = {variableValue};";
+        var assignment = string.IsNullOrEmpty(variableValue) ? string.Empty : $" = {variableValue}";
+        return $"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(Name.Text)}{assignment};";
     }
 
     public override string ToString() => $"{Name.Text}  -->  {Tag?.ToString() ?? "Failed to parse"}";

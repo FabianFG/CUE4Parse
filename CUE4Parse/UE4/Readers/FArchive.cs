@@ -431,13 +431,16 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static long CalculateFStringByteLength(int length) => length >= 0 ? length : -(long) length * sizeof(ushort);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SkipFString()
         {
             var length = Read<int>();
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            var strlength = length >= 0 ? length : -length * sizeof(ushort);
+            var strlength = CalculateFStringByteLength(length);
             if (strlength > Length - Position)
             {
                 throw new ParserException($"Invalid FString length '{length}'");
@@ -454,7 +457,8 @@ namespace CUE4Parse.UE4.Readers
             if (length == int.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(length), "Archive is corrupted");
 
-            if (Math.Abs(length) > Length - Position)
+            var strlength = CalculateFStringByteLength(length);
+            if (strlength > Length - Position)
             {
                 throw new ParserException($"Invalid FString length '{length}'");
             }

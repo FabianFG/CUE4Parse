@@ -229,7 +229,7 @@ public static class MeshConverter
         {
             numTris += cluster.TriIndices.Length;
             numVerts += cluster.Vertices.Length;
-            bHasTangents &= cluster.bHasTangents;
+            bHasTangents |= cluster.bHasTangents;
             numUVs = Math.Max(numUVs, cluster.NumUVs);
         }
 
