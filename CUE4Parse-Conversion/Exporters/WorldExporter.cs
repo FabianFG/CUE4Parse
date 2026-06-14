@@ -111,6 +111,6 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
     {
         EMeshFormat.USD => new UsdWorldFormat(),
         // EMeshFormat.UEFormat => new UEFormatWorldFormat(),
-        _ => throw new NotSupportedException($"World export does not support format {format}")
+        _ => throw new NotSupportedException($"World export does not support format {format}. Available formats: {string.Join(", ", "USD")}")
     };
 }

@@ -25,6 +25,6 @@ public class PoseAssetExporter(UPoseAsset poseAsset) : ExporterBase(poseAsset)
     private IPoseExportFormat GetPoseFormat(EMeshFormat format) => format switch
     {
         EMeshFormat.UEFormat => new UEFormatPoseFormat(),
-        _ => throw new NotSupportedException($"Pose asset export does not support format {format}")
+        _ => throw new NotSupportedException($"Pose asset export does not support format {format}. Available formats: {string.Join(", ", "UEFormat")}")
     };
 }

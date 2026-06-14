@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CUE4Parse.FileProvider;
+﻿using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.Utils;
 

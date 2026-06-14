@@ -22,6 +22,6 @@ public sealed class AnimationExporter(UAnimationAsset animation) : ExporterBase(
         EMeshFormat.ActorX => new ActorXAnimFormat(),
         EMeshFormat.UEFormat => new UEFormatAnimFormat(),
         EMeshFormat.USD => new UsdAnimFormat(),
-        _ => throw new NotSupportedException($"Animation export does not support format {format}")
+        _ => throw new NotSupportedException($"Animation export does not support format {format}. Available formats: {string.Join(", ", "ActorX", "UEFormat", "USD")}"),
     };
 }

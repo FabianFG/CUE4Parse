@@ -89,7 +89,7 @@ public sealed class ExportSession : INotifyPropertyChanged
         while (true)
         {
             current.Clear();
-            while (_roots.TryDequeue(out var exporter) && _paths.TryRemove(exporter.ObjectPath, out _))
+            while (_roots.TryDequeue(out var exporter))
             {
                 ct.ThrowIfCancellationRequested();
                 current.Add(exporter);
@@ -99,6 +99,7 @@ public sealed class ExportSession : INotifyPropertyChanged
             await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
         }
 
+        _paths.Clear();
         progress?.Report(new ExportProgress(completed, total)); // that's kinda cheating but useful too
 
         _baseDirectory = null;

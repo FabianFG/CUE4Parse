@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using CUE4Parse.UE4.Assets.Exports.Nanite;
+﻿using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 
@@ -35,12 +33,11 @@ public partial class MeshLodDto<TVertex>
         var triBufferWriteOffsets = new int[sections.Length];
         for (int i = 1; i < sections.Length; i++)
         {
-            triBufferWriteOffsets[i] = sections[i - 1].FirstIndex + sections[i - 1].NumFaces;
-            sections[i].FirstIndex = 3 * triBufferWriteOffsets[i];
+            sections[i].FirstIndex = triBufferWriteOffsets[i] = triBufferWriteOffsets[i - 1] + sections[i - 1].NumFaces * 3;
         }
 
-        var indices = new uint[sections[^1].FirstIndex + sections[^1].NumFaces];
-        var extraUvs = new FMeshUVFloat[numTexCoords][];
+        var indices = new uint[triBufferWriteOffsets[^1] + sections[^1].NumFaces * 3];
+        var extraUvs = new FMeshUVFloat[numTexCoords - 1][];
         var vertices = new MeshVertex[numVertices];
         var vertexColors = new FColor[vertices.Length];
 
@@ -92,16 +89,18 @@ public partial class MeshLodDto<TVertex>
             {
                 if (triLength <= 0) return;
 
-                var triBufferWriteOffset = Interlocked.Add(ref triBufferWriteOffsets[matIndex], (int) triLength) - triLength;
-                for (long localTriIndex = 0; localTriIndex < triLength; localTriIndex++)
+                var writeAt = FetchAdd(ref triBufferWriteOffsets[matIndex], (int) triLength * 3);
+                for (long t = 0; t < triLength; t++, writeAt += 3)
                 {
-                    indices[triBufferWriteOffset++] = cluster.TriIndices[triStart + localTriIndex].X + globalVertOffset;
-                    indices[triBufferWriteOffset++] = cluster.TriIndices[triStart + localTriIndex].Y + globalVertOffset;
-                    indices[triBufferWriteOffset++] = cluster.TriIndices[triStart + localTriIndex].Z + globalVertOffset;
+                    indices[writeAt + 0] = cluster.TriIndices[triStart + t].X + globalVertOffset;
+                    indices[writeAt + 1] = cluster.TriIndices[triStart + t].Y + globalVertOffset;
+                    indices[writeAt + 2] = cluster.TriIndices[triStart + t].Z + globalVertOffset;
                 }
             }
         });
 
         return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
+
+        int FetchAdd(ref int location, int value) => Interlocked.Add(ref location, value) - value;
     }
 }
