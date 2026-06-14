@@ -66,7 +66,7 @@ public static partial class ProSpiEncryption
             _cipherDllLoadAttempted = true;
             if (!TryLoadCipherDll(out var handle, out var loadedPath))
             {
-                Log.Information("ProSpi DLL unavailable: {DllName}", ProSpiDecryptorDllName);
+                Log.Warning("ProSpi DLL unavailable: {DllName}", ProSpiDecryptorDllName);
                 return null;
             }
 
@@ -142,18 +142,17 @@ public static partial class ProSpiEncryption
         if (gameRoot == null)
             return string.Empty;
 
-        var binariesFolder = Path.Combine(gameRoot.FullName, "Binaries", "Win64");
-        if (!Directory.Exists(binariesFolder))
+        if (!Directory.Exists(gameRoot.FullName))
             return string.Empty;
 
-        foreach (var modulePath in Directory.EnumerateFiles(binariesFolder, "*.exe", SearchOption.TopDirectoryOnly))
+        foreach (var modulePath in Directory.EnumerateFiles(gameRoot.FullName, "*.exe", SearchOption.AllDirectories))
         {
             using var stream = File.OpenRead(modulePath);
             using var sha256 = SHA256.Create();
 
             var hash = Convert.ToHexString(sha256.ComputeHash(stream));
 
-            // It will only work if exe it was designed for exists in /Binaries/Win64/
+            // It will only work if exe it was designed for exists
             if (string.Equals(hash, ExpectedExeHash, StringComparison.OrdinalIgnoreCase))
                 return modulePath;
         }

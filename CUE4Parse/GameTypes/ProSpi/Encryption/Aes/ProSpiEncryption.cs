@@ -11,7 +11,7 @@ public static partial class ProSpiEncryption
     private static readonly ConcurrentDictionary<ulong, byte> _missingDescriptorLookupKeys = new();
 
     public const int EncryptionDataTrailerSize = 0x18;
-    public const string ExpectedExeHash = "2F6189590F1896E48E752FD08D436BD276A02086FCB38B75EF5042DB7FCDD3DC";
+    public const string ExpectedExeHash = "2F6189590F1896E48E752FD08D436BD276A02086FCB38B75EF5042DB7FCDD3DC"; // DLL was mapped ONLY with this executable
 
     private static byte[] _aesKey = [];
     private static string _exePath = string.Empty;
