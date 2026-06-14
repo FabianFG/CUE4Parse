@@ -10,7 +10,7 @@ public readonly struct FIoChunkHash
     public FIoChunkHash(FArchive Ar)
     {
         Hash = default;
-        Ar.Read(Hash);
+        Ar.ReadExactly(Hash);
     }
 
     [InlineArray(32)]

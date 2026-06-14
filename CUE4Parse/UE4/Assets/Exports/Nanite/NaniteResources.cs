@@ -25,14 +25,15 @@ public class FNaniteResources
     [JsonIgnore] public uint[] PageDependencies = [];
     public FMatrix3x4[] AssemblyTransforms = [];
     public uint[] AssemblyBoneAttachmentData;
+    public uint[] BoneIndices;
     public ulong VoxelMaterialsMask;
     public FBoxSphereBounds? MeshBounds = null; // FBoxSphereBounds3f
-    
+
     /// <summary>
     /// Dictionary of page ranges relevant to streaming requests and fixups
     /// </summary>
     public FPageRangeKey[] PageRangeLookup;
-    
+
     /// <summary>The number of root pages found outside of the bulk page.</summary>
     public int NumRootPages = 0;
     /// <summary>The precision which which vertex positions are recorded with.</summary>
@@ -48,6 +49,8 @@ public class FNaniteResources
     public ushort NumInputTexCoords = 0;
     /// <summary>The number of clusters in total for this mesh.</summary>
     public uint NumClusters = 0;
+
+    public uint NumInputCurves;
     [JsonConverter(typeof(StringEnumConverter))]
     public NaniteConstants.NANITE_RESOURCE_FLAG ResourceFlags = 0;
 
@@ -76,12 +79,15 @@ public class FNaniteResources
                 if (Ar.Game >= EGame.GAME_UE5_7)
                 {
                     AssemblyBoneAttachmentData = Ar.ReadArray<uint>();
+                    if (Ar.Game >= EGame.GAME_UE5_8)
+                        BoneIndices = Ar.ReadArray<uint>();
+
                     PageRangeLookup = Ar.ReadArray<FPageRangeKey>();
                 }
-                
+
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
-            ImposterAtlas = Ar.ReadArray<ushort>();
+            if (Ar.Game < EGame.GAME_UE5_8) ImposterAtlas = Ar.ReadArray<ushort>();
             if (Ar.Game is EGame.GAME_Aion2) Ar.SkipFixedArray(1); // same length as ImposterAtlas
             NumRootPages = Ar.Read<int>();
             PositionPrecision = Ar.Read<int>();
@@ -98,6 +104,7 @@ public class FNaniteResources
             }
             if (Ar.Game >= EGame.GAME_UE5_1) NumClusters = Ar.Read<uint>();
             if (Ar.Game >= EGame.GAME_UE5_7) VoxelMaterialsMask = Ar.Read<ulong>();
+            if (Ar.Game >= EGame.GAME_UE5_8) NumInputCurves = Ar.Read<uint>();
         }
     }
 
@@ -124,7 +131,7 @@ public class FNaniteResources
             else
                 FailedPages.Add(pageIndex);
         }
-        
+
         return LoadedPages[pageIndex];
     }
 

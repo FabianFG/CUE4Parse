@@ -41,14 +41,7 @@ public class FLayout
             Version = Ar.Read<int>();
             var size = Ar.Read<TIntVector2<ushort>>();
             Size = new FIntVector2(size.X, size.Y);
-            if (Version < 6)
-            {
-                Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
-            }
-            else
-            {
-                Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
-            }
+            Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
             var maxSize = Ar.Read<TIntVector2<ushort>>();
             MaxSize = new FIntVector2(maxSize.X, maxSize.Y);
             Strategy = Ar.Read<EPackStrategy>();

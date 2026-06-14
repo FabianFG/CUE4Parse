@@ -23,6 +23,9 @@ public class UsmapParser
 
     public UsmapParser(FArchive archive, StringComparer? comparer = null)
     {
+        if (archive.Length < 2)
+            throw new ParserException("Usmap is empty");
+
         var magic = archive.Read<ushort>();
         if (magic != FileMagic)
             throw new ParserException("Usmap has invalid magic");
@@ -97,7 +100,7 @@ public class UsmapParser
                 {
                     var value = Ar.Read<ulong>();
                     var name = Ar.ReadName(nameLut)!;
-                    enumNames[(int)value] = name;
+                    enumNames[(long)value] = name;
                 }
             }
             else
