@@ -71,9 +71,10 @@ public class USkeleton : UObject
             Guid = Ar.Read<FGuid>();
         }
 
-        if (Ar.Game < EGame.GAME_UE5_8 || !Ar.IsFilterEditorOnly)
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_ADD_SMARTNAMES)
         {
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_ADD_SMARTNAMES && FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovedSmartNameContainerPayload)
+            bool isLegacy = Ar.Game < EGame.GAME_UE5_8;
+            if (isLegacy || (!Ar.IsFilterEditorOnly && FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovedSmartNameContainerPayload))
             {
                 NameMappings = Ar.ReadMap(Ar.ReadFName, () => new FSmartNameMapping(Ar));
             }

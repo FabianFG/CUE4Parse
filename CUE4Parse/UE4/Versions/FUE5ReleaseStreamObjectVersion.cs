@@ -238,6 +238,7 @@ public static class FUE5ReleaseStreamObjectVersion
             < EGame.GAME_UE5_4 => Type.OpenColorIODisabledDisplayConfigurationDefault,
             < EGame.GAME_UE5_6 => Type.OrthographicAutoNearFarPlane,
             < EGame.GAME_UE5_7 => Type.RecalculateClothAssetSerializedBounds,
+            < EGame.GAME_UE5_8 => Type.AudioSectionPlayUntilFinished,
             _ => Type.LatestVersion
         };
     }
