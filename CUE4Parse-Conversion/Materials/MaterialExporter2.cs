@@ -61,7 +61,7 @@ namespace CUE4Parse_Conversion.Materials
 
                 lock (_texture)
                 {
-                    var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext);
+                    var imageData = bitmap.Encode(Options.TextureFormat, Options.ExportHdrTexturesAsHdr, out var ext, Options.TextureQuality);
                     var texturePath = FixAndCreatePath(baseDirectory,(t.Owner?.Provider?.FixPath(t.Owner.Name) ?? t.Name).SubstringBeforeLast('.'), ext);
                     using var fs = new FileStream(texturePath, FileMode.Create, FileAccess.Write);
                     fs.Write(imageData, 0, imageData.Length);
