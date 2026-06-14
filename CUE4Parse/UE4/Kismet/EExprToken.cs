@@ -165,6 +165,8 @@ public enum EBlueprintTextLiteralType : byte
     Empty,
     /** Text is localized. The bytecode will contain three strings - source, key, and namespace - and should be loaded via FInternationalization */
     LocalizedText,
+    /** Added in 5.8. Text is localized. The bytecode will contain four strings - source, key, namespace, and devnotes - and should be loaded via FInternationalization */
+    LocalizedTextWithNotes,
     /** Text is culture invariant. The bytecode will contain one string, and you should use FText::AsCultureInvariant to initialize the FText instance. */
     InvariantText,
     /** Text is a literal FString. The bytecode will contain one string, and you should use FText::FromString to initialize the FText instance. */

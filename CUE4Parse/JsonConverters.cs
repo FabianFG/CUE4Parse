@@ -3043,29 +3043,39 @@ public class FScriptTextConverter : JsonConverter<FScriptText>
         switch (value.TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:
-                writer.WritePropertyName("SourceString");
+                writer.WritePropertyName(nameof(value.SourceString));
                 writer.WriteValue("");
                 break;
             case EBlueprintTextLiteralType.LocalizedText:
-                writer.WritePropertyName("SourceString");
+                writer.WritePropertyName(nameof(value.SourceString));
                 serializer.Serialize(writer, value.SourceString);
-                writer.WritePropertyName("KeyString");
+                writer.WritePropertyName(nameof(value.KeyString));
                 serializer.Serialize(writer, value.KeyString);
-                writer.WritePropertyName("Namespace");
+                writer.WritePropertyName(nameof(value.Namespace));
                 serializer.Serialize(writer, value.Namespace);
                 break;
             case EBlueprintTextLiteralType.InvariantText:
             case EBlueprintTextLiteralType.LiteralString:
-                writer.WritePropertyName("SourceString");
+                writer.WritePropertyName(nameof(value.SourceString));
                 serializer.Serialize(writer, value.SourceString);
                 break;
             case EBlueprintTextLiteralType.StringTableEntry:
-                writer.WritePropertyName("StringTableAsset");
+                writer.WritePropertyName(nameof(value.StringTableAsset));
                 serializer.Serialize(writer, value.StringTableAsset);
-                writer.WritePropertyName("TableIdString");
+                writer.WritePropertyName(nameof(value.TableIdString));
                 serializer.Serialize(writer, value.TableIdString);
-                writer.WritePropertyName("KeyString");
+                writer.WritePropertyName(nameof(value.KeyString));
                 serializer.Serialize(writer, value.KeyString);
+                break;
+            case EBlueprintTextLiteralType.LocalizedTextWithNotes:
+                writer.WritePropertyName(nameof(value.SourceString));
+                serializer.Serialize(writer, value.SourceString);
+                writer.WritePropertyName(nameof(value.KeyString));
+                serializer.Serialize(writer, value.KeyString);
+                writer.WritePropertyName(nameof(value.Namespace));
+                serializer.Serialize(writer, value.Namespace);
+                writer.WritePropertyName(nameof(value.DevNotes));
+                serializer.Serialize(writer, value.DevNotes);
                 break;
         }
         writer.WriteEndObject();
