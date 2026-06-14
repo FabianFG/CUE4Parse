@@ -17,6 +17,8 @@ namespace CUE4Parse.GameTypes.OctopathTraveler.Exports;
 
 public class UBinaryAsset : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UBinaryAsset>();
+    
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

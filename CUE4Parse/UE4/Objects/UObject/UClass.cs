@@ -19,6 +19,8 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UClass : UStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UClass>();
+    
     /** Used to check if the class was cooked or not */
     public bool bCooked;
 

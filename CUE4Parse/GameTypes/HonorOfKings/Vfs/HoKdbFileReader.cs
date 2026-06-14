@@ -18,11 +18,14 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using GenericReader;
+using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Vfs;
 
 public sealed class HoKdbFileReader : AbstractAesVfsReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<HoKdbFileReader>();
+    
     public static readonly ConcurrentDictionary<ulong, string> HashMap = [];
     private static readonly ConcurrentDictionary<ulong, string> _indexFiles = [];
     private readonly IReadOnlyList<HoKdbContainerStream> _containerStreams;

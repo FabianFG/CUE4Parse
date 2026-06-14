@@ -197,6 +197,8 @@ public enum EGameplayTagQueryExprType
 
 public class FQueryEvaluator
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FQueryEvaluator>();
+    
     private readonly FGameplayTagQuery Query;
     private int CurStreamIdx;
     private EGameplayTagQueryStreamVersion Version;

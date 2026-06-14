@@ -9,6 +9,8 @@ namespace CUE4Parse.UE4.CriWare.Readers;
 [JsonConverter(typeof(AcbReaderConverter))]
 public sealed class AcbReader : IDisposable
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<AcbReader>();
+    
     private readonly Stream _outerStream;
     private readonly long _offset;
     private readonly uint _awbOffset;

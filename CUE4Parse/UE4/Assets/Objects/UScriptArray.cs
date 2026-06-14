@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(UScriptArrayConverter))]
 public class UScriptArray
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UScriptArray>();
+    
     public readonly string InnerType;
     public readonly FPropertyTagData? InnerTagData;
     public readonly List<FPropertyTagType> Properties;

@@ -15,6 +15,11 @@ namespace CUE4Parse.Example;
 
 public static class Unpacker
 {
+    private static readonly ILogger Log = new LoggerConfiguration()
+        .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
+        .CreateLogger()
+        .ForContext(typeof(Unpacker));
+    
     private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
     private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
 
@@ -22,8 +27,6 @@ public static class Unpacker
 
     public static void Unpack()
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
-
         ZlibHelper.Initialize();
         OodleHelper.Initialize();
 

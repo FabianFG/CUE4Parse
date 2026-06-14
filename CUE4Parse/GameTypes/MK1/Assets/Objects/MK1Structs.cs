@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine;
@@ -88,6 +86,8 @@ public class FTimelinePredicateState(FAssetArchive Ar) : IUStruct
 
 public class FCompiledTimelinePredicate : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FCompiledTimelinePredicate>();
+    
     public byte[] Unknown;
     public object[] Parameters;
 

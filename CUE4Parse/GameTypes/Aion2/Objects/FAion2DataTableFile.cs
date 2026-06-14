@@ -9,6 +9,8 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2DataTableFile : FAion2DataFile
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FAion2DataTableFile>();
+    
     public FAion2DataTableFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();

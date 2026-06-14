@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.FMod.Utils;
 
 public static class EventNodesResolver
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(EventNodesResolver));
+    
     public static Dictionary<FModGuid, List<FmodSample>> TryResolveAudioEvents(FModReader reader, out bool allWaveformsResolved)
     {
         var result = new Dictionary<FModGuid, List<FmodSample>>();

@@ -10,6 +10,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UTexture2D>();
+    
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }

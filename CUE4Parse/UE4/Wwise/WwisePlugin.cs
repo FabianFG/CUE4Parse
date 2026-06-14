@@ -19,6 +19,8 @@ namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<WwisePlugin>();
+    
     public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
         var pluginId = plugin.PluginId;

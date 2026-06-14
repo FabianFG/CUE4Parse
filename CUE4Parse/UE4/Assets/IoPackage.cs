@@ -20,6 +20,8 @@ namespace CUE4Parse.UE4.Assets;
 [SkipObjectRegistration]
 public sealed class IoPackage : AbstractUePackage
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<IoPackage>();
+    
     private readonly IoGlobalData _globalData;
 
     public override FPackageFileSummary Summary { get; }

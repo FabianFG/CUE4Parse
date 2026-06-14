@@ -25,6 +25,8 @@ public class OodleException : ParserException
 
 public static class OodleHelper
 {
+    private static ILogger Log = Serilog.Log.ForContext(typeof(OodleHelper));
+    
     public const string OODLE_NAME_OLD = "oo2core_9_win64.dll";
     public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
     public const string OODLE_NAME_LINUX = "liboodle-data-shared.so";

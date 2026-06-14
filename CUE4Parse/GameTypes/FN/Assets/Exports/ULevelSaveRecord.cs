@@ -87,6 +87,8 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
     [StructFallback]
     public class FActorTemplateRecord
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<FActorTemplateRecord>();
+        
         public ulong ID;
         public FSoftObjectPath ActorClass;
         public FActorComponentRecord[] ActorComponents;
@@ -179,6 +181,8 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
 
     public class FActorComponentRecord
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<FActorComponentRecord>();
+        
         public FName ComponentName;
         public FSoftObjectPath ComponentClass; // UClass
         public byte[]? ComponentData;
@@ -329,6 +333,8 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
 
     public class ULevelSaveRecord : UObject
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<ULevelSaveRecord>();
+        
         public FName PackageName;
         public ELevelSaveRecordVersion SaveVersion;
         public bool bCompressed;

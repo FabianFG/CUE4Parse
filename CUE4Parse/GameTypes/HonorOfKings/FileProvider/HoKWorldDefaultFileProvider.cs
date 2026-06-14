@@ -8,11 +8,14 @@ using CUE4Parse.GameTypes.HonorOfKings.Vfs;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.FileProvider;
 
 public class HoKWDefaultFileProvider : DefaultFileProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<HoKWDefaultFileProvider>();
+    
     public static string GeneratedIndexFolder;
 
     public HoKWDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null,

@@ -24,6 +24,8 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(BlueprintDecompilerUtils));
+    
     public static TypeMappings? Mappings { get; set; }
     public static UFunction Function { get; set; }
     private static readonly Stack<int> _executionFlowStack = new();

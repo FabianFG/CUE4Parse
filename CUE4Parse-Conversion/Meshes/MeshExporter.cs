@@ -10,10 +10,8 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
-using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Rig;
-using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Serilog;
@@ -22,6 +20,8 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<MeshExporter>();
+        
         public readonly List<Mesh> MeshLods;
         public readonly List<DNAExporter> DNAAssets = [];
 
@@ -65,7 +65,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
             {
-                Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
+                Log.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 

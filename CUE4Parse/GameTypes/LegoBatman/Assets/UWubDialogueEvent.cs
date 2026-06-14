@@ -11,6 +11,8 @@ namespace CUE4Parse.GameTypes.LegoBatman.Assets;
 
 public class UWubDialogueEvent : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UWubDialogueEvent>();
+    
     public FWubStruct2 Sequence;
     public HashSet<FName> Wems = [];
 
