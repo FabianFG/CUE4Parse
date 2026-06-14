@@ -20,10 +20,10 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
 
         var paths = new WorldAssetPaths();
 
-        foreach (var levelWorld in world.StreamingLevels)
+        foreach (var level in world.StreamingLevels)
         {
-            paths.SubLayers.Add(Resolve(levelWorld, Extension));
-            Session.Add(levelWorld);
+            paths.SubLayers.Add(Resolve(level.World, Extension));
+            if (level.Persistent) Session.Add(level.World);
         }
 
         CollectFromActor(world.Actors, paths, ct);

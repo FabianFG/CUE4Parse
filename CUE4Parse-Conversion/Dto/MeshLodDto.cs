@@ -17,11 +17,14 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
 
     private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
     {
-        for (var i = 0; i < sections.Length; i++)
+        if (owner.Materials.Length > 0)
         {
-            // unfortunately we can't trust these indices
-            var materialIndex = Math.Clamp(sections[i].MaterialIndex, 0, owner.Materials.Length - 1);
-            sections[i] = new MeshSectionDto(materialIndex, sections[i]);
+            for (var i = 0; i < sections.Length; i++)
+            {
+                // unfortunately we can't trust these indices
+                var materialIndex = Math.Clamp(sections[i].MaterialIndex, 0, owner.Materials.Length - 1);
+                sections[i] = new MeshSectionDto(materialIndex, sections[i]);
+            }
         }
 
         Owner = owner;

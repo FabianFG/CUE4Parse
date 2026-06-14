@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports;
+﻿using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Objects.Engine;
 
 namespace CUE4Parse_Conversion.Dto;
@@ -8,7 +6,7 @@ namespace CUE4Parse_Conversion.Dto;
 public class WorldDto : ObjectDto
 {
     public readonly List<ActorDto> Actors = [];
-    public readonly List<UWorld> StreamingLevels = [];
+    public readonly List<StreamingLevel> StreamingLevels = [];
 
     public WorldDto(UWorld world, CancellationToken ct = default) : this(world, new WorldParseContext(), ct)
     {
@@ -40,14 +38,7 @@ public class WorldDto : ObjectDto
             {
                 case ULevelStreaming { WorldAsset: { } worldAsset } streaming when worldAsset.TryLoad<UWorld>(out var w):
                 {
-                    if (streaming is ULevelStreamingAlwaysLoaded or ULevelStreamingPersistent)
-                    {
-                        StreamingLevels.Add(w);
-                    }
-                    else
-                    {
-                        // TODO: on-demand streaming levels
-                    }
+                    StreamingLevels.Add(new StreamingLevel(w, streaming is ULevelStreamingAlwaysLoaded or ULevelStreamingPersistent));
                     break;
                 }
             }
@@ -65,4 +56,10 @@ public class WorldDto : ObjectDto
         Actors.Clear();
         StreamingLevels.Clear();
     }
+}
+
+public class StreamingLevel(UWorld world, bool persistent)
+{
+    public readonly UWorld World = world;
+    public readonly bool Persistent = persistent; // non-persistent levels will be referenced but not automatically exported
 }
