@@ -25,7 +25,7 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
     public FIoChunkId[]? ChunkIds { get; set; }
     public FOnDemandChunkEntry[]? ChunkEntries { get; set; }
     public FOnDemandPartitionEntry[]? PartitionEntries { get; set; }
-    
+
     public FOnDemandContainerEntry(FArchive Ar, Func<FOnDemandStringEntry, string> func)
     {
         EncryptionKeyGuid = Ar.Read<FGuid>();
@@ -47,22 +47,29 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
         Ar.Position += 32;
     }
 
-    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FSHAHash fileEntryHash)
+    public bool TryGetFileEntryHash(FIoChunkId chunkId, out FOnDemandFileEntry fileEntry)
     {
         if (ChunkIds == null || ChunkEntries == null)
         {
-            fileEntryHash = default;
-            return false;
-        }
-        
-        var index = Array.IndexOf(ChunkIds, chunkId);
-        if (index == -1)
-        {
-            fileEntryHash = default;
+            fileEntry = default;
             return false;
         }
 
-        fileEntryHash = ChunkEntries[index].Hash;
+        var index = Array.IndexOf(ChunkIds, chunkId);
+        if (index == -1)
+        {
+            fileEntry = default;
+            return false;
+        }
+
+        var partitionIndex = ChunkEntries[index].PartitionIndex;
+        if (PartitionEntries != null && PartitionEntries.Length > partitionIndex)
+        {
+            fileEntry = new FOnDemandFileEntry(PartitionEntries[partitionIndex].Hash, ChunkEntries[index].PartitionOffset, "iopart");
+            return true;
+        }
+
+        fileEntry = new FOnDemandFileEntry(ChunkEntries[index]);
         return true;
     }
 }

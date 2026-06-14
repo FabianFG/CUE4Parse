@@ -406,6 +406,7 @@ public static class FUE5MainStreamObjectVersion
             < EGame.GAME_UE5_3 => Type.RigVMGeneratedClass,
             < EGame.GAME_UE5_4 => Type.ClothCollectionSingleLodSchema,
             < EGame.GAME_UE5_6 => Type.VisualLoggerAddedSeparateWorldTime,
+            < EGame.GAME_UE5_8 => Type.RuntimeVirtualTextureMaterialValidation,
             _ => Type.LatestVersion
         };
     }

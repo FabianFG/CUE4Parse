@@ -1,7 +1,6 @@
-using System;
-using System.IO;
+using CUE4Parse.MappingsProvider.Usmap;
 
-namespace CUE4Parse.MappingsProvider;
+namespace CUE4Parse.MappingsProvider.Jmap;
 
 public sealed class JmapTypeMappingsProvider : FileUsmapTypeMappingsProvider
 {

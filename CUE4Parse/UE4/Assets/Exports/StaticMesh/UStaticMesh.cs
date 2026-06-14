@@ -30,7 +30,11 @@ public class UStaticMesh : UObject
 
         var stripDataFlags = new FStripDataFlags(Ar);
         bCooked = Ar.ReadBoolean();
-        BodySetup = new FPackageIndex(Ar);
+
+        if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
+            BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+        else
+            BodySetup = new FPackageIndex(Ar);
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])
             NavCollision = new FPackageIndex(Ar);

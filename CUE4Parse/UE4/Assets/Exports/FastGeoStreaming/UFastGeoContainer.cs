@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
@@ -17,6 +18,17 @@ public class UFastGeoContainer : UAssetUserData
         Assets = GetOrDefault<FPackageIndex[]>(nameof(Assets), []);
 
         var length = (int)(validPos - Ar.Position);
+        if (Ar.Game is EGame.GAME_WutheringWaves)
+        {
+            using var arclone = (FAssetArchive) Ar.Clone();
+            arclone.Versions = (VersionContainer) Ar.Versions.Clone();
+            arclone.Game = EGame.GAME_WutheringWavesFastGeo;
+            using var fgWuWaAr = new FFastGeoArchive(arclone, Assets);
+            ComponentClusters = fgWuWaAr.ReadArray(() => new FFastGeoComponentCluster(fgWuWaAr));
+            HLODs = fgWuWaAr.ReadArray(() => new FFastGeoHLOD(fgWuWaAr));
+            Ar.Position = arclone.Position;
+            return;
+        }
         using var fgAr = new FFastGeoArchive(Ar, Assets);
         ComponentClusters = fgAr.ReadArray(() => new FFastGeoComponentCluster(fgAr));
         HLODs = fgAr.ReadArray(() => new FFastGeoHLOD(fgAr));

@@ -25,6 +25,12 @@ public class UAkAudioBank : UAkAudioType
                 Properties.AddRange(idk.Properties);
                 return;
             }
+            case EGame.GAME_CenturyAgeofAshes:
+            {
+                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(2, 1)], ERawHeaderFlags.RawProperties));
+                Properties.AddRange(idk.Properties);
+                return;
+            }
             default:
                 SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
                 break;

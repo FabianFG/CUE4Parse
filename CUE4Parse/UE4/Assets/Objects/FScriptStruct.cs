@@ -87,6 +87,7 @@ public class FScriptStruct
             "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
             "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
             "NameCurveKey" => type == ReadType.ZERO ? new FNameCurveKey() : new FNameCurveKey(Ar),
+            "StringCurveKey" => type == ReadType.ZERO ? new FStringCurveKey() : new FStringCurveKey(Ar),
             "RichCurveKey" => type == ReadType.ZERO ? new FRichCurveKey() : Ar.Read<FRichCurveKey>(),
             "SimpleCurveKey" => type == ReadType.ZERO ? new FSimpleCurveKey() : Ar.Read<FSimpleCurveKey>(),
             "ScalarMaterialInput" => type == ReadType.ZERO ? new FMaterialInput<float>() : new FMaterialInput<float>(Ar),
@@ -268,6 +269,7 @@ public class FScriptStruct
 
             "WaynetNode" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetNode(Ar),
             "WaynetPath" when Ar.Game == EGame.GAME_Gothic1Remake => new FWaynetPath(Ar),
+            "AlkimiaLightweightStaticMeshProxyDesc" when Ar.Game == EGame.GAME_Gothic1Remake => new FAlkimiaLightweightStaticMeshProxyDesc(Ar),
 
             "BrickStudGroup" when Ar.Game == EGame.GAME_Brickadia => new FBrickStudGroup(Ar),
             "BRGuid" when Ar.Game == EGame.GAME_Brickadia => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
@@ -358,7 +360,7 @@ public class FScriptStruct
 
             "EncVector" when Ar.Game is EGame.GAME_DeltaForce => Ar.Read<FVector>(),
 
-            "MercunaUsageSpec" when Ar.Game is EGame.GAME_PUBGBlackBudget => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "MercunaUsageSpec" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
             "MercunaUsageTypes" when Ar.Game is EGame.GAME_PUBGBlackBudget => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
 
             // Palia
@@ -386,6 +388,7 @@ public class FScriptStruct
 
             // Windrose
             "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "R5SoftAssetPath" => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             // Armatus
             "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
@@ -416,8 +419,13 @@ public class FScriptStruct
             "PerPlatformUObject" or "PerPlatformSoftObjectPtr" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformSoftObject() : new FPerPlatformSoftObject(Ar),
             "PerPlatformMediaSource" when Ar.Game is EGame.GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformUObject() : new FPerPlatformUObject(Ar),
 
-            "TtScalableShadowFloat" or "TtScalableLightFloat" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "TtScalableShadowBool" => new FStructFallback(Ar, structName, new FRawHeader([(0,1)])),
+            "TtScalableShadowFloat" or "TtScalableLightFloat" when Ar.Game is EGame.GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "TtScalableShadowBool" when Ar.Game is EGame.GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)])),
+
+            "ItemStack" when Ar.Game is EGame.GAME_Fatekeeper => new FFixedSizeStruct(Ar, 158),
+
+            // Orcs Must Die Deathtrap
+            "RDialogueFactValue" => new FFixedSizeStruct(Ar, 13),
 
             _ => Ar.Game switch
             {

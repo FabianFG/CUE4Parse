@@ -40,10 +40,16 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         if (Ar.Game is EGame.GAME_LEGOBatmanLegacyoftheDarkKnight) Ar.Position += 4;
         SurrogateComponentDescriptorIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
         CustomPrimitiveData = Ar.ReadArray<float>();
-        DetailMode = Ar.Game < EGame.GAME_UE5_8 ? Ar.Read<EDetailMode>() : EDetailMode.Low;
+        DetailMode = Ar.Game is < EGame.GAME_UE5_8 or EGame.GAME_WutheringWavesFastGeo ? Ar.Read<EDetailMode>() : EDetailMode.Low;
         bHasCustomNavigableGeometry = Ar.Read<EHasCustomNavigableGeometry>();
         RuntimeVirtualTextures = Ar.ReadArray(Ar.ReadFPackageIndex);
         BodyInstance = Ar.Game < EGame.GAME_UE5_8 ? new FStructFallback(Ar, "BodyInstance") : null;
-        SceneProxyDesc = new FSceneProxyDesc(Ar);
+        if (Ar.Game != EGame.GAME_WutheringWavesFastGeo)
+            SceneProxyDesc = new FSceneProxyDesc(Ar);
+        else
+        {
+            SceneProxyDesc = new FSceneProxyDesc();
+            Ar.Position += 365;
+        }
     }
 }

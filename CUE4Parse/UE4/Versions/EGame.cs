@@ -77,6 +77,7 @@ public enum EGame : uint
         GAME_ThePathless = GAME_UE4_25 + 10,
         GAME_SuicideSquad = GAME_UE4_25 + 11,
         GAME_HellLetLoose = GAME_UE4_25 + 12,
+        GAME_AliensFireteamElite = GAME_UE4_25 + 13,
     GAME_UE4_26 = GameUtils.GameUe4Base + (26 << 16),
         GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
         GAME_ReadyOrNot = GAME_UE4_26 + 2,
@@ -140,6 +141,7 @@ public enum EGame : uint
         GAME_BloodBowl3 = GAME_UE4_27 + 31,
         GAME_ChasingKaleidoRIDER = GAME_UE4_27 + 32,
         GAME_Lego2KDrive = GAME_UE4_27 + 33,
+        GAME_CenturyAgeofAshes = GAME_UE4_27 + 34,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -177,6 +179,7 @@ public enum EGame : uint
         GAME_Avowed = GAME_UE5_3 + 7,
         GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
         GAME_Highguard = GAME_UE5_3 + 9,
+        GAME_DragonSwordAwakening = GAME_UE5_3 + 10,
     GAME_UE5_4 = GameUtils.GameUe5Base + (4 << 16),
         GAME_FunkoFusion = GAME_UE5_4 + 1,
         GAME_InfinityNikki = GAME_UE5_4 + 2,
@@ -222,10 +225,12 @@ public enum EGame : uint
         GAME_ConanExilesEnhanced = GAME_UE5_6 + 6,
         GAME_Subnautica2 = GAME_UE5_6 + 7,
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
+        GAME_Fatekeeper = GAME_UE5_6 + 9,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
         GAME_Squad = GAME_UE5_7 + 2,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
+        GAME_WutheringWavesFastGeo = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_8
