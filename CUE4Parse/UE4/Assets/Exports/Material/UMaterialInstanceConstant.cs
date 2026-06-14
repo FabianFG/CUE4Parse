@@ -245,13 +245,13 @@ public class UMaterialInstanceConstant : UMaterialInstance
             parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
     }
 
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
-        if (format != EMaterialFormat.FirstLayer && Parent != null && Parent != this)
-            Parent.GetParams(parameters, format);
+        if (depth != EMaterialDepth.TopLayerOnly && Parent != null && Parent != this)
+            Parent.GetParams(parameters, depth);
 
         parameters.AppendAllProperties(Properties);
-        base.GetParams(parameters, format);
+        base.GetParams(parameters, depth);
 
         foreach (var textureParameter in TextureParameterValues)
         {

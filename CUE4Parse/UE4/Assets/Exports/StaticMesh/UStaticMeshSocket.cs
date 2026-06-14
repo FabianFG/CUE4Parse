@@ -11,7 +11,7 @@ public class UStaticMeshSocket : UObject
     public FVector RelativeLocation { get; private set; }
     public FRotator RelativeRotation { get; private set; }
     public FVector RelativeScale { get; private set; }
-    public string Tag { get; private set; }
+    public string? Tag { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

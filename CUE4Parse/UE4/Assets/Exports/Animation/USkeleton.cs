@@ -21,8 +21,8 @@ public class USkeleton : UObject
     public Dictionary<FName, FReferencePose> AnimRetargetSources;
     public Dictionary<FName, FSmartNameMapping> NameMappings;
     public FName[] ExistingMarkerNames;
-    public FPackageIndex[] Sockets;
-    public FVirtualBone[] VirtualBones;
+    public FPackageIndex[] Sockets = [];
+    public FVirtualBone[] VirtualBones = [];
 
     public int BoneCount => ReferenceSkeleton.FinalRefBoneInfo.Length;
 
@@ -40,8 +40,8 @@ public class USkeleton : UObject
             }
         }
         VirtualBoneGuid = GetOrDefault<FGuid>(nameof(VirtualBoneGuid));
-        Sockets = GetOrDefault(nameof(Sockets), Array.Empty<FPackageIndex>());
-        VirtualBones = GetOrDefault(nameof(VirtualBones), Array.Empty<FVirtualBone>());
+        Sockets = GetOrDefault(nameof(Sockets), Sockets);
+        VirtualBones = GetOrDefault(nameof(VirtualBones), VirtualBones);
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {

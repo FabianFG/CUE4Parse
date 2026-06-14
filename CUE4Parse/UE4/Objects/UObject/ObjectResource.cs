@@ -65,7 +65,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool IsImport => Index < 0;
 
         private string? _name;
-        public string Name => _name ?? (_name = ResolvedObject?.Name.Text ?? "None");
+        public string Name => _name ??= ResolvedObject?.Name.Text ?? "None";
 
         public FPackageIndex(FAssetArchive Ar, int index)
         {

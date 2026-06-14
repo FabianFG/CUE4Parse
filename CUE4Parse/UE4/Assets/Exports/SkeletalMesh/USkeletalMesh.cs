@@ -24,7 +24,7 @@ public partial class USkeletalMesh : UObject
     public FPackageIndex[] MorphTargets { get; private set; }
     public FPackageIndex[] Sockets { get; private set; }
     public FPackageIndex Skeleton { get; private set; }
-    public ResolvedObject?[] Materials { get; private set; } = []; // UMaterialInterface[]
+    public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public bool bEnablePerPolyCollision { get; private set; }
     public FPackageIndex PhysicsAsset { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
@@ -49,7 +49,7 @@ public partial class USkeletalMesh : UObject
         ImportedBounds = new FBoxSphereBounds(Ar);
 
         SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
-        Materials = new ResolvedObject?[SkeletalMaterials.Length];
+        Materials = new FPackageIndex?[SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
             Materials[i] = SkeletalMaterials[i].Material;
@@ -186,9 +186,9 @@ public partial class USkeletalMesh : UObject
                 var lodModel = LODModels[i];
                 for (var j = 0; j < lodModel.Sections.Length; j++)
                 {
-                    if (j < lodMatMap.Length && lodMatMap[j] >= 0 && lodMatMap[j] < Materials.Length)
+                    if (j < lodMatMap.Length && lodMatMap[j] >= 0 && lodMatMap[j] < SkeletalMaterials.Length)
                     {
-                        lodModel.Sections[j].MaterialIndex = (short) Math.Clamp((ushort) lodMatMap[j], 0, Materials.Length);
+                        lodModel.Sections[j].MaterialIndex = (short) Math.Clamp((ushort) lodMatMap[j], 0, SkeletalMaterials.Length);
                     }
                 }
             }

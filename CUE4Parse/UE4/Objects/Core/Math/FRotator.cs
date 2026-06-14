@@ -184,7 +184,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                                                                     MathF.Abs(NormalizeAxis(Yaw - r.Yaw)) <= tolerance &&
                                                                     MathF.Abs(NormalizeAxis(Roll - r.Roll)) <= tolerance;
 
-        public void Serialize(FArchiveWriter Ar)
+        public readonly void Serialize(FArchiveWriter Ar)
         {
             Ar.Write(Pitch);
             Ar.Write(Yaw);

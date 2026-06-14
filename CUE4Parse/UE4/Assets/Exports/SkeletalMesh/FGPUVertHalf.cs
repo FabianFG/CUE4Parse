@@ -5,16 +5,22 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
 public class FGPUVertHalf : FSkelMeshVertexBase
 {
-    public readonly FMeshUVHalf[] UV;
+    public sealed override FMeshUVFloat[] UVs { get; }
 
     public FGPUVertHalf()
     {
-        UV = [];
+
     }
 
     public FGPUVertHalf(FArchive Ar, bool bExtraBoneInfluences, int numSkelUVSets) : this()
     {
         SerializeForGPU(Ar, bExtraBoneInfluences);
-        UV = Ar.ReadArray<FMeshUVHalf>(numSkelUVSets);
+        var uvs = Ar.ReadArray<FMeshUVHalf>(numSkelUVSets);
+
+        UVs = new FMeshUVFloat[uvs.Length];
+        for (var i = 0; i < uvs.Length; i++)
+        {
+            UVs[i] = (FMeshUVFloat) uvs[i];
+        }
     }
 }

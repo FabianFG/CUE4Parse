@@ -79,9 +79,9 @@ public class UMaterialInstance : UMaterialInterface
         }
     }
 
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
-        base.GetParams(parameters, format);
+        base.GetParams(parameters, depth);
 
         if (StaticParameters != null)
             foreach (var switchParameter in StaticParameters.StaticSwitchParameters)

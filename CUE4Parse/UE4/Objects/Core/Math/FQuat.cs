@@ -349,7 +349,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public override string ToString() => $"X={X:F3} Y={Y:F3} Z={Z:F3} W={W:F3}";
 
-        public void Serialize(FArchiveWriter Ar)
+        public readonly void Serialize(FArchiveWriter Ar)
         {
             Ar.Write(X);
             Ar.Write(Y);
