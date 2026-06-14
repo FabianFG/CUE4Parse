@@ -50,8 +50,23 @@ public class ULandscapeComponent : UPrimitiveComponent
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
             LegacyMapBuildData = new FMeshMapBuildData();
-            LegacyMapBuildData.LightMap = new FLightMap(Ar);
-            LegacyMapBuildData.ShadowMap = new FShadowMap(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LANDSCAPECOMPONENT_LIGHTMAPS)
+            {
+                LegacyMapBuildData.LightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                };
+            }
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRECOMPUTED_SHADOW_MAPS_BSP)
+            {
+                LegacyMapBuildData.ShadowMap = Ar.Read<EShadowMapType>() switch
+                {
+                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                    _ => null
+                };
+            }
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA)
@@ -59,7 +74,7 @@ public class ULandscapeComponent : UPrimitiveComponent
             GrassData = new FLandscapeComponentGrassData(Ar);
         }
 
-        if (!Ar.IsFilterEditorOnly)
+        if (!Ar.IsFilterEditorOnly && Ar.Game >= EGame.GAME_UE4_0)
         {
             Ar.Position += sizeof(int); // SelectedType
         }
@@ -79,7 +94,7 @@ public class ULandscapeComponent : UPrimitiveComponent
             return;
         }
 
-        if (Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
+        if (Ar.Game >= EGame.GAME_UE4_0 && Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
         {
             var bCookedMobileData = Ar.ReadBoolean();
             if (bCookedMobileData)

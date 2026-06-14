@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
@@ -23,8 +24,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public FMaterialParameterInfo(FArchive Ar)
         {
             Name = Ar.ReadFName();
-            Association = Ar.Read<EMaterialParameterAssociation>();
-            Index = Ar.Read<int>();
+            if (Ar.Game >= EGame.GAME_UE4_0)
+            {
+                Association = Ar.Read<EMaterialParameterAssociation>();
+                Index = Ar.Read<int>();
+            }
         }
 
         public FMaterialParameterInfo()
