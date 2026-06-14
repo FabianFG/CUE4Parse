@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.Utils;
 
-namespace CUE4Parse.MappingsProvider;
+namespace CUE4Parse.MappingsProvider.Jmap;
 
 public class JmapParser
 {

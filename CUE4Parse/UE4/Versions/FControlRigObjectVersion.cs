@@ -134,6 +134,12 @@ public static class FControlRigObjectVersion
         // Overrides the skip offset as int64 - previous versions stored it as int32
         OverridesStoreDatSkipOffsetAsInt64,
 
+        // Overrides now only store the path to the leaf as well as the details about the leaf property
+        OverridesStorePathAndLeafPropertyOnly,
+
+        // Overrides now only store the hash for validation, not the size since size can change without changing the payload (containers), also starts including hash for maps and sets
+        OverridesStoreLeafPropertyHashOnly,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
