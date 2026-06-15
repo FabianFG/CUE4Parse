@@ -56,6 +56,7 @@ public sealed class ExportSession : INotifyPropertyChanged
 
     public ExportSession Add(ExporterBase exporter)
     {
+        // TODO: this prevents 2 exporters messing with the same file from being enqueued in the same run (e.g. MeshExporter / RawDataExporter)
         if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
         exporter._session = this;
@@ -82,28 +83,34 @@ public sealed class ExportSession : INotifyPropertyChanged
 
         var completed = 0;
         var total = _totalQueued;
-        var allResults = new ConcurrentQueue<ExportResult>();
-        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
+        var allResults = new ConcurrentBag<ExportResult>();
 
-        var current = new List<IExporter>();
-        while (true)
+        try
         {
-            current.Clear();
-            while (_roots.TryDequeue(out var exporter))
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
+            var current = new List<IExporter>();
+            while (true)
             {
-                ct.ThrowIfCancellationRequested();
-                current.Add(exporter);
-            }
-            if (current.Count == 0) break;
+                current.Clear();
+                while (_roots.TryDequeue(out var exporter))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    current.Add(exporter);
+                }
+                if (current.Count == 0) break;
 
-            await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
+                await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
+            }
+        }
+        finally // just in case cancellation is requested, we still need to clear things up
+        {
+            Clear();
+            progress?.Report(new ExportProgress(completed, total)); // this ensure the last progress reports the actual numbers
+
+            _baseDirectory = null;
+            _options = null;
         }
 
-        _paths.Clear();
-        progress?.Report(new ExportProgress(completed, total)); // that's kinda cheating but useful too
-
-        _baseDirectory = null;
-        _options = null;
         return [.. allResults];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
@@ -115,7 +122,7 @@ public sealed class ExportSession : INotifyPropertyChanged
 
             foreach (var result in results)
             {
-                allResults.Enqueue(result);
+                allResults.Add(result);
 
                 var c = Interlocked.Increment(ref completed);
                 progress?.Report(new ExportProgress(c, total, result));

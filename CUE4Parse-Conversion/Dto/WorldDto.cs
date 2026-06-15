@@ -8,6 +8,8 @@ public class WorldDto : ObjectDto
     public readonly List<ActorDto> Actors = [];
     public readonly List<StreamingLevel> StreamingLevels = [];
 
+    public bool IsEmpty => Actors.Count == 0 && StreamingLevels.Count == 0;
+
     public WorldDto(UWorld world, CancellationToken ct = default) : this(world, new WorldParseContext(), ct)
     {
 
@@ -58,8 +60,8 @@ public class WorldDto : ObjectDto
     }
 }
 
-public class StreamingLevel(UWorld world, bool persistent)
+public class StreamingLevel(UWorld world, bool isPersistent)
 {
     public readonly UWorld World = world;
-    public readonly bool Persistent = persistent; // non-persistent levels will be referenced but not automatically exported
+    public readonly bool IsPersistent = isPersistent; // non-persistent levels will be referenced but not automatically exported
 }

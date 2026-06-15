@@ -16,14 +16,19 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         var format = GetWorldFormat(Session.Options.MeshFormat);
+
         using var world = new WorldDto(export);
+        if (world.IsEmpty)
+        {
+            throw new Exception("World is empty, nothing to export");
+        }
 
         var paths = new WorldAssetPaths();
 
         foreach (var level in world.StreamingLevels)
         {
             paths.SubLayers.Add(Resolve(level.World, Extension));
-            if (level.Persistent) Session.Add(level.World);
+            if (level.IsPersistent) Session.Add(level.World);
         }
 
         CollectFromActor(world.Actors, paths, ct);
@@ -47,11 +52,11 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
                 }
             }
 
-            CollectFromComponent(actor.RootComponent, paths);
+            CollectFromComponent(actor.RootComponent, paths, ct);
         }
     }
 
-    private void CollectFromComponent(SceneComponentDto? comp, WorldAssetPaths paths)
+    private void CollectFromComponent(SceneComponentDto? comp, WorldAssetPaths paths, CancellationToken ct = default)
     {
         switch (comp)
         {
@@ -102,7 +107,8 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
 
         foreach (var child in comp.Children)
         {
-            CollectFromComponent(child, paths);
+            ct.ThrowIfCancellationRequested();
+            CollectFromComponent(child, paths, ct);
         }
     }
 

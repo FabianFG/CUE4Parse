@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using CUE4Parse.UE4.Assets.Exports.Rig;
+﻿using CUE4Parse.UE4.Assets.Exports.Rig;
 
 namespace CUE4Parse_Conversion.Exporters;
 

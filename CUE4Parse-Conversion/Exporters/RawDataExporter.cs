@@ -8,7 +8,7 @@ namespace CUE4Parse_Conversion.Exporters;
 /// hacky raw data exporter just to delegate the work to our new export session thing
 /// instead of letting the user do the dirty work
 /// </summary>
-public sealed class RawDataExporter(GameFile gameFile, IFileProvider provider) : ExporterBase(gameFile)
+public sealed class RawDataExporter(GameFile gameFile, IFileProvider provider) : ExporterBase(gameFile, "RawData")
 {
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {

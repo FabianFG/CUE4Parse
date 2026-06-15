@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.Utils;
@@ -44,26 +38,18 @@ public abstract class ExporterBase : IExporter
         ObjectPath = PackagePath + '.' + ObjectName;
         ClassName = className;
 
-        // TODO: ObjectName is not unique across packages and their objects, so multiple distinct packages can share the same name
-        // in such case it won't be possible to distinguish the two without putting ObjectPath as context
-        // it should mostly be fine tho as the session is still gonna export the two but filtering logs will be a bit more difficult
-        // Known cases:
-        //   FarFarWest/Content/Interfaces/MainMenu/UI_LoadingScreen.UI_LoadingScreen
-        //   FarFarWest/Content/Interfaces/UI_LoadingScreen.UI_LoadingScreen
-        //   FarFarWest/Content/Interfaces/Textures/T_ContractBackground.T_ContractBackground
-        //   FarFarWest/Content/Interfaces/Contracts/T_ContractBackground.T_ContractBackground
         Log = Serilog.Log.ForContext(GetType())
-            .ForContext(nameof(ObjectName), ObjectName)
+            .ForContext(nameof(ObjectPath), ObjectPath)
             .ForContext(nameof(ClassName), ClassName)
             .ForContext("ExporterV2", true);
     }
 
-    protected ExporterBase(UObject export) : this(BuildPackagePath(export), export.Name, export.ExportType)
+    protected ExporterBase(UObject export, string? className = null) : this(BuildPackagePath(export), export.Name, className ?? export.ExportType)
     {
 
     }
 
-    protected internal ExporterBase(GameFile file) : this(file.PathWithoutExtension, file.NameWithoutExtension, "RawData")
+    protected internal ExporterBase(GameFile file, string className) : this(file.PathWithoutExtension, file.NameWithoutExtension, className)
     {
         if (file.IsUePackagePayload)
             throw new ArgumentException("GameFile must not be a UE package payload file", nameof(file));
